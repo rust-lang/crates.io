@@ -15,6 +15,7 @@ use tracing::{debug, instrument};
 pub async fn get_index_data(
     name: &str,
     conn: &mut AsyncPgConnection,
+    include_pubtime: bool,
 ) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
     let krate = Crate::query()
@@ -28,7 +29,7 @@ pub async fn get_index_data(
     };
 
     debug!("Gathering remaining index data");
-    let crates = index_metadata(&krate, conn)
+    let crates = index_metadata(&krate, conn, include_pubtime)
         .await
         .context("Failed to gather index metadata")?;
 
@@ -58,6 +59,7 @@ pub async fn get_index_data(
 pub async fn index_metadata(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
+    include_pubtime: bool,
 ) -> QueryResult<Vec<crates_io_index::Crate>> {
     let mut versions: Vec<Version> = Version::belonging_to(krate)
         .select(Version::as_select())
@@ -127,6 +129,7 @@ pub async fn index_metadata(
                 features,
                 links: version.links,
                 rust_version: version.rust_version,
+                pubtime: include_pubtime.then_some(version.created_at),
                 features2,
                 v,
             };
@@ -170,7 +173,7 @@ mod tests {
             .expect_build(&mut conn)
             .await;
 
-        let metadata = index_metadata(&fooo, &mut conn).await.unwrap();
+        let metadata = index_metadata(&fooo, &mut conn, false).await.unwrap();
         assert_json_snapshot!(metadata);
 
         let bar = CrateBuilder::new("bar", user_id)
@@ -189,7 +192,37 @@ mod tests {
             .expect_build(&mut conn)
             .await;
 
-        let metadata = index_metadata(&bar, &mut conn).await.unwrap();
+        let metadata = index_metadata(&bar, &mut conn, false).await.unwrap();
+        assert_json_snapshot!(metadata);
+    }
+
+    #[tokio::test]
+    async fn test_index_metadata_with_pubtime() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let user_id = diesel::insert_into(users::table)
+            .values((
+                users::name.eq("user1"),
+                users::gh_login.eq("user1"),
+                users::gh_id.eq(42),
+                users::gh_encrypted_token.eq(&[]),
+            ))
+            .returning(users::id)
+            .get_result::<i32>(&mut conn)
+            .await
+            .unwrap();
+
+        let v1 = VersionBuilder::new("1.0.0").created_at("2020-01-01T00:00:00Z".parse().unwrap());
+        let v2 = VersionBuilder::new("2.0.0").created_at("2020-02-01T00:00:00Z".parse().unwrap());
+
+        let bar = CrateBuilder::new("bar", user_id)
+            .version(v1)
+            .version(v2)
+            .expect_build(&mut conn)
+            .await;
+
+        let metadata = index_metadata(&bar, &mut conn, true).await.unwrap();
         assert_json_snapshot!(metadata);
     }
 }

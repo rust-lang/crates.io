@@ -15,9 +15,9 @@ module('Acceptance | support', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
 
-  hooks.beforeEach(function () {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.0' });
+  hooks.beforeEach(async function () {
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.0' });
 
     window.open = (url, target, features) => {
       window.openKwargs = { url, target, features };

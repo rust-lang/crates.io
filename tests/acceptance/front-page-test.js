@@ -19,7 +19,7 @@ module('Acceptance | front page', function (hooks) {
   test('visiting /', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';
 
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/');
 

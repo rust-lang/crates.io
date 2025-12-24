@@ -1,35 +1,35 @@
-import { nullable, oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
 const REQS = ['^0.1.0', '^2.1.3', '0.3.7', '~5.2.12'];
 
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  default_features: Boolean,
-  features: Array,
-  kind: String,
-  optional: Boolean,
-  req: String,
-  target: nullable(String),
+    default_features: v.optional(v.boolean()),
+    features: v.optional(v.array(v.any()), []),
+    kind: v.optional(v.string()),
+    optional: v.optional(v.boolean()),
+    req: v.optional(v.string()),
+    target: v.optional(v.nullable(v.string()), null),
 
-  crate: oneOf('crate'),
-  version: oneOf('version'),
+    crate: v.any(),
+    version: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('dependency');
+    let id = input.id ?? counter;
+    let default_features = input.default_features ?? counter % 4 === 3;
+    let kind = input.kind ?? (counter % 3 === 0 ? 'dev' : 'normal');
+    let optional = input.optional ?? counter % 4 !== 3;
+    let req = input.req ?? REQS[counter % REQS.length];
+    return { ...input, id, default_features, kind, optional, req };
+  }),
+);
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'default_features', () => counter % 4 === 3);
-    applyDefault(attrs, 'kind', () => (counter % 3 === 0 ? 'dev' : 'normal'));
-    applyDefault(attrs, 'optional', () => counter % 4 !== 3);
-    applyDefault(attrs, 'req', () => REQS[counter % REQS.length]);
-    applyDefault(attrs, 'target', () => null);
+const collection = new Collection({ schema });
 
-    if (!attrs.crate) {
-      throw new Error(`Missing \`crate\` relationship on \`dependency:${attrs.id}\``);
-    }
-    if (!attrs.version) {
-      throw new Error(`Missing \`version\` relationship on \`dependency:${attrs.id}\``);
-    }
-  },
-};
+export default collection;

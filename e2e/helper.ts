@@ -1,14 +1,14 @@
+import axeConfig from '@/tests/axe-config';
+import { db, handlers } from '@crates-io/msw';
 import { test as base } from '@playwright/test';
+import * as pwFakeTimers from '@sinonjs/fake-timers';
 import type { MockServiceWorker } from 'playwright-msw';
 import { createWorker } from 'playwright-msw';
-import { db, handlers } from '@crates-io/msw';
 
-import * as pwFakeTimers from '@sinonjs/fake-timers';
-import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
-import { PercyPage } from './fixtures/percy';
 import { A11yPage } from './fixtures/a11y';
 import { EmberPage, EmberPageOptions } from './fixtures/ember';
-import axeConfig from '@/tests/axe-config';
+import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
+import { PercyPage } from './fixtures/percy';
 
 export type AppOptions = {
   clockOptions: FakeTimersOptions;
@@ -58,12 +58,12 @@ export const test = base.extend<AppOptions & AppFixtures>({
   msw: async ({ page }, use) => {
     const worker = await createWorker(page, handlers);
     const authenticateAs = async function (user) {
-      db.mswSession.create({ user });
+      await db.mswSession.create({ user });
       await page.addInitScript("globalThis.localStorage.setItem('isLoggedIn', '1')");
     };
 
     await use({ worker, db, authenticateAs });
-    db.reset();
+    await db.reset();
     worker.resetCookieStore();
   },
   ember: [

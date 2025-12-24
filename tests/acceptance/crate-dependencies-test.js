@@ -16,7 +16,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('shows the lists of dependencies', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg/dependencies');
     assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
@@ -31,8 +31,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('empty list case', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/dependencies');
 
@@ -63,8 +63,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('shows an error page if version is not found', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '2.0.0' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '2.0.0' });
 
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
@@ -75,8 +75,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('shows error message if loading of dependencies fails', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     this.worker.use(
       http.get('/api/v1/crates/:crate_name/:version_num/dependencies', () => HttpResponse.json({}, { status: 500 })),
@@ -91,16 +91,16 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('hides description if loading of dependency details fails', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    let version = this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    let version = await this.db.version.create({ crate, num: '0.6.1' });
 
-    let foo = this.db.crate.create({ name: 'foo', description: 'This is the foo crate' });
-    this.db.version.create({ crate: foo, num: '1.0.0' });
-    this.db.dependency.create({ crate: foo, version, req: '^1.0.0', kind: 'normal' });
+    let foo = await this.db.crate.create({ name: 'foo', description: 'This is the foo crate' });
+    await this.db.version.create({ crate: foo, num: '1.0.0' });
+    await this.db.dependency.create({ crate: foo, version, req: '^1.0.0', kind: 'normal' });
 
-    let bar = this.db.crate.create({ name: 'bar', description: 'This is the bar crate' });
-    this.db.version.create({ crate: bar, num: '2.3.4' });
-    this.db.dependency.create({ crate: bar, version, req: '^2.0.0', kind: 'normal' });
+    let bar = await this.db.crate.create({ name: 'bar', description: 'This is the bar crate' });
+    await this.db.version.create({ crate: bar, num: '2.3.4' });
+    await this.db.dependency.create({ crate: bar, version, req: '^2.0.0', kind: 'normal' });
 
     this.worker.use(http.get('/api/v1/crates', () => HttpResponse.json({}, { status: 500 })));
 

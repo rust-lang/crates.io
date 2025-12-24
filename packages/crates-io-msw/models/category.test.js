@@ -2,8 +2,8 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('default are applied', ({ expect }) => {
-  let category = db.category.create();
+test('default are applied', async ({ expect }) => {
+  let category = await db.category.create({});
   expect(category).toMatchInlineSnapshot(`
     {
       "category": "Category 1",
@@ -12,14 +12,12 @@ test('default are applied', ({ expect }) => {
       "description": "This is the description for the category called "Category 1"",
       "id": "category-1",
       "slug": "category-1",
-      Symbol(type): "category",
-      Symbol(primaryKey): "id",
     }
   `);
 });
 
-test('name can be set', ({ expect }) => {
-  let category = db.category.create({ category: 'Network programming' });
+test('name can be set', async ({ expect }) => {
+  let category = await db.category.create({ category: 'Network programming' });
   expect(category).toMatchInlineSnapshot(`
     {
       "category": "Network programming",
@@ -28,8 +26,6 @@ test('name can be set', ({ expect }) => {
       "description": "This is the description for the category called "Network programming"",
       "id": "network-programming",
       "slug": "network-programming",
-      Symbol(type): "category",
-      Symbol(primaryKey): "id",
     }
   `);
 });

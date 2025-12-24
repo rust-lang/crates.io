@@ -31,6 +31,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // Routes used by the frontend
         .routes(routes!(
             krate::metadata::find_crate,
+            krate::update::update_crate,
             krate::delete::delete_crate
         ))
         .routes(routes!(
@@ -100,6 +101,8 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         ))
         .routes(routes!(
             trustpub::gitlab_configs::create::create_trustpub_gitlab_config,
+            trustpub::gitlab_configs::delete::delete_trustpub_gitlab_config,
+            trustpub::gitlab_configs::list::list_trustpub_gitlab_configs,
         ))
         .split_for_parts();
 

@@ -5,10 +5,10 @@ import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/crates/:name/downloads', async ({ request, params }) => {
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 
-  let downloads = db.versionDownload.findMany({ where: { version: { crate: { id: { equals: crate.id } } } } });
+  let downloads = db.versionDownload.findMany(q => q.where(download => download.version.crate.id === crate.id));
   let resp = {
     version_downloads: downloads.map(download => ({
       date: download.date,

@@ -19,7 +19,7 @@ module('Acceptance | crates page', function (hooks) {
   const per_page = 50;
 
   test('visiting the crates page from the front page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/');
     await click('[data-test-all-crates-link]');
@@ -32,7 +32,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('visiting the crates page directly', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates');
     await click('[data-test-all-crates-link]');
@@ -43,8 +43,8 @@ module('Acceptance | crates page', function (hooks) {
 
   test('listing crates', async function (assert) {
     for (let i = 1; i <= per_page; i++) {
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
     }
 
     await visit('/crates');
@@ -55,8 +55,8 @@ module('Acceptance | crates page', function (hooks) {
 
   test('navigating to next page of crates', async function (assert) {
     for (let i = 1; i <= per_page + 2; i++) {
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
     }
     const page_start = per_page + 1;
     const total = per_page + 2;
@@ -70,7 +70,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('crates default sort is by recent downloads', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates');
 
@@ -78,7 +78,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('downloads appears for each crate on crate list', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates');
 
@@ -87,7 +87,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('recent downloads appears for each crate on crate list', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates');
 
@@ -96,7 +96,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('shows error message screen', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     let detail =
       'Page 1 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.';

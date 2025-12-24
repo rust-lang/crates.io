@@ -2,6 +2,7 @@
 source: src/controllers/trustpub/emails.rs
 expression: rendered.body_text
 ---
+
 Hello team-member!
 
 crates.io user octocat removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage ("my-crate").

@@ -1,6 +1,5 @@
-import { Page } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
-import { expect } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 // Ref: https://playwright.dev/docs/accessibility-testing#scanning-an-entire-page
 export class A11yPage {

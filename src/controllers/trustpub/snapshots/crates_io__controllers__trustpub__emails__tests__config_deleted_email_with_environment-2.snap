@@ -2,6 +2,7 @@
 source: src/controllers/trustpub/emails.rs
 expression: rendered.body_text
 ---
+
 Hello octocat!
 
 You removed a "Trusted Publishing" configuration for GitHub Actions from your crate "my-crate".

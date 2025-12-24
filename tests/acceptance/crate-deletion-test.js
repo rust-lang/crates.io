@@ -9,12 +9,12 @@ module('Acceptance | crate deletion', function (hooks) {
   setupApplicationTest(hooks);
 
   test('happy path', async function (assert) {
-    let user = this.db.user.create();
-    this.authenticateAs(user);
+    let user = await this.db.user.create({});
+    await this.authenticateAs(user);
 
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate });
-    this.db.crateOwnership.create({ crate, user });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate });
+    await this.db.crateOwnership.create({ crate, user });
 
     await visit('/crates/foo');
     assert.strictEqual(currentURL(), '/crates/foo');
@@ -39,7 +39,7 @@ module('Acceptance | crate deletion', function (hooks) {
     let message = 'Crate foo has been successfully deleted.';
     assert.dom('[data-test-notification-message="success"]').hasText(message);
 
-    crate = this.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
-    assert.strictEqual(crate, null);
+    crate = this.db.crate.findFirst(q => q.where({ name: 'foo' }));
+    assert.strictEqual(crate, undefined);
   });
 });

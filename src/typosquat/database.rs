@@ -106,10 +106,17 @@ pub struct Crate {
 
 impl Crate {
     /// Hydrates a crate and its owners from the database given the crate name.
-    pub async fn from_name(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Self> {
+    pub async fn from_name(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Option<Self>> {
         use crate::models;
 
-        let krate = models::Crate::by_exact_name(name).first(conn).await?;
+        let Some(krate) = models::Crate::by_exact_name(name)
+            .first(conn)
+            .await
+            .optional()?
+        else {
+            return Ok(None);
+        };
+
         let owners = krate
             .owners(conn)
             .await?
@@ -117,7 +124,7 @@ impl Crate {
             .map(Owner::from)
             .collect();
 
-        Ok(Self { owners })
+        Ok(Some(Self { owners }))
     }
 }
 
@@ -209,7 +216,7 @@ mod tests {
         assert!(!pkg_a.shared_authors(pkg_b.authors()));
 
         // Now let's go get package c and pretend it's a new package.
-        let pkg_c = Crate::from_name(&mut conn, "c").await?;
+        let pkg_c = Crate::from_name(&mut conn, "c").await?.unwrap();
 
         // c _does_ have an author in common with a.
         assert!(pkg_a.shared_authors(pkg_c.authors()));

@@ -52,7 +52,12 @@ async fn check(
     if let Some(harness) = cache.get_harness() {
         info!(name, "Checking new crate for potential typosquatting");
 
-        let krate: Box<dyn Package> = Box::new(Crate::from_name(conn, name).await?);
+        let Some(krate) = Crate::from_name(conn, name).await? else {
+            info!("Crate '{name}' not found in database; skipping typosquat check");
+            return Ok(());
+        };
+
+        let krate: Box<dyn Package> = Box::new(krate);
         let squats = harness.check_package(name, krate)?;
         if !squats.is_empty() {
             // Well, well, well. For now, the only action we'll take is to e-mail people who
@@ -165,6 +170,9 @@ mod tests {
         assert!(!sent_mail.is_empty());
         let sent = sent_mail.into_iter().next().unwrap();
         assert_eq!(&sent.0.to(), &["admin@example.com".parse::<Address>()?]);
+
+        // Now run the check with a non-existent crate.
+        check(&emails, &cache, &mut async_conn, "does-not-exist").await?;
 
         Ok(())
     }

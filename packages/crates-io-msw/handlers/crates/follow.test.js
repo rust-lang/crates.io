@@ -1,36 +1,55 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'PUT' });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(response.status).toBe(403);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'PUT' });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('makes the authenticated user follow the crate', async function () {
-  let crate = db.crate.create({ name: 'rand' });
+  let crate = await db.crate.create({ name: 'rand' });
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
-  assert.deepEqual(user.followedCrates, []);
+  expect(user.followedCrates).toMatchInlineSnapshot(`[]`);
 
   let response = await fetch('/api/v1/crates/rand/follow', { method: 'PUT' });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
-  user = db.user.findFirst({ where: { id: user.id } });
-  assert.deepEqual(user.followedCrates, [crate]);
+  user = db.user.findFirst(q => q.where({ id: user.id }));
+  expect(user.followedCrates.length).toBe(1);
+  expect(user.followedCrates[0].name).toBe(crate.name);
 });

@@ -11,31 +11,31 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Acceptance | /me/pending-invites', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    let inviter = context.db.user.create({ name: 'janed' });
-    let inviter2 = context.db.user.create({ name: 'wycats' });
+  async function prepare(context) {
+    let inviter = await context.db.user.create({ name: 'janed' });
+    let inviter2 = await context.db.user.create({ name: 'wycats' });
 
-    let user = context.db.user.create();
+    let user = await context.db.user.create({});
 
-    let nanomsg = context.db.crate.create({ name: 'nanomsg' });
-    context.db.version.create({ crate: nanomsg });
-    context.db.crateOwnerInvitation.create({
+    let nanomsg = await context.db.crate.create({ name: 'nanomsg' });
+    await context.db.version.create({ crate: nanomsg });
+    await context.db.crateOwnerInvitation.create({
       crate: nanomsg,
       createdAt: '2016-12-24T12:34:56Z',
       invitee: user,
       inviter,
     });
 
-    let ember = context.db.crate.create({ name: 'ember-rs' });
-    context.db.version.create({ crate: ember });
-    context.db.crateOwnerInvitation.create({
+    let ember = await context.db.crate.create({ name: 'ember-rs' });
+    await context.db.version.create({ crate: ember });
+    await context.db.crateOwnerInvitation.create({
       crate: ember,
       createdAt: '2020-12-31T12:34:56Z',
       invitee: user,
       inviter: inviter2,
     });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
 
     return { nanomsg, user };
   }
@@ -48,7 +48,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('list all pending crate owner invites', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/me/pending-invites');
     assert.strictEqual(currentURL(), '/me/pending-invites');
@@ -71,9 +71,9 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('shows empty list message', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
-    this.db.crateOwnerInvitation.deleteMany({});
+    this.db.crateOwnerInvitation.deleteMany(null);
 
     await visit('/me/pending-invites');
     assert.strictEqual(currentURL(), '/me/pending-invites');
@@ -82,23 +82,13 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('invites can be declined', async function (assert) {
-    let { nanomsg, user } = prepare(this);
+    let { nanomsg, user } = await prepare(this);
 
     let { crateOwnerInvitation, crateOwnership } = this.db;
-    let invites = crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    let invites = crateOwnerInvitation.findMany(q => q.where({ crate: { id: nanomsg.id }, invitee: { id: user.id } }));
     assert.strictEqual(invites.length, 1);
 
-    let owners = crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    let owners = crateOwnership.findMany(q => q.where({ crate: { id: nanomsg.id }, user: { id: user.id } }));
     assert.strictEqual(owners.length, 0);
 
     await visit('/me/pending-invites');
@@ -113,25 +103,15 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
 
-    invites = crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    invites = crateOwnerInvitation.findMany(q => q.where({ crate: { id: nanomsg.id }, invitee: { id: user.id } }));
     assert.strictEqual(invites.length, 0);
 
-    owners = crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    owners = crateOwnership.findMany(q => q.where({ crate: { id: nanomsg.id }, user: { id: user.id } }));
     assert.strictEqual(owners.length, 0);
   });
 
   test('error message is shown if decline request fails', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let error = HttpResponse.json({}, { status: 500 });
     this.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
@@ -146,23 +126,13 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('invites can be accepted', async function (assert) {
-    let { nanomsg, user } = prepare(this);
+    let { nanomsg, user } = await prepare(this);
 
     let { crateOwnerInvitation, crateOwnership } = this.db;
-    let invites = crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    let invites = crateOwnerInvitation.findMany(q => q.where({ crate: { id: nanomsg.id }, invitee: { id: user.id } }));
     assert.strictEqual(invites.length, 1);
 
-    let owners = crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    let owners = crateOwnership.findMany(q => q.where({ crate: { id: nanomsg.id }, user: { id: user.id } }));
     assert.strictEqual(owners.length, 0);
 
     await visit('/me/pending-invites');
@@ -179,25 +149,15 @@ module('Acceptance | /me/pending-invites', function (hooks) {
 
     await percySnapshot(assert);
 
-    invites = crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    invites = crateOwnerInvitation.findMany(q => q.where({ crate: { id: nanomsg.id }, invitee: { id: user.id } }));
     assert.strictEqual(invites.length, 0);
 
-    owners = crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    owners = crateOwnership.findMany(q => q.where({ crate: { id: nanomsg.id }, user: { id: user.id } }));
     assert.strictEqual(owners.length, 1);
   });
 
   test('error message is shown if accept request fails', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let error = HttpResponse.json({}, { status: 500 });
     this.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
@@ -212,7 +172,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('specific error message is shown if accept request fails', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let errorMessage =
       'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';

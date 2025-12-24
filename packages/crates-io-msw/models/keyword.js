@@ -1,14 +1,21 @@
-import { primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
-export default {
-  id: primaryKey(String),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.string()),
+    keyword: v.optional(v.string()),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('keyword');
+    let keyword = input.keyword ?? `keyword-${counter}`;
+    let id = input.id ?? keyword;
+    return { ...input, id, keyword };
+  }),
+);
 
-  keyword: String,
+const collection = new Collection({ schema });
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'keyword', () => `keyword-${counter}`);
-    applyDefault(attrs, 'id', () => attrs.keyword);
-  },
-};
+export default collection;

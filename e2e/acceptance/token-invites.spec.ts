@@ -36,11 +36,11 @@ test.describe('Acceptance | /accept-invite/:token', { tag: '@acceptance' }, () =
   });
 
   test('shows success for known token', async ({ page, msw, percy }) => {
-    let inviter = msw.db.user.create();
-    let invitee = msw.db.user.create();
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate });
-    let invite = msw.db.crateOwnerInvitation.create({ crate, invitee, inviter });
+    let inviter = await msw.db.user.create({});
+    let invitee = await msw.db.user.create({});
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate });
+    let invite = await msw.db.crateOwnerInvitation.create({ crate, invitee, inviter });
 
     await page.goto(`/accept-invite/${invite.token}`);
     await expect(page).toHaveURL(`/accept-invite/${invite.token}`);

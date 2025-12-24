@@ -1,3 +1,7 @@
+/**
+ * @param {string} a
+ * @param {string} b
+ */
 export function compareDates(a, b) {
   let aDate = new Date(a);
   let bDate = new Date(b);

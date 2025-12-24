@@ -2,15 +2,16 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('throws if `crate` is not set', ({ expect }) => {
-  expect(() => db.version.create()).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing \`crate\` relationship on \`version:1.0.0\`]`,
+test('throws if `crate` is not set', async ({ expect }) => {
+  // @ts-expect-error
+  await expect(() => db.version.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
+    `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
 });
 
-test('happy path', ({ expect }) => {
-  let crate = db.crate.create();
-  let version = db.version.create({ crate });
+test('happy path', async ({ expect }) => {
+  let crate = await db.crate.create({});
+  let version = await db.version.create({ crate });
   expect(version).toMatchInlineSnapshot(`
     {
       "crate": {
@@ -27,9 +28,8 @@ test('happy path', ({ expect }) => {
         "name": "crate-1",
         "recent_downloads": 321,
         "repository": null,
+        "trustpubOnly": false,
         "updated_at": "2017-02-24T12:34:56Z",
-        Symbol(type): "crate",
-        Symbol(primaryKey): "id",
       },
       "crate_size": 162963,
       "created_at": "2010-06-16T21:30:45Z",
@@ -61,8 +61,6 @@ test('happy path', ({ expect }) => {
       "updated_at": "2017-02-24T12:34:56Z",
       "yank_message": null,
       "yanked": false,
-      Symbol(type): "version",
-      Symbol(primaryKey): "id",
     }
   `);
 });

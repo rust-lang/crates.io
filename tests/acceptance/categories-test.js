@@ -14,12 +14,12 @@ module('Acceptance | categories', function (hooks) {
   test('listing categories', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';
 
-    this.db.category.create({ category: 'API bindings' });
-    let algos = this.db.category.create({ category: 'Algorithms' });
-    this.db.crate.create({ categories: [algos] });
-    let async = this.db.category.create({ category: 'Asynchronous' });
+    await this.db.category.create({ category: 'API bindings' });
+    let algos = await this.db.category.create({ category: 'Algorithms' });
+    await this.db.crate.create({ categories: [algos] });
+    let async = await this.db.category.create({ category: 'Asynchronous' });
     Array.from({ length: 15 }, () => this.db.crate.create({ categories: [async] }));
-    this.db.category.create({ category: 'Everything', crates_cnt: 1234 });
+    await this.db.category.create({ category: 'Everything', crates_cnt: 1234 });
 
     await visit('/categories');
 
@@ -35,14 +35,14 @@ module('Acceptance | categories', function (hooks) {
   test('listing categories (locale: de)', async function (assert) {
     this.owner.lookup('service:intl').locale = 'de';
 
-    this.db.category.create({ category: 'Everything', crates_cnt: 1234 });
+    await this.db.category.create({ category: 'Everything', crates_cnt: 1234 });
 
     await visit('/categories');
     assert.dom('[data-test-category="everything"] [data-test-crate-count]').hasText('1.234 crates');
   });
 
   test('category/:category_id index default sort is recent-downloads', async function (assert) {
-    this.db.category.create({ category: 'Algorithms' });
+    await this.db.category.create({ category: 'Algorithms' });
 
     await visit('/categories/algorithms');
 
@@ -53,8 +53,8 @@ module('Acceptance | categories', function (hooks) {
   });
 
   test('listing category slugs', async function (assert) {
-    this.db.category.create({ category: 'Algorithms', description: 'Crates for algorithms' });
-    this.db.category.create({ category: 'Asynchronous', description: 'Async crates' });
+    await this.db.category.create({ category: 'Algorithms', description: 'Crates for algorithms' });
+    await this.db.category.create({ category: 'Asynchronous', description: 'Async crates' });
 
     await visit('/category_slugs');
 

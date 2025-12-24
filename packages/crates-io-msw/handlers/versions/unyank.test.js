@@ -1,49 +1,75 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/1.0.0/unyank', { method: 'PUT' });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(response.status).toBe(403);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/unyank', { method: 'PUT' });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown versions', async function () {
-  db.crate.create({ name: 'foo' });
+  await db.crate.create({ name: 'foo' });
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/unyank', { method: 'PUT' });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('unyanks the version', async function () {
-  let crate = db.crate.create({ name: 'foo' });
-  let version = db.version.create({ crate, num: '1.0.0', yanked: true, yank_message: 'some reason' });
-  assert.strictEqual(version.yanked, true);
-  assert.strictEqual(version.yank_message, 'some reason');
+  let crate = await db.crate.create({ name: 'foo' });
+  let version = await db.version.create({ crate, num: '1.0.0', yanked: true, yank_message: 'some reason' });
+  expect(version.yanked).toBe(true);
+  expect(version.yank_message).toBe('some reason');
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/unyank', { method: 'PUT' });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
-  version = db.version.findFirst({ where: { id: version.id } });
-  assert.strictEqual(version.yanked, false);
-  assert.strictEqual(version.yank_message, null);
+  version = db.version.findFirst(q => q.where({ id: version.id }));
+  expect(version.yanked).toBe(false);
+  expect(version.yank_message).toBe(null);
 });

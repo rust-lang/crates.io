@@ -18,23 +18,18 @@ export default http.get('/api/v1/trusted_publishing/github_configs', ({ request 
     return HttpResponse.json({ errors: [{ detail: 'missing or invalid filter' }] }, { status: 400 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: crateName } } });
+  let crate = db.crate.findFirst(q => q.where({ name: crateName }));
   if (!crate) return notFound();
 
   // Check if the user is an owner of the crate
-  let isOwner = db.crateOwnership.findFirst({
-    where: {
-      crate: { id: { equals: crate.id } },
-      user: { id: { equals: user.id } },
-    },
-  });
+  let isOwner = db.crateOwnership.findFirst(q =>
+    q.where(ownership => ownership.crate.id === crate.id && ownership.user?.id === user.id),
+  );
   if (!isOwner) {
     return HttpResponse.json({ errors: [{ detail: 'You are not an owner of this crate' }] }, { status: 400 });
   }
 
-  let configs = db.trustpubGithubConfig.findMany({
-    where: { crate: { id: { equals: crate.id } } },
-  });
+  let configs = db.trustpubGithubConfig.findMany(q => q.where(config => config.crate.id === crate.id));
 
   return HttpResponse.json({
     github_configs: configs.map(config => serializeGitHubConfig(config)),

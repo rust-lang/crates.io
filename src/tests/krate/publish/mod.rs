@@ -20,5 +20,6 @@ mod readme;
 mod similar_names;
 mod tarball;
 mod timestamps;
-mod trustpub;
+mod trustpub_github;
+mod trustpub_gitlab;
 mod validation;

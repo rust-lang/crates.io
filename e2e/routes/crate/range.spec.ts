@@ -3,11 +3,11 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Route | crate.range', { tag: '@routes' }, () => {
   test('happy path', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.0.0' });
-    msw.db.version.create({ crate, num: '1.1.0' });
-    msw.db.version.create({ crate, num: '1.2.0' });
-    msw.db.version.create({ crate, num: '1.2.3' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.1.0' });
+    await msw.db.version.create({ crate, num: '1.2.0' });
+    await msw.db.version.create({ crate, num: '1.2.3' });
 
     await page.goto('/crates/foo/range/^1.1.0');
     await expect(page).toHaveURL(`/crates/foo/1.2.3`);
@@ -17,11 +17,11 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('happy path with tilde range', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.0.0' });
-    msw.db.version.create({ crate, num: '1.1.0' });
-    msw.db.version.create({ crate, num: '1.1.1' });
-    msw.db.version.create({ crate, num: '1.2.0' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.1.0' });
+    await msw.db.version.create({ crate, num: '1.1.1' });
+    await msw.db.version.create({ crate, num: '1.2.0' });
 
     await page.goto('/crates/foo/range/~1.1.0');
     await expect(page).toHaveURL(`/crates/foo/1.1.1`);
@@ -31,11 +31,11 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('happy path with cargo style and', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.4.2' });
-    msw.db.version.create({ crate, num: '1.3.4' });
-    msw.db.version.create({ crate, num: '1.3.3' });
-    msw.db.version.create({ crate, num: '1.2.6' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.4.2' });
+    await msw.db.version.create({ crate, num: '1.3.4' });
+    await msw.db.version.create({ crate, num: '1.3.3' });
+    await msw.db.version.create({ crate, num: '1.2.6' });
 
     await page.goto('/crates/foo/range/>=1.3.0, <1.4.0');
     await expect(page).toHaveURL(`/crates/foo/1.3.4`);
@@ -45,11 +45,11 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('ignores yanked versions if possible', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.0.0' });
-    msw.db.version.create({ crate, num: '1.1.0' });
-    msw.db.version.create({ crate, num: '1.1.1' });
-    msw.db.version.create({ crate, num: '1.2.0', yanked: true });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.1.0' });
+    await msw.db.version.create({ crate, num: '1.1.1' });
+    await msw.db.version.create({ crate, num: '1.2.0', yanked: true });
 
     await page.goto('/crates/foo/range/^1.0.0');
     await expect(page).toHaveURL(`/crates/foo/1.1.1`);
@@ -59,11 +59,11 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('falls back to yanked version if necessary', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.0.0', yanked: true });
-    msw.db.version.create({ crate, num: '1.1.0', yanked: true });
-    msw.db.version.create({ crate, num: '1.1.1', yanked: true });
-    msw.db.version.create({ crate, num: '2.0.0' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.0.0', yanked: true });
+    await msw.db.version.create({ crate, num: '1.1.0', yanked: true });
+    await msw.db.version.create({ crate, num: '1.1.1', yanked: true });
+    await msw.db.version.create({ crate, num: '2.0.0' });
 
     await page.goto('/crates/foo/range/^1.0.0');
     await expect(page).toHaveURL(`/crates/foo/1.1.1`);
@@ -82,7 +82,7 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('shows an error page if crate fails to load', async ({ page, msw }) => {
-    msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
@@ -93,11 +93,11 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('shows an error page if no match found', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.0.0' });
-    msw.db.version.create({ crate, num: '1.1.0' });
-    msw.db.version.create({ crate, num: '1.1.1' });
-    msw.db.version.create({ crate, num: '2.0.0' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.1.0' });
+    await msw.db.version.create({ crate, num: '1.1.1' });
+    await msw.db.version.create({ crate, num: '2.0.0' });
 
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
@@ -108,10 +108,10 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('shows an error page if versions fail to load', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '3.2.1' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '3.2.1' });
 
-    msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');

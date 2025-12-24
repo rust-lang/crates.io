@@ -5,21 +5,18 @@ import { serializeDependency } from '../../serializers/dependency.js';
 import { notFound } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/crates/:name/:version/dependencies', async ({ params }) => {
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 
-  let version = db.version.findFirst({
-    where: {
-      crate: { id: { equals: crate.id } },
-      num: { equals: params.version },
-    },
-  });
+  let version = db.version.findFirst(q =>
+    q.where(version => version.crate.id === crate.id && version.num === params.version),
+  );
   if (!version) {
     let errorMessage = `crate \`${crate.name}\` does not have a version \`${params.version}\``;
     return HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 404 });
   }
 
-  let dependencies = db.dependency.findMany({ where: { version: { id: { equals: version.id } } } });
+  let dependencies = db.dependency.findMany(q => q.where(dep => dep.version.id === version.id));
 
   return HttpResponse.json({
     dependencies: dependencies.map(d => serializeDependency(d)),

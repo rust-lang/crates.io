@@ -12,7 +12,7 @@ export default http.put('/api/v1/me/tokens', async ({ request }) => {
 
   let json = await request.json();
 
-  let token = db.apiToken.create({
+  let token = await db.apiToken.create({
     user,
     name: json.api_token.name,
     crateScopes: json.api_token.crate_scopes ?? null,

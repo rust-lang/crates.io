@@ -96,6 +96,12 @@ pub struct Server {
 
     /// Banner message to display on all pages (e.g., for security incidents).
     pub banner_message: Option<String>,
+
+    /// Include publication timestamp in index entries (ISO8601 format).
+    pub index_include_pubtime: bool,
+
+    /// Enable Fastly CDN invalidation for sparse index files.
+    pub sparse_index_fastly_enabled: bool,
 }
 
 impl Server {
@@ -193,6 +199,7 @@ impl Server {
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
         let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
         let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
+        let index_include_pubtime = var_parsed("INDEX_INCLUDE_PUBTIME")?.unwrap_or(false);
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
@@ -243,6 +250,9 @@ impl Server {
             trustpub_audience,
             disable_token_creation,
             banner_message,
+            index_include_pubtime,
+            sparse_index_fastly_enabled: var_parsed("SPARSE_INDEX_FASTLY_ENABLED")?
+                .unwrap_or(false),
         })
     }
 }

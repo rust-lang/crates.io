@@ -2,15 +2,16 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('throws if `user` is not set', ({ expect }) => {
-  expect(() => db.apiToken.create()).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing \`user\` relationship on \`api-token\`]`,
+test('throws if `user` is not set', async ({ expect }) => {
+  // @ts-expect-error
+  await expect(() => db.apiToken.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
+    `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
 });
 
-test('happy path', ({ expect }) => {
-  let user = db.user.create();
-  let session = db.apiToken.create({ user });
+test('happy path', async ({ expect }) => {
+  let user = await db.user.create({});
+  let session = await db.apiToken.create({ user });
   expect(session).toMatchInlineSnapshot(`
     {
       "crateScopes": null,
@@ -34,11 +35,7 @@ test('happy path', ({ expect }) => {
         "name": "User 1",
         "publishNotifications": true,
         "url": "https://github.com/user-1",
-        Symbol(type): "user",
-        Symbol(primaryKey): "id",
       },
-      Symbol(type): "apiToken",
-      Symbol(primaryKey): "id",
     }
   `);
 });

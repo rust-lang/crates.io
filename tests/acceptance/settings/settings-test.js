@@ -11,28 +11,28 @@ import axeConfig from '../../axe-config';
 module('Acceptance | Settings', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
+  async function prepare(context) {
     let { db } = context;
 
-    let user1 = db.user.create({ name: 'blabaere' });
-    let user2 = db.user.create({ name: 'thehydroimpulse' });
-    let team1 = db.team.create({ org: 'org', name: 'blabaere' });
-    let team2 = db.team.create({ org: 'org', name: 'thehydroimpulse' });
+    let user1 = await db.user.create({ name: 'blabaere' });
+    let user2 = await db.user.create({ name: 'thehydroimpulse' });
+    let team1 = await db.team.create({ org: 'org', name: 'blabaere' });
+    let team2 = await db.team.create({ org: 'org', name: 'thehydroimpulse' });
 
-    let crate = db.crate.create({ name: 'nanomsg' });
-    db.version.create({ crate, num: '1.0.0' });
-    db.crateOwnership.create({ crate, user: user1 });
-    db.crateOwnership.create({ crate, user: user2 });
-    db.crateOwnership.create({ crate, team: team1 });
-    db.crateOwnership.create({ crate, team: team2 });
+    let crate = await db.crate.create({ name: 'nanomsg' });
+    await db.version.create({ crate, num: '1.0.0' });
+    await db.crateOwnership.create({ crate, user: user1 });
+    await db.crateOwnership.create({ crate, user: user2 });
+    await db.crateOwnership.create({ crate, team: team1 });
+    await db.crateOwnership.create({ crate, team: team2 });
 
-    context.authenticateAs(user1);
+    await context.authenticateAs(user1);
 
     return { crate, team1, team2, user1, user2 };
   }
 
   test('listing crate owners', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/nanomsg/settings');
     assert.strictEqual(currentURL(), '/crates/nanomsg/settings');
@@ -49,7 +49,7 @@ module('Acceptance | Settings', function (hooks) {
   });
 
   test('/crates/:name/owners redirects to /crates/:name/settings', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/nanomsg/owners');
     assert.strictEqual(currentURL(), '/crates/nanomsg/settings');

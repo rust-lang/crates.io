@@ -2,9 +2,8 @@ import Controller from '@ember/controller';
 import { action } from '@ember/object';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import Ember from 'ember';
 
-import { rawTimeout, restartableTask, task } from 'ember-concurrency';
+import { task } from 'ember-concurrency';
 
 export default class NewTrustedPublisherController extends Controller {
   @service notifications;
@@ -12,74 +11,64 @@ export default class NewTrustedPublisherController extends Controller {
   @service router;
 
   @tracked publisher = 'GitHub';
-  @tracked repositoryOwner = '';
-  @tracked repositoryName = '';
-  @tracked workflowFilename = '';
+  @tracked namespace = '';
+  @tracked project = '';
+  @tracked workflow = '';
   @tracked environment = '';
-  @tracked repositoryOwnerInvalid = false;
-  @tracked repositoryNameInvalid = false;
-  @tracked workflowFilenameInvalid = false;
+  @tracked namespaceInvalid = false;
+  @tracked projectInvalid = false;
+  @tracked workflowInvalid = false;
 
   get crate() {
     return this.model.crate;
   }
 
   get publishers() {
-    return ['GitHub'];
+    return ['GitHub', 'GitLab'];
   }
 
   get repository() {
-    if (this.repositoryOwner && this.repositoryName) {
-      return `${this.repositoryOwner}/${this.repositoryName}`;
+    if (this.namespace && this.project) {
+      return `${this.namespace}/${this.project}`;
     }
   }
 
   get verificationUrl() {
-    if (this.repositoryOwner && this.repositoryName && this.workflowFilename) {
-      return `https://raw.githubusercontent.com/${this.repositoryOwner}/${this.repositoryName}/HEAD/.github/workflows/${this.workflowFilename}`;
-    }
+    if (this.publisher !== 'GitHub') return;
+    if (!this.namespace || !this.project || !this.workflow) return;
+
+    return `https://raw.githubusercontent.com/${this.namespace}/${this.project}/HEAD/.github/workflows/${this.workflow}`;
   }
-
-  verifyWorkflowTask = restartableTask(async () => {
-    let timeout = Ember.testing ? 0 : 500;
-    await rawTimeout(timeout);
-
-    let { verificationUrl } = this;
-    if (!verificationUrl) return null;
-
-    try {
-      let response = await fetch(verificationUrl, { method: 'HEAD' });
-
-      if (response.ok) {
-        return 'success';
-      } else if (response.status === 404) {
-        return 'not-found';
-      } else {
-        return 'error';
-      }
-    } catch {
-      return 'error';
-    }
-  });
 
   saveConfigTask = task(async () => {
     if (!this.validate()) return;
 
-    let config = this.store.createRecord('trustpub-github-config', {
-      crate: this.crate,
-      repository_owner: this.repositoryOwner,
-      repository_name: this.repositoryName,
-      workflow_filename: this.workflowFilename,
-      environment: this.environment || null,
-    });
+    let config;
+    if (this.publisher === 'GitHub') {
+      config = this.store.createRecord('trustpub-github-config', {
+        crate: this.crate,
+        repository_owner: this.namespace,
+        repository_name: this.project,
+        workflow_filename: this.workflow,
+        environment: this.environment || null,
+      });
+    } else if (this.publisher === 'GitLab') {
+      config = this.store.createRecord('trustpub-gitlab-config', {
+        crate: this.crate,
+        namespace: this.namespace,
+        project: this.project,
+        workflow_filepath: this.workflow,
+        environment: this.environment || null,
+      });
+    }
 
     try {
       // Save the new config on the backend
       await config.save();
 
-      this.repositoryOwner = '';
-      this.repositoryName = '';
-      this.workflowFilename = '';
+      this.namespace = '';
+      this.project = '';
+      this.workflow = '';
       this.environment = '';
 
       // Navigate back to the crate settings page
@@ -99,22 +88,26 @@ export default class NewTrustedPublisherController extends Controller {
   });
 
   validate() {
-    this.repositoryOwnerInvalid = !this.repositoryOwner;
-    this.repositoryNameInvalid = !this.repositoryName;
-    this.workflowFilenameInvalid = !this.workflowFilename;
+    this.namespaceInvalid = !this.namespace;
+    this.projectInvalid = !this.project;
+    this.workflowInvalid = !this.workflow;
 
-    return !this.repositoryOwnerInvalid && !this.repositoryNameInvalid && !this.workflowFilenameInvalid;
+    return !this.namespaceInvalid && !this.projectInvalid && !this.workflowInvalid;
   }
 
-  @action resetRepositoryOwnerValidation() {
-    this.repositoryOwnerInvalid = false;
+  @action publisherChanged(event) {
+    this.publisher = event.target.value;
   }
 
-  @action resetRepositoryNameValidation() {
-    this.repositoryNameInvalid = false;
+  @action resetNamespaceValidation() {
+    this.namespaceInvalid = false;
   }
 
-  @action resetWorkflowFilenameValidation() {
-    this.workflowFilenameInvalid = false;
+  @action resetProjectValidation() {
+    this.projectInvalid = false;
+  }
+
+  @action resetWorkflowValidation() {
+    this.workflowInvalid = false;
   }
 }

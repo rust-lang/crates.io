@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
@@ -11,16 +11,16 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       };
     });
 
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
-      http.get('/api/private/session/authorize', ({ request }) => {
+      http.get('/api/private/session/authorize', async ({ request }) => {
         let url = new URL(request.url);
         expect([...url.searchParams.keys()]).toEqual(['code', 'state']);
         expect(url.searchParams.get('code')).toBe('901dd10e07c7e9fa1cd5');
         expect(url.searchParams.get('state')).toBe('fYcUY3FMdUUz00FC7vLT7A');
 
-        let user = msw.db.user.create();
-        msw.db.mswSession.create({ user });
+        let user = await msw.db.user.create({});
+        await msw.db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
       }),
       http.get('/api/v1/me', () =>
@@ -69,7 +69,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       };
     });
 
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
       http.get('/api/private/session/authorize', () =>
         HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),

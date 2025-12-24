@@ -10,7 +10,7 @@ test.describe('Route | keyword', { tag: '@routes' }, () => {
 
   test('server error causes the error page to be shown', async ({ page, msw }) => {
     let error = HttpResponse.json({}, { status: 500 });
-    msw.worker.use(http.get('/api/v1/crates', () => error));
+    await msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.goto('/keywords/foo');
     await expect(page).toHaveURL('/keywords/foo');

@@ -11,6 +11,9 @@ use axum::body::{Body, Bytes};
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{TarballError, process_tarball};
+use crates_io_validation::{
+    validate_crate_name, validate_dependency_name, validate_feature, validate_feature_name,
+};
 use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, now, select};
 use diesel::prelude::*;
@@ -111,7 +114,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     const MAX_JSON_LENGTH: u32 = 1024 * 1024; // 1 MB
     let metadata = read_json_metadata(&mut reader, MAX_JSON_LENGTH).await?;
 
-    Crate::validate_crate_name("crate", &metadata.name).map_err(bad_request)?;
+    validate_crate_name("crate", &metadata.name).map_err(bad_request)?;
 
     let semver = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
@@ -183,7 +186,6 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let hashed_token = trustpub_token.sha256();
 
-        #[expect(deprecated)]
         let (crate_ids, trustpub_data): (Vec<Option<i32>>, Option<TrustpubData>) =
             trustpub_tokens::table
                 .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
@@ -215,6 +217,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         AuthType::Regular(Box::new(auth))
     };
+
+    // Check if crate requires trusted publishing
+    if let Some(existing_crate) = &existing_crate
+        && existing_crate.trustpub_only
+        && matches!(auth, AuthType::Regular(_))
+    {
+        return Err(forbidden(
+            "New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing).",
+        ));
+    }
 
     let verified_email_address = if let Some(user) = auth.user() {
         let verified_email_address = user.verified_email(&mut conn).await?;
@@ -378,7 +390,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     }
 
     for (key, values) in features.iter() {
-        Crate::validate_feature_name(key).map_err(bad_request)?;
+        validate_feature_name(key).map_err(bad_request)?;
 
         let num_features = values.len();
         if num_features > max_features {
@@ -397,7 +409,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         }
 
         for value in values.iter() {
-            Crate::validate_feature(value).map_err(bad_request)?;
+            validate_feature(value).map_err(bad_request)?;
         }
     }
 
@@ -913,10 +925,10 @@ fn convert_dependency(
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
-    Crate::validate_crate_name("dependency", &dep.name).map_err(bad_request)?;
+    validate_crate_name("dependency", &dep.name).map_err(bad_request)?;
 
     for feature in &dep.features {
-        Crate::validate_feature(feature).map_err(bad_request)?;
+        validate_feature(feature).map_err(bad_request)?;
     }
 
     if let Some(registry) = &dep.registry
@@ -948,7 +960,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
-        Crate::validate_dependency_name(toml_name).map_err(bad_request)?;
+        validate_dependency_name(toml_name).map_err(bad_request)?;
     }
 
     Ok(())

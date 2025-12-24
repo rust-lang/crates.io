@@ -68,6 +68,7 @@ pub struct AuthCheck {
     allow_token: bool,
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
+    allow_any_crate_scope: bool,
 }
 
 impl AuthCheck {
@@ -79,6 +80,7 @@ impl AuthCheck {
             allow_token: true,
             endpoint_scope: None,
             crate_name: None,
+            allow_any_crate_scope: false,
         }
     }
 
@@ -88,6 +90,7 @@ impl AuthCheck {
             allow_token: false,
             endpoint_scope: None,
             crate_name: None,
+            allow_any_crate_scope: false,
         }
     }
 
@@ -96,6 +99,7 @@ impl AuthCheck {
             allow_token: self.allow_token,
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: self.allow_any_crate_scope,
         }
     }
 
@@ -104,6 +108,20 @@ impl AuthCheck {
             allow_token: self.allow_token,
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
+            allow_any_crate_scope: self.allow_any_crate_scope,
+        }
+    }
+
+    /// Allow tokens with any crate scope without specifying a particular crate.
+    ///
+    /// Use this for endpoints that deal with multiple crates at once, where the
+    /// caller will handle crate scope filtering manually.
+    pub fn allow_any_crate_scope(&self) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: true,
         }
     }
 
@@ -170,7 +188,8 @@ impl AuthCheck {
             (Some(token_scopes), _) if token_scopes.is_empty() => true,
 
             // The token has crate scopes, but the endpoint does not deal with crates.
-            (Some(_), None) => false,
+            // However, if allow_any_crate_scope is set, we allow it (caller handles filtering).
+            (Some(_), None) => self.allow_any_crate_scope,
 
             // The token is NOT a legacy token, and the endpoint allows a certain endpoint scope or a legacy token.
             (Some(token_scopes), Some(crate_name)) => token_scopes
@@ -218,6 +237,21 @@ impl Authentication {
             Authentication::Cookie(cookie) => &cookie.user,
             Authentication::Token(token) => &token.user,
         }
+    }
+
+    /// Returns an error if the request was authenticated with a legacy API token.
+    ///
+    /// Legacy tokens are tokens without any endpoint scopes. They were created
+    /// before the scoped token feature was introduced.
+    pub fn reject_legacy_tokens(&self) -> AppResult<()> {
+        if let Some(token) = self.api_token()
+            && token.endpoint_scopes.is_none()
+        {
+            return Err(forbidden(
+                "This endpoint cannot be used with legacy API tokens. Use a scoped API token instead.",
+            ));
+        }
+        Ok(())
     }
 }
 

@@ -2,13 +2,16 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('throws if `user` is not set', ({ expect }) => {
-  expect(() => db.mswSession.create()).toThrowErrorMatchingInlineSnapshot(`[Error: Missing \`user\` relationship]`);
+test('throws if `user` is not set', async ({ expect }) => {
+  // @ts-expect-error
+  await expect(() => db.mswSession.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
+    `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
+  );
 });
 
-test('happy path', ({ expect }) => {
-  let user = db.user.create();
-  let session = db.mswSession.create({ user });
+test('happy path', async ({ expect }) => {
+  let user = await db.user.create({});
+  let session = await db.mswSession.create({ user });
   expect(session).toMatchInlineSnapshot(`
     {
       "id": 1,
@@ -24,11 +27,7 @@ test('happy path', ({ expect }) => {
         "name": "User 1",
         "publishNotifications": true,
         "url": "https://github.com/user-1",
-        Symbol(type): "user",
-        Symbol(primaryKey): "id",
       },
-      Symbol(type): "mswSession",
-      Symbol(primaryKey): "id",
     }
   `);
 });

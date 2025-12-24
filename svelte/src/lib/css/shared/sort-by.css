@@ -1,0 +1,9 @@
+@layer global {
+  .sort-by-v-center {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 5px;
+  }
+}

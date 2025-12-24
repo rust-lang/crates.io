@@ -1,24 +1,31 @@
-import { primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
 const ORGS = ['rust-lang', 'emberjs', 'rust-random', 'georust', 'actix'];
 
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  name: String,
-  org: String,
-  login: String,
-  url: String,
-  avatar: String,
+    name: v.optional(v.string()),
+    org: v.optional(v.string()),
+    login: v.optional(v.string()),
+    url: v.optional(v.string()),
+    avatar: v.optional(v.string(), 'https://avatars1.githubusercontent.com/u/14631425?v=4'),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('team');
+    let id = input.id ?? counter;
+    let name = input.name ?? `team-${id}`;
+    let org = input.org ?? ORGS[(id - 1) % ORGS.length];
+    let login = input.login ?? `github:${org}:${name}`;
+    let url = input.url ?? `https://github.com/${org}`;
+    return { ...input, id, name, org, login, url };
+  }),
+);
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'name', () => `team-${attrs.id}`);
-    applyDefault(attrs, 'org', () => ORGS[(attrs.id - 1) % ORGS.length]);
-    applyDefault(attrs, 'login', () => `github:${attrs.org}:${attrs.name}`);
-    applyDefault(attrs, 'url', () => `https://github.com/${attrs.org}`);
-    applyDefault(attrs, 'avatar', () => 'https://avatars1.githubusercontent.com/u/14631425?v=4');
-  },
-};
+const collection = new Collection({ schema });
+
+export default collection;

@@ -1,0 +1,133 @@
+import { expect, test } from 'vitest';
+
+import { db } from '../../../index.js';
+
+test('happy path', async function () {
+  let crate = await db.crate.create({ name: 'test-crate' });
+  await db.version.create({ crate });
+
+  let user = await db.user.create({ email_verified: true });
+  await db.mswSession.create({ user });
+
+  // Create crate ownership
+  await db.crateOwnership.create({
+    crate,
+    user,
+  });
+
+  // Create GitLab config
+  let config = await db.trustpubGitlabConfig.create({
+    crate,
+    namespace: 'rust-lang',
+    project: 'crates.io',
+    workflow_filepath: '.gitlab-ci.yml',
+    created_at: '2023-01-01T00:00:00Z',
+  });
+
+  let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs/${config.id}`, {
+    method: 'DELETE',
+  });
+
+  expect(response.status).toBe(204);
+  expect(await response.text()).toBe('');
+
+  // Verify the config was deleted
+  let deletedConfig = db.trustpubGitlabConfig.findFirst(q => q.where({ id: config.id }));
+  expect(deletedConfig).toBe(undefined);
+});
+
+test('returns 403 if unauthenticated', async function () {
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs/1', {
+    method: 'DELETE',
+  });
+
+  expect(response.status).toBe(403);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
+});
+
+test('returns 404 if config ID is invalid', async function () {
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs/invalid', {
+    method: 'DELETE',
+  });
+
+  expect(response.status).toBe(404);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
+});
+
+test("returns 404 if config can't be found", async function () {
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs/999999', {
+    method: 'DELETE',
+  });
+
+  expect(response.status).toBe(404);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
+});
+
+test('returns 400 if user is not an owner of the crate', async function () {
+  let crate = await db.crate.create({ name: 'test-crate-not-owner' });
+  await db.version.create({ crate });
+
+  let owner = await db.user.create({});
+  await db.crateOwnership.create({
+    crate,
+    user: owner,
+  });
+
+  // Create GitLab config
+  let config = await db.trustpubGitlabConfig.create({
+    crate,
+    namespace: 'rust-lang',
+    project: 'crates.io',
+    workflow_filepath: '.gitlab-ci.yml',
+    created_at: '2023-01-01T00:00:00Z',
+  });
+
+  // Login as a different user
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
+
+  let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs/${config.id}`, {
+    method: 'DELETE',
+  });
+
+  expect(response.status).toBe(400);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "You are not an owner of this crate",
+        },
+      ],
+    }
+  `);
+});

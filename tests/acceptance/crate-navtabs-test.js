@@ -13,8 +13,8 @@ module('Acceptance | crate navigation tabs', function (hooks) {
   setupApplicationTest(hooks);
 
   test('basic navigation between tabs works as expected', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg');
     assert.strictEqual(currentURL(), '/crates/nanomsg');

@@ -15,14 +15,14 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
 
   module('query()', function () {
     test('fetches GitHub configs for a crate', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
-      this.db.crateOwnership.create({ crate, user });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+      await this.db.crateOwnership.create({ crate, user });
 
-      let config = this.db.trustpubGithubConfig.create({
+      let config = await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -39,8 +39,8 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not authenticated', async function (assert) {
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
       await assert.rejects(this.store.query('trustpub-github-config', { crate: crate.name }), function (error) {
         assert.deepEqual(error.errors, [{ detail: 'must be logged in to perform that action' }]);
@@ -49,11 +49,11 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not an owner of the crate', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
       await assert.rejects(this.store.query('trustpub-github-config', { crate: crate.name }), function (error) {
         assert.deepEqual(error.errors, [{ detail: 'You are not an owner of this crate' }]);
@@ -64,12 +64,12 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
 
   module('createRecord()', function () {
     test('creates a new GitHub config', async function (assert) {
-      let user = this.db.user.create({ emailVerified: true });
-      this.authenticateAs(user);
+      let user = await this.db.user.create({ emailVerified: true });
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
-      this.db.crateOwnership.create({ crate, user });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+      await this.db.crateOwnership.create({ crate, user });
 
       let config = this.store.createRecord('trustpub-github-config', {
         crate: await this.store.findRecord('crate', crate.name),
@@ -86,8 +86,8 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not authenticated', async function (assert) {
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
       let config = this.store.createRecord('trustpub-github-config', {
         crate: await this.store.findRecord('crate', crate.name),
@@ -103,11 +103,11 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not an owner of the crate', async function (assert) {
-      let user = this.db.user.create({ emailVerified: true });
-      this.authenticateAs(user);
+      let user = await this.db.user.create({ emailVerified: true });
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
       let config = this.store.createRecord('trustpub-github-config', {
         crate: await this.store.findRecord('crate', crate.name),
@@ -123,12 +123,12 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user does not have a verified email', async function (assert) {
-      let user = this.db.user.create({ emailVerified: false });
-      this.authenticateAs(user);
+      let user = await this.db.user.create({ emailVerified: false });
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
-      this.db.crateOwnership.create({ crate, user });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+      await this.db.crateOwnership.create({ crate, user });
 
       let config = this.store.createRecord('trustpub-github-config', {
         crate: await this.store.findRecord('crate', crate.name),
@@ -147,15 +147,15 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
 
   module('deleteRecord()', function () {
     test('deletes a GitHub config', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
-      this.db.crateOwnership.create({ crate, user });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+      await this.db.crateOwnership.create({ crate, user });
 
       // Create a config in the database that will be queried later
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -172,25 +172,25 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not authenticated', async function (assert) {
-      let user = this.db.user.create();
+      let user = await this.db.user.create({});
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
-      this.db.crateOwnership.create({ crate, user });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+      await this.db.crateOwnership.create({ crate, user });
 
       // Create a config in the database that will be queried later
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
         workflow_filename: 'ci.yml',
       });
 
-      this.authenticateAs(user);
+      await this.authenticateAs(user);
       let configs = await this.store.query('trustpub-github-config', { crate: crate.name });
       assert.strictEqual(configs.length, 1);
 
-      db.mswSession.deleteMany({});
+      db.mswSession.deleteMany(null);
 
       await assert.rejects(configs[0].destroyRecord(), function (error) {
         assert.deepEqual(error.errors, [{ detail: 'must be logged in to perform that action' }]);
@@ -199,27 +199,27 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not an owner of the crate', async function (assert) {
-      let user1 = this.db.user.create();
-      let user2 = this.db.user.create();
+      let user1 = await this.db.user.create({});
+      let user2 = await this.db.user.create({});
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
-      this.db.crateOwnership.create({ crate, user: user1 });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+      await this.db.crateOwnership.create({ crate, user: user1 });
 
       // Create a config in the database that will be queried later
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
         workflow_filename: 'ci.yml',
       });
 
-      this.authenticateAs(user1);
+      await this.authenticateAs(user1);
       let configs = await this.store.query('trustpub-github-config', { crate: crate.name });
       assert.strictEqual(configs.length, 1);
 
-      db.mswSession.deleteMany({});
-      this.authenticateAs(user2);
+      db.mswSession.deleteMany(null);
+      await this.authenticateAs(user2);
 
       await assert.rejects(configs[0].destroyRecord(), function (error) {
         assert.deepEqual(error.errors, [{ detail: 'You are not an owner of this crate' }]);

@@ -13,15 +13,61 @@ module('Model | Crate', function (hooks) {
     this.store = this.owner.lookup('service:store');
   });
 
+  module('setTrustpubOnlyTask', function () {
+    test('enables trustpub_only', async function (assert) {
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
+
+      let crate = await this.db.crate.create({ trustpubOnly: false });
+      await this.db.version.create({ crate });
+
+      let crateRecord = await this.store.findRecord('crate', crate.name);
+      assert.false(crateRecord.trustpub_only);
+      assert.false(this.db.crate.findFirst(q => q.where({ id: crate.id })).trustpubOnly);
+
+      await crateRecord.setTrustpubOnlyTask.perform(true);
+      assert.true(crateRecord.trustpub_only);
+      assert.true(this.db.crate.findFirst(q => q.where({ id: crate.id })).trustpubOnly);
+    });
+
+    test('disables trustpub_only', async function (assert) {
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
+
+      let crate = await this.db.crate.create({ trustpubOnly: true });
+      await this.db.version.create({ crate });
+
+      let crateRecord = await this.store.findRecord('crate', crate.name);
+      assert.true(crateRecord.trustpub_only);
+      assert.true(this.db.crate.findFirst(q => q.where({ id: crate.id })).trustpubOnly);
+
+      await crateRecord.setTrustpubOnlyTask.perform(false);
+      assert.false(crateRecord.trustpub_only);
+      assert.false(this.db.crate.findFirst(q => q.where({ id: crate.id })).trustpubOnly);
+    });
+
+    test('requires authentication', async function (assert) {
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
+
+      let crateRecord = await this.store.findRecord('crate', crate.name);
+
+      await assert.rejects(crateRecord.setTrustpubOnlyTask.perform(true), function (error) {
+        assert.deepEqual(error.errors, [{ detail: 'must be logged in to perform that action' }]);
+        return true;
+      });
+    });
+  });
+
   module('inviteOwner()', function () {
     test('happy path', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
-      let user2 = this.db.user.create();
+      let user2 = await this.db.user.create({});
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
@@ -30,11 +76,11 @@ module('Model | Crate', function (hooks) {
     });
 
     test('error handling', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
@@ -47,14 +93,14 @@ module('Model | Crate', function (hooks) {
 
   module('removeOwner()', function () {
     test('happy path', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
-      let user2 = this.db.user.create();
-      this.db.crateOwnership.create({ crate, user: user2 });
+      let user2 = await this.db.user.create({});
+      await this.db.crateOwnership.create({ crate, user: user2 });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
@@ -63,11 +109,11 @@ module('Model | Crate', function (hooks) {
     });
 
     test('error handling', async function (assert) {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create({});
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 

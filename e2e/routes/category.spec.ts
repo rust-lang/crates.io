@@ -12,7 +12,7 @@ test.describe('Route | category', { tag: '@routes' }, () => {
   });
 
   test('server error causes the error page to be shown', async ({ page, msw }) => {
-    msw.worker.use(http.get('/api/v1/categories/:categoryId', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/categories/:categoryId', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/categories/foo');
     await expect(page).toHaveURL('/categories/foo');
@@ -23,7 +23,7 @@ test.describe('Route | category', { tag: '@routes' }, () => {
   });
 
   test('updates the search field when the categories route is accessed', async ({ page, msw }) => {
-    msw.db.category.create({ category: 'foo' });
+    await msw.db.category.create({ category: 'foo' });
 
     const searchInput = page.locator('[data-test-search-input]');
     await page.goto('/');

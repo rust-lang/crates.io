@@ -10,7 +10,7 @@ export default http.get('/api/v1/me', () => {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let ownerships = db.crateOwnership.findMany({ where: { user: { id: { equals: user.id } } } });
+  let ownerships = db.crateOwnership.findMany(q => q.where(ownership => ownership.user?.id === user.id));
 
   return HttpResponse.json({
     user: serializeUser(user, { removePrivateData: false }),

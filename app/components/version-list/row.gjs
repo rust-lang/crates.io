@@ -135,12 +135,16 @@ export default class VersionRow extends Component {
                 <a href={{@version.trustpubUrl}} target='_blank' rel='nofollow noopener noreferrer'>
                   {{#if (eq @version.trustpub_data.provider 'github')}}
                     {{svgJar 'github'}}
+                  {{else if (eq @version.trustpub_data.provider 'gitlab')}}
+                    {{svgJar 'gitlab'}}
                   {{/if}}
                   {{@version.trustpubPublisher}}
                 </a>
               {{else}}
                 {{#if (eq @version.trustpub_data.provider 'github')}}
                   {{svgJar 'github'}}
+                {{else if (eq @version.trustpub_data.provider 'gitlab')}}
+                  {{svgJar 'gitlab'}}
                 {{/if}}
                 {{@version.trustpubPublisher}}
               {{/if}}

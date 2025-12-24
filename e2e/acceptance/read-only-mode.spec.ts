@@ -1,4 +1,4 @@
-import { test, expect, AppFixtures } from '@/e2e/helper';
+import { AppFixtures, expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {

@@ -11,9 +11,9 @@ module('Acceptance | publish notifications', function (hooks) {
   setupApplicationTest(hooks);
 
   test('unsubscribe and resubscribe', async function (assert) {
-    let user = this.db.user.create();
+    let user = await this.db.user.create({});
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
     assert.true(user.publishNotifications);
 
     await visit('/settings/profile');
@@ -24,24 +24,24 @@ module('Acceptance | publish notifications', function (hooks) {
     assert.dom('[data-test-notifications] input[type=checkbox]').isNotChecked();
 
     await click('[data-test-notifications] button');
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.false(user.publishNotifications);
 
     await click('[data-test-notifications] input[type=checkbox]');
     assert.dom('[data-test-notifications] input[type=checkbox]').isChecked();
 
     await click('[data-test-notifications] button');
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.true(user.publishNotifications);
   });
 
   test('loading and error state', async function (assert) {
-    let user = this.db.user.create();
+    let user = await this.db.user.create({});
 
     let deferred = defer();
     this.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
     assert.true(user.publishNotifications);
 
     await visit('/settings/profile');

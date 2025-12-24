@@ -11,22 +11,22 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Acceptance | api-tokens', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    let user = context.db.user.create({
+  async function prepare(context) {
+    let user = await context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    context.db.apiToken.create({
+    await context.db.apiToken.create({
       user,
       name: 'foo',
       createdAt: '2017-08-01T12:34:56',
       lastUsedAt: '2017-11-02T01:45:14',
     });
 
-    context.db.apiToken.create({
+    await context.db.apiToken.create({
       user,
       name: 'BAR',
       createdAt: '2017-11-19T17:59:22',
@@ -34,7 +34,7 @@ module('Acceptance | api-tokens', function (hooks) {
       expiredAt: '2017-12-19T17:59:22',
     });
 
-    context.db.apiToken.create({
+    await context.db.apiToken.create({
       user,
       name: 'recently expired',
       createdAt: '2017-08-01T12:34:56',
@@ -42,11 +42,11 @@ module('Acceptance | api-tokens', function (hooks) {
       expiredAt: '2017-11-19T17:59:22',
     });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
   }
 
   test('/me is showing the list of active API tokens', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
@@ -85,14 +85,14 @@ module('Acceptance | api-tokens', function (hooks) {
   });
 
   test('API tokens can be revoked', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 3 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    assert.strictEqual(this.db.apiToken.findMany({}).length, 2, 'API token has been deleted from the backend database');
+    assert.strictEqual(this.db.apiToken.findMany().length, 2, 'API token has been deleted from the backend database');
 
     assert.dom('[data-test-api-token]').exists({ count: 2 });
     assert.dom('[data-test-api-token="2"]').exists();
@@ -100,7 +100,7 @@ module('Acceptance | api-tokens', function (hooks) {
   });
 
   test('API tokens can be regenerated', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
@@ -120,7 +120,7 @@ module('Acceptance | api-tokens', function (hooks) {
   });
 
   test('failed API tokens revocation shows an error', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     this.worker.use(
       http.delete('/api/v1/me/tokens/:id', function () {
@@ -142,7 +142,7 @@ module('Acceptance | api-tokens', function (hooks) {
   });
 
   test('new API tokens can be created', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
@@ -157,7 +157,7 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'the new token' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'the new token' }));
     assert.ok(Boolean(token), 'API token has been created in the backend database');
 
     assert.dom('[data-test-api-token="4"] [data-test-name]').hasText('the new token');
@@ -169,7 +169,7 @@ module('Acceptance | api-tokens', function (hooks) {
   });
 
   test('API tokens are only visible in plaintext until the page is left', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens');
     await click('[data-test-new-token-button]');
@@ -177,7 +177,7 @@ module('Acceptance | api-tokens', function (hooks) {
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'the new token' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'the new token' }));
     assert.dom('[data-test-token]').hasText(token.token);
 
     // leave the API tokens page
@@ -189,7 +189,7 @@ module('Acceptance | api-tokens', function (hooks) {
   });
 
   test('navigating away while creating a token does not keep it in the list', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 3 });

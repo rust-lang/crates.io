@@ -10,7 +10,7 @@ test.describe('Acceptance | Dashboard', { tag: '@acceptance' }, () => {
   });
 
   test('shows the dashboard when logged in', async ({ page, msw, percy }) => {
-    let user = msw.db.user.create({
+    let user = await msw.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -20,31 +20,33 @@ test.describe('Acceptance | Dashboard', { tag: '@acceptance' }, () => {
     await msw.authenticateAs(user);
 
     {
-      let crate = msw.db.crate.create({ name: 'rand' });
-      msw.db.version.create({ crate, num: '0.5.0' });
-      msw.db.version.create({ crate, num: '0.6.0' });
-      msw.db.version.create({ crate, num: '0.7.0' });
-      msw.db.version.create({ crate, num: '0.7.1' });
-      msw.db.version.create({ crate, num: '0.7.2' });
-      msw.db.version.create({ crate, num: '0.7.3' });
-      msw.db.version.create({ crate, num: '0.8.0' });
-      msw.db.version.create({ crate, num: '0.8.1' });
-      msw.db.version.create({ crate, num: '0.9.0' });
-      msw.db.version.create({ crate, num: '1.0.0' });
-      msw.db.version.create({ crate, num: '1.1.0' });
-      user = msw.db.user.update({
-        where: { id: { equals: user.id } },
-        data: { followedCrates: [...user.followedCrates, crate] },
+      let crate = await msw.db.crate.create({ name: 'rand' });
+      await msw.db.version.create({ crate, num: '0.5.0' });
+      await msw.db.version.create({ crate, num: '0.6.0' });
+      await msw.db.version.create({ crate, num: '0.7.0' });
+      await msw.db.version.create({ crate, num: '0.7.1' });
+      await msw.db.version.create({ crate, num: '0.7.2' });
+      await msw.db.version.create({ crate, num: '0.7.3' });
+      await msw.db.version.create({ crate, num: '0.8.0' });
+      await msw.db.version.create({ crate, num: '0.8.1' });
+      await msw.db.version.create({ crate, num: '0.9.0' });
+      await msw.db.version.create({ crate, num: '1.0.0' });
+      await msw.db.version.create({ crate, num: '1.1.0' });
+      user = await msw.db.user.update(q => q.where({ id: user.id }), {
+        data(u) {
+          u.followedCrates = [...u.followedCrates, crate];
+        },
       });
     }
 
     {
-      let crate = msw.db.crate.create({ name: 'nanomsg' });
-      msw.db.crateOwnership.create({ crate, user });
-      msw.db.version.create({ crate, num: '0.1.0' });
-      user = msw.db.user.update({
-        where: { id: { equals: user.id } },
-        data: { followedCrates: [...user.followedCrates, crate] },
+      let crate = await msw.db.crate.create({ name: 'nanomsg' });
+      await msw.db.crateOwnership.create({ crate, user });
+      await msw.db.version.create({ crate, num: '0.1.0' });
+      user = await msw.db.user.update(q => q.where({ id: user.id }), {
+        data(u) {
+          u.followedCrates = [...u.followedCrates, crate];
+        },
       });
     }
 

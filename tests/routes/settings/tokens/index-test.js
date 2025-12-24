@@ -8,23 +8,23 @@ import { visit } from '../../../helpers/visit-ignoring-abort';
 module('/settings/tokens', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    let user = context.db.user.create({
+  async function prepare(context) {
+    let user = await context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
 
     return { user };
   }
 
   test('reloads all tokens from the server', async function (assert) {
-    let { user } = prepare(this);
+    let { user } = await prepare(this);
 
-    this.db.apiToken.create({ user, name: 'token-1' });
+    await this.db.apiToken.create({ user, name: 'token-1' });
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -43,9 +43,9 @@ module('/settings/tokens', function (hooks) {
   });
 
   test('scope formatting', async function (assert) {
-    let { user } = prepare(this);
+    let { user } = await prepare(this);
 
-    this.db.apiToken.create({
+    await this.db.apiToken.create({
       user,
       endpointScopes: ['publish-new', 'publish-update', 'yank'],
       crateScopes: ['serde', 'serde-*', 'serde_*'],

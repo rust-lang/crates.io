@@ -9,16 +9,16 @@ module('Acceptance | rebuild docs page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('navigates to rebuild docs confirmation page', async function (assert) {
-    let user = this.db.user.create();
-    this.authenticateAs(user);
+    let user = await this.db.user.create({});
+    await this.authenticateAs(user);
 
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.crateOwnership.create({ crate, user });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.crateOwnership.create({ crate, user });
 
-    this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
-    this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
-    this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    await this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
+    await this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
+    await this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
+    await this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await visit('/crates/nanomsg/versions');
     assert.strictEqual(currentURL(), '/crates/nanomsg/versions');
@@ -34,13 +34,13 @@ module('Acceptance | rebuild docs page', function (hooks) {
   });
 
   test('rebuild docs confirmation page shows crate info and allows confirmation', async function (assert) {
-    let user = this.db.user.create();
-    this.authenticateAs(user);
+    let user = await this.db.user.create({});
+    await this.authenticateAs(user);
 
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.crateOwnership.create({ crate, user });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.crateOwnership.create({ crate, user });
 
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    await this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await visit('/crates/nanomsg/0.2.1/rebuild-docs');
     assert.strictEqual(currentURL(), '/crates/nanomsg/0.2.1/rebuild-docs');
@@ -57,11 +57,11 @@ module('Acceptance | rebuild docs page', function (hooks) {
   });
 
   test('rebuilds docs confirmation page redirects non-owners to error page', async function (assert) {
-    let user = this.db.user.create();
-    this.authenticateAs(user);
+    let user = await this.db.user.create({});
+    await this.authenticateAs(user);
 
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await visit('/crates/nanomsg/0.2.1/rebuild-docs');
     assert.dom('[data-test-title]').hasText('This page is only accessible by crate owners');
@@ -69,8 +69,8 @@ module('Acceptance | rebuild docs page', function (hooks) {
   });
 
   test('rebuild docs confirmation page shows authentication error for unauthenticated users', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await visit('/crates/nanomsg/0.2.1/rebuild-docs');
 

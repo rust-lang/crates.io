@@ -1,14 +1,14 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Bug #11772', { tag: '@bugs' }, () => {
-  function prepare(msw: any) {
+  async function prepare(msw: any) {
     // Create a crate that will appear in "New Crates" section
-    let newCrate = msw.db.crate.create({ name: 'test-crate' });
-    msw.db.version.create({ crate: newCrate, num: '1.2.3' });
+    let newCrate = await msw.db.crate.create({ name: 'test-crate' });
+    await msw.db.version.create({ crate: newCrate, num: '1.2.3' });
   }
 
   test('crate versions should remain correct after navigating back from crate details', async ({ page, msw }) => {
-    prepare(msw);
+    await prepare(msw);
 
     // Visit homepage
     await page.goto('/');
@@ -33,8 +33,8 @@ test.describe('Bug #11772', { tag: '@bugs' }, () => {
 
   test('crates with actual v0.0.0 versions should display correctly', async ({ page, msw }) => {
     // Create a crate with an actual v0.0.0 version
-    let zeroCrate = msw.db.crate.create({ name: 'test-zero-crate' });
-    msw.db.version.create({ crate: zeroCrate, num: '0.0.0' });
+    let zeroCrate = await msw.db.crate.create({ name: 'test-zero-crate' });
+    await msw.db.version.create({ crate: zeroCrate, num: '0.0.0' });
 
     // Visit homepage
     await page.goto('/');

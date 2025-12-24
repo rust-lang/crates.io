@@ -18,7 +18,7 @@ module('Acceptance | search', function (hooks) {
   setupApplicationTest(hooks);
 
   test('searching for "rust"', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
@@ -46,7 +46,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('searching for "rust" from query', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/search?q=rust');
 
@@ -59,7 +59,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('clearing search results', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/search?q=rust');
 
@@ -73,7 +73,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('pressing S key to focus the search bar', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/');
 
@@ -99,7 +99,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('check search results are by default displayed by relevance', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
@@ -109,8 +109,8 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('error handling when searching from the frontpage', async function (assert) {
-    let crate = this.db.crate.create({ name: 'rust' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'rust' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.json({}, { status: 500 });
     this.worker.use(http.get('/api/v1/crates', () => error));
@@ -140,8 +140,8 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('error handling when searching from the search page', async function (assert) {
-    let crate = this.db.crate.create({ name: 'rust' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'rust' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/search?q=rust');
     assert.dom('[data-test-crate-row]').exists({ count: 1 });
@@ -239,7 +239,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('visiting without query parameters works', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/search');
 

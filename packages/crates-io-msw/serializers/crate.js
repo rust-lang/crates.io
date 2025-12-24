@@ -9,7 +9,7 @@ export function serializeCrate(
   crate,
   { calculateVersions = true, includeCategories = false, includeKeywords = false, includeVersions = false } = {},
 ) {
-  let versions = db.version.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let versions = db.version.findMany(q => q.where({ crate: { id: crate.id } }));
   if (versions.length === 0) {
     throw new Error(`crate \`${crate.name}\` has no associated versions`);
   }

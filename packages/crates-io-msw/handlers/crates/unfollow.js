@@ -10,15 +10,14 @@ export default http.delete('/api/v1/crates/:name/follow', async ({ params }) => 
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
     return notFound();
   }
 
-  db.user.update({
-    where: { id: { equals: user.id } },
-    data: {
-      followedCrates: user.followedCrates.filter(c => c.id !== crate.id),
+  await db.user.update(q => q.where({ id: user.id }), {
+    data(user) {
+      user.followedCrates = user.followedCrates.filter(c => c.id !== crate.id);
     },
   });
 

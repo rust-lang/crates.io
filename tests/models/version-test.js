@@ -19,22 +19,22 @@ module('Model | Version', function (hooks) {
   test('isNew', async function (assert) {
     let { db, store } = this;
 
-    let crate = db.crate.create();
-    db.version.create({ crate, created_at: '2010-06-16T21:30:45Z' });
+    let crate = await db.crate.create({});
+    await db.version.create({ crate, created_at: '2010-06-16T21:30:45Z' });
 
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.versions).slice();
 
-    this.clock.setSystemTime(new Date('2010-06-16T21:40:45Z'));
+    await this.clock.setSystemTime(new Date('2010-06-16T21:40:45Z'));
     assert.true(versions[0].isNew);
 
-    this.clock.setSystemTime(new Date('2010-06-23T21:40:45Z'));
+    await this.clock.setSystemTime(new Date('2010-06-23T21:40:45Z'));
     assert.true(versions[0].isNew);
 
-    this.clock.setSystemTime(new Date('2010-06-24T21:40:45Z'));
+    await this.clock.setSystemTime(new Date('2010-06-24T21:40:45Z'));
     assert.false(versions[0].isNew);
 
-    this.clock.setSystemTime(new Date('2014-06-24T21:40:45Z'));
+    await this.clock.setSystemTime(new Date('2014-06-24T21:40:45Z'));
     assert.false(versions[0].isNew);
   });
 
@@ -77,8 +77,8 @@ module('Model | Version', function (hooks) {
     async function prepare(context, { num }) {
       let { db, store } = context;
 
-      let crate = db.crate.create();
-      db.version.create({ crate, num });
+      let crate = await db.crate.create({});
+      await db.version.create({ crate, num });
 
       let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).slice();
@@ -167,9 +167,9 @@ module('Model | Version', function (hooks) {
         '0.1.1',
       ];
 
-      let crate = this.db.crate.create();
+      let crate = await this.db.crate.create({});
       for (let num of nums.toReversed()) {
-        this.db.version.create({ crate, num });
+        await this.db.version.create({ crate, num });
       }
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
@@ -199,10 +199,10 @@ module('Model | Version', function (hooks) {
     });
 
     test('ignores yanked versions', async function (assert) {
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate, num: '0.4.0' });
-      this.db.version.create({ crate, num: '0.4.1' });
-      this.db.version.create({ crate, num: '0.4.2', yanked: true });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate, num: '0.4.0' });
+      await this.db.version.create({ crate, num: '0.4.1' });
+      await this.db.version.create({ crate, num: '0.4.2', yanked: true });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
@@ -219,9 +219,9 @@ module('Model | Version', function (hooks) {
     });
 
     test('handles newly released versions correctly', async function (assert) {
-      let crate = this.db.crate.create();
-      this.db.version.create({ crate, num: '0.4.0' });
-      this.db.version.create({ crate, num: '0.4.1' });
+      let crate = await this.db.crate.create({});
+      await this.db.version.create({ crate, num: '0.4.0' });
+      await this.db.version.create({ crate, num: '0.4.1' });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
@@ -235,8 +235,8 @@ module('Model | Version', function (hooks) {
         ],
       );
 
-      this.db.version.create({ crate, num: '0.4.2' });
-      this.db.version.create({ crate, num: '0.4.3', yanked: true });
+      await this.db.version.create({ crate, num: '0.4.2' });
+      await this.db.version.create({ crate, num: '0.4.3', yanked: true });
       crateRecord = await this.store.findRecord('crate', crate.name, { reload: true });
       versions = (await crateRecord.loadVersionsTask.perform({ reload: true })).slice();
       crateRecord.release_tracks = calculateReleaseTracks(versions);
@@ -257,8 +257,8 @@ module('Model | Version', function (hooks) {
     async function prepare(context, { features }) {
       let { db, store } = context;
 
-      let crate = db.crate.create();
-      db.version.create({ crate, features });
+      let crate = await db.crate.create({});
+      await db.version.create({ crate, features });
 
       let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).slice();
@@ -335,10 +335,10 @@ module('Model | Version', function (hooks) {
   });
 
   test('`published_by` relationship is assigned correctly', async function (assert) {
-    let user = this.db.user.create({ name: 'JD' });
+    let user = await this.db.user.create({ name: 'JD' });
 
-    let crate = this.db.crate.create();
-    this.db.version.create({ crate, publishedBy: user });
+    let crate = await this.db.crate.create({});
+    await this.db.version.create({ crate, publishedBy: user });
 
     let crateRecord = await this.store.findRecord('crate', crate.name);
     assert.ok(crateRecord);
@@ -355,8 +355,8 @@ module('Model | Version', function (hooks) {
 
       window.location = 'https://crates.io';
 
-      let crate = db.crate.create({ name: 'serde' });
-      db.version.create({ crate, num: '1.0.136' });
+      let crate = await db.crate.create({ name: 'serde' });
+      await db.version.create({ crate, num: '1.0.136' });
 
       let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).slice();
@@ -370,8 +370,8 @@ module('Model | Version', function (hooks) {
 
       window.location = 'https://staging.crates.io';
 
-      let crate = db.crate.create({ name: 'test-crate' });
-      db.version.create({ crate, num: '2.5.0' });
+      let crate = await db.crate.create({ name: 'test-crate' });
+      await db.version.create({ crate, num: '2.5.0' });
 
       let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).slice();

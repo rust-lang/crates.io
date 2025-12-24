@@ -1,10 +1,10 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { Locator } from '@playwright/test';
 
 test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () => {
   test('basic navigation between tabs works as expected', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.1' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.1' });
 
     const tabReadme = page.locator('[data-test-readme-tab] a');
     const tabVersions = page.locator('[data-test-versions-tab] a');

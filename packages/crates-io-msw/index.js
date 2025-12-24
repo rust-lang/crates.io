@@ -3,6 +3,7 @@ import categoryHandlers from './handlers/categories.js';
 import cratesHandlers from './handlers/crates.js';
 import docsRsHandlers from './handlers/docs-rs.js';
 import githubHandlers from './handlers/github.js';
+import gitlabHandlers from './handlers/gitlab.js';
 import inviteHandlers from './handlers/invites.js';
 import keywordHandlers from './handlers/keywords.js';
 import metadataHandlers from './handlers/metadata.js';
@@ -13,20 +14,6 @@ import teamHandlers from './handlers/teams.js';
 import trustpubHandlers from './handlers/trustpub.js';
 import userHandlers from './handlers/users.js';
 import versionHandlers from './handlers/versions.js';
-import apiToken from './models/api-token.js';
-import category from './models/category.js';
-import crateOwnerInvitation from './models/crate-owner-invitation.js';
-import crateOwnership from './models/crate-ownership.js';
-import crate from './models/crate.js';
-import dependency from './models/dependency.js';
-import keyword from './models/keyword.js';
-import mswSession from './models/msw-session.js';
-import team from './models/team.js';
-import trustpubGithubConfig from './models/trustpub/github-config.js';
-import user from './models/user.js';
-import versionDownload from './models/version-download.js';
-import version from './models/version.js';
-import { factory } from './utils/factory.js';
 
 export const handlers = [
   ...apiTokenHandlers,
@@ -34,6 +21,7 @@ export const handlers = [
   ...cratesHandlers,
   ...docsRsHandlers,
   ...githubHandlers,
+  ...gitlabHandlers,
   ...inviteHandlers,
   ...keywordHandlers,
   ...metadataHandlers,
@@ -46,18 +34,4 @@ export const handlers = [
   ...versionHandlers,
 ];
 
-export const db = factory({
-  apiToken,
-  category,
-  crateOwnerInvitation,
-  crateOwnership,
-  crate,
-  dependency,
-  keyword,
-  mswSession,
-  team,
-  trustpubGithubConfig,
-  user,
-  versionDownload,
-  version,
-});
+export { db } from './models/index.js';

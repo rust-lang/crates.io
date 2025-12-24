@@ -1,4 +1,4 @@
-import { afterEach, assert, beforeEach, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -12,34 +12,36 @@ afterEach(() => {
 });
 
 test('creates a new API token', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let body = JSON.stringify({ api_token: { name: 'foooo' } });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
-  let token = db.apiToken.findMany({})[0];
-  assert.ok(token);
+  let token = db.apiToken.findMany()[0];
+  expect(token).toBeTruthy();
 
-  assert.deepEqual(await response.json(), {
-    api_token: {
-      id: 1,
-      crate_scopes: null,
-      created_at: '2017-11-20T11:23:45.000Z',
-      endpoint_scopes: null,
-      expired_at: null,
-      last_used_at: null,
-      name: 'foooo',
-      revoked: false,
-      token: token.token,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "api_token": {
+        "crate_scopes": null,
+        "created_at": "2017-11-20T11:23:45.000Z",
+        "endpoint_scopes": null,
+        "expired_at": null,
+        "id": 1,
+        "last_used_at": null,
+        "name": "foooo",
+        "revoked": false,
+        "token": "6270739405881613",
+      },
+    }
+  `);
 });
 
 test('creates a new API token with scopes', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let body = JSON.stringify({
     api_token: {
@@ -49,29 +51,36 @@ test('creates a new API token with scopes', async function () {
     },
   });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
-  let token = db.apiToken.findMany({})[0];
-  assert.ok(token);
+  let token = db.apiToken.findMany()[0];
+  expect(token).toBeTruthy();
 
-  assert.deepEqual(await response.json(), {
-    api_token: {
-      id: 1,
-      crate_scopes: ['serde', 'serde-*'],
-      created_at: '2017-11-20T11:23:45.000Z',
-      endpoint_scopes: ['publish-update'],
-      expired_at: null,
-      last_used_at: null,
-      name: 'foooo',
-      revoked: false,
-      token: token.token,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "api_token": {
+        "crate_scopes": [
+          "serde",
+          "serde-*",
+        ],
+        "created_at": "2017-11-20T11:23:45.000Z",
+        "endpoint_scopes": [
+          "publish-update",
+        ],
+        "expired_at": null,
+        "id": 1,
+        "last_used_at": null,
+        "name": "foooo",
+        "revoked": false,
+        "token": "6270739405881613",
+      },
+    }
+  `);
 });
 
 test('creates a new API token with expiry date', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let body = JSON.stringify({
     api_token: {
@@ -80,31 +89,39 @@ test('creates a new API token with expiry date', async function () {
     },
   });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
-  let token = db.apiToken.findMany({})[0];
-  assert.ok(token);
+  let token = db.apiToken.findMany()[0];
+  expect(token).toBeTruthy();
 
-  assert.deepEqual(await response.json(), {
-    api_token: {
-      id: 1,
-      crate_scopes: null,
-      created_at: '2017-11-20T11:23:45.000Z',
-      endpoint_scopes: null,
-      expired_at: '2023-12-24T12:34:56.000Z',
-      last_used_at: null,
-      name: 'foooo',
-      revoked: false,
-      token: token.token,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "api_token": {
+        "crate_scopes": null,
+        "created_at": "2017-11-20T11:23:45.000Z",
+        "endpoint_scopes": null,
+        "expired_at": "2023-12-24T12:34:56.000Z",
+        "id": 1,
+        "last_used_at": null,
+        "name": "foooo",
+        "revoked": false,
+        "token": "6270739405881613",
+      },
+    }
+  `);
 });
 
 test('returns an error if unauthenticated', async function () {
   let body = JSON.stringify({ api_token: {} });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(response.status).toBe(403);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });

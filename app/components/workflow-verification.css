@@ -1,0 +1,16 @@
+.workflow-verification {
+    margin-top: var(--space-2xs);
+    font-size: 0.85em;
+
+    :global(a), :global(a):hover {
+        color: inherit;
+    }
+}
+
+.workflow-verification--success {
+    color: var(--green800);
+}
+
+.workflow-verification--warning {
+    color: var(--yellow700);
+}

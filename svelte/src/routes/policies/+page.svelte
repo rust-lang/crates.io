@@ -1,0 +1,228 @@
+<script lang="ts">
+  import { resolve } from '$app/paths';
+
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import TextContent from '$lib/components/TextContent.svelte';
+</script>
+
+<PageHeader title="Usage Policy" />
+
+<TextContent boxed>
+  <p>
+    <strong>Short version:</strong>
+    <em>
+      crates.io is a critical resource for the Rust ecosystem, which hosts a variety of packages from a diverse group of
+      users. That resource is only effective when our users are able to work together as part of a community in good
+      faith. While using crates.io, you must comply with our Acceptable Use Policies, which include some restrictions on
+      content and conduct on crates.io related to user safety, intellectual property, privacy, authenticity, and other
+      limitations. In short, be excellent to each other!
+    </em>
+  </p>
+
+  <p>We do not allow content or activity on crates.io that:</p>
+
+  <ul>
+    <li>
+      violates the
+      <a href="https://www.rust-lang.org/policies/code-of-conduct">Code of Conduct</a>
+      of the Rust project
+    </li>
+    <li>
+      is unlawful or promotes unlawful activities, incurring legal liability in the countries the Rust Foundation
+      officially operates in
+    </li>
+    <li>is libelous, defamatory, or fraudulent</li>
+    <li>amounts to phishing or attempted phishing</li>
+    <li>
+      infringes any proprietary right of any party, including patent, trademark, trade secret, copyright, right of
+      publicity, or other right
+    </li>
+    <li>
+      unlawfully shares unauthorized product licensing keys, software for generating unauthorized product licensing
+      keys, or software for bypassing checks for product licensing keys, including extension of a free license beyond
+      its trial period
+    </li>
+    <li>
+      contains malicious code, such as computer viruses, computer worms, rootkits, back doors, or spyware, including
+      content submitted for research purposes (tools designed and documented explicitly to assist in security research
+      are acceptable, but exploits and malware that use the crates.io registry as a deployment or delivery vector are
+      not)
+    </li>
+    <li>uses obfuscation to hide or mask functionality</li>
+    <li>is discriminatory toward, harasses or abuses another individual or group</li>
+    <li>threatens or incites violence toward any individual or group, especially on the basis of who they are</li>
+    <li>is using crates.io as a platform for propagating abuse on other platforms</li>
+    <li>
+      violates the privacy of any third party, such as by posting another person's personal information without consent
+    </li>
+    <li>gratuitously depicts or glorifies violence, including violent images</li>
+    <li>
+      is sexually obscene or relates to sexual exploitation or abuse, including of minors (see "Sexually Obscene
+      Content" section below)
+    </li>
+    <li>
+      is off-topic, or interacts with platform features in a way that significantly or repeatedly disrupts the
+      experience of other users
+    </li>
+    <li>
+      exists only to reserve a name for a prolonged period of time (often called "name squatting") without having any
+      genuine functionality, purpose, or significant development activity on the corresponding repository
+    </li>
+    <li>
+      is related to buying, selling, or otherwise trading of package names or any other names on crates.io for money or
+      other compensation
+    </li>
+    <li>
+      impersonates any person or entity, including through false association with crates.io, or by fraudulently
+      misrepresenting your identity or site's purpose
+    </li>
+    <li>is related to inauthentic interactions, such as fake accounts and automated inauthentic activity</li>
+    <li>
+      is using our servers for any form of excessive automated bulk activity, to place undue burden on our servers
+      through automated means, or to relay any form of unsolicited advertising or solicitation through our servers, such
+      as get-rich-quick schemes
+    </li>
+    <li>
+      is using our servers for other automated excessive bulk activity or coordinated inauthentic activity, such as:
+      <ul>
+        <li>spamming</li>
+        <li>cryptocurrency mining</li>
+      </ul>
+    </li>
+    <li>
+      is not functionally compatible with the cargo build tool (for example, a "package" cannot simply be a PNG or JPEG
+      image, a movie file, or a text document uploaded directly to the registry)
+    </li>
+    <li>is abusing the package index for purposes it was not intended</li>
+  </ul>
+
+  <p>
+    You are responsible for using crates.io in compliance with all applicable laws, regulations, and all of our
+    policies. These policies may be updated from time to time. We will interpret our policies and resolve disputes in
+    favor of protecting users as a whole. The crates.io team reserves the possibility to evaluate each instance on a
+    case-by-case basis.
+  </p>
+
+  <p>
+    For issues such as DMCA violations, or trademark and copyright infringements, the crates.io team will respect the
+    legal decisions of the
+    <a href="https://rustfoundation.org/">Rust Foundation</a>
+    as the official legal entity providing the crates.io service.
+  </p>
+
+  <h2 id="package-ownership">Package Ownership</h2>
+
+  <p>
+    crates.io has a first-come, first-serve policy on crate names. Upon publishing a package, the publisher will be made
+    owner of the package on crates.io.
+  </p>
+
+  <p>
+    If you want to take over a package, we recommend you try and contact the current owner directly. If the current
+    owner agrees, they can add you as an owner of the crate, and you can then remove them, if necessary. For security
+    reasons, the crates.io team will not transfer ownership of existing crates without the explicit approval of the
+    current owner.
+  </p>
+
+  <p>
+    If you are the author of a crate that another person wants to take over: keep in mind that the new owner might
+    develop your crate in a way you never intended it, or might completely repurpose your crate. Transferring a crate to
+    a malicious user could have a significant impact for any existing users of your crate.
+  </p>
+
+  <p>
+    Crate owners can delete their crates under certain conditions: the crate has been published for less than 72 hours,
+    or the crate only has a single owner, the crate has been downloaded less than 1000 times for each month it has been
+    published, and the crate is not depended upon by any other crate on crates.io. If these conditions are not met, the
+    crate will not be deleted. In exceptional cases crate owners may contact
+    <a href="mailto:help@crates.io">the crates.io team</a>
+    to request deletion of a crate that does not meet these conditions.
+  </p>
+
+  <p>
+    The crates.io team may delete crates from the registry that do not comply with the policies on this document. In
+    larger cases of squatting attacks this may happen without prior notification to the author, but in most cases the
+    team will first give the author the chance to justify the purpose of the crate.
+  </p>
+
+  <h2 id="data-access">Data Access</h2>
+
+  <p>
+    Details on how to access the crates.io data can be found on the dedicated
+    <a href={resolve('/data-access')}>Data Access Policy</a>
+    page.
+  </p>
+
+  <h2 id="security">Security</h2>
+
+  <p>
+    Please see the <a href={resolve('/policies/security')}>Security page</a>.
+  </p>
+
+  <h2 id="sexually-obscene-content">Sexually Obscene Content</h2>
+
+  <p>
+    We do not tolerate content associated with sexual exploitation or abuse of another individual, including where
+    minors are concerned. We do not allow sexually themed or suggestive content that serves little or no purpose other
+    than to solicit an erotic or shocking response, particularly where that content is amplified by its placement in
+    profiles or other social contexts.
+  </p>
+
+  <p>This includes:</p>
+
+  <ul>
+    <li>Pornographic content</li>
+    <li>Non-consensual intimate imagery</li>
+    <li>
+      Graphic depictions of sexual acts including photographs, video, animation, drawings, computer-generated images, or
+      text-based content
+    </li>
+  </ul>
+
+  <p>
+    We recognize that not all nudity or content related to sexuality is obscene. We may allow visual and/or textual
+    depictions in artistic, educational, historical or journalistic contexts, or as it relates to victim advocacy. In
+    some cases a disclaimer can help communicate the context of the project.
+  </p>
+
+  <h2 id="violations-and-enforcement">Violations and Enforcement</h2>
+
+  <p>
+    crates.io retains full discretion to take action in response to a violation of these policies, including account
+    suspension, account termination, or removal of content.
+  </p>
+
+  <p>
+    We will however not be proactively monitoring the site for these kinds of violations, but instead relying on the
+    community to draw them to our attention.
+  </p>
+
+  <p>
+    While the majority of interactions between individuals in the Rust community falls within our policies, violations
+    of those policies do occur at times. When they do, the crates.io team may need to take enforcement action to address
+    the violations. In all cases, content and account deletion is permanent and there is no basis to reverse these
+    moderation actions taken by the crates.io team. Account suspension may be lifted at the team's discretion however,
+    for example in the case of someone's account being compromised.
+  </p>
+
+  <h2 id="reporting">Reporting</h2>
+
+  <p>Please report violations of this policy to <a href="mailto:help@crates.io">help@crates.io</a>.</p>
+
+  <h2 id="credits-license">Credits &amp; License</h2>
+
+  <p>
+    This policy is partially based on
+    <a
+      href="https://github.com/pypi/warehouse/blob/3c404ada9fed7a03bbf7c3c74e86c383f705d96a/policies/acceptable-use-policy.md"
+    >
+      PyPI's Acceptable Use Policy
+    </a>
+    and modified from its original form.
+  </p>
+
+  <p>
+    Licensed under the
+    <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International license</a>.
+  </p>
+</TextContent>

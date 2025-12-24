@@ -4,13 +4,13 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
   async function prepare(msw, { skipLogin = false, following = false } = {}) {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
 
     let loggedIn = !skipLogin;
     if (loggedIn) {
       let followedCrates = following ? [crate] : [];
-      let user = msw.db.user.create({ followedCrates });
+      let user = await msw.db.user.create({ followedCrates });
       await msw.authenticateAs(user);
     }
   }

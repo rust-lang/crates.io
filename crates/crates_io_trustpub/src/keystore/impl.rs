@@ -60,7 +60,7 @@ impl RealOidcKeyStore {
     /// Creates a new instance of [`RealOidcKeyStore`].
     pub fn new(issuer_uri: String) -> Self {
         let client = reqwest::Client::builder()
-            .user_agent("crates.io")
+            .user_agent(crates_io_version::user_agent())
             .timeout(Duration::from_secs(5))
             .build()
             .unwrap();

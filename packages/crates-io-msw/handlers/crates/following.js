@@ -10,12 +10,12 @@ export default http.get('/api/v1/crates/:name/following', async ({ params }) => 
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
     return notFound();
   }
 
-  let following = user.followedCrates.includes(crate);
+  let following = user.followedCrates.some(followedCrate => followedCrate.id === crate.id);
 
   return HttpResponse.json({ following });
 });

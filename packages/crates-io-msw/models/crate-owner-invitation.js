@@ -1,32 +1,28 @@
-import { oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  createdAt: String,
-  expiresAt: String,
-  token: String,
+    createdAt: v.optional(v.string(), '2016-12-24T12:34:56Z'),
+    expiresAt: v.optional(v.string(), '2017-01-24T12:34:56Z'),
+    token: v.optional(v.string()),
 
-  crate: oneOf('crate'),
-  invitee: oneOf('user'),
-  inviter: oneOf('user'),
+    crate: v.any(),
+    invitee: v.any(),
+    inviter: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('crateOwnerInvitation');
+    let id = input.id ?? counter;
+    let token = input.token ?? `secret-token-${id}`;
+    return { ...input, id, token };
+  }),
+);
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'createdAt', () => '2016-12-24T12:34:56Z');
-    applyDefault(attrs, 'expiresAt', () => '2017-01-24T12:34:56Z');
-    applyDefault(attrs, 'token', () => `secret-token-${attrs.id}`);
+const collection = new Collection({ schema });
 
-    if (!attrs.crate) {
-      throw new Error(`Missing \`crate\` relationship on \`crate-owner-invitation\``);
-    }
-    if (!attrs.invitee) {
-      throw new Error(`Missing \`invitee\` relationship on \`crate-owner-invitation\``);
-    }
-    if (!attrs.inviter) {
-      throw new Error(`Missing \`inviter\` relationship on \`crate-owner-invitation\``);
-    }
-  },
-};
+export default collection;

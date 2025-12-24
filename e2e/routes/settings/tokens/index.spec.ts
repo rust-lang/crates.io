@@ -2,7 +2,7 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('/settings/tokens', { tag: '@routes' }, () => {
   test('reloads all tokens from the server', async ({ page, msw }) => {
-    let user = msw.db.user.create({
+    let user = await msw.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -11,7 +11,7 @@ test.describe('/settings/tokens', { tag: '@routes' }, () => {
 
     await msw.authenticateAs(user);
 
-    msw.db.apiToken.create({ user, name: 'token-1' });
+    await msw.db.apiToken.create({ user, name: 'token-1' });
 
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
@@ -30,7 +30,7 @@ test.describe('/settings/tokens', { tag: '@routes' }, () => {
   });
 
   test('scope formatting', async ({ page, msw }) => {
-    let user = msw.db.user.create({
+    let user = await msw.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -39,7 +39,7 @@ test.describe('/settings/tokens', { tag: '@routes' }, () => {
 
     await msw.authenticateAs(user);
 
-    msw.db.apiToken.create({
+    await msw.db.apiToken.create({
       user,
       endpointScopes: ['publish-new', 'publish-update', 'yank'],
       crateScopes: ['serde', 'serde-*', 'serde_*'],

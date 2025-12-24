@@ -1,51 +1,48 @@
-import { nullable, oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
 const LICENSES = ['MIT/Apache-2.0', 'MIT', 'Apache-2.0'];
 
 const LANGUAGES = ['Rust', 'JavaScript', 'TypeScript', 'Python', 'CSS', 'HTML', 'Shell'];
 
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  num: String,
-  created_at: String,
-  updated_at: String,
-  yanked: Boolean,
-  yank_message: nullable(String),
-  license: String,
-  downloads: Number,
-  features: Object,
-  crate_size: Number,
-  readme: nullable(String),
-  rust_version: nullable(String),
-  trustpub_data: nullable(Object),
-  linecounts: nullable(Object),
+    num: v.optional(v.string()),
+    created_at: v.optional(v.string(), '2010-06-16T21:30:45Z'),
+    updated_at: v.optional(v.string(), '2017-02-24T12:34:56Z'),
+    yanked: v.optional(v.boolean(), false),
+    yank_message: v.optional(v.nullable(v.string()), null),
+    license: v.optional(v.string()),
+    downloads: v.optional(v.number()),
+    features: v.optional(v.record(v.string(), v.any()), {}),
+    crate_size: v.optional(v.number()),
+    readme: v.optional(v.nullable(v.string()), null),
+    rust_version: v.optional(v.nullable(v.string()), null),
+    trustpub_data: v.optional(v.any(), null),
+    linecounts: v.optional(v.any()),
 
-  crate: oneOf('crate'),
-  publishedBy: nullable(oneOf('user')),
+    crate: v.any(),
+    publishedBy: v.optional(v.any(), null),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('version');
+    let id = input.id ?? counter;
+    let num = input.num ?? `1.0.${id - 1}`;
+    let license = input.license ?? LICENSES[id % LICENSES.length];
+    let downloads = input.downloads ?? (((id + 13) * 42) % 13) * 1234;
+    let crate_size = input.crate_size ?? (((id + 13) * 42) % 13) * 54_321;
+    let linecounts = input.linecounts ?? generateLinecounts(id);
+    return { ...input, id, num, license, downloads, crate_size, linecounts };
+  }),
+);
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'num', () => `1.0.${attrs.id - 1}`);
-    applyDefault(attrs, 'created_at', () => '2010-06-16T21:30:45Z');
-    applyDefault(attrs, 'updated_at', () => '2017-02-24T12:34:56Z');
-    applyDefault(attrs, 'yanked', () => false);
-    applyDefault(attrs, 'yank_message', () => null);
-    applyDefault(attrs, 'license', () => LICENSES[attrs.id % LICENSES.length]);
-    applyDefault(attrs, 'downloads', () => (((attrs.id + 13) * 42) % 13) * 1234);
-    applyDefault(attrs, 'crate_size', () => (((attrs.id + 13) * 42) % 13) * 54_321);
-    applyDefault(attrs, 'readme', () => null);
-    applyDefault(attrs, 'rust_version', () => null);
-    applyDefault(attrs, 'trustpub_data', () => null);
-    applyDefault(attrs, 'linecounts', () => generateLinecounts(attrs.id));
+const collection = new Collection({ schema });
 
-    if (!attrs.crate) {
-      throw new Error(`Missing \`crate\` relationship on \`version:${attrs.num}\``);
-    }
-  },
-};
+export default collection;
 
 function generateLinecounts(id) {
   // Some versions don't have linecount data (simulating older versions)

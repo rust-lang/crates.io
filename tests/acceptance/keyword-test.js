@@ -12,7 +12,7 @@ module('Acceptance | keywords', function (hooks) {
   setupApplicationTest(hooks);
 
   test('keyword/:keyword_id index default sort is recent-downloads', async function (assert) {
-    this.db.keyword.create({ keyword: 'network' });
+    await this.db.keyword.create({ keyword: 'network' });
 
     await visit('/keywords/network');
 

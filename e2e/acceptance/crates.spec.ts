@@ -7,7 +7,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   const per_page = 50;
 
   test('visiting the crates page from the front page', async ({ page, msw, percy, a11y }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/');
     await page.click('[data-test-all-crates-link]');
@@ -20,7 +20,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   });
 
   test('visiting the crates page directly', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates');
     await page.click('[data-test-all-crates-link]');
@@ -32,8 +32,8 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   test('listing crates', async ({ page, msw }) => {
     const per_page = 50;
     for (let i = 1; i <= per_page; i++) {
-      let crate = msw.db.crate.create();
-      msw.db.version.create({ crate });
+      let crate = await msw.db.crate.create({});
+      await msw.db.version.create({ crate });
     }
 
     await page.goto('/crates');
@@ -45,8 +45,8 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   test('navigating to next page of crates', async ({ page, msw }) => {
     const per_page = 50;
     for (let i = 1; i <= per_page + 2; i++) {
-      let crate = msw.db.crate.create();
-      msw.db.version.create({ crate });
+      let crate = await msw.db.crate.create({});
+      await msw.db.version.create({ crate });
     }
     const page_start = per_page + 1;
     const total = per_page + 2;
@@ -60,7 +60,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   });
 
   test('crates default sort is alphabetical', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates');
 
@@ -68,21 +68,21 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   });
 
   test('downloads appears for each crate on crate list', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText('All-Time: 21,573');
   });
 
   test('recent downloads appears for each crate on crate list', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-recent-downloads]')).toHaveText('Recent: 2,000');
   });
 
   test('shows error message screen', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     let detail =
       'Page 1 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.';

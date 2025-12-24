@@ -359,6 +359,10 @@ expression: response.json()
               "null"
             ]
           },
+          "trustpub_only": {
+            "description": "Whether this crate can only be published via Trusted Publishing.",
+            "type": "boolean"
+          },
           "updated_at": {
             "description": "The date and time this crate was last updated.",
             "example": "2019-12-13T13:46:41Z",
@@ -394,7 +398,8 @@ expression: response.json()
           "max_version",
           "newest_version",
           "links",
-          "exact_match"
+          "exact_match",
+          "trustpub_only"
         ],
         "type": "object"
       },
@@ -905,6 +910,30 @@ expression: response.json()
           "login",
           "kind"
         ],
+        "type": "object"
+      },
+      "PatchRequest": {
+        "properties": {
+          "crate": {
+            "$ref": "#/components/schemas/PatchRequestCrate",
+            "description": "The crate settings to update."
+          }
+        },
+        "required": [
+          "crate"
+        ],
+        "type": "object"
+      },
+      "PatchRequestCrate": {
+        "properties": {
+          "trustpub_only": {
+            "description": "Whether this crate can only be published via Trusted Publishing.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "PublishWarnings": {
@@ -2250,6 +2279,63 @@ expression: response.json()
         "tags": [
           "crates"
         ]
+      },
+      "patch": {
+        "operationId": "update_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate",
+                      "description": "The updated crate metadata."
+                    }
+                  },
+                  "required": [
+                    "crate"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Update crate settings.",
+        "tags": [
+          "crates"
+        ]
       }
     },
     "/api/v1/crates/{name}/downloads": {
@@ -2590,6 +2676,32 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "owners": {
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "example": [
+                      "octocat",
+                      "github:rust-lang:owners"
+                    ],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "owners"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -2684,6 +2796,32 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "owners": {
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "example": [
+                      "octocat",
+                      "github:rust-lang:owners"
+                    ],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "owners"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -4294,9 +4432,19 @@ expression: response.json()
             "description": "Name of the crate to list Trusted Publishing configurations for.",
             "in": "query",
             "name": "crate",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "User ID to list Trusted Publishing configurations for all crates owned by the user.",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
             }
           },
           {
@@ -4479,6 +4627,119 @@ expression: response.json()
       }
     },
     "/api/v1/trusted_publishing/gitlab_configs": {
+      "get": {
+        "operationId": "list_trustpub_gitlab_configs",
+        "parameters": [
+          {
+            "description": "Name of the crate to list Trusted Publishing configurations for.",
+            "in": "query",
+            "name": "crate",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "User ID to list Trusted Publishing configurations for all crates owned by the user.",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "gitlab_configs": {
+                      "items": {
+                        "$ref": "#/components/schemas/GitLabConfig"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query string to the next page of results, if any.",
+                          "example": "?seek=abc123",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "description": "The total number of GitLab configs belonging to the crate.",
+                          "example": 42,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "gitlab_configs",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "api_token": []
+          }
+        ],
+        "summary": "List Trusted Publishing configurations for GitLab CI/CD.",
+        "tags": [
+          "trusted_publishing"
+        ]
+      },
       "post": {
         "operationId": "create_trustpub_gitlab_config",
         "requestBody": {
@@ -4527,6 +4788,40 @@ expression: response.json()
             "api_token": []
           }
         ],
+        "tags": [
+          "trusted_publishing"
+        ]
+      }
+    },
+    "/api/v1/trusted_publishing/gitlab_configs/{id}": {
+      "delete": {
+        "operationId": "delete_trustpub_gitlab_config",
+        "parameters": [
+          {
+            "description": "ID of the Trusted Publishing configuration",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "api_token": []
+          }
+        ],
+        "summary": "Delete Trusted Publishing configuration for GitLab CI/CD.",
         "tags": [
           "trusted_publishing"
         ]

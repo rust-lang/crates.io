@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/trustpub/github_configs/list/by_crate.rs
+expression: json
+---
+{
+  "github_configs": [],
+  "meta": {
+    "next_page": null,
+    "total": 15
+  }
+}

@@ -2,16 +2,16 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   test('navigates to rebuild docs confirmation page', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.crateOwnership.create({ crate, user });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.crateOwnership.create({ crate, user });
 
-    msw.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
-    msw.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
-    msw.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
-    msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    await msw.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
+    await msw.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
+    await msw.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
+    await msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await page.goto('/crates/nanomsg/versions');
     await expect(page).toHaveURL('/crates/nanomsg/versions');
@@ -29,13 +29,13 @@ test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   });
 
   test('rebuild docs confirmation page shows crate info and allows confirmation', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.crateOwnership.create({ crate, user });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.crateOwnership.create({ crate, user });
 
-    msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    await msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await page.goto('/crates/nanomsg/0.2.1/rebuild-docs');
     await expect(page).toHaveURL('/crates/nanomsg/0.2.1/rebuild-docs');
@@ -52,11 +52,11 @@ test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   });
 
   test('rebuild docs confirmation page redirects non-owners to error page', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await page.goto('/crates/nanomsg/0.2.1/rebuild-docs');
 
@@ -65,8 +65,8 @@ test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   });
 
   test('rebuild docs confirmation page shows authentication error for unauthenticated users', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await page.goto('/crates/nanomsg/0.2.1/rebuild-docs');
 

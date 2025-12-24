@@ -30,14 +30,14 @@ module('Acceptance | Login', function (hooks) {
 
     this.worker.use(
       http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
-      http.get('/api/private/session/authorize', ({ request }) => {
+      http.get('/api/private/session/authorize', async ({ request }) => {
         let url = new URL(request.url);
         assert.deepEqual([...url.searchParams.keys()], ['code', 'state']);
         assert.strictEqual(url.searchParams.get('code'), '901dd10e07c7e9fa1cd5');
         assert.strictEqual(url.searchParams.get('state'), 'fYcUY3FMdUUz00FC7vLT7A');
 
-        let user = db.user.create();
-        db.mswSession.create({ user });
+        let user = await db.user.create({});
+        await db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
       }),
       http.get('/api/v1/me', () =>

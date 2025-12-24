@@ -59,7 +59,7 @@ export default class InstallInstructions extends Component {
             {{~#if (eq index 0)~}}
               <span class='bin-name'>{{binName}}</span>
             {{~else if (eq index (sum @binNames.length -1))~}}
-              and
+              , and
               <span class='bin-name'>{{binName}}</span>
             {{~else~}}
               ,

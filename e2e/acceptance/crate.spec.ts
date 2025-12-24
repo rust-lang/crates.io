@@ -4,8 +4,8 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   test('visiting a crate page from the front page', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });
-    msw.db.version.create({ crate, num: '0.6.1' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });
+    await msw.db.version.create({ crate, num: '0.6.1' });
 
     await page.goto('/');
     await page.click('[data-test-just-updated] [data-test-crate-link="0"]');
@@ -17,18 +17,15 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
   });
 
-  test('visiting /crates/nanomsg', async ({ page, msw, ember, percy, a11y }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
-    msw.db.version.create({ crate, num: '0.6.1', rust_version: '1.69' });
+  test('visiting /crates/nanomsg', async ({ page, msw, percy, a11y }) => {
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
+    await msw.db.version.create({ crate, num: '0.6.1', rust_version: '1.69' });
 
     await page.goto('/crates/nanomsg');
 
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page).toHaveTitle('nanomsg - crates.io: Rust Package Registry');
-    // TODO: Add the following as a method to EmberPage fixture
-    const currentRouteName = await ember.evaluate(owner => owner.lookup('router:main').currentRouteName);
-    expect(currentRouteName).toBe('crate.index');
 
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
@@ -38,36 +35,30 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await a11y.audit();
   });
 
-  test('visiting /crates/nanomsg/', async ({ page, msw, ember }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
-    msw.db.version.create({ crate, num: '0.6.1' });
+  test('visiting /crates/nanomsg/', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
+    await msw.db.version.create({ crate, num: '0.6.1' });
 
     await page.goto('/crates/nanomsg/');
 
     await expect(page).toHaveURL('/crates/nanomsg/');
     await expect(page).toHaveTitle('nanomsg - crates.io: Rust Package Registry');
-    // TODO: Add the following as a method to EmberPage fixture
-    const currentRouteName = await ember.evaluate(owner => owner.lookup('router:main').currentRouteName);
-    expect(currentRouteName).toBe('crate.index');
 
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
     await expect(page.locator('[data-test-crate-stats-label]')).toHaveText('Stats Overview');
   });
 
-  test('visiting /crates/nanomsg/0.6.0', async ({ page, msw, ember, percy, a11y }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
-    msw.db.version.create({ crate, num: '0.6.1' });
+  test('visiting /crates/nanomsg/0.6.0', async ({ page, msw, percy, a11y }) => {
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
+    await msw.db.version.create({ crate, num: '0.6.1' });
 
     await page.goto('/crates/nanomsg/0.6.0');
 
     await expect(page).toHaveURL('/crates/nanomsg/0.6.0');
     await expect(page).toHaveTitle('nanomsg - crates.io: Rust Package Registry');
-    // TODO: Add the following as a method to EmberPage fixture
-    const currentRouteName = await ember.evaluate(owner => owner.lookup('router:main').currentRouteName);
-    expect(currentRouteName).toBe('crate.version');
 
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.0');
@@ -87,7 +78,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('other crate loading error shows an error message', async ({ page, msw }) => {
-    msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
@@ -98,9 +89,9 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('unknown versions fall back to latest version and show an error message', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
-    msw.db.version.create({ crate, num: '0.6.1' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
+    await msw.db.version.create({ crate, num: '0.6.1' });
 
     await page.goto('/crates/nanomsg/0.7.0');
 
@@ -112,8 +103,8 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('works for non-canonical names', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo-bar' });
-    msw.db.version.create({ crate });
+    let crate = await msw.db.crate.create({ name: 'foo-bar' });
+    await msw.db.version.create({ crate });
 
     await page.goto('/crates/foo_bar');
 
@@ -124,7 +115,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to the versions page', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     // default with a page size more than 13
     await page.goto('/crates/nanomsg');
@@ -136,7 +127,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to the versions page with custom per_page', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg/versions?per_page=10');
     await expect(page.locator('[data-test-page-description]')).toHaveText(
@@ -150,7 +141,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to the reverse dependencies page', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
     await page.click('[data-test-rev-deps-tab] a');
@@ -160,7 +151,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to a user page', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
     await page.click('[data-test-owners] [data-test-owner-link="blabaere"]');
@@ -170,7 +161,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to a team page', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
     await page.click('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"]');
@@ -180,7 +171,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('crates having user-owners', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
 
@@ -192,7 +183,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('crates having team-owners', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
 
@@ -201,7 +192,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('crates license is supplied by version', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
     await expect(page.locator('[data-test-license]')).toHaveText('Apache-2.0');
@@ -211,9 +202,9 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('sidebar shows correct information', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '0.5.0' });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '0.5.0' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-linecounts]')).toHaveText('1,119 SLoC');
@@ -223,9 +214,9 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test.skip('crates can be yanked by owner', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
-    let user = msw.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
+    let user = msw.db.user.findFirst(q => q.where({ login: 'thehydroimpulse' }));
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg/0.5.0');
@@ -243,7 +234,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to the owners page when not logged in', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
 
@@ -251,9 +242,9 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to the owners page when not an owner', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
-    let user = msw.db.user.findFirst({ where: { login: { equals: 'iain8' } } });
+    let user = msw.db.user.findFirst(q => q.where({ login: 'iain8' }));
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg');
@@ -262,9 +253,9 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to the settings page', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
-    let user = msw.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
+    let user = msw.db.user.findFirst(q => q.where({ login: 'thehydroimpulse' }));
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg');
@@ -274,7 +265,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('keywords are shown when navigating from search', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/search?q=nanomsg');
     await page.getByRole('link', { name: 'nanomsg', exact: true }).click();
@@ -284,7 +275,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('keywords are shown when navigating from crate to keywords, and then back to crate', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
     await expect(page.locator('[data-test-keyword]')).toBeVisible();
@@ -298,7 +289,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('keywords are shown when navigating from crate to searchs, and then back to crate', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
     await expect(page.locator('[data-test-keyword]')).toBeVisible();

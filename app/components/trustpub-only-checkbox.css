@@ -1,0 +1,25 @@
+.trustpub-only-checkbox {
+  display: grid;
+  grid-template:
+    'checkbox label' auto
+    'checkbox note' auto / 16px 1fr;
+  row-gap: var(--space-3xs);
+  column-gap: var(--space-xs);
+  padding: var(--space-s) var(--space-m);
+  cursor: pointer;
+}
+
+.checkbox {
+  grid-area: checkbox;
+}
+
+.label {
+  grid-area: label;
+  font-weight: bold;
+}
+
+.note {
+  grid-area: note;
+  font-size: 85%;
+  color: var(--main-color-light);
+}

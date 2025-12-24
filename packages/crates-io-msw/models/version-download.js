@@ -1,22 +1,25 @@
-import { oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  date: String,
-  downloads: Number,
+    date: v.optional(v.string(), '2019-05-21'),
+    downloads: v.optional(v.number()),
 
-  version: oneOf('version'),
+    version: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('versionDownload');
+    let id = input.id ?? counter;
+    let downloads = input.downloads ?? (((id + 13) * 42) % 13) * 2345;
+    return { ...input, id, downloads };
+  }),
+);
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'date', () => '2019-05-21');
-    applyDefault(attrs, 'downloads', () => (((attrs.id + 13) * 42) % 13) * 2345);
+const collection = new Collection({ schema });
 
-    if (!attrs.version) {
-      throw new Error('Missing `version` relationship on `version-download`');
-    }
-  },
-};
+export default collection;

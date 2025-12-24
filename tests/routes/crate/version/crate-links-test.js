@@ -7,13 +7,13 @@ module('Route | crate.version | crate links', function (hooks) {
   setupApplicationTest(hooks);
 
   test('shows all external crate links', async function (assert) {
-    let crate = this.db.crate.create({
+    let crate = await this.db.crate.create({
       name: 'foo',
       homepage: 'https://crates.io/',
       documentation: 'https://doc.rust-lang.org/cargo/getting-started/',
       repository: 'https://github.com/rust-lang/crates.io.git',
     });
-    this.db.version.create({ crate, num: '1.0.0' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 
@@ -31,8 +31,8 @@ module('Route | crate.version | crate links', function (hooks) {
   });
 
   test('shows no external crate links if none are set', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 
@@ -42,12 +42,12 @@ module('Route | crate.version | crate links', function (hooks) {
   });
 
   test('hide the homepage link if it is the same as the repository', async function (assert) {
-    let crate = this.db.crate.create({
+    let crate = await this.db.crate.create({
       name: 'foo',
       homepage: 'https://github.com/rust-lang/crates.io',
       repository: 'https://github.com/rust-lang/crates.io',
     });
-    this.db.version.create({ crate, num: '1.0.0' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 
@@ -61,12 +61,12 @@ module('Route | crate.version | crate links', function (hooks) {
   });
 
   test('hide the homepage link if it is the same as the repository plus `.git`', async function (assert) {
-    let crate = this.db.crate.create({
+    let crate = await this.db.crate.create({
       name: 'foo',
       homepage: 'https://github.com/rust-lang/crates.io/',
       repository: 'https://github.com/rust-lang/crates.io.git',
     });
-    this.db.version.create({ crate, num: '1.0.0' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 

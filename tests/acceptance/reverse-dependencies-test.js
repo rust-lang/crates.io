@@ -10,24 +10,24 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare({ db }) {
-    let foo = db.crate.create({ name: 'foo' });
-    db.version.create({ crate: foo });
+  async function prepare({ db }) {
+    let foo = await db.crate.create({ name: 'foo' });
+    await db.version.create({ crate: foo });
 
-    let bar = db.crate.create({ name: 'bar' });
-    let barVersion = db.version.create({ crate: bar });
+    let bar = await db.crate.create({ name: 'bar' });
+    let barVersion = await db.version.create({ crate: bar });
 
-    let baz = db.crate.create({ name: 'baz' });
-    let bazVersion = db.version.create({ crate: baz });
+    let baz = await db.crate.create({ name: 'baz' });
+    let bazVersion = await db.version.create({ crate: baz });
 
-    db.dependency.create({ crate: foo, version: barVersion });
-    db.dependency.create({ crate: foo, version: bazVersion });
+    await db.dependency.create({ crate: foo, version: barVersion });
+    await db.dependency.create({ crate: foo, version: bazVersion });
 
     return { foo, bar, baz };
   }
 
   test('shows a list of crates depending on the selected crate', async function (assert) {
-    let { foo, bar, baz } = prepare(this);
+    let { foo, bar, baz } = await prepare(this);
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
     assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
@@ -39,12 +39,12 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   });
 
   test('supports pagination', async function (assert) {
-    let { foo } = prepare(this);
+    let { foo } = await prepare(this);
 
     for (let i = 0; i < 20; i++) {
-      let crate = this.db.crate.create();
-      let version = this.db.version.create({ crate });
-      this.db.dependency.create({ crate: foo, version });
+      let crate = await this.db.crate.create({});
+      let version = await this.db.version.create({ crate });
+      await this.db.dependency.create({ crate: foo, version });
     }
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
@@ -67,7 +67,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   });
 
   test('shows error message if loading of reverse dependencies fails', async function (assert) {
-    let { foo } = prepare(this);
+    let { foo } = await prepare(this);
 
     let error = HttpResponse.json({}, { status: 500 });
     this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));

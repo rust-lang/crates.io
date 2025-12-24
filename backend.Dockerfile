@@ -1,10 +1,10 @@
 # renovate: datasource=github-tags depName=rust lookupName=rust-lang/rust
-ARG RUST_VERSION=1.91.0
+ARG RUST_VERSION=1.92.0
 
 FROM rust:$RUST_VERSION
 
 # renovate: datasource=crate depName=diesel_cli versioning=semver
-ARG DIESEL_CLI_VERSION=2.3.3
+ARG DIESEL_CLI_VERSION=2.3.5
 
 RUN apt-get update \
     && apt-get install -y postgresql \

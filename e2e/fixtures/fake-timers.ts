@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { withGlobal, FakeTimerWithContext, FakeTimerInstallOpts } from '@sinonjs/fake-timers';
+import { FakeTimerInstallOpts, FakeTimerWithContext, withGlobal } from '@sinonjs/fake-timers';
 
 export type FakeTimersOptions = Omit<FakeTimerInstallOpts, 'now'> & { now?: FakeTimerInstallOpts['now'] | string };
 

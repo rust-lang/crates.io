@@ -97,6 +97,16 @@ impl BackgroundJob for SendPublishNotificationsJob {
                 ) => &format!(
                     " by GitHub Actions (https://github.com/{repository}/actions/runs/{run_id})",
                 ),
+                (
+                    _,
+                    Some(TrustpubData::GitLab {
+                        project_path,
+                        job_id,
+                        ..
+                    }),
+                ) => {
+                    &format!(" by GitLab CI/CD (https://gitlab.com/{project_path}/-/jobs/{job_id})")
+                }
                 _ => "",
             };
 

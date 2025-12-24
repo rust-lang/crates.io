@@ -1,4 +1,6 @@
 use crate::Crate;
+use chrono::{DateTime, Utc};
+use serde::Serializer;
 use std::io::Write;
 
 fn write_crate<W: Write>(krate: &Crate, mut writer: W) -> anyhow::Result<()> {
@@ -14,6 +16,21 @@ pub fn write_crates<W: Write>(crates: &[Crate], mut writer: W) -> anyhow::Result
     Ok(())
 }
 
+/// Serialize `pubtime` with seconds precision `DateTime<Utc>`
+pub fn serialize_pubtime<S>(dt: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match dt {
+        Some(dt) => {
+            let secs = dt.timestamp();
+            let dt_secs = DateTime::from_timestamp(secs, 0).unwrap();
+            serializer.serialize_some(&dt_secs)
+        }
+        None => serializer.serialize_none(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -21,6 +38,7 @@ mod tests {
 
     #[test]
     fn test_write_crate() {
+        let pubtime = chrono::DateTime::from_timestamp_nanos(1_763_456_303_013_233_232);
         let krate = Crate {
             name: "foo".to_string(),
             vers: "1.2.3".to_string(),
@@ -31,6 +49,7 @@ mod tests {
             yanked: None,
             links: None,
             rust_version: None,
+            pubtime: Some(pubtime),
             v: None,
         };
         let mut buffer = Vec::new();
@@ -38,7 +57,7 @@ mod tests {
         assert_ok_eq!(
             String::from_utf8(buffer),
             "\
-            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
+            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null,\"pubtime\":\"2025-11-18T08:58:23Z\"}\n\
         "
         );
     }
@@ -58,6 +77,7 @@ mod tests {
                 yanked: None,
                 links: None,
                 rust_version: None,
+                pubtime: None,
                 v: None,
             })
             .collect::<Vec<_>>();

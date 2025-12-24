@@ -92,7 +92,6 @@ async fn test_happy_path() -> anyhow::Result<()> {
 
     let mut conn = client.app().db_conn().await;
 
-    #[expect(deprecated)]
     let tokens = trustpub_tokens::table
         .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
         .select((trustpub_tokens::id, trustpub_tokens::crate_ids))

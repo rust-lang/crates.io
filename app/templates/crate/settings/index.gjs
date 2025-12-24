@@ -6,9 +6,12 @@ import perform from 'ember-concurrency/helpers/perform';
 import preventDefault from 'ember-event-helpers/helpers/prevent-default';
 import pageTitle from 'ember-page-title/helpers/page-title';
 import not from 'ember-truth-helpers/helpers/not';
+import or from 'ember-truth-helpers/helpers/or';
 
+import Alert from 'crates-io/components/alert';
 import CrateHeader from 'crates-io/components/crate-header';
 import Tooltip from 'crates-io/components/tooltip';
+import TrustpubOnlyCheckbox from 'crates-io/components/trustpub-only-checkbox';
 import UserAvatar from 'crates-io/components/user-avatar';
 
 <template>
@@ -115,63 +118,125 @@ import UserAvatar from 'crates-io/components/user-avatar';
     </div>
   </div>
 
-  <table class='trustpub' data-test-trusted-publishing>
-    <thead>
-      <tr>
-        <th>Publisher</th>
-        <th>Details</th>
-        <th><span class='sr-only'>Actions</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each @controller.githubConfigs as |config|}}
-        <tr data-test-github-config={{config.id}}>
-          <td>GitHub</td>
-          <td class='details'>
-            <strong>Repository:</strong>
-            <a
-              href='https://github.com/{{config.repository_owner}}/{{config.repository_name}}'
-              target='_blank'
-              rel='noopener noreferrer'
-            >{{config.repository_owner}}/{{config.repository_name}}</a>
-            <span class='owner-id'>
-              · Owner ID:
-              {{config.repository_owner_id}}
-              <Tooltip>
-                This is the owner ID for
-                <strong>{{config.repository_owner}}</strong>
-                from when this configuration was created. If
-                <strong>{{config.repository_owner}}</strong>
-                was recreated on GitHub, this configuration will need to be recreated as well.
-              </Tooltip>
-            </span><br />
-            <strong>Workflow:</strong>
-            <a
-              href='https://github.com/{{config.repository_owner}}/{{config.repository_name}}/blob/HEAD/.github/workflows/{{config.workflow_filename}}'
-              target='_blank'
-              rel='noopener noreferrer'
-            >{{config.workflow_filename}}</a><br />
-            {{#if config.environment}}
-              <strong>Environment:</strong>
-              {{config.environment}}
-            {{/if}}
-          </td>
-          <td class='actions'>
-            <button
-              type='button'
-              class='button button--small'
-              data-test-remove-config-button
-              {{on 'click' (perform @controller.removeConfigTask config)}}
-            >Remove</button>
-          </td>
+  {{#if @controller.showTrustpubOnlyWarning}}
+    <Alert @variant='warning' class='trustpub-only-warning' data-test-trustpub-only-warning>
+      Trusted publishing is required but no publishers are configured. Publishing to this crate is currently blocked.
+    </Alert>
+  {{/if}}
+
+  <div class='trustpub'>
+    <table data-test-trusted-publishing>
+      <thead>
+        <tr>
+          <th>Publisher</th>
+          <th>Details</th>
+          <th><span class='sr-only'>Actions</span></th>
         </tr>
-      {{else}}
-        <tr data-test-no-config>
-          <td colspan='3'>No trusted publishers configured for this crate.</td>
-        </tr>
-      {{/each}}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {{#each @controller.githubConfigs as |config|}}
+          <tr data-test-github-config={{config.id}}>
+            <td>GitHub</td>
+            <td class='details'>
+              <strong>Repository:</strong>
+              <a
+                href='https://github.com/{{config.repository_owner}}/{{config.repository_name}}'
+                target='_blank'
+                rel='noopener noreferrer'
+              >{{config.repository_owner}}/{{config.repository_name}}</a>
+              <span class='owner-id'>
+                · Owner ID:
+                {{config.repository_owner_id}}
+                <Tooltip>
+                  This is the owner ID for
+                  <strong>{{config.repository_owner}}</strong>
+                  from when this configuration was created. If
+                  <strong>{{config.repository_owner}}</strong>
+                  was recreated on GitHub, this configuration will need to be recreated as well.
+                </Tooltip>
+              </span><br />
+              <strong>Workflow:</strong>
+              <a
+                href='https://github.com/{{config.repository_owner}}/{{config.repository_name}}/blob/HEAD/.github/workflows/{{config.workflow_filename}}'
+                target='_blank'
+                rel='noopener noreferrer'
+              >{{config.workflow_filename}}</a><br />
+              {{#if config.environment}}
+                <strong>Environment:</strong>
+                {{config.environment}}
+              {{/if}}
+            </td>
+            <td class='actions'>
+              <button
+                type='button'
+                class='button button--small'
+                data-test-remove-config-button
+                {{on 'click' (perform @controller.removeConfigTask config)}}
+              >Remove</button>
+            </td>
+          </tr>
+        {{/each}}
+        {{#each @controller.gitlabConfigs as |config|}}
+          <tr data-test-gitlab-config={{config.id}}>
+            <td>GitLab</td>
+            <td class='details'>
+              <strong>Repository:</strong>
+              <a
+                href='https://gitlab.com/{{config.namespace}}/{{config.project}}'
+                target='_blank'
+                rel='noopener noreferrer'
+              >{{config.namespace}}/{{config.project}}</a>
+              <span class='owner-id'>
+                · Namespace ID:
+                {{#if config.namespace_id}}
+                  {{config.namespace_id}}
+                  <Tooltip>
+                    This is the namespace ID for
+                    <strong>{{config.namespace}}</strong>
+                    from the first publish using this configuration. If
+                    <strong>{{config.namespace}}</strong>
+                    was recreated on GitLab, this configuration will need to be recreated as well.
+                  </Tooltip>
+                {{else}}
+                  (not yet set)
+                  <Tooltip>
+                    The namespace ID will be captured from the first publish using this configuration.
+                  </Tooltip>
+                {{/if}}
+              </span><br />
+              <strong>Workflow:</strong>
+              <a
+                href='https://gitlab.com/{{config.namespace}}/{{config.project}}/-/blob/HEAD/{{config.workflow_filepath}}'
+                target='_blank'
+                rel='noopener noreferrer'
+              >{{config.workflow_filepath}}</a><br />
+              {{#if config.environment}}
+                <strong>Environment:</strong>
+                {{config.environment}}
+              {{/if}}
+            </td>
+            <td class='actions'>
+              <button
+                type='button'
+                class='button button--small'
+                data-test-remove-config-button
+                {{on 'click' (perform @controller.removeConfigTask config)}}
+              >Remove</button>
+            </td>
+          </tr>
+        {{/each}}
+        {{#unless (or @controller.githubConfigs.length @controller.gitlabConfigs.length)}}
+          <tr class='no-trustpub-config' data-test-no-config>
+            <td colspan='3'>No trusted publishers configured for this crate.</td>
+          </tr>
+        {{/unless}}
+      </tbody>
+    </table>
+
+    {{#if @controller.showTrustpubOnlyCheckbox}}
+      <TrustpubOnlyCheckbox @crate={{@controller.crate}} class='trustpub-only-checkbox' />
+    {{/if}}
+  </div>
 
   <h2 class='header'>Danger Zone</h2>
 

@@ -2,8 +2,8 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('default are applied', ({ expect }) => {
-  let user = db.user.create();
+test('default are applied', async ({ expect }) => {
+  let user = await db.user.create({});
   expect(user).toMatchInlineSnapshot(`
     {
       "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
@@ -17,14 +17,12 @@ test('default are applied', ({ expect }) => {
       "name": "User 1",
       "publishNotifications": true,
       "url": "https://github.com/user-1",
-      Symbol(type): "user",
-      Symbol(primaryKey): "id",
     }
   `);
 });
 
-test('name can be set', ({ expect }) => {
-  let user = db.user.create({ name: 'John Doe' });
+test('name can be set', async ({ expect }) => {
+  let user = await db.user.create({ name: 'John Doe' });
   expect(user).toMatchInlineSnapshot(`
     {
       "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
@@ -38,8 +36,6 @@ test('name can be set', ({ expect }) => {
       "name": "John Doe",
       "publishNotifications": true,
       "url": "https://github.com/john-doe",
-      Symbol(type): "user",
-      Symbol(primaryKey): "id",
     }
   `);
 });

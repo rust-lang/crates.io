@@ -1,34 +1,48 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo', { method: 'DELETE' });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(response.status).toBe(403);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo', { method: 'DELETE' });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'crate `foo` does not exist' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "crate \`foo\` does not exist",
+        },
+      ],
+    }
+  `);
 });
 
 test('deletes crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
 
-  let crate = db.crate.create({ name: 'foo' });
-  db.crateOwnership.create({ crate, user });
+  let crate = await db.crate.create({ name: 'foo' });
+  await db.crateOwnership.create({ crate, user });
 
   let response = await fetch('/api/v1/crates/foo', { method: 'DELETE' });
-  assert.strictEqual(response.status, 204);
-  assert.deepEqual(await response.text(), '');
+  expect(response.status).toBe(204);
+  expect(await response.text()).toMatchInlineSnapshot(`""`);
 
-  assert.strictEqual(db.crate.findFirst({ where: { name: { equals: 'foo' } } }), null);
+  expect(db.crate.findFirst(q => q.where({ name: 'foo' }))).toBe(undefined);
 });

@@ -14,7 +14,7 @@ use std::fs::File;
 use std::io::{ErrorKind, Write};
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::{debug, info, instrument};
+use tracing::{debug, info, instrument, warn};
 
 /// Maximum number of commits to make within in a single batch.
 const BATCH_SIZE: i32 = 100;
@@ -187,16 +187,35 @@ impl BackgroundJob for SyncToSparseIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let content = get_index_data(&crate_name, &mut conn)
+        let content = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
             .await
             .context("Failed to get index data")?;
 
         let future = env.storage.sync_index(&self.krate, content);
         future.await.context("Failed to sync index data")?;
 
-        if env.cloudfront().is_some() {
-            let path = Repository::relative_index_file_for_url(&self.krate);
+        let path = Repository::relative_index_file_for_url(&self.krate);
 
+        if let Some(fastly) = env.fastly()
+            && env.config.sparse_index_fastly_enabled
+        {
+            let domain_name = &env.config.domain_name;
+            let domains = [
+                format!("index.{}", domain_name),
+                format!("fastly-index.{}", domain_name),
+            ];
+
+            for domain in domains {
+                if let Err(error) = fastly.purge(&domain, &path).await {
+                    warn!(
+                        domain,
+                        path, "Failed to invalidate sparse index on Fastly: {error}"
+                    );
+                }
+            }
+        }
+
+        if env.cloudfront().is_some() {
             info!(%path, "Queuing index file invalidation on CloudFront");
 
             let paths = &[path];

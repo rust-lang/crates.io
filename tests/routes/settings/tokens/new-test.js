@@ -12,21 +12,21 @@ import { visit } from '../../../helpers/visit-ignoring-abort';
 module('/settings/tokens/new', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    let user = context.db.user.create({
+  async function prepare(context) {
+    let user = await context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
 
     return { user };
   }
 
   test('can navigate to the route', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/');
     assert.strictEqual(currentURL(), '/');
@@ -50,7 +50,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('happy path', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -60,7 +60,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'token-name' }));
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.expiredAt, null);
@@ -76,7 +76,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('crate scopes', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -133,7 +133,7 @@ module('/settings/tokens/new', function (hooks) {
 
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'token-name' }));
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.deepEqual(token.crateScopes, ['serde-*', 'serde']);
@@ -148,7 +148,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('token expiry', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -173,7 +173,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'token-name' }));
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.expiredAt.slice(0, 10), '2017-12-20');
@@ -189,7 +189,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('token expiry with custom date', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -209,7 +209,7 @@ module('/settings/tokens/new', function (hooks) {
 
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'token-name' }));
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.expiredAt.slice(0, 10), '2024-05-04');
@@ -225,7 +225,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('loading and error state', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let deferred = defer();
     this.worker.use(http.put('/api/v1/me/tokens', () => deferred.promise));
@@ -250,7 +250,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('cancel button navigates back to the token list', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -260,7 +260,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('empty name shows an error', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -274,7 +274,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('no scopes selected shows an error', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -287,9 +287,9 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('prefill with the exist token', async function (assert) {
-    let { user } = prepare(this);
+    let { user } = await prepare(this);
 
-    let token = this.db.apiToken.create({
+    let token = await this.db.apiToken.create({
       user,
       name: 'foo',
       createdAt: '2017-08-01T12:34:56',
@@ -310,7 +310,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-generate]');
     assert.strictEqual(currentURL(), '/settings/tokens');
 
-    let tokens = this.db.apiToken.findMany({ where: { name: { equals: 'foo' } } });
+    let tokens = this.db.apiToken.findMany(q => q.where({ name: 'foo' }));
     assert.strictEqual(tokens.length, 2, 'New API token has been created in the backend database');
 
     // It should reset the token ID query parameter.
@@ -319,9 +319,9 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('prefilled: crate scoped can be added', async function (assert) {
-    let { user } = prepare(this);
+    let { user } = await prepare(this);
 
-    let token = this.db.apiToken.create({
+    let token = await this.db.apiToken.create({
       user,
       name: 'serde',
       crateScopes: ['serde', 'serde-*'],
@@ -340,7 +340,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('token not found', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new?from=1');
     assert.strictEqual(currentURL(), '/settings/tokens/new?from=1');
@@ -348,7 +348,7 @@ module('/settings/tokens/new', function (hooks) {
   });
 
   test('trusted-publishing scope', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -358,7 +358,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-scope="trusted-publishing"]');
     await click('[data-test-generate]');
 
-    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'trusted-publishing-token' } } });
+    let token = this.db.apiToken.findFirst(q => q.where({ name: 'trusted-publishing-token' }));
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'trusted-publishing-token');
     assert.strictEqual(token.expiredAt, null);

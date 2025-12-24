@@ -6,7 +6,7 @@ import { notFound } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/keywords/:keyword_id', ({ params }) => {
   let keywordId = params.keyword_id;
-  let keyword = db.keyword.findFirst({ where: { id: { equals: keywordId } } });
+  let keyword = db.keyword.findFirst(q => q.where({ id: keywordId }));
   if (!keyword) {
     return notFound();
   }

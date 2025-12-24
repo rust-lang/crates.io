@@ -3,6 +3,7 @@ import { on } from '@ember/modifier';
 
 import pageTitle from 'ember-page-title/helpers/page-title';
 
+import Alert from 'crates-io/components/alert';
 import CrateList from 'crates-io/components/crate-list';
 import PageHeader from 'crates-io/components/page-header';
 import Pagination from 'crates-io/components/pagination';
@@ -20,11 +21,11 @@ import SortDropdown from 'crates-io/components/sort-dropdown';
   />
 
   {{#if @controller.hasMultiCategoryFilter}}
-    <div class='warning'>
+    <Alert @variant='warning'>
       Support for using multiple
       <code>category:</code>
       filters is not yet implemented.
-    </div>
+    </Alert>
   {{/if}}
 
   {{#if @controller.firstResultPending}}

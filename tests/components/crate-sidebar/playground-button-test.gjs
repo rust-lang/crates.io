@@ -29,8 +29,8 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
   });
 
   test('button is hidden for unavailable crates', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
     let crateModel = await store.findRecord('crate', crate.name);
@@ -42,8 +42,8 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
   });
 
   test('button is visible for available crates', async function (assert) {
-    let crate = this.db.crate.create({ name: 'aho-corasick' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'aho-corasick' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
     let crateModel = await store.findRecord('crate', crate.name);
@@ -58,8 +58,8 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
   });
 
   test('button is hidden while Playground request is pending', async function (assert) {
-    let crate = this.db.crate.create({ name: 'aho-corasick' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'aho-corasick' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     let deferred = defer();
     this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => deferred.promise));
@@ -78,8 +78,8 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
   });
 
   test('button is hidden if the Playground request fails', async function (assert) {
-    let crate = this.db.crate.create({ name: 'aho-corasick' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'aho-corasick' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.json({}, { status: 500 });
     this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => error));

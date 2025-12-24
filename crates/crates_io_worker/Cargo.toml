@@ -9,18 +9,18 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.100"
-diesel = { version = "=2.3.3", features = ["postgres", "serde_json"] }
+diesel = { version = "=2.3.5", features = ["postgres", "serde_json"] }
 diesel-async = { version = "=0.7.4", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 futures-util = "=0.3.31"
-sentry-core = { version = "=0.45.0", features = ["client"] }
+sentry-core = { version = "=0.46.0", features = ["client"] }
 serde = { version = "=1.0.228", features = ["derive"] }
-serde_json = "=1.0.145"
+serde_json = "=1.0.147"
 thiserror = "=2.0.17"
 tokio = { version = "=1.48.0", features = ["rt", "time"]}
-tracing = "=0.1.41"
+tracing = "=0.1.44"
 
 [dev-dependencies]
 claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
-insta = { version = "=1.43.2", features = ["json"] }
+insta = { version = "=1.45.0", features = ["json"] }
 tokio = { version = "=1.48.0", features = ["macros", "sync"]}

@@ -128,8 +128,8 @@ module('Acceptance | README rendering', function (hooks) {
   setupApplicationTest(hooks);
 
   test('it works', async function (assert) {
-    let crate = this.db.crate.create({ name: 'serde' });
-    this.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
+    let crate = await this.db.crate.create({ name: 'serde' });
+    await this.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
 
     await visit('/crates/serde');
     assert.dom('[data-test-readme]').exists();
@@ -141,16 +141,16 @@ module('Acceptance | README rendering', function (hooks) {
   });
 
   test('it shows a fallback if no readme is available', async function (assert) {
-    let crate = this.db.crate.create({ name: 'serde' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'serde' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/serde');
     assert.dom('[data-test-no-readme]').exists();
   });
 
   test('it shows an error message and retry button if loading fails', async function (assert) {
-    let crate = this.db.crate.create({ name: 'serde' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'serde' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     // Simulate a server error when fetching the README
     this.worker.use(http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('', { status: 500 })));

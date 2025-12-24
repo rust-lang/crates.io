@@ -1,6 +1,5 @@
 use crate::Emails;
 use crate::cloudfront::CloudFront;
-use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::typosquat;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
@@ -8,6 +7,7 @@ use anyhow::Context;
 use bon::Builder;
 use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_docs_rs::DocsRsClient;
+use crates_io_fastly::Fastly;
 use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepo;
@@ -91,8 +91,13 @@ impl Environment {
             result.context("Failed to enqueue CloudFront invalidation processing job")?;
         }
 
-        if let Some(fastly) = self.fastly() {
-            fastly.invalidate(path).await.context("Fastly")?;
+        if let Some(fastly) = self.fastly()
+            && let Some(cdn_domain) = &self.config.storage.cdn_prefix
+        {
+            fastly
+                .purge_both_domains(cdn_domain, path)
+                .await
+                .context("Fastly")?;
         }
 
         Ok(())

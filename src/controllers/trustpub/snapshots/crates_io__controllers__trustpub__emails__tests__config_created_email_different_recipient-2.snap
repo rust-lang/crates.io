@@ -2,6 +2,7 @@
 source: src/controllers/trustpub/emails.rs
 expression: rendered.body_text
 ---
+
 Hello team-member!
 
 crates.io user octocat added a new "Trusted Publishing" configuration for GitHub Actions to a crate that you manage ("my-crate"). Trusted publishers act as trusted users and can publish new versions of the crate automatically.

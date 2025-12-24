@@ -1,39 +1,37 @@
-import { nullable, oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 import { seededRandom } from '../utils/random.js';
 
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  crateScopes: nullable(Array),
-  createdAt: String,
-  endpointScopes: nullable(Array),
-  expiredAt: nullable(String),
-  lastUsedAt: nullable(String),
-  name: String,
-  token: String,
-  revoked: Boolean,
+    crateScopes: v.optional(v.nullable(v.array(v.string())), null),
+    createdAt: v.optional(v.string(), '2017-11-19T17:59:22Z'),
+    endpointScopes: v.optional(v.nullable(v.array(v.string())), null),
+    expiredAt: v.optional(v.nullable(v.string()), null),
+    lastUsedAt: v.optional(v.nullable(v.string()), null),
+    name: v.optional(v.string()),
+    token: v.optional(v.string()),
+    revoked: v.optional(v.boolean(), false),
 
-  user: oneOf('user'),
-
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'crateScopes', () => null);
-    applyDefault(attrs, 'createdAt', () => '2017-11-19T17:59:22Z');
-    applyDefault(attrs, 'endpointScopes', () => null);
-    applyDefault(attrs, 'expiredAt', () => null);
-    applyDefault(attrs, 'lastUsedAt', () => null);
-    applyDefault(attrs, 'name', () => `API Token ${attrs.id}`);
-    applyDefault(attrs, 'token', () => generateToken(counter));
-    applyDefault(attrs, 'revoked', () => false);
-
-    if (!attrs.user) {
-      throw new Error('Missing `user` relationship on `api-token`');
-    }
-  },
-};
+    user: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('apiToken');
+    let id = input.id ?? counter;
+    let name = input.name ?? `API Token ${id}`;
+    let token = input.token ?? generateToken(id);
+    return { ...input, id, name, token };
+  }),
+);
 
 function generateToken(seed) {
   return seededRandom(seed).toString().slice(2);
 }
+
+const collection = new Collection({ schema });
+
+export default collection;

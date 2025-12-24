@@ -33,8 +33,8 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('unprivileged block is shown to a logged in user without access', async function (assert) {
-    const user = this.db.user.create();
-    this.authenticateAs(user);
+    const user = await this.db.user.create({});
+    await this.authenticateAs(user);
 
     await this.renderComponent(false);
     assert.dom('[data-test-privileged]').doesNotExist();
@@ -43,8 +43,8 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in user with access', async function (assert) {
-    const user = this.db.user.create();
-    this.authenticateAs(user);
+    const user = await this.db.user.create({});
+    await this.authenticateAs(user);
 
     await this.renderComponent(true);
     assert.dom('[data-test-privileged]').exists();
@@ -53,8 +53,8 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('placeholder block is shown to a logged in admin without sudo', async function (assert) {
-    const user = this.db.user.create({ isAdmin: true });
-    this.authenticateAs(user);
+    const user = await this.db.user.create({ isAdmin: true });
+    await this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
@@ -68,8 +68,8 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in admin without sudo with access', async function (assert) {
-    const user = this.db.user.create({ isAdmin: true });
-    this.authenticateAs(user);
+    const user = await this.db.user.create({ isAdmin: true });
+    await this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
@@ -83,8 +83,8 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in admin with sudo', async function (assert) {
-    const user = this.db.user.create({ isAdmin: true });
-    this.authenticateAs(user);
+    const user = await this.db.user.create({ isAdmin: true });
+    await this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
@@ -99,8 +99,8 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('automatic placeholder block', async function (assert) {
-    const user = this.db.user.create({ isAdmin: true });
-    this.authenticateAs(user);
+    const user = await this.db.user.create({ isAdmin: true });
+    await this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();

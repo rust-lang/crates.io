@@ -4,6 +4,9 @@ export function notFound() {
   return HttpResponse.json({ errors: [{ detail: 'Not Found' }] }, { status: 404 });
 }
 
+/**
+ * @param {import("msw").StrictRequest<import("msw").DefaultBodyType>} request
+ */
 export function pageParams(request) {
   let url = new URL(request.url);
 

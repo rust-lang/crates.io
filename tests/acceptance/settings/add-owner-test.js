@@ -6,28 +6,28 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 module('Acceptance | Settings | Add Owner', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
+  async function prepare(context) {
     let { db } = context;
 
-    let user1 = db.user.create({ name: 'blabaere' });
-    let user2 = db.user.create({ name: 'thehydroimpulse' });
-    let team1 = db.team.create({ org: 'org', name: 'blabaere' });
-    let team2 = db.team.create({ org: 'org', name: 'thehydroimpulse' });
+    let user1 = await db.user.create({ name: 'blabaere' });
+    let user2 = await db.user.create({ name: 'thehydroimpulse' });
+    let team1 = await db.team.create({ org: 'org', name: 'blabaere' });
+    let team2 = await db.team.create({ org: 'org', name: 'thehydroimpulse' });
 
-    let crate = db.crate.create({ name: 'nanomsg' });
-    db.version.create({ crate, num: '1.0.0' });
-    db.crateOwnership.create({ crate, user: user1 });
-    db.crateOwnership.create({ crate, user: user2 });
-    db.crateOwnership.create({ crate, team: team1 });
-    db.crateOwnership.create({ crate, team: team2 });
+    let crate = await db.crate.create({ name: 'nanomsg' });
+    await db.version.create({ crate, num: '1.0.0' });
+    await db.crateOwnership.create({ crate, user: user1 });
+    await db.crateOwnership.create({ crate, user: user2 });
+    await db.crateOwnership.create({ crate, team: team1 });
+    await db.crateOwnership.create({ crate, team: team2 });
 
-    context.authenticateAs(user1);
+    await context.authenticateAs(user1);
 
     return { crate, team1, team2, user1, user2 };
   }
 
   test('attempting to add owner without username', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/nanomsg/settings');
     await click('[data-test-add-owner-button]');
@@ -36,7 +36,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
   });
 
   test('attempting to add non-existent owner', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/nanomsg/settings');
     await click('[data-test-add-owner-button]');
@@ -51,9 +51,9 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
   });
 
   test('add a new owner', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
-    this.db.user.create({ name: 'iain8' });
+    await this.db.user.create({ name: 'iain8' });
 
     await visit('/crates/nanomsg/settings');
     await click('[data-test-add-owner-button]');
@@ -66,10 +66,10 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
   });
 
   test('add a team owner', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
-    this.db.user.create({ name: 'iain8' });
-    this.db.team.create({ org: 'rust-lang', name: 'crates-io' });
+    await this.db.user.create({ name: 'iain8' });
+    await this.db.team.create({ org: 'rust-lang', name: 'crates-io' });
 
     await visit('/crates/nanomsg/settings');
     await click('[data-test-add-owner-button]');

@@ -3,7 +3,7 @@ import { loadFixtures } from '@crates-io/msw/fixtures';
 
 test.describe('Acceptance | user page', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
     await page.goto('/users/thehydroimpulse');
   });
 

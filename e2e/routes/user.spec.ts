@@ -12,7 +12,7 @@ test.describe('Route | user', { tag: '@routes' }, () => {
   });
 
   test('server error causes the error page to be shown', async ({ page, msw }) => {
-    msw.worker.use(http.get('/api/v1/users/:id', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/users/:id', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/users/foo');
     await expect(page).toHaveURL('/users/foo');

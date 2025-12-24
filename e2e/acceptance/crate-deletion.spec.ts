@@ -2,12 +2,12 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crate deletion', { tag: '@acceptance' }, () => {
   test('happy path', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
-    msw.db.crateOwnership.create({ crate, user });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user });
 
     await page.goto('/crates/foo');
     await expect(page).toHaveURL('/crates/foo');
@@ -32,7 +32,7 @@ test.describe('Acceptance | crate deletion', { tag: '@acceptance' }, () => {
     let message = 'Crate foo has been successfully deleted.';
     await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(message);
 
-    crate = msw.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
-    expect(crate).toBeNull();
+    crate = msw.db.crate.findFirst(q => q.where({ name: 'foo' }));
+    expect(crate).toBeUndefined();
   });
 });

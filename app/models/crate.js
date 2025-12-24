@@ -4,7 +4,7 @@ import { waitForPromise } from '@ember/test-waiters';
 import { cached } from '@glimmer/tracking';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
-import { task } from 'ember-concurrency';
+import { keepLatestTask, task } from 'ember-concurrency';
 
 export default class Crate extends Model {
   @attr name;
@@ -28,6 +28,12 @@ export default class Crate extends Model {
   @attr homepage;
   @attr documentation;
   @attr repository;
+
+  /**
+   * Whether this crate can only be published via Trusted Publishing.
+   * @type {boolean}
+   */
+  @attr trustpub_only;
 
   /**
    * This isn't an attribute in the crate response.
@@ -122,5 +128,11 @@ export default class Crate extends Model {
     let versionsRef = this.hasMany('versions');
     let fut = reload === true ? versionsRef.reload() : versionsRef.load();
     return (await fut) ?? [];
+  });
+
+  setTrustpubOnlyTask = keepLatestTask(async trustpubOnly => {
+    let data = { crate: { trustpub_only: trustpubOnly } };
+    let payload = await waitForPromise(apiAction(this, { method: 'PATCH', data }));
+    this.store.pushPayload(payload);
   });
 }

@@ -1,6 +1,7 @@
-import { oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
+import * as counters from '../utils/counters.js';
 
 /**
  * This is a MSW-only model, that is used to keep track of the current
@@ -10,16 +11,19 @@ import { applyDefault } from '../utils/defaults.js';
  * This mock implementation means that there can only ever exist one
  * session at a time.
  */
-export default {
-  id: primaryKey(Number),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  user: oneOf('user'),
+    user: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('mswSession');
+    let id = input.id ?? counter;
+    return { ...input, id };
+  }),
+);
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
+const collection = new Collection({ schema });
 
-    if (!attrs.user) {
-      throw new Error('Missing `user` relationship');
-    }
-  },
-};
+export default collection;

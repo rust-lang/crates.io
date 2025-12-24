@@ -17,82 +17,58 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
-  CARGO_DENY_VERSION: 0.18.5
+  CARGO_DENY_VERSION: 0.18.9
   # renovate: datasource=github-releases depName=cargo-insta lookupName=mitsuhiko/insta versioning=semver
-  CARGO_INSTA_VERSION: 1.43.2
+  CARGO_INSTA_VERSION: 1.45.0
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
+  # renovate: datasource=crate depName=diesel-guard versioning=semver
+  DIESEL_GUARD_VERSION: 0.3.0
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
-  OXIPNG_VERSION: 9.1.5
+  OXIPNG_VERSION: 10.0.0
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 10.20.0
+  PNPM_VERSION: 10.26.1
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
-  TYPST_VERSION: 0.14.0
+  TYPST_VERSION: 0.14.2
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.16.3
+  ZIZMOR_VERSION: 1.19.0
 
 jobs:
-  changed-files:
-    name: Changed Files
+  filter-jobs:
+    name: Filter Jobs
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
           # This is needed to get the commit history for the changed-files action
           # (see https://github.com/tj-actions/changed-files/blob/v46.0.5/README.md#usage-)
           fetch-depth: 0
 
-      - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
-        id: changed-files-non-js
+      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        id: changed-files
         with:
-          files_ignore: |
-            app/**
-            e2e/**
-            packages/**
-            public/**
-            tests/**
-            eslint.config.mjs
-            .template-lintrc.js
-            ember-cli-build.js
-            package.json
-            pnpm-lock.yaml
-            testem.js
-
-      - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
-        id: changed-files-non-rust
-        with:
-          files_ignore: |
-            crates/**
-            migrations/**
-            src/**
-            build.rs
-            Cargo.lock
-            Cargo.toml
-            rust-toolchain.toml
-
-      - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
-        id: changed-files-rust-lockfile
-        with:
-          files: Cargo.lock
-
-      - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
-        id: changed-files-ci
-        with:
-          files: .github/workflows/**
+          files_yaml_from_source_file: .github/changed-files.yml
 
     outputs:
-      non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
-      non-rust: ${{ steps.changed-files-non-rust.outputs.any_modified }}
-      rust-lockfile: ${{ steps.changed-files-rust-lockfile.outputs.any_modified }}
-      ci: ${{ steps.changed-files-ci.outputs.any_modified }}
+      backend-lint: ${{ steps.changed-files.outputs.backend_lint_any_modified }}
+      backend-deps: ${{ steps.steps.changed-files.outputs.backend_deps_any_modified || github.event_name == 'push' }}
+      backend-migrations: ${{ steps.changed-files.outputs.backend_migrations_any_modified }}
+      backend-test: ${{ steps.changed-files.outputs.backend_test_any_modified }}
+      frontend-lint: ${{ steps.changed-files.outputs.frontend_lint_any_modified }}
+      frontend-test: ${{ steps.changed-files.outputs.frontend_test_any_modified }}
+      msw-test: ${{ steps.changed-files.outputs.msw_test_any_modified }}
+      api-client-test: ${{ steps.changed-files.outputs.api_client_test_any_modified }}
+      e2e-test: ${{ steps.changed-files.outputs.e2e_test_any_modified }}
+      svelte: ${{ steps.changed-files.outputs.svelte_any_modified }}
+      zizmor: ${{ steps.changed-files.outputs.zizmor_any_modified }}
 
   percy-nonce:
     name: Frontend / Percy Nonce
     runs-on: ubuntu-latest
-    needs: changed-files
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.frontend-test == 'true' || needs.filter-jobs.outputs.e2e-test == 'true'
 
     # persist job results to other jobs in the workflow
     outputs:
@@ -107,22 +83,22 @@ jobs:
   backend-lint:
     name: Backend / Lint
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.non-js == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-lint == 'true'
 
     env:
       RUSTFLAGS: "-D warnings"
       RUSTDOCFLAGS: "-D warnings"
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - run: rustup component add rustfmt
       - run: rustup component add clippy
 
-      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
@@ -133,15 +109,15 @@ jobs:
   backend-deps:
     name: Backend / dependencies
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-deps == 'true'
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
@@ -151,11 +127,29 @@ jobs:
       - run: cargo install cargo-machete --vers ${CARGO_MACHETE_VERSION}
       - run: cargo machete
 
+  backend-migrations:
+    name: Backend / migrations
+    runs-on: ubuntu-24.04
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-migrations == 'true'
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - run: cargo install diesel-guard --vers ${DIESEL_GUARD_VERSION}
+      - run: diesel-guard check migrations/
+
   backend-test:
     name: Backend / Test
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.non-js == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-test == 'true'
 
     env:
       RUST_BACKTRACE: 1
@@ -164,7 +158,7 @@ jobs:
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -192,7 +186,7 @@ jobs:
           wget -q "https://github.com/mozilla/Fira/archive/4.202.zip"
           unzip -q "4.202.zip"
 
-      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
@@ -212,11 +206,11 @@ jobs:
   frontend-lint:
     name: Frontend / Lint
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.frontend-lint == 'true'
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -224,7 +218,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           cache: pnpm
           node-version-file: package.json
@@ -239,8 +233,8 @@ jobs:
   frontend-test:
     name: Frontend / Test
     runs-on: ubuntu-24.04
-    needs: [changed-files, percy-nonce]
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: [ filter-jobs, percy-nonce ]
+    if: needs.filter-jobs.outputs.frontend-test == 'true'
 
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
@@ -250,9 +244,10 @@ jobs:
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
       PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
       PERCY_PARALLEL_TOTAL: 2
+      PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -260,7 +255,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           cache: pnpm
           node-version-file: package.json
@@ -276,11 +271,11 @@ jobs:
   msw-test:
     name: Frontend / Test (@crates-io/msw)
     runs-on: ubuntu-24.04
-    needs: [changed-files]
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.msw-test == 'true'
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -288,7 +283,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           cache: pnpm
           node-version-file: package.json
@@ -297,12 +292,36 @@ jobs:
 
       - run: pnpm --filter "@crates-io/msw" test
 
+  api-client-test:
+    name: Frontend / Test (@crates-io/api-client)
+    runs-on: ubuntu-24.04
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.api-client-test == 'true'
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - run: pnpm install
+
+      - run: pnpm --filter "@crates-io/api-client" test
+
   e2e-test:
     name: Frontend / Test (playwright)
     runs-on: ubuntu-24.04
-    needs: [changed-files, percy-nonce]
+    needs: [ filter-jobs, percy-nonce ]
     timeout-minutes: 60
-    if: needs.changed-files.outputs.non-rust == 'true'
+    if: needs.filter-jobs.outputs.e2e-test == 'true'
 
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
@@ -312,9 +331,10 @@ jobs:
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
       PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
       PERCY_PARALLEL_TOTAL: 2
+      PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -322,7 +342,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           cache: pnpm
           node-version-file: package.json
@@ -334,7 +354,7 @@ jobs:
       - if: github.repository == 'rust-lang/crates.io'
         run: pnpm percy exec --parallel -- pnpm e2e
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -344,21 +364,53 @@ jobs:
   zizmor:
     name: CI / Lint
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.ci == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.zizmor == 'true'
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+      - uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
       - run: uvx zizmor@${ZIZMOR_VERSION} --format=sarif . > results.sarif
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee # v4.31.2
+      - uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
         with:
           sarif_file: results.sarif
           category: zizmor
+
+  svelte:
+    name: Svelte (experimental)
+    runs-on: ubuntu-24.04
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.svelte == 'true'
+
+    defaults:
+      run:
+        working-directory: svelte
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - run: pnpm install
+
+      - run: pnpm lint
+      - run: pnpm check
+      - run: pnpm build
+      - run: pnpm playwright install chromium-headless-shell
+      - run: pnpm test
