@@ -1,6 +1,6 @@
 use crate::dialoguer;
 use crates_io::db;
-use crates_io::models::{Crate, Version};
+use crates_io::models::{Crate, GitIndexSyncQueueItem, Version};
 use crates_io::schema::versions;
 use crates_io::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use crates_io_worker::BackgroundJob;
@@ -67,12 +67,12 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
         .execute(conn)
         .await?;
 
-    let git_index_job = SyncToGitIndex.enqueue_crate(conn, &krate.name);
+    GitIndexSyncQueueItem::queue(conn, &krate.name).await?;
     let sparse_index_job = SyncToSparseIndex::new(&krate.name);
     let update_default_version_job = UpdateDefaultVersion::new(krate.id);
 
     tokio::try_join!(
-        git_index_job,
+        SyncToGitIndex.enqueue(conn),
         sparse_index_job.enqueue(conn),
         update_default_version_job.enqueue(conn),
     )?;

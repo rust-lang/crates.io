@@ -5,7 +5,7 @@ use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontInvalidationQueueItem, GitIndexSyncQueueItem};
 use crates_io_index::Repository;
-use crates_io_worker::{BackgroundJob, EnqueueError};
+use crates_io_worker::BackgroundJob;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use serde::{Deserialize, Serialize};
@@ -29,23 +29,6 @@ struct PendingGitIndexSync {
 }
 
 impl SyncToGitIndex {
-    /// Enqueues a crate to be synced, and ensures that there is also an instance of the job
-    /// enqueued in the worker.
-    ///
-    /// This is a convenience method that returns the usual [`EnqueueError`] returned by
-    /// [`BackgroundJob::enqueue`].
-    #[instrument(skip_all)]
-    pub async fn enqueue_crate(
-        conn: &mut AsyncPgConnection,
-        crate_name: &str,
-    ) -> Result<Option<i64>, EnqueueError> {
-        GitIndexSyncQueueItem::queue(conn, crate_name)
-            .await
-            .map_err(|e| EnqueueError::DatabaseError(e))?;
-
-        Self.enqueue(conn).await
-    }
-
     /// Processes a single batch of crates that are awaiting Git index updates.
     #[instrument(skip_all)]
     async fn process_batch(
