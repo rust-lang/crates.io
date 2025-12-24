@@ -28,6 +28,11 @@ struct PendingGitIndexSync {
     new: Option<String>,
 }
 
+/// A job that syncs all pending crate changes to the Git index.
+///
+/// Note that you must have created one or more [`GitIndexSyncQueueItem`] records in the database
+/// using [`GitIndexSyncQueueItem::queue`] before enqueuing this job, otherwise this job will do
+/// nothing.
 impl SyncToGitIndex {
     /// Processes a single batch of crates that are awaiting Git index updates.
     #[instrument(skip_all)]
