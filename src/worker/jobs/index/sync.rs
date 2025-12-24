@@ -64,7 +64,7 @@ impl SyncToGitIndex {
                         .await?
                         .into_iter()
                 {
-                    let new = get_index_data(&crate_name, conn)
+                    let new = get_index_data(&crate_name, conn, env.config.index_include_pubtime)
                         .await
                         .with_context(|| format!("Failed to get index data for {crate_name}"))?;
 
