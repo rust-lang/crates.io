@@ -4,7 +4,7 @@ use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use futures_util::TryStreamExt;
-use object_store::{ObjectMeta, ObjectStore};
+use object_store::{ObjectMeta, ObjectStore, ObjectStoreExt};
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 

@@ -5,6 +5,7 @@ use crates_io::worker::jobs::DumpDb;
 use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};
+use object_store::ObjectStoreExt;
 use regex::Regex;
 use std::io::{Cursor, Read};
 use std::sync::LazyLock;

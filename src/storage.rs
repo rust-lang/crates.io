@@ -8,7 +8,9 @@ use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
 use object_store::prefix::PrefixStore;
-use object_store::{Attribute, Attributes, ClientOptions, ObjectStore, PutPayload, Result};
+use object_store::{
+    Attribute, Attributes, ClientOptions, ObjectStore, ObjectStoreExt, PutPayload, Result,
+};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::io::Cursor;
@@ -380,17 +382,10 @@ impl Storage {
 
     async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<Vec<Path>> {
         let objects = self.store.list(Some(prefix));
-        let mut paths = Vec::new();
-        let locations = objects
-            .map(|meta| meta.map(|m| m.location))
-            .inspect(|r| {
-                if let Ok(path) = r {
-                    paths.push(path.clone());
-                }
-            })
-            .boxed();
+        let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
 
-        self.store
+        let paths = self
+            .store
             .delete_stream(locations)
             .try_collect::<Vec<_>>()
             .await?;
