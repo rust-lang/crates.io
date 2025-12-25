@@ -4,14 +4,20 @@ import svg from '@poppanator/sveltekit-svg';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { createLogger } from 'vite';
+import { analyzer } from 'vite-bundle-analyzer';
 import { defineConfig } from 'vitest/config';
 
 const API_HOST = process.env.API_HOST ?? 'https://crates.io';
 
 const proxyLogger = createLogger('info', { prefix: '[proxy]' });
 
+const plugins = [sveltekit(), svg()];
+if (process.env.BUNDLE_ANALYSIS) {
+  plugins.push(analyzer({ analyzerMode: 'static' }));
+}
+
 export default defineConfig({
-  plugins: [sveltekit(), svg()],
+  plugins,
 
   server: {
     proxy: {
