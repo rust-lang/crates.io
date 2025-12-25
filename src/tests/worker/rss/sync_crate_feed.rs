@@ -6,6 +6,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
+use object_store::ObjectStoreExt;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_crate_feed() -> anyhow::Result<()> {

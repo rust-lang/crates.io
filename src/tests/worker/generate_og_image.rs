@@ -4,6 +4,7 @@ use claims::{assert_err, assert_ok};
 use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
 use insta::assert_binary_snapshot;
+use object_store::ObjectStoreExt;
 use std::process::Command;
 use tracing::warn;
 
