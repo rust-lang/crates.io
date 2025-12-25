@@ -21,6 +21,9 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
+  "dependencies": {
+    "@crates-io/api-client": "workspace:*"
+  },
   "devDependencies": {
     "@chromatic-com/storybook": "4.1.3",
     "@eslint/compat": "2.0.0",

@@ -364,6 +364,10 @@ importers:
         version: 4.0.16(@types/node@24.10.4)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.4(@types/node@24.10.4)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.2)
 
   svelte:
+    dependencies:
+      '@crates-io/api-client':
+        specifier: workspace:*
+        version: link:../packages/crates-io-api-client
     devDependencies:
       '@chromatic-com/storybook':
         specifier: 4.1.3
