@@ -1,0 +1,9 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hello {{ user_name }}!</p>
+
+<p>A new API token with the name "<strong>{{ token_name }}</strong>" was recently added to your {{ domain }} account.</p>
+
+<p>If you did not create this token, you should revoke it immediately: <a href="https://{{ domain }}/settings/tokens">https://{{ domain }}/settings/tokens</a>.</p>
+{% endblock %}

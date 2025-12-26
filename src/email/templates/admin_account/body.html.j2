@@ -1,0 +1,21 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+{% if added_admins -%}
+<p>Granted admin access:</p>
+
+<ul>
+{% for admin in added_admins -%}
+<li>{{ admin }}</li>
+{% endfor %}
+</ul>
+{% endif -%}
+{% if removed_admins -%}
+<p>Revoked admin access:</p>
+<ul>
+{% for admin in removed_admins -%}
+<li>{{ admin }}</li>
+{% endfor -%}
+</ul>
+{% endif %}
+{% endblock %}

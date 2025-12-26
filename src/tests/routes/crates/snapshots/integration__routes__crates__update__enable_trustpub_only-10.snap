@@ -5,6 +5,11 @@ expression: app.emails_snapshot().await
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Publishing method restriction changed for foo
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -23,3 +28,22 @@ If you are unable to revert the change and need to do so, you can email help@cra
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>You changed the publishing method restriction for your crate "<strong>foo</strong>".</p>
+
+<p><strong>This crate can now ONLY be published via Trusted Publishing.</strong> Publishing with API tokens has been disabled.</p>
+
+<p>This means that only trusted publishers (like GitHub Actions or GitLab CI workflows) that you have configured will be able to publish new versions of this crate. API tokens will no longer work for publishing.</p>
+
+<p>If you did not make this change and you think it was made maliciously, you can revert the setting from the "Settings" tab on the crate's page.</p>
+
+<p>If you are unable to revert the change and need to do so, you can email <a href="mailto:help@crates.io">help@crates.io</a> for assistance.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--

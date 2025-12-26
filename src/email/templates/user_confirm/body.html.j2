@@ -1,0 +1,11 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hello {{ user_name }}!</p>
+
+<p>Welcome to crates.io. Please click the link below to verify your email address:</p>
+
+<p><a href="https://{{ domain }}/confirm/{{ token }}">https://{{ domain }}/confirm/{{ token }}</a></p>
+
+<p>Thank you!</p>
+{% endblock %}

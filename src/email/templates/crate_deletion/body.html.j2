@@ -1,0 +1,9 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hi {{ user }},</p>
+
+<p>Your "<strong>{{ krate }}</strong>" crate has been deleted, per your request.</p>
+
+<p>If you did not initiate this deletion, your account may have been compromised. Please contact us at <a href="mailto:help@crates.io">help@crates.io</a>.</p>
+{% endblock %}

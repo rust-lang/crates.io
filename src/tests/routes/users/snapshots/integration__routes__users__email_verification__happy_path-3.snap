@@ -5,6 +5,11 @@ expression: app.emails_snapshot().await
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Please confirm your email address
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -19,3 +24,18 @@ Thank you!
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>Welcome to crates.io. Please click the link below to verify your email address:</p>
+
+<p><a href="https://crates.io/confirm/[confirm-token]">https://crates.io/confirm/[confirm-token]</a></p>
+
+<p>Thank you!</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--

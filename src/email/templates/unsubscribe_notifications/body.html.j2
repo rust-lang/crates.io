@@ -1,0 +1,9 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hello {{ user_name }}!</p>
+
+<p>You have been unsubscribed from publish notifications.</p>
+
+<p>If you would like to resubscribe, please visit <a href="https://{{ domain }}/settings/profile">https://{{ domain }}/settings/profile</a>.</p>
+{% endblock %}

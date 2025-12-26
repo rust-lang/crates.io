@@ -1,0 +1,11 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hello {{ recipient }}!</p>
+
+<p>A new version of the <strong>{{ krate }}</strong> crate was published{{ publisher_info }} at {{ publish_time }}.</p>
+
+<p>View v{{ version }} here: <a href="https://{{ domain }}/crates/{{ krate }}/{{ version }}">https://{{ domain }}/crates/{{ krate }}/{{ version }}</a></p>
+
+<p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
+{% endblock %}
