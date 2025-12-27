@@ -2,7 +2,10 @@ import type { Preview } from '@storybook/sveltekit';
 
 import '../src/lib/css/global.css';
 
+import ColorSchemeDecorator from '../src/lib/storybook/ColorSchemeDecorator.svelte';
+
 const preview: Preview = {
+  decorators: [() => ColorSchemeDecorator],
   initialGlobals: {
     backgrounds: { value: 'content' },
   },

@@ -1,17 +1,17 @@
 <script lang="ts">
+  import type { ColorScheme } from '$lib/color-scheme.svelte';
   import type { Component } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
   import ColorModeIcon from '$lib/assets/color-mode.svg?component';
   import MoonIcon from '$lib/assets/moon.svg?component';
   import SunIcon from '$lib/assets/sun.svg?component';
+  import { getColorScheme } from '$lib/color-scheme.svelte';
   import * as Dropdown from './dropdown';
 
   type Props = HTMLAttributes<HTMLDivElement>;
 
   let { class: className, ...restProps }: Props = $props();
-
-  type ColorScheme = 'light' | 'dark' | 'system';
 
   interface SchemeOption {
     mode: ColorScheme;
@@ -24,17 +24,9 @@
     { mode: 'system', Icon: ColorModeIcon },
   ];
 
-  // TODO: Replace with actual color scheme service/store
-  let currentScheme = $state<ColorScheme>('system');
+  let colorScheme = getColorScheme();
 
-  let CurrentIcon: Component = $derived(COLOR_SCHEMES.find(({ mode }) => mode === currentScheme)?.Icon ?? SunIcon);
-
-  function setScheme(mode: ColorScheme) {
-    currentScheme = mode;
-    // TODO: Persist to localStorage and apply to document
-    // localStorage.setItem('color-scheme', mode);
-    // applyColorScheme(mode);
-  }
+  let CurrentIcon: Component = $derived(COLOR_SCHEMES.find(({ mode }) => mode === colorScheme.scheme)?.Icon ?? SunIcon);
 </script>
 
 <div class={['color-scheme-menu', className]} {...restProps}>
@@ -49,9 +41,9 @@
         <Dropdown.Item>
           <button
             class="menu-button button-reset"
-            class:selected={mode === currentScheme}
+            class:selected={mode === colorScheme.scheme}
             type="button"
-            onclick={() => setScheme(mode)}
+            onclick={() => colorScheme.setScheme(mode)}
           >
             <Icon class="icon" />
             {mode}
