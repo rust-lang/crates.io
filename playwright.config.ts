@@ -7,6 +7,28 @@ import { defineConfig, devices } from '@playwright/test';
 // require('dotenv').config();
 
 /**
+ * TEST_APP controls which frontend app to test:
+ * - 'ember' (default): Test the Ember.js app on port 4200
+ * - 'svelte': Test the SvelteKit app on port 5173
+ */
+const TEST_APP = process.env.TEST_APP ?? 'ember';
+
+const APP_CONFIG = {
+  ember: {
+    url: 'http://127.0.0.1:4200',
+    command: 'pnpm start',
+  },
+  svelte: {
+    url: 'http://localhost:4173',
+    command: 'npm run build && npm run preview',
+    cwd: './svelte',
+    env: { PLAYWRIGHT: '1' },
+  },
+} as const;
+
+const appConfig = APP_CONFIG[TEST_APP] ?? APP_CONFIG.ember;
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -26,7 +48,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://127.0.0.1:4200',
+    baseURL: appConfig.url,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -77,8 +99,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm start',
-    url: 'http://127.0.0.1:4200',
+    ...appConfig,
     reuseExistingServer: !process.env.CI,
     timeout: 5 * 60 * 1000,
   },

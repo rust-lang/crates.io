@@ -10,6 +10,8 @@ import { EmberPage, EmberPageOptions } from './fixtures/ember';
 import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
 import { PercyPage } from './fixtures/percy';
 
+const TEST_APP = process.env.TEST_APP ?? 'ember';
+
 export type AppOptions = {
   clockOptions: FakeTimersOptions;
   emberOptions: EmberPageOptions;
@@ -72,7 +74,7 @@ export const test = base.extend<AppOptions & AppFixtures>({
       await ember.setup(emberOptions);
       await use(ember);
     },
-    { auto: true, scope: 'test' },
+    { auto: TEST_APP === 'ember', scope: 'test' },
   ],
   percy: async ({ page }, use, testInfo) => {
     let percy = new PercyPage(page, testInfo);

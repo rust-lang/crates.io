@@ -16,7 +16,8 @@ const config = {
     paths: {
       // We are serving the app from the `/svelte` subdirectory for now
       // to be able to serve it alongside the Ember.js app at `/`.
-      base: process.env.VITEST ? '' : '/svelte',
+      // Use empty base path for tests (Vitest unit tests and Playwright e2e tests).
+      base: process.env.VITEST || process.env.PLAYWRIGHT ? '' : '/svelte',
     },
   },
 };
