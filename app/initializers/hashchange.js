@@ -25,8 +25,8 @@ function hashchange() {
     return;
   }
 
-  const hash = decodeFragmentValue(location.hash);
-  const target = findElementByFragmentName(document, `user-content-${hash}`);
+  let hash = decodeFragmentValue(location.hash);
+  let target = findElementByFragmentName(document, `user-content-${hash}`);
   if (target) {
     target.scrollIntoView();
   }

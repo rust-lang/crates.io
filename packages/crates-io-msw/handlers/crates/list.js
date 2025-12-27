@@ -8,7 +8,7 @@ import { getSession } from '../../utils/session.js';
 export default http.get('/api/v1/crates', async ({ request }) => {
   let url = new URL(request.url);
 
-  const { start, end } = pageParams(request);
+  let { start, end } = pageParams(request);
 
   let crates = db.crate.findMany();
 

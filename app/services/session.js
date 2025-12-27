@@ -203,7 +203,7 @@ export default class SessionService extends Service {
     // If the user is an admin, we need to look up whether they have enabled
     // sudo mode.
     if (currentUser?.is_admin) {
-      const expiry = localStorage.getItem('sudo');
+      let expiry = localStorage.getItem('sudo');
       if (expiry !== null) {
         try {
           // Trigger sudoTask, but without waiting for it to complete.
@@ -222,7 +222,7 @@ export default class SessionService extends Service {
 
   sudoTask = restartableTask(async until => {
     try {
-      const now = Date.now();
+      let now = Date.now();
 
       if (until > now) {
         // Since this task will replace any running task, we should update local

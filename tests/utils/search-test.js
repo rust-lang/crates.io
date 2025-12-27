@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 import { processSearchQuery } from '../../utils/search';
 
 module('processSearchQuery()', function () {
-  const TESTS = [
+  let TESTS = [
     ['foo', { q: 'foo' }],
     ['  foo    bar     ', { q: 'foo bar' }],
     ['foo keyword:bar', { q: 'foo', keyword: 'bar' }],

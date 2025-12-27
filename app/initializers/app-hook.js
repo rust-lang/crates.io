@@ -8,7 +8,7 @@ export function initialize(app) {
   }
 
   // This is not available in Ember test
-  const owner = app.__container__?.owner;
+  let owner = app.__container__?.owner;
   if (!owner) {
     return;
   }
@@ -26,7 +26,7 @@ export function initialize(app) {
 }
 
 async function processHooks(owner, app) {
-  const hooks = window[Symbol.for(APP_HOOK_KEY)];
+  let hooks = window[Symbol.for(APP_HOOK_KEY)];
   if (hooks && Array.isArray(hooks)) {
     for (let hook of hooks) {
       await hook(owner, app);

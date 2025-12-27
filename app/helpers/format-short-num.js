@@ -1,6 +1,9 @@
 import Helper from '@ember/component/helper';
 import { service } from '@ember/service';
 
+const THRESHOLD = 1500;
+const UNITS = ['', 'K', 'M'];
+
 /**
  * This matches the implementation in https://github.com/rust-lang/crates_io_og_image/blob/v0.2.1/src/formatting.rs
  * to ensure that we render roughly the same values in our user interface and the generated OpenGraph images.
@@ -9,9 +12,6 @@ export default class FormatShortNumHelper extends Helper {
   @service intl;
 
   compute([value]) {
-    const THRESHOLD = 1500;
-    const UNITS = ['', 'K', 'M'];
-
     let numValue = Number(value);
     let unitIndex = 0;
 

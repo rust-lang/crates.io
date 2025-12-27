@@ -32,7 +32,7 @@ module('Acceptance | support', function (hooks) {
     assert.dom('[data-test-id="support-main-content"] section').exists({ count: 1 });
     assert.dom('[data-test-id="inquire-list-section"]').exists();
     assert.dom('[data-test-id="inquire-list"]').exists();
-    const listitem = findAll('[data-test-id="inquire-list"] li');
+    let listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
       ['Report a crate that violates policies'].concat([
@@ -52,7 +52,7 @@ module('Acceptance | support', function (hooks) {
     assert.dom('[data-test-id="support-main-content"] section').exists({ count: 1 });
     assert.dom('[data-test-id="inquire-list-section"]').exists();
     assert.dom('[data-test-id="inquire-list"]').exists();
-    const listitem = findAll('[data-test-id="inquire-list"] li');
+    let listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
       ['Report a crate that violates policies'].concat([
@@ -210,7 +210,7 @@ test detail
         console.error(error);
         console.log(getSettledState());
         // display DOM tree for debugging
-        const walker = document.createTreeWalker(
+        let walker = document.createTreeWalker(
           document.querySelector('main'),
           NodeFilter.SHOW_ELEMENT + NodeFilter.SHOW_TEXT,
         );

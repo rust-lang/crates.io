@@ -32,7 +32,7 @@ export default class TokenListRoute extends Route {
   setupController(controller, model) {
     super.setupController(controller, model);
     if (model) {
-      const { name, endpoint_scopes, crate_scopes } = model;
+      let { name, endpoint_scopes, crate_scopes } = model;
 
       controller.name = name;
       if (endpoint_scopes) {

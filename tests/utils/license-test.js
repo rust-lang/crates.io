@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 import { parseLicense } from '../../utils/license';
 
 module('parseLicense()', function () {
-  const TESTS = [
+  let TESTS = [
     ['MIT', [{ isKeyword: false, link: 'https://choosealicense.com/licenses/mit', text: 'MIT' }]],
     [
       'MIT OR Apache-2.0',

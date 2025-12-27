@@ -14,9 +14,9 @@ module('Route | crate.settings', hooks => {
   setupApplicationTest(hooks);
 
   async function prepare(context) {
-    const user = await context.db.user.create({});
+    let user = await context.db.user.create({});
 
-    const crate = await context.db.crate.create({ name: 'foo' });
+    let crate = await context.db.crate.create({ name: 'foo' });
     await context.db.version.create({ crate });
     await context.db.crateOwnership.create({ crate, user });
 
@@ -24,7 +24,7 @@ module('Route | crate.settings', hooks => {
   }
 
   test('unauthenticated', async function (assert) {
-    const crate = await this.db.crate.create({ name: 'foo' });
+    let crate = await this.db.crate.create({ name: 'foo' });
     await this.db.version.create({ crate });
 
     await visit('/crates/foo/settings');
@@ -34,9 +34,9 @@ module('Route | crate.settings', hooks => {
   });
 
   test('not an owner', async function (assert) {
-    const { crate } = await prepare(this);
+    let { crate } = await prepare(this);
 
-    const otherUser = await this.db.user.create({});
+    let otherUser = await this.db.user.create({});
     await this.authenticateAs(otherUser);
 
     await visit(`/crates/${crate.name}/settings`);
@@ -46,7 +46,7 @@ module('Route | crate.settings', hooks => {
   });
 
   test('happy path', async function (assert) {
-    const { crate, user } = await prepare(this);
+    let { crate, user } = await prepare(this);
     await this.authenticateAs(user);
 
     await visit(`/crates/${crate.name}/settings`);
@@ -66,7 +66,7 @@ module('Route | crate.settings', hooks => {
 
   module('Trusted Publishing', function () {
     test('mixed GitHub and GitLab configs', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       // Create GitHub configs
@@ -114,7 +114,7 @@ module('Route | crate.settings', hooks => {
 
     module('GitHub', function () {
       test('happy path', async function (assert) {
-        const { crate, user } = await prepare(this);
+        let { crate, user } = await prepare(this);
         await this.authenticateAs(user);
 
         // Create two GitHub configs for the crate
@@ -194,7 +194,7 @@ module('Route | crate.settings', hooks => {
 
     module('GitLab', function () {
       test('happy path', async function (assert) {
-        const { crate, user } = await prepare(this);
+        let { crate, user } = await prepare(this);
         await this.authenticateAs(user);
 
         // Create two GitLab configs for the crate
@@ -279,7 +279,7 @@ module('Route | crate.settings', hooks => {
 
   module('trustpub_only warning banner', function () {
     test('hidden when flag is false', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
@@ -288,7 +288,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('hidden when flag is true and configs exist', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -309,7 +309,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('shown when flag is true but no configs exist', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -328,7 +328,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('disappears when checkbox is unchecked', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -346,7 +346,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('appears when checkbox is checked with no configs', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -375,7 +375,7 @@ module('Route | crate.settings', hooks => {
 
   module('trustpub_only checkbox', function () {
     test('hidden when no configs and flag is false', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
@@ -384,7 +384,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('visible when GitHub configs exist', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       await this.db.trustpubGithubConfig.create({
@@ -401,7 +401,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('visible when GitLab configs exist', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       await this.db.trustpubGitlabConfig.create({
@@ -418,7 +418,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('visible when flag is true but no configs', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -433,7 +433,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('stays visible after disabling when no configs exist', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -460,7 +460,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('enabling trustpub_only', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       await this.db.trustpubGithubConfig.create({
@@ -482,7 +482,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('disabling trustpub_only', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.db.crate.update(q => q.where({ id: crate.id }), {
         data(c) {
           c.trustpubOnly = true;
@@ -509,7 +509,7 @@ module('Route | crate.settings', hooks => {
     });
 
     test('loading and error state', async function (assert) {
-      const { crate, user } = await prepare(this);
+      let { crate, user } = await prepare(this);
       await this.authenticateAs(user);
 
       await this.db.trustpubGithubConfig.create({

@@ -14,7 +14,7 @@ export default class UserRoute extends Route {
   };
 
   async model(params, transition) {
-    const { user_id } = params;
+    let { user_id } = params;
     try {
       let user = await this.store.queryRecord('user', { user_id });
 

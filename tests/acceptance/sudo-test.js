@@ -11,7 +11,7 @@ module('Acceptance | sudo', function (hooks) {
   setupApplicationTest(hooks);
 
   async function prepare(context, isAdmin) {
-    const user = await context.db.user.create({
+    let user = await context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -19,12 +19,12 @@ module('Acceptance | sudo', function (hooks) {
       isAdmin,
     });
 
-    const crate = await context.db.crate.create({
+    let crate = await context.db.crate.create({
       name: 'foo',
       newest_version: '0.1.0',
     });
 
-    const version = await context.db.version.create({
+    let version = await context.db.version.create({
       crate,
       num: '0.1.0',
     });
@@ -73,7 +73,7 @@ module('Acceptance | sudo', function (hooks) {
 
     await visit('/crates/foo/versions');
 
-    const untilAbout = Date.now() + 6 * 60 * 60 * 1000;
+    let untilAbout = Date.now() + 6 * 60 * 60 * 1000;
     await click('[data-test-enable-admin-actions]');
 
     // Test the various header elements.
@@ -83,10 +83,10 @@ module('Acceptance | sudo', function (hooks) {
 
     // Test that the expiry time is sensible. We'll allow a minute either way in
     // case of slow tests or slightly wonky clocks.
-    const disable = find('[data-test-disable-admin-actions] > div');
+    let disable = find('[data-test-disable-admin-actions] > div');
     let seen = 0;
-    for (const ts of [untilAbout - 60 * 1000, untilAbout, untilAbout + 60 * 1000]) {
-      const time = format(new Date(ts), 'HH:mm');
+    for (let ts of [untilAbout - 60 * 1000, untilAbout, untilAbout + 60 * 1000]) {
+      let time = format(new Date(ts), 'HH:mm');
       if (disable.textContent.includes(time)) {
         seen += 1;
       }
@@ -111,12 +111,12 @@ module('Acceptance | sudo', function (hooks) {
     await click('[data-test-version-yank-button="0.1.0"]');
 
     await waitFor('[data-test-version-unyank-button="0.1.0"]');
-    const crate = this.db.crate.findFirst(q => q.where({ name: 'foo' }));
-    const version = this.db.version.findFirst(q => q.where(v => v.crate.id === crate.id && v.num === '0.1.0'));
+    let crate = this.db.crate.findFirst(q => q.where({ name: 'foo' }));
+    let version = this.db.version.findFirst(q => q.where(v => v.crate.id === crate.id && v.num === '0.1.0'));
     assert.true(version.yanked, 'The version should be yanked');
     assert.dom('[data-test-version-unyank-button="0.1.0"]').exists();
     await click('[data-test-version-unyank-button="0.1.0"]');
-    const updatedVersion = this.db.version.findFirst(q => q.where(v => v.crate.id === crate.id && v.num === '0.1.0'));
+    let updatedVersion = this.db.version.findFirst(q => q.where(v => v.crate.id === crate.id && v.num === '0.1.0'));
     assert.false(updatedVersion.yanked, 'The version should be unyanked');
 
     await waitFor('[data-test-version-yank-button="0.1.0"]');

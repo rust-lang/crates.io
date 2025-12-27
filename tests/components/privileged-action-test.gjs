@@ -33,7 +33,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('unprivileged block is shown to a logged in user without access', async function (assert) {
-    const user = await this.db.user.create({});
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     await this.renderComponent(false);
@@ -43,7 +43,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in user with access', async function (assert) {
-    const user = await this.db.user.create({});
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     await this.renderComponent(true);
@@ -53,10 +53,10 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('placeholder block is shown to a logged in admin without sudo', async function (assert) {
-    const user = await this.db.user.create({ isAdmin: true });
+    let user = await this.db.user.create({ isAdmin: true });
     await this.authenticateAs(user);
 
-    const session = this.owner.lookup('service:session');
+    let session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
     assert.true(currentUser.is_admin);
     assert.false(session.isSudoEnabled);
@@ -68,10 +68,10 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in admin without sudo with access', async function (assert) {
-    const user = await this.db.user.create({ isAdmin: true });
+    let user = await this.db.user.create({ isAdmin: true });
     await this.authenticateAs(user);
 
-    const session = this.owner.lookup('service:session');
+    let session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
     assert.true(currentUser.is_admin);
     assert.false(session.isSudoEnabled);
@@ -83,10 +83,10 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in admin with sudo', async function (assert) {
-    const user = await this.db.user.create({ isAdmin: true });
+    let user = await this.db.user.create({ isAdmin: true });
     await this.authenticateAs(user);
 
-    const session = this.owner.lookup('service:session');
+    let session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
     assert.true(currentUser.is_admin);
     session.setSudo(86_400_000);
@@ -99,10 +99,10 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('automatic placeholder block', async function (assert) {
-    const user = await this.db.user.create({ isAdmin: true });
+    let user = await this.db.user.create({ isAdmin: true });
     await this.authenticateAs(user);
 
-    const session = this.owner.lookup('service:session');
+    let session = this.owner.lookup('service:session');
     let { currentUser } = await session.loadUserTask.perform();
     assert.true(currentUser.is_admin);
     assert.false(session.isSudoEnabled);

@@ -50,25 +50,25 @@ function generateLinecounts(id) {
     return null;
   }
 
-  const languages = {};
+  let languages = {};
   let totalCodeLines = 0;
   let totalCommentLines = 0;
 
   // Generate 1-3 random languages per version
-  const numLanguages = (id % 3) + 1;
-  const selectedLanguages = [];
+  let numLanguages = (id % 3) + 1;
+  let selectedLanguages = [];
 
   for (let i = 0; i < numLanguages; i++) {
-    const langIndex = (id + i) % LANGUAGES.length;
+    let langIndex = (id + i) % LANGUAGES.length;
     selectedLanguages.push(LANGUAGES[langIndex]);
   }
 
-  for (const language of selectedLanguages) {
+  for (let language of selectedLanguages) {
     // Generate pseudo-random but deterministic line counts based on id and language
-    const seed = id + language.codePointAt(0);
-    const codeLines = ((seed * 137) % 500) + 50; // 50-550 lines
-    const commentLines = ((seed * 73) % 100) + 5; // 5-105 lines
-    const files = ((seed * 29) % 8) + 1; // 1-8 files
+    let seed = id + language.codePointAt(0);
+    let codeLines = ((seed * 137) % 500) + 50; // 50-550 lines
+    let commentLines = ((seed * 73) % 100) + 5; // 5-105 lines
+    let files = ((seed * 29) % 8) + 1; // 1-8 files
 
     languages[language] = {
       code_lines: codeLines,

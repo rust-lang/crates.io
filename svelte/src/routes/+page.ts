@@ -15,7 +15,7 @@ let cachedSummary: SummaryResponse | undefined;
  * before rendering.
  */
 export async function load({ fetch }) {
-  const client = createClient({ fetch });
+  let client = createClient({ fetch });
 
   return { summary: fetchSummary(client) };
 }
@@ -25,7 +25,7 @@ async function fetchSummary(client: ReturnType<typeof createClient>): Promise<Su
     return cachedSummary;
   }
 
-  const response = await client.GET('/api/v1/summary');
+  let response = await client.GET('/api/v1/summary');
   if (response.error) {
     throw new Error('Failed to fetch summary data');
   }

@@ -8,8 +8,8 @@ module.exports = function (defaults) {
 
   let extraPublicTrees = [];
   if (!isProd) {
-    const path = require('node:path');
-    const funnel = require('broccoli-funnel');
+    let path = require('node:path');
+    let funnel = require('broccoli-funnel');
 
     let mswPath = require.resolve('msw/mockServiceWorker.js');
     let mswParentPath = path.dirname(mswPath);
@@ -59,7 +59,7 @@ module.exports = function (defaults) {
   // app.import('node_modules/normalize.css/normalize.css');
   app.import('vendor/qunit.css', { type: 'test' });
 
-  const { Webpack } = require('@embroider/webpack');
+  let { Webpack } = require('@embroider/webpack');
   return require('@embroider/compat').compatBuild(app, Webpack, {
     extraPublicTrees,
     staticAddonTrees: true,
