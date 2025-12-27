@@ -1,6 +1,7 @@
 use anyhow::Result;
 use chrono::NaiveDate;
 use crates_io::db;
+use crates_io::models::GitIndexSyncQueueItem;
 use crates_io::schema::{background_jobs, crates};
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
@@ -163,7 +164,8 @@ pub async fn run(command: Command) -> Result<()> {
             jobs::rss::SyncCratesFeed.enqueue(&mut conn).await?;
         }
         Command::SyncToGitIndex { name } => {
-            jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+            GitIndexSyncQueueItem::queue(&mut conn, &name).await?;
+            jobs::SyncToGitIndex.enqueue(&mut conn).await?;
         }
         Command::SyncToSparseIndex { name } => {
             jobs::SyncToSparseIndex::new(name)

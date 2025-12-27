@@ -1,7 +1,7 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use claims::{assert_ok, assert_ok_eq};
-use crates_io::models::Crate;
+use crates_io::models::{Crate, GitIndexSyncQueueItem};
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -58,7 +58,9 @@ async fn index_smoke_test() {
             .await
     );
 
-    assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(&mut conn).await);
+    assert_ok!(GitIndexSyncQueueItem::queue(&mut conn, "serde").await);
+    assert_ok!(jobs::SyncToGitIndex.enqueue(&mut conn).await);
+
     assert_ok!(
         jobs::SyncToSparseIndex::new("serde")
             .enqueue(&mut conn)

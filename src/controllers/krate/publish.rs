@@ -48,7 +48,9 @@ use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidd
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
-use crates_io_database::models::{TrustpubData, User, versions_published_by};
+use crates_io_database::models::{
+    GitIndexSyncQueueItem, TrustpubData, User, versions_published_by,
+};
 use crates_io_diesel_helpers::canon_crate_name;
 use crates_io_trustpub::access_token::AccessToken;
 
@@ -634,7 +636,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+        GitIndexSyncQueueItem::queue(conn, &krate.name).await?;
         let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
         let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
         let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
@@ -642,7 +644,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let analyze_crate_file_job = AnalyzeCrateFile::new(version.id);
 
         tokio::try_join!(
-            git_index_job.enqueue(conn),
+            jobs::SyncToGitIndex.enqueue(conn),
             sparse_index_job.enqueue(conn),
             publish_notifications_job.enqueue(conn),
             crate_feed_job.enqueue(conn).or_else(async |error| {

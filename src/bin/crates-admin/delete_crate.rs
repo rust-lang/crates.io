@@ -3,7 +3,7 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
 use crates_io::controllers::krate::delete::max_downloads;
-use crates_io::models::{NewDeletedCrate, User};
+use crates_io::models::{GitIndexSyncQueueItem, NewDeletedCrate, User};
 use crates_io::schema::{crate_downloads, deleted_crates};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::crates};
@@ -106,12 +106,12 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         };
 
         info!("{name}: Enqueuing background jobs…");
-        let git_index_job = jobs::SyncToGitIndex::new(name);
+        GitIndexSyncQueueItem::queue(&mut conn, &name).await?;
         let sparse_index_job = jobs::SyncToSparseIndex::new(name);
         let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(name.into());
 
         if let Err(error) = tokio::try_join!(
-            git_index_job.enqueue(&mut conn),
+            jobs::SyncToGitIndex.enqueue(&mut conn),
             sparse_index_job.enqueue(&mut conn),
             delete_from_storage_job.enqueue(&mut conn),
         ) {
