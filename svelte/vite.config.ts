@@ -33,7 +33,7 @@ export default defineConfig({
               level = 'warn';
             }
 
-            const msg = `${req.method} ${req.url} → ${proxyRes.statusCode} ${proxyRes.statusMessage}`;
+            let msg = `${req.method} ${req.url} → ${proxyRes.statusCode} ${proxyRes.statusMessage}`;
             proxyLogger[level](msg, { timestamp: true });
           });
         },

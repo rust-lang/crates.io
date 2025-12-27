@@ -16,7 +16,7 @@ module('Acceptance | crates page', function (hooks) {
   setupApplicationTest(hooks);
 
   // should match the default set in the crates controller
-  const per_page = 50;
+  let per_page = 50;
 
   test('visiting the crates page from the front page', async function (assert) {
     await loadFixtures(this.db);
@@ -58,8 +58,8 @@ module('Acceptance | crates page', function (hooks) {
       let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
     }
-    const page_start = per_page + 1;
-    const total = per_page + 2;
+    let page_start = per_page + 1;
+    let total = per_page + 2;
 
     await visit('/crates');
     await click('[data-test-pagination-next]');

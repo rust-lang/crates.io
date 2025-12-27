@@ -6,6 +6,7 @@ import js from '@eslint/js';
 import emberEslintParser from 'ember-eslint-parser';
 import ember from 'eslint-plugin-ember';
 import emberConcurrency from 'eslint-plugin-ember-concurrency';
+import preferLet from 'eslint-plugin-prefer-let';
 import prettier from 'eslint-plugin-prettier';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
@@ -58,6 +59,7 @@ export default [
     plugins: {
       ember,
       'ember-concurrency': emberConcurrency,
+      'prefer-let': preferLet,
       prettier,
     },
 
@@ -89,6 +91,9 @@ export default [
     rules: {
       // it's fine to use `return` without a value and rely on the implicit `undefined` return value
       'getter-return': 'off',
+
+      'prefer-const': 'off',
+      'prefer-let/prefer-let': 'error',
 
       'prettier/prettier': 'error',
 

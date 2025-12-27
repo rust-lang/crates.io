@@ -38,7 +38,7 @@ export default class CrateSettingsController extends Controller {
   }
 
   addOwnerTask = task(async () => {
-    const username = this.username;
+    let username = this.username;
 
     try {
       await this.crate.inviteOwner(username);

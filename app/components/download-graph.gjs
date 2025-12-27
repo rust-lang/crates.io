@@ -260,11 +260,11 @@ function midnightForDate(date) {
 // The specific implementation is based on @bertho-zero's here:
 // https://github.com/date-fns/date-fns/issues/571#issuecomment-602496322
 function subDays(date, amount) {
-  const originalTZO = date.getTimezoneOffset();
-  const endDate = brokenSubDays(date, amount);
-  const endTZO = endDate.getTimezoneOffset();
+  let originalTZO = date.getTimezoneOffset();
+  let endDate = brokenSubDays(date, amount);
+  let endTZO = endDate.getTimezoneOffset();
 
-  const dstDiff = originalTZO - endTZO;
+  let dstDiff = originalTZO - endTZO;
 
   return dstDiff >= 0 ? addMinutes(endDate, dstDiff) : subMinutes(endDate, Math.abs(dstDiff));
 }

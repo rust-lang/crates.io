@@ -16,7 +16,7 @@ export function addRegistryUrl(purl) {
   }
 
   // Add repository_url query parameter
-  const repositoryUrl = `https://${host}/`;
-  const separator = purl.includes('?') ? '&' : '?';
+  let repositoryUrl = `https://${host}/`;
+  let separator = purl.includes('?') ? '&' : '?';
   return `${purl}${separator}repository_url=${encodeURIComponent(repositoryUrl)}`;
 }

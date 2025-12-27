@@ -60,8 +60,8 @@ module('Route | support', function (hooks) {
   });
 
   test('must reset query when existing', async function (assert) {
-    const route = this.owner.lookup('route:support');
-    const originResetController = route.resetController;
+    let route = this.owner.lookup('route:support');
+    let originResetController = route.resetController;
     // query params of LinkTo support's in footer will not be cleared
     class MockService extends Service {
       paramsFor() {

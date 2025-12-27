@@ -19,7 +19,7 @@ function isClaudeAvailable() {
 }
 
 function parseGitHubCompareUrl(url) {
-  const compareMatch = url.match(/compare\/([a-f0-9]+)\.\.\.([a-f0-9]+)/);
+  let compareMatch = url.match(/compare\/([a-f0-9]+)\.\.\.([a-f0-9]+)/);
   if (!compareMatch) {
     throw new Error('Invalid GitHub compare URL. Expected format: https://github.com/owner/repo/compare/hash1...hash2');
   }
@@ -30,24 +30,24 @@ function parseGitHubCompareUrl(url) {
 }
 
 function getCommits(from, to) {
-  const format = '%H%x00%an%x00%s';
-  const output = exec(`git log --format="${format}" ${from}..${to}`);
+  let format = '%H%x00%an%x00%s';
+  let output = exec(`git log --format="${format}" ${from}..${to}`);
 
   return output
     .trim()
     .split('\n')
     .filter(Boolean)
     .map(line => {
-      const [sha, author, message] = line.split('\u0000');
+      let [sha, author, message] = line.split('\u0000');
       return { sha, author, message };
     });
 }
 
 function getMigrations(from, to) {
   try {
-    const files = exec(`git log --name-only --format="" ${from}..${to} -- migrations/`);
+    let files = exec(`git log --name-only --format="" ${from}..${to} -- migrations/`);
 
-    const migrationFiles = files
+    let migrationFiles = files
       .trim()
       .split('\n')
       .filter(Boolean)
@@ -57,12 +57,12 @@ function getMigrations(from, to) {
       return [];
     }
 
-    const migrations = [];
-    const migrationDirs = new Set(migrationFiles.map(file => file.split('/').slice(0, 2).join('/')));
+    let migrations = [];
+    let migrationDirs = new Set(migrationFiles.map(file => file.split('/').slice(0, 2).join('/')));
 
-    for (const dir of migrationDirs) {
-      const upFile = `${dir}/up.sql`;
-      const downFile = `${dir}/down.sql`;
+    for (let dir of migrationDirs) {
+      let upFile = `${dir}/up.sql`;
+      let downFile = `${dir}/down.sql`;
 
       let upContent = '';
       let downContent = '';
@@ -110,7 +110,7 @@ function formatMigrations(migrations) {
     output += `\nNo database migrations`;
   }
 
-  for (const migration of migrations) {
+  for (let migration of migrations) {
     output += `\n\n${migration.dir}\n`;
     output += '-'.repeat(80);
 
@@ -129,10 +129,10 @@ function formatMigrations(migrations) {
 }
 
 function generateChangelog(commits, migrations, url) {
-  const commitList = formatCommits(commits);
-  const migrationInfo = formatMigrations(migrations);
+  let commitList = formatCommits(commits);
+  let migrationInfo = formatMigrations(migrations);
 
-  const prompt = `You are generating a deployment changelog for crates.io based on git commit history and database migrations.
+  let prompt = `You are generating a deployment changelog for crates.io based on git commit history and database migrations.
 
 Generate a deployment announcement in this exact style:
 
@@ -175,7 +175,7 @@ Generate only the deployment announcement, no additional explanation.`;
 }
 
 function main() {
-  const url = process.argv[2];
+  let url = process.argv[2];
 
   if (!url) {
     console.error('Usage: script/generate-deploy-changelog.mjs <github-compare-url>');
@@ -186,15 +186,15 @@ function main() {
   }
 
   try {
-    const { from, to } = parseGitHubCompareUrl(url);
-    const commits = getCommits(from, to);
+    let { from, to } = parseGitHubCompareUrl(url);
+    let commits = getCommits(from, to);
 
     if (commits.length === 0) {
       console.log('No commits found in range');
       return;
     }
 
-    const migrations = getMigrations(from, to);
+    let migrations = getMigrations(from, to);
 
     console.log(`Found ${commits.length} commit${commits.length === 1 ? '' : 's'}:\n`);
     console.log(formatCommits(commits));
@@ -203,7 +203,7 @@ function main() {
     if (isClaudeAvailable()) {
       console.log(`\n${'='.repeat(80)}`);
       console.log('Generating deployment changelog...\n');
-      const changelog = generateChangelog(commits, migrations, url);
+      let changelog = generateChangelog(commits, migrations, url);
       console.log(changelog);
     }
   } catch (error) {

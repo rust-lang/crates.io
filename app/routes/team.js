@@ -13,7 +13,7 @@ export default class TeamRoute extends Route {
   };
 
   async model(params, transition) {
-    const { team_id } = params;
+    let { team_id } = params;
 
     try {
       let team = await this.store.queryRecord('team', { team_id });

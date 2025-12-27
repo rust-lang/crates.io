@@ -172,8 +172,8 @@ test('never returns more than 10 results', async function () {
 
   await Promise.all(
     Array.from({ length: 25 }, async () => {
-      const depCrate = await db.crate.create({ name: 'bar' });
-      const version = await db.version.create({ crate: depCrate });
+      let depCrate = await db.crate.create({ name: 'bar' });
+      let version = await db.version.create({ crate: depCrate });
       return db.dependency.create({ crate, version });
     }),
   );
