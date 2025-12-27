@@ -1,9 +1,17 @@
 {% extends "base.html.j2" %}
+{% from "base.html.j2" import view_action %}
+
+{% set accept_url = "https://" ~ domain ~ "/accept-invite/" ~ token %}
+{% set invites_url = "https://" ~ domain ~ "/me/pending-invites" %}
 
 {% block content %}
 <p>{{ inviter }} has invited you to become an owner of the crate <strong>{{ crate_name }}</strong>!</p>
 
-<p>Visit <a href="https://{{ domain }}/accept-invite/{{ token }}">https://{{ domain }}/accept-invite/{{ token }}</a> to accept this invitation.</p>
+<p>Visit <a href="{{ accept_url | safe }}">{{ accept_url | safe }}</a> to accept this invitation.</p>
 
-<p>You can also go to <a href="https://{{ domain }}/me/pending-invites">https://{{ domain }}/me/pending-invites</a> to manage all of your crate ownership invitations.</p>
+<p>You can also go to <a href="{{ invites_url | safe }}">{{ invites_url | safe }}</a> to manage all of your crate ownership invitations.</p>
 {% endblock %}
+
+{%- block action %}
+{{ view_action(accept_url, "Accept Invitation", "Accept the crate ownership invitation") }}
+{%- endblock %}

@@ -1,2 +1,24 @@
+{%- macro view_action(url, name, description) -%}
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "EmailMessage",
+  "potentialAction": {
+    "@type": "ViewAction",
+    "target": "{{ url | safe }}",
+    "url": "{{ url | safe }}",
+    "name": "{{ name }}"
+  },
+  "description": "{{ description }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "crates.io",
+    "url": "https://crates.io"
+  }
+}
+</script>
+{%- endmacro -%}
+
 {% block content %}{% endblock %}
 <p>--<br>The crates.io Team</p>
+{%- block action %}{% endblock -%}

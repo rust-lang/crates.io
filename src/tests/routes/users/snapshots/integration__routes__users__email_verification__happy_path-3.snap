@@ -38,4 +38,22 @@ Content-Transfer-Encoding: quoted-printable
 <p>Thank you!</p>
 
 <p>--<br>The crates.io Team</p>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "EmailMessage",
+  "potentialAction": {
+    "@type": "ViewAction",
+    "target": "https://crates.io/confirm/[confirm-token]",
+    "url": "https://crates.io/confirm/[confirm-token]",
+    "name": "Confirm Verification"
+  },
+  "description": "Confirm your email address for crates.io",
+  "publisher": {
+    "@type": "Organization",
+    "name": "crates.io",
+    "url": "https://crates.io"
+  }
+}
+</script>
 --[boundary]--

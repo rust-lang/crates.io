@@ -38,6 +38,24 @@ Content-Transfer-Encoding: quoted-printable
 <p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
 
 <p>--<br>The crates.io Team</p>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "EmailMessage",
+  "potentialAction": {
+    "@type": "ViewAction",
+    "target": "https://crates.io/crates/foo/1.0.0",
+    "url": "https://crates.io/crates/foo/1.0.0",
+    "name": "View Release"
+  },
+  "description": "View the newly published crate version",
+  "publisher": {
+    "@type": "Organization",
+    "name": "crates.io",
+    "url": "https://crates.io"
+  }
+}
+</script>
 --[boundary]--
 
 ----------------------------------------
@@ -122,4 +140,22 @@ Content-Transfer-Encoding: quoted-printable
 <p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
 
 <p>--<br>The crates.io Team</p>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "EmailMessage",
+  "potentialAction": {
+    "@type": "ViewAction",
+    "target": "https://crates.io/crates/foo/1.1.0",
+    "url": "https://crates.io/crates/foo/1.1.0",
+    "name": "View Release"
+  },
+  "description": "View the newly published crate version",
+  "publisher": {
+    "@type": "Organization",
+    "name": "crates.io",
+    "url": "https://crates.io"
+  }
+}
+</script>
 --[boundary]--

@@ -1,11 +1,18 @@
 {% extends "base.html.j2" %}
+{% from "base.html.j2" import view_action %}
+
+{% set version_url = "https://" ~ domain ~ "/crates/" ~ krate ~ "/" ~ version %}
 
 {% block content %}
 <p>Hello {{ recipient }}!</p>
 
 <p>A new version of the <strong>{{ krate }}</strong> crate was published{{ publisher_info }} at {{ publish_time }}.</p>
 
-<p>View v{{ version }} here: <a href="https://{{ domain }}/crates/{{ krate }}/{{ version }}">https://{{ domain }}/crates/{{ krate }}/{{ version }}</a></p>
+<p>View v{{ version }} here: <a href="{{ version_url | safe }}">{{ version_url | safe }}</a></p>
 
 <p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
 {% endblock %}
+
+{%- block action %}
+{{ view_action(version_url, "View Release", "View the newly published crate version") }}
+{%- endblock %}

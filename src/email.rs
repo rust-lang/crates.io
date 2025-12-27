@@ -353,6 +353,24 @@ mod tests {
         <p>You can also go to <a href="https://crates.io/me/pending-invites">https://crates.io/me/pending-invites</a> to manage all of your crate ownership invitations.</p>
 
         <p>--<br>The crates.io Team</p>
+        <script type="application/ld+json">
+        {
+          "@context": "http://schema.org",
+          "@type": "EmailMessage",
+          "potentialAction": {
+            "@type": "ViewAction",
+            "target": "https://crates.io/accept-invite/abc123",
+            "url": "https://crates.io/accept-invite/abc123",
+            "name": "Accept Invitation"
+          },
+          "description": "Accept the crate ownership invitation",
+          "publisher": {
+            "@type": "Organization",
+            "name": "crates.io",
+            "url": "https://crates.io"
+          }
+        }
+        </script>
         "#);
     }
 
