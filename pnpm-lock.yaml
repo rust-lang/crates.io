@@ -256,7 +256,7 @@ importers:
         specifier: 0.5.1
         version: 0.5.1(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-prefer-let:
-        specifier: ^4.0.0
+        specifier: 4.0.0
         version: 4.0.0
       eslint-plugin-prettier:
         specifier: 5.5.4
@@ -427,7 +427,7 @@ importers:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-prefer-let:
-        specifier: ^4.0.0
+        specifier: 4.0.0
         version: 4.0.0
       eslint-plugin-storybook:
         specifier: 10.1.10
