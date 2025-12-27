@@ -127,7 +127,7 @@ secrecy = "=0.10.3"
 semver = { version = "=1.0.27", features = ["serde"] }
 sentry = { version = "=0.46.0", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
 serde = { version = "=1.0.228", features = ["derive"] }
-serde_json = "=1.0.147"
+serde_json = "=1.0.148"
 sha2 = "=0.10.9"
 spdx = "=0.13.3"
 tar = "=0.4.44"
