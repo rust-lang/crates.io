@@ -28,7 +28,9 @@ export default class Footer extends Component {
           <h1>Get Help</h1>
           <ul role='list'>
             <li><a href='https://doc.rust-lang.org/cargo/'>The Cargo Book</a></li>
-            <li><LinkTo @route='support' @query={{this.pristineSupportQuery}}>Support</LinkTo></li>
+            <li>
+              <LinkTo @route='support' @query={{this.pristineSupportQuery}} data-test-support-link>Support</LinkTo>
+            </li>
             <li><a href='https://status.crates.io/'>System Status</a></li>
             <li><a href='https://github.com/rust-lang/crates.io/issues/new/choose'>Report a bug</a></li>
           </ul>

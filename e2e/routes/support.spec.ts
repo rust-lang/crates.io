@@ -1,6 +1,17 @@
 import { expect, test } from '@/e2e/helper';
 
 test.describe('Route | support', { tag: '@routes' }, () => {
+  test('footer should always point to /support without query parameters', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('footer [data-test-support-link]')).toHaveAttribute('href', '/support');
+
+    await page.goto('/support?inquire=crate-violation&crate=foo');
+    await expect(page.locator('footer [data-test-support-link]')).toHaveAttribute('href', '/support');
+
+    await page.locator('header [href="/"]').click();
+    await expect(page.locator('footer [data-test-support-link]')).toHaveAttribute('href', '/support');
+  });
+
   test('should not retain query params when exiting and then returning', async ({ page }) => {
     await page.goto('/support?inquire=crate-violation');
     await expect(page).toHaveURL('/support?inquire=crate-violation');
@@ -11,7 +22,7 @@ test.describe('Route | support', { tag: '@routes' }, () => {
     // back to index
     await page.locator('header [href="/"]').click();
     await expect(page).toHaveURL('/');
-    let link = page.locator('footer').getByRole('link', { name: 'Support', exact: true });
+    let link = page.locator('footer [data-test-support-link]');
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute('href', '/support');
 

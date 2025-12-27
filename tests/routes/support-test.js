@@ -10,6 +10,17 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Route | support', function (hooks) {
   setupApplicationTest(hooks);
 
+  test('footer should always point to /support without query parameters', async function (assert) {
+    await visit('/');
+    assert.dom('footer [data-test-support-link]').hasAttribute('href', '/support');
+
+    await visit('/support?inquire=crate-violation&crate=foo');
+    assert.dom('footer [data-test-support-link]').hasAttribute('href', '/support');
+
+    await click('header [href="/"]');
+    assert.dom('footer [data-test-support-link]').hasAttribute('href', '/support');
+  });
+
   test('should not retain query params when exiting and then returning', async function (assert) {
     await visit('/support?inquire=crate-violation');
     assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
@@ -21,10 +32,10 @@ module('Route | support', function (hooks) {
     // back to index
     await click('header [href="/"]');
     assert.strictEqual(currentURL(), '/');
-    assert.dom('footer [href="/support"]').exists();
+    assert.dom('footer [data-test-support-link]').hasAttribute('href', '/support');
 
     // goto support
-    await click('footer [href="/support"]');
+    await click('footer [data-test-support-link]');
     assert.strictEqual(currentURL(), '/support');
     assert
       .dom('[data-test-id="support-main-content"] section')
