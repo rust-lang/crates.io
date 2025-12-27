@@ -10,8 +10,10 @@ const SUPPORTS = [
 
 const VALID_INQUIRE = new Set(SUPPORTS.map(s => s.inquire));
 
+export const SUPPORT_QUERY_PARAMS = ['inquire', 'crate'];
+
 export default class SupportController extends Controller {
-  queryParams = ['inquire', 'crate'];
+  queryParams = SUPPORT_QUERY_PARAMS;
 
   @tracked inquire;
   @tracked crate;
