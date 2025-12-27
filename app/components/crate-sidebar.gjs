@@ -162,7 +162,7 @@ export default class CrateSidebar extends Component {
         </div>
       {{/unless}}
 
-      {{#if (or this.showHomepage @version.documentationLink @crate.repository)}}
+      {{#if (or this.showHomepage @version.documentationLink @version.sourceLink @crate.repository)}}
         <div class='links'>
           {{#if this.showHomepage}}
             <Link @title='Homepage' @url={{@crate.homepage}} data-test-homepage-link />
@@ -170,6 +170,10 @@ export default class CrateSidebar extends Component {
 
           {{#if @version.documentationLink}}
             <Link @title='Documentation' @url={{@version.documentationLink}} data-test-docs-link />
+          {{/if}}
+
+          {{#if @version.sourceLink}}
+            <Link @title='Browse source' @url={{@version.sourceLink}} data-test-source-link />
           {{/if}}
 
           {{#if @crate.repository}}
