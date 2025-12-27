@@ -30,7 +30,8 @@
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
     "test": "ember test",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:svelte": "TEST_APP=svelte playwright test"
   },
   "prettier": {
     "plugins": [
