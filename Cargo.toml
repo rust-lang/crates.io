@@ -62,7 +62,7 @@ aws-sdk-sqs = "=1.91.0"
 axum = { version = "=0.8.8", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.12.5", features = ["erased-json", "middleware", "query", "typed-header"] }
 base64 = "=0.22.1"
-bigdecimal = { version = "=0.4.9", features = ["serde"] }
+bigdecimal = { version = "=0.4.10", features = ["serde"] }
 bon = "=3.8.1"
 cargo-manifest = "=0.19.1"
 colored = "=3.0.0"
