@@ -96,7 +96,7 @@
     "@glimmer/tracking": "1.1.2",
     "@ianvs/prettier-plugin-sort-imports": "4.7.0",
     "@mainmatter/ember-api-actions": "0.6.0",
-    "@percy/cli": "1.31.5",
+    "@percy/cli": "1.31.6",
     "@percy/ember": "5.0.0",
     "@percy/playwright": "1.0.10",
     "@playwright/test": "1.57.0",
