@@ -17,6 +17,10 @@ if (process.env.BUNDLE_ANALYSIS) {
 }
 
 export default defineConfig({
+  define: {
+    __TEST__: Boolean(process.env.PLAYWRIGHT || process.env.VITEST),
+  },
+
   plugins,
 
   server: {

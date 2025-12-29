@@ -1,3 +1,5 @@
+/* eslint-disable prefer-let/prefer-let */
+
 import '@poppanator/sveltekit-svg/dist/svg.d.ts';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
@@ -10,6 +12,8 @@ declare global {
     // interface PageState {}
     // interface Platform {}
   }
+
+  const __TEST__: boolean;
 }
 
 export {};
