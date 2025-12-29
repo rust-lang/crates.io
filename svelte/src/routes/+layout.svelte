@@ -4,6 +4,7 @@
   import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
+  import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
 
   import '$lib/css/global.css';
 
@@ -19,6 +20,9 @@
   $effect(() => {
     document.documentElement.dataset.colorScheme = colorScheme.resolvedScheme;
   });
+
+  let searchFormContext = new SearchFormContext();
+  setSearchFormContext(searchFormContext);
 
   // TODO: implement notification container
 </script>
