@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use crates_io_database::models::CloudFrontInvalidationQueueItem;
+use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 
@@ -54,7 +54,9 @@ impl BackgroundJob for InvalidateCdns {
         if ctx.cloudfront().is_some() {
             let mut conn = ctx.deadpool.get().await?;
 
-            let result = CloudFrontInvalidationQueueItem::queue_paths(&mut conn, &self.paths).await;
+            let dist = CloudFrontDistribution::Static;
+            let result =
+                CloudFrontInvalidationQueueItem::queue_paths(&mut conn, dist, &self.paths).await;
             result.context("Failed to queue CloudFront invalidation paths")?;
 
             // Schedule the processing job to handle the queued paths

@@ -186,6 +186,8 @@ diesel::table! {
     cloudfront_invalidation_queue (id) {
         /// Timestamp when the path was queued for invalidation
         created_at -> Timestamptz,
+        /// CloudFront distribution to invalidate: "index" for index.crates.io, "static" for static.crates.io
+        distribution -> Text,
         /// Unique identifier for each queued invalidation path
         id -> Int8,
         /// CloudFront path to invalidate (e.g. /crates/serde/serde-1.0.0.crate)

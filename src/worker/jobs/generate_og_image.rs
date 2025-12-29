@@ -4,7 +4,7 @@ use crate::worker::Environment;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use bigdecimal::ToPrimitive;
-use crates_io_database::models::CloudFrontInvalidationQueueItem;
+use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_og_image::{OgImageAuthorData, OgImageData};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -109,8 +109,10 @@ impl BackgroundJob for GenerateOgImage {
 
         // Queue CloudFront invalidation for batch processing
         if ctx.cloudfront().is_some() {
+            let distribution = CloudFrontDistribution::Static;
             let paths = std::slice::from_ref(&og_image_path);
-            let result = CloudFrontInvalidationQueueItem::queue_paths(&mut conn, paths).await;
+            let result =
+                CloudFrontInvalidationQueueItem::queue_paths(&mut conn, distribution, paths).await;
             if let Err(error) = result {
                 warn!("Failed to queue CloudFront invalidation for {crate_name}: {error}");
             } else if let Err(error) = ProcessCloudfrontInvalidationQueue.enqueue(&mut conn).await {

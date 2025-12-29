@@ -5,7 +5,7 @@ use crate::typosquat;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use bon::Builder;
-use crates_io_database::models::CloudFrontInvalidationQueueItem;
+use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_docs_rs::DocsRsClient;
 use crates_io_fastly::Fastly;
 use crates_io_index::{Repository, RepositoryConfig};
@@ -78,12 +78,14 @@ impl Environment {
     pub(crate) async fn invalidate_cdns(
         &self,
         conn: &mut AsyncPgConnection,
+        distribution: CloudFrontDistribution,
         path: &str,
     ) -> anyhow::Result<()> {
         // Queue CloudFront invalidations for batch processing instead of calling directly
         if self.cloudfront().is_some() {
             let paths = &[path.to_string()];
-            let result = CloudFrontInvalidationQueueItem::queue_paths(conn, paths).await;
+            let result =
+                CloudFrontInvalidationQueueItem::queue_paths(conn, distribution, paths).await;
             result.context("Failed to queue CloudFront invalidation path")?;
 
             // Schedule the processing job to handle the queued paths
