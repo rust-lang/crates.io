@@ -1,5 +1,7 @@
 # diesel-guard configuration file
 
+framework = "diesel"
+
 # Skip checking migrations created before this timestamp
 # Useful for retrofitting diesel-guard into existing projects
 # Accepted formats: YYYYMMDDHHMMSS, YYYY_MM_DD_HHMMSS, or YYYY-MM-DD-HHMMSS
