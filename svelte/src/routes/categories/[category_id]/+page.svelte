@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
 
   import CrateList from '$lib/components/CrateList.svelte';
@@ -6,12 +7,20 @@
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
+  import { getSearchFormContext } from '$lib/search-form.svelte';
   import { calculatePagination } from '$lib/utils/pagination';
 
-  // TODO: Set header search value to `category:${data.category.slug} ` when header context is implemented
-  // (see SearchForm.svelte TODO about moving search state into header context)
-
   let { data } = $props();
+
+  let searchFormContext = getSearchFormContext();
+
+  // Pre-fill search with category prefix (trailing space helps user not accidentally mangle the category)
+  $effect(() => {
+    searchFormContext.value = `category:${data.category.slug} `;
+  });
+  onMount(() => () => {
+    searchFormContext.value = '';
+  });
 
   let pagination = $derived(calculatePagination(data.page, data.perPage, data.crates.meta.total, data.maxPages));
 
@@ -29,10 +38,6 @@
         return 'Recent Downloads';
     }
   });
-
-  function formatNumber(value: number): string {
-    return value.toLocaleString();
-  }
 </script>
 
 <svelte:head>
@@ -64,7 +69,7 @@
               {subcategory.category}
             </a>
             <span class="text--small">
-              {formatNumber(subcategory.crates_cnt)}
+              {subcategory.crates_cnt.toLocaleString()}
               {subcategory.crates_cnt === 1 ? 'crate' : 'crates'}
             </span>
           </div>
