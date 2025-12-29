@@ -3,6 +3,7 @@
 @import './shared/forms.css';
 @import './shared/sort-by.css';
 @import './shared/typography.css';
+@import 'https://code.cdn.mozilla.net/fonts/fira.css';
 
 /*
  * The `normalize.css` file does not use CSS layers, so we need to vendor it
