@@ -6,6 +6,7 @@
 
   import LeftPagIcon from '$lib/assets/left-pag.svg?component';
   import RightPagIcon from '$lib/assets/right-pag.svg?component';
+  import Tooltip from '$lib/components/Tooltip.svelte';
 
   interface Props {
     pagination: PaginationState;
@@ -51,14 +52,12 @@
   {#if pagination.currentPage === pagination.availablePages}
     <span class="next disabled" data-test-pagination-next>
       <RightPagIcon />
-      <!-- TODO: Add Tooltip component when available
       {#if pagination.maxPages && pagination.currentPage === pagination.maxPages}
         <Tooltip>
           For performance reasons, no more pages are available. For bulk data access, please visit
           <a href="https://crates.io/data-access" target="_blank" rel="noopener noreferrer">crates.io/data-access</a>.
         </Tooltip>
       {/if}
-      -->
     </span>
   {:else}
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params -->
