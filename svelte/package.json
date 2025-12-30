@@ -22,7 +22,8 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@crates-io/api-client": "workspace:*"
+    "@crates-io/api-client": "workspace:*",
+    "date-fns": "4.1.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "4.1.3",

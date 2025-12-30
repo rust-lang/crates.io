@@ -371,6 +371,9 @@ importers:
       '@crates-io/api-client':
         specifier: workspace:*
         version: link:../packages/crates-io-api-client
+      date-fns:
+        specifier: 4.1.0
+        version: 4.1.0
     devDependencies:
       '@chromatic-com/storybook':
         specifier: 4.1.3
