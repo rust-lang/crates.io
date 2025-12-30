@@ -3,9 +3,9 @@
 
   import logo from '$lib/assets/cargo.png';
   import LockIcon from '$lib/assets/lock.svg?component';
+  import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import SearchForm from './SearchForm.svelte';
 
-  // TODO: import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   // TODO: import Dropdown from './Dropdown.svelte';
   // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
   // TODO: import UserAvatar from './UserAvatar.svelte';
@@ -44,7 +44,7 @@
     </div>
 
     <nav class="nav">
-      <!-- TODO: <ColorSchemeMenu class="color-scheme-menu" /> -->
+      <ColorSchemeMenu class="color-scheme-menu" />
 
       <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
       <span class="sep">|</span>
@@ -61,7 +61,7 @@
     </nav>
 
     <div class="menu">
-      <!-- TODO: <ColorSchemeMenu class="color-scheme-menu" /> -->
+      <ColorSchemeMenu class="color-scheme-menu" />
 
       <!-- TODO: implement mobile menu dropdown -->
       <!-- <Dropdown>
@@ -214,11 +214,9 @@
   }
   */
 
-  /* TODO: uncomment when color scheme menu is added
-  .color-scheme-menu {
+  .header :global(.color-scheme-menu) {
     margin-right: var(--space-xs);
   }
-  */
 
   .login-button {
     display: inline-flex;

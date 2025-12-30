@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
 
+  import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
 
@@ -12,7 +13,13 @@
 
   let isIndex = $derived(page.route.id === '/');
 
-  // TODO: implement color scheme support
+  let colorScheme = new ColorSchemeState();
+  setColorScheme(colorScheme);
+
+  $effect(() => {
+    document.documentElement.dataset.colorScheme = colorScheme.resolvedScheme;
+  });
+
   // TODO: implement notification container
 </script>
 
