@@ -27,6 +27,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
           <li>Users will no longer be able to download this crate.</li>
           <li>Any dependencies or projects relying on this crate will be broken.</li>
           <li>Deleted crates cannot be restored.</li>
+          <li>Publishing a crate with the same name will be blocked for 24 hours.</li>
         </ul>
       </div>
 
