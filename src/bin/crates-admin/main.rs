@@ -11,6 +11,7 @@ mod migrate;
 mod populate;
 mod render_og_images;
 mod render_readmes;
+mod test_email;
 mod transfer_crates;
 mod upload_index;
 mod verify_token;
@@ -25,6 +26,7 @@ enum Command {
     DeleteVersion(delete_version::Opts),
     Populate(populate::Opts),
     RenderReadmes(render_readmes::Opts),
+    TestEmail(test_email::Opts),
     TransferCrates(transfer_crates::Opts),
     VerifyToken(verify_token::Opts),
     Migrate(migrate::Opts),
@@ -56,6 +58,7 @@ async fn main() -> anyhow::Result<()> {
         Command::DeleteVersion(opts) => delete_version::run(opts).await,
         Command::Populate(opts) => populate::run(opts).await,
         Command::RenderReadmes(opts) => render_readmes::run(opts).await,
+        Command::TestEmail(opts) => test_email::run(opts).await,
         Command::TransferCrates(opts) => transfer_crates::run(opts).await,
         Command::VerifyToken(opts) => verify_token::run(opts).await,
         Command::Migrate(opts) => migrate::run(opts).await,
