@@ -5,8 +5,10 @@
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
+  import TooltipContainer from '$lib/components/TooltipContainer.svelte';
   import { ProgressState, setProgressContext } from '$lib/progress.svelte';
   import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
+  import { setTooltipContext } from '$lib/tooltip.svelte';
 
   import '$lib/css/global.css';
 
@@ -33,6 +35,9 @@
     }
   });
 
+  let tooltipContainerId = $props.id();
+  setTooltipContext({ containerId: tooltipContainerId });
+
   // TODO: implement notification container
 </script>
 
@@ -46,7 +51,7 @@
 {/if}
 
 <!-- TODO: <NotificationContainer position='top-right' /> -->
-<div id="tooltip-container"></div>
+<TooltipContainer />
 
 <Header hero={isIndex} />
 
