@@ -19,6 +19,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
       <Alert @variant='warning'>
         <strong>Important:</strong>
         This action will permanently delete the crate and its associated versions. Deleting a crate cannot be reversed!
+        Additionally, you will be blocked from republishing a crate with this name for up to 36 hours.
       </Alert>
 
       <div class='impact'>
