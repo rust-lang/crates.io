@@ -4,11 +4,13 @@
   import PageHeader from '$lib/components/PageHeader.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
+  import * as SortDropdown from '$lib/components/sort-dropdown';
   import { calculatePagination } from '$lib/utils/pagination';
 
   let { data } = $props();
 
   let pagination = $derived(calculatePagination(data.page, data.perPage, data.keywords.meta.total));
+  let currentSortBy = $derived(data.sort === 'crates' ? '# Crates' : 'Alphabetical');
 </script>
 
 <svelte:head>
@@ -25,7 +27,13 @@
     data-test-keywords-nav
   />
 
-  <!-- TODO: Add SortDropdown component when available -->
+  <div data-test-keywords-sort class="sort-by-v-center">
+    <span class="text--small">Sort by</span>
+    <SortDropdown.Root current={currentSortBy}>
+      <SortDropdown.Option query={{ sort: 'alpha' }}>Alphabetical</SortDropdown.Option>
+      <SortDropdown.Option query={{ sort: 'crates' }}># Crates</SortDropdown.Option>
+    </SortDropdown.Root>
+  </div>
 </div>
 
 <div class="list">
