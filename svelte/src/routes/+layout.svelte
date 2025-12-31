@@ -4,8 +4,10 @@
   import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
+  import NotificationContainer from '$lib/components/notifications/NotificationContainer.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import TooltipContainer from '$lib/components/TooltipContainer.svelte';
+  import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
   import { ProgressState, setProgressContext } from '$lib/progress.svelte';
   import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
   import { setTooltipContext } from '$lib/tooltip.svelte';
@@ -38,7 +40,8 @@
   let tooltipContainerId = $props.id();
   setTooltipContext({ containerId: tooltipContainerId });
 
-  // TODO: implement notification container
+  let notifications = new NotificationsState();
+  setNotifications(notifications);
 </script>
 
 <svelte:head>
@@ -50,7 +53,7 @@
   <ProgressBar />
 {/if}
 
-<!-- TODO: <NotificationContainer position='top-right' /> -->
+<NotificationContainer position="top-right" />
 <TooltipContainer />
 
 <Header hero={isIndex} />
