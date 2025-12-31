@@ -20,7 +20,11 @@ const APP_CONFIG = {
   },
   svelte: {
     url: 'http://localhost:4173',
-    command: 'npm run build && npm run preview',
+    command: process.env.CI
+      ? // on CI we compile once and then serve the static files, which is faster than running the dev server
+        'npm run build && npm run preview'
+      : // locally we run the dev server, which supports hot module replacement and is more convenient for development
+        'npm run dev -- --port 4173',
     cwd: './svelte',
     env: { PLAYWRIGHT: '1' },
   },
