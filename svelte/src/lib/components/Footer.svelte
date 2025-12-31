@@ -21,7 +21,7 @@
       <h1>Get Help</h1>
       <ul role="list">
         <li><a href="https://doc.rust-lang.org/cargo/">The Cargo Book</a></li>
-        <li><a href={resolve('/support')}>Support</a></li>
+        <li><a href={resolve('/support')} data-test-support-link>Support</a></li>
         <li><a href="https://status.crates.io/">System Status</a></li>
         <li><a href="https://github.com/rust-lang/crates.io/issues/new/choose">Report a bug</a></li>
       </ul>
