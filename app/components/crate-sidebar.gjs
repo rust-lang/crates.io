@@ -1,5 +1,4 @@
 import { hash } from '@ember/helper';
-import { action } from '@ember/object';
 import { LinkTo } from '@ember/routing';
 import { service } from '@ember/service';
 import Component from '@glimmer/component';
@@ -27,7 +26,6 @@ import prettyBytes from 'crates-io/helpers/pretty-bytes';
 import { simplifyUrl } from './crate-sidebar/link';
 
 export default class CrateSidebar extends Component {
-  @service notifications;
   @service playground;
   @service sentry;
 
@@ -60,16 +58,6 @@ export default class CrateSidebar extends Component {
         this.sentry.captureException(error);
       }
     });
-  }
-
-  @action
-  async copyToClipboard(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      this.notifications.success('Copied to clipboard!');
-    } catch {
-      this.notifications.error('Copy to clipboard failed!');
-    }
   }
 
   <template>
