@@ -114,7 +114,7 @@
     "ember-cli-dependency-checker": "3.3.3",
     "ember-cli-dependency-lint": "2.0.1",
     "ember-cli-head": "2.0.0",
-    "ember-cli-htmlbars": "6.3.0",
+    "ember-cli-htmlbars": "7.0.0",
     "ember-cli-inject-live-reload": "2.1.0",
     "ember-cli-notifications": "9.1.0",
     "ember-click-outside": "6.1.1",
