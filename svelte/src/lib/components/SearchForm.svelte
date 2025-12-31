@@ -3,6 +3,7 @@
   import { resolve } from '$app/paths';
 
   import SearchIcon from '$lib/assets/search.svg?component';
+  import { getSearchFormContext } from '$lib/search-form.svelte';
 
   interface Props {
     size?: 'big';
@@ -11,18 +12,17 @@
 
   let { size, autofocus = false }: Props = $props();
 
-  // TODO: move search state into header context instead
-  let searchValue = $state('');
+  let searchFormContext = getSearchFormContext();
   let inputElement: HTMLInputElement | undefined = $state();
 
   function updateSearchValue(event: Event) {
-    searchValue = (event.target as HTMLInputElement).value;
+    searchFormContext.value = (event.target as HTMLInputElement).value;
   }
 
   function search(event: SubmitEvent) {
     event.preventDefault();
     // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params
-    goto(`${resolve('/search')}?q=${encodeURIComponent(searchValue)}&page=1`);
+    goto(`${resolve('/search')}?q=${encodeURIComponent(searchFormContext.value)}&page=1`);
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -67,7 +67,7 @@
     id="cargo-desktop-search"
     placeholder="Type 'S' or '/' to search"
     autocorrect="off"
-    value={searchValue}
+    value={searchFormContext.value}
     oninput={updateSearchValue}
     {autofocus}
     required
@@ -83,7 +83,7 @@
     name="q"
     placeholder="Search"
     autocorrect="off"
-    value={searchValue}
+    value={searchFormContext.value}
     oninput={updateSearchValue}
     required
     aria-label="Search"
