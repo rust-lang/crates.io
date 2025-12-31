@@ -13,7 +13,7 @@ bytes = "=1.11.1"
 clap = { version = "=4.5.58", features = ["derive", "env", "unicode", "wrap_help"] }
 crates_io_index = { path = "../crates_io_index" }
 rand = "=0.10.0"
-reqwest = { version = "=0.12.28", features = ["gzip", "json"] }
+reqwest = { version = "=0.13.1", features = ["gzip", "json"] }
 secrecy = "=0.10.3"
 semver = { version = "=1.0.27", features = ["serde"] }
 serde = { version = "=1.0.228", features = ["derive"] }

@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 crates_io_version = { path = "../crates_io_version" }
-reqwest = { version = "=0.12.28", features = ["json"] }
+reqwest = { version = "=0.13.1", features = ["json"] }
 secrecy = "=0.10.3"
 thiserror = "=2.0.18"
 tracing = "=0.1.44"
