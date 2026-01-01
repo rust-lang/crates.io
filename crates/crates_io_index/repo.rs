@@ -177,20 +177,21 @@ impl Repository {
         Ok(head.target().unwrap())
     }
 
-    /// Commits the specified file with the specified commit message and pushes
-    /// the commit to the `master` branch on the `origin` remote.
-    ///
-    /// Note that `modified_file` expects a file path **relative** to the
-    /// repository working folder!
+    /// Commits the specified file with specified commit message.
     #[instrument(skip_all, fields(message = %msg))]
-    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> anyhow::Result<()> {
+    pub fn commit_file(&self, msg: &str, modified_file: &Path) -> anyhow::Result<()> {
+        info!("Committing \"{msg}\"");
+
+        // Strip the checkout path from the path.
+        let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
+
         // git add $file
         let mut index = self.repository.index()?;
 
-        if self.checkout_path.path().join(modified_file).exists() {
-            index.add_path(modified_file)?;
+        if self.checkout_path.path().join(relative_path).exists() {
+            index.add_path(relative_path)?;
         } else {
-            index.remove_path(modified_file)?;
+            index.remove_path(relative_path)?;
         }
 
         index.write()?;
@@ -204,7 +205,7 @@ impl Repository {
         self.repository
             .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
-        self.push()
+        Ok(())
     }
 
     /// Gets a list of files that have been modified since a given `starting_commit`
@@ -252,29 +253,21 @@ impl Repository {
         Ok(files)
     }
 
-    /// Push the current branch to the provided refname
+    /// Push the current branch to the `master` branch on the `origin` remote.
+    ///
+    /// This function also emits a success or failure message at INFO level.
     #[instrument(skip_all)]
-    fn push(&self) -> anyhow::Result<()> {
-        self.run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
-    }
+    pub fn push(&self) -> anyhow::Result<()> {
+        info!("Pushing commits");
+        if let Err(err) =
+            self.run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
+        {
+            error!(?err, "Push errored");
+        } else {
+            info!("Push finished");
+        }
 
-    /// Commits the specified file with the specified commit message and pushes
-    /// the commit to the `master` branch on the `origin` remote.
-    ///
-    /// Note that `modified_file` expects an **absolute** file path!
-    ///
-    /// This function also prints the commit message and a success or failure
-    /// message to the console.
-    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> anyhow::Result<()> {
-        info!("Committing and pushing \"{message}\"");
-
-        let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
-        self.perform_commit_and_push(message, relative_path)
-            .map(|_| info!("Commit and push finished for \"{message}\""))
-            .map_err(|err| {
-                error!(?err, "Commit and push for \"{message}\" errored");
-                err
-            })
+        Ok(())
     }
 
     /// Fetches any changes from the `origin` remote and performs a hard reset

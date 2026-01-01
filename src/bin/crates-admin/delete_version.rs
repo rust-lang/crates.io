@@ -1,6 +1,6 @@
 use crate::dialoguer;
 use anyhow::Context;
-use crates_io::models::update_default_version;
+use crates_io::models::{GitIndexSyncQueueItem, update_default_version};
 use crates_io::schema::crates;
 use crates_io::storage::Storage;
 use crates_io::worker::jobs;
@@ -95,11 +95,11 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let crate_name = &opts.crate_name;
 
     info!(%crate_name, "Enqueuing index sync jobs");
-    let git_index_job = jobs::SyncToGitIndex::new(crate_name);
+    GitIndexSyncQueueItem::queue(&mut conn, crate_name).await?;
     let sparse_index_job = jobs::SyncToSparseIndex::new(crate_name);
 
     if let Err(error) = tokio::try_join!(
-        git_index_job.enqueue(&mut conn),
+        jobs::SyncToGitIndex.enqueue(&mut conn),
         sparse_index_job.enqueue(&mut conn),
     ) {
         warn!(%crate_name, "Failed to enqueue background job: {error}");

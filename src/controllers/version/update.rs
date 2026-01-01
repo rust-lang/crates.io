@@ -10,6 +10,7 @@ use crate::util::errors::{AppResult, bad_request, custom};
 use crate::views::EncodableVersion;
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use axum::Json;
+use crates_io_database::models::GitIndexSyncQueueItem;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -179,12 +180,12 @@ pub async fn perform_version_yank_update(
         .insert(conn)
         .await?;
 
-    let git_index_job = SyncToGitIndex::new(&krate.name);
+    GitIndexSyncQueueItem::queue(conn, &krate.name).await?;
     let sparse_index_job = SyncToSparseIndex::new(&krate.name);
     let update_default_version_job = UpdateDefaultVersion::new(krate.id);
 
     tokio::try_join!(
-        git_index_job.enqueue(conn),
+        SyncToGitIndex.enqueue(conn),
         sparse_index_job.enqueue(conn),
         update_default_version_job.enqueue(conn),
     )?;

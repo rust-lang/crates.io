@@ -11,6 +11,7 @@ use axum::extract::rejection::QueryRejection;
 use axum::extract::{FromRequestParts, Query};
 use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
+use crates_io_database::models::GitIndexSyncQueueItem;
 use crates_io_database::schema::deleted_crates;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -132,12 +133,12 @@ pub async fn delete_crate(
                 .execute(conn)
                 .await?;
 
-            let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+            GitIndexSyncQueueItem::queue(conn, &krate.name).await?;
             let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
             let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(path.name);
 
             tokio::try_join!(
-                git_index_job.enqueue(conn),
+                jobs::SyncToGitIndex.enqueue(conn),
                 sparse_index_job.enqueue(conn),
                 delete_from_storage_job.enqueue(conn),
             )?;
