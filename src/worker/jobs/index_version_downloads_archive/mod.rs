@@ -2,6 +2,7 @@ use std::{collections::BTreeSet, sync::Arc};
 
 use crate::worker::Environment;
 use anyhow::Context;
+use crates_io_database::models::CloudFrontDistribution;
 use crates_io_worker::BackgroundJob;
 use futures_util::TryStreamExt;
 use object_store::{ObjectMeta, ObjectStore, ObjectStoreExt};
@@ -55,12 +56,18 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 
         info!("Invalidating CDN caches…");
         let mut conn = env.deadpool.get().await?;
-        if let Err(error) = env.invalidate_cdns(&mut conn, INDEX_PATH).await {
+        let dist = CloudFrontDistribution::Static;
+
+        let result = env.invalidate_cdns(&mut conn, dist, INDEX_PATH).await;
+        if let Err(error) = result {
             warn!("Failed to invalidate CDN caches: {error}");
         }
-        if let Err(error) = env.invalidate_cdns(&mut conn, INDEX_JSON_PATH).await {
+
+        let result = env.invalidate_cdns(&mut conn, dist, INDEX_JSON_PATH);
+        if let Err(error) = result.await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
+
         info!("CDN caches invalidated");
 
         info!("Finished indexing old version downloads");

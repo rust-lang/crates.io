@@ -1,6 +1,8 @@
 pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
 pub use self::category::{Category, CrateCategory, NewCategory};
-pub use self::cloudfront_invalidation_queue::CloudFrontInvalidationQueueItem;
+pub use self::cloudfront_invalidation_queue::{
+    CloudFrontDistribution, CloudFrontInvalidationQueueItem,
+};
 pub use self::crate_owner_invitation::{
     CrateOwnerInvitation, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome,
 };

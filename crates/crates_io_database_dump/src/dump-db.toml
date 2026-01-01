@@ -51,6 +51,7 @@ path = "public"
 
 [cloudfront_invalidation_queue.columns]
 id = "private"
+distribution = "private"
 path = "private"
 created_at = "private"
 

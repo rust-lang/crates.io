@@ -1,5 +1,6 @@
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
+use crates_io_database::models::CloudFrontDistribution;
 use crates_io_database_dump::{DumpDirectory, create_archives};
 use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
@@ -48,7 +49,9 @@ impl BackgroundJob for DumpDb {
 
         info!("Invalidating CDN caches…");
         let mut conn = env.deadpool.get().await?;
-        if let Err(error) = env.invalidate_cdns(&mut conn, TAR_PATH).await {
+        let dist = CloudFrontDistribution::Static;
+
+        if let Err(error) = env.invalidate_cdns(&mut conn, dist, TAR_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
@@ -59,7 +62,7 @@ impl BackgroundJob for DumpDb {
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Err(error) = env.invalidate_cdns(&mut conn, ZIP_PATH).await {
+        if let Err(error) = env.invalidate_cdns(&mut conn, dist, ZIP_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 

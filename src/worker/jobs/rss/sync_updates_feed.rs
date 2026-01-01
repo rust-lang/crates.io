@@ -2,6 +2,7 @@ use crate::schema::{crates, versions};
 use crate::storage::FeedId;
 use crate::worker::Environment;
 use chrono::{Duration, Utc};
+use crates_io_database::models::CloudFrontDistribution;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -66,8 +67,9 @@ impl BackgroundJob for SyncUpdatesFeed {
         info!("Uploading feed to storage…");
         ctx.storage.upload_feed(&feed_id, &channel).await?;
 
+        let dist = CloudFrontDistribution::Static;
         let path = object_store::path::Path::from(&feed_id);
-        if let Err(error) = ctx.invalidate_cdns(&mut conn, path.as_ref()).await {
+        if let Err(error) = ctx.invalidate_cdns(&mut conn, dist, path.as_ref()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 

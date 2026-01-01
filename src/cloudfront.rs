@@ -5,6 +5,7 @@ use aws_sdk_cloudfront::error::{BuildError, SdkError};
 use aws_sdk_cloudfront::operation::create_invalidation::CreateInvalidationError;
 use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_cloudfront::{Client, Config};
+use crates_io_database::models::CloudFrontDistribution;
 use tracing::{debug, instrument, warn};
 
 #[derive(Debug, thiserror::Error)]
@@ -37,14 +38,30 @@ impl CloudFrontError {
 
 pub struct CloudFront {
     client: Client,
-    distribution_id: String,
+    index_distribution_id: String,
+    static_distribution_id: String,
 }
 
 impl CloudFront {
     pub fn from_environment() -> Option<Self> {
-        let distribution_id = dotenvy::var("CLOUDFRONT_DISTRIBUTION").ok()?;
         let access_key = dotenvy::var("AWS_ACCESS_KEY").expect("missing AWS_ACCESS_KEY");
         let secret_key = dotenvy::var("AWS_SECRET_KEY").expect("missing AWS_SECRET_KEY");
+
+        let index_distribution_id = match dotenvy::var("CLOUDFRONT_DISTRIBUTION_ID_INDEX") {
+            Ok(id) => id,
+            Err(_) => {
+                warn!("Missing CLOUDFRONT_DISTRIBUTION_ID_INDEX environment variable");
+                return None;
+            }
+        };
+
+        let static_distribution_id = match dotenvy::var("CLOUDFRONT_DISTRIBUTION_ID_STATIC") {
+            Ok(id) => id,
+            Err(_) => {
+                warn!("Missing CLOUDFRONT_DISTRIBUTION_ID_STATIC environment variable");
+                return None;
+            }
+        };
 
         let credentials = Credentials::from_keys(access_key, secret_key, None);
 
@@ -59,20 +76,27 @@ impl CloudFront {
 
         Some(Self {
             client,
-            distribution_id,
+            index_distribution_id,
+            static_distribution_id,
         })
     }
 
-    /// Invalidate a file on CloudFront
-    ///
-    /// `path` is the path to the file to invalidate, such as `config.json`, or `re/ge/regex`
-    pub async fn invalidate(&self, path: &str) -> Result<(), CloudFrontError> {
-        self.invalidate_many(vec![path.to_string()]).await
+    /// Returns the distribution ID for the given distribution.
+    pub fn distribution_id(&self, distribution: CloudFrontDistribution) -> &str {
+        match distribution {
+            CloudFrontDistribution::Static => &self.static_distribution_id,
+            CloudFrontDistribution::Index => &self.index_distribution_id,
+        }
     }
 
-    /// Invalidate multiple paths on Cloudfront.
+    /// Invalidate multiple paths on CloudFront for a specific distribution.
     #[instrument(skip(self))]
-    pub async fn invalidate_many(&self, mut paths: Vec<String>) -> Result<(), CloudFrontError> {
+    pub async fn invalidate_many(
+        &self,
+        distribution: CloudFrontDistribution,
+        mut paths: Vec<String>,
+    ) -> Result<(), CloudFrontError> {
+        let distribution_id = self.distribution_id(distribution);
         let now = chrono::offset::Utc::now().timestamp_micros();
 
         // We need to ensure that paths have a starting slash.
@@ -97,10 +121,10 @@ impl CloudFront {
         let invalidation_request = self
             .client
             .create_invalidation()
-            .distribution_id(&self.distribution_id)
+            .distribution_id(distribution_id)
             .invalidation_batch(invalidation_batch);
 
-        debug!("Sending invalidation request");
+        debug!(%distribution_id, "Sending invalidation request");
 
         Ok(invalidation_request
             .send()

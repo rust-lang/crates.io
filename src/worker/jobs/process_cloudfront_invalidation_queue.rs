@@ -1,7 +1,7 @@
 use crate::cloudfront::{CloudFront, CloudFrontError};
 use crate::worker::Environment;
 use anyhow::Context;
-use crates_io_database::models::CloudFrontInvalidationQueueItem;
+use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
@@ -18,24 +18,33 @@ const INITIAL_BACKOFF: Duration = Duration::from_secs(30);
 const MAX_BACKOFF: Duration = Duration::from_secs(15 * 60);
 const MAX_RETRIES: u32 = 6; // 30s, 1m, 2m, 4m, 8m, 15m
 
+const DISTRIBUTIONS: [CloudFrontDistribution; 2] = [
+    CloudFrontDistribution::Index,
+    CloudFrontDistribution::Static,
+];
+
 /// Background job that processes CloudFront invalidation paths from the database queue in batches.
 ///
 /// This job:
 /// - Processes up to 1,000 paths per batch to stay within AWS limits
 /// - Deduplicates paths before sending to CloudFront
 /// - Implements exponential backoff for `TooManyInvalidationsInProgress` errors
-/// - Processes all available batches in a single job run
+/// - Processes all available batches for each distribution in a single job run
 #[derive(Deserialize, Serialize)]
 pub struct ProcessCloudfrontInvalidationQueue;
 
 impl ProcessCloudfrontInvalidationQueue {
-    #[instrument(skip_all)]
+    #[instrument(skip_all, fields(distribution = %distribution.as_str()))]
     async fn process_batch(
         &self,
         conn: &mut AsyncPgConnection,
         cloudfront: &CloudFront,
+        distribution: CloudFrontDistribution,
     ) -> anyhow::Result<usize> {
-        let items = CloudFrontInvalidationQueueItem::fetch_batch(conn, BATCH_SIZE as i64).await?;
+        let items =
+            CloudFrontInvalidationQueueItem::fetch_batch(conn, distribution, BATCH_SIZE as i64)
+                .await?;
+
         if items.is_empty() {
             info!("No more CloudFront invalidations to process");
             return Ok(0);
@@ -52,7 +61,9 @@ impl ProcessCloudfrontInvalidationQueue {
         }
         let unique_paths: Vec<String> = unique_paths.into_iter().collect();
 
-        let result = self.invalidate_with_backoff(cloudfront, unique_paths).await;
+        let result = self
+            .invalidate_with_backoff(cloudfront, distribution, unique_paths)
+            .await;
         result.context("Failed to request CloudFront invalidations")?;
 
         let result = CloudFrontInvalidationQueueItem::remove_items(conn, &item_ids).await;
@@ -68,12 +79,17 @@ impl ProcessCloudfrontInvalidationQueue {
     async fn invalidate_with_backoff(
         &self,
         cloudfront: &CloudFront,
+        distribution: CloudFrontDistribution,
         paths: Vec<String>,
     ) -> Result<(), CloudFrontError> {
         let mut attempt = 1;
         let mut backoff = INITIAL_BACKOFF;
         loop {
-            let Err(error) = cloudfront.invalidate_many(paths.clone()).await else {
+            let result = cloudfront
+                .invalidate_many(distribution, paths.clone())
+                .await;
+
+            let Err(error) = result else {
                 return Ok(());
             };
 
@@ -109,12 +125,15 @@ impl BackgroundJob for ProcessCloudfrontInvalidationQueue {
 
         let mut conn = ctx.deadpool.get().await?;
 
-        // Process batches until the queue is empty, or we hit an error
-        loop {
-            let item_count = self.process_batch(&mut conn, cloudfront).await?;
-            if item_count == 0 {
-                // Queue is empty, we're done
-                break;
+        // Process batches for each distribution until the queues are empty
+        for distribution in DISTRIBUTIONS {
+            loop {
+                let item_count = self
+                    .process_batch(&mut conn, cloudfront, distribution)
+                    .await?;
+                if item_count == 0 {
+                    break;
+                }
             }
         }
 
