@@ -8,13 +8,11 @@
   import CopyIcon from '$lib/assets/copy.svg?component';
   import DownloadIcon from '$lib/assets/download.svg?component';
   import LatestUpdatesIcon from '$lib/assets/latest-updates.svg?component';
+  import Tooltip from '$lib/components/Tooltip.svelte';
   import { truncateText } from '$lib/utils/truncate-text';
 
   // TODO: Import CopyButton component when implemented
   // import CopyButton from '$lib/components/CopyButton.svelte';
-
-  // TODO: Import Tooltip component when implemented
-  // import Tooltip from '$lib/components/Tooltip.svelte';
 
   type Crate = components['schemas']['Crate'];
 
@@ -66,8 +64,7 @@
       <span>
         <span>
           All-Time:
-          <!-- TODO: Replace with Tooltip component when implemented -->
-          <!-- <Tooltip text="Total number of downloads" /> -->
+          <Tooltip text="Total number of downloads" />
         </span>
         {crate.downloads.toLocaleString()}
       </span>
@@ -77,8 +74,7 @@
       <span>
         <span>
           Recent:
-          <!-- TODO: Replace with Tooltip component when implemented -->
-          <!-- <Tooltip text="Downloads in the last 90 days" /> -->
+          <Tooltip text="Downloads in the last 90 days" />
         </span>
         {(crate.recent_downloads ?? 0).toLocaleString()}
       </span>
@@ -88,13 +84,11 @@
       <span>
         <span>
           Updated:
-          <!-- TODO: Replace with Tooltip component when implemented -->
-          <!-- <Tooltip text="The last time the crate was updated" /> -->
+          <Tooltip text="The last time the crate was updated" />
         </span>
         <time datetime={formatISO(crate.updated_at)} data-test-updated-at>
           {formatDistanceToNow(crate.updated_at, { addSuffix: true })}
-          <!-- TODO: Replace with Tooltip component showing full timestamp -->
-          <!-- <Tooltip text={crate.updated_at} /> -->
+          <Tooltip text={crate.updated_at} />
         </time>
       </span>
     </div>
