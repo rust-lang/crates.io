@@ -195,9 +195,12 @@ export default class Version extends Model {
     return await ajax(`https://docs.rs/crate/${this.crateName}/=${this.num}/status.json`);
   });
 
+  get docsRsResponse() {
+    return this.loadDocsStatusTask.lastSuccessful;
+  }
+
   get hasDocsRsLink() {
-    let docsStatus = this.loadDocsStatusTask.lastSuccessful?.value;
-    return docsStatus?.doc_status === true;
+    return this.docsRsResponse?.value?.doc_status === true;
   }
 
   get docsRsLink() {
@@ -223,6 +226,25 @@ export default class Version extends Model {
     // finally, we'll return the specified documentation link, whatever it is
     if (crateDocsLink) {
       return crateDocsLink;
+    }
+
+    return null;
+  }
+
+  get docsRsSourceLink() {
+    if (this.docsRsResponse) {
+      return `https://docs.rs/crate/${this.crateName}/${this.num}/source/`;
+    }
+  }
+
+  get sourceLink() {
+    // Return a link to docs.rs if we get any successful response from docs.rs, so that we show
+    // the source link regardless of this crate being a library or binary, regardless of whether
+    // the docs built successfully, regardless of whether the build is queued or completed, and
+    // regardless of whether a documentation link is specified.
+    let { docsRsSourceLink } = this;
+    if (docsRsSourceLink) {
+      return docsRsSourceLink;
     }
 
     return null;

@@ -58,14 +58,14 @@ export default class VersionRoute extends Route {
       // ignored
     });
 
-    if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
-      version.loadDocsStatusTask.perform().catch(error => {
-        // report unexpected errors to Sentry and ignore `ajax()` errors
-        if (!didCancel(error) && !(error instanceof AjaxError)) {
-          this.sentry.captureException(error);
-        }
-      });
-    }
+    // Load the status of the docs.rs build even if there's a non-docs.rs documentation link
+    // specified, so that we can link to the source view on docs.rs (as long as it exists).
+    version.loadDocsStatusTask.perform().catch(error => {
+      // report unexpected errors to Sentry and ignore `ajax()` errors
+      if (!didCancel(error) && !(error instanceof AjaxError)) {
+        this.sentry.captureException(error);
+      }
+    });
   }
 
   serialize(model) {
