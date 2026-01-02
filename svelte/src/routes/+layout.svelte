@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { page } from '$app/state';
+  import { navigating, page } from '$app/state';
 
   import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
+  import ProgressBar from '$lib/components/ProgressBar.svelte';
+  import { ProgressState, setProgressContext } from '$lib/progress.svelte';
   import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
 
   import '$lib/css/global.css';
-
-  // TODO: import ProgressBar from '$lib/components/ProgressBar.svelte';
 
   let { children } = $props();
 
@@ -24,6 +24,15 @@
   let searchFormContext = new SearchFormContext();
   setSearchFormContext(searchFormContext);
 
+  let progress = new ProgressState();
+  setProgressContext(progress);
+
+  $effect(() => {
+    if (navigating.complete) {
+      progress.trackPromise(navigating.complete);
+    }
+  });
+
   // TODO: implement notification container
 </script>
 
@@ -31,7 +40,11 @@
   <title>crates.io: Rust Package Registry</title>
 </svelte:head>
 
-<!-- TODO: <ProgressBar /> -->
+{#if !__TEST__}
+  <!-- Disabled in tests to ensure stable snapshots -->
+  <ProgressBar />
+{/if}
+
 <!-- TODO: <NotificationContainer position='top-right' /> -->
 <div id="tooltip-container"></div>
 
