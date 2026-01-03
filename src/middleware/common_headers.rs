@@ -23,7 +23,8 @@ pub async fn add_common_headers(
 
     let path = request.uri().path();
 
-    const STATIC_FILES: [&str; 5] = [
+    const STATIC_FILES: [&str; 6] = [
+        "/github-auth-loading.html",
         "/github-redirect.html",
         "/favicon.ico",
         "/robots.txt",
