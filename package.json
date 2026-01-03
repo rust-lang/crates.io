@@ -163,7 +163,7 @@
     "postcss-preset-env": "10.6.0",
     "prettier": "3.7.4",
     "prettier-plugin-ember-template-tag": "2.1.2",
-    "qunit": "2.24.3",
+    "qunit": "2.25.0",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.5.0",
     "tracked-built-ins": "4.1.0",
