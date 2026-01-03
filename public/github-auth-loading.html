@@ -8,7 +8,10 @@
   <p>Please wait while we redirect you to GitHub...</p>
   <script>
     fetch('/api/private/session/begin')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(data => {
         window.location.href = data.url;
       })
