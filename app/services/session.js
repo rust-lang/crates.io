@@ -97,19 +97,15 @@ export default class SessionService extends Service {
       'menuBar=0',
     ].join(',');
 
-    let win = window.open('', '_blank', windowDimensions);
+    // Open popup to a same-origin loading page that fetches the OAuth URL and
+    // redirects. Previously, using document.write() on a blank popup created an
+    // opaque origin, causing GitHub to reject the OAuth POST with HTTP 422
+    // ("Your browser did something unexpected") due to Origin: null.
+    // See: https://github.com/rust-lang/crates.io/discussions/4320
+    let win = window.open('/github-auth-loading.html', '_blank', windowDimensions);
     if (!win) {
       return;
     }
-
-    win.document.write('<html><head></head><body>Please wait while we redirect you…</body></html>');
-    win.document.close();
-
-    // we can't call `window.open()` with this URL directly, because it might trigger
-    // the popup window prevention mechanism of the browser, since the async opening
-    // can not be associated with the original user click event
-    let { url } = await ajax(`/api/private/session/begin`);
-    win.location = url;
 
     let event = await race([this.windowEventWatcherTask.perform(), this.windowCloseWatcherTask.perform(win)]);
     if (event.closed) {

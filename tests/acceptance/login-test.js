@@ -18,14 +18,14 @@ module('Acceptance | Login', function (hooks) {
     let deferred = defer();
 
     window.open = (url, target, features) => {
-      assert.strictEqual(url, '');
+      assert.strictEqual(url, '/github-auth-loading.html');
       assert.strictEqual(target, '_blank');
       assert.strictEqual(
         features,
         'width=1000,height=450,toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0',
       );
       deferred.resolve();
-      return { document: { write() {}, close() {} }, close() {} };
+      return { close() {} };
     };
 
     this.worker.use(
@@ -79,7 +79,7 @@ module('Acceptance | Login', function (hooks) {
 
     window.open = () => {
       deferred.resolve();
-      return { document: { write() {}, close() {} }, close() {} };
+      return { close() {} };
     };
 
     this.worker.use(

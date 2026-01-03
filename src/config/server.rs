@@ -180,10 +180,12 @@ impl Server {
 
         // `sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0=` refers to
         // the `script` in `public/github-redirect.html`
+        // `sha256-qfh2Go0si80c5fCQM7vtMfMYVJPGGpVLgWpgpPssfvw=` refers to
+        // the `script` in `public/github-auth-loading.html`
         let content_security_policy = format!(
             "default-src 'self'; \
             connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://raw.githubusercontent.com {cdn_domain}; \
-            script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE=' 'sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0='; \
+            script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE=' 'sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0=' 'sha256-qfh2Go0si80c5fCQM7vtMfMYVJPGGpVLgWpgpPssfvw='; \
             style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; \
             font-src https://code.cdn.mozilla.net; \
             img-src *; \

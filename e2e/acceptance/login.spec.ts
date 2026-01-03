@@ -7,7 +7,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await page.addInitScript(() => {
       globalThis.open = (url, target, features) => {
         globalThis.openKwargs = { url, target, features };
-        return { document: { write() {}, close() {} }, close() {} } as ReturnType<(typeof globalThis)['open']>;
+        return { close() {} } as ReturnType<(typeof globalThis)['open']>;
       };
     });
 
@@ -44,7 +44,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await page.click('[data-test-login-button]');
     await expect(page).toHaveURL('/');
 
-    await page.waitForFunction(expect => globalThis.openKwargs.url === expect, '');
+    await page.waitForFunction(expect => globalThis.openKwargs.url === expect, '/github-auth-loading.html');
     await page.waitForFunction(expect => globalThis.openKwargs.target === expect, '_blank');
     await page.waitForFunction(
       expect => globalThis.openKwargs.features === expect,
@@ -65,7 +65,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await page.addInitScript(() => {
       globalThis.open = (url, target, features) => {
         globalThis.openKwargs = { url, target, features };
-        return { document: { write() {}, close() {} }, close() {} } as ReturnType<(typeof globalThis)['open']>;
+        return { close() {} } as ReturnType<(typeof globalThis)['open']>;
       };
     });
 
