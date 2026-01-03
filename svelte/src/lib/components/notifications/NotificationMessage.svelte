@@ -68,7 +68,8 @@
   {#if notification.autoClear && !notification.dismiss}
     <div
       class="notification__countdown"
-      style="animation-duration: {notification.clearDuration}ms; animation-play-state: {paused ? 'paused' : 'running'}"
+      style:animation-duration="{notification.clearDuration}ms"
+      style:animation-play-state={paused ? 'paused' : 'running'}
     ></div>
   {/if}
 </div>
