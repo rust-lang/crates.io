@@ -54,6 +54,7 @@ export default defineConfig({
 
         test: {
           name: 'client',
+          setupFiles: ['./src/test/setup-browser.ts'],
 
           browser: {
             enabled: true,
