@@ -15,6 +15,7 @@
   import '$lib/css/global.css';
 
   let { children } = $props();
+  let propsId = $props.id();
 
   let isIndex = $derived(page.route.id === '/');
 
@@ -37,8 +38,7 @@
     }
   });
 
-  let tooltipContainerId = $props.id();
-  setTooltipContext({ containerId: tooltipContainerId });
+  setTooltipContext({ containerId: `tooltip-container-${propsId}` });
 
   let notifications = new NotificationsState();
   setNotifications(notifications);
