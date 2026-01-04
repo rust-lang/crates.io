@@ -5,9 +5,9 @@
   import { setTooltipContext } from '$lib/tooltip.svelte';
 
   let { children }: { children: Snippet } = $props();
+  let propsId = $props.id();
 
-  let tooltipContainerId = $props.id();
-  setTooltipContext({ containerId: tooltipContainerId });
+  setTooltipContext({ containerId: `tooltip-container-${propsId}` });
 </script>
 
 {@render children()}
