@@ -1,5 +1,7 @@
 import type { Preview } from '@storybook/sveltekit';
 
+import { themes } from 'storybook/theming';
+
 import '../src/lib/css/global.css';
 
 import ColorSchemeDecorator from '../src/lib/storybook/ColorSchemeDecorator.svelte';
@@ -29,6 +31,11 @@ const preview: Preview = {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
+    },
+    docs: {
+      // Storybook's docs pages default to light theme regardless of system preference.
+      // The `normal` theme adapts to system preference, so we set it here to keep things consistent.
+      theme: themes.normal,
     },
   },
 };
