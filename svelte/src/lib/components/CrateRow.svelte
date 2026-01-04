@@ -8,11 +8,9 @@
   import CopyIcon from '$lib/assets/copy.svg?component';
   import DownloadIcon from '$lib/assets/download.svg?component';
   import LatestUpdatesIcon from '$lib/assets/latest-updates.svg?component';
+  import CopyButton from '$lib/components/CopyButton.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { truncateText } from '$lib/utils/truncate-text';
-
-  // TODO: Import CopyButton component when implemented
-  // import CopyButton from '$lib/components/CopyButton.svelte';
 
   type Crate = components['schemas']['Crate'];
 
@@ -34,21 +32,14 @@
       </a>
       {#if showVersion}
         <span class="version" data-test-version>v{crate.default_version}</span>
-        <!-- TODO: Replace with CopyButton component when implemented -->
-        <!-- <CopyButton
+        <CopyButton
           copyText={cargoTomlSnippet}
           title="Copy Cargo.toml snippet to clipboard"
-          class="copy-button"
-        /> -->
-        <button
-          type="button"
           class="copy-button button-reset"
-          title="Copy Cargo.toml snippet to clipboard"
           data-test-copy-toml-button
-          onclick={() => navigator.clipboard.writeText(cargoTomlSnippet)}
         >
           <CopyIcon aria-label="Copy Cargo.toml snippet to clipboard" />
-        </button>
+        </CopyButton>
       {/if}
     </div>
     {#if crate.description}
@@ -138,7 +129,7 @@
     overflow-wrap: break-word;
   }
 
-  .copy-button {
+  .crate-row :global(.copy-button) {
     color: var(--main-color);
     cursor: pointer;
 
@@ -147,23 +138,27 @@
     @media (pointer: fine) {
       opacity: 0;
       transition: var(--transition-medium);
-
-      .crate-row:hover & {
-        opacity: 0.8;
-        transition: var(--transition-instant);
-      }
-
-      .crate-row:hover &:hover,
-      &:focus {
-        opacity: 1;
-        transition: var(--transition-instant);
-      }
     }
 
     :global(svg) {
       vertical-align: top;
       height: 1rem;
       width: 1rem;
+    }
+  }
+
+  @media (pointer: fine) {
+    .crate-row {
+      &:hover :global(.copy-button) {
+        opacity: 0.8;
+        transition: var(--transition-instant);
+      }
+
+      &:hover :global(.copy-button:hover),
+      :global(.copy-button:focus) {
+        opacity: 1;
+        transition: var(--transition-instant);
+      }
     }
   }
 
