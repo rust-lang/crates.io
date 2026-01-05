@@ -1,6 +1,7 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
+  import { loadMermaid } from '$lib/attachments/mermaid';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import RenderedHtml from './RenderedHtml.svelte';
 
@@ -50,7 +51,7 @@
 
 <Story name="Default" args={{ html: EXAMPLE_HTML }} {template} />
 
-<Story name="With Mermaid" args={{ html: MERMAID_HTML }} {template} />
+<Story name="With Mermaid" args={{ html: MERMAID_HTML }} loaders={[() => loadMermaid()]} {template} />
 
 <Story name="Dark Mode Images" args={{ html: DARK_MODE_IMAGES_HTML }} {template} />
 

@@ -2,8 +2,10 @@
   import type { ResolvedScheme } from '$lib/color-scheme.svelte';
 
   import { highlightSyntax } from '$lib/attachments/highlight';
+  import { renderMermaids } from '$lib/attachments/mermaid';
   import { getColorScheme } from '$lib/color-scheme.svelte';
   import TextContent from '$lib/components/TextContent.svelte';
+  import { getNotifications } from '$lib/notifications.svelte';
 
   interface Props {
     html: string;
@@ -12,6 +14,7 @@
   let { html }: Props = $props();
 
   let colorScheme = getColorScheme();
+  let notifications = getNotifications();
 
   /**
    * Updates <source> media attributes in <picture> elements based on
@@ -49,12 +52,6 @@
       }
     };
   }
-
-  // TODO: implement renderMermaids attachment
-  // - Render mermaid diagrams from .language-mermaid code blocks
-  // - Requires lazy-loading mermaid.js library
-  // - Re-run when `html` changes
-  // - See: app/modifiers/render-mermaids.js and app/services/mermaid.js
 </script>
 
 <!--
@@ -64,6 +61,7 @@
 <div
   {@attach highlightSyntax(html, 'pre > code:not(.language-mermaid)')}
   {@attach updateSourceMedia(colorScheme.resolvedScheme, html)}
+  {@attach renderMermaids(html, notifications)}
 >
   <TextContent>
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
