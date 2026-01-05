@@ -1,6 +1,7 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
+  import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import RenderedHtml from './RenderedHtml.svelte';
 
   const { Story } = defineMeta({
@@ -42,6 +43,7 @@
 
 {#snippet template(args: { html: string })}
   <div class="docs">
+    <ColorSchemeMenu style="position: absolute; right: var(--space-l)" />
     <RenderedHtml html={args.html} />
   </div>
 {/snippet}
