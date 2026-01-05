@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ResolvedScheme } from '$lib/color-scheme.svelte';
 
+  import { highlightSyntax } from '$lib/attachments/highlight';
   import { getColorScheme } from '$lib/color-scheme.svelte';
   import TextContent from '$lib/components/TextContent.svelte';
 
@@ -11,12 +12,6 @@
   let { html }: Props = $props();
 
   let colorScheme = getColorScheme();
-
-  // TODO: implement highlightSyntax attachment
-  // - Use highlight.js to syntax highlight code blocks
-  // - Select elements matching 'pre > code:not(.language-mermaid)'
-  // - Re-run when `html` changes
-  // - See: app/modifiers/highlight-syntax.js
 
   /**
    * Updates <source> media attributes in <picture> elements based on
@@ -66,7 +61,10 @@
   This component renders raw HTML. Be very careful with this since it
   can enable cross-site scripting attacks!
 -->
-<div {@attach updateSourceMedia(colorScheme.resolvedScheme, html)}>
+<div
+  {@attach highlightSyntax(html, 'pre > code:not(.language-mermaid)')}
+  {@attach updateSourceMedia(colorScheme.resolvedScheme, html)}
+>
   <TextContent>
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html html}
