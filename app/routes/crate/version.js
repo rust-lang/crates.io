@@ -1,15 +1,9 @@
 import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
-import { waitForPromise } from '@ember/test-waiters';
-
-import { didCancel } from 'ember-concurrency';
-
-import { AjaxError } from '../../utils/ajax';
 
 export default class VersionRoute extends Route {
   @service router;
-  @service sentry;
   @service store;
 
   async model(params, transition) {
@@ -40,32 +34,6 @@ export default class VersionRoute extends Route {
     }
 
     return { crate, requestedVersion, version };
-  }
-
-  setupController(controller, model) {
-    super.setupController(...arguments);
-
-    waitForPromise(controller.loadReadmeTask.perform()).catch(() => {
-      // ignored
-    });
-    waitForPromise(controller.loadDownloadsTask.perform()).catch(() => {
-      // ignored
-    });
-
-    let { crate, version } = model;
-
-    waitForPromise(crate.loadOwnersTask.perform()).catch(() => {
-      // ignored
-    });
-
-    // Load the status of the docs.rs build even if there's a non-docs.rs documentation link
-    // specified, so that we can link to the source view on docs.rs (as long as it exists).
-    version.loadDocsStatusTask.perform().catch(error => {
-      // report unexpected errors to Sentry and ignore `ajax()` errors
-      if (!didCancel(error) && !(error instanceof AjaxError)) {
-        this.sentry.captureException(error);
-      }
-    });
   }
 
   serialize(model) {
