@@ -105,7 +105,7 @@ futures-util = "=0.3.31"
 hex = "=0.4.3"
 http = "=1.4.0"
 hyper = { version = "=1.8.1", features = ["client", "http1"] }
-indexmap = { version = "=2.12.1", features = ["serde"] }
+indexmap = { version = "=2.13.0", features = ["serde"] }
 indicatif = "=0.18.3"
 json-subscriber = "=0.2.6"
 lettre = { version = "=0.11.19", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
