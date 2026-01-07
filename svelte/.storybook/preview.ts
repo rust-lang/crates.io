@@ -9,15 +9,45 @@ import HeaderSearchDecorator from '../src/lib/storybook/HeaderSearchDecorator.sv
 import NotificationDecorator from '../src/lib/storybook/NotificationDecorator.svelte';
 import TooltipDecorator from '../src/lib/storybook/TooltipDecorator.svelte';
 
+const THEME_ITEMS = [
+  { value: 'light', icon: 'sun' },
+  { value: 'dark', icon: 'moon' },
+  { value: 'system', icon: 'mirror' },
+];
+
 const preview: Preview = {
   decorators: [
-    () => ColorSchemeDecorator,
+    (_, context) => {
+      let { theme } = context.globals;
+      return {
+        Component: ColorSchemeDecorator,
+        props: {
+          theme: theme === '_reset' ? 'system' : theme,
+        },
+      };
+    },
     () => HeaderSearchDecorator,
     () => NotificationDecorator,
     () => TooltipDecorator,
   ],
+  globalTypes: {
+    theme: {
+      description: 'Global theme for components',
+      toolbar: {
+        title: 'Theme',
+        icon: 'mirror',
+        items: THEME_ITEMS.map(c => ({
+          ...c,
+          title: c.value.charAt(0).toUpperCase() + c.value.slice(1),
+        })),
+        showName: true,
+        dynamicTitle: true,
+      },
+    },
+  },
   initialGlobals: {
     backgrounds: { value: 'content' },
+    theme: { value: 'system' },
   },
   parameters: {
     backgrounds: {
