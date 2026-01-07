@@ -6,7 +6,12 @@ import '@poppanator/sveltekit-svg/dist/svg.d.ts';
 // for information about these interfaces
 declare global {
   namespace App {
-    // interface Error {}
+    interface Error {
+      message: string;
+      details?: string;
+      tryAgain?: boolean;
+    }
+
     // interface Locals {}
     // interface PageData {}
     // interface PageState {}
