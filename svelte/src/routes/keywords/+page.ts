@@ -1,4 +1,7 @@
+import type { paths } from '@crates-io/api-client';
+
 import { createClient } from '@crates-io/api-client';
+import { error } from '@sveltejs/kit';
 
 export async function load({ fetch, url }) {
   let client = createClient({ fetch });
@@ -8,24 +11,31 @@ export async function load({ fetch, url }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'crates';
 
-  let response = await client.GET('/api/v1/keywords', {
-    params: {
-      query: {
-        page,
-        per_page: perPage,
-        sort,
-      },
-    },
-  });
+  let keywords = await loadKeywords(client, { page, per_page: perPage, sort });
 
-  if (response.error) {
-    throw new Error('Failed to fetch keywords');
+  return { keywords, page, perPage, sort };
+}
+
+function loadKeywordsError(status: number): never {
+  error(status, { message: 'Failed to load keywords', tryAgain: true });
+}
+
+async function loadKeywords(
+  client: ReturnType<typeof createClient>,
+  query: paths['/api/v1/keywords']['get']['parameters']['query'],
+) {
+  let response;
+  try {
+    response = await client.GET('/api/v1/keywords', { params: { query } });
+  } catch (_error) {
+    // Network errors are treated as `504 Gateway Timeout`
+    loadKeywordsError(504);
   }
 
-  return {
-    keywords: response.data,
-    page,
-    perPage,
-    sort,
-  };
+  let status = response.response.status;
+  if (response.error) {
+    loadKeywordsError(status);
+  }
+
+  return response.data;
 }
