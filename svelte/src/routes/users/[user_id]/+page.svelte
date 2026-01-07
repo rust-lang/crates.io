@@ -12,7 +12,7 @@
 
   let { data } = $props();
 
-  let pagination = $derived(calculatePagination(data.page, data.perPage, data.crates.meta.total, MAX_PAGES));
+  let pagination = $derived(calculatePagination(data.page, data.perPage, data.cratesResponse.meta.total, MAX_PAGES));
 
   let currentSortBy = $derived.by(() => {
     if (data.sort === 'downloads') return 'All-Time Downloads';
@@ -37,7 +37,11 @@
 </PageHeader>
 
 <div class="results-meta">
-  <ResultsCount start={pagination.currentPageStart} end={pagination.currentPageEnd} total={data.crates.meta.total} />
+  <ResultsCount
+    start={pagination.currentPageStart}
+    end={pagination.currentPageEnd}
+    total={data.cratesResponse.meta.total}
+  />
 
   <div class="sort-by">
     <span class="text--small">Sort by</span>
@@ -51,7 +55,7 @@
   </div>
 </div>
 
-<CrateList crates={data.crates.crates} style="margin-bottom: var(--space-s)" />
+<CrateList crates={data.cratesResponse.crates} style="margin-bottom: var(--space-s)" />
 
 <Pagination {pagination} />
 
