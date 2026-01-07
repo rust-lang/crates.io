@@ -2,6 +2,7 @@ import type { operations } from '@crates-io/api-client';
 
 import { browser } from '$app/environment';
 import { createClient } from '@crates-io/api-client';
+import { error } from '@sveltejs/kit';
 
 type SummaryResponse = operations['get_summary']['responses']['200']['content']['application/json'];
 
@@ -17,17 +18,29 @@ let cachedSummary: SummaryResponse | undefined;
 export async function load({ fetch }) {
   let client = createClient({ fetch });
 
-  return { summary: fetchSummary(client) };
+  return { summary: loadSummary(client) };
 }
 
-async function fetchSummary(client: ReturnType<typeof createClient>): Promise<SummaryResponse> {
+function loadSummaryError(status: number): never {
+  error(status, { message: 'Failed to load summary data', tryAgain: true });
+}
+
+async function loadSummary(client: ReturnType<typeof createClient>): Promise<SummaryResponse> {
   if (browser && cachedSummary) {
     return cachedSummary;
   }
 
-  let response = await client.GET('/api/v1/summary');
+  let response;
+  try {
+    response = await client.GET('/api/v1/summary');
+  } catch (_error) {
+    // Network errors are treated as `504 Gateway Timeout`
+    loadSummaryError(504);
+  }
+
+  let status = response.response.status;
   if (response.error) {
-    throw new Error('Failed to fetch summary data');
+    loadSummaryError(status);
   }
 
   if (browser) {
