@@ -1,4 +1,7 @@
+import type { paths } from '@crates-io/api-client';
+
 import { createClient } from '@crates-io/api-client';
+import { error } from '@sveltejs/kit';
 
 export async function load({ fetch, url }) {
   let client = createClient({ fetch });
@@ -8,24 +11,31 @@ export async function load({ fetch, url }) {
   let perPage = 100;
   let sort = url.searchParams.get('sort') ?? 'alpha';
 
-  let response = await client.GET('/api/v1/categories', {
-    params: {
-      query: {
-        page,
-        per_page: perPage,
-        sort,
-      },
-    },
-  });
+  let categories = await loadCategories(client, { page, per_page: perPage, sort });
 
-  if (response.error) {
-    throw new Error('Failed to fetch categories');
+  return { categories, page, perPage, sort };
+}
+
+function loadCategoriesError(status: number): never {
+  error(status, { message: 'Failed to load categories', tryAgain: true });
+}
+
+async function loadCategories(
+  client: ReturnType<typeof createClient>,
+  query: paths['/api/v1/categories']['get']['parameters']['query'],
+) {
+  let response;
+  try {
+    response = await client.GET('/api/v1/categories', { params: { query } });
+  } catch (_error) {
+    // Network errors are treated as `504 Gateway Timeout`
+    loadCategoriesError(504);
   }
 
-  return {
-    categories: response.data,
-    page,
-    perPage,
-    sort,
-  };
+  let status = response.response.status;
+  if (response.error) {
+    loadCategoriesError(status);
+  }
+
+  return response.data;
 }

@@ -1,3 +1,5 @@
+import type { paths } from '@crates-io/api-client';
+
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
@@ -11,37 +13,60 @@ export async function load({ fetch, url, params }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'recent-downloads';
 
-  let categoryResponse = await client.GET('/api/v1/categories/{category}', {
-    params: {
-      path: { category: categorySlug },
-    },
-  });
+  let category = await loadCategory(client, categorySlug);
 
-  if (categoryResponse.error) {
-    error(404, { message: `Category "${categorySlug}" not found` });
-  }
-
-  let cratesResponse = await client.GET('/api/v1/crates', {
-    params: {
-      query: {
-        category: categorySlug,
-        page,
-        per_page: perPage,
-        sort,
-      },
-    },
-  });
-
-  if (cratesResponse.error) {
-    throw new Error(`Failed to fetch crates for category "${categorySlug}"`);
-  }
-
-  return {
-    category: categoryResponse.data.category,
-    crates: cratesResponse.data,
+  let cratesResponse = await loadCrates(client, categorySlug, {
+    category: categorySlug,
     page,
-    perPage,
+    per_page: perPage,
     sort,
-    maxPages: MAX_PAGES,
-  };
+  });
+
+  return { category, cratesResponse, page, perPage, sort, maxPages: MAX_PAGES };
+}
+
+function loadCategoryError(slug: string, status: number): never {
+  if (status === 404) {
+    error(404, { message: `${slug}: Category not found` });
+  } else {
+    error(status, { message: `${slug}: Failed to load category data`, tryAgain: true });
+  }
+}
+
+async function loadCategory(client: ReturnType<typeof createClient>, slug: string) {
+  let response;
+  try {
+    response = await client.GET('/api/v1/categories/{category}', { params: { path: { category: slug } } });
+  } catch (_error) {
+    // Network errors are treated as `504 Gateway Timeout`
+    loadCategoryError(slug, 504);
+  }
+
+  let status = response.response.status;
+  if (response.error) {
+    loadCategoryError(slug, status);
+  }
+
+  return response.data.category;
+}
+
+async function loadCrates(
+  client: ReturnType<typeof createClient>,
+  slug: string,
+  query: paths['/api/v1/crates']['get']['parameters']['query'],
+) {
+  let response;
+  try {
+    response = await client.GET('/api/v1/crates', { params: { query } });
+  } catch (_error) {
+    // Network errors are treated as `504 Gateway Timeout`
+    loadCategoryError(slug, 504);
+  }
+
+  let status = response.response.status;
+  if (response.error) {
+    loadCategoryError(slug, status);
+  }
+
+  return response.data;
 }

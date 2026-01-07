@@ -22,7 +22,9 @@
     searchFormContext.value = '';
   });
 
-  let pagination = $derived(calculatePagination(data.page, data.perPage, data.crates.meta.total, data.maxPages));
+  let pagination = $derived(
+    calculatePagination(data.page, data.perPage, data.cratesResponse.meta.total, data.maxPages),
+  );
 
   let currentSortBy = $derived.by(() => {
     switch (data.sort) {
@@ -87,7 +89,7 @@
   <ResultsCount
     start={pagination.currentPageStart}
     end={pagination.currentPageEnd}
-    total={data.crates.meta.total}
+    total={data.cratesResponse.meta.total}
     data-test-category-nav
   />
 
@@ -103,7 +105,7 @@
   </div>
 </div>
 
-<CrateList crates={data.crates.crates} style="margin-bottom: var(--space-s);" />
+<CrateList crates={data.cratesResponse.crates} style="margin-bottom: var(--space-s);" />
 
 <Pagination {pagination} />
 
