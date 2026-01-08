@@ -7,6 +7,9 @@
   import DownloadIcon from '$lib/assets/download.svg?component';
   import CrateSidebar from '$lib/components/crate-sidebar/CrateSidebar.svelte';
   import CrateHeader from '$lib/components/CrateHeader.svelte';
+  import Placeholder from '$lib/components/Placeholder.svelte';
+  import RenderedHtml from '$lib/components/RenderedHtml.svelte';
+  import { loadReadme } from '$lib/utils/readme';
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
@@ -18,9 +21,10 @@
     version: Version;
     keywords?: Keyword[];
     requestedVersion?: string;
+    readmePromise: Promise<string | null>;
   }
 
-  let { crate, version, keywords = [], requestedVersion }: Props = $props();
+  let { crate, version, keywords = [], requestedVersion, readmePromise }: Props = $props();
 
   // TODO load owners from API
   let owners: Owner[] = [];
@@ -28,6 +32,13 @@
   let numberFormat = new Intl.NumberFormat();
 
   let downloadsContext = $derived(requestedVersion ? version : crate);
+
+  let retryReadmePromise = $state<typeof readmePromise | null>(null);
+  let activeReadmePromise = $derived(retryReadmePromise ?? readmePromise);
+
+  function retryReadme() {
+    retryReadmePromise = loadReadme(fetch, crate.name, version.num);
+  }
 </script>
 
 <svelte:head>
@@ -38,11 +49,95 @@
 
 <div class="crate-info">
   <div class="docs" data-test-docs>
-    <!-- TODO: Implement readme loading and display -->
-    <!-- TODO: Implement loading spinner with Placeholder components -->
-    <!-- TODO: Implement readme error state with retry button -->
-    <!-- TODO: Implement no readme state -->
-    README content goes here.
+    {#await activeReadmePromise}
+      <div class="readme-spinner">
+        <Placeholder
+          width="30%"
+          height="25px"
+          radius="var(--space-3xs)"
+          opacity={0.6}
+          style="margin: var(--space-s) 0 var(--space-m)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="50%"
+          height="20px"
+          radius="var(--space-3xs)"
+          opacity={0.6}
+          style="margin: var(--space-l) 0 var(--space-m);"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+        <Placeholder
+          width="100%"
+          height="16px"
+          radius="var(--space-3xs)"
+          opacity={0.3}
+          style="margin-top: var(--space-xs)"
+        />
+      </div>
+    {:then readme}
+      {#if readme}
+        <article aria-label="Readme" data-test-readme>
+          <RenderedHtml html={readme} />
+        </article>
+      {:else}
+        <div class="no-readme" data-test-no-readme>
+          {crate.name} v{version.num} appears to have no <code>README.md</code> file
+        </div>
+      {/if}
+    {:catch}
+      <div class="readme-error" data-test-readme-error>
+        Failed to load <code>README</code> file for {crate.name} v{version.num}
+        <button type="button" class="retry-button button" data-test-retry-button onclick={retryReadme}>Retry</button>
+      </div>
+    {/await}
   </div>
 
   <div class="sidebar">
@@ -151,5 +246,26 @@
       position: relative;
       bottom: 0.4rem;
     }
+  }
+
+  .no-readme,
+  .readme-error {
+    padding: var(--space-l) var(--space-s);
+    text-align: center;
+    font-size: 20px;
+    font-weight: 300;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+
+    code {
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  .retry-button {
+    display: block;
+    text-align: center;
+    margin: var(--space-s) auto 0;
   }
 </style>

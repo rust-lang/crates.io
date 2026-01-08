@@ -9,4 +9,5 @@
   version={data.version}
   keywords={data.keywords}
   requestedVersion={data.requestedVersion}
+  readmePromise={data.readmePromise}
 />

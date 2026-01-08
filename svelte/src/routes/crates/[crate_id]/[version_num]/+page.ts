@@ -1,15 +1,23 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { loadReadme } from '$lib/utils/readme';
+
 export async function load({ fetch, params }) {
   let client = createClient({ fetch });
 
   let crateName = params.crate_id;
   let versionNum = params.version_num;
 
-  let version = await loadVersion(client, crateName, versionNum);
+  // Start both requests in parallel
+  let versionPromise = loadVersion(client, crateName, versionNum);
+  let readmePromise = loadReadme(fetch, crateName, versionNum);
 
-  return { version, requestedVersion: versionNum };
+  return {
+    requestedVersion: versionNum,
+    version: await versionPromise,
+    readmePromise,
+  };
 }
 
 async function loadVersion(client: ReturnType<typeof createClient>, name: string, version: string) {

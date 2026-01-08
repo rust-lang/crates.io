@@ -4,4 +4,9 @@
   let { data } = $props();
 </script>
 
-<CrateVersionPage crate={data.crate} version={data.defaultVersion} keywords={data.keywords} />
+<CrateVersionPage
+  crate={data.crate}
+  version={data.defaultVersion}
+  keywords={data.keywords}
+  readmePromise={data.readmePromise}
+/>
