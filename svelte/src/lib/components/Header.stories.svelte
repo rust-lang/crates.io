@@ -9,6 +9,7 @@
     tags: ['autodocs'],
     globals: {
       backgrounds: { value: 'header' },
+      theme: { value: 'system' },
     },
   });
 </script>
