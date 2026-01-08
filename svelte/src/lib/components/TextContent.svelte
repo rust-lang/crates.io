@@ -204,7 +204,7 @@
       padding: 0.5rem 1rem;
       margin-bottom: 1rem;
       color: inherit;
-      border-left: .25em solid var(--gray-border);
+      border-left: 0.25em solid var(--gray-border);
 
       & > :first-child {
         margin-top: 0;
@@ -223,7 +223,7 @@
 
       & > :global(.markdown-alert-title)::before {
         content: '';
-        margin-right: .5rem;
+        margin-right: 0.5rem;
         background-color: var(--gray-border);
         width: 1em;
         height: 1em;
@@ -236,7 +236,7 @@
           color: var(--fg-color-note);
 
           &:before {
-            mask: url("$lib/assets/alert-note.svg");
+            mask: url('$lib/assets/alert-note.svg');
             background-color: var(--fg-color-note);
           }
         }
@@ -249,7 +249,7 @@
           color: var(--fg-color-tip);
 
           &:before {
-            mask: url("$lib/assets/alert-tip.svg");
+            mask: url('$lib/assets/alert-tip.svg');
             background-color: var(--fg-color-tip);
           }
         }
@@ -262,7 +262,7 @@
           color: var(--fg-color-important);
 
           &:before {
-            mask: url("$lib/assets/alert-important.svg");
+            mask: url('$lib/assets/alert-important.svg');
             background-color: var(--fg-color-important);
           }
         }
@@ -275,7 +275,7 @@
           color: var(--fg-color-warning);
 
           &:before {
-            mask: url("$lib/assets/alert-warning.svg");
+            mask: url('$lib/assets/alert-warning.svg');
             background-color: var(--fg-color-warning);
           }
         }
@@ -288,7 +288,7 @@
           color: var(--fg-color-caution);
 
           &:before {
-            mask: url("$lib/assets/alert-caution.svg");
+            mask: url('$lib/assets/alert-caution.svg');
             background-color: var(--fg-color-caution);
           }
         }
