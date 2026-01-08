@@ -25,7 +25,8 @@
     "@crates-io/api-client": "workspace:*",
     "@floating-ui/dom": "1.7.4",
     "date-fns": "4.1.0",
-    "highlight.js": "11.11.1"
+    "highlight.js": "11.11.1",
+    "pretty-bytes": "7.1.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "4.1.3",
