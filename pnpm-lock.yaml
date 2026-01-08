@@ -289,7 +289,7 @@ importers:
         specifier: 4.0.2
         version: 4.0.2
       micromark-extension-gfm:
-        specifier: ^3.0.0
+        specifier: 3.0.0
         version: 3.0.0
       msw:
         specifier: 2.12.7
@@ -2182,8 +2182,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/wasm-node@4.55.0':
-    resolution: {integrity: sha512-p006FFYmAU0UgSDNDKhqVNfM0Ix87nToWZ5wI+vQJXEoYxahSQTnl8cFaN8UEcvc2LPlf0sqD4z9VzNPqaiO6g==}
+  '@rollup/wasm-node@4.55.1':
+    resolution: {integrity: sha512-GD+BSGH7+hVtNreVwv2JVxKImAdaDDrT9Ev0Bbr9CTATPjXjp7pQlRAqyZqNW3RGY37qL/RkF0HyO9ptJDU2pQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -11985,7 +11985,7 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.3
 
-  '@rollup/wasm-node@4.55.0':
+  '@rollup/wasm-node@4.55.1':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -18000,7 +18000,7 @@ snapshots:
   micromark@4.0.2:
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.4.3(supports-color@8.1.1)
+      debug: 4.4.3
       decode-named-character-reference: 1.2.0
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.3
@@ -20485,7 +20485,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.55.0'
+      rollup: '@rollup/wasm-node@4.55.1'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.4
