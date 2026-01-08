@@ -100,9 +100,8 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await expect(advisory.locator('h3')).toContainText('Advisory with XSS attempt');
 
     // Verify the script tag is escaped and not executed
-    let detailsHTML = await advisory.locator('p').innerHTML();
-    expect(detailsHTML).toContain('&lt;script&gt;');
-    expect(detailsHTML).toContain('&lt;/script&gt;');
-    expect(detailsHTML).not.toContain('<script>');
+    expect(await advisory.locator('p').innerHTML()).toBe(
+      'This advisory contains &lt;script&gt;alert("XSS")&lt;/script&gt; and should be escaped.',
+    );
   });
 });
