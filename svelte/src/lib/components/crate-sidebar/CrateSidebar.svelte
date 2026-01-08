@@ -1,0 +1,326 @@
+<script lang="ts">
+  import type { components } from '@crates-io/api-client';
+
+  import { resolve } from '$app/paths';
+  import { format, formatDistanceToNow, formatISO } from 'date-fns';
+  import prettyBytes from 'pretty-bytes';
+
+  import CalendarIcon from '$lib/assets/calendar.svg?component';
+  import CodeIcon from '$lib/assets/code.svg?component';
+  import LicenseIcon from '$lib/assets/license.svg?component';
+  import RustIcon from '$lib/assets/rust.svg?component';
+  import WeightIcon from '$lib/assets/weight.svg?component';
+  import LicenseExpression from '$lib/components/LicenseExpression.svelte';
+  import OwnersList from '$lib/components/OwnersList.svelte';
+  import Tooltip from '$lib/components/Tooltip.svelte';
+  import { formatShortNum } from '$lib/utils/format-short-num';
+  import Edition from './Edition.svelte';
+  import InstallInstructions from './InstallInstructions.svelte';
+  import Link, { simplifyUrl } from './Link.svelte';
+  import Msrv from './Msrv.svelte';
+
+  type Crate = components['schemas']['Crate'];
+  type Version = components['schemas']['Version'];
+  type Owner = components['schemas']['Owner'];
+
+  interface Props {
+    crate: Crate;
+    version: Version;
+    owners: Owner[];
+    requestedVersion?: boolean;
+  }
+
+  let { crate, version, owners, requestedVersion = false }: Props = $props();
+
+  let showHomepage = $derived.by(() => {
+    let { repository, homepage } = crate;
+    return homepage && (!repository || simplifyUrl(repository) !== simplifyUrl(homepage));
+  });
+
+  let hasLinks = $derived(crate.homepage || crate.repository);
+
+  let reportUrl = $derived(`${resolve('/support')}?inquire=crate-violation&crate=${encodeURIComponent(crate.name)}`);
+</script>
+
+<section aria-label="Crate metadata" class="sidebar">
+  <div class="metadata">
+    <h2 class="heading">Metadata</h2>
+
+    <time datetime={formatISO(version.created_at)} class="date">
+      <CalendarIcon />
+      <span>
+        {formatDistanceToNow(version.created_at, { addSuffix: true })}
+        <Tooltip text={format(version.created_at, 'PPP')} />
+      </span>
+    </time>
+
+    {#if version.rust_version}
+      <div class="msrv" data-test-msrv>
+        <RustIcon />
+        <Msrv msrv={version.rust_version} edition={version.edition ?? undefined} />
+      </div>
+    {:else if version.edition}
+      <div class="edition" data-test-edition>
+        <RustIcon />
+        <Edition edition={version.edition} />
+      </div>
+    {/if}
+
+    {#if version.license}
+      <div class="license" data-test-license>
+        <LicenseIcon />
+        <span>
+          <LicenseExpression license={version.license} />
+        </span>
+      </div>
+    {/if}
+
+    {#if version.linecounts?.total_code_lines}
+      <div class="linecount" data-test-linecounts>
+        <CodeIcon />
+        <span>
+          {formatShortNum(version.linecounts.total_code_lines)} SLoC
+          <Tooltip>
+            Source Lines of Code<br />
+            <small>(excluding comments, integration tests and example code)</small>
+          </Tooltip>
+        </span>
+      </div>
+    {/if}
+
+    {#if version.crate_size}
+      <div class="bytes">
+        <WeightIcon />
+        {prettyBytes(version.crate_size, { binary: true })}
+      </div>
+    {/if}
+
+    <!-- TODO: PURL (Package URL) section
+         Requires computing purl from crate name and version number,
+         plus the addRegistryUrl utility from app/utils/purl.js
+    -->
+  </div>
+
+  {#if !version.yanked}
+    <div data-test-install>
+      <h2 class="heading">Install</h2>
+
+      <InstallInstructions
+        crate={crate.name}
+        version={version.num}
+        exactVersion={requestedVersion}
+        hasLib={version.has_lib !== false}
+        binNames={version.bin_names?.filter((name): name is string => Boolean(name))}
+      />
+    </div>
+  {/if}
+
+  {#if hasLinks}
+    <div class="links">
+      {#if showHomepage}
+        <Link title="Homepage" url={crate.homepage!} data-test-homepage-link />
+      {/if}
+
+      <!-- TODO: Documentation link
+           Requires async docs.rs status check to determine if docs are available.
+           Falls back to crate.documentation if not a docs.rs link.
+           See app/models/version.js documentationLink getter.
+      -->
+
+      <!-- TODO: Browse source link
+           Requires async docs.rs status check.
+           See app/models/version.js sourceLink getter.
+      -->
+
+      {#if crate.repository}
+        <Link title="Repository" url={crate.repository} data-test-repository-link />
+      {/if}
+    </div>
+  {/if}
+
+  <div>
+    <h2 class="heading">Owners</h2>
+    <OwnersList {owners} />
+  </div>
+
+  <!-- TODO: Categories section
+       Requires categories data loaded with the crate and routing to /categories/{slug}
+  <div>
+    <h2 class="heading">Categories</h2>
+    <ul class="categories">
+      {#each crate.categories as category}
+        <li><a href={resolve('/categories/[slug]', { slug: category.slug })}>{category.category}</a></li>
+      {/each}
+    </ul>
+  </div>
+  -->
+
+  <div>
+    <!-- TODO: Rust Playground integration
+         Requires playground service that fetches crates from play.rust-lang.org
+         and checks if this crate is in the top 100 available crates.
+    <a
+      href={playgroundLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="playground-button button button--small"
+      data-test-playground-button
+    >
+      Try on Rust Playground
+    </a>
+    -->
+
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+    <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
+      Report crate
+    </a>
+  </div>
+</section>
+
+<style>
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+
+    > * + * {
+      margin-top: var(--space-m);
+    }
+  }
+
+  .heading {
+    font-size: 1.17em;
+    margin: 0 0 var(--space-s);
+  }
+
+  .metadata {
+    > * + * {
+      margin-top: var(--space-2xs);
+    }
+  }
+
+  .date,
+  .msrv,
+  .edition,
+  .license,
+  .linecount,
+  .bytes {
+    display: flex;
+    align-items: center;
+
+    :global(svg) {
+      flex-shrink: 0;
+      margin-right: var(--space-2xs);
+      height: 1em;
+      width: auto;
+    }
+  }
+
+  .date,
+  .msrv,
+  .edition,
+  .linecount {
+    > span {
+      cursor: help;
+    }
+  }
+
+  .license {
+    :global(a) {
+      color: var(--main-color);
+    }
+  }
+
+  .linecount,
+  .bytes {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* TODO: Uncomment when PURL section is implemented
+  .purl {
+    align-items: flex-start;
+  }
+
+  .sidebar :global(.purl-copy-button) {
+    text-align: left;
+    width: 100%;
+    min-width: 0;
+    cursor: pointer;
+
+    &:focus {
+      outline: 2px solid var(--yellow500);
+      outline-offset: 1px;
+      border-radius: var(--space-3xs);
+    }
+  }
+
+  .purl-text {
+    word-break: break-all;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+
+  .sidebar :global(.purl-tooltip) {
+    word-break: break-all;
+
+    > :global(small) {
+      word-break: normal;
+    }
+  }
+
+  .purl-help-link {
+    color: unset;
+    margin-left: var(--space-2xs);
+    flex-shrink: 0;
+
+    &:hover {
+      color: unset;
+    }
+
+    &:focus {
+      outline: 2px solid var(--yellow500);
+      outline-offset: 1px;
+      border-radius: var(--space-3xs);
+    }
+
+    :global(svg) {
+      margin: 0;
+    }
+  }
+  */
+
+  .links {
+    > :global(* + *) {
+      margin-top: var(--space-m);
+    }
+  }
+
+  /* TODO: Uncomment when categories section is implemented
+  .categories {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.5;
+  }
+  */
+
+  .report-button {
+    justify-content: center;
+    width: 220px;
+  }
+
+  /* TODO: Uncomment when Playground integration is implemented
+  .playground-button {
+    justify-content: center;
+    width: 220px;
+    margin-bottom: var(--space-2xs);
+  }
+
+  .playground-help {
+    max-width: 220px;
+    text-align: justify;
+    line-height: 1.3em;
+  }
+  */
+</style>
