@@ -19,7 +19,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
 
     await page.goto('/crates/foo/security');
 
@@ -48,7 +48,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     let crate = await msw.db.crate.create({ name: 'safe-crate' });
     await msw.db.version.create({ crate, num: '1.0.0' });
 
-    msw.worker.use(
+    await msw.worker.use(
       http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.text('not found', { status: 404 })),
     );
 
@@ -62,7 +62,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     let crate = await msw.db.crate.create({ name: 'error-crate' });
     await msw.db.version.create({ crate, num: '1.0.0' });
 
-    msw.worker.use(
+    await msw.worker.use(
       http.get('https://rustsec.org/packages/:crateId.json', () =>
         HttpResponse.text('Internal Server Error', { status: 500 }),
       ),
@@ -89,7 +89,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
 
     await page.goto('/crates/xss-test/security');
 
