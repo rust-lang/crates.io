@@ -1,6 +1,8 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
 
+import { versionRanges } from 'crates-io/utils/version-ranges';
+
 async function fetchAdvisories(crateId) {
   let url = `https://rustsec.org/packages/${crateId}.json`;
   let response = await fetch(url);
@@ -8,9 +10,14 @@ async function fetchAdvisories(crateId) {
     return [];
   } else if (response.ok) {
     let advisories = await response.json();
-    return advisories.filter(
-      advisory => !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
-    );
+    return advisories
+      .filter(
+        advisory => !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
+      )
+      .map(advisory => ({
+        ...advisory,
+        versionRanges: versionRanges(advisory),
+      }));
   } else {
     throw new Error(`HTTP error! status: ${response}`);
   }
