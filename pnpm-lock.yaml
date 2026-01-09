@@ -68,7 +68,7 @@ importers:
         version: 2.3.0
       '@ember/render-modifiers':
         specifier: 3.0.0
-        version: 3.0.0(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 3.0.0(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
       '@ember/string':
         specifier: 4.0.1
         version: 4.0.1
@@ -128,7 +128,7 @@ importers:
         version: 15.0.1
       '@zestia/ember-auto-focus':
         specifier: 5.1.0
-        version: 5.1.0(@babel/core@7.28.5)(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.104.1)
+        version: 5.1.0(@babel/core@7.28.5)(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.104.1)
       broccoli-asset-rev:
         specifier: 3.0.0
         version: 3.0.0
@@ -167,7 +167,7 @@ importers:
         version: 2.1.0
       ember-cli-notifications:
         specifier: 9.1.0
-        version: 9.1.0(@babel/core@7.28.5)(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 9.1.0(@babel/core@7.28.5)(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
       ember-click-outside:
         specifier: 6.1.1
         version: 6.1.1(@babel/core@7.28.5)
@@ -200,7 +200,7 @@ importers:
         version: 3.5.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))
       ember-load-initializers:
         specifier: 3.0.1
-        version: 3.0.1(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 3.0.1(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
       ember-modifier:
         specifier: 4.2.2
         version: 4.2.2(@babel/core@7.28.5)
@@ -220,8 +220,8 @@ importers:
         specifier: 10.2.3
         version: 10.2.3(@babel/core@7.28.5)(ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.104.1))
       ember-source:
-        specifier: 6.9.0
-        version: 6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+        specifier: 6.10.0
+        version: 6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
       ember-svg-jar:
         specifier: 2.7.1
         version: 2.7.1
@@ -4885,9 +4885,9 @@ packages:
       webpack:
         optional: true
 
-  ember-source@6.9.0:
-    resolution: {integrity: sha512-d/P2/z5Y82/EEn95JRkwYy/JckZTCAgfZZC3dhWWzzXt5ZGHbHbAhole0c4wuUyYz42thM6isJa3C97b/1PdcA==}
-    engines: {node: '>= 18.*'}
+  ember-source@6.10.0:
+    resolution: {integrity: sha512-2oCxVajWrOIt2MGZRGLBSBSAO/yM/bHG4+cb1b9DTpbdGKkwHVRqs3XGg8L7HOGseCNMvMdgH4RZW3fqodbgTg==}
+    engines: {node: '>= 20.19'}
     peerDependencies:
       '@glimmer/component': '>= 1.1.2'
 
@@ -11042,13 +11042,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ember/render-modifiers@3.0.0(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5))':
+  '@ember/render-modifiers@3.0.0(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5))':
     dependencies:
       '@babel/core': 7.28.5
       '@embroider/macros': 1.19.6
       ember-cli-babel: 8.2.0(@babel/core@7.28.5)
       ember-modifier-manager-polyfill: 1.2.0(@babel/core@7.28.5)
-      ember-source: 6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -12999,13 +12999,13 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@zestia/ember-auto-focus@5.1.0(@babel/core@7.28.5)(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.104.1)':
+  '@zestia/ember-auto-focus@5.1.0(@babel/core@7.28.5)(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.104.1)':
     dependencies:
       ember-auto-import: 2.12.0(webpack@5.104.1)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
       ember-modifier: 4.2.2(@babel/core@7.28.5)
-      ember-source: 6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
     transitivePeerDependencies:
       - '@babel/core'
       - '@glint/template'
@@ -15121,11 +15121,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-notifications@9.1.0(@babel/core@7.28.5)(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
+  ember-cli-notifications@9.1.0(@babel/core@7.28.5)(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
     dependencies:
       '@embroider/addon-shim': 1.10.2
       decorator-transforms: 2.3.1(@babel/core@7.28.5)
-      ember-source: 6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -15486,9 +15486,9 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  ember-load-initializers@3.0.1(ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
+  ember-load-initializers@3.0.1(ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
     dependencies:
-      ember-source: 6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
 
   ember-modifier-manager-polyfill@1.2.0(@babel/core@7.28.5):
     dependencies:
@@ -15574,7 +15574,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-source@6.9.0(@glimmer/component@2.0.0)(rsvp@4.8.5):
+  ember-source@6.10.0(@glimmer/component@2.0.0)(rsvp@4.8.5):
     dependencies:
       '@babel/core': 7.28.5
       '@ember/edition-utils': 1.2.0
