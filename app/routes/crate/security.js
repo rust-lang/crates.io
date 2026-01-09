@@ -12,7 +12,9 @@ async function fetchAdvisories(crateId) {
     let advisories = await response.json();
     return advisories
       .filter(
-        advisory => !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
+        advisory =>
+          !advisory.withdrawn &&
+          !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
       )
       .map(advisory => ({
         ...advisory,
