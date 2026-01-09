@@ -104,4 +104,48 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       'This advisory contains &lt;script&gt;alert("XSS")&lt;/script&gt; and should be escaped.',
     );
   });
+
+  test('filters out unmaintained advisories', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'unmaintained-test' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+
+    let advisories = [
+      {
+        id: 'TEST-VULN',
+        summary: 'Actual security vulnerability',
+        details: 'This is a real security issue.',
+      },
+      {
+        id: 'TEST-UNMAINTAINED',
+        summary: 'Package is unmaintained',
+        details: 'This package is no longer maintained.',
+        affected: [
+          {
+            database_specific: {
+              informational: 'unmaintained',
+            },
+          },
+        ],
+      },
+      {
+        id: 'TEST-ANOTHER',
+        summary: 'Another vulnerability',
+        details: 'Another real security issue.',
+      },
+    ];
+
+    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    await page.goto('/crates/unmaintained-test/security');
+
+    // Should only show 2 advisories (the unmaintained one should be filtered out)
+    await expect(page.locator('[data-test-list] li')).toHaveCount(2);
+
+    // Verify the unmaintained advisory is not shown
+    await expect(page.locator('[data-test-list]')).not.toContainText('TEST-UNMAINTAINED');
+    await expect(page.locator('[data-test-list]')).not.toContainText('Package is unmaintained');
+
+    // Verify the actual vulnerabilities are shown
+    await expect(page.locator('[data-test-list]')).toContainText('TEST-VULN');
+    await expect(page.locator('[data-test-list]')).toContainText('TEST-ANOTHER');
+  });
 });
