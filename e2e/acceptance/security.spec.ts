@@ -148,4 +148,39 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-list]')).toContainText('TEST-VULN');
     await expect(page.locator('[data-test-list]')).toContainText('TEST-ANOTHER');
   });
+
+  test('shows withdrawn badge for withdrawn advisories', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'withdrawn-test' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+
+    let advisories = [
+      {
+        id: 'TEST-ACTIVE',
+        summary: 'Active security vulnerability',
+        details: 'This is an active security issue.',
+      },
+      {
+        id: 'TEST-WITHDRAWN',
+        summary: 'Withdrawn advisory',
+        details: 'This advisory was withdrawn after circumstances changed.',
+        withdrawn: '2025-02-22T12:00:00Z',
+      },
+    ];
+
+    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    await page.goto('/crates/withdrawn-test/security');
+
+    await expect(page.locator('[data-test-list] li')).toHaveCount(2);
+
+    // Check the active advisory doesn't have a withdrawn badge
+    let advisory1 = page.locator('[data-test-list] li').nth(0);
+    await expect(advisory1.locator('h3')).toContainText('Active security vulnerability');
+    await expect(advisory1.locator('[data-test-withdrawn-badge]')).not.toBeVisible();
+
+    // Check the withdrawn advisory has the badge with date
+    let advisory2 = page.locator('[data-test-list] li').nth(1);
+    await expect(advisory2.locator('h3')).toContainText('Withdrawn advisory');
+    await expect(advisory2.locator('[data-test-withdrawn-badge]')).toBeVisible();
+    await expect(advisory2.locator('[data-test-withdrawn-badge]')).toContainText('Withdrawn on Feb 22, 2025');
+  });
 });
