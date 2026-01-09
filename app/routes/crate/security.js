@@ -7,7 +7,10 @@ async function fetchAdvisories(crateId) {
   if (response.status === 404) {
     return [];
   } else if (response.ok) {
-    return await response.json();
+    let advisories = await response.json();
+    return advisories.filter(
+      advisory => !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
+    );
   } else {
     throw new Error(`HTTP error! status: ${response}`);
   }
