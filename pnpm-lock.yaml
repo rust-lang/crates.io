@@ -256,8 +256,8 @@ importers:
         specifier: 0.5.1
         version: 0.5.1(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-prefer-let:
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 4.0.1
+        version: 4.0.1
       eslint-plugin-prettier:
         specifier: 5.5.4
         version: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))(prettier@3.7.4)
@@ -445,8 +445,8 @@ importers:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-prefer-let:
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 4.0.1
+        version: 4.0.1
       eslint-plugin-storybook:
         specifier: 10.1.11
         version: 10.1.11(eslint@9.39.2(jiti@2.6.1))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
@@ -5074,8 +5074,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-prefer-let@4.0.0:
-    resolution: {integrity: sha512-X4ep5PMO1320HKaNC9DM5+p6XvOhwv+RcqGjhv3aiw9iAtHhiFtdIUB5l0Zya0iM22ys2BGKzrNI9Xpw/ZHooQ==}
+  eslint-plugin-prefer-let@4.0.1:
+    resolution: {integrity: sha512-a+QXFZL+8iVqj2LF/kO/iZAN1quHB1tYr3OaMGxU03tgr9govV8ccQv8QV5G2dQ33VoUibu362DQTIOyDoCPTA==}
     engines: {node: '>=0.10.0'}
 
   eslint-plugin-prettier@5.5.4:
@@ -15936,7 +15936,7 @@ snapshots:
       - '@babel/core'
       - typescript
 
-  eslint-plugin-prefer-let@4.0.0:
+  eslint-plugin-prefer-let@4.0.1:
     dependencies:
       requireindex: 1.2.0
 
