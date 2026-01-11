@@ -1,6 +1,12 @@
 <script lang="ts">
+  import CrateVersionPage from '$lib/components/CrateVersionPage.svelte';
+
   let { data } = $props();
 </script>
 
-<h1>Crate: {data.crate_id} v{data.version_num}</h1>
-<p>Stub route for /crates/:crate_id/:version_num</p>
+<CrateVersionPage
+  crate={data.crate}
+  version={data.version}
+  keywords={data.keywords}
+  requestedVersion={data.requestedVersion}
+/>
