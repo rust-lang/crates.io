@@ -27,3 +27,14 @@
   overflow-wrap: break-word;
   line-height: 1.5;
 }
+
+.withdrawn-badge {
+  background: light-dark(#6b7280, #9ca3af);
+  border-radius: 99999px;
+  padding: var(--space-3xs) var(--space-s);
+  color: light-dark(white, #1f2937);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-left: var(--space-xs);
+  float: right;
+}

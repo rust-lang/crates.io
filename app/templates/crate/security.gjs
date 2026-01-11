@@ -1,5 +1,6 @@
 import { htmlSafe } from '@ember/template';
 
+import dateFormat from 'crates-io/helpers/date-format';
 import CrateHeader from 'crates-io/components/crate-header';
 
 <template>
@@ -9,6 +10,12 @@ import CrateHeader from 'crates-io/components/crate-header';
     <ul class='advisories' data-test-list>
       {{#each @controller.advisories as |advisory|}}
         <li class='row'>
+          {{#if advisory.withdrawn}}
+            <span class='withdrawn-badge' data-test-withdrawn-badge>
+              Withdrawn on
+              {{dateFormat advisory.withdrawn 'MMM d, yyyy'}}
+            </span>
+          {{/if}}
           <h3>
             <a href='https://rustsec.org/advisories/{{advisory.id}}.html'>{{advisory.id}}</a>:
             {{advisory.summary}}
