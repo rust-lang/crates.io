@@ -11,6 +11,16 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
         id: 'TEST-001',
         summary: 'First test advisory',
         details: 'This is the first test advisory with **markdown** support.',
+        affected: [
+          {
+            ranges: [
+              {
+                type: 'SEMVER',
+                events: [{ introduced: '0.0.0-0' }, { fixed: '0.7.46' }, { introduced: '0.8.0' }, { fixed: '0.8.13' }],
+              },
+            ],
+          },
+        ],
       },
       {
         id: 'TEST-002',
@@ -33,13 +43,19 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     expect(await advisory1.locator('p').innerHTML()).toBe(
       'This is the first test advisory with <strong>markdown</strong> support.',
     );
+    // Check version ranges are displayed
+    await expect(advisory1.locator('[data-test-affected-versions]')).toBeVisible();
+    await expect(advisory1.locator('[data-test-affected-versions]')).toContainText('Affected versions:');
+    await expect(advisory1.locator('[data-test-affected-versions]')).toContainText('<0.7.46; >=0.8.0, <0.8.13');
 
-    // Check second advisory
+    // Check second advisory (without version ranges)
     let advisory2 = page.locator('[data-test-list] li').nth(1);
     await expect(advisory2.locator('h3 a')).toHaveAttribute('href', 'https://rustsec.org/advisories/TEST-002.html');
     await expect(advisory2.locator('h3 a')).toHaveText('TEST-002');
     await expect(advisory2.locator('h3')).toContainText('Second test advisory');
     expect(await advisory2.locator('p').innerHTML()).toBe('This is the second test advisory with more details.');
+    // Verify no version ranges section for advisory without affected data
+    await expect(advisory2.locator('[data-test-affected-versions]')).not.toBeVisible();
 
     await percy.snapshot();
   });

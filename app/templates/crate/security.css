@@ -27,3 +27,16 @@
   overflow-wrap: break-word;
   line-height: 1.5;
 }
+
+.affected-versions {
+  margin-top: var(--space-s);
+  margin-bottom: var(--space-m);
+  padding: var(--space-xs) var(--space-s);
+  background-color: light-dark(#f5f5f5, #1a1a19);
+  border-left: 3px solid var(--orange-500);
+  border-radius: var(--space-4xs);
+}
+
+.affected-versions strong {
+  margin-right: var(--space-2xs);
+}

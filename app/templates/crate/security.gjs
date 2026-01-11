@@ -13,6 +13,12 @@ import CrateHeader from 'crates-io/components/crate-header';
             <a href='https://rustsec.org/advisories/{{advisory.id}}.html'>{{advisory.id}}</a>:
             {{advisory.summary}}
           </h3>
+          {{#if advisory.versionRanges}}
+            <div class='affected-versions' data-test-affected-versions>
+              <strong>Affected versions:</strong>
+              {{advisory.versionRanges}}
+            </div>
+          {{/if}}
           {{htmlSafe (@controller.convertMarkdown advisory.details)}}
         </li>
       {{/each}}
