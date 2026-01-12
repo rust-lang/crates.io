@@ -179,7 +179,8 @@
     "ember-inflector": "6.0.0",
     "ember-modifier": "4.2.2",
     "ember-svg-jar>cheerio": "1.0.0-rc.12",
-    "rollup": "npm:@rollup/wasm-node"
+    "rollup": "npm:@rollup/wasm-node",
+    "vite@7": "7.3.1"
   },
   "pnpm": {
     "peerDependencyRules": {
