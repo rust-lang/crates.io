@@ -164,4 +164,37 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-list]')).toContainText('TEST-VULN');
     await expect(page.locator('[data-test-list]')).toContainText('TEST-ANOTHER');
   });
+
+  test('filters out withdrawn advisories', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'withdrawn-test' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+
+    let advisories = [
+      {
+        id: 'TEST-ACTIVE',
+        summary: 'Active security vulnerability',
+        details: 'This is an active security issue.',
+      },
+      {
+        id: 'TEST-WITHDRAWN',
+        summary: 'Withdrawn advisory',
+        details: 'This advisory was withdrawn after circumstances changed.',
+        withdrawn: '2025-02-22T12:00:00Z',
+      },
+    ];
+
+    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    await page.goto('/crates/withdrawn-test/security');
+
+    // Should only show 1 advisory (the withdrawn one should be filtered out)
+    await expect(page.locator('[data-test-list] li')).toHaveCount(1);
+
+    // Verify the withdrawn advisory is not shown
+    await expect(page.locator('[data-test-list]')).not.toContainText('TEST-WITHDRAWN');
+    await expect(page.locator('[data-test-list]')).not.toContainText('Withdrawn advisory');
+
+    // Verify the active vulnerability is shown
+    await expect(page.locator('[data-test-list]')).toContainText('TEST-ACTIVE');
+    await expect(page.locator('[data-test-list]')).toContainText('Active security vulnerability');
+  });
 });
