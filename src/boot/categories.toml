@@ -520,13 +520,13 @@ Crates related to the study of matter, computational chemistry, and cheminformat
 [science.categories.chemistry.categories.physical]
 name = "Physical Chemistry"
 description = """
-Molecular dynamics, quantum chemistry, and statistical thermodynamics.
+Crates for molecular dynamics, quantum chemistry, and statistical thermodynamics.
 """
 
 [science.categories.chemistry.categories.informatics]
 name = "Cheminformatics"
 description = """
-Chemical graph theory, molecular descriptors, and file formats.
+Crates for chemical graph theory, molecular descriptors, and file formats.
 """
 
 [science.categories.materials]
@@ -581,7 +581,7 @@ Crates for processing biological sequences, including alignment, assembly, and a
 [science.categories.bioinformatics.categories.structural]
 name = "Structural Bioinformatics"
 description = """
-Analysis, modeling, and simulation of 3D biomolecular structures.
+Crates for the analysis, modeling, and simulation of 3D biomolecular structures.
 """
 
 [security]
