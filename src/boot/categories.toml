@@ -529,6 +529,13 @@ description = """
 Chemical graph theory, molecular descriptors, and file formats.
 """
 
+[science.categories.materials]
+name = "Materials Science"
+description = """
+Crates for the study, characterization, and simulation of condensed matter
+and materials, including crystallography and solid-state physics.
+"""
+
 [science.categories.geo]
 name = "Geospatial"
 description = """
