@@ -511,6 +511,24 @@ Crates related to solving problems involving physics, chemistry,
 biology, machine learning, geoscience, and other scientific fields.
 """
 
+[science.categories.chemistry]
+name = "Chemistry"
+description = """
+Crates related to the study of matter, computational chemistry, and cheminformatics.
+"""
+
+[science.categories.chemistry.categories.physical]
+name = "Physical Chemistry"
+description = """
+Molecular dynamics, quantum chemistry, and statistical thermodynamics.
+"""
+
+[science.categories.chemistry.categories.informatics]
+name = "Cheminformatics"
+description = """
+Chemical graph theory, molecular descriptors, and file formats.
+"""
+
 [science.categories.geo]
 name = "Geospatial"
 description = """
