@@ -572,7 +572,7 @@ Crates for processing biological sequences, including alignment, assembly, and a
 """
 
 [science.categories.bioinformatics.categories.structural]
-name = "Structural Biology"
+name = "Structural Bioinformatics"
 description = """
 Analysis, modeling, and simulation of 3D biomolecular structures.
 """
