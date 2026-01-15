@@ -14,7 +14,7 @@ test-helpers = ["dep:bon", "dep:mockall", "dep:serde_json"]
 anyhow = "=1.0.100"
 async-trait = "=0.1.89"
 bon = { version = "=3.8.2", optional = true }
-chrono = { version = "=0.4.42", features = ["serde"] }
+chrono = { version = "=0.4.43", features = ["serde"] }
 crates_io_version = { path = "../crates_io_version" }
 jsonwebtoken = { version = "=10.2.0", features = ["aws_lc_rs"] }
 mockall = { version = "=0.14.0", optional = true }
