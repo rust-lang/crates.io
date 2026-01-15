@@ -553,6 +553,12 @@ description = """
 Crates for processing biological sequences, including alignment, assembly, and annotation.
 """
 
+[science.categories.bioinformatics.categories.structural]
+name = "Structural Biology"
+description = """
+Analysis, modeling, and simulation of 3D biomolecular structures.
+"""
+
 [security]
 name = "Security"
 description = """
