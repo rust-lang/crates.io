@@ -1231,11 +1231,11 @@ dependencies = [
 
 [[package]]
 name = "colored"
-version = "3.0.0"
+version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
+checksum = "faf9468729b8cbcea668e36183cb69d317348c2e08e994829fb56ebfdfbaac34"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1396,7 +1396,7 @@ dependencies = [
  "chrono",
  "claims",
  "clap",
- "colored 3.0.0",
+ "colored 3.1.1",
  "cookie",
  "crates_io_api_types",
  "crates_io_cdn_logs",
@@ -4045,7 +4045,7 @@ checksum = "7e0603425789b4a70fcc4ac4f5a46a566c116ee3e2a6b768dc623f7719c611de"
 dependencies = [
  "assert-json-diff",
  "bytes",
- "colored 3.0.0",
+ "colored 3.1.1",
  "futures-core",
  "http 1.4.0",
  "http-body 1.0.1",
