@@ -7,7 +7,7 @@
   import DownloadIcon from '$lib/assets/download.svg?component';
   import CrateSidebar from '$lib/components/crate-sidebar/CrateSidebar.svelte';
   import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import Placeholder from '$lib/components/Placeholder.svelte';
+  import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
   import { loadReadme } from '$lib/utils/readme';
 
@@ -50,78 +50,7 @@
 <div class="crate-info">
   <div class="docs" data-test-docs>
     {#await activeReadmePromise}
-      <div class="readme-spinner">
-        <Placeholder
-          width="30%"
-          height="25px"
-          radius="var(--space-3xs)"
-          opacity={0.6}
-          style="margin: var(--space-s) 0 var(--space-m)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="50%"
-          height="20px"
-          radius="var(--space-3xs)"
-          opacity={0.6}
-          style="margin: var(--space-l) 0 var(--space-m);"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-        <Placeholder
-          width="100%"
-          height="16px"
-          radius="var(--space-3xs)"
-          opacity={0.3}
-          style="margin-top: var(--space-xs)"
-        />
-      </div>
+      <ReadmePlaceholder />
     {:then readme}
       {#if readme}
         <article aria-label="Readme" data-test-readme>
