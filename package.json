@@ -78,9 +78,9 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",
-    "@babel/core": "7.28.5",
-    "@babel/eslint-parser": "7.28.5",
-    "@babel/plugin-proposal-decorators": "7.28.0",
+    "@babel/core": "7.28.6",
+    "@babel/eslint-parser": "7.28.6",
+    "@babel/plugin-proposal-decorators": "7.28.6",
     "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.3.0",
     "@ember/render-modifiers": "3.0.0",
@@ -173,7 +173,7 @@
     "webpack": "5.104.1"
   },
   "resolutions": {
-    "@babel/runtime": "7.28.4",
+    "@babel/runtime": "7.28.6",
     "ember-auto-import": "2.12.0",
     "ember-get-config": "2.1.1",
     "ember-inflector": "6.0.0",
