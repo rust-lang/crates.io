@@ -31,7 +31,7 @@ env:
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
   TYPST_VERSION: 0.14.2
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.21.0
+  ZIZMOR_VERSION: 1.22.0
 
 jobs:
   filter-jobs:
