@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-thiserror = "=2.0.17"
+thiserror = "=2.0.18"
 unicode-xid = "=0.2.6"
 
 [dev-dependencies]
