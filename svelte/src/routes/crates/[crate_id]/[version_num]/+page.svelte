@@ -2,6 +2,10 @@
   import CrateVersionPage from '$lib/components/CrateVersionPage.svelte';
 
   let { data } = $props();
+
+  let downloadsPromise = $derived(
+    data.downloadsPromise.then(downloads => ({ ...downloads, versions: [data.version] })),
+  );
 </script>
 
 <CrateVersionPage
@@ -10,4 +14,5 @@
   keywords={data.keywords}
   requestedVersion={data.requestedVersion}
   readmePromise={data.readmePromise}
+  {downloadsPromise}
 />

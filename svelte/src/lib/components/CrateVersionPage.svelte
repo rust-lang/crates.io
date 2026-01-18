@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
+  import type { DownloadChartData } from '$lib/components/download-chart/data';
 
   import { resolve } from '$app/paths';
 
@@ -7,6 +8,8 @@
   import DownloadIcon from '$lib/assets/download.svg?component';
   import CrateSidebar from '$lib/components/crate-sidebar/CrateSidebar.svelte';
   import CrateHeader from '$lib/components/CrateHeader.svelte';
+  import DownloadChart from '$lib/components/download-chart/DownloadChart.svelte';
+  import * as Dropdown from '$lib/components/dropdown';
   import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
   import { loadReadme } from '$lib/utils/readme';
@@ -22,14 +25,16 @@
     keywords?: Keyword[];
     requestedVersion?: string;
     readmePromise: Promise<string | null>;
+    downloadsPromise: Promise<DownloadChartData>;
   }
 
-  let { crate, version, keywords = [], requestedVersion, readmePromise }: Props = $props();
+  let { crate, version, keywords = [], requestedVersion, readmePromise, downloadsPromise }: Props = $props();
 
   // TODO load owners from API
   let owners: Owner[] = [];
 
   let numberFormat = new Intl.NumberFormat();
+  let stackedGraph = $state(true);
 
   let downloadsContext = $derived(requestedVersion ? version : crate);
 
@@ -102,7 +107,34 @@
     </div>
   </div>
 
-  <!-- TODO: Implement download graph with stacked/unstacked toggle -->
+  <div class="graph">
+    <h4>Downloads over the last 90 days</h4>
+    <div class="toggle-stacked">
+      <span class="toggle-stacked-label">Display as </span>
+      <Dropdown.Root>
+        <Dropdown.Trigger class="trigger">
+          <span class="trigger-label">
+            {stackedGraph ? 'Stacked' : 'Unstacked'}
+          </span>
+        </Dropdown.Trigger>
+        <Dropdown.Menu>
+          <Dropdown.Item>
+            <button type="button" class="dropdown-button" onclick={() => (stackedGraph = true)}>Stacked</button>
+          </Dropdown.Item>
+          <Dropdown.Item>
+            <button type="button" class="dropdown-button" onclick={() => (stackedGraph = false)}>Unstacked</button>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Root>
+    </div>
+    {#await downloadsPromise then downloads}
+      <div class="graph-data">
+        <DownloadChart data={downloads} stacked={stackedGraph} />
+      </div>
+    {:catch}
+      <div class="graph-error">Failed to load download data</div>
+    {/await}
+  </div>
 </div>
 
 <style>
@@ -196,5 +228,55 @@
     display: block;
     text-align: center;
     margin: var(--space-s) auto 0;
+  }
+
+  .graph {
+    flex-grow: 10;
+    width: 100%;
+    margin: var(--space-xs) 0 var(--space-m);
+
+    h4 {
+      color: var(--main-color-light);
+      float: left;
+    }
+
+    @media only percy {
+      display: none;
+    }
+  }
+
+  .graph-data {
+    clear: both;
+  }
+
+  .graph-error {
+    clear: both;
+    padding: var(--space-l) var(--space-s);
+    text-align: center;
+    font-size: 20px;
+    font-weight: 300;
+  }
+
+  .toggle-stacked {
+    float: right;
+    margin-top: calc(1.33em - 10px);
+    margin-bottom: calc(1.33em - 10px);
+
+    :global(.trigger) {
+      background-color: var(--main-bg-dark);
+      font-size: 85%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .trigger-label {
+      min-width: 65px;
+    }
+
+    .dropdown-button {
+      background: none;
+      border: 0;
+    }
   }
 </style>

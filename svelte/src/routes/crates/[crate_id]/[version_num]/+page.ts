@@ -9,14 +9,16 @@ export async function load({ fetch, params }) {
   let crateName = params.crate_id;
   let versionNum = params.version_num;
 
-  // Start both requests in parallel
+  // Start all requests in parallel
   let versionPromise = loadVersion(client, crateName, versionNum);
   let readmePromise = loadReadme(fetch, crateName, versionNum);
+  let downloadsPromise = loadDownloads(fetch, crateName, versionNum);
 
   return {
     requestedVersion: versionNum,
     version: await versionPromise,
     readmePromise,
+    downloadsPromise,
   };
 }
 
@@ -43,4 +45,26 @@ function loadVersionError(name: string, version: string, status: number): never 
   } else {
     error(status, { message: `${name}: Failed to load version data`, tryAgain: true });
   }
+}
+
+/**
+ * Loads download data for a specific crate version.
+ *
+ * This loads the per-day downloads for the last 90 days for that version only.
+ */
+async function loadDownloads(fetch: typeof globalThis.fetch, name: string, version: string) {
+  let client = createClient({ fetch });
+
+  let response = await client.GET('/api/v1/crates/{name}/{version}/downloads', {
+    params: { path: { name, version } },
+  });
+
+  if (response.error) {
+    throw new Error('Failed to load download data');
+  }
+
+  return {
+    versionDownloads: response.data.version_downloads,
+    extraDownloads: [],
+  };
 }
