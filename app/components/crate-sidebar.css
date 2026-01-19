@@ -18,6 +18,11 @@
     }
 }
 
+._label {
+    font-weight: 500;
+    margin-right: 0.2rem;
+}
+
 .date,
 .msrv,
 .edition,

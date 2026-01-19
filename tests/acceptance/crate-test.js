@@ -312,8 +312,12 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/foo');
     assert.dom('[data-test-linecounts]').hasText('1,119 SLoC');
+    assert.dom('[data-test-date-label]').includesText('Last Updated');
+    assert.dom('[data-test-byte-size-label]').includesText('Size');
 
     await visit('/crates/foo/0.5.0');
     assert.dom('[data-test-linecounts]').hasText('520 SLoC');
+    assert.dom('[data-test-date-label]').includesText('Last Updated');
+    assert.dom('[data-test-byte-size-label]').includesText('Size');
   });
 });
