@@ -19,7 +19,8 @@
     "test:unit": "vitest",
     "test": "npm run test:unit -- --run",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "chromatic": "chromatic"
   },
   "dependencies": {
     "@crates-io/api-client": "workspace:*",
@@ -48,6 +49,7 @@
     "@types/semver": "7.7.1",
     "@vitest/browser-playwright": "4.0.17",
     "@vitest/coverage-v8": "4.0.17",
+    "chromatic": "13.3.5",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.0.1",
