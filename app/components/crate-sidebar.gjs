@@ -68,7 +68,7 @@ export default class CrateSidebar extends Component {
         <time datetime={{dateFormatIso @version.created_at}} class='date' data-test-date-label>
           {{svgJar 'calendar'}}
           <span>
-            <span class="_label">Last Updated</span>
+            <span class='_label'>Last Updated</span>
             {{dateFormatDistanceToNow @version.created_at addSuffix=true}}
             <Tooltip @text={{dateFormat @version.created_at 'PPP'}} />
           </span>
@@ -112,7 +112,7 @@ export default class CrateSidebar extends Component {
         {{#if @version.crate_size}}
           <div class='bytes' data-test-byte-size-label>
             {{svgJar 'weight'}}
-            <span class="_label">Size</span>
+            <span class='_label'>Size</span>
             {{prettyBytes @version.crate_size}}
           </div>
         {{/if}}
