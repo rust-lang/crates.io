@@ -66,7 +66,7 @@ impl CloudFront {
         let credentials = Credentials::from_keys(access_key, secret_key, None);
 
         let config = Config::builder()
-            .behavior_version(BehaviorVersion::v2025_08_07())
+            .behavior_version(BehaviorVersion::v2026_01_12())
             .region(Region::new("us-east-1"))
             .credentials_provider(credentials)
             .retry_config(RetryConfig::standard().with_max_attempts(10))
