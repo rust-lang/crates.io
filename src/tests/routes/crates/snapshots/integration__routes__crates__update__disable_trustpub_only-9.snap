@@ -26,6 +26,7 @@ expression: json
     },
     "max_stable_version": "0.99.0",
     "max_version": "0.99.0",
+    "monthly_downloads": null,
     "name": "foo",
     "newest_version": "0.99.0",
     "num_versions": 1,
@@ -36,6 +37,7 @@ expression: json
     "versions": [
       1
     ],
+    "weekly_downloads": null,
     "yanked": false
   },
   "keywords": [],

@@ -258,6 +258,8 @@ pub async fn list_crates(
                 record.exact_match,
                 record.downloads,
                 Some(record.recent_downloads.unwrap_or(0)),
+                None,
+                None,
             )
         })
         .collect::<Vec<_>>();

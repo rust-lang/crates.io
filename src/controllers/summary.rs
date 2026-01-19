@@ -181,6 +181,8 @@ fn encode_crates(
                     false,
                     record.total_downloads,
                     record.recent_downloads,
+                    None,
+                    None,
                 ))
             })
             .collect()

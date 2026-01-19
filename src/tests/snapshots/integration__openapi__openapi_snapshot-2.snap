@@ -325,6 +325,15 @@ expression: response.json()
             "example": "2.0.0-beta.1",
             "type": "string"
           },
+          "monthly_downloads": {
+            "description": "The total number of downloads for this crate in the last month.",
+            "example": 123456,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
           "name": {
             "description": "The name of the crate.",
             "example": "serde",
@@ -378,6 +387,15 @@ expression: response.json()
             },
             "type": [
               "array",
+              "null"
+            ]
+          },
+          "weekly_downloads": {
+            "description": "The total number of downloads for this crate in the last week.",
+            "example": 56789,
+            "format": "int64",
+            "type": [
+              "integer",
               "null"
             ]
           },

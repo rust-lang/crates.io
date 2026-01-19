@@ -314,6 +314,14 @@ pub struct EncodableCrate {
     #[schema(example = 456_789)]
     pub recent_downloads: Option<i64>,
 
+    /// The total number of downloads for this crate in the last month.
+    #[schema(example = 123_456)]
+    pub monthly_downloads: Option<i64>,
+
+    /// The total number of downloads for this crate in the last week.
+    #[schema(example = 56_789)]
+    pub weekly_downloads: Option<i64>,
+
     /// The "default" version of this crate.
     ///
     /// This version will be displayed by default on the crate's page.
@@ -380,6 +388,8 @@ impl EncodableCrate {
         exact_match: bool,
         downloads: i64,
         recent_downloads: Option<i64>,
+        monthly_downloads: Option<i64>,
+        weekly_downloads: Option<i64>,
     ) -> Self {
         let Crate {
             name,
@@ -440,6 +450,8 @@ impl EncodableCrate {
             created_at,
             downloads,
             recent_downloads,
+            monthly_downloads,
+            weekly_downloads,
             versions,
             keywords: keyword_ids,
             categories: category_ids,
@@ -477,6 +489,8 @@ impl EncodableCrate {
         exact_match: bool,
         downloads: i64,
         recent_downloads: Option<i64>,
+        monthly_downloads: Option<i64>,
+        weekly_downloads: Option<i64>,
     ) -> Self {
         Self::from(
             krate,
@@ -490,6 +504,8 @@ impl EncodableCrate {
             exact_match,
             downloads,
             recent_downloads,
+            monthly_downloads,
+            weekly_downloads,
         )
     }
 }
@@ -1187,6 +1203,8 @@ mod tests {
                 .and_utc(),
             downloads: 0,
             recent_downloads: None,
+            monthly_downloads: None,
+            weekly_downloads: None,
             default_version: None,
             num_versions: 0,
             yanked: false,
