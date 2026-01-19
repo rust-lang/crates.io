@@ -448,6 +448,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.17
         version: 4.0.17(@vitest/browser@4.0.17(msw@2.12.7(@types/node@24.10.9)(typescript@5.9.3))(vite@7.3.1(@types/node@24.10.9)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))(vitest@4.0.17))(vitest@4.0.17)
+      chromatic:
+        specifier: 13.3.5
+        version: 13.3.5
       eslint:
         specifier: 9.39.2
         version: 9.39.2(jiti@2.6.1)
@@ -2298,8 +2301,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/wasm-node@4.55.1':
-    resolution: {integrity: sha512-GD+BSGH7+hVtNreVwv2JVxKImAdaDDrT9Ev0Bbr9CTATPjXjp7pQlRAqyZqNW3RGY37qL/RkF0HyO9ptJDU2pQ==}
+  '@rollup/wasm-node@4.55.2':
+    resolution: {integrity: sha512-oWKZLjYwTihnTeINcNenxIIDfeotkQ2GAjFJPe7aYsMONrwDwQQXcAl3Qv0qON7Hdc8RTsFomq22zotm/i6VVQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -12309,7 +12312,7 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.3
 
-  '@rollup/wasm-node@4.55.1':
+  '@rollup/wasm-node@4.55.2':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -20854,7 +20857,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.55.1'
+      rollup: '@rollup/wasm-node@4.55.2'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.9

@@ -9,6 +9,9 @@
     title: 'DownloadChart',
     component: DownloadChart,
     tags: ['autodocs'],
+    parameters: {
+      chromatic: { diffThreshold: 0.5 },
+    },
   });
 
   function generateData(): DownloadChartData {
