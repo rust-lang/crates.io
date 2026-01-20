@@ -1,9 +1,11 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
+  import type { PlaygroundCrate } from '$lib/utils/playground';
 
   import { resolve } from '$app/paths';
   import { format, formatDistanceToNow, formatISO } from 'date-fns';
   import prettyBytes from 'pretty-bytes';
+  import { MediaQuery } from 'svelte/reactivity';
 
   import CalendarIcon from '$lib/assets/calendar.svg?component';
   import CircleQuestionIcon from '$lib/assets/circle-question.svg?component';
@@ -17,11 +19,15 @@
   import OwnersList from '$lib/components/OwnersList.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { formatShortNum } from '$lib/utils/format-short-num';
+  import { buildPlaygroundLink } from '$lib/utils/playground';
   import { getPurl } from '$lib/utils/purl';
   import Edition from './Edition.svelte';
   import InstallInstructions from './InstallInstructions.svelte';
   import Link, { simplifyUrl } from './Link.svelte';
   import Msrv from './Msrv.svelte';
+
+  const PLAYGROUND_TOOLTIP =
+    'The top 100 crates are available on the Rust Playground for you to try out directly in your browser.';
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
@@ -32,9 +38,12 @@
     version: Version;
     owners: Owner[];
     requestedVersion?: boolean;
+    playgroundCratesPromise: Promise<PlaygroundCrate[]>;
   }
 
-  let { crate, version, owners, requestedVersion = false }: Props = $props();
+  let { crate, version, owners, requestedVersion = false, playgroundCratesPromise }: Props = $props();
+
+  let canHover = new MediaQuery('hover: hover', false);
 
   let showHomepage = $derived.by(() => {
     let { repository, homepage } = crate;
@@ -181,19 +190,30 @@
   -->
 
   <div>
-    <!-- TODO: Rust Playground integration
-         Requires playground service that fetches crates from play.rust-lang.org
-         and checks if this crate is in the top 100 available crates.
-    <a
-      href={playgroundLink}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="playground-button button button--small"
-      data-test-playground-button
-    >
-      Try on Rust Playground
-    </a>
-    -->
+    {#await playgroundCratesPromise then playgroundCrates}
+      {@const playgroundCrate = playgroundCrates.find(it => it.name === crate.name)}
+      {#if playgroundCrate}
+        <!-- eslint-disable svelte/no-navigation-without-resolve -->
+        <a
+          href={buildPlaygroundLink(playgroundCrate.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="playground-button button button--small"
+          data-test-playground-button
+        >
+          Try on Rust Playground
+          {#if canHover.current}
+            <Tooltip text={PLAYGROUND_TOOLTIP} />
+          {/if}
+        </a>
+        <!-- eslint-enable svelte/no-navigation-without-resolve -->
+        {#if !canHover.current}
+          <p class="playground-help text--small" data-test-playground-help>{PLAYGROUND_TOOLTIP}</p>
+        {/if}
+      {/if}
+    {:catch}
+      <!-- Silently ignore playground loading failures -->
+    {/await}
 
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
     <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
@@ -329,15 +349,14 @@
   }
   */
 
-  .report-button {
+  .report-button,
+  .playground-button {
     justify-content: center;
     width: 220px;
   }
 
-  /* TODO: Uncomment when Playground integration is implemented
   .playground-button {
-    justify-content: center;
-    width: 220px;
+    display: flex;
     margin-bottom: var(--space-2xs);
   }
 
@@ -346,5 +365,4 @@
     text-align: justify;
     line-height: 1.3em;
   }
-  */
 </style>

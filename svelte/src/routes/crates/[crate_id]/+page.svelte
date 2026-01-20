@@ -14,5 +14,6 @@
   keywords={data.keywords}
   ownersPromise={data.ownersPromise}
   readmePromise={data.readmePromise}
+  playgroundCratesPromise={data.playgroundCratesPromise}
   {downloadsPromise}
 />
