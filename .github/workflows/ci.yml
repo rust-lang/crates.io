@@ -23,7 +23,7 @@ env:
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=crate depName=diesel-guard versioning=semver
-  DIESEL_GUARD_VERSION: 0.4.0
+  DIESEL_GUARD_VERSION: 0.5.0
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
   OXIPNG_VERSION: 10.0.0
   # renovate: datasource=npm depName=pnpm
