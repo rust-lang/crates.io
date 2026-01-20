@@ -23,7 +23,7 @@ const BG_COLORS = ['#d3b5bc', '#eabdc0', '#f3d0ca', '#fce4d9', '#deedf5', '#c9de
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-export function toChartData(data: DownloadChartData | null): { datasets: DownloadChartDataset[] } {
+export function toChartData(data: DownloadChartData | null, now: Date): { datasets: DownloadChartDataset[] } {
   if (!data) {
     return { datasets: [] };
   }
@@ -35,7 +35,6 @@ export function toChartData(data: DownloadChartData | null): { datasets: Downloa
   let versions = new Map<string, Version>();
   let versionsById = new Map(data.versions.map(v => [v.id, v]));
 
-  let now = new Date();
   for (let i = 0; i < 90; i++) {
     let date = subDays(now, i);
     dates[date.toISOString().slice(0, 10)] = { date, cnt: {} };

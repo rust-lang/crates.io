@@ -14,12 +14,11 @@
     },
   });
 
-  function generateData(): DownloadChartData {
+  function generateData(now: Date): DownloadChartData {
     let versionCount = 5;
     let daysBack = 90;
     let baseDownloads = 10000;
 
-    let now = new Date();
     let versions: Version[] = [];
     let versionDownloads: VersionDownload[] = [];
     let extraDownloads: { date: string; downloads: number }[] = [];
@@ -106,11 +105,12 @@
     };
   }
 
-  let defaultData = generateData();
+  let now = new Date('2020-12-30T12:34:56Z');
+  let defaultData = generateData(now);
 </script>
 
-<Story name="Default" args={{ data: defaultData, stacked: true }} />
+<Story name="Default" args={{ data: defaultData, now, stacked: true }} />
 
-<Story name="Unstacked" args={{ data: defaultData, stacked: false }} />
+<Story name="Unstacked" args={{ data: defaultData, now, stacked: false }} />
 
-<Story name="No Data" args={{ data: null, stacked: true }} />
+<Story name="No Data" args={{ data: null, now, stacked: true }} />

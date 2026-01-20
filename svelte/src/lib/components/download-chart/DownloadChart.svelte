@@ -11,12 +11,13 @@
 
   interface Props {
     data: DownloadChartData | null;
+    now?: Date;
     /** Whether to display the chart as a stacked area chart */
     stacked?: boolean;
     onReload?: () => void;
   }
 
-  let { data, stacked = true, onReload = () => location.reload() }: Props = $props();
+  let { data, now = new Date(), stacked = true, onReload = () => location.reload() }: Props = $props();
 
   let colorScheme = getColorScheme();
 
@@ -27,7 +28,7 @@
   // Load Chart.js and capture the constructor when ready
   let chartPromise = loadChart().then(Chart => (ChartConstructor = Chart));
 
-  let chartData = $derived(toChartData(data));
+  let chartData = $derived(toChartData(data, now));
   let fontColor = $derived(colorScheme.isDark ? '#ADBABD' : '#666');
   let borderColor = $derived(colorScheme.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)');
 
