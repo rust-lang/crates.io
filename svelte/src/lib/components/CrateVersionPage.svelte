@@ -23,15 +23,13 @@
     crate: Crate;
     version: Version;
     keywords?: Keyword[];
+    owners: Owner[];
     requestedVersion?: string;
     readmePromise: Promise<string | null>;
     downloadsPromise: Promise<DownloadChartData>;
   }
 
-  let { crate, version, keywords = [], requestedVersion, readmePromise, downloadsPromise }: Props = $props();
-
-  // TODO load owners from API
-  let owners: Owner[] = [];
+  let { crate, version, keywords = [], owners, requestedVersion, readmePromise, downloadsPromise }: Props = $props();
 
   let numberFormat = new Intl.NumberFormat();
   let stackedGraph = $state(true);
