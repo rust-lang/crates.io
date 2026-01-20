@@ -7,20 +7,22 @@
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
+  type Category = components['schemas']['Category'];
   type Owner = components['schemas']['Owner'];
 
   interface Props {
     crate: Crate;
     version: Version;
+    categories?: Category[];
     owners: Owner[];
     requestedVersion?: boolean;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
   }
 
-  let { crate, version, owners, playgroundCratesPromise, requestedVersion = false }: Props = $props();
+  let { crate, version, categories = [], owners, playgroundCratesPromise, requestedVersion = false }: Props = $props();
 
   let notifications = new NotificationsState();
   setNotifications(notifications);
 </script>
 
-<CrateSidebar {crate} {version} {owners} {playgroundCratesPromise} {requestedVersion} />
+<CrateSidebar {crate} {version} {categories} {owners} {playgroundCratesPromise} {requestedVersion} />

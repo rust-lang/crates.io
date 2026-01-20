@@ -11,6 +11,7 @@
 <CrateVersionPage
   crate={data.crate}
   version={data.version}
+  categories={data.categories}
   keywords={data.keywords}
   ownersPromise={data.ownersPromise}
   requestedVersion={data.requestedVersion}
