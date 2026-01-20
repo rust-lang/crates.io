@@ -1,22 +1,14 @@
 import type { DownloadChartData, Version, VersionDownload } from './data';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { toChartData } from './data';
 
 describe('toChartData()', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2020-12-30T12:34:56Z'));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it('converts raw download data to Chart.js format', () => {
     let data = exampleData();
-    let result = toChartData(data);
+    let now = new Date('2020-12-30T12:34:56Z');
+    let result = toChartData(data, now);
 
     expect(result).toMatchObject({
       datasets: [
