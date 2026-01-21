@@ -400,6 +400,9 @@ importers:
       '@chromatic-com/storybook':
         specifier: 5.0.0
         version: 5.0.0(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.8.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
+      '@crates-io/msw':
+        specifier: workspace:*
+        version: link:../packages/crates-io-msw
       '@eslint/compat':
         specifier: 2.0.1
         version: 2.0.1(eslint@9.39.2(jiti@2.6.1))
@@ -469,6 +472,9 @@ importers:
       globals:
         specifier: 17.0.0
         version: 17.0.0
+      msw:
+        specifier: 2.12.7
+        version: 2.12.7(@types/node@24.10.9)(typescript@5.9.3)
       playwright:
         specifier: 1.57.0
         version: 1.57.0

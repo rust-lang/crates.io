@@ -9,6 +9,7 @@
     "dev:live": "vite dev",
     "dev:local": "API_HOST=http://127.0.0.1:8888 vite dev",
     "dev:staging": "API_HOST=https://staging.crates.io vite dev",
+    "dev:msw": "VITE_MSW_ENABLED=true vite dev",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
@@ -66,7 +67,14 @@
     "typescript-eslint": "8.53.0",
     "vite": "7.3.1",
     "vite-bundle-analyzer": "1.3.2",
+    "@crates-io/msw": "workspace:*",
+    "msw": "2.12.7",
     "vitest": "4.0.17",
     "vitest-browser-svelte": "2.0.1"
+  },
+  "msw": {
+    "workerDirectory": [
+      "static"
+    ]
   }
 }
