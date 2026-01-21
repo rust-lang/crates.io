@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { components } from '@crates-io/api-client';
+
   import { resolve } from '$app/paths';
 
   import logo from '$lib/assets/cargo.png';
@@ -10,17 +12,17 @@
   // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
   // TODO: import UserAvatar from './UserAvatar.svelte';
 
-  // TODO: import session service
+  type AuthenticatedUser = components['schemas']['AuthenticatedUser'];
 
   interface Props {
     hero?: boolean;
+    currentUser?: AuthenticatedUser | null;
   }
 
-  let { hero = false }: Props = $props();
+  let { hero = false, currentUser }: Props = $props();
 
   // TODO: implement session state
-  // let currentUser = $derived(session.currentUser);
-  // let isAdmin = $derived(session.isAdmin);
+  // let isAdmin = $derived(currentUser?.is_admin ?? false);
   // let isSudoEnabled = $derived(session.isSudoEnabled);
   // let sudoEnabledUntil = $derived(session.sudoEnabledUntil);
 
@@ -49,15 +51,16 @@
       <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
       <span class="sep">|</span>
 
-      <!-- TODO: implement authenticated user menu -->
-      <!-- {#if currentUser} -->
-      <!--   <Dropdown data-test-user-menu> ... </Dropdown> -->
-      <!-- {:else} -->
-      <button type="button" class="login-button button-reset" data-test-login-button>
-        <LockIcon />
-        Log in with GitHub
-      </button>
-      <!-- {/if} -->
+      {#if currentUser}
+        {currentUser.name}
+        <!-- TODO: implement user menu -->
+        <!--   <Dropdown data-test-user-menu> ... </Dropdown> -->
+      {:else}
+        <button type="button" class="login-button button-reset" data-test-login-button>
+          <LockIcon />
+          Log in with GitHub
+        </button>
+      {/if}
     </nav>
 
     <div class="menu">
