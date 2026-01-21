@@ -10,7 +10,7 @@ export function getPurl(crateName: string, version: string): string {
   let basePurl = `pkg:cargo/${crateName}@${version}`;
   let host = globalThis.location.host;
 
-  if (host === 'crates.io') {
+  if (host === 'crates.io' || import.meta.env.STORYBOOK) {
     return basePurl;
   }
 
