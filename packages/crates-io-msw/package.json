@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "main": "index.js",
+  "types": "index.d.ts",
   "homepage": "https://github.com/rust-lang/crates.io#readme",
   "bugs": {
     "url": "https://github.com/rust-lang/crates.io/issues"
