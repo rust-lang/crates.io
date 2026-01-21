@@ -6,14 +6,18 @@
   import prettyBytes from 'pretty-bytes';
 
   import CalendarIcon from '$lib/assets/calendar.svg?component';
+  import CircleQuestionIcon from '$lib/assets/circle-question.svg?component';
   import CodeIcon from '$lib/assets/code.svg?component';
   import LicenseIcon from '$lib/assets/license.svg?component';
+  import LinkIcon from '$lib/assets/link.svg?component';
   import RustIcon from '$lib/assets/rust.svg?component';
   import WeightIcon from '$lib/assets/weight.svg?component';
+  import CopyButton from '$lib/components/CopyButton.svelte';
   import LicenseExpression from '$lib/components/LicenseExpression.svelte';
   import OwnersList from '$lib/components/OwnersList.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { formatShortNum } from '$lib/utils/format-short-num';
+  import { getPurl } from '$lib/utils/purl';
   import Edition from './Edition.svelte';
   import InstallInstructions from './InstallInstructions.svelte';
   import Link, { simplifyUrl } from './Link.svelte';
@@ -40,6 +44,8 @@
   let hasLinks = $derived(crate.homepage || crate.repository);
 
   let reportUrl = $derived(`${resolve('/support')}?inquire=crate-violation&crate=${encodeURIComponent(crate.name)}`);
+
+  let purl = $derived(getPurl(crate.name, version.num));
 </script>
 
 <section aria-label="Crate metadata" class="sidebar">
@@ -95,10 +101,29 @@
       </div>
     {/if}
 
-    <!-- TODO: PURL (Package URL) section
-         Requires computing purl from crate name and version number,
-         plus the addRegistryUrl utility from app/utils/purl.js
-    -->
+    <div class="purl" data-test-purl>
+      <LinkIcon />
+      <CopyButton copyText={purl} class="button-reset purl-copy-button">
+        <span class="purl-text">{purl}</span>
+        <Tooltip>
+          <span class="purl-tooltip">
+            <strong>Package URL:</strong>
+            {purl}
+            <small>(click to copy)</small>
+          </span>
+        </Tooltip>
+      </CopyButton>
+      <a
+        href="https://github.com/package-url/purl-spec"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="purl-help-link"
+        aria-label="Learn more"
+      >
+        <CircleQuestionIcon />
+        <Tooltip text="Learn more about Package URLs" />
+      </a>
+    </div>
   </div>
 
   {#if !version.yanked}
@@ -203,7 +228,8 @@
   .edition,
   .license,
   .linecount,
-  .bytes {
+  .bytes,
+  .purl {
     display: flex;
     align-items: center;
 
@@ -235,7 +261,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* TODO: Uncomment when PURL section is implemented
   .purl {
     align-items: flex-start;
   }
@@ -262,10 +287,10 @@
     display: block;
   }
 
-  .sidebar :global(.purl-tooltip) {
+  .purl-tooltip {
     word-break: break-all;
 
-    > :global(small) {
+    > small {
       word-break: normal;
     }
   }
@@ -289,7 +314,6 @@
       margin: 0;
     }
   }
-  */
 
   .links {
     > :global(* + *) {
