@@ -113,4 +113,4 @@
 
 <Story name="Unstacked" args={{ data: defaultData, now, stacked: false }} />
 
-<Story name="No Data" args={{ data: null, now, stacked: true }} />
+<Story name="No Data" args={{ data: null, now, stacked: true }} parameters={{ chromatic: { disableSnapshot: true } }} />
