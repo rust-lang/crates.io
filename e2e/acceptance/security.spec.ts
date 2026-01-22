@@ -11,6 +11,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
         id: 'TEST-001',
         summary: 'First test advisory',
         details: 'This is the first test advisory with **markdown** support.',
+        aliases: ['CVE-2024-12345', 'GHSA-abcd-1234-efgh'],
         affected: [
           {
             ranges: [
@@ -33,10 +34,10 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
 
     await page.goto('/crates/foo/security');
 
-    await expect(page.locator('[data-test-list] li')).toHaveCount(2);
+    await expect(page.locator('[data-test-list] > li')).toHaveCount(2);
 
     // Check first advisory
-    let advisory1 = page.locator('[data-test-list] li').nth(0);
+    let advisory1 = page.locator('[data-test-list] > li').nth(0);
     await expect(advisory1.locator('h3 a')).toHaveAttribute('href', 'https://rustsec.org/advisories/TEST-001.html');
     await expect(advisory1.locator('h3 a')).toHaveText('TEST-001');
     await expect(advisory1.locator('h3')).toContainText('First test advisory');
@@ -48,14 +49,30 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await expect(advisory1.locator('[data-test-affected-versions]')).toContainText('Affected versions:');
     await expect(advisory1.locator('[data-test-affected-versions]')).toContainText('<0.7.46; >=0.8.0, <0.8.13');
 
-    // Check second advisory (without version ranges)
-    let advisory2 = page.locator('[data-test-list] li').nth(1);
+    // Check aliases are displayed with correct links
+    await expect(advisory1.locator('[data-test-aliases]')).toBeVisible();
+    await expect(advisory1.locator('[data-test-aliases]')).toContainText('Aliases:');
+    await expect(advisory1.locator('[data-test-aliases] li')).toHaveCount(2);
+    await expect(advisory1.locator('[data-test-aliases] li').nth(0).locator('a')).toHaveText('CVE-2024-12345');
+    await expect(advisory1.locator('[data-test-aliases] li').nth(0).locator('a')).toHaveAttribute(
+      'href',
+      'https://nvd.nist.gov/vuln/detail/CVE-2024-12345',
+    );
+    await expect(advisory1.locator('[data-test-aliases] li').nth(1).locator('a')).toHaveText('GHSA-abcd-1234-efgh');
+    await expect(advisory1.locator('[data-test-aliases] li').nth(1).locator('a')).toHaveAttribute(
+      'href',
+      'https://github.com/advisories/GHSA-abcd-1234-efgh',
+    );
+
+    // Check second advisory (without version ranges or aliases)
+    let advisory2 = page.locator('[data-test-list] > li').nth(1);
     await expect(advisory2.locator('h3 a')).toHaveAttribute('href', 'https://rustsec.org/advisories/TEST-002.html');
     await expect(advisory2.locator('h3 a')).toHaveText('TEST-002');
     await expect(advisory2.locator('h3')).toContainText('Second test advisory');
     expect(await advisory2.locator('p').innerHTML()).toBe('This is the second test advisory with more details.');
-    // Verify no version ranges section for advisory without affected data
+    // Verify no version ranges or aliases section for advisory without affected data
     await expect(advisory2.locator('[data-test-affected-versions]')).not.toBeVisible();
+    await expect(advisory2.locator('[data-test-aliases]')).not.toBeVisible();
 
     await percy.snapshot();
   });
@@ -109,9 +126,9 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
 
     await page.goto('/crates/xss-test/security');
 
-    await expect(page.locator('[data-test-list] li')).toHaveCount(1);
+    await expect(page.locator('[data-test-list] > li')).toHaveCount(1);
 
-    let advisory = page.locator('[data-test-list] li').first();
+    let advisory = page.locator('[data-test-list] > li').first();
     await expect(advisory.locator('h3 a')).toHaveText('TEST-XSS');
     await expect(advisory.locator('h3')).toContainText('Advisory with XSS attempt');
 
@@ -154,7 +171,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await page.goto('/crates/unmaintained-test/security');
 
     // Should only show 2 advisories (the unmaintained one should be filtered out)
-    await expect(page.locator('[data-test-list] li')).toHaveCount(2);
+    await expect(page.locator('[data-test-list] > li')).toHaveCount(2);
 
     // Verify the unmaintained advisory is not shown
     await expect(page.locator('[data-test-list]')).not.toContainText('TEST-UNMAINTAINED');
@@ -187,7 +204,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await page.goto('/crates/withdrawn-test/security');
 
     // Should only show 1 advisory (the withdrawn one should be filtered out)
-    await expect(page.locator('[data-test-list] li')).toHaveCount(1);
+    await expect(page.locator('[data-test-list] > li')).toHaveCount(1);
 
     // Verify the withdrawn advisory is not shown
     await expect(page.locator('[data-test-list]')).not.toContainText('TEST-WITHDRAWN');

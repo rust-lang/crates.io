@@ -19,6 +19,16 @@ import CrateHeader from 'crates-io/components/crate-header';
               {{advisory.versionRanges}}
             </div>
           {{/if}}
+          {{#if advisory.aliases.length}}
+            <div class='aliases' data-test-aliases>
+              <strong>Aliases:</strong>
+              <ul>
+                {{#each advisory.aliases as |alias|}}
+                  <li><a href={{@controller.aliasUrl alias}}>{{alias}}</a></li>
+                {{/each}}
+              </ul>
+            </div>
+          {{/if}}
           {{htmlSafe (@controller.convertMarkdown advisory.details)}}
         </li>
       {{/each}}

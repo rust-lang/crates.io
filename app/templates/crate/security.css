@@ -40,3 +40,19 @@
 .affected-versions strong {
   margin-right: var(--space-2xs);
 }
+
+.aliases {
+  margin-top: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.aliases ul {
+  margin: var(--space-2xs) 0 0 var(--space-m);
+  padding: 0;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.aliases li {
+  margin: var(--space-3xs) 0;
+}
