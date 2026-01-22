@@ -56,3 +56,12 @@
 .aliases li {
   margin: var(--space-3xs) 0;
 }
+
+.cvss {
+  margin-top: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.cvss strong {
+  margin-right: var(--space-2xs);
+}

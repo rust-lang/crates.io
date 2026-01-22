@@ -3,6 +3,13 @@ import { service } from '@ember/service';
 
 import { versionRanges } from 'crates-io/utils/version-ranges';
 
+function extractCvss(advisory) {
+  // Prefer V4 over V3
+  let cvssEntry =
+    advisory.severity?.find(s => s.type === 'CVSS_V4') ?? advisory.severity?.find(s => s.type === 'CVSS_V3');
+  return cvssEntry?.score ?? null;
+}
+
 async function fetchAdvisories(crateId) {
   let url = `https://rustsec.org/packages/${crateId}.json`;
   let response = await fetch(url);
@@ -19,6 +26,7 @@ async function fetchAdvisories(crateId) {
       .map(advisory => ({
         ...advisory,
         versionRanges: versionRanges(advisory),
+        cvss: extractCvss(advisory),
       }));
   } else {
     throw new Error(`HTTP error! status: ${response}`);
@@ -54,18 +62,28 @@ export default class SecurityRoute extends Route {
         return null;
       };
 
-      return { crate, advisories, convertMarkdown, aliasUrl };
+      let cvssUrl = cvss => {
+        // Extract version from CVSS string (e.g., "CVSS:3.1/..." -> "3.1")
+        let match = cvss.match(/^CVSS:(\d+\.\d+)\//);
+        if (match) {
+          return `https://www.first.org/cvss/calculator/${match[1]}#${cvss}`;
+        }
+        return null;
+      };
+
+      return { crate, advisories, convertMarkdown, aliasUrl, cvssUrl };
     } catch (error) {
       let title = `${crate.name}: Failed to load advisories`;
       return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
     }
   }
 
-  setupController(controller, { crate, advisories, convertMarkdown, aliasUrl }) {
+  setupController(controller, { crate, advisories, convertMarkdown, aliasUrl, cvssUrl }) {
     super.setupController(...arguments);
     controller.crate = crate;
     controller.advisories = advisories;
     controller.convertMarkdown = convertMarkdown;
     controller.aliasUrl = aliasUrl;
+    controller.cvssUrl = cvssUrl;
   }
 }

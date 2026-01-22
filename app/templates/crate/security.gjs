@@ -29,6 +29,12 @@ import CrateHeader from 'crates-io/components/crate-header';
               </ul>
             </div>
           {{/if}}
+          {{#if advisory.cvss}}
+            <div class='cvss' data-test-cvss>
+              <strong>CVSS:</strong>
+              <a href={{@controller.cvssUrl advisory.cvss}}>{{advisory.cvss}}</a>
+            </div>
+          {{/if}}
           {{htmlSafe (@controller.convertMarkdown advisory.details)}}
         </li>
       {{/each}}
