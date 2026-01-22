@@ -6,11 +6,12 @@ export async function load({ fetch, params }) {
 
   let crateName = params.crate_id;
 
-  let [crateData, owners] = await Promise.all([loadCrate(client, crateName), loadOwners(client, crateName)]);
+  let cratePromise = loadCrate(client, crateName);
+  let ownersPromise = loadOwners(client, crateName);
 
-  let { crate, categories, keywords, defaultVersion } = crateData;
+  let { crate, categories, keywords, defaultVersion } = await cratePromise;
 
-  return { crate, categories, keywords, defaultVersion, owners };
+  return { crate, categories, keywords, defaultVersion, ownersPromise };
 }
 
 async function loadOwners(client: ReturnType<typeof createClient>, name: string) {
