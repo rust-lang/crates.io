@@ -12,6 +12,7 @@
   crate={data.crate}
   version={data.version}
   keywords={data.keywords}
+  ownersPromise={data.ownersPromise}
   requestedVersion={data.requestedVersion}
   readmePromise={data.readmePromise}
   {downloadsPromise}

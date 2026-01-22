@@ -6,11 +6,31 @@ export async function load({ fetch, params }) {
 
   let crateName = params.crate_id;
 
-  let { crate, categories, keywords, defaultVersion } = await loadCrate(client, crateName);
+  let cratePromise = loadCrate(client, crateName);
+  let ownersPromise = loadOwners(client, crateName);
 
-  // TODO: load owners
+  let { crate, categories, keywords, defaultVersion } = await cratePromise;
 
-  return { crate, categories, keywords, defaultVersion };
+  return { crate, categories, keywords, defaultVersion, ownersPromise };
+}
+
+async function loadOwners(client: ReturnType<typeof createClient>, name: string) {
+  let response;
+  try {
+    response = await client.GET('/api/v1/crates/{name}/owners', {
+      params: { path: { name } },
+    });
+  } catch (_error) {
+    // Network errors are treated as `504 Gateway Timeout`
+    loadCrateError(name, 504);
+  }
+
+  let status = response.response.status;
+  if (response.error) {
+    loadCrateError(name, status);
+  }
+
+  return response.data.users;
 }
 
 function loadCrateError(name: string, status: number): never {
