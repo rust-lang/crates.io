@@ -1,5 +1,6 @@
 <script module lang="ts">
   import type { components } from '@crates-io/api-client';
+  import type { PlaygroundCrate } from '$lib/utils/playground';
 
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
@@ -14,6 +15,10 @@
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
   type Owner = components['schemas']['Owner'];
+
+  const playgroundCrates: PlaygroundCrate[] = [{ name: 'serde', version: '1.0.215', id: 'serde' }];
+
+  const playgroundCratesPromise = Promise.resolve(playgroundCrates);
 
   const baseCrate: Crate = {
     id: 'serde',
@@ -94,9 +99,12 @@
   ];
 </script>
 
-<Story name="Default" args={{ crate: baseCrate, version: baseVersion, owners: baseOwners }} />
+<Story name="Default" args={{ crate: baseCrate, version: baseVersion, owners: baseOwners, playgroundCratesPromise }} />
 
-<Story name="Yanked" args={{ crate: baseCrate, version: { ...baseVersion, yanked: true }, owners: baseOwners }} />
+<Story
+  name="Yanked"
+  args={{ crate: baseCrate, version: { ...baseVersion, yanked: true }, owners: baseOwners, playgroundCratesPromise }}
+/>
 
 <Story
   name="Binary Crate"
@@ -104,10 +112,14 @@
     crate: { ...baseCrate, id: 'cargo-watch', name: 'cargo-watch' },
     version: { ...baseVersion, bin_names: ['cargo-watch'], has_lib: false },
     owners: baseOwners,
+    playgroundCratesPromise,
   }}
 />
 
-<Story name="Many Owners" args={{ crate: baseCrate, version: baseVersion, owners: manyOwners }} />
+<Story
+  name="Many Owners"
+  args={{ crate: baseCrate, version: baseVersion, owners: manyOwners, playgroundCratesPromise }}
+/>
 
 <Story
   name="Deduplicated Links"
@@ -119,6 +131,7 @@
     },
     version: baseVersion,
     owners: baseOwners,
+    playgroundCratesPromise,
   }}
 />
 
@@ -128,5 +141,6 @@
     crate: { ...baseCrate, homepage: null, repository: null },
     version: { ...baseVersion, rust_version: null, edition: null, license: null, crate_size: 0 },
     owners: baseOwners,
+    playgroundCratesPromise,
   }}
 />
