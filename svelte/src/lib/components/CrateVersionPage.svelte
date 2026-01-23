@@ -17,12 +17,14 @@
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
+  type Category = components['schemas']['Category'];
   type Keyword = components['schemas']['Keyword'];
   type Owner = components['schemas']['Owner'];
 
   interface Props {
     crate: Crate;
     version: Version;
+    categories?: Category[];
     keywords?: Keyword[];
     ownersPromise: Promise<Owner[]>;
     requestedVersion?: string;
@@ -34,6 +36,7 @@
   let {
     crate,
     version,
+    categories = [],
     keywords = [],
     ownersPromise,
     requestedVersion,
@@ -92,6 +95,7 @@
     <CrateSidebar
       {crate}
       {version}
+      {categories}
       {owners}
       requestedVersion={requestedVersion !== undefined}
       {playgroundCratesPromise}

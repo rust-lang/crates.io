@@ -14,6 +14,7 @@
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
+  type Category = components['schemas']['Category'];
   type Owner = components['schemas']['Owner'];
 
   const playgroundCrates: PlaygroundCrate[] = [{ name: 'serde', version: '1.0.215', id: 'serde' }];
@@ -73,6 +74,25 @@
     },
   };
 
+  const baseCategories: Category[] = [
+    {
+      id: 'encoding',
+      slug: 'encoding',
+      category: 'Encoding',
+      description: 'Encoding and/or decoding data from one data format to another.',
+      crates_cnt: 1234,
+      created_at: '2014-11-05T00:00:00Z',
+    },
+    {
+      id: 'no-std',
+      slug: 'no-std',
+      category: 'No standard library',
+      description: 'Crates that are able to function without the Rust standard library.',
+      crates_cnt: 5678,
+      created_at: '2014-11-05T00:00:00Z',
+    },
+  ];
+
   const baseOwners: Owner[] = [
     {
       id: 1,
@@ -99,11 +119,26 @@
   ];
 </script>
 
-<Story name="Default" args={{ crate: baseCrate, version: baseVersion, owners: baseOwners, playgroundCratesPromise }} />
+<Story
+  name="Default"
+  args={{
+    crate: baseCrate,
+    version: baseVersion,
+    categories: baseCategories,
+    owners: baseOwners,
+    playgroundCratesPromise,
+  }}
+/>
 
 <Story
   name="Yanked"
-  args={{ crate: baseCrate, version: { ...baseVersion, yanked: true }, owners: baseOwners, playgroundCratesPromise }}
+  args={{
+    crate: baseCrate,
+    version: { ...baseVersion, yanked: true },
+    categories: baseCategories,
+    owners: baseOwners,
+    playgroundCratesPromise,
+  }}
 />
 
 <Story
@@ -111,6 +146,7 @@
   args={{
     crate: { ...baseCrate, id: 'cargo-watch', name: 'cargo-watch' },
     version: { ...baseVersion, bin_names: ['cargo-watch'], has_lib: false },
+    categories: baseCategories,
     owners: baseOwners,
     playgroundCratesPromise,
   }}
@@ -118,7 +154,13 @@
 
 <Story
   name="Many Owners"
-  args={{ crate: baseCrate, version: baseVersion, owners: manyOwners, playgroundCratesPromise }}
+  args={{
+    crate: baseCrate,
+    version: baseVersion,
+    categories: baseCategories,
+    owners: manyOwners,
+    playgroundCratesPromise,
+  }}
 />
 
 <Story
@@ -130,6 +172,7 @@
       repository: 'https://github.com/serde-rs/serde',
     },
     version: baseVersion,
+    categories: baseCategories,
     owners: baseOwners,
     playgroundCratesPromise,
   }}
@@ -140,6 +183,7 @@
   args={{
     crate: { ...baseCrate, homepage: null, repository: null },
     version: { ...baseVersion, rust_version: null, edition: null, license: null, crate_size: 0 },
+    categories: [],
     owners: baseOwners,
     playgroundCratesPromise,
   }}

@@ -11,6 +11,7 @@
 <CrateVersionPage
   crate={data.crate}
   version={data.defaultVersion}
+  categories={data.categories}
   keywords={data.keywords}
   ownersPromise={data.ownersPromise}
   readmePromise={data.readmePromise}

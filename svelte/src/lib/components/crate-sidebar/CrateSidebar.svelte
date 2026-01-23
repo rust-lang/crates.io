@@ -31,17 +31,19 @@
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
+  type Category = components['schemas']['Category'];
   type Owner = components['schemas']['Owner'];
 
   interface Props {
     crate: Crate;
     version: Version;
+    categories: Category[];
     owners: Owner[];
     requestedVersion?: boolean;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
   }
 
-  let { crate, version, owners, requestedVersion = false, playgroundCratesPromise }: Props = $props();
+  let { crate, version, categories, owners, requestedVersion = false, playgroundCratesPromise }: Props = $props();
 
   let canHover = new MediaQuery('hover: hover', false);
 
@@ -177,17 +179,16 @@
     <OwnersList {owners} />
   </div>
 
-  <!-- TODO: Categories section
-       Requires categories data loaded with the crate and routing to /categories/{slug}
-  <div>
-    <h2 class="heading">Categories</h2>
-    <ul class="categories">
-      {#each crate.categories as category}
-        <li><a href={resolve('/categories/[slug]', { slug: category.slug })}>{category.category}</a></li>
-      {/each}
-    </ul>
-  </div>
-  -->
+  {#if categories.length > 0}
+    <div>
+      <h2 class="heading">Categories</h2>
+      <ul class="categories">
+        {#each categories as category (category.id)}
+          <li><a href={resolve('/categories/[category_id]', { category_id: category.id })}>{category.category}</a></li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 
   <div>
     {#await playgroundCratesPromise then playgroundCrates}
@@ -341,13 +342,11 @@
     }
   }
 
-  /* TODO: Uncomment when categories section is implemented
   .categories {
     margin: 0;
     padding-left: 20px;
     line-height: 1.5;
   }
-  */
 
   .report-button,
   .playground-button {
