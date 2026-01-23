@@ -13,7 +13,7 @@ chrono = { version = "=0.4.43", default-features = false, features = ["serde"] }
 crates_io_diesel_helpers = { path = "../crates_io_diesel_helpers" }
 crates_io_index = { path = "../crates_io_index" }
 crates_io_validation = { path = "../crates_io_validation" }
-diesel = { version = "=2.3.5", features = ["serde_json", "chrono", "numeric"] }
+diesel = { version = "=2.3.6", features = ["serde_json", "chrono", "numeric"] }
 diesel-async = { version = "=0.7.4", features = ["postgres"] }
 diesel_full_text_search = "=2.3.0"
 futures-util = "=0.3.31"
