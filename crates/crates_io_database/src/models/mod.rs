@@ -18,7 +18,7 @@ pub use self::owner::{CrateOwner, Owner, OwnerKind};
 pub use self::team::{NewTeam, Team};
 pub use self::token::ApiToken;
 pub use self::trustpub::TrustpubData;
-pub use self::user::{NewUser, User};
+pub use self::user::{NewOauthGithub, NewUser, OauthGithub, User};
 pub use self::version::{NewVersion, TopVersions, Version};
 
 pub mod helpers;

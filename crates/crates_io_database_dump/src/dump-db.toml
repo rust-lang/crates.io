@@ -164,6 +164,15 @@ created_at = "public"
 [metadata.columns]
 total_downloads = "public"
 
+[oauth_github.columns]
+user_id = "public"
+account_id = "public"
+encrypted_token = "private"
+login = "public"
+avatar = "public"
+[oauth_github.column_defaults]
+encrypted_token = "''"
+
 [processed_log_files.columns]
 path = "private"
 time = "private"
