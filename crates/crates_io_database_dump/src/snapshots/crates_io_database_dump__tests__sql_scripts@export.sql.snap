@@ -1,5 +1,6 @@
 ---
 source: crates/crates_io_database_dump/src/lib.rs
+assertion_line: 323
 expression: content
 ---
 BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
@@ -9,6 +10,7 @@ BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
     \copy "crates" ("created_at", "description", "documentation", "homepage", "id", "max_features", "max_upload_size", "name", "readme", "repository", "trustpub_only", "updated_at") TO 'data/crates.csv' WITH CSV HEADER
     \copy "keywords" ("crates_cnt", "created_at", "id", "keyword") TO 'data/keywords.csv' WITH CSV HEADER
     \copy "metadata" ("total_downloads") TO 'data/metadata.csv' WITH CSV HEADER
+    \copy "oauth_github" ("account_id", "avatar", "login", "user_id") TO 'data/oauth_github.csv' WITH CSV HEADER
     \copy "reserved_crate_names" ("name") TO 'data/reserved_crate_names.csv' WITH CSV HEADER
     \copy "teams" ("avatar", "github_id", "id", "login", "name", "org_id") TO 'data/teams.csv' WITH CSV HEADER
     \copy (SELECT "gh_avatar", "gh_id", "gh_login", "id", "name" FROM "users" WHERE id in (     SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0     UNION     SELECT published_by as user_id FROM versions )) TO 'data/users.csv' WITH CSV HEADER

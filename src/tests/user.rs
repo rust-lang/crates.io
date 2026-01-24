@@ -4,7 +4,8 @@ use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
 use claims::assert_ok;
 use crates_io::controllers::session;
-use crates_io::models::{ApiToken, Email, User};
+use crates_io::models::{ApiToken, Email, OauthGithub, User};
+use crates_io::schema::oauth_github;
 use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
 use crates_io::util::token::HashedToken;
 use crates_io_github::GitHubUser;
@@ -262,6 +263,68 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     assert_eq!(json.user.email.unwrap(), "potahto@example.com");
     assert!(!json.user.email_verified);
     assert!(!json.user.email_verification_sent);
+
+    Ok(())
+}
+
+// To assist in eventually someday allowing OAuth with more than GitHub, verify that we're starting
+// to also write the GitHub info to the `oauth_github` table. Nothing currently reads from this
+// table other than this test.
+#[tokio::test(flavor = "multi_thread")]
+async fn also_write_to_oauth_github() -> anyhow::Result<()> {
+    let (app, _) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let encryption = GitHubTokenEncryption::for_testing();
+    let gh_id = next_gh_id();
+    let email = "potahto@example.com";
+    let emails = &app.as_inner().emails;
+
+    // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a user record
+    // directly into the database and we want to test the OAuth flow here.
+    let gh_user = GitHubUser {
+        id: gh_id,
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: Some(email.to_string()),
+        avatar_url: None,
+    };
+    let encrypted_token = encryption.encrypt("some random token")?;
+    let u = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+
+    let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
+    assert_eq!(oauth_github_records.len(), 1);
+    let oauth_github = &oauth_github_records[0];
+    assert_eq!(oauth_github.user_id, u.id);
+    assert_eq!(oauth_github.account_id, gh_id as i64);
+    assert_eq!(oauth_github.login, u.gh_login);
+    assert!(oauth_github.avatar.is_none());
+    let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
+    assert_eq!(decrypted_token.secret(), "some random token");
+
+    // Log in again with the same gh_id but different login, avatar, and token; these should get
+    // updated in the `oauth_github` table as well.
+    let gh_user = GitHubUser {
+        id: gh_id,
+        login: "i_changed_my_username".to_string(),
+        name: None,
+        email: Some(email.to_string()),
+        avatar_url: Some("http://example.com/icon.png".into()),
+    };
+    let encrypted_token = encryption.encrypt("a different token")?;
+    let u = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+
+    let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
+    // There still should only be one `oauth_github` record that got updated, not a new insertion
+    assert_eq!(oauth_github_records.len(), 1);
+    let oauth_github = &oauth_github_records[0];
+    assert_eq!(oauth_github.user_id, u.id);
+    assert_eq!(oauth_github.login, "i_changed_my_username");
+    assert_eq!(
+        oauth_github.avatar.as_ref().unwrap(),
+        "http://example.com/icon.png"
+    );
+    let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
+    assert_eq!(decrypted_token.secret(), "a different token");
 
     Ok(())
 }
