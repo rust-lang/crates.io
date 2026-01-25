@@ -70,7 +70,7 @@
     "@crates-io/msw": "workspace:*",
     "msw": "2.12.7",
     "vitest": "4.0.18",
-    "vitest-browser-svelte": "2.0.1"
+    "vitest-browser-svelte": "2.0.2"
   },
   "msw": {
     "workerDirectory": [
