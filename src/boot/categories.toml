@@ -511,31 +511,6 @@ Crates related to solving problems involving physics, chemistry,
 biology, machine learning, geoscience, and other scientific fields.
 """
 
-[science.categories.chemistry]
-name = "Chemistry"
-description = """
-Crates related to the study of matter, computational chemistry, and cheminformatics.
-"""
-
-[science.categories.chemistry.categories.physical]
-name = "Physical Chemistry"
-description = """
-Crates for molecular dynamics, quantum chemistry, and statistical thermodynamics.
-"""
-
-[science.categories.chemistry.categories.informatics]
-name = "Cheminformatics"
-description = """
-Crates for chemical graph theory, molecular descriptors, and file formats.
-"""
-
-[science.categories.materials]
-name = "Materials Science"
-description = """
-Crates for the study, characterization, and simulation of condensed matter
-and materials, including crystallography and solid-state physics.
-"""
-
 [science.categories.geo]
 name = "Geospatial"
 description = """
@@ -576,12 +551,6 @@ Crates for processing protein data including sequences, abdundance and analysis.
 name = "Sequence analysis"
 description = """
 Crates for processing biological sequences, including alignment, assembly, and annotation.
-"""
-
-[science.categories.bioinformatics.categories.structural]
-name = "Structural Bioinformatics"
-description = """
-Crates for the analysis, modeling, and simulation of 3D biomolecular structures.
 """
 
 [security]
