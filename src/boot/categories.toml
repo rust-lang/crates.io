@@ -511,6 +511,35 @@ Crates related to solving problems involving physics, chemistry,
 biology, machine learning, geoscience, and other scientific fields.
 """
 
+[science.categories.computational-chemistry]
+name = "Computational Chemistry"
+description = """
+Crates for computational methods in chemistry, including
+electronic-structure calculations, molecular simulation, and
+cheminformatics.
+"""
+
+[science.categories.computational-chemistry.categories.electronic-structure]
+name = "Electronic Structure"
+description = """
+Crates for quantum chemistry and electronic-structure methods such as
+DFT, ab initio, and correlated techniques.
+"""
+
+[science.categories.computational-chemistry.categories.molecular-simulation]
+name = "Molecular Simulation"
+description = """
+Crates for molecular dynamics, Monte Carlo, force fields, and
+statistical mechanics simulations.
+"""
+
+[science.categories.computational-chemistry.categories.cheminformatics]
+name = "Cheminformatics"
+description = """
+Crates for molecular representations, descriptors, chemical graph
+algorithms, file format parsing, and QSAR tooling.
+"""
+
 [science.categories.geo]
 name = "Geospatial"
 description = """
