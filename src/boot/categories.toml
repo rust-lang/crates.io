@@ -540,6 +540,35 @@ Crates for molecular representations, descriptors, chemical graph
 algorithms, file format parsing, and QSAR tooling.
 """
 
+[science.categories.computational-biology]
+name = "Computational Biology"
+description = """
+Crates for computational modeling and simulation of biological systems,
+including structural modeling and systems-level modeling.
+"""
+
+[science.categories.computational-biology.categories.structural-modeling]
+name = "Structural Modeling"
+description = """
+Crates for protein and biomolecular structure prediction, docking,
+model refinement, and physics-based biomolecular simulation.
+"""
+
+[science.categories.computational-biology.categories.systems-biology]
+name = "Systems Biology"
+description = """
+Crates for network modeling, pathway and metabolic modeling, and
+whole-system simulations.
+"""
+
+[science.categories.computational-biology.categories.structural-informatics]
+name = "Structural Informatics"
+description = """
+Crates for representing, parsing, analyzing, and manipulating
+macromolecular structure data, including PDB/mmCIF formats,
+biomolecular topologies, and assembly models.
+"""
+
 [science.categories.geo]
 name = "Geospatial"
 description = """
