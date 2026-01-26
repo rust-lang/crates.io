@@ -107,7 +107,7 @@ http = "=1.4.0"
 hyper = { version = "=1.8.1", features = ["client", "http1"] }
 indexmap = { version = "=2.13.0", features = ["serde"] }
 indicatif = "=0.18.3"
-json-subscriber = "=0.2.6"
+json-subscriber = "=0.2.7"
 lettre = { version = "=0.11.19", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = { version = "=2.14.0", features = ["loader"] }
 mockall = "=0.14.0"
