@@ -16,6 +16,7 @@ BEGIN;
     ALTER TABLE "crates_categories" DISABLE TRIGGER ALL;
     ALTER TABLE "crates_keywords" DISABLE TRIGGER ALL;
     ALTER TABLE "crate_owners" DISABLE TRIGGER ALL;
+    ALTER TABLE "deleted_crates" DISABLE TRIGGER ALL;
     ALTER TABLE "versions" DISABLE TRIGGER ALL;
     ALTER TABLE "default_versions" DISABLE TRIGGER ALL;
     ALTER TABLE "dependencies" DISABLE TRIGGER ALL;
@@ -38,6 +39,7 @@ BEGIN;
     TRUNCATE "crates_categories" RESTART IDENTITY CASCADE;
     TRUNCATE "crates_keywords" RESTART IDENTITY CASCADE;
     TRUNCATE "crate_owners" RESTART IDENTITY CASCADE;
+    TRUNCATE "deleted_crates" RESTART IDENTITY CASCADE;
     TRUNCATE "versions" RESTART IDENTITY CASCADE;
     TRUNCATE "default_versions" RESTART IDENTITY CASCADE;
     TRUNCATE "dependencies" RESTART IDENTITY CASCADE;
@@ -59,6 +61,7 @@ BEGIN;
     \copy "crates_categories" ("category_id", "crate_id") FROM 'data/crates_categories.csv' WITH CSV HEADER
     \copy "crates_keywords" ("crate_id", "keyword_id") FROM 'data/crates_keywords.csv' WITH CSV HEADER
     \copy "crate_owners" ("crate_id", "created_at", "created_by", "owner_id", "owner_kind") FROM 'data/crate_owners.csv' WITH CSV HEADER
+    \copy "deleted_crates" ("available_at", "created_at", "deleted_at", "deleted_by", "id", "message", "name") FROM 'data/deleted_crates.csv' WITH CSV HEADER
     \copy "versions" ("bin_names", "categories", "checksum", "crate_id", "crate_size", "created_at", "description", "documentation", "downloads", "edition", "features", "has_lib", "homepage", "id", "keywords", "license", "links", "num", "num_no_build", "published_by", "repository", "rust_version", "updated_at", "yanked") FROM 'data/versions.csv' WITH CSV HEADER
     \copy "default_versions" ("crate_id", "num_versions", "version_id") FROM 'data/default_versions.csv' WITH CSV HEADER
     \copy "dependencies" ("crate_id", "default_features", "explicit_name", "features", "id", "kind", "optional", "req", "target", "version_id") FROM 'data/dependencies.csv' WITH CSV HEADER
@@ -81,6 +84,7 @@ BEGIN;
     ALTER TABLE "crates_categories" ENABLE TRIGGER ALL;
     ALTER TABLE "crates_keywords" ENABLE TRIGGER ALL;
     ALTER TABLE "crate_owners" ENABLE TRIGGER ALL;
+    ALTER TABLE "deleted_crates" ENABLE TRIGGER ALL;
     ALTER TABLE "versions" ENABLE TRIGGER ALL;
     ALTER TABLE "default_versions" ENABLE TRIGGER ALL;
     ALTER TABLE "dependencies" ENABLE TRIGGER ALL;

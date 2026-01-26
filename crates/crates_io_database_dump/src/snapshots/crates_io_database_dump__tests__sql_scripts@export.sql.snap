@@ -17,6 +17,7 @@ BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
     \copy "crates_keywords" ("crate_id", "keyword_id") TO 'data/crates_keywords.csv' WITH CSV HEADER
     \copy (SELECT "crate_id", "created_at", "created_by", "owner_id", "owner_kind" FROM "crate_owners" WHERE NOT deleted) TO 'data/crate_owners.csv' WITH CSV HEADER
 
+    \copy "deleted_crates" ("available_at", "created_at", "deleted_at", "deleted_by", "id", "message", "name") TO 'data/deleted_crates.csv' WITH CSV HEADER
     \copy "versions" ("bin_names", "categories", "checksum", "crate_id", "crate_size", "created_at", "description", "documentation", "downloads", "edition", "features", "has_lib", "homepage", "id", "keywords", "license", "links", "num", "num_no_build", "published_by", "repository", "rust_version", "updated_at", "yanked") TO 'data/versions.csv' WITH CSV HEADER
     \copy "default_versions" ("crate_id", "num_versions", "version_id") TO 'data/default_versions.csv' WITH CSV HEADER
     \copy "dependencies" ("crate_id", "default_features", "explicit_name", "features", "id", "kind", "optional", "req", "target", "version_id") TO 'data/dependencies.csv' WITH CSV HEADER
