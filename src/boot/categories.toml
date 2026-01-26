@@ -561,14 +561,6 @@ Crates for network modeling, pathway and metabolic modeling, and
 whole-system simulations.
 """
 
-[science.categories.computational-biology.categories.structural-informatics]
-name = "Structural Informatics"
-description = """
-Crates for representing, parsing, analyzing, and manipulating
-macromolecular structure data, including PDB/mmCIF formats,
-biomolecular topologies, and assembly models.
-"""
-
 [science.categories.materials]
 name = "Materials Science"
 description = """
