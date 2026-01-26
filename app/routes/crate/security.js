@@ -3,6 +3,13 @@ import { service } from '@ember/service';
 
 import { versionRanges } from 'crates-io/utils/version-ranges';
 
+function extractCvss(advisory) {
+  // Prefer V4 over V3
+  let cvssEntry =
+    advisory.severity?.find(s => s.type === 'CVSS_V4') ?? advisory.severity?.find(s => s.type === 'CVSS_V3');
+  return cvssEntry?.score ?? null;
+}
+
 async function fetchAdvisories(crateId) {
   let url = `https://rustsec.org/packages/${crateId}.json`;
   let response = await fetch(url);
@@ -19,6 +26,7 @@ async function fetchAdvisories(crateId) {
       .map(advisory => ({
         ...advisory,
         versionRanges: versionRanges(advisory),
+        cvss: extractCvss(advisory),
       }));
   } else {
     throw new Error(`HTTP error! status: ${response}`);
