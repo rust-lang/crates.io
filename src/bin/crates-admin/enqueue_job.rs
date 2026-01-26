@@ -20,33 +20,32 @@ pub enum Command {
         /// The date before which to archive version downloads (default: 90 days ago)
         before: Option<NaiveDate>,
     },
-    IndexVersionDownloadsArchive,
-    UpdateDownloads,
-    CleanProcessedLogFiles,
-    DumpDb,
-    DailyDbMaintenance,
-    SquashIndex,
-    NormalizeIndex {
-        #[arg(long = "dry-run")]
-        dry_run: bool,
-    },
     CheckTyposquat {
         #[arg()]
         name: String,
     },
+    CleanProcessedLogFiles,
+    DailyDbMaintenance,
+    DumpDb,
     /// Generate OpenGraph images for the specified crates
     GenerateOgImage {
         /// Crate names to generate OpenGraph images for
         #[arg(required = true)]
         names: Vec<String>,
     },
+    IndexVersionDownloadsArchive,
+    NormalizeIndex {
+        #[arg(long = "dry-run")]
+        dry_run: bool,
+    },
     ProcessCdnLogQueue(jobs::ProcessCdnLogQueue),
+    SendTokenExpiryNotifications,
+    SquashIndex,
     SyncAdmins {
         /// Force a sync even if one is already in progress
         #[arg(long)]
         force: bool,
     },
-    SendTokenExpiryNotifications,
     SyncCratesFeed,
     SyncToGitIndex {
         name: String,
@@ -56,6 +55,7 @@ pub enum Command {
     },
     SyncUpdatesFeed,
     TrustpubCleanup,
+    UpdateDownloads,
 }
 
 pub async fn run(command: Command) -> Result<()> {
@@ -70,32 +70,56 @@ pub async fn run(command: Command) -> Result<()> {
                 .enqueue(&mut conn)
                 .await?;
         }
+        Command::CheckTyposquat { name } => {
+            // The job will fail if the crate doesn't actually exist, so let's check that up front.
+            if crates::table
+                .filter(crates::name.eq(&name))
+                .count()
+                .get_result::<i64>(&mut conn)
+                .await?
+                == 0
+            {
+                anyhow::bail!(
+                    "cannot enqueue a typosquat check for a crate that doesn't exist: {name}"
+                );
+            }
+
+            jobs::CheckTyposquat::new(&name).enqueue(&mut conn).await?;
+        }
+        Command::CleanProcessedLogFiles => {
+            jobs::CleanProcessedLogFiles.enqueue(&mut conn).await?;
+        }
+        Command::DailyDbMaintenance => {
+            jobs::DailyDbMaintenance.enqueue(&mut conn).await?;
+        }
+        Command::DumpDb => {
+            jobs::DumpDb.enqueue(&mut conn).await?;
+        }
+        Command::GenerateOgImage { names } => {
+            for name in names {
+                jobs::GenerateOgImage::new(name).enqueue(&mut conn).await?;
+            }
+        }
         Command::IndexVersionDownloadsArchive => {
             jobs::IndexVersionDownloadsArchive
                 .enqueue(&mut conn)
                 .await?;
         }
-        Command::UpdateDownloads => {
-            let count: i64 = background_jobs::table
-                .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
-                .count()
-                .get_result(&mut conn)
+        Command::NormalizeIndex { dry_run } => {
+            jobs::NormalizeIndex::new(dry_run)
+                .enqueue(&mut conn)
                 .await?;
-
-            if count > 0 {
-                println!(
-                    "Did not enqueue {}, existing job already in progress",
-                    jobs::UpdateDownloads::JOB_NAME
-                );
-            } else {
-                jobs::UpdateDownloads.enqueue(&mut conn).await?;
-            }
         }
-        Command::CleanProcessedLogFiles => {
-            jobs::CleanProcessedLogFiles.enqueue(&mut conn).await?;
+        Command::ProcessCdnLogQueue(job) => {
+            job.enqueue(&mut conn).await?;
         }
-        Command::DumpDb => {
-            jobs::DumpDb.enqueue(&mut conn).await?;
+        Command::SendTokenExpiryNotifications => {
+            jobs::SendTokenExpiryNotifications
+                .enqueue(&mut conn)
+                .await?;
+        }
+        Command::SquashIndex => {
+            jobs::SquashIndex.enqueue(&mut conn).await?;
         }
         Command::SyncAdmins { force } => {
             if !force {
@@ -119,46 +143,6 @@ pub async fn run(command: Command) -> Result<()> {
 
             jobs::SyncAdmins.enqueue(&mut conn).await?;
         }
-        Command::DailyDbMaintenance => {
-            jobs::DailyDbMaintenance.enqueue(&mut conn).await?;
-        }
-        Command::ProcessCdnLogQueue(job) => {
-            job.enqueue(&mut conn).await?;
-        }
-        Command::SquashIndex => {
-            jobs::SquashIndex.enqueue(&mut conn).await?;
-        }
-        Command::NormalizeIndex { dry_run } => {
-            jobs::NormalizeIndex::new(dry_run)
-                .enqueue(&mut conn)
-                .await?;
-        }
-        Command::CheckTyposquat { name } => {
-            // The job will fail if the crate doesn't actually exist, so let's check that up front.
-            if crates::table
-                .filter(crates::name.eq(&name))
-                .count()
-                .get_result::<i64>(&mut conn)
-                .await?
-                == 0
-            {
-                anyhow::bail!(
-                    "cannot enqueue a typosquat check for a crate that doesn't exist: {name}"
-                );
-            }
-
-            jobs::CheckTyposquat::new(&name).enqueue(&mut conn).await?;
-        }
-        Command::GenerateOgImage { names } => {
-            for name in names {
-                jobs::GenerateOgImage::new(name).enqueue(&mut conn).await?;
-            }
-        }
-        Command::SendTokenExpiryNotifications => {
-            jobs::SendTokenExpiryNotifications
-                .enqueue(&mut conn)
-                .await?;
-        }
         Command::SyncCratesFeed => {
             jobs::rss::SyncCratesFeed.enqueue(&mut conn).await?;
         }
@@ -179,6 +163,22 @@ pub async fn run(command: Command) -> Result<()> {
 
             let job = jobs::trustpub::DeleteExpiredJtis;
             job.enqueue(&mut conn).await?;
+        }
+        Command::UpdateDownloads => {
+            let count: i64 = background_jobs::table
+                .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
+                .count()
+                .get_result(&mut conn)
+                .await?;
+
+            if count > 0 {
+                println!(
+                    "Did not enqueue {}, existing job already in progress",
+                    jobs::UpdateDownloads::JOB_NAME
+                );
+            } else {
+                jobs::UpdateDownloads.enqueue(&mut conn).await?;
+            }
         }
     };
 
