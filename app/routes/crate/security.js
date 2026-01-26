@@ -53,37 +53,17 @@ export default class SecurityRoute extends Route {
         });
       };
 
-      let aliasUrl = alias => {
-        if (alias.startsWith('CVE-')) {
-          return `https://nvd.nist.gov/vuln/detail/${alias}`;
-        } else if (alias.startsWith('GHSA-')) {
-          return `https://github.com/advisories/${alias}`;
-        }
-        return null;
-      };
-
-      let cvssUrl = cvss => {
-        // Extract version from CVSS string (e.g., "CVSS:3.1/..." -> "3.1")
-        let match = cvss.match(/^CVSS:(\d+\.\d+)\//);
-        if (match) {
-          return `https://www.first.org/cvss/calculator/${match[1]}#${cvss}`;
-        }
-        return null;
-      };
-
-      return { crate, advisories, convertMarkdown, aliasUrl, cvssUrl };
+      return { crate, advisories, convertMarkdown };
     } catch (error) {
       let title = `${crate.name}: Failed to load advisories`;
       return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
     }
   }
 
-  setupController(controller, { crate, advisories, convertMarkdown, aliasUrl, cvssUrl }) {
+  setupController(controller, { crate, advisories, convertMarkdown }) {
     super.setupController(...arguments);
     controller.crate = crate;
     controller.advisories = advisories;
     controller.convertMarkdown = convertMarkdown;
-    controller.aliasUrl = aliasUrl;
-    controller.cvssUrl = cvssUrl;
   }
 }
