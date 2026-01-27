@@ -25,8 +25,8 @@ importers:
         specifier: 3.4.0
         version: 3.4.0
       '@sentry/ember':
-        specifier: 10.35.0
-        version: 10.35.0(ember-cli@6.10.0(@types/node@24.10.9)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.104.1)
+        specifier: 10.36.0
+        version: 10.36.0(ember-cli@6.10.0(@types/node@24.10.9)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.104.1)
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
@@ -2363,8 +2363,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/wasm-node@4.56.0':
-    resolution: {integrity: sha512-ecaoyItGmpj4hnabpa2D+oI6ME7t7hrqosQ2SA+qBGihoL0DuuoaXIfY8Oa1o7lWGtPpRZmt9EYe7oyivypsJg==}
+  '@rollup/wasm-node@4.57.0':
+    resolution: {integrity: sha512-EmuVEJWCxlkA/HIe9IJUSSXUXj3mw3w/4NDHhdu2KLCfBUOsjHMOWWrVzTGySmdaua0E120LSQ5ojDGfi+tA/Q==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -2375,32 +2375,32 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
-  '@sentry-internal/browser-utils@10.35.0':
-    resolution: {integrity: sha512-YjVbyqpJu6E6U/BCdOgIUuUQPUDZ7XdFiBYXtGy59xqQB1qSqNfei163hkfnXxIN90csDubxWNrnit+W5Wo/uQ==}
+  '@sentry-internal/browser-utils@10.36.0':
+    resolution: {integrity: sha512-WILVR8HQBWOxbqLRuTxjzRCMIACGsDTo6jXvzA8rz6ezElElLmIrn3CFAswrESLqEEUa4CQHl5bLgSVJCRNweA==}
     engines: {node: '>=18'}
 
-  '@sentry-internal/feedback@10.35.0':
-    resolution: {integrity: sha512-h/rtGcgvGtZIY9njxnzHHMzMwFYAYG/UwDaNtpf8jN63JD6cTQDQ8wNWp0arD9gmUr96YjER55BNRRF8oSg6Fw==}
+  '@sentry-internal/feedback@10.36.0':
+    resolution: {integrity: sha512-zPjz7AbcxEyx8AHj8xvp28fYtPTPWU1XcNtymhAHJLS9CXOblqSC7W02Jxz6eo3eR1/pLyOo6kJBUjvLe9EoFA==}
     engines: {node: '>=18'}
 
-  '@sentry-internal/replay-canvas@10.35.0':
-    resolution: {integrity: sha512-efaz8ETDLd0rSpoqX4m8fMnq7abzUJAdqeChz9Jdq6OgvHeBgM6tTfqWSes6sFnSCvFUVkdFngZQfgmBxWGuEA==}
+  '@sentry-internal/replay-canvas@10.36.0':
+    resolution: {integrity: sha512-DLGIwmT2LX+O6TyYPtOQL5GiTm2rN0taJPDJ/Lzg2KEJZrdd5sKkzTckhh2x+vr4JQyeaLmnb8M40Ch1hvG/vQ==}
     engines: {node: '>=18'}
 
-  '@sentry-internal/replay@10.35.0':
-    resolution: {integrity: sha512-9hGP3lD+7o/4ovGTdwv3T9K2t9LxSlR/CAcRQeFApW2c0AGsjTdcglOxsgxYei4YmaISx0CBJ/YqJfQVYxaxWw==}
+  '@sentry-internal/replay@10.36.0':
+    resolution: {integrity: sha512-nLMkJgvHq+uCCrQKV2KgSdVHxTsmDk0r2hsAoTcKCbzUpXyW5UhCziMRS6ULjBlzt5sbxoIIplE25ZpmIEeNgg==}
     engines: {node: '>=18'}
 
-  '@sentry/browser@10.35.0':
-    resolution: {integrity: sha512-3wCdmKOTqg6Fvmb9HLHzCVIpSSYCPhXFQ95VaYsb1rESIgL7BMS9nyqhecPcPR3oJppU2a/TqZk4YH3nFrPXmA==}
+  '@sentry/browser@10.36.0':
+    resolution: {integrity: sha512-yHhXbgdGY1s+m8CdILC9U/II7gb6+s99S2Eh8VneEn/JG9wHc+UOzrQCeFN0phFP51QbLkjkiQbbanjT1HP8UQ==}
     engines: {node: '>=18'}
 
-  '@sentry/core@10.35.0':
-    resolution: {integrity: sha512-lEK1WFqt6oHtMq5dDLVE/FDzHDGs1PlYT5cZH4aBirYtJVyUiTf0NknKFob4a2zTywczlq7SbLv6Ba8UMU9dYg==}
+  '@sentry/core@10.36.0':
+    resolution: {integrity: sha512-EYJjZvofI+D93eUsPLDIUV0zQocYqiBRyXS6CCV6dHz64P/Hob5NJQOwPa8/v6nD+UvJXvwsFfvXOHhYZhZJOQ==}
     engines: {node: '>=18'}
 
-  '@sentry/ember@10.35.0':
-    resolution: {integrity: sha512-MJQ0qhyzU4+i2nQUmcbxnDK+ofm+LA9E1K17wvP1xjY0uXWzUUK1EePUb8bveOZIPn11MlTT9LB9mPbThl+vgA==}
+  '@sentry/ember@10.36.0':
+    resolution: {integrity: sha512-1fM8JlUaf5AWbb19vg8SzYwhONG5D1PLPchbaN4MqTBE6nMGMIpBABMR/RCGZbL54BZBL0cVaPQ8f8kM5QTJGg==}
     engines: {node: '>=18'}
     peerDependencies:
       ember-cli: '>=4'
@@ -12485,7 +12485,7 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.3
 
-  '@rollup/wasm-node@4.56.0':
+  '@rollup/wasm-node@4.57.0':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -12502,40 +12502,40 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@sentry-internal/browser-utils@10.35.0':
+  '@sentry-internal/browser-utils@10.36.0':
     dependencies:
-      '@sentry/core': 10.35.0
+      '@sentry/core': 10.36.0
 
-  '@sentry-internal/feedback@10.35.0':
+  '@sentry-internal/feedback@10.36.0':
     dependencies:
-      '@sentry/core': 10.35.0
+      '@sentry/core': 10.36.0
 
-  '@sentry-internal/replay-canvas@10.35.0':
+  '@sentry-internal/replay-canvas@10.36.0':
     dependencies:
-      '@sentry-internal/replay': 10.35.0
-      '@sentry/core': 10.35.0
+      '@sentry-internal/replay': 10.36.0
+      '@sentry/core': 10.36.0
 
-  '@sentry-internal/replay@10.35.0':
+  '@sentry-internal/replay@10.36.0':
     dependencies:
-      '@sentry-internal/browser-utils': 10.35.0
-      '@sentry/core': 10.35.0
+      '@sentry-internal/browser-utils': 10.36.0
+      '@sentry/core': 10.36.0
 
-  '@sentry/browser@10.35.0':
+  '@sentry/browser@10.36.0':
     dependencies:
-      '@sentry-internal/browser-utils': 10.35.0
-      '@sentry-internal/feedback': 10.35.0
-      '@sentry-internal/replay': 10.35.0
-      '@sentry-internal/replay-canvas': 10.35.0
-      '@sentry/core': 10.35.0
+      '@sentry-internal/browser-utils': 10.36.0
+      '@sentry-internal/feedback': 10.36.0
+      '@sentry-internal/replay': 10.36.0
+      '@sentry-internal/replay-canvas': 10.36.0
+      '@sentry/core': 10.36.0
 
-  '@sentry/core@10.35.0': {}
+  '@sentry/core@10.36.0': {}
 
-  '@sentry/ember@10.35.0(ember-cli@6.10.0(@types/node@24.10.9)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.104.1)':
+  '@sentry/ember@10.36.0(ember-cli@6.10.0(@types/node@24.10.9)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.104.1)':
     dependencies:
       '@babel/core': 7.28.6
       '@embroider/macros': 1.19.6
-      '@sentry/browser': 10.35.0
-      '@sentry/core': 10.35.0
+      '@sentry/browser': 10.36.0
+      '@sentry/core': 10.36.0
       ember-auto-import: 2.12.0(webpack@5.104.1)
       ember-cli-babel: 8.2.0(@babel/core@7.28.6)
       ember-cli-htmlbars: 6.3.0
@@ -21168,7 +21168,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.9
