@@ -117,13 +117,13 @@ num_versions = "public"
 [deleted_crates]
 dependencies = ["users"]
 [deleted_crates.columns]
-id = "private"
-name = "private"
-created_at = "private"
-deleted_at = "private"
-deleted_by = "private"
-message = "private"
-available_at = "private"
+id = "public"
+name = "public"
+created_at = "public"
+deleted_at = "public"
+deleted_by = "public"
+message = "public"
+available_at = "public"
 
 [dependencies]
 dependencies = ["crates", "versions"]
