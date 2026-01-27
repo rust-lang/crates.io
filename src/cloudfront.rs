@@ -44,8 +44,20 @@ pub struct CloudFront {
 
 impl CloudFront {
     pub fn from_environment() -> Option<Self> {
-        let access_key = dotenvy::var("AWS_ACCESS_KEY").expect("missing AWS_ACCESS_KEY");
-        let secret_key = dotenvy::var("AWS_SECRET_KEY").expect("missing AWS_SECRET_KEY");
+        let access_key = match dotenvy::var("AWS_ACCESS_KEY") {
+            Ok(a) => a,
+            Err(_) => {
+                warn!("Missing AWS_ACCESS_KEY environment variable");
+                return None;
+            }
+        };
+        let secret_key = match dotenvy::var("AWS_SECRET_KEY") {
+            Ok(s) => s,
+            Err(_) => {
+                warn!("Missing AWS_SECRET_KEY environment variable");
+                return None;
+            }
+        };
 
         let index_distribution_id = match dotenvy::var("CLOUDFRONT_DISTRIBUTION_ID_INDEX") {
             Ok(id) => id,
