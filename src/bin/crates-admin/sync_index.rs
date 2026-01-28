@@ -1,3 +1,4 @@
+use crate::dialoguer;
 use anyhow::{Result, bail};
 use clap::builder::ArgAction;
 use crates_io::db;
@@ -24,6 +25,10 @@ pub struct Opts {
     /// Skip syncing to the sparse index
     #[arg(long = "no-sparse", action = ArgAction::SetFalse)]
     sparse: bool,
+
+    /// Create a single git commit with this message instead of per-crate commits
+    #[arg(long, value_name = "COMMIT_MESSAGE")]
+    single_commit: Option<String>,
 }
 
 pub async fn run(opts: Opts) -> Result<()> {
@@ -49,13 +54,55 @@ pub async fn run(opts: Opts) -> Result<()> {
         bail!("Crates {missing_crates:?} do not exist");
     }
 
-    for name in &opts.names {
+    let num_crates = opts.names.len();
+
+    // Show confirmation prompt when --single-commit is used
+    if opts.single_commit.is_some() {
+        let mut prompt_parts = Vec::new();
+
         if opts.git {
-            println!("Enqueueing SyncToGitIndex job for `{name}`");
-            jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+            prompt_parts.push(format!(
+                "This will sync {num_crates} crate{} to the git index in a single commit.",
+                if num_crates == 1 { "" } else { "s" }
+            ));
         }
 
         if opts.sparse {
+            prompt_parts.push(format!(
+                "This will enqueue {num_crates} sparse index sync job{}.",
+                if num_crates == 1 { "" } else { "s" }
+            ));
+        }
+
+        if !prompt_parts.is_empty() {
+            println!("{}", prompt_parts.join("\n"));
+            if !dialoguer::confirm("Do you want to continue?").await? {
+                return Ok(());
+            }
+        }
+    }
+
+    // Handle git index sync
+    if opts.git {
+        if let Some(commit_message) = &opts.single_commit {
+            println!(
+                "Enqueueing BulkSyncToGitIndex job for {} crates",
+                num_crates
+            );
+            jobs::BulkSyncToGitIndex::new(opts.names.clone(), commit_message)
+                .enqueue(&mut conn)
+                .await?;
+        } else {
+            for name in &opts.names {
+                println!("Enqueueing SyncToGitIndex job for `{name}`");
+                jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+            }
+        }
+    }
+
+    // Handle sparse index sync (always per-crate)
+    if opts.sparse {
+        for name in &opts.names {
             println!("Enqueueing SyncToSparseIndex job for `{name}`");
             jobs::SyncToSparseIndex::new(name)
                 .enqueue(&mut conn)
