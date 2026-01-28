@@ -42,6 +42,9 @@
 
   let notifications = new NotificationsState();
   setNotifications(notifications);
+
+  // TODO: fetch current user
+  let currentUser = null;
 </script>
 
 <svelte:head>
@@ -56,7 +59,7 @@
 <NotificationContainer position="top-right" />
 <TooltipContainer />
 
-<Header hero={isIndex} />
+<Header hero={isIndex} {currentUser} />
 
 <main class="main">
   <div class="inner-main width-limit">

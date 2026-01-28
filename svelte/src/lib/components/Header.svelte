@@ -1,33 +1,59 @@
 <script lang="ts">
+  import type { components } from '@crates-io/api-client';
+
   import { resolve } from '$app/paths';
 
   import logo from '$lib/assets/cargo.png';
   import LockIcon from '$lib/assets/lock.svg?component';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
+  import * as Dropdown from './dropdown';
+  import LoadingSpinner from './LoadingSpinner.svelte';
   import SearchForm from './SearchForm.svelte';
+  import UserAvatar from './UserAvatar.svelte';
 
-  // TODO: import Dropdown from './Dropdown.svelte';
-  // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
-  // TODO: import UserAvatar from './UserAvatar.svelte';
-
-  // TODO: import session service
+  type AuthenticatedUser = components['schemas']['AuthenticatedUser'];
 
   interface Props {
     hero?: boolean;
+    currentUser?: AuthenticatedUser | null;
   }
 
-  let { hero = false }: Props = $props();
+  let { hero = false, currentUser }: Props = $props();
+
+  let isAdmin = $derived(currentUser?.is_admin ?? false);
 
   // TODO: implement session state
-  // let currentUser = $derived(session.currentUser);
-  // let isAdmin = $derived(session.isAdmin);
-  // let isSudoEnabled = $derived(session.isSudoEnabled);
-  // let sudoEnabledUntil = $derived(session.sudoEnabledUntil);
+  let isLoggingIn = $state(false);
+  let isLoggingOut = $state(false);
+
+  function login() {
+    isLoggingIn = true;
+  }
+
+  function logout() {
+    isLoggingOut = true;
+  }
 
   // TODO: implement sudo actions
-  // const SUDO_SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
-  // function enableSudo() { session.setSudo(SUDO_SESSION_DURATION_MS); }
-  // function disableSudo() { session.setSudo(0); }
+  const SUDO_SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
+
+  let isSudoEnabled = $state(false);
+  let sudoEnabledUntil = $state<Date | null>(null);
+
+  function enableSudo() {
+    isSudoEnabled = true;
+    sudoEnabledUntil = new Date(Date.now() + SUDO_SESSION_DURATION_MS);
+  }
+
+  function disableSudo() {
+    isSudoEnabled = false;
+    sudoEnabledUntil = null;
+  }
+
+  function formatTime(date: Date | null): string {
+    if (!date) return '';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 </script>
 
 <header class="header" class:hero>
@@ -49,36 +75,122 @@
       <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
       <span class="sep">|</span>
 
-      <!-- TODO: implement authenticated user menu -->
-      <!-- {#if currentUser} -->
-      <!--   <Dropdown data-test-user-menu> ... </Dropdown> -->
-      <!-- {:else} -->
-      <button type="button" class="login-button button-reset" data-test-login-button>
-        <LockIcon />
-        Log in with GitHub
-      </button>
-      <!-- {/if} -->
+      {#if currentUser}
+        <Dropdown.Root data-test-user-menu>
+          <Dropdown.Trigger class="button-reset" data-test-toggle>
+            {#if isSudoEnabled}
+              <span class="wizard-hat" data-test-wizard-hat>🧙</span>
+            {/if}
+
+            <UserAvatar
+              user={{ ...currentUser, kind: 'user' }}
+              size="small"
+              style="margin-right: var(--space-2xs); margin-top: calc((22px - 1em) * -0.5)"
+              data-test-avatar
+            />
+
+            {currentUser.name}
+          </Dropdown.Trigger>
+
+          <Dropdown.Menu class="current-user-links">
+            <Dropdown.Item>
+              <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
+            </Dropdown.Item>
+            <Dropdown.Item><a href={resolve('/dashboard')}>Dashboard</a></Dropdown.Item>
+            <Dropdown.Item><a href={resolve('/settings')} data-test-settings>Account Settings</a></Dropdown.Item>
+            <Dropdown.Item><a href={resolve('/me/pending-invites')}>Owner Invites</a></Dropdown.Item>
+            {#if isAdmin}
+              <Dropdown.Item class="sudo">
+                {#if isSudoEnabled}
+                  <button
+                    type="button"
+                    class="sudo-menu-item button-reset"
+                    data-test-disable-admin-actions
+                    onclick={disableSudo}
+                  >
+                    Disable admin actions
+                    <span class="expires-in">expires at {formatTime(sudoEnabledUntil)}</span>
+                  </button>
+                {:else}
+                  <button
+                    type="button"
+                    class="sudo-menu-item button-reset"
+                    data-test-enable-admin-actions
+                    onclick={enableSudo}
+                  >
+                    Enable admin actions
+                  </button>
+                {/if}
+              </Dropdown.Item>
+            {/if}
+            <Dropdown.Item style="border-top: 1px solid var(--gray-border)">
+              <button
+                type="button"
+                class="logout-menu-item button-reset"
+                disabled={isLoggingOut}
+                data-test-logout-button
+                onclick={logout}
+              >
+                {#if isLoggingOut}
+                  <LoadingSpinner class="spinner" />
+                {/if}
+                Sign Out
+              </button>
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown.Root>
+      {:else}
+        <button
+          type="button"
+          class="login-button button-reset"
+          disabled={isLoggingIn}
+          data-test-login-button
+          onclick={login}
+        >
+          {#if isLoggingIn}
+            <LoadingSpinner class="spinner" />
+          {:else}
+            <LockIcon />
+          {/if}
+          Log in with GitHub
+        </button>
+      {/if}
     </nav>
 
     <div class="menu">
       <ColorSchemeMenu class="color-scheme-menu" />
 
-      <!-- TODO: implement mobile menu dropdown -->
-      <!-- <Dropdown>
-        <button class="dropdown-button">Menu</button>
-        <menu>
-          <li><a href={resolve('/crates')}>Browse All Crates</a></li>
+      <Dropdown.Root>
+        <Dropdown.Trigger class="button-reset">Menu</Dropdown.Trigger>
+        <Dropdown.Menu class="current-user-links">
+          <Dropdown.Item><a href={resolve('/crates')}>Browse All Crates</a></Dropdown.Item>
           {#if currentUser}
-            <li><a href={resolve(`/users/${currentUser.login}`)}>Profile</a></li>
-            <li><a href={resolve('/dashboard')}>Dashboard</a></li>
-            <li><a href={resolve('/settings')}>Account Settings</a></li>
-            <li><a href={resolve('/me/pending-invites')}>Owner Invites</a></li>
-            <li><button>Sign Out</button></li>
+            <Dropdown.Item>
+              <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
+            </Dropdown.Item>
+            <Dropdown.Item><a href={resolve('/dashboard')}>Dashboard</a></Dropdown.Item>
+            <Dropdown.Item><a href={resolve('/settings')} data-test-me-link>Account Settings</a></Dropdown.Item>
+            <Dropdown.Item><a href={resolve('/me/pending-invites')}>Owner Invites</a></Dropdown.Item>
+            <Dropdown.Item style="border-top: 1px solid var(--gray-border)">
+              <button type="button" class="logout-menu-item button-reset" disabled={isLoggingOut} onclick={logout}>
+                {#if isLoggingOut}
+                  <LoadingSpinner class="spinner" />
+                {/if}
+                Sign Out
+              </button>
+            </Dropdown.Item>
           {:else}
-            <li><button>Log in with GitHub</button></li>
+            <Dropdown.Item>
+              <button type="button" class="login-menu-item button-reset" disabled={isLoggingIn} onclick={login}>
+                {#if isLoggingIn}
+                  <LoadingSpinner class="spinner" />
+                {/if}
+                Log in with GitHub
+              </button>
+            </Dropdown.Item>
           {/if}
-        </menu>
-      </Dropdown> -->
+        </Dropdown.Menu>
+      </Dropdown.Root>
     </div>
   </div>
 </header>
@@ -208,12 +320,6 @@
     }
   }
 
-  /* TODO: uncomment when menu is added
-  .menu-item-with-separator {
-    border-top: 1px solid var(--gray-border);
-  }
-  */
-
   .header :global(.color-scheme-menu) {
     margin-right: var(--space-xs);
   }
@@ -230,14 +336,12 @@
       cursor: wait;
     }
 
-    /* TODO: uncomment when SVG icons are added
-    & .spinner {
+    & :global(.spinner) {
       --spinner-color: white;
-      --spinner-bg-color: rgba(255, 255, 255, .2);
+      --spinner-bg-color: rgba(255, 255, 255, 0.2);
 
       margin-right: var(--space-2xs);
     }
-    */
   }
 
   .login-button :global(svg) {
@@ -246,35 +350,17 @@
     opacity: 0.5;
   }
 
-  /* TODO: uncomment when UserAvatar is implemented
-  .avatar {
-    margin-right: var(--space-2xs);
-  }
-
   .wizard-hat {
     margin-right: var(--space-3xs);
   }
-  */
 
-  /* TODO: uncomment when Dropdown is implemented
-  .current-user-links {
-    left: auto;
-    right: 0;
-    min-width: 200px;
-  }
-
-  .dropdown-button {
-    background: none;
-    border: 0;
-    padding: 0;
-
-    & img {
-      margin-top: calc((22px - 1em) * -0.5);
+  .menu,
+  .nav {
+    & :global(.current-user-links) {
+      left: auto;
+      right: 0;
+      min-width: 200px;
     }
-  }
-
-  .menu-item-with-separator {
-    border-top: 1px solid var(--gray-border);
   }
 
   .login-menu-item,
@@ -286,7 +372,7 @@
       cursor: wait;
     }
 
-    & .spinner {
+    & :global(.spinner) {
       margin-right: var(--space-2xs);
     }
   }
@@ -300,5 +386,4 @@
       padding-top: var(--space-3xs);
     }
   }
-  */
 </style>

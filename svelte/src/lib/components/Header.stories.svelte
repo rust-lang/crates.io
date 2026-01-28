@@ -1,4 +1,6 @@
 <script module lang="ts">
+  import type { components } from '@crates-io/api-client';
+
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
   import Header from './Header.svelte';
@@ -12,8 +14,34 @@
       theme: { value: 'system' },
     },
   });
+
+  type AuthenticatedUser = components['schemas']['AuthenticatedUser'];
+
+  const baseUser: AuthenticatedUser = {
+    id: 42,
+    login: 'johndoe',
+    name: 'John Doe',
+    avatar: 'https://avatars.githubusercontent.com/u/1234567?v=4',
+    email: 'john@example.com',
+    email_verified: true,
+    email_verification_sent: true,
+    is_admin: false,
+    publish_notifications: true,
+    url: 'https://github.com/johndoe',
+  };
+
+  const adminUser: AuthenticatedUser = {
+    ...baseUser,
+    login: 'admin',
+    name: 'Admin User',
+    is_admin: true,
+  };
 </script>
 
 <Story name="Default" />
 
+<Story name="Authenticated" args={{ currentUser: baseUser }} />
+
 <Story name="Hero" args={{ hero: true }} />
+
+<Story name="Hero (Authenticated Admin)" args={{ hero: true, currentUser: adminUser }} />
