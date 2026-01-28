@@ -177,20 +177,21 @@ impl Repository {
         Ok(head.target().unwrap())
     }
 
-    /// Commits the specified file with the specified commit message and pushes
+    /// Commits the specified files with the specified commit message and pushes
     /// the commit to the `master` branch on the `origin` remote.
     ///
-    /// Note that `modified_file` expects a file path **relative** to the
+    /// Note that `modified_files` expects file paths **relative** to the
     /// repository working folder!
-    #[instrument(skip_all, fields(message = %msg))]
-    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> anyhow::Result<()> {
-        // git add $file
+    #[instrument(skip_all, fields(message = %msg, num_files = modified_files.len()))]
+    fn perform_commit_and_push(&self, msg: &str, modified_files: &[&Path]) -> anyhow::Result<()> {
         let mut index = self.repository.index()?;
 
-        if self.checkout_path.path().join(modified_file).exists() {
-            index.add_path(modified_file)?;
-        } else {
-            index.remove_path(modified_file)?;
+        for modified_file in modified_files {
+            if self.checkout_path.path().join(modified_file).exists() {
+                index.add_path(modified_file)?;
+            } else {
+                index.remove_path(modified_file)?;
+            }
         }
 
         index.write()?;
@@ -258,18 +259,23 @@ impl Repository {
         self.run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
     }
 
-    /// Commits the specified file with the specified commit message and pushes
+    /// Commits the specified files with the specified commit message and pushes
     /// the commit to the `master` branch on the `origin` remote.
     ///
-    /// Note that `modified_file` expects an **absolute** file path!
+    /// Note that `modified_files` expects **absolute** file paths!
     ///
     /// This function also prints the commit message and a success or failure
     /// message to the console.
-    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> anyhow::Result<()> {
+    pub fn commit_and_push(&self, message: &str, modified_files: &[&Path]) -> anyhow::Result<()> {
         info!("Committing and pushing \"{message}\"");
 
-        let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
-        self.perform_commit_and_push(message, relative_path)
+        let checkout_path = self.checkout_path.path();
+        let relative_paths: Vec<&Path> = modified_files
+            .iter()
+            .map(|p| p.strip_prefix(checkout_path))
+            .collect::<Result<_, _>>()?;
+
+        self.perform_commit_and_push(message, &relative_paths)
             .map(|_| info!("Commit and push finished for \"{message}\""))
             .map_err(|err| {
                 error!(?err, "Commit and push for \"{message}\" errored");

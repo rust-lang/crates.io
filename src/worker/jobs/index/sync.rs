@@ -63,16 +63,16 @@ impl BackgroundJob for SyncToGitIndex {
                     fs::create_dir_all(dst.parent().unwrap())?;
                     let mut file = File::create(&dst)?;
                     file.write_all(new.as_bytes())?;
-                    repo.commit_and_push(&format!("Create crate `{}`", &crate_name), &dst)?;
+                    repo.commit_and_push(&format!("Create crate `{}`", &crate_name), &[&dst])?;
                 }
                 (Some(old), Some(new)) if old != new => {
                     let mut file = File::create(&dst)?;
                     file.write_all(new.as_bytes())?;
-                    repo.commit_and_push(&format!("Update crate `{}`", &crate_name), &dst)?;
+                    repo.commit_and_push(&format!("Update crate `{}`", &crate_name), &[&dst])?;
                 }
                 (Some(_old), None) => {
                     fs::remove_file(&dst)?;
-                    repo.commit_and_push(&format!("Delete crate `{}`", &crate_name), &dst)?;
+                    repo.commit_and_push(&format!("Delete crate `{}`", &crate_name), &[&dst])?;
                 }
                 _ => debug!("Skipping sync because index is up-to-date"),
             }
