@@ -1,5 +1,6 @@
 use crate::dialoguer;
 use anyhow::{Result, bail};
+use chrono::{NaiveDate, NaiveTime, TimeZone, Utc};
 use clap::builder::ArgAction;
 use crates_io::db;
 use crates_io::schema::crates;
@@ -15,7 +16,7 @@ use diesel_async::RunQueryDsl;
 )]
 pub struct Opts {
     /// Names of the crates to synchronize
-    #[arg(required = true)]
+    #[arg(required_unless_present = "updated_before")]
     names: Vec<String>,
 
     /// Skip syncing to the git index
@@ -29,32 +30,60 @@ pub struct Opts {
     /// Create a single git commit with this message instead of per-crate commits
     #[arg(long, value_name = "COMMIT_MESSAGE")]
     single_commit: Option<String>,
+
+    /// Sync all crates with `updated_at` before this date (format: YYYY-MM-DD)
+    #[arg(
+        long,
+        value_name = "DATE",
+        requires = "single_commit",
+        conflicts_with = "names"
+    )]
+    updated_before: Option<NaiveDate>,
 }
 
 pub async fn run(opts: Opts) -> Result<()> {
     let mut conn = db::oneoff_connection().await?;
 
-    // Validate all crates exist before enqueueing any jobs
-    let existing_crates: Vec<String> = crates::table
-        .filter(crates::name.eq_any(&opts.names))
-        .select(crates::name)
-        .load(&mut conn)
-        .await?;
+    // Determine which crates to sync
+    let crate_names: Vec<String> = if let Some(date) = opts.updated_before {
+        let datetime = Utc.from_utc_datetime(&date.and_time(NaiveTime::MIN));
 
-    let missing_crates: Vec<_> = opts
-        .names
-        .iter()
-        .filter(|name| !existing_crates.contains(name))
-        .collect();
+        crates::table
+            .filter(crates::updated_at.lt(datetime))
+            .select(crates::name)
+            .order(crates::name)
+            .load(&mut conn)
+            .await?
+    } else {
+        // Validate all crates exist before enqueueing any jobs
+        let existing_crates: Vec<String> = crates::table
+            .filter(crates::name.eq_any(&opts.names))
+            .select(crates::name)
+            .load(&mut conn)
+            .await?;
 
-    let num_missing_crates = missing_crates.len();
-    if num_missing_crates == 1 {
-        bail!("Crate {} does not exist", missing_crates[0]);
-    } else if num_missing_crates > 1 {
-        bail!("Crates {missing_crates:?} do not exist");
+        let missing_crates: Vec<_> = opts
+            .names
+            .iter()
+            .filter(|name| !existing_crates.contains(name))
+            .collect();
+
+        let num_missing_crates = missing_crates.len();
+        if num_missing_crates == 1 {
+            bail!("Crate {} does not exist", missing_crates[0]);
+        } else if num_missing_crates > 1 {
+            bail!("Crates {missing_crates:?} do not exist");
+        }
+
+        opts.names
+    };
+
+    let num_crates = crate_names.len();
+
+    if num_crates == 0 {
+        println!("No crates to sync");
+        return Ok(());
     }
-
-    let num_crates = opts.names.len();
 
     // Show confirmation prompt when --single-commit is used
     if opts.single_commit.is_some() {
@@ -85,15 +114,12 @@ pub async fn run(opts: Opts) -> Result<()> {
     // Handle git index sync
     if opts.git {
         if let Some(commit_message) = &opts.single_commit {
-            println!(
-                "Enqueueing BulkSyncToGitIndex job for {} crates",
-                num_crates
-            );
-            jobs::BulkSyncToGitIndex::new(opts.names.clone(), commit_message)
+            println!("Enqueueing BulkSyncToGitIndex job for {num_crates} crates");
+            jobs::BulkSyncToGitIndex::new(crate_names.clone(), commit_message)
                 .enqueue(&mut conn)
                 .await?;
         } else {
-            for name in &opts.names {
+            for name in &crate_names {
                 println!("Enqueueing SyncToGitIndex job for `{name}`");
                 jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
             }
@@ -102,7 +128,7 @@ pub async fn run(opts: Opts) -> Result<()> {
 
     // Handle sparse index sync (always per-crate)
     if opts.sparse {
-        for name in &opts.names {
+        for name in &crate_names {
             println!("Enqueueing SyncToSparseIndex job for `{name}`");
             jobs::SyncToSparseIndex::new(name)
                 .enqueue(&mut conn)
