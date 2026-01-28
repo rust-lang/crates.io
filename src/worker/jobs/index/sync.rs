@@ -10,8 +10,10 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Write};
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
+use tokio::runtime::Handle;
 use tracing::{debug, info, instrument, warn};
 
 #[derive(Serialize, Deserialize)]
@@ -80,6 +82,94 @@ impl BackgroundJob for SyncToGitIndex {
                 duration = commit_and_push_start.elapsed().as_nanos(),
                 "Committed and pushed"
             );
+
+            Ok(())
+        })
+        .await?
+    }
+}
+
+/// Syncs index files for multiple crates in a single commit
+#[derive(Serialize, Deserialize)]
+pub struct BulkSyncToGitIndex {
+    crate_names: Vec<String>,
+    commit_message: String,
+}
+
+impl BulkSyncToGitIndex {
+    pub fn new(crate_names: Vec<String>, commit_message: impl Into<String>) -> Self {
+        Self {
+            crate_names,
+            commit_message: commit_message.into(),
+        }
+    }
+}
+
+impl BackgroundJob for BulkSyncToGitIndex {
+    const JOB_NAME: &'static str = "bulk_sync_to_git_index";
+    const QUEUE: &'static str = "repository";
+
+    type Context = Arc<Environment>;
+
+    #[instrument(skip_all, fields(num_crates = self.crate_names.len()))]
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+        info!(commit_message = ?self.commit_message, "Syncing {} crates to git index", self.crate_names.len());
+
+        let crate_names = self.crate_names.clone();
+        let commit_message = self.commit_message.clone();
+
+        let handle = Handle::current();
+        spawn_blocking(move || {
+            let repo = env.lock_index()?;
+            let include_pubtime = env.config.index_include_pubtime;
+
+            let mut modified_files = Vec::new();
+
+            for crate_name in &crate_names {
+                // Fetch index data using async database queries
+                let new = handle
+                    .block_on(async {
+                        let mut conn = env.deadpool.get().await?;
+                        get_index_data(crate_name, &mut conn, include_pubtime).await
+                    })
+                    .with_context(|| format!("Failed to get index data for `{crate_name}`"))?;
+
+                let dst = repo.index_file(crate_name);
+
+                let old = match fs::read_to_string(&dst) {
+                    Ok(content) => Some(content),
+                    Err(error) if error.kind() == ErrorKind::NotFound => None,
+                    Err(error) => return Err(error.into()),
+                };
+
+                match (old, new) {
+                    (None, Some(new)) => {
+                        fs::create_dir_all(dst.parent().unwrap())?;
+                        let mut file = File::create(&dst)?;
+                        file.write_all(new.as_bytes())?;
+                        modified_files.push(dst);
+                    }
+                    (Some(old), Some(new)) if old != new => {
+                        let mut file = File::create(&dst)?;
+                        file.write_all(new.as_bytes())?;
+                        modified_files.push(dst);
+                    }
+                    (Some(_old), None) => {
+                        fs::remove_file(&dst)?;
+                        modified_files.push(dst);
+                    }
+                    _ => debug!(%crate_name, "Skipping sync because index is up-to-date"),
+                }
+            }
+
+            if modified_files.is_empty() {
+                info!("No changes to commit");
+                return Ok(());
+            }
+
+            info!("Committing {} modified files", modified_files.len());
+            let modified_refs: Vec<&Path> = modified_files.iter().map(|p| p.as_path()).collect();
+            repo.commit_and_push(&commit_message, &modified_refs)?;
 
             Ok(())
         })
