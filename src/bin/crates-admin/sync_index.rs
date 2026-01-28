@@ -4,7 +4,6 @@ use crates_io::db;
 use crates_io::schema::crates;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
-use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
@@ -14,8 +13,9 @@ use diesel_async::RunQueryDsl;
     about = "Synchronize crate index data to git and sparse indexes"
 )]
 pub struct Opts {
-    /// Name of the crate to synchronize
-    name: String,
+    /// Names of the crates to synchronize
+    #[arg(required = true)]
+    names: Vec<String>,
 
     /// Skip syncing to the git index
     #[arg(long = "no-git", action = ArgAction::SetFalse)]
@@ -29,24 +29,38 @@ pub struct Opts {
 pub async fn run(opts: Opts) -> Result<()> {
     let mut conn = db::oneoff_connection().await?;
 
-    let query = crates::table.filter(crates::name.eq(&opts.name));
-    let crate_exists: bool = diesel::select(exists(query)).get_result(&mut conn).await?;
-    if !crate_exists {
-        bail!("Crate `{}` does not exist", opts.name);
+    // Validate all crates exist before enqueueing any jobs
+    let existing_crates: Vec<String> = crates::table
+        .filter(crates::name.eq_any(&opts.names))
+        .select(crates::name)
+        .load(&mut conn)
+        .await?;
+
+    let missing_crates: Vec<_> = opts
+        .names
+        .iter()
+        .filter(|name| !existing_crates.contains(name))
+        .collect();
+
+    let num_missing_crates = missing_crates.len();
+    if num_missing_crates == 1 {
+        bail!("Crate {} does not exist", missing_crates[0]);
+    } else if num_missing_crates > 1 {
+        bail!("Crates {missing_crates:?} do not exist");
     }
 
-    if opts.git {
-        println!("Enqueueing SyncToGitIndex job for `{}`", opts.name);
-        jobs::SyncToGitIndex::new(&opts.name)
-            .enqueue(&mut conn)
-            .await?;
-    }
+    for name in &opts.names {
+        if opts.git {
+            println!("Enqueueing SyncToGitIndex job for `{name}`");
+            jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+        }
 
-    if opts.sparse {
-        println!("Enqueueing SyncToSparseIndex job for `{}`", opts.name);
-        jobs::SyncToSparseIndex::new(&opts.name)
-            .enqueue(&mut conn)
-            .await?;
+        if opts.sparse {
+            println!("Enqueueing SyncToSparseIndex job for `{name}`");
+            jobs::SyncToSparseIndex::new(name)
+                .enqueue(&mut conn)
+                .await?;
+        }
     }
 
     Ok(())
