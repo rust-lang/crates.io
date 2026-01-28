@@ -1,8 +1,12 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use clap::builder::ArgAction;
 use crates_io::db;
+use crates_io::schema::crates;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
+use diesel::dsl::exists;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -24,6 +28,12 @@ pub struct Opts {
 
 pub async fn run(opts: Opts) -> Result<()> {
     let mut conn = db::oneoff_connection().await?;
+
+    let query = crates::table.filter(crates::name.eq(&opts.name));
+    let crate_exists: bool = diesel::select(exists(query)).get_result(&mut conn).await?;
+    if !crate_exists {
+        bail!("Crate `{}` does not exist", opts.name);
+    }
 
     if opts.git {
         println!("Enqueueing SyncToGitIndex job for `{}`", opts.name);
