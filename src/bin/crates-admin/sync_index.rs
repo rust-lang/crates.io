@@ -6,8 +6,33 @@ use crates_io::db;
 use crates_io::schema::crates;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
+use crates_io_worker::schema::background_jobs;
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+
+const BATCH_SIZE: usize = 1000;
+
+async fn enqueue_jobs<T: BackgroundJob>(conn: &mut AsyncPgConnection, jobs: &[T]) -> Result<()> {
+    for chunk in jobs.chunks(BATCH_SIZE) {
+        let values = chunk
+            .iter()
+            .map(|job| {
+                Ok((
+                    background_jobs::job_type.eq(T::JOB_NAME),
+                    background_jobs::data.eq(serde_json::to_value(job)?),
+                    background_jobs::priority.eq(T::PRIORITY),
+                ))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        diesel::insert_into(background_jobs::table)
+            .values(&values)
+            .execute(conn)
+            .await?;
+    }
+
+    Ok(())
+}
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -121,19 +146,22 @@ pub async fn run(opts: Opts) -> Result<()> {
                         .enqueue(conn)
                         .await?;
                 } else {
-                    for name in &crate_names {
-                        println!("Enqueueing SyncToGitIndex job for `{name}`");
-                        jobs::SyncToGitIndex::new(name).enqueue(conn).await?;
-                    }
+                    let jobs: Vec<_> = crate_names.iter().map(jobs::SyncToGitIndex::new).collect();
+
+                    println!("Enqueueing {} SyncToGitIndex jobs", jobs.len());
+                    enqueue_jobs(conn, &jobs).await?;
                 }
             }
 
             // Handle sparse index sync (always per-crate)
             if opts.sparse {
-                for name in &crate_names {
-                    println!("Enqueueing SyncToSparseIndex job for `{name}`");
-                    jobs::SyncToSparseIndex::new(name).enqueue(conn).await?;
-                }
+                let jobs: Vec<_> = crate_names
+                    .iter()
+                    .map(jobs::SyncToSparseIndex::new)
+                    .collect();
+
+                println!("Enqueueing {} SyncToSparseIndex jobs", jobs.len());
+                enqueue_jobs(conn, &jobs).await?;
             }
 
             Ok(())
