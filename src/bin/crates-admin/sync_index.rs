@@ -7,7 +7,7 @@ use crates_io::schema::crates;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncConnection, RunQueryDsl};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -111,30 +111,33 @@ pub async fn run(opts: Opts) -> Result<()> {
         }
     }
 
-    // Handle git index sync
-    if opts.git {
-        if let Some(commit_message) = &opts.single_commit {
-            println!("Enqueueing BulkSyncToGitIndex job for {num_crates} crates");
-            jobs::BulkSyncToGitIndex::new(crate_names.clone(), commit_message)
-                .enqueue(&mut conn)
-                .await?;
-        } else {
-            for name in &crate_names {
-                println!("Enqueueing SyncToGitIndex job for `{name}`");
-                jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+    conn.transaction(|conn| {
+        Box::pin(async move {
+            // Handle git index sync
+            if opts.git {
+                if let Some(commit_message) = &opts.single_commit {
+                    println!("Enqueueing BulkSyncToGitIndex job for {num_crates} crates");
+                    jobs::BulkSyncToGitIndex::new(crate_names.clone(), commit_message)
+                        .enqueue(conn)
+                        .await?;
+                } else {
+                    for name in &crate_names {
+                        println!("Enqueueing SyncToGitIndex job for `{name}`");
+                        jobs::SyncToGitIndex::new(name).enqueue(conn).await?;
+                    }
+                }
             }
-        }
-    }
 
-    // Handle sparse index sync (always per-crate)
-    if opts.sparse {
-        for name in &crate_names {
-            println!("Enqueueing SyncToSparseIndex job for `{name}`");
-            jobs::SyncToSparseIndex::new(name)
-                .enqueue(&mut conn)
-                .await?;
-        }
-    }
+            // Handle sparse index sync (always per-crate)
+            if opts.sparse {
+                for name in &crate_names {
+                    println!("Enqueueing SyncToSparseIndex job for `{name}`");
+                    jobs::SyncToSparseIndex::new(name).enqueue(conn).await?;
+                }
+            }
 
-    Ok(())
+            Ok(())
+        })
+    })
+    .await
 }
