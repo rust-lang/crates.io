@@ -32,7 +32,7 @@ tracing = "=0.1.44"
 [dev-dependencies]
 bon = "=3.8.2"
 claims = "=0.8.0"
-clap = { version = "=4.5.55", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.5.56", features = ["derive", "env", "unicode", "wrap_help"] }
 insta = { version = "=1.46.1", features = ["json", "redactions"] }
 mockito = "=1.7.1"
 serde_json = "=1.0.149"
