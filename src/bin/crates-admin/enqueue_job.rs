@@ -47,12 +47,6 @@ pub enum Command {
         force: bool,
     },
     SyncCratesFeed,
-    SyncToGitIndex {
-        name: String,
-    },
-    SyncToSparseIndex {
-        name: String,
-    },
     SyncUpdatesFeed,
     TrustpubCleanup,
     UpdateDownloads,
@@ -145,14 +139,6 @@ pub async fn run(command: Command) -> Result<()> {
         }
         Command::SyncCratesFeed => {
             jobs::rss::SyncCratesFeed.enqueue(&mut conn).await?;
-        }
-        Command::SyncToGitIndex { name } => {
-            jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
-        }
-        Command::SyncToSparseIndex { name } => {
-            jobs::SyncToSparseIndex::new(name)
-                .enqueue(&mut conn)
-                .await?;
         }
         Command::SyncUpdatesFeed => {
             jobs::rss::SyncUpdatesFeed.enqueue(&mut conn).await?;
