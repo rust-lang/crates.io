@@ -12,7 +12,11 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 const BATCH_SIZE: usize = 1000;
 
-async fn enqueue_jobs<T: BackgroundJob>(conn: &mut AsyncPgConnection, jobs: &[T]) -> Result<()> {
+async fn enqueue_jobs<T: BackgroundJob>(
+    conn: &mut AsyncPgConnection,
+    jobs: &[T],
+    priority: i16,
+) -> Result<()> {
     for chunk in jobs.chunks(BATCH_SIZE) {
         let values = chunk
             .iter()
@@ -20,7 +24,7 @@ async fn enqueue_jobs<T: BackgroundJob>(conn: &mut AsyncPgConnection, jobs: &[T]
                 Ok((
                     background_jobs::job_type.eq(T::JOB_NAME),
                     background_jobs::data.eq(serde_json::to_value(job)?),
-                    background_jobs::priority.eq(T::PRIORITY),
+                    background_jobs::priority.eq(priority),
                 ))
             })
             .collect::<Result<Vec<_>>>()?;
@@ -64,6 +68,10 @@ pub struct Opts {
         conflicts_with = "names"
     )]
     updated_before: Option<NaiveDate>,
+
+    /// Priority for the enqueued jobs
+    #[arg(long)]
+    priority: Option<i16>,
 }
 
 pub async fn run(opts: Opts) -> Result<()> {
@@ -141,27 +149,30 @@ pub async fn run(opts: Opts) -> Result<()> {
             // Handle git index sync
             if opts.git {
                 if let Some(commit_message) = &opts.single_commit {
+                    let priority = opts.priority.unwrap_or(jobs::BulkSyncToGitIndex::PRIORITY);
+                    let job = jobs::BulkSyncToGitIndex::new(crate_names.clone(), commit_message);
+
                     println!("Enqueueing BulkSyncToGitIndex job for {num_crates} crates");
-                    jobs::BulkSyncToGitIndex::new(crate_names.clone(), commit_message)
-                        .enqueue(conn)
-                        .await?;
+                    enqueue_jobs(conn, &[job], priority).await?;
                 } else {
+                    let priority = opts.priority.unwrap_or(jobs::SyncToGitIndex::PRIORITY);
                     let jobs: Vec<_> = crate_names.iter().map(jobs::SyncToGitIndex::new).collect();
 
                     println!("Enqueueing {} SyncToGitIndex jobs", jobs.len());
-                    enqueue_jobs(conn, &jobs).await?;
+                    enqueue_jobs(conn, &jobs, priority).await?;
                 }
             }
 
             // Handle sparse index sync (always per-crate)
             if opts.sparse {
+                let priority = opts.priority.unwrap_or(jobs::SyncToSparseIndex::PRIORITY);
                 let jobs: Vec<_> = crate_names
                     .iter()
                     .map(jobs::SyncToSparseIndex::new)
                     .collect();
 
                 println!("Enqueueing {} SyncToSparseIndex jobs", jobs.len());
-                enqueue_jobs(conn, &jobs).await?;
+                enqueue_jobs(conn, &jobs, priority).await?;
             }
 
             Ok(())
