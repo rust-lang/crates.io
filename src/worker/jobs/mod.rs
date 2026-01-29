@@ -30,7 +30,9 @@ pub use self::downloads::{
 pub use self::dump_db::DumpDb;
 pub use self::expiry_notification::SendTokenExpiryNotifications;
 pub use self::generate_og_image::GenerateOgImage;
-pub use self::index::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
+pub use self::index::{
+    BulkSyncToGitIndex, NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex,
+};
 pub use self::index_version_downloads_archive::IndexVersionDownloadsArchive;
 pub use self::invalidate_cdns::InvalidateCdns;
 pub use self::process_cloudfront_invalidation_queue::ProcessCloudfrontInvalidationQueue;
