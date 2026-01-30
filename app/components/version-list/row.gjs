@@ -3,12 +3,12 @@ import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import { LinkTo } from '@ember/routing';
 import { service } from '@ember/service';
-import { htmlSafe } from '@ember/template';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 import scopedClass from 'ember-scoped-css/helpers/scoped-class';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
+import and from 'ember-truth-helpers/helpers/and';
 import eq from 'ember-truth-helpers/helpers/eq';
 import or from 'ember-truth-helpers/helpers/or';
 
@@ -25,45 +25,10 @@ import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-n
 import dateFormatIso from 'crates-io/helpers/date-format-iso';
 import prettyBytes from 'crates-io/helpers/pretty-bytes';
 
-import styles from './row.css';
-
 export default class VersionRow extends Component {
   @service session;
 
   @tracked focused = false;
-
-  get releaseTrackTitle() {
-    let { version } = this.args;
-    if (version.yanked) {
-      return htmlSafe(`This version was <span class="${styles['rt-yanked']}">yanked</span>`);
-    }
-    if (version.invalidSemver) {
-      return `Failed to parse version ${version.num}`;
-    }
-
-    let { releaseTrack } = version;
-
-    let modifiers = [];
-    if (version.isPrerelease) {
-      modifiers.push('prerelease');
-    }
-    if (version.isHighestOfReleaseTrack) {
-      modifiers.push('latest');
-    }
-
-    let title = `Release Track: ${releaseTrack}`;
-    if (modifiers.length !== 0) {
-      let formattedModifiers = modifiers
-        .map(modifier => {
-          let klass = styles[`rt-${modifier}`];
-          return klass ? `<span class='${klass}'>${modifier}</span>` : modifier;
-        })
-        .join(', ');
-
-      title += ` (${formattedModifiers})`;
-    }
-    return htmlSafe(title);
-  }
 
   get isOwner() {
     let userId = this.session.currentUser?.id;
@@ -102,7 +67,21 @@ export default class VersionRow extends Component {
           {{/if}}
 
           <Tooltip @side='right' class='rt-tooltip' data-test-release-track-title>
-            {{this.releaseTrackTitle}}
+            {{#if @version.yanked}}
+              This version was
+              <span class='rt-yanked'>yanked</span>
+            {{else if @version.invalidSemver}}
+              Failed to parse version
+              {{@version.num}}
+            {{else}}
+              Release Track:
+              {{@version.releaseTrack}}
+              {{#if (or @version.isPrerelease @version.isHighestOfReleaseTrack)}}
+                ({{#if @version.isPrerelease}}<span class='rt-prerelease'>prerelease</span>{{/if}}{{#if
+                  (and @version.isPrerelease @version.isHighestOfReleaseTrack)
+                }}, {{/if}}{{#if @version.isHighestOfReleaseTrack}}<span class='rt-latest'>latest</span>{{/if}})
+              {{/if}}
+            {{/if}}
           </Tooltip>
         </div>
 
