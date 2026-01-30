@@ -65,7 +65,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@floating-ui/dom": "1.7.4",
+    "@floating-ui/dom": "1.7.5",
     "@juggle/resize-observer": "3.4.0",
     "@sentry/ember": "10.36.0",
     "chart.js": "4.5.1",

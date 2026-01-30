@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@crates-io/api-client": "workspace:*",
-    "@floating-ui/dom": "1.7.4",
+    "@floating-ui/dom": "1.7.5",
     "chart.js": "4.5.1",
     "date-fns": "4.1.0",
     "highlight.js": "11.11.1",
