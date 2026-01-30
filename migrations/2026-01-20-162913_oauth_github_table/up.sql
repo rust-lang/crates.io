@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS oauth_github (
 );
 -- safety-assured:end
 
-comment on column oauth_github.account_id is 'Corresponds to users.gh_id';
-comment on column oauth_github.encrypted_token is 'Corresponds to users.gh_encrypted_token';
-comment on column oauth_github.login is 'Corresponds to users.gh_login';
-comment on column oauth_github.avatar is 'Corresponds to users.gh_avatar';
+comment on table oauth_github is 'GitHub-specific account information associated with a crates.io account';
+comment on column oauth_github.account_id is 'GitHub ID returned from the oAuth response';
+comment on column oauth_github.user_id is 'Crates.io user ID foreign key';
+comment on column oauth_github.encrypted_token is 'Encrypted GitHub access token';
+comment on column oauth_github.login is 'GitHub username';
+comment on column oauth_github.avatar is 'GitHub avatar URL';
