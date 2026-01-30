@@ -42,7 +42,7 @@ import dateFormat from 'crates-io/helpers/date-format';
     <ul class='list'>
       {{#each @controller.sortedVersions as |version|}}
         <li>
-          <Row @version={{version}} class='row' data-test-version={{version.num}} />
+          <Row @version={{version}} @isOwner={{@controller.isOwner}} class='row' data-test-version={{version.num}} />
         </li>
       {{/each}}
     </ul>
