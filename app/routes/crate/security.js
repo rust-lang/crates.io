@@ -1,13 +1,38 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
 
+import { loadCvssModule, parseCvss } from 'crates-io/utils/cvss';
 import { versionRanges } from 'crates-io/utils/version-ranges';
 
-function extractCvss(advisory) {
+async function extractCvssWithScore(advisory) {
   // Prefer V4 over V3
   let cvssEntry =
     advisory.severity?.find(s => s.type === 'CVSS_V4') ?? advisory.severity?.find(s => s.type === 'CVSS_V3');
-  return cvssEntry?.score ?? null;
+
+  if (!cvssEntry?.score) {
+    return null;
+  }
+
+  // Parse the vector using WASM module to get calculated score and severity
+  try {
+    let parsed = await parseCvss(cvssEntry.score);
+    return {
+      vector: cvssEntry.score,
+      calculatedScore: parsed.score,
+      severity: parsed.severity,
+      version: parsed.version,
+      valid: parsed.valid,
+    };
+  } catch {
+    // Fallback to just returning the vector string
+    return {
+      vector: cvssEntry.score,
+      calculatedScore: null,
+      severity: null,
+      version: null,
+      valid: false,
+    };
+  }
 }
 
 async function fetchAdvisories(crateId) {
@@ -17,17 +42,22 @@ async function fetchAdvisories(crateId) {
     return [];
   } else if (response.ok) {
     let advisories = await response.json();
-    return advisories
-      .filter(
-        advisory =>
-          !advisory.withdrawn &&
-          !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
-      )
-      .map(advisory => ({
+
+    // Filter advisories
+    let filtered = advisories.filter(
+      advisory =>
+        !advisory.withdrawn &&
+        !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
+    );
+
+    // Process CVSS scores in parallel
+    return Promise.all(
+      filtered.map(async advisory => ({
         ...advisory,
         versionRanges: versionRanges(advisory),
-        cvss: extractCvss(advisory),
-      }));
+        cvss: await extractCvssWithScore(advisory),
+      })),
+    );
   } else {
     throw new Error(`HTTP error! status: ${response}`);
   }
@@ -44,6 +74,7 @@ export default class SecurityRoute extends Route {
         fetchAdvisories(crate.id),
         import('micromark'),
         import('micromark-extension-gfm'),
+        loadCvssModule(), // Pre-load WASM module
       ]);
 
       let convertMarkdown = markdown => {

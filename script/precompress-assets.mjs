@@ -5,9 +5,10 @@ import { constants, createBrotliCompress, createGzip } from 'node:zlib';
 
 import { globby } from 'globby';
 
-let paths = await globby(['**/*.css', '**/*.html', '**/*.js', '**/*.map', '**/*.svg', '**/*.txt', '**/*.xml'], {
-  cwd: 'dist',
-});
+let paths = await globby(
+  ['**/*.css', '**/*.html', '**/*.js', '**/*.map', '**/*.svg', '**/*.txt', '**/*.wasm', '**/*.xml'],
+  { cwd: 'dist' },
+);
 
 for (let path of paths) {
   let fullPath = `dist/${path}`;

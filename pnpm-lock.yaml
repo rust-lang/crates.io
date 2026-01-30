@@ -30,6 +30,9 @@ importers:
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
+      crates_io_cvss_wasm:
+        specifier: workspace:*
+        version: link:packages/crates-io-cvss-wasm
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -350,6 +353,8 @@ importers:
       vitest:
         specifier: 4.0.18
         version: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.7(@types/node@24.10.9)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2)
+
+  packages/crates-io-cvss-wasm: {}
 
   packages/crates-io-msw:
     dependencies:
@@ -2363,8 +2368,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/wasm-node@4.57.0':
-    resolution: {integrity: sha512-EmuVEJWCxlkA/HIe9IJUSSXUXj3mw3w/4NDHhdu2KLCfBUOsjHMOWWrVzTGySmdaua0E120LSQ5ojDGfi+tA/Q==}
+  '@rollup/wasm-node@4.57.1':
+    resolution: {integrity: sha512-b0rcJH8ykEanfgTeDtlPubhphIUOx0oaAek+3hizTaFkoC1FBSTsY0GixwB4D5HZ5r3Gt2yI9c8M13OcW/kW5A==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -12485,7 +12490,7 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.3
 
-  '@rollup/wasm-node@4.57.0':
+  '@rollup/wasm-node@4.57.1':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -21168,7 +21173,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.57.0'
+      rollup: '@rollup/wasm-node@4.57.1'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.9
