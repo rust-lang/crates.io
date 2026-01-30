@@ -165,11 +165,11 @@ created_at = "public"
 total_downloads = "public"
 
 [oauth_github.columns]
-user_id = "public"
-account_id = "public"
+user_id = "private"
+account_id = "private"
 encrypted_token = "private"
-login = "public"
-avatar = "public"
+login = "private"
+avatar = "private"
 [oauth_github.column_defaults]
 encrypted_token = "''"
 
