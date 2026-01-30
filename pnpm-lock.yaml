@@ -272,8 +272,8 @@ importers:
         specifier: 62.0.0
         version: 62.0.0(eslint@9.39.2(jiti@2.6.1))
       globals:
-        specifier: 17.1.0
-        version: 17.1.0
+        specifier: 17.2.0
+        version: 17.2.0
       globby:
         specifier: 16.1.0
         version: 16.1.0
@@ -470,8 +470,8 @@ importers:
         specifier: 3.14.0
         version: 3.14.0(eslint@9.39.2(jiti@2.6.1))(svelte@5.48.3)
       globals:
-        specifier: 17.1.0
-        version: 17.1.0
+        specifier: 17.2.0
+        version: 17.2.0
       msw:
         specifier: 2.12.7
         version: 2.12.7(@types/node@24.10.9)(typescript@5.9.3)
@@ -2363,8 +2363,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/wasm-node@4.57.0':
-    resolution: {integrity: sha512-EmuVEJWCxlkA/HIe9IJUSSXUXj3mw3w/4NDHhdu2KLCfBUOsjHMOWWrVzTGySmdaua0E120LSQ5ojDGfi+tA/Q==}
+  '@rollup/wasm-node@4.57.1':
+    resolution: {integrity: sha512-b0rcJH8ykEanfgTeDtlPubhphIUOx0oaAek+3hizTaFkoC1FBSTsY0GixwB4D5HZ5r3Gt2yI9c8M13OcW/kW5A==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -5945,8 +5945,8 @@ packages:
     resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
     engines: {node: '>=18'}
 
-  globals@17.1.0:
-    resolution: {integrity: sha512-8HoIcWI5fCvG5NADj4bDav+er9B9JMj2vyL2pI8D0eismKyUvPLTSs+Ln3wqhwcp306i73iyVnEKx3F6T47TGw==}
+  globals@17.2.0:
+    resolution: {integrity: sha512-tovnCz/fEq+Ripoq+p/gN1u7l6A7wwkoBT9pRCzTHzsD/LvADIzXZdjmRymh5Ztf0DYC3Rwg5cZRYjxzBmzbWg==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -12522,7 +12522,7 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.3
 
-  '@rollup/wasm-node@4.57.0':
+  '@rollup/wasm-node@4.57.1':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -17392,7 +17392,7 @@ snapshots:
 
   globals@16.5.0: {}
 
-  globals@17.1.0: {}
+  globals@17.2.0: {}
 
   globalthis@1.0.4:
     dependencies:
@@ -21256,7 +21256,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.57.0'
+      rollup: '@rollup/wasm-node@4.57.1'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.9
