@@ -15,9 +15,15 @@ CREATE TABLE IF NOT EXISTS oauth_github (
 );
 -- safety-assured:end
 
+-- safety-assured:start
+-- This table doesn't exist yet, so creating this index concurrently isn't necessary.
+CREATE INDEX IF NOT EXISTS index_oauth_github_user_id ON oauth_github (user_id);
+-- safety-assured:end
+
 comment on table oauth_github is 'GitHub-specific account information associated with a crates.io account';
 comment on column oauth_github.account_id is 'GitHub ID returned from the oAuth response';
 comment on column oauth_github.user_id is 'Crates.io user ID foreign key';
 comment on column oauth_github.encrypted_token is 'Encrypted GitHub access token';
 comment on column oauth_github.login is 'GitHub username';
 comment on column oauth_github.avatar is 'GitHub avatar URL';
+
