@@ -168,14 +168,19 @@ pub struct NewOauthGithub<'a> {
 impl NewOauthGithub<'_> {
     /// Inserts the associated GitHub account info into the database, or updates an existing record.
     ///
-    /// This is to be used for logging in when there is no currently logged-in user, as opposed to
-    /// adding another linked GitHub to a currently-logged-in user. The logic for adding another
-    /// GitHub account (when that ability gets added) will need to ensure that a particular
-    /// `account_id` (ex: GitHub account with GitHub ID 1234) is only associated with one crates.io
-    /// account, so that we know what crates.io account to log in when we get an oAuth request from
-    /// GitHub ID 1234. In other words, we should NOT be updating the user_id on an existing
-    /// `account_id` row when starting from a currently-logged-in crates.io user because that would
-    /// mean that oAuth account has already been associated with a different crates.io account.
+    /// GitHub `account_id` is the primary key of the `oauth_github` table, and comes from GitHub.
+    ///
+    /// Each GitHub account ID can only be associated with one crates.io account, so that we know
+    /// who to log in when we get a GitHub oAuth response.
+    ///
+    /// If this function gets an `account_id` conflict, it does not and should not update the
+    /// `user_id` to that of the currently-logged-in crates.io user's ID because that would mean
+    /// that GitHub account has already been associated with a different crates.io account. In that
+    /// case, the currently-logged-in crates.io user should be logged out and the crates.io user
+    /// already associated with this GitHub user should be logged in.
+    ///
+    /// We may eventually implement the ability to associate multiple GitHub accounts with one
+    /// crates.io account.
     ///
     /// This function should be called if there is no current user and should update the encrypted
     /// token, login, or avatar if those have changed.
