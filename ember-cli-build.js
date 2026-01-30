@@ -47,7 +47,7 @@ module.exports = function (defaults) {
     },
 
     fingerprint: {
-      extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
+      extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2', 'wasm'],
     },
 
     sourcemaps: {
@@ -67,6 +67,9 @@ module.exports = function (defaults) {
     staticModifiers: true,
     packagerOptions: {
       webpackConfig: {
+        experiments: {
+          asyncWebAssembly: true,
+        },
         externals: ({ request, context }, callback) => {
           // Prevent `@mswjs/data` from bundling the `msw` package.
           //

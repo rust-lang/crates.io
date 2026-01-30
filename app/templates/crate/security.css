@@ -65,3 +65,44 @@
 .cvss strong {
   margin-right: var(--space-2xs);
 }
+
+
+.cvss a {
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+:global(.severity-none),
+:global(.severity-low),
+:global(.severity-medium),
+:global(.severity-high),
+:global(.severity-critical) {
+  font-weight: 600;
+  padding: var(--space-4xs) var(--space-2xs);
+  border-radius: var(--space-4xs);
+}
+
+:global(.severity-none) {
+  background-color: light-dark(#e0e0e0, #424242);
+  color: light-dark(#616161, #bdbdbd);
+}
+
+:global(.severity-low) {
+  background-color: light-dark(#c8e6c9, #1b5e20);
+  color: light-dark(#2e7d32, #a5d6a7);
+}
+
+:global(.severity-medium) {
+  background-color: light-dark(#fff3e0, #e65100);
+  color: light-dark(#e65100, #ffe0b2);
+}
+
+:global(.severity-high) {
+  background-color: light-dark(#ffccbc, #bf360c);
+  color: light-dark(#d84315, #ffab91);
+}
+
+:global(.severity-critical) {
+  background-color: light-dark(#ffcdd2, #b71c1c);
+  color: light-dark(#c62828, #ef9a9a);
+}

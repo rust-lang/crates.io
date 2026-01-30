@@ -25,6 +25,7 @@ export default [
     ignores: [
       '.git/**/*',
       'crates/',
+      'packages/crates-io-cvss-wasm/',
       'playwright-report/',
       'svelte/',
       'target/',

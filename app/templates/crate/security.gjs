@@ -12,12 +12,26 @@ function aliasUrl(alias) {
 }
 
 function cvssUrl(cvss) {
-  // Extract version from CVSS string (e.g., "CVSS:3.1/..." -> "3.1")
-  let match = cvss.match(/^CVSS:(\d+\.\d+)\//);
+  if (!cvss?.vector) return null;
+  let match = cvss.vector.match(/^CVSS:(\d+\.\d+)\//);
   if (match) {
-    return `https://www.first.org/cvss/calculator/${match[1]}#${cvss}`;
+    return `https://www.first.org/cvss/calculator/${match[1]}#${cvss.vector}`;
   }
   return null;
+}
+
+function severityClass(severity) {
+  return `severity-${severity ?? 'none'}`;
+}
+
+function formatScoreDisplay(cvss) {
+  let score = cvss?.calculatedScore;
+  let severity = cvss?.severity;
+  if (score === null || score === undefined || Number.isNaN(score)) {
+    return 'N/A';
+  }
+  let capitalizedSeverity = severity ? severity.charAt(0).toUpperCase() + severity.slice(1) : '';
+  return `${score.toFixed(1)} (${capitalizedSeverity})`;
 }
 
 <template>
@@ -50,7 +64,13 @@ function cvssUrl(cvss) {
           {{#if advisory.cvss}}
             <div class='cvss' data-test-cvss>
               <strong>CVSS:</strong>
-              <a href={{cvssUrl advisory.cvss}}>{{advisory.cvss}}</a>
+              {{#if advisory.cvss.valid}}
+                <span class={{severityClass advisory.cvss.severity}} data-test-cvss-score>{{~formatScoreDisplay
+                    advisory.cvss
+                  ~}}</span>
+                —
+              {{/if}}
+              <a href={{cvssUrl advisory.cvss}}>{{advisory.cvss.vector}}</a>
             </div>
           {{/if}}
           {{htmlSafe (@controller.convertMarkdown advisory.details)}}

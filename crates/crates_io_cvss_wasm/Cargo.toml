@@ -1,0 +1,21 @@
+[package]
+name = "crates_io_cvss_wasm"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "WASM module for CVSS score calculation"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+cvss = "2.2.0"
+wasm-bindgen = "0.2.100"
+serde = { version = "1.0.228", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
+console_error_panic_hook = "0.1.7"

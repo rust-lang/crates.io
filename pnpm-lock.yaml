@@ -30,6 +30,9 @@ importers:
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
+      crates_io_cvss_wasm:
+        specifier: workspace:*
+        version: link:packages/crates-io-cvss-wasm
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -350,6 +353,8 @@ importers:
       vitest:
         specifier: 4.0.18
         version: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.7(@types/node@24.10.9)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2)
+
+  packages/crates-io-cvss-wasm: {}
 
   packages/crates-io-msw:
     dependencies:

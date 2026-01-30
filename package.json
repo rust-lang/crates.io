@@ -17,7 +17,10 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "ember build --environment=production && node ./script/precompress-assets.mjs",
+    "build": "pnpm build:wasm && ember build --environment=production && node ./script/precompress-assets.mjs",
+    "build:wasm": "wasm-pack build crates/crates_io_cvss_wasm --target bundler --out-dir ../../packages/crates-io-cvss-wasm --out-name cvss",
+    "postbuild:wasm": "prettier --write packages/crates-io-cvss-wasm/*.js",
+    "prelint:deps": "pnpm build:wasm",
     "lint:deps": "ember dependency-lint",
     "lint:hbs": "ember-template-lint app",
     "lint:js": "eslint . --cache",
@@ -29,7 +32,9 @@
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
+    "pretest": "pnpm build:wasm",
     "test": "ember test",
+    "pree2e": "pnpm build:wasm",
     "e2e": "playwright test",
     "e2e:svelte": "TEST_APP=svelte playwright test"
   },
@@ -66,6 +71,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "1.7.4",
+    "crates_io_cvss_wasm": "workspace:*",
     "@juggle/resize-observer": "3.4.0",
     "@sentry/ember": "10.36.0",
     "chart.js": "4.5.1",
