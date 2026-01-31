@@ -1,9 +1,6 @@
 use crate::util::{RequestHelper, TestApp};
-use claims::assert_ok;
-use crates_io::models::NewUser;
-use crates_io::schema::users;
+use crates_io::models::{NewUser, NewOauthGithub};
 use crates_io::views::EncodablePublicUser;
-use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -31,32 +28,41 @@ async fn show_latest_user_case_insensitively() {
 
     // Please do not delete or modify the setup of this test in order to get it to pass.
     // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
-    // available for anyone to take. We need to support having multiple user accounts
-    // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
-    // should be used for uniquely identifying GitHub accounts whenever possible. For the
+    // available for anyone to take. We need to support having multiple user accounts with the same
+    // `oauth_github.login` in crates.io. `oauth_github.account_id` is stable across renames, so
+    // that field should be used for uniquely identifying GitHub accounts whenever possible. For the
     // crates.io/user/{username} pages, the best we can do is show the last crates.io account
     // created with that username.
 
-    let user1 = NewUser::builder()
+    let new_user1 = NewUser::builder()
         .gh_id(1)
         .gh_login("foobar")
         .name("I was first then deleted my github account")
         .gh_encrypted_token(&[])
         .build();
+    let user1 = new_user1.insert(&mut conn).await.unwrap();
+    let linked_account1 = NewOauthGithub::builder()
+        .user_id(user1.id)
+        .account_id(1)
+        .login("foobar")
+        .encrypted_token(&[])
+        .build();
+    linked_account1.insert_or_update(&mut conn).await.unwrap();
 
-    let user2 = NewUser::builder()
+    let new_user2 = NewUser::builder()
         .gh_id(2)
         .gh_login("FOOBAR")
         .name("I was second, I took the foobar username on github")
         .gh_encrypted_token(&[])
         .build();
-
-    assert_ok!(
-        diesel::insert_into(users::table)
-            .values(&vec![user1, user2])
-            .execute(&mut conn)
-            .await
-    );
+    let user2 = new_user2.insert(&mut conn).await.unwrap();
+    let linked_account2 = NewOauthGithub::builder()
+        .user_id(user2.id)
+        .account_id(2)
+        .login("FOOBAR")
+        .encrypted_token(&[])
+        .build();
+    linked_account2.insert_or_update(&mut conn).await.unwrap();
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(

@@ -7,6 +7,7 @@ use crates_io::config::{
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::NewEmail;
+use crates_io::models::NewOauthGithub;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
@@ -132,7 +133,17 @@ impl TestApp {
 
         let email = format!("{username}@example.com");
 
-        let user = crate::new_user(username).insert(&mut conn).await.unwrap();
+        let new_user = crate::new_user(username);
+        let user = new_user.insert(&mut conn).await.unwrap();
+
+        let linked_account = NewOauthGithub::builder()
+            .user_id(user.id)
+            .account_id(user.gh_id as i64)
+            .encrypted_token(new_user.gh_encrypted_token)
+            .login(&user.gh_login)
+            .maybe_avatar(user.gh_avatar.as_deref())
+            .build();
+        linked_account.insert_or_update(&mut conn).await.unwrap();
 
         let new_email = NewEmail::builder()
             .user_id(user.id)

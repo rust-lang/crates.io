@@ -34,9 +34,9 @@ impl User {
 
     pub async fn find_by_login(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
         User::query()
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
-            .filter(users::gh_id.ne(-1))
-            .order(users::gh_id.desc())
+            .inner_join(oauth_github::table)
+            .filter(lower(oauth_github::login).eq(lower(login)))
+            .order(oauth_github::account_id.desc())
             .first(conn)
             .await
     }
