@@ -31,5 +31,5 @@ utoipa = { version = "=5.4.0", features = ["chrono"] }
 claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
 googletest = "=0.14.2"
-insta = { version = "=1.46.1", features = ["filters", "json"] }
+insta = { version = "=1.46.2", features = ["filters", "json"] }
 tokio = { version = "=1.49.0", features = ["macros", "rt"] }
