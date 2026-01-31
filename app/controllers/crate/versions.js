@@ -14,6 +14,7 @@ function defaultVersionsContext() {
 export default class SearchController extends Controller {
   @service releaseTracks;
   @service sentry;
+  @service session;
   @service store;
 
   queryParams = ['per_page', 'sort'];
@@ -44,6 +45,11 @@ export default class SearchController extends Controller {
   get sortedVersions() {
     let { loadedVersionsById: versions } = this.crate;
     return this.data.map(id => versions.get(id));
+  }
+
+  get isOwner() {
+    let userId = this.session.currentUser?.id;
+    return this.crate.hasOwnerUser(userId);
   }
 
   loadMoreTask = dropTask(async () => {

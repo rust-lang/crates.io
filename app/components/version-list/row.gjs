@@ -2,7 +2,6 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import { LinkTo } from '@ember/routing';
-import { service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
@@ -26,14 +25,7 @@ import dateFormatIso from 'crates-io/helpers/date-format-iso';
 import prettyBytes from 'crates-io/helpers/pretty-bytes';
 
 export default class VersionRow extends Component {
-  @service session;
-
   @tracked focused = false;
-
-  get isOwner() {
-    let userId = this.session.currentUser?.id;
-    return this.args.version.crate.hasOwnerUser(userId);
-  }
 
   get features() {
     let features = this.args.version.featureList;
@@ -200,7 +192,7 @@ export default class VersionRow extends Component {
         {{/if}}
       </div>
 
-      <PrivilegedAction @userAuthorised={{this.isOwner}} class='actions'>
+      <PrivilegedAction @userAuthorised={{@isOwner}} class='actions'>
         <Dropdown class='dropdown' data-test-actions-menu as |dd|>
           <dd.Trigger @hideArrow={{true}} class='trigger' data-test-actions-toggle>
             {{svgJar 'ellipsis-circle' class=(scopedClass 'icon')}}
