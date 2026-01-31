@@ -158,7 +158,7 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       ember-cli-deprecation-workflow:
-        specifier: ^4.0.0
+        specifier: 4.0.0
         version: 4.0.0(@babel/core@7.28.6)
       ember-cli-head:
         specifier: 2.0.0
