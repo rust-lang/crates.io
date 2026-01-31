@@ -8,6 +8,18 @@ import * as Sentry from './sentry';
 
 import './app.css';
 
+import { importSync, isDevelopingApp, macroCondition } from '@embroider/macros';
+
+// Will only import your deprecation-workflow file while isDevelopingApp is true
+// and will be stripped from your build if isDevelopingApp is false
+//
+// If you want to always include deprecation-workflow,
+// use:
+//   import './deprecation-workflow.js';
+if (macroCondition(isDevelopingApp())) {
+  importSync('./deprecation-workflow.js');
+}
+
 // eslint-disable-next-line unicorn/prefer-add-event-listener
 window.onerror = undefined;
 Sentry.init();
