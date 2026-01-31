@@ -668,6 +668,25 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
 
+    /// GitHub-specific account information associated with a crates.io account
+    oauth_github (account_id) {
+        /// GitHub ID returned from the oAuth response
+        account_id -> Int8,
+        /// GitHub avatar URL
+        avatar -> Nullable<Varchar>,
+        /// Encrypted GitHub access token
+        encrypted_token -> Bytea,
+        /// GitHub username
+        login -> Varchar,
+        /// Crates.io user ID foreign key
+        user_id -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     /// List of all processed CDN log files, used to avoid processing the same file multiple times.
     processed_log_files (path) {
         /// Path of the log file inside the S3 bucket
@@ -1244,6 +1263,7 @@ diesel::joinable!(dependencies -> versions (version_id));
 diesel::joinable!(emails -> users (user_id));
 diesel::joinable!(follows -> crates (crate_id));
 diesel::joinable!(follows -> users (user_id));
+diesel::joinable!(oauth_github -> users (user_id));
 diesel::joinable!(publish_limit_buckets -> users (user_id));
 diesel::joinable!(publish_rate_overrides -> users (user_id));
 diesel::joinable!(readme_renderings -> versions (version_id));
@@ -1276,6 +1296,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     follows,
     keywords,
     metadata,
+    oauth_github,
     processed_log_files,
     publish_limit_buckets,
     publish_rate_overrides,

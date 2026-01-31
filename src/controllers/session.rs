@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewUser, User};
+use crate::models::{NewEmail, NewOauthGithub, NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
@@ -171,6 +171,20 @@ async fn create_or_update_user(
     conn.transaction(|conn| {
         async move {
             let user = new_user.insert_or_update(conn).await?;
+
+            // To assist in eventually someday allowing OAuth with more than GitHub, also
+            // write the GitHub info to the `oauth_github` table. Nothing currently reads
+            // from this table. Only log errors but don't fail login if this writing fails.
+            let new_oauth_github = NewOauthGithub::builder()
+                .user_id(user.id)
+                .account_id(user.gh_id as i64)
+                .encrypted_token(new_user.gh_encrypted_token)
+                .login(&user.gh_login)
+                .maybe_avatar(user.gh_avatar.as_deref())
+                .build();
+            if let Err(e) = new_oauth_github.insert_or_update(conn).await {
+                error!("Error inserting or updating oauth_github record: {e}");
+            }
 
             // To send the user an account verification email
             if let Some(user_email) = email {

@@ -1,5 +1,6 @@
 ---
 source: crates/crates_io_database_dump/src/lib.rs
+assertion_line: 323
 expression: content
 ---
 BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
