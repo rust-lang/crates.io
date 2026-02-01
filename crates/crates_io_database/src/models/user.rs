@@ -32,12 +32,15 @@ impl User {
         User::query().find(id).first(conn).await
     }
 
-    pub async fn find_by_login(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
+    pub async fn find_all_by_login(
+        conn: &mut AsyncPgConnection,
+        login: &str,
+    ) -> QueryResult<Vec<User>> {
         User::query()
             .inner_join(oauth_github::table)
             .filter(lower(oauth_github::login).eq(lower(login)))
             .order(oauth_github::account_id.desc())
-            .first(conn)
+            .load(conn)
             .await
     }
 

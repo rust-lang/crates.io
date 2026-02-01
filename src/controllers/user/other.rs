@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::models::{CrateOwner, OwnerKind, User};
 use crate::schema::{crate_downloads, crate_owners, crates};
-use crate::util::errors::AppResult;
+use crate::util::errors::{AppResult, not_found};
 use crate::views::EncodablePublicUser;
 use axum::Json;
 use axum::extract::Path;
@@ -29,7 +29,11 @@ pub async fn find_user(
 ) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    let user = User::find_by_login(&mut conn, &user_name).await?;
+    let mut users = User::find_all_by_login(&mut conn, &user_name)
+        .await?
+        .into_iter();
+
+    let user = users.next().ok_or_else(|| not_found())?;
 
     Ok(Json(GetResponse { user: user.into() }))
 }

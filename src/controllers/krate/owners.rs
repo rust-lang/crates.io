@@ -342,9 +342,10 @@ async fn invite_user_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    let user = User::find_by_login(conn, login)
-        .await
-        .optional()?
+    let mut users = User::find_all_by_login(conn, login).await?.into_iter();
+
+    let user = users
+        .next()
         .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
 
     // Users are invited and must accept before being added

@@ -1,5 +1,5 @@
 use crate::dialoguer;
-use anyhow::Context;
+use anyhow::{Context, anyhow, ensure};
 use chrono::{DateTime, Utc};
 use colored::Colorize;
 use crates_io::controllers::krate::delete::max_downloads;
@@ -60,9 +60,17 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .await
         .context("Failed to look up crate name from the database")?;
 
-    let deleted_by = User::find_by_login(&mut conn, &opts.deleted_by)
+    let mut deleted_by_candidates = User::find_all_by_login(&mut conn, &opts.deleted_by)
         .await
-        .context("Failed to look up `--deleted-by` user from the database")?;
+        .context("Failed to look up `--deleted-by` user from the database")?
+        .into_iter();
+    let deleted_by = deleted_by_candidates
+        .next()
+        .ok_or_else(|| anyhow!("`--deleted-by` user not found"))?;
+    ensure!(
+        deleted_by_candidates.next().is_none(),
+        "Expected only one `--deleted-by` user found but got more"
+    );
 
     println!("Deleting the following crates:");
     println!();
