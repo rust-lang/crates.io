@@ -6,9 +6,6 @@ use crate::views::EncodablePublicUser;
 use axum::Json;
 use axum::extract::Path;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use crates_io_diesel_helpers::lower;
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
@@ -32,14 +29,7 @@ pub async fn find_user(
 ) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    use crate::schema::users::dsl::{gh_login, id};
-
-    let name = lower(&user_name);
-    let user: User = User::query()
-        .filter(lower(gh_login).eq(name))
-        .order(id.desc())
-        .first(&mut conn)
-        .await?;
+    let user = User::find_by_login(&mut conn, &user_name).await?;
 
     Ok(Json(GetResponse { user: user.into() }))
 }
@@ -70,7 +60,7 @@ pub async fn get_user_stats(
 ) -> AppResult<Json<StatsResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    use diesel::dsl::sum;
+    use diesel::{dsl::sum, prelude::*};
     use diesel_async::RunQueryDsl;
 
     let total_downloads = CrateOwner::by_owner_kind(OwnerKind::User)
