@@ -56,15 +56,19 @@ pub struct Opts {
     #[arg(long = "no-sparse", action = ArgAction::SetFalse)]
     sparse: bool,
 
-    /// Create a single git commit with this message instead of per-crate commits
-    #[arg(long, value_name = "COMMIT_MESSAGE")]
-    single_commit: Option<String>,
+    /// Number of crates per bulk sync job (enables batch mode)
+    #[arg(long, requires = "commit_message")]
+    batch_size: Option<usize>,
+
+    /// Commit message for bulk sync jobs
+    #[arg(long, requires = "batch_size")]
+    commit_message: Option<String>,
 
     /// Sync all crates with `updated_at` before this date (format: YYYY-MM-DD)
     #[arg(
         long,
         value_name = "DATE",
-        requires = "single_commit",
+        requires = "batch_size",
         conflicts_with = "names"
     )]
     updated_before: Option<NaiveDate>,
@@ -118,14 +122,16 @@ pub async fn run(opts: Opts) -> Result<()> {
         return Ok(());
     }
 
-    // Show confirmation prompt when --single-commit is used
-    if opts.single_commit.is_some() {
+    // Show confirmation prompt when batch mode is used
+    if let Some(batch_size) = opts.batch_size {
         let mut prompt_parts = Vec::new();
 
         if opts.git {
+            let num_batches = num_crates.div_ceil(batch_size);
             prompt_parts.push(format!(
-                "This will sync {num_crates} crate{} to the git index in a single commit.",
-                if num_crates == 1 { "" } else { "s" }
+                "This will sync {num_crates} crate{} to the git index in {num_batches} batch{}.",
+                if num_crates == 1 { "" } else { "s" },
+                if num_batches == 1 { "" } else { "es" }
             ));
         }
 
@@ -148,12 +154,18 @@ pub async fn run(opts: Opts) -> Result<()> {
         Box::pin(async move {
             // Handle git index sync
             if opts.git {
-                if let Some(commit_message) = &opts.single_commit {
+                if let Some(batch_size) = opts.batch_size
+                    && let Some(commit_message) = opts.commit_message.as_ref()
+                {
                     let priority = opts.priority.unwrap_or(jobs::BulkSyncToGitIndex::PRIORITY);
-                    let job = jobs::BulkSyncToGitIndex::new(crate_names.clone(), commit_message);
 
-                    println!("Enqueueing BulkSyncToGitIndex job for {num_crates} crates");
-                    enqueue_jobs(conn, &[job], priority).await?;
+                    let jobs: Vec<_> = crate_names
+                        .chunks(batch_size)
+                        .map(|chunk| jobs::BulkSyncToGitIndex::new(chunk.to_vec(), commit_message))
+                        .collect();
+
+                    println!("Enqueueing {} BulkSyncToGitIndex jobs", jobs.len());
+                    enqueue_jobs(conn, &jobs, priority).await?;
                 } else {
                     let priority = opts.priority.unwrap_or(jobs::SyncToGitIndex::PRIORITY);
                     let jobs: Vec<_> = crate_names.iter().map(jobs::SyncToGitIndex::new).collect();
