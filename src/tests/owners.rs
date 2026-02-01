@@ -867,6 +867,51 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
     assert_eq!(json.crate_owner_invitations.len(), 1);
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn inviting_nonexistent_user_fails() {
+    use crates_io::models::NewUser;
+
+    let (app, _, owner, owner_token) = TestApp::init().with_token().await;
+    let mut conn = app.db_conn().await;
+    let owner = owner.as_model();
+
+    // An inactive user with gh_id -1 exists
+    let invited_gh_login = "user_bar";
+    NewUser::builder()
+        .gh_id(-1)
+        .gh_login(invited_gh_login)
+        .gh_encrypted_token(&[])
+        .build()
+        .insert(&mut conn)
+        .await
+        .unwrap();
+
+    let krate_name = "inactive_test";
+    CrateBuilder::new(krate_name, owner.id)
+        .expect_build(&mut conn)
+        .await;
+
+    // But trying to add the inactive user fails
+    let response = owner_token
+        .add_named_owner(krate_name, invited_gh_login)
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(
+        response.text(),
+        @r#"{"errors":[{"detail":"could not find user with login `user_bar`"}]}"#
+    );
+
+    // Adding a user that doesn't exist at all also fails
+    let response = owner_token
+        .add_named_owner(krate_name, "nonexistent_username")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(
+        response.text(),
+        @r#"{"errors":[{"detail":"could not find user with login `nonexistent_username`"}]}"#
+    );
+}
+
 fn extract_token_from_invite_email(emails: &[String]) -> String {
     let body = emails
         .iter()
