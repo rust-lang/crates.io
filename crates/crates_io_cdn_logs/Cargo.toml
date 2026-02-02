@@ -23,7 +23,7 @@ tracing = "=0.1.44"
 claims = "=0.8.0"
 clap = { version = "=4.5.56", features = ["derive"] }
 criterion = { version = "=0.8.1", features = ["async_tokio"] }
-insta = "=1.46.2"
+insta = "=1.46.3"
 tokio = { version = "=1.49.0", features = ["fs", "macros", "rt", "rt-multi-thread"] }
 tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }
 
