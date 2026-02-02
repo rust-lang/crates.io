@@ -20,7 +20,7 @@ anyhow = "=1.0.100"
 base64 = "=0.22.1"
 chrono = { version = "=0.4.43", features = ["serde"] }
 crates_io_env_vars = { path = "../crates_io_env_vars" }
-git2 = "=0.20.3"
+git2 = "=0.20.4"
 secrecy = "=0.10.3"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
