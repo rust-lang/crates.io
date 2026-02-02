@@ -19,7 +19,7 @@ env:
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.19.0
   # renovate: datasource=github-releases depName=cargo-insta lookupName=mitsuhiko/insta versioning=semver
-  CARGO_INSTA_VERSION: 1.46.2
+  CARGO_INSTA_VERSION: 1.46.3
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=crate depName=diesel-guard versioning=semver
