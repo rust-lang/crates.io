@@ -128,6 +128,40 @@ impl NewUser<'_> {
     }
 }
 
+/// A linked account of any type supported for login and associated with one `User`.
+pub enum LinkedAccount {
+    Github(OauthGithub),
+}
+
+impl LinkedAccount {
+    /// For all users specified, look up all linked accounts associated with the users and return
+    /// them collated with their associated user.
+    pub async fn find_all_by_users(
+        conn: &mut AsyncPgConnection,
+        users: Vec<User>,
+    ) -> QueryResult<Vec<(User, Vec<LinkedAccount>)>> {
+        let oauth_github_accounts = OauthGithub::belonging_to(&users)
+            .select(OauthGithub::as_select())
+            .load(conn)
+            .await?;
+
+        Ok(oauth_github_accounts
+            .grouped_by(&users)
+            .into_iter()
+            .zip(users)
+            .map(|(github_accounts, user)| {
+                (
+                    user,
+                    github_accounts
+                        .into_iter()
+                        .map(LinkedAccount::Github)
+                        .collect(),
+                )
+            })
+            .collect())
+    }
+}
+
 /// Represents an OAuth GitHub account record linked to a user record.
 /// Stored in the `oauth_github` table.
 #[derive(Associations, Identifiable, Selectable, Queryable, Debug, Clone)]
