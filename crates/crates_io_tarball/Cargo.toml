@@ -13,7 +13,7 @@ builder = ["dep:flate2", "dep:tar"]
 [dependencies]
 astral-tokio-tar = "=0.5.6"
 cargo-manifest = "=0.19.1"
-flate2 = { version = "=1.1.8", optional = true }
+flate2 = { version = "=1.1.9", optional = true }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 tar = { version = "=0.4.44", optional = true }
@@ -27,7 +27,7 @@ futures-util = "=0.3.31"
 anyhow = "=1.0.100"
 claims = "=0.8.0"
 clap = { version = "=4.5.56", features = ["derive", "unicode", "wrap_help"] }
-flate2 = { version = "=1.1.8" }
+flate2 = { version = "=1.1.9" }
 indicatif = { version = "=0.18.3", features = ["rayon"] }
 insta = "=1.46.3"
 rayon = "=1.11.0"
