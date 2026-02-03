@@ -133,6 +133,20 @@ pub enum LinkedAccount {
     Github(OauthGithub),
 }
 
+impl LinkedAccount {
+    pub fn avatar(&self) -> Option<&str> {
+        match self {
+            Self::Github(oauth_github) => oauth_github.avatar.as_deref(),
+        }
+    }
+
+    pub fn login(&self) -> &str {
+        match self {
+            Self::Github(oauth_github) => &oauth_github.login,
+        }
+    }
+}
+
 /// A user with their linked accounts, retrieved with more database queries. If you don't need
 /// linked accounts, use `User`.
 pub struct UserWithLinkedAccounts {

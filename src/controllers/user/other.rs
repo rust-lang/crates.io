@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::models::{CrateOwner, OwnerKind, User};
+use crate::models::{CrateOwner, OwnerKind, User, UserWithLinkedAccounts};
 use crate::schema::{crate_downloads, crate_owners, crates};
 use crate::util::errors::{AppResult, not_found};
 use crate::views::EncodablePublicUser;
@@ -29,7 +29,8 @@ pub async fn find_user(
 ) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    let mut users = User::find_all_by_login(&mut conn, &user_name)
+    let users = User::find_all_by_login(&mut conn, &user_name).await?;
+    let mut users = UserWithLinkedAccounts::find_all_by_users(&mut conn, users)
         .await?
         .into_iter();
 

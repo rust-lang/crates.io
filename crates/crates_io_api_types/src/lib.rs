@@ -8,8 +8,9 @@ pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
 use chrono::{DateTime, Utc};
 use crates_io_database::models::{
-    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
-    TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
+    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, LinkedAccount, Owner,
+    ReverseDependency, Team, TopVersions, TrustpubData, User, UserWithLinkedAccounts, Version,
+    VersionDownload, VersionOwnerAction,
 };
 use serde::{Deserialize, Serialize};
 
@@ -791,6 +792,39 @@ impl From<User> for EncodablePublicUser {
             id,
             avatar: gh_avatar,
             login: gh_login,
+            name,
+            url,
+        }
+    }
+}
+
+/// Converts a `UserWithLinkedAccounts` model into an `EncodablePublicUser` for JSON serialization.
+///
+/// Uses the first `LinkedAccount` and ignores any others for now for JSON API compatibility; when
+/// there may be multiple linked accounts, we'll need to rethink this. Uses placeholders if there
+/// aren't any linked accounts.
+impl From<UserWithLinkedAccounts> for EncodablePublicUser {
+    fn from(user: UserWithLinkedAccounts) -> Self {
+        let UserWithLinkedAccounts {
+            user: User { id, name, .. },
+            linked_accounts,
+            ..
+        } = user;
+
+        let first_linked_account = linked_accounts.first();
+        let avatar = first_linked_account
+            .and_then(LinkedAccount::avatar)
+            .map(ToOwned::to_owned);
+        let login = first_linked_account
+            .map(LinkedAccount::login)
+            .unwrap_or("ghost")
+            .to_owned();
+        let url = format!("https://github.com/{login}");
+
+        EncodablePublicUser {
+            id,
+            avatar,
+            login,
             name,
             url,
         }
