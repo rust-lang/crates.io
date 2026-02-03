@@ -62,7 +62,7 @@
     "prettier-plugin-svelte": "3.4.1",
     "storybook": "10.2.3",
     "svelte": "5.49.1",
-    "svelte-check": "4.3.5",
+    "svelte-check": "4.3.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.54.0",
     "vite": "7.3.1",
