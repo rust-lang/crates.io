@@ -133,13 +133,20 @@ pub enum LinkedAccount {
     Github(OauthGithub),
 }
 
-impl LinkedAccount {
+/// A user with their linked accounts, retrieved with more database queries. If you don't need
+/// linked accounts, use `User`.
+pub struct UserWithLinkedAccounts {
+    pub user: User,
+    pub linked_accounts: Vec<LinkedAccount>,
+}
+
+impl UserWithLinkedAccounts {
     /// For all users specified, look up all linked accounts associated with the users and return
     /// them collated with their associated user.
     pub async fn find_all_by_users(
         conn: &mut AsyncPgConnection,
         users: Vec<User>,
-    ) -> QueryResult<Vec<(User, Vec<LinkedAccount>)>> {
+    ) -> QueryResult<Vec<UserWithLinkedAccounts>> {
         let oauth_github_accounts = OauthGithub::belonging_to(&users)
             .select(OauthGithub::as_select())
             .load(conn)
@@ -149,14 +156,12 @@ impl LinkedAccount {
             .grouped_by(&users)
             .into_iter()
             .zip(users)
-            .map(|(github_accounts, user)| {
-                (
-                    user,
-                    github_accounts
-                        .into_iter()
-                        .map(LinkedAccount::Github)
-                        .collect(),
-                )
+            .map(|(github_accounts, user)| Self {
+                user,
+                linked_accounts: github_accounts
+                    .into_iter()
+                    .map(LinkedAccount::Github)
+                    .collect(),
             })
             .collect())
     }
