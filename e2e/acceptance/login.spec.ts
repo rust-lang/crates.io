@@ -76,4 +76,26 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await page.click('[data-test-login-button]');
     await expect(page.locator('[data-test-notification-message]')).toHaveText('Failed to log in: Forbidden');
   });
+
+  test('login canceled when popup is closed', async ({ page }) => {
+    await setupGitHubOAuthRoutes(page);
+
+    // Override the GitHub OAuth route to hang instead of redirecting
+    await page.context().route('https://github.com/login/oauth/authorize*', () => {
+      // Don't fulfill - let the request hang
+    });
+
+    await page.goto('/');
+
+    const popupPromise = page.waitForEvent('popup');
+
+    await page.click('[data-test-login-button]');
+
+    const popup = await popupPromise;
+    await popup.close();
+
+    await expect(page.locator('[data-test-notification-message]')).toHaveText(
+      'Login was canceled because the popup window was closed.',
+    );
+  });
 });
