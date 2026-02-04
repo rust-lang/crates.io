@@ -152,7 +152,7 @@
     "eslint-plugin-qunit": "8.2.5",
     "eslint-plugin-qunit-dom": "0.2.0",
     "eslint-plugin-unicorn": "62.0.0",
-    "globals": "17.2.0",
+    "globals": "17.3.0",
     "globby": "16.1.0",
     "loader.js": "4.7.0",
     "match-json": "1.3.7",
