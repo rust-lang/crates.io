@@ -24,7 +24,7 @@ export async function init() {
     await loadFixtures(db);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let user = db.user.findFirst((q: any) => q.where({ id: { equals: 1 } }));
+    let user = db.user.findFirst((q: any) => q.where({ id: 2 }));
     if (user) {
       await db.mswSession.create({ user });
       localStorage.setItem('isLoggedIn', '1');
