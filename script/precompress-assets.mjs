@@ -5,28 +5,31 @@ import { constants, createBrotliCompress, createGzip } from 'node:zlib';
 
 import { globby } from 'globby';
 
-let paths = await globby(['**/*.css', '**/*.html', '**/*.js', '**/*.map', '**/*.svg', '**/*.txt', '**/*.xml'], {
-  cwd: 'dist',
-});
+const DIRECTORIES = ['dist', 'svelte/build'];
+const PATTERNS = ['**/*.css', '**/*.html', '**/*.js', '**/*.map', '**/*.svg', '**/*.txt', '**/*.xml'];
 
-for (let path of paths) {
-  let fullPath = `dist/${path}`;
-  console.log(`Compressing ${fullPath}…`);
+for (let dir of DIRECTORIES) {
+  let paths = await globby(PATTERNS, { cwd: dir });
 
-  let gzipPath = fullPath + '.gz';
-  await pipeline(createReadStream(fullPath), createGzip({ level: 9 }), createWriteStream(gzipPath));
+  for (let path of paths) {
+    let fullPath = `${dir}/${path}`;
+    console.log(`Compressing ${fullPath}…`);
 
-  let brPath = fullPath + '.br';
-  await pipeline(
-    createReadStream(fullPath),
-    createBrotliCompress({
-      params: {
-        [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY,
-        [constants.BROTLI_PARAM_SIZE_HINT]: (await stat(fullPath)).size,
-      },
-    }),
-    createWriteStream(brPath),
-  );
+    let gzipPath = fullPath + '.gz';
+    await pipeline(createReadStream(fullPath), createGzip({ level: 9 }), createWriteStream(gzipPath));
+
+    let brPath = fullPath + '.br';
+    await pipeline(
+      createReadStream(fullPath),
+      createBrotliCompress({
+        params: {
+          [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY,
+          [constants.BROTLI_PARAM_SIZE_HINT]: (await stat(fullPath)).size,
+        },
+      }),
+      createWriteStream(brPath),
+    );
+  }
 }
 
 console.log('\nCompression completed');
