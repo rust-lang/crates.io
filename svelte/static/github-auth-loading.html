@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>crates.io - Redirecting to GitHub</title>
+</head>
+<body>
+  <p>Please wait while we redirect you to GitHub...</p>
+  <script>
+    fetch('/api/private/session/begin')
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => {
+        window.location.href = data.url;
+      })
+      .catch(() => {
+        document.body.textContent = 'Failed to start login. Please close this window and try again.';
+      });
+  </script>
+</body>
+</html>
