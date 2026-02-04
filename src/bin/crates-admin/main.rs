@@ -13,7 +13,6 @@ mod render_og_images;
 mod render_readmes;
 mod sync_index;
 mod test_email;
-mod transfer_crates;
 mod upload_index;
 mod verify_token;
 mod yank_version;
@@ -29,7 +28,6 @@ enum Command {
     RenderReadmes(render_readmes::Opts),
     SyncIndex(sync_index::Opts),
     TestEmail(test_email::Opts),
-    TransferCrates(transfer_crates::Opts),
     VerifyToken(verify_token::Opts),
     Migrate(migrate::Opts),
     UploadIndex(upload_index::Opts),
@@ -62,7 +60,6 @@ async fn main() -> anyhow::Result<()> {
         Command::RenderReadmes(opts) => render_readmes::run(opts).await,
         Command::SyncIndex(opts) => sync_index::run(opts).await,
         Command::TestEmail(opts) => test_email::run(opts).await,
-        Command::TransferCrates(opts) => transfer_crates::run(opts).await,
         Command::VerifyToken(opts) => verify_token::run(opts).await,
         Command::Migrate(opts) => migrate::run(opts).await,
         Command::UploadIndex(opts) => upload_index::run(opts).await,
