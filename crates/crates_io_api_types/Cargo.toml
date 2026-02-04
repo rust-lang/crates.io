@@ -14,7 +14,7 @@ chrono = { version = "=0.4.43", default-features = false, features = ["serde"] }
 crates_io_database = { path = "../crates_io_database" }
 indexmap = { version = "=2.13.0", features = ["serde"] }
 semver = { version = "=1.0.27", features = ["serde"] }
-sentry-core = "=0.46.1"
+sentry-core = "=0.46.2"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 url = "=2.5.8"

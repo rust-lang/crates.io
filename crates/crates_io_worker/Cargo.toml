@@ -12,7 +12,7 @@ anyhow = "=1.0.100"
 diesel = { version = "=2.3.6", features = ["postgres", "serde_json"] }
 diesel-async = { version = "=0.7.4", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 futures-util = "=0.3.31"
-sentry-core = { version = "=0.46.1", features = ["client"] }
+sentry-core = { version = "=0.46.2", features = ["client"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 thiserror = "=2.0.18"

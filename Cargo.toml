@@ -125,7 +125,7 @@ reqwest = { version = "=0.12.28", features = ["gzip", "json"] }
 rss = { version = "=2.0.12", default-features = false, features = ["atom"] }
 secrecy = "=0.10.3"
 semver = { version = "=1.0.27", features = ["serde"] }
-sentry = { version = "=0.46.1", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
+sentry = { version = "=0.46.2", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 sha2 = "=0.10.9"
@@ -164,6 +164,6 @@ insta = { version = "=1.46.3", features = ["glob", "json", "redactions"] }
 jsonwebtoken = { version = "=10.3.0", features = ["aws_lc_rs"] }
 quoted_printable = "=0.5.1"
 regex = "=1.12.3"
-sentry = { version = "=0.46.1", features = ["test"] }
+sentry = { version = "=0.46.2", features = ["test"] }
 tokio = "=1.49.0"
 zip = { version = "=7.3.0", default-features = false, features = ["deflate"] }
