@@ -8,5 +8,5 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.100"
+anyhow = "=1.0.101"
 crates_io_env_vars = { path = "../crates_io_env_vars" }

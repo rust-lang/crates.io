@@ -11,7 +11,7 @@ workspace = true
 test-helpers = ["dep:bon", "dep:mockall", "dep:serde_json"]
 
 [dependencies]
-anyhow = "=1.0.100"
+anyhow = "=1.0.101"
 async-trait = "=0.1.89"
 bon = { version = "=3.8.2", optional = true }
 chrono = { version = "=0.4.43", features = ["serde"] }
