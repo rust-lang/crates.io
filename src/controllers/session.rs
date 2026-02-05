@@ -58,10 +58,15 @@ pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<Beg
     Json(BeginResponse { url, state })
 }
 
-#[derive(Clone, Debug, Deserialize, FromRequestParts)]
+#[derive(Clone, Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
 pub struct AuthorizeQuery {
+    /// Temporary code received from the GitHub API.
+    #[param(value_type = String, example = "901dd10e07c7e9fa1cd5")]
     code: AuthorizationCode,
+    /// State parameter received from the GitHub API.
+    #[param(value_type = String, example = "fYcUY3FMdUUz00FC7vLT7A")]
     state: CsrfToken,
 }
 
@@ -82,6 +87,7 @@ pub struct AuthorizeQuery {
     get,
     path = "/api/private/session/authorize",
     tag = "session",
+    params(AuthorizeQuery),
     responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
 pub async fn authorize_session(

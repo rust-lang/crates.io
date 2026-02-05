@@ -1927,7 +1927,18 @@ export interface operations {
     };
     authorize_session: {
         parameters: {
-            query?: never;
+            query: {
+                /**
+                 * @description Temporary code received from the GitHub API.
+                 * @example 901dd10e07c7e9fa1cd5
+                 */
+                code: string;
+                /**
+                 * @description State parameter received from the GitHub API.
+                 * @example fYcUY3FMdUUz00FC7vLT7A
+                 */
+                state: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

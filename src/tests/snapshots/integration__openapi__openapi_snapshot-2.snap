@@ -1539,6 +1539,28 @@ expression: response.json()
       "get": {
         "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the GitHub API  **(Required)**\n- `state` – state parameter received from the GitHub API  **(Required)**",
         "operationId": "authorize_session",
+        "parameters": [
+          {
+            "description": "Temporary code received from the GitHub API.",
+            "example": "901dd10e07c7e9fa1cd5",
+            "in": "query",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "State parameter received from the GitHub API.",
+            "example": "fYcUY3FMdUUz00FC7vLT7A",
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
