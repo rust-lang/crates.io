@@ -1,5 +1,6 @@
 <script lang="ts">
   import { navigating, page } from '$app/state';
+  import { createClient } from '@crates-io/api-client';
 
   import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
@@ -11,10 +12,11 @@
   import { ProgressState, setProgressContext } from '$lib/progress.svelte';
   import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
   import { setTooltipContext } from '$lib/tooltip.svelte';
+  import { SessionState, setSession } from '$lib/utils/session.svelte';
 
   import '$lib/css/global.css';
 
-  let { children } = $props();
+  let { children, data } = $props();
   let propsId = $props.id();
 
   let isIndex = $derived(page.route.id === '/');
@@ -43,8 +45,9 @@
   let notifications = new NotificationsState();
   setNotifications(notifications);
 
-  // TODO: fetch current user
-  let currentUser = null;
+  // svelte-ignore state_referenced_locally
+  let sessionState = new SessionState(createClient({ fetch }), data.userPromise, notifications);
+  setSession(sessionState);
 </script>
 
 <svelte:head>
@@ -59,7 +62,7 @@
 <NotificationContainer position="top-right" />
 <TooltipContainer />
 
-<Header hero={isIndex} {currentUser} />
+<Header hero={isIndex} />
 
 <main class="main">
   <div class="inner-main width-limit">

@@ -7,6 +7,7 @@ import '../src/lib/css/global.css';
 import ColorSchemeDecorator from '../src/lib/storybook/ColorSchemeDecorator.svelte';
 import HeaderSearchDecorator from '../src/lib/storybook/HeaderSearchDecorator.svelte';
 import NotificationDecorator from '../src/lib/storybook/NotificationDecorator.svelte';
+import SessionDecorator from '../src/lib/storybook/SessionDecorator.svelte';
 import TooltipDecorator from '../src/lib/storybook/TooltipDecorator.svelte';
 
 const THEME_ITEMS = [
@@ -28,6 +29,7 @@ const preview: Preview = {
     },
     () => HeaderSearchDecorator,
     () => NotificationDecorator,
+    () => SessionDecorator,
     () => TooltipDecorator,
   ],
   globalTypes: {

@@ -3,6 +3,7 @@
 
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
+  import SessionDecorator from '$lib/storybook/SessionDecorator.svelte';
   import Header from './Header.svelte';
 
   const { Story } = defineMeta({
@@ -40,8 +41,16 @@
 
 <Story name="Default" />
 
-<Story name="Authenticated" args={{ currentUser: baseUser }} />
+<Story name="Authenticated" asChild>
+  <SessionDecorator user={baseUser}>
+    <Header />
+  </SessionDecorator>
+</Story>
 
 <Story name="Hero" args={{ hero: true }} />
 
-<Story name="Hero (Authenticated Admin)" args={{ hero: true, currentUser: adminUser }} />
+<Story name="Hero (Authenticated Admin)" asChild>
+  <SessionDecorator user={adminUser}>
+    <Header hero />
+  </SessionDecorator>
+</Story>

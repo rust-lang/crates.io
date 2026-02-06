@@ -1,38 +1,26 @@
 <script lang="ts">
-  import type { components } from '@crates-io/api-client';
-
   import { resolve } from '$app/paths';
 
   import logo from '$lib/assets/cargo.png';
   import LockIcon from '$lib/assets/lock.svg?component';
+  import { getSession } from '$lib/utils/session.svelte';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import * as Dropdown from './dropdown';
   import LoadingSpinner from './LoadingSpinner.svelte';
   import SearchForm from './SearchForm.svelte';
   import UserAvatar from './UserAvatar.svelte';
 
-  type AuthenticatedUser = components['schemas']['AuthenticatedUser'];
-
   interface Props {
     hero?: boolean;
-    currentUser?: AuthenticatedUser | null;
   }
 
-  let { hero = false, currentUser }: Props = $props();
+  let { hero = false }: Props = $props();
 
-  let isAdmin = $derived(currentUser?.is_admin ?? false);
+  let session = getSession();
 
-  // TODO: implement session state
-  let isLoggingIn = $state(false);
-  let isLoggingOut = $state(false);
-
-  function login() {
-    isLoggingIn = true;
-  }
-
-  function logout() {
-    isLoggingOut = true;
-  }
+  let currentUser = $derived(session.currentUser);
+  let isLoggingIn = $derived(session.state === 'logging-in');
+  let isLoggingOut = $derived(session.state === 'logging-out');
 
   // TODO: implement sudo actions
   const SUDO_SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
@@ -99,7 +87,7 @@
             <Dropdown.Item><a href={resolve('/dashboard')}>Dashboard</a></Dropdown.Item>
             <Dropdown.Item><a href={resolve('/settings')} data-test-settings>Account Settings</a></Dropdown.Item>
             <Dropdown.Item><a href={resolve('/me/pending-invites')}>Owner Invites</a></Dropdown.Item>
-            {#if isAdmin}
+            {#if currentUser?.is_admin}
               <Dropdown.Item class="sudo">
                 {#if isSudoEnabled}
                   <button
@@ -129,7 +117,7 @@
                 class="logout-menu-item button-reset"
                 disabled={isLoggingOut}
                 data-test-logout-button
-                onclick={logout}
+                onclick={() => session.logout()}
               >
                 {#if isLoggingOut}
                   <LoadingSpinner class="spinner" />
@@ -145,7 +133,7 @@
           class="login-button button-reset"
           disabled={isLoggingIn}
           data-test-login-button
-          onclick={login}
+          onclick={() => session.login()}
         >
           {#if isLoggingIn}
             <LoadingSpinner class="spinner" />
@@ -172,7 +160,12 @@
             <Dropdown.Item><a href={resolve('/settings')} data-test-me-link>Account Settings</a></Dropdown.Item>
             <Dropdown.Item><a href={resolve('/me/pending-invites')}>Owner Invites</a></Dropdown.Item>
             <Dropdown.Item style="border-top: 1px solid var(--gray-border)">
-              <button type="button" class="logout-menu-item button-reset" disabled={isLoggingOut} onclick={logout}>
+              <button
+                type="button"
+                class="logout-menu-item button-reset"
+                disabled={isLoggingOut}
+                onclick={() => session.logout()}
+              >
                 {#if isLoggingOut}
                   <LoadingSpinner class="spinner" />
                 {/if}
@@ -181,7 +174,12 @@
             </Dropdown.Item>
           {:else}
             <Dropdown.Item>
-              <button type="button" class="login-menu-item button-reset" disabled={isLoggingIn} onclick={login}>
+              <button
+                type="button"
+                class="login-menu-item button-reset"
+                disabled={isLoggingIn}
+                onclick={() => session.login()}
+              >
                 {#if isLoggingIn}
                   <LoadingSpinner class="spinner" />
                 {/if}

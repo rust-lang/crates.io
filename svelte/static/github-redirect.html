@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>crates.io OAuth Redirect</title>
+  <script>
+    var params = new URLSearchParams(location.search);
+    var code = params.get('code');
+    var state = params.get('state');
+
+    if (window.opener) {
+      window.opener.postMessage({ code: code, state: state }, window.location.origin);
+    }
+  </script>
+</head>
+</html>
