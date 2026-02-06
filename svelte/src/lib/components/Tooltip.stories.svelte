@@ -24,17 +24,18 @@
   });
 </script>
 
-<Story name="Text Only" asChild>
-  <div style="display: flex; justify-content: center; padding-top: 20px;">
+<!-- This is using a single Story with multiple examples to reduce the amount of snapshots generated for visual regression testing -->
+<Story name="Combined" asChild parameters={{ chromatic: { disableSnapshot: true } }}>
+  <h1>Text Only</h1>
+  <div style="display: flex; justify-content: center;">
     <button type="button">
       Hover me
       <Tooltip text="This is a simple text tooltip" />
     </button>
   </div>
-</Story>
 
-<Story name="Block Content" asChild>
-  <div style="display: flex; justify-content: center; padding-top: 50px">
+  <h1>Block Content</h1>
+  <div style="display: flex; justify-content: center;">
     <button type="button">
       Hover for details
       <Tooltip>
@@ -45,46 +46,41 @@
       </Tooltip>
     </button>
   </div>
-</Story>
 
-<Story name="Side: Top (Default)" asChild>
-  <div style="display: flex; justify-content: center; padding: 20px;">
+  <h1>Side: Top (Default)</h1>
+  <div style="display: flex; justify-content: center;">
     <button type="button">
       Top tooltip
       <Tooltip text="Positioned above the element" side="top" />
     </button>
   </div>
-</Story>
 
-<Story name="Side: Bottom" asChild>
-  <div style="display: flex; justify-content: center; padding: 20px;">
+  <h1>Side: Bottom</h1>
+  <div style="display: flex; justify-content: center;">
     <button type="button">
       Bottom tooltip
       <Tooltip text="Positioned below the element" side="bottom" />
     </button>
   </div>
-</Story>
 
-<Story name="Side: Left" asChild>
-  <div style="display: flex; justify-content: center; padding: 20px;">
+  <h1>Side: Left</h1>
+  <div style="display: flex; justify-content: center;">
     <button type="button">
       Left tooltip
       <Tooltip text="Positioned to the left" side="left" />
     </button>
   </div>
-</Story>
 
-<Story name="Side: Right" asChild>
-  <div style="display: flex; justify-content: center; padding: 20px;">
+  <h1>Side: Right</h1>
+  <div style="display: flex; justify-content: center;">
     <button type="button">
       Right tooltip
       <Tooltip text="Positioned to the right" side="right" />
     </button>
   </div>
-</Story>
 
-<Story name="Multiple Tooltips" asChild>
-  <div style="display: flex; gap: 20px; justify-content: center; padding-top: 20px;">
+  <h1>Multiple Tooltips</h1>
+  <div style="display: flex; gap: 20px; justify-content: center;">
     <button type="button">
       First
       <Tooltip text="Tooltip for the first button" />
@@ -98,19 +94,17 @@
       <Tooltip text="Tooltip for the third button" />
     </button>
   </div>
-</Story>
 
-<Story name="On Link" asChild>
-  <div style="display: flex; justify-content: center; padding-top: 20px;">
+  <h1>On Link</h1>
+  <div style="display: flex; justify-content: center;">
     <a href="#example">
       Hover this link
       <Tooltip text="Links can have tooltips too" />
     </a>
   </div>
-</Story>
 
-<Story name="On Inline Element" asChild>
-  <div style="display: flex; justify-content: center; padding-top: 50px;">
+  <h1>On Inline Element</h1>
+  <div style="display: flex; justify-content: center;">
     <p>
       Some text with a
       <span style="text-decoration: underline; cursor: help;">
@@ -123,3 +117,13 @@
     </p>
   </div>
 </Story>
+
+<style>
+  h1 {
+    font-size: 0.875rem;
+    font-weight: normal;
+    opacity: 0.2;
+    margin: 1rem 0 0.25rem;
+    text-align: center;
+  }
+</style>

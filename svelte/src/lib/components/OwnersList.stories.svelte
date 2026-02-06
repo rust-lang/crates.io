@@ -6,7 +6,6 @@
   const { Story } = defineMeta({
     title: 'OwnersList',
     component: OwnersList,
-    tags: ['autodocs'],
   });
 
   const JANE_DOE = {
@@ -74,14 +73,32 @@
   };
 </script>
 
-<Story name="Single User" args={{ owners: [JANE_DOE] }} />
+<!-- This is using a single Story with multiple examples to reduce the amount of snapshots generated for visual regression testing -->
+<Story name="Combined" asChild>
+  <h1>Single User</h1>
+  <OwnersList owners={[JANE_DOE]} />
 
-<Story name="User Without Name" args={{ owners: [ANONYMOUS] }} />
+  <h1>User Without Name</h1>
+  <OwnersList owners={[ANONYMOUS]} />
 
-<Story name="Five Users (Detailed)" args={{ owners: [JANE_DOE, JOHN_SMITH, ANONYMOUS, USER_4, USER_5] }} />
+  <h1>Five Users (Detailed)</h1>
+  <OwnersList owners={[JANE_DOE, JOHN_SMITH, ANONYMOUS, USER_4, USER_5]} />
 
-<Story name="Six Users (Compact)" args={{ owners: [JANE_DOE, JOHN_SMITH, ANONYMOUS, USER_4, USER_5, USER_6] }} />
+  <h1>Six Users (Compact)</h1>
+  <OwnersList owners={[JANE_DOE, JOHN_SMITH, ANONYMOUS, USER_4, USER_5, USER_6]} />
 
-<Story name="Mixed Users and Teams" args={{ owners: [RUST_TEAM, ANOTHER_TEAM, JANE_DOE, JOHN_SMITH, ANONYMOUS] }} />
+  <h1>Mixed Users and Teams</h1>
+  <OwnersList owners={[RUST_TEAM, ANOTHER_TEAM, JANE_DOE, JOHN_SMITH, ANONYMOUS]} />
 
-<Story name="Teams Only" args={{ owners: [RUST_TEAM, ANOTHER_TEAM] }} />
+  <h1>Teams Only</h1>
+  <OwnersList owners={[RUST_TEAM, ANOTHER_TEAM]} />
+</Story>
+
+<style>
+  h1 {
+    font-size: 0.875rem;
+    font-weight: normal;
+    opacity: 0.2;
+    margin: 1rem 0 0.25rem;
+  }
+</style>

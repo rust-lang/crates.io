@@ -8,7 +8,6 @@
   const { Story } = defineMeta({
     title: 'CrateRow',
     component: CrateRow,
-    tags: ['autodocs'],
   });
 
   type Crate = components['schemas']['Crate'];
@@ -42,90 +41,89 @@
   };
 </script>
 
-<Story name="Default" args={{ crate: baseCrate }} />
+<!-- This is using a single Story with multiple examples to reduce the amount of snapshots generated for visual regression testing -->
+<Story name="Combined" asChild>
+  <h1>Default</h1>
+  <CrateRow crate={baseCrate} />
 
-<Story
-  name="No Description"
-  args={{
-    crate: {
+  <h1>No Description</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       description: null,
-    },
-  }}
-/>
+    }}
+  />
 
-<Story
-  name="Without Links"
-  args={{
-    crate: {
+  <h1>Without Links</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       id: 'tokio',
       name: 'tokio',
       homepage: null,
       documentation: null,
       repository: null,
-    },
-  }}
-/>
+    }}
+  />
 
-<Story
-  name="Yanked Version"
-  args={{
-    crate: {
+  <h1>Yanked Version</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       id: 'yanked-crate',
       name: 'yanked-crate',
       yanked: true,
-    },
-  }}
-/>
+    }}
+  />
 
-<Story
-  name="Long Description"
-  args={{
-    crate: {
+  <h1>Long Description</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       id: 'long-description',
       name: 'long-description',
       description:
         'This is a very long description that should be truncated because it exceeds the maximum length of 200 characters. It keeps going on and on with more text to demonstrate how the truncation works in the component when dealing with verbose package descriptions.',
-    },
-  }}
-/>
+    }}
+  />
 
-<Story
-  name="Long Crate Name"
-  args={{
-    crate: {
+  <h1>Long Crate Name</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       id: 'some-very-very-very-very-very-very-very-long-crate-name-that-might-overflow',
       name: 'some-very-very-very-very-very-very-very-long-crate-name-that-might-overflow',
-    },
-  }}
-/>
+    }}
+  />
 
-<Story
-  name="Low Downloads"
-  args={{
-    crate: {
+  <h1>Low Downloads</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       id: 'new-crate',
       name: 'new-crate',
       downloads: 42,
       recent_downloads: 15,
       updated_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
-    },
-  }}
-/>
+    }}
+  />
 
-<Story
-  name="Old Update"
-  args={{
-    crate: {
+  <h1>Old Update</h1>
+  <CrateRow
+    crate={{
       ...baseCrate,
       id: 'old-crate',
       name: 'old-crate',
       updated_at: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year ago
-    },
-  }}
-/>
+    }}
+  />
+</Story>
+
+<style>
+  h1 {
+    font-size: 0.875rem;
+    font-weight: normal;
+    opacity: 0.2;
+    margin: 1rem 0 0.25rem;
+  }
+</style>
