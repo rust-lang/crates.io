@@ -57,8 +57,8 @@ astral-tokio-tar = "=0.5.6"
 async-compression = { version = "=0.4.37", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
 aws-credential-types = { version = "=1.2.11", features = ["hardcoded-credentials"] }
-aws-sdk-cloudfront = "=1.108.0"
-aws-sdk-sqs = "=1.92.0"
+aws-sdk-cloudfront = "=1.110.0"
+aws-sdk-sqs = "=1.93.0"
 axum = { version = "=0.8.8", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.12.5", features = ["erased-json", "middleware", "query", "typed-header"] }
 base64 = "=0.22.1"
