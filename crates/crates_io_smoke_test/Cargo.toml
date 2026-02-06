@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.100"
+anyhow = "=1.0.101"
 bytes = "=1.11.1"
 clap = { version = "=4.5.57", features = ["derive", "env", "unicode", "wrap_help"] }
 crates_io_index = { path = "../crates_io_index" }
