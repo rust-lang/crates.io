@@ -129,7 +129,7 @@
     "ember-keyboard": "9.0.4",
     "ember-link": "3.5.0",
     "ember-load-initializers": "3.0.1",
-    "ember-modifier": "4.2.2",
+    "ember-modifier": "4.3.0",
     "ember-page-title": "9.0.3",
     "ember-qunit": "9.0.4",
     "ember-resolver": "13.1.1",
@@ -178,7 +178,7 @@
     "ember-auto-import": "2.12.0",
     "ember-get-config": "2.1.1",
     "ember-inflector": "6.0.0",
-    "ember-modifier": "4.2.2",
+    "ember-modifier": "4.3.0",
     "ember-svg-jar>cheerio": "1.0.0-rc.12",
     "rollup": "npm:@rollup/wasm-node",
     "vite@7": "7.3.1"
