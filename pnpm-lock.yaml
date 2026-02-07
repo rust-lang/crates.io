@@ -9,7 +9,7 @@ overrides:
   ember-auto-import: 2.12.0
   ember-get-config: 2.1.1
   ember-inflector: 6.0.0
-  ember-modifier: 4.2.2
+  ember-modifier: 4.3.0
   ember-svg-jar>cheerio: 1.0.0-rc.12
   rollup: npm:@rollup/wasm-node
   vite@7: 7.3.1
@@ -206,8 +206,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(ember-source@6.10.1(@glimmer/component@2.0.0)(rsvp@4.8.5))
       ember-modifier:
-        specifier: 4.2.2
-        version: 4.2.2(@babel/core@7.29.0)
+        specifier: 4.3.0
+        version: 4.3.0(@babel/core@7.29.0)
       ember-page-title:
         specifier: 9.0.3
         version: 9.0.3
@@ -5038,8 +5038,8 @@ packages:
     resolution: {integrity: sha512-bnaKF1LLKMkBNeDoetvIJ4vhwRPKIIumWr6dbVuW6W6p4QV8ZiO+GdF8J7mxDNlog9CeL9Z/7wam4YS86G8BYA==}
     engines: {node: 6.* || 8.* || >= 10.*}
 
-  ember-modifier@4.2.2:
-    resolution: {integrity: sha512-pPYBAGyczX0hedGWQFQOEiL9s45KS9efKxJxUQkMLjQyh+1Uef1mcmAGsdw2KmvNupITkE/nXxmVO1kZ9tt3ag==}
+  ember-modifier@4.3.0:
+    resolution: {integrity: sha512-O0rirSLQbGg0VJ/NqoQ4uN1bh2iAekZC/Ykma+FkjCM2ofrO38u+d8n3+AK6uVWeMJmogGX2KL+Is5fofoInJg==}
 
   ember-page-title@9.0.3:
     resolution: {integrity: sha512-fedRHUsvq8tIZgOii8jTrfAyeq+la/9H5eAzhNNwEyzo7nDMmqK2SxsyBUGXprd8fOacsPabLlzlucMi/4mUpA==}
@@ -13418,7 +13418,7 @@ snapshots:
       ember-auto-import: 2.12.0(webpack@5.104.1)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
-      ember-modifier: 4.2.2(@babel/core@7.29.0)
+      ember-modifier: 4.3.0(@babel/core@7.29.0)
       ember-source: 6.10.1(@glimmer/component@2.0.0)(rsvp@4.8.5)
     transitivePeerDependencies:
       - '@babel/core'
@@ -15822,7 +15822,7 @@ snapshots:
   ember-click-outside@6.1.1(@babel/core@7.29.0):
     dependencies:
       '@embroider/addon-shim': 1.10.2
-      ember-modifier: 4.2.2(@babel/core@7.29.0)
+      ember-modifier: 4.3.0(@babel/core@7.29.0)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -15932,7 +15932,7 @@ snapshots:
   ember-keyboard@9.0.4(@babel/core@7.29.0)(@ember/test-helpers@5.4.1(@babel/core@7.29.0)):
     dependencies:
       '@embroider/addon-shim': 1.10.2
-      ember-modifier: 4.2.2(@babel/core@7.29.0)
+      ember-modifier: 4.3.0(@babel/core@7.29.0)
     optionalDependencies:
       '@ember/test-helpers': 5.4.1(@babel/core@7.29.0)
     transitivePeerDependencies:
@@ -15963,12 +15963,10 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-modifier@4.2.2(@babel/core@7.29.0):
+  ember-modifier@4.3.0(@babel/core@7.29.0):
     dependencies:
       '@embroider/addon-shim': 1.10.2
       decorator-transforms: 2.3.1(@babel/core@7.29.0)
-      ember-cli-normalize-entity-name: 1.0.0
-      ember-cli-string-utils: 1.1.0
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -18408,7 +18406,7 @@ snapshots:
     dependencies:
       '@embroider/addon-shim': 1.10.2
       decorator-transforms: 2.3.1(@babel/core@7.29.0)
-      ember-modifier: 4.2.2(@babel/core@7.29.0)
+      ember-modifier: 4.3.0(@babel/core@7.29.0)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
