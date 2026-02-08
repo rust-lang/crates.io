@@ -450,12 +450,18 @@ pub async fn create_or_update_github_team(
                 format!("Failed to decrypt GitHub token: {err}"),
             )
         })?;
-    let team = gh_client.team_by_name(org_name, team_name, &token).await
+    let team = gh_client
+        .team_by_name(org_name, team_name, &token)
+        .await
         .map_err(|_| {
             bad_request(format_args!(
                 "could not find the github team {org_name}/{team_name}. \
-                    Make sure that you have the right permissions in GitHub. \
-                    See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
+                 This can happen if crates.io is blocked by the organization's \"Third-party \
+                 application access policy\": \
+                 https://github.com/organizations/{org_name}/settings/oauth_application_policy. \
+                 If the policy shows \"Access restricted\", temporarily disable it, add the team, \
+                 then re-enable. \
+                 See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
             ))
         })?;
 
