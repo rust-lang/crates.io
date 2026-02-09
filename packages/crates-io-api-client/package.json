@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@crates-io/msw": "workspace:*",
-    "msw": "2.12.8",
+    "msw": "2.12.9",
     "openapi-typescript": "7.10.1",
     "vitest": "4.0.18"
   }
