@@ -6,7 +6,7 @@ use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sql_query;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
-use rand::Rng;
+use rand::RngExt;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::{debug, instrument};
