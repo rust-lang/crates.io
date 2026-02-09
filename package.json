@@ -74,7 +74,7 @@
     "macro-decorators": "0.1.2",
     "mermaid": "11.12.2",
     "pretty-bytes": "7.1.0",
-    "semver": "7.7.3"
+    "semver": "7.7.4"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",
