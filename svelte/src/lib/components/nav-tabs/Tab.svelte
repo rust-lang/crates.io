@@ -25,26 +25,18 @@
 <style>
   .link {
     display: block;
-    padding: calc(var(--nav-tabs-padding-v) + var(--nav-tabs-border-width)) var(--nav-tabs-padding-h)
-      var(--nav-tabs-padding-v);
     color: var(--main-color);
-    border-top-left-radius: var(--nav-tabs-radius);
-    border-top-right-radius: var(--nav-tabs-radius);
-    border-bottom: var(--nav-tabs-border-width) solid transparent;
-    margin-bottom: calc(0px - var(--nav-tabs-border-width));
     transition:
       color var(--transition-medium),
       border-bottom-color var(--transition-medium);
 
     &.active {
       color: var(--link-hover-color);
-      border-bottom-color: var(--link-hover-color);
       background: var(--main-bg-dark);
     }
 
     &:hover {
       color: var(--link-hover-color);
-      border-bottom-color: var(--link-hover-color);
       transition:
         color var(--transition-instant),
         border-bottom-color var(--transition-instant);
@@ -59,15 +51,26 @@
       z-index: 1;
     }
 
+    @media only screen and (min-width: 551px) {
+      padding: calc(var(--nav-tabs-padding-v) + var(--nav-tabs-border-width)) var(--nav-tabs-padding-h)
+        var(--nav-tabs-padding-v);
+      border-top-left-radius: var(--nav-tabs-radius);
+      border-top-right-radius: var(--nav-tabs-radius);
+      border-bottom: var(--nav-tabs-border-width) solid transparent;
+      margin-bottom: calc(0px - var(--nav-tabs-border-width));
+
+      &.active,
+      &:hover {
+        border-bottom-color: var(--link-hover-color);
+      }
+    }
+
     @media only screen and (max-width: 550px) {
       padding: var(--nav-tabs-padding-v) var(--nav-tabs-padding-h) var(--nav-tabs-padding-v)
         calc(var(--nav-tabs-padding-h) + var(--nav-tabs-border-width));
-
-      border-top-left-radius: 0;
+      border-top-right-radius: var(--nav-tabs-radius);
       border-bottom-right-radius: var(--nav-tabs-radius);
-      border-bottom: none;
       border-left: var(--nav-tabs-border-width) solid transparent;
-      margin-bottom: 0;
       margin-left: calc(0px - var(--nav-tabs-border-width));
 
       &.active,
