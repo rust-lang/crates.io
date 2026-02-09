@@ -26,12 +26,14 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    border-bottom: var(--nav-tabs-border-width) solid var(--gray-border);
+
+    @media only screen and (min-width: 551px) {
+      border-bottom: var(--nav-tabs-border-width) solid var(--gray-border);
+    }
 
     @media only screen and (max-width: 550px) {
       flex-direction: column;
       border-left: var(--nav-tabs-border-width) solid var(--gray-border);
-      border-bottom: none;
     }
   }
 </style>
