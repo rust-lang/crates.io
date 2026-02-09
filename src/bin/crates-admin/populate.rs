@@ -3,7 +3,7 @@ use crates_io::{db, schema::version_downloads};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use rand::Rng;
+use rand::RngExt;
 
 #[derive(clap::Parser, Debug)]
 #[command(
