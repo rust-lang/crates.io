@@ -4,8 +4,10 @@
   import { resolve } from '$app/paths';
 
   import TrashIcon from '$lib/assets/trash.svg?component';
+  import FollowButton from '$lib/components/FollowButton.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
   import Tooltip from '$lib/components/Tooltip.svelte';
+  import { getSession } from '$lib/utils/session.svelte';
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
@@ -33,6 +35,8 @@
 
   let { crate, version, versionNum: version_num, keywords = [] }: Props = $props();
   let crate_id = $derived(crate.id);
+
+  let session = getSession();
 
   // TODO: implement isOwner check using session service
   let isOwner = $derived(false);
@@ -95,12 +99,11 @@
     </ul>
   {/if}
 
-  <!-- TODO: Add FollowButton component when session service is implemented -->
-  <!-- {#if session.currentUser}
+  {#if session.currentUser}
     <div class="follow-button">
-      <FollowButton {crate} />
+      <FollowButton crateName={crate.name} />
     </div>
-  {/if} -->
+  {/if}
 </div>
 
 <NavTabs.Root aria-label="{crate.name} crate subpages" style="margin-bottom: var(--space-s)">
