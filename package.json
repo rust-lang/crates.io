@@ -149,7 +149,7 @@
     "eslint-plugin-ember-concurrency": "0.5.1",
     "eslint-plugin-prefer-let": "4.0.1",
     "eslint-plugin-prettier": "5.5.5",
-    "eslint-plugin-qunit": "8.2.5",
+    "eslint-plugin-qunit": "8.2.6",
     "eslint-plugin-qunit-dom": "0.2.0",
     "eslint-plugin-unicorn": "62.0.0",
     "globals": "17.3.0",
