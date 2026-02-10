@@ -9,7 +9,7 @@
 </script>
 
 <div class={['spinner', theme, className]} {...restProps}>
-  <span class="sr-only">Loading...</span>
+  <span class="sr-only">Loading…</span>
 </div>
 
 <style>
