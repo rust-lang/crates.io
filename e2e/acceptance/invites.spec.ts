@@ -2,15 +2,6 @@ import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => {
-  test('shows "page requires authentication" error when not logged in', async ({ page }) => {
-    await page.goto('/me/pending-invites');
-    await expect(page).toHaveURL('/me/pending-invites');
-    await expect(page.locator('[data-test-title]')).toHaveText('This page requires authentication');
-    await expect(page.locator('[data-test-login]')).toBeVisible();
-  });
-});
-
-test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => {
   async function prepare(msw) {
     let inviter = await msw.db.user.create({ name: 'janed' });
     let inviter2 = await msw.db.user.create({ name: 'wycats' });
@@ -39,6 +30,13 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
 
     return { nanomsg, user };
   }
+
+  test('shows "page requires authentication" error when not logged in', async ({ page }) => {
+    await page.goto('/me/pending-invites');
+    await expect(page).toHaveURL('/me/pending-invites');
+    await expect(page.locator('[data-test-title]')).toHaveText('This page requires authentication');
+    await expect(page.locator('[data-test-login]')).toBeVisible();
+  });
 
   test('list all pending crate owner invites', async ({ page, msw }) => {
     await prepare(msw);
