@@ -131,7 +131,7 @@ serde_json = "=1.0.149"
 sha2 = "=0.10.9"
 spdx = "=0.13.3"
 tar = "=0.4.44"
-tempfile = "=3.24.0"
+tempfile = "=3.25.0"
 thiserror = "=2.0.18"
 tikv-jemallocator = { version = "=0.6.1", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 tokio = { version = "=1.49.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
