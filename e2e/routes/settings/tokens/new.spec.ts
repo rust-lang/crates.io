@@ -364,9 +364,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-api-token="1"] [data-test-crate-scopes]')).toHaveCount(0);
     await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
   });
-});
 
-test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
   test('access is blocked if unauthenticated', async ({ page }) => {
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
