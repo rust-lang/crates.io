@@ -2,5 +2,5 @@
 #
 # This file specifies the versions of various tools to be used in this project.
 # These versions are also used by our Heroku buildpack setup.
-pnpm 10.29.1
+pnpm 10.29.2
 nodejs 24.13.0
