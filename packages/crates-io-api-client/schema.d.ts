@@ -1485,30 +1485,6 @@ export interface components {
              */
             inviter_id: number;
         };
-        NewGitHubConfig: {
-            /** @example regex */
-            crate: string;
-            /** @example null */
-            environment?: string | null;
-            /** @example regex */
-            repository_name: string;
-            /** @example rust-lang */
-            repository_owner: string;
-            /** @example ci.yml */
-            workflow_filename: string;
-        };
-        NewGitLabConfig: {
-            /** @example regex */
-            crate: string;
-            /** @example null */
-            environment?: string | null;
-            /** @example rust-lang */
-            namespace: string;
-            /** @example regex */
-            project: string;
-            /** @example .gitlab-ci.yml */
-            workflow_filepath: string;
-        };
         Owner: {
             /**
              * @description The avatar URL of the team or user.
@@ -1541,14 +1517,6 @@ export interface components {
              * @example https://github.com/ghost
              */
             url?: string | null;
-        };
-        PatchRequest: {
-            /** @description The crate settings to update. */
-            crate: components["schemas"]["PatchRequestCrate"];
-        };
-        PatchRequestCrate: {
-            /** @description Whether this crate can only be published via Trusted Publishing. */
-            trustpub_only?: boolean | null;
         };
         PublishWarnings: {
             /**
@@ -2406,7 +2374,13 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PatchRequest"];
+                "application/json": {
+                    /** @description The crate settings to update. */
+                    crate: {
+                        /** @description Whether this crate can only be published via Trusted Publishing. */
+                        trustpub_only?: boolean | null;
+                    };
+                };
             };
         };
         responses: {
@@ -3731,7 +3705,18 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    github_config: components["schemas"]["NewGitHubConfig"];
+                    github_config: {
+                        /** @example regex */
+                        crate: string;
+                        /** @example null */
+                        environment?: string | null;
+                        /** @example regex */
+                        repository_name: string;
+                        /** @example rust-lang */
+                        repository_owner: string;
+                        /** @example ci.yml */
+                        workflow_filename: string;
+                    };
                 };
             };
         };
@@ -3839,7 +3824,18 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    gitlab_config: components["schemas"]["NewGitLabConfig"];
+                    gitlab_config: {
+                        /** @example regex */
+                        crate: string;
+                        /** @example null */
+                        environment?: string | null;
+                        /** @example rust-lang */
+                        namespace: string;
+                        /** @example regex */
+                        project: string;
+                        /** @example .gitlab-ci.yml */
+                        workflow_filepath: string;
+                    };
                 };
             };
         };

@@ -794,74 +794,6 @@ expression: response.json()
         ],
         "type": "object"
       },
-      "NewGitHubConfig": {
-        "properties": {
-          "crate": {
-            "example": "regex",
-            "type": "string"
-          },
-          "environment": {
-            "example": null,
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "repository_name": {
-            "example": "regex",
-            "type": "string"
-          },
-          "repository_owner": {
-            "example": "rust-lang",
-            "type": "string"
-          },
-          "workflow_filename": {
-            "example": "ci.yml",
-            "type": "string"
-          }
-        },
-        "required": [
-          "crate",
-          "repository_owner",
-          "repository_name",
-          "workflow_filename"
-        ],
-        "type": "object"
-      },
-      "NewGitLabConfig": {
-        "properties": {
-          "crate": {
-            "example": "regex",
-            "type": "string"
-          },
-          "environment": {
-            "example": null,
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "namespace": {
-            "example": "rust-lang",
-            "type": "string"
-          },
-          "project": {
-            "example": "regex",
-            "type": "string"
-          },
-          "workflow_filepath": {
-            "example": ".gitlab-ci.yml",
-            "type": "string"
-          }
-        },
-        "required": [
-          "crate",
-          "namespace",
-          "project",
-          "workflow_filepath"
-        ],
-        "type": "object"
-      },
       "Owner": {
         "properties": {
           "avatar": {
@@ -910,30 +842,6 @@ expression: response.json()
           "login",
           "kind"
         ],
-        "type": "object"
-      },
-      "PatchRequest": {
-        "properties": {
-          "crate": {
-            "$ref": "#/components/schemas/PatchRequestCrate",
-            "description": "The crate settings to update."
-          }
-        },
-        "required": [
-          "crate"
-        ],
-        "type": "object"
-      },
-      "PatchRequestCrate": {
-        "properties": {
-          "trustpub_only": {
-            "description": "Whether this crate can only be published via Trusted Publishing.",
-            "type": [
-              "boolean",
-              "null"
-            ]
-          }
-        },
         "type": "object"
       },
       "PublishWarnings": {
@@ -2319,7 +2227,29 @@ expression: response.json()
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PatchRequest"
+                "properties": {
+                  "crate": {
+                    "description": "The crate settings to update.",
+                    "oneOf": [
+                      {
+                        "properties": {
+                          "trustpub_only": {
+                            "description": "Whether this crate can only be published via Trusted Publishing.",
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          }
+                        },
+                        "type": "object"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "crate"
+                ],
+                "type": "object"
               }
             }
           },
@@ -4568,7 +4498,38 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "github_config": {
-                    "$ref": "#/components/schemas/NewGitHubConfig"
+                    "properties": {
+                      "crate": {
+                        "example": "regex",
+                        "type": "string"
+                      },
+                      "environment": {
+                        "example": null,
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "repository_name": {
+                        "example": "regex",
+                        "type": "string"
+                      },
+                      "repository_owner": {
+                        "example": "rust-lang",
+                        "type": "string"
+                      },
+                      "workflow_filename": {
+                        "example": "ci.yml",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "crate",
+                      "repository_owner",
+                      "repository_name",
+                      "workflow_filename"
+                    ],
+                    "type": "object"
                   }
                 },
                 "required": [
@@ -4770,7 +4731,38 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "gitlab_config": {
-                    "$ref": "#/components/schemas/NewGitLabConfig"
+                    "properties": {
+                      "crate": {
+                        "example": "regex",
+                        "type": "string"
+                      },
+                      "environment": {
+                        "example": null,
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "namespace": {
+                        "example": "rust-lang",
+                        "type": "string"
+                      },
+                      "project": {
+                        "example": "regex",
+                        "type": "string"
+                      },
+                      "workflow_filepath": {
+                        "example": ".gitlab-ci.yml",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "crate",
+                      "namespace",
+                      "project",
+                      "workflow_filepath"
+                    ],
+                    "type": "object"
                   }
                 },
                 "required": [

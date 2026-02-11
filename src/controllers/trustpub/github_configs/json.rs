@@ -7,6 +7,7 @@ pub use crate::views::trustpub::{GitHubConfig, NewGitHubConfig};
 #[derive(Debug, Deserialize, FromRequest, utoipa::ToSchema)]
 #[from_request(via(Json))]
 pub struct CreateRequest {
+    #[schema(inline)]
     pub github_config: NewGitHubConfig,
 }
 

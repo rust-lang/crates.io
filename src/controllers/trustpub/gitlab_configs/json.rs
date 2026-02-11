@@ -7,6 +7,7 @@ pub use crate::views::trustpub::{GitLabConfig, NewGitLabConfig};
 #[derive(Debug, Deserialize, FromRequest, utoipa::ToSchema)]
 #[from_request(via(Json))]
 pub struct CreateRequest {
+    #[schema(inline)]
     pub gitlab_config: NewGitLabConfig,
 }
 

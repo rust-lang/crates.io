@@ -21,6 +21,7 @@ use tracing::{info, warn};
 pub struct PatchRequest {
     /// The crate settings to update.
     #[serde(rename = "crate")]
+    #[schema(inline)]
     pub krate: PatchRequestCrate,
 }
 
@@ -43,7 +44,7 @@ pub struct PatchResponse {
     patch,
     path = "/api/v1/crates/{name}",
     params(CratePath),
-    request_body = PatchRequest,
+    request_body = inline(PatchRequest),
     security(
         ("api_token" = []),
         ("cookie" = []),
