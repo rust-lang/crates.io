@@ -100,10 +100,12 @@ export class SessionState {
     this.#client = client;
     this.#notifications = notifications;
 
-    userPromise.then(user => {
-      this.state = user ? 'logged-in' : 'logged-out';
-      this.currentUser = user;
-    });
+    userPromise.then(user => this.setUser(user));
+  }
+
+  setUser(user: AuthenticatedUser | null): void {
+    this.state = user ? 'logged-in' : 'logged-out';
+    this.currentUser = user;
   }
 
   /**
