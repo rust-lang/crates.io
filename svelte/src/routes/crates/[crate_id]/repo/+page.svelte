@@ -1,6 +1,12 @@
 <script lang="ts">
-  let { data } = $props();
-</script>
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import { page } from '$app/state';
 
-<h1>Repo: {data.crate_id}</h1>
-<p>Stub route for /crates/:crate_id/repo (well-known redirect)</p>
+  import { getNotifications } from '$lib/notifications.svelte';
+
+  let notifications = getNotifications();
+
+  notifications.error('Crate does not supply a repository URL');
+  goto(resolve('/crates/[crate_id]', { crate_id: page.params.crate_id! }));
+</script>
