@@ -1,3 +1,9 @@
-export function load({ params }) {
-  return { crate_id: params.crate_id };
+import { redirect } from '@sveltejs/kit';
+
+export async function load({ parent }) {
+  let { crate } = await parent();
+
+  if (crate.documentation) {
+    redirect(302, crate.documentation);
+  }
 }
