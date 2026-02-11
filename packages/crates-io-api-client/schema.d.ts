@@ -4015,7 +4015,16 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    user: {
+                        email?: string | null;
+                        publish_notifications?: boolean | null;
+                    };
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
