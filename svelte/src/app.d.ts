@@ -10,6 +10,7 @@ declare global {
       message: string;
       details?: string;
       tryAgain?: boolean;
+      loginNeeded?: boolean;
     }
 
     // interface Locals {}
