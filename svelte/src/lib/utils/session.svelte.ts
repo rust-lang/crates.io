@@ -96,11 +96,9 @@ export class SessionState {
   #client: ApiClient;
   #notifications?: NotificationsContext;
 
-  constructor(client: ApiClient, userPromise: Promise<AuthenticatedUser | null>, notifications?: NotificationsContext) {
+  constructor(client: ApiClient, notifications?: NotificationsContext) {
     this.#client = client;
     this.#notifications = notifications;
-
-    userPromise.then(user => this.setUser(user));
   }
 
   setUser(user: AuthenticatedUser | null): void {
