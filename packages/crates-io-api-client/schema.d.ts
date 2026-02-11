@@ -1542,14 +1542,6 @@ export interface components {
              */
             url?: string | null;
         };
-        PatchRequest: {
-            /** @description The crate settings to update. */
-            crate: components["schemas"]["PatchRequestCrate"];
-        };
-        PatchRequestCrate: {
-            /** @description Whether this crate can only be published via Trusted Publishing. */
-            trustpub_only?: boolean | null;
-        };
         PublishWarnings: {
             /**
              * @deprecated
@@ -2406,7 +2398,13 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PatchRequest"];
+                "application/json": {
+                    /** @description The crate settings to update. */
+                    crate: {
+                        /** @description Whether this crate can only be published via Trusted Publishing. */
+                        trustpub_only?: boolean | null;
+                    };
+                };
             };
         };
         responses: {

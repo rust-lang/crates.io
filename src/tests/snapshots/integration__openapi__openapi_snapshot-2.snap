@@ -912,30 +912,6 @@ expression: response.json()
         ],
         "type": "object"
       },
-      "PatchRequest": {
-        "properties": {
-          "crate": {
-            "$ref": "#/components/schemas/PatchRequestCrate",
-            "description": "The crate settings to update."
-          }
-        },
-        "required": [
-          "crate"
-        ],
-        "type": "object"
-      },
-      "PatchRequestCrate": {
-        "properties": {
-          "trustpub_only": {
-            "description": "Whether this crate can only be published via Trusted Publishing.",
-            "type": [
-              "boolean",
-              "null"
-            ]
-          }
-        },
-        "type": "object"
-      },
       "PublishWarnings": {
         "properties": {
           "invalid_badges": {
@@ -2319,7 +2295,29 @@ expression: response.json()
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PatchRequest"
+                "properties": {
+                  "crate": {
+                    "description": "The crate settings to update.",
+                    "oneOf": [
+                      {
+                        "properties": {
+                          "trustpub_only": {
+                            "description": "Whether this crate can only be published via Trusted Publishing.",
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          }
+                        },
+                        "type": "object"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "crate"
+                ],
+                "type": "object"
               }
             }
           },
