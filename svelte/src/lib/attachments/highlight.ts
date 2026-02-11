@@ -43,7 +43,7 @@ hljs.registerAliases('rs', { languageName: 'rust' });
 /**
  * Attachment that applies syntax highlighting to code blocks using highlight.js.
  */
-export function highlightSyntax(html: string, selector?: string) {
+export function highlightSyntax(html?: string, selector?: string) {
   return (element: Element) => {
     // Ensure that the attachment is re-run when `html` changes
     void html;
