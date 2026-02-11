@@ -12,5 +12,6 @@ test.describe('Route | me', { tag: '@routes' }, () => {
   test('shows "page requires authentication" error when not logged in', async ({ page }) => {
     await page.goto('/me');
     await expect(page.locator('[data-test-title]')).toHaveText('This page requires authentication');
+    await expect(page.locator('[data-test-login]')).toBeVisible();
   });
 });
