@@ -82,7 +82,7 @@
     "@babel/eslint-parser": "7.28.6",
     "@babel/plugin-proposal-decorators": "7.29.0",
     "@crates-io/msw": "workspace:*",
-    "@ember/optional-features": "2.3.0",
+    "@ember/optional-features": "3.0.0",
     "@ember/render-modifiers": "3.0.0",
     "@ember/string": "4.0.1",
     "@ember/test-helpers": "5.4.1",
