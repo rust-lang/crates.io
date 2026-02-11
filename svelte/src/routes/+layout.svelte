@@ -45,9 +45,11 @@
   let notifications = new NotificationsState();
   setNotifications(notifications);
 
-  // svelte-ignore state_referenced_locally
-  let sessionState = new SessionState(createClient({ fetch }), data.userPromise, notifications);
+  let sessionState = new SessionState(createClient({ fetch }), notifications);
   setSession(sessionState);
+
+  // svelte-ignore state_referenced_locally
+  data.userPromise.then(user => sessionState.setUser(user));
 </script>
 
 <svelte:head>

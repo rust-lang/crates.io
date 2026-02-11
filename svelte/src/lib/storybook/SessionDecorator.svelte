@@ -8,10 +8,11 @@
 
   let { children, user }: { children: Snippet; user?: AuthenticatedUser } = $props();
 
-  // svelte-ignore state_referenced_locally
-  let userPromise = Promise.resolve(user ?? null);
-  let session = new SessionState(createClient({ fetch }), userPromise);
+  let session = new SessionState(createClient({ fetch }));
   setSession(session);
+
+  // svelte-ignore state_referenced_locally
+  session.setUser(user ?? null);
 </script>
 
 {@render children()}
