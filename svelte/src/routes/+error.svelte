@@ -2,6 +2,9 @@
   import { page } from '$app/state';
 
   import Ferris from '$lib/assets/cuddlyferris.svg?url';
+  import { getSession } from '$lib/utils/session.svelte';
+
+  let session = getSession();
 
   function goBack() {
     history.back();
@@ -10,8 +13,6 @@
   function reload() {
     location.reload();
   }
-
-  // TODO: implement "login with GitHub" functionality
 </script>
 
 <div class="wrapper" data-test-404-page>
@@ -24,7 +25,17 @@
       <p class="details" data-test-details>{page.error.details}</p>
     {/if}
 
-    {#if page.error?.tryAgain}
+    {#if page.error?.loginNeeded}
+      <button
+        type="button"
+        class="link button-reset text--link"
+        data-test-login
+        disabled={session.state === 'logging-in'}
+        onclick={() => session.login()}
+      >
+        Log in with GitHub
+      </button>
+    {:else if page.error?.tryAgain}
       <button type="button" class="link button-reset text--link" data-test-try-again onclick={reload}>Try Again</button>
     {:else}
       <button type="button" class="link button-reset text--link" data-test-go-back onclick={goBack}>Go Back</button>
@@ -52,10 +63,9 @@
   .link {
     font-weight: 500;
 
-    /* TODO */
-    /*&[disabled] {*/
-    /*	color: var(--grey600);*/
-    /*	cursor: wait;*/
-    /*}*/
+    &[disabled] {
+      color: var(--grey600);
+      cursor: wait;
+    }
   }
 </style>
