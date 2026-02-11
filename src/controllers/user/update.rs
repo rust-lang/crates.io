@@ -16,12 +16,13 @@ use secrecy::ExposeSecret;
 use serde::Deserialize;
 use tracing::warn;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct UserUpdate {
+    #[schema(inline)]
     user: User,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct User {
     email: Option<String>,
     publish_notifications: Option<bool>,
@@ -38,6 +39,7 @@ pub struct User {
     params(
         ("user" = i32, Path, description = "ID of the user"),
     ),
+    request_body = inline(UserUpdate),
     security(
         ("api_token" = []),
         ("cookie" = []),
