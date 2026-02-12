@@ -6,6 +6,7 @@ use crate::models::{NewEmail, NewOauthGithub, NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
+use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
@@ -104,9 +105,11 @@ pub async fn authorize_session(
     }
 
     // Fetch the access token from GitHub using the code we just got
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()?;
+    let client = ReqwestClient(
+        reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?,
+    );
 
     let token = app
         .github_oauth
