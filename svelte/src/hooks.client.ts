@@ -1,5 +1,3 @@
-import { asset } from '$app/paths';
-
 export async function init() {
   if (import.meta.env.VITE_MSW_ENABLED) {
     let { http, passthrough } = await import('msw');
@@ -12,6 +10,11 @@ export async function init() {
       http.get('https://:avatars.githubusercontent.com/u/:id', passthrough),
       http.get('https://code.cdn.mozilla.net/fonts/*', passthrough),
     );
+
+    // We need to dynamically import `$app/paths` here to avoid a race condition during app startup,
+    // resulting in a "ReferenceError: __SVELTEKIT_PAYLOAD__ is not defined" error.
+    let { asset } = await import('$app/paths');
+
     await worker.start({
       serviceWorker: { url: asset('/mockServiceWorker.js') },
       onUnhandledRequest(request, print) {
