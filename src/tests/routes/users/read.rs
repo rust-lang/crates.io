@@ -4,6 +4,7 @@ use crates_io::models::NewUser;
 use crates_io::schema::users;
 use crates_io::views::EncodablePublicUser;
 use diesel_async::RunQueryDsl;
+use insta::assert_snapshot;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -19,9 +20,14 @@ async fn show() {
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
 
+    // Lookup by username is case insensitive; returned data uses capitalization in database
     let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").await.good();
     assert_eq!(json.user.login, "Bar");
     assert_eq!(json.user.url, "https://github.com/Bar");
+
+    // Username not in database results in 404
+    let response = anon.get::<()>("/api/v1/users/not_a_user").await;
+    assert_snapshot!(response.status(), @"404 Not Found");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -63,4 +69,25 @@ async fn show_latest_user_case_insensitively() {
         "I was second, I took the foobar username on github",
         json.user.name.unwrap()
     );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn user_without_github_account() {
+    let (app, anon) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+
+    let new_user = NewUser::builder()
+        // The gh_id column will eventually be removed; there are currently records in production
+        // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
+        .gh_id(-1)
+        .gh_login("foobar")
+        .name("I deleted my github account")
+        .gh_encrypted_token(&[])
+        .build();
+    new_user.insert(&mut conn).await.unwrap();
+    // This user doesn't have a linked record in `oauth_github`
+
+    // The crates.io username still exists
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
+    assert_eq!("I deleted my github account", json.user.name.unwrap());
 }
