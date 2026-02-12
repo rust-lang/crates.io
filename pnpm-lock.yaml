@@ -338,8 +338,8 @@ importers:
   packages/crates-io-api-client:
     dependencies:
       openapi-fetch:
-        specifier: 0.15.0
-        version: 0.15.0
+        specifier: 0.16.0
+        version: 0.16.0
     devDependencies:
       '@crates-io/msw':
         specifier: workspace:*
@@ -7341,8 +7341,8 @@ packages:
     resolution: {integrity: sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==}
     engines: {node: '>=8'}
 
-  openapi-fetch@0.15.0:
-    resolution: {integrity: sha512-OjQUdi61WO4HYhr9+byCPMj0+bgste/LtSBEcV6FzDdONTs7x0fWn8/ndoYwzqCsKWIxEZwo4FN/TG1c1rI8IQ==}
+  openapi-fetch@0.16.0:
+    resolution: {integrity: sha512-EVLlvcUOugBYMXhuITAm2Ihv9EmQ7b9gJYn7hg2wvcf/GxbanhQ9olDz9I3DcS0Jr4Jv/53I2oVuIYQsFHa9mA==}
 
   openapi-typescript-helpers@0.0.15:
     resolution: {integrity: sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==}
@@ -18938,7 +18938,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openapi-fetch@0.15.0:
+  openapi-fetch@0.16.0:
     dependencies:
       openapi-typescript-helpers: 0.0.15
 
