@@ -1,5 +1,5 @@
 # renovate: datasource=github-tags depName=rust lookupName=rust-lang/rust
-ARG RUST_VERSION=1.93.0
+ARG RUST_VERSION=1.93.1
 
 FROM rust:$RUST_VERSION
 
