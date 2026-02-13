@@ -6,6 +6,7 @@ pub mod diesel;
 pub mod errors;
 pub mod gh_token_encryption;
 mod io_util;
+pub mod oauth;
 mod request_helpers;
 pub mod string_excl_null;
 pub mod tracing;
