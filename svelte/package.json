@@ -50,7 +50,7 @@
     "@types/semver": "7.7.1",
     "@vitest/browser-playwright": "4.0.18",
     "@vitest/coverage-v8": "4.0.18",
-    "chromatic": "15.0.0",
+    "chromatic": "15.1.0",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.0.1",
