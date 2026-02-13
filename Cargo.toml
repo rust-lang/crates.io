@@ -63,7 +63,7 @@ axum = { version = "=0.8.8", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.12.5", features = ["erased-json", "middleware", "query", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.10", features = ["serde"] }
-bon = "=3.8.2"
+bon = "=3.9.0"
 cargo-manifest = "=0.19.1"
 colored = "=3.1.1"
 crates_io_api_types = { path = "crates/crates_io_api_types" }

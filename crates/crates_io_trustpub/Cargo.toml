@@ -13,7 +13,7 @@ test-helpers = ["dep:bon", "dep:mockall", "dep:serde_json"]
 [dependencies]
 anyhow = "=1.0.101"
 async-trait = "=0.1.89"
-bon = { version = "=3.8.2", optional = true }
+bon = { version = "=3.9.0", optional = true }
 chrono = { version = "=0.4.43", features = ["serde"] }
 crates_io_version = { path = "../crates_io_version" }
 jsonwebtoken = { version = "=10.3.0", features = ["aws_lc_rs"] }
@@ -30,7 +30,7 @@ tokio = { version = "=1.49.0", features = ["sync"] }
 tracing = "=0.1.44"
 
 [dev-dependencies]
-bon = "=3.8.2"
+bon = "=3.9.0"
 claims = "=0.8.0"
 clap = { version = "=4.5.58", features = ["derive", "env", "unicode", "wrap_help"] }
 insta = { version = "=1.46.3", features = ["json", "redactions"] }
