@@ -26,7 +26,7 @@ importers:
         version: 3.4.0
       '@sentry/ember':
         specifier: 10.38.0
-        version: 10.38.0(ember-cli@6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.105.0)
+        version: 10.38.0(ember-cli@6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.105.0)
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
@@ -143,8 +143,8 @@ importers:
         specifier: 2.12.0
         version: 2.12.0(webpack@5.105.0)
       ember-cli:
-        specifier: 6.10.0
-        version: 6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+        specifier: 6.10.2
+        version: 6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       ember-cli-babel:
         specifier: 8.3.1
         version: 8.3.1(@babel/core@7.29.0)
@@ -153,7 +153,7 @@ importers:
         version: 1.0.0
       ember-cli-dependency-checker:
         specifier: 3.3.3
-        version: 3.3.3(ember-cli@6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
+        version: 3.3.3(ember-cli@6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -2749,9 +2749,6 @@ packages:
   '@types/fs-extra@5.1.0':
     resolution: {integrity: sha512-AInn5+UBFIK9FK5xc9yP5e3TQSPNNgjHByqYcj9g5elVBnDQcQL7PlO1CIRy2gWlbwK7UPYqi7vRvFA44dCmYQ==}
 
-  '@types/fs-extra@8.1.5':
-    resolution: {integrity: sha512-0dzKcwO+S8s2kuF5Z9oUWatQJj5Uq/iqphEtE3GQJVRRYm/tD1LglU2UnXi2A8jLq5umkGouOXOR9y0n613ZwQ==}
-
   '@types/fs-extra@9.0.13':
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
 
@@ -4981,8 +4978,8 @@ packages:
     resolution: {integrity: sha512-rk7GY+FmLn/2e22HsZs0Ycrz8HQ1W3Fv+2TFOuEFW9optnDXDgkntPBIl6gact/LHsfBM5RKbM3dHsIIeLgl0Q==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-cli@6.10.0:
-    resolution: {integrity: sha512-jts9ucisVeJ9aYoBnV+BH/z38DbyGvYEw+68+WpZZFuGelMknstlG5WhUvn/W6mwReCRGi/Hfh2XsEbdrMEsQQ==}
+  ember-cli@6.10.2:
+    resolution: {integrity: sha512-NsVKAphIjU2chk/rskIjnIqU5ZN9mbDsczDrn7Mu5RZYa60cULjt2XMWQAcMMak6XO8ve8KDf7UyYe6IyKoTXQ==}
     engines: {node: '>= 20.19.0'}
     hasBin: true
 
@@ -5685,17 +5682,9 @@ packages:
   fixturify-project@1.10.0:
     resolution: {integrity: sha512-L1k9uiBQuN0Yr8tA9Noy2VSQ0dfg0B8qMdvT7Wb5WQKc7f3dn3bzCbSrqlb+etLW+KDV4cBC7R1OvcMg3kcxmA==}
 
-  fixturify-project@2.1.1:
-    resolution: {integrity: sha512-sP0gGMTr4iQ8Kdq5Ez0CVJOZOGWqzP5dv/veOTdFNywioKjkNWCHBi1q65DMpcNGUGeoOUWehyji274Q2wRgxA==}
-    engines: {node: 10.* || >= 12.*}
-
   fixturify@1.3.0:
     resolution: {integrity: sha512-tL0svlOy56pIMMUQ4bU1xRe6NZbFSa/ABTWMxW2mH38lFGc9TrNAKWcMBQ7eIjo3wqSS8f2ICabFaatFyFmrVQ==}
     engines: {node: 6.* || 8.* || >= 10.*}
-
-  fixturify@2.1.1:
-    resolution: {integrity: sha512-SRgwIMXlxkb6AUgaVjIX+jCEqdhyXu9hah7mcK+lWynjKtX73Ux1TDv71B7XyaQ+LJxkYRHl5yCL8IycAvQRUw==}
-    engines: {node: 10.* || >= 12.*}
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -6517,10 +6506,6 @@ packages:
   isbinaryfile@5.0.7:
     resolution: {integrity: sha512-gnWD14Jh3FzS3CPhF0AxNOJ8CxqeblPTADzI38r0wt8ZyQl5edpy75myt08EG2oKvpyiqSqsx+Wkz9vtkbTqYQ==}
     engines: {node: '>= 18.0.0'}
-
-  isbinaryfile@6.0.0:
-    resolution: {integrity: sha512-2FN2B8MAqKv6d5TaKsLvMrwMcghxwHTpcKy0L5mhNbRqjNqo2++SpCqN6eG1lCC1GmTQgvrYJYXv2+Chvyevag==}
-    engines: {node: '>= 24.0.0'}
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -9086,10 +9071,6 @@ packages:
   type-detect@4.0.8:
     resolution: {integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==}
     engines: {node: '>=4'}
-
-  type-fest@0.11.0:
-    resolution: {integrity: sha512-OdjXJxnCN1AvyLSzeKIgXTXxV+99ZuXl3Hpo9XpJAv9MBcHrrJOQ5kV7ypXOuQie+AmWG25hLbiKdwYTifzcfQ==}
-    engines: {node: '>=8'}
 
   type-fest@2.19.0:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
@@ -12559,7 +12540,7 @@ snapshots:
 
   '@sentry/core@10.38.0': {}
 
-  '@sentry/ember@10.38.0(ember-cli@6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.105.0)':
+  '@sentry/ember@10.38.0(ember-cli@6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.105.0)':
     dependencies:
       '@babel/core': 7.29.0
       '@embroider/macros': 1.19.7(@babel/core@7.29.0)
@@ -12570,7 +12551,7 @@ snapshots:
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
     optionalDependencies:
-      ember-cli: 6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -12987,10 +12968,6 @@ snapshots:
       '@types/serve-static': 1.15.10
 
   '@types/fs-extra@5.1.0':
-    dependencies:
-      '@types/node': 24.10.12
-
-  '@types/fs-extra@8.1.5':
     dependencies:
       '@types/node': 24.10.12
 
@@ -15561,10 +15538,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.3(ember-cli@6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
+  ember-cli-dependency-checker@3.3.3(ember-cli@6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       find-yarn-workspace-root: 2.0.0
       is-git-url: 1.0.0
       resolve: 1.22.11
@@ -15735,7 +15712,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@6.10.0(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
+  ember-cli@6.10.2(@types/node@24.10.12)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
     dependencies:
       '@ember-tooling/blueprint-blueprint': 0.2.1
       '@ember-tooling/blueprint-model': 0.5.0
@@ -15779,7 +15756,6 @@ snapshots:
       filesize: 11.0.13
       find-up: 8.0.0
       find-yarn-workspace-root: 2.0.0
-      fixturify-project: 2.1.1
       fs-extra: 11.3.3
       fs-tree-diff: 2.0.1
       get-caller-file: 2.0.5
@@ -15794,7 +15770,6 @@ snapshots:
       inquirer: 13.2.2(@types/node@24.10.12)
       is-git-url: 1.0.0
       is-language-code: 5.1.3
-      isbinaryfile: 6.0.0
       lodash: 4.17.23
       markdown-it: 14.1.0
       markdown-it-terminal: 0.4.0(markdown-it@14.1.0)
@@ -17043,12 +17018,6 @@ snapshots:
       fixturify: 1.3.0
       tmp: 0.0.33
 
-  fixturify-project@2.1.1:
-    dependencies:
-      fixturify: 2.1.1
-      tmp: 0.0.33
-      type-fest: 0.11.0
-
   fixturify@1.3.0:
     dependencies:
       '@types/fs-extra': 5.1.0
@@ -17056,15 +17025,6 @@ snapshots:
       '@types/rimraf': 2.0.5
       fs-extra: 7.0.1
       matcher-collection: 2.0.1
-
-  fixturify@2.1.1:
-    dependencies:
-      '@types/fs-extra': 8.1.5
-      '@types/minimatch': 3.0.5
-      '@types/rimraf': 2.0.5
-      fs-extra: 8.1.0
-      matcher-collection: 2.0.1
-      walk-sync: 2.2.0
 
   flat-cache@4.0.1:
     dependencies:
@@ -17963,8 +17923,6 @@ snapshots:
   isarray@2.0.5: {}
 
   isbinaryfile@5.0.7: {}
-
-  isbinaryfile@6.0.0: {}
 
   isexe@2.0.0: {}
 
@@ -21024,8 +20982,6 @@ snapshots:
       prelude-ls: 1.2.1
 
   type-detect@4.0.8: {}
-
-  type-fest@0.11.0: {}
 
   type-fest@2.19.0: {}
 
