@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@msw/data": "1.1.2",
-    "msw": "2.12.9",
+    "msw": "2.12.10",
     "semver": "7.7.4",
     "valibot": "1.2.0"
   },

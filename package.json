@@ -159,7 +159,7 @@
     "memory-scroll": "2.0.1",
     "micromark": "4.0.2",
     "micromark-extension-gfm": "3.0.0",
-    "msw": "2.12.9",
+    "msw": "2.12.10",
     "playwright-msw": "3.0.1",
     "postcss": "8.5.6",
     "postcss-loader": "8.2.0",
