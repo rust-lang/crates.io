@@ -64,7 +64,7 @@ axum-extra = { version = "=0.12.5", features = ["erased-json", "middleware", "qu
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.10", features = ["serde"] }
 bon = "=3.9.0"
-cargo-manifest = "=0.19.1"
+cargo-manifest = "=0.20.0"
 colored = "=3.1.1"
 crates_io_api_types = { path = "crates/crates_io_api_types" }
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
