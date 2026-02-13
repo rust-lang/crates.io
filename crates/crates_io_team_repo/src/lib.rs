@@ -46,9 +46,7 @@ fn build_client() -> Client {
     let x2_cert = Certificate::from_pem(certs::ISRG_ROOT_X2).unwrap();
 
     Client::builder()
-        .tls_built_in_root_certs(false)
-        .add_root_certificate(x1_cert)
-        .add_root_certificate(x2_cert)
+        .tls_certs_only([x1_cert, x2_cert])
         .build()
         .unwrap()
 }
