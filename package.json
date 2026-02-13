@@ -101,7 +101,7 @@
     "@percy/playwright": "1.0.10",
     "@playwright/test": "1.58.2",
     "@sinonjs/fake-timers": "15.1.0",
-    "@types/node": "24.10.12",
+    "@types/node": "24.10.13",
     "@types/sinonjs__fake-timers": "15.0.1",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
