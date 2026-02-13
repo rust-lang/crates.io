@@ -112,7 +112,7 @@ lettre = { version = "=0.11.19", default-features = false, features = ["file-tra
 minijinja = { version = "=2.15.1", features = ["loader"] }
 mockall = "=0.14.0"
 moka = { version = "=0.12.13", default-features = false, features = ["future"] }
-native-tls = "=0.2.15"
+native-tls = "=0.2.16"
 oauth2 = { version = "=5.0.0", default-features = false }
 object_store = { version = "=0.13.1", features = ["aws"] }
 p256 = "=0.13.2"
