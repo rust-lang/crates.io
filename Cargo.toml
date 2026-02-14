@@ -106,7 +106,7 @@ hex = "=0.4.3"
 http = "=1.4.0"
 hyper = { version = "=1.8.1", features = ["client", "http1"] }
 indexmap = { version = "=2.13.0", features = ["serde"] }
-indicatif = "=0.18.3"
+indicatif = "=0.18.4"
 json-subscriber = "=0.2.7"
 lettre = { version = "=0.11.19", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = { version = "=2.15.1", features = ["loader"] }

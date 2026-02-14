@@ -28,7 +28,7 @@ anyhow = "=1.0.101"
 claims = "=0.8.0"
 clap = { version = "=4.5.58", features = ["derive", "unicode", "wrap_help"] }
 flate2 = { version = "=1.1.9" }
-indicatif = { version = "=0.18.3", features = ["rayon"] }
+indicatif = { version = "=0.18.4", features = ["rayon"] }
 insta = "=1.46.3"
 rayon = "=1.11.0"
 tar = { version = "=0.4.44" }
