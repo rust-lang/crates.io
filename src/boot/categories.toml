@@ -73,6 +73,12 @@ VTOL (Vertical Takeoff and Landing), Airships/Balloons, Rovers, Boats,
 Submersibles.
 """
 
+[ai]
+name = "AI"
+description = """
+Crates relating to AI.
+"""
+
 [algorithms]
 name = "Algorithms"
 description = """
