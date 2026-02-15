@@ -1,5 +1,5 @@
 use crate::util::TestApp;
-use crates_io::schema::{emails, users};
+use crates_io::schema::{emails, oauth_github, users};
 use crates_io::worker::jobs::SyncAdmins;
 use crates_io_team_repo::{MockTeamRepo, Permission, Person};
 use crates_io_worker::BackgroundJob;
@@ -57,7 +57,7 @@ fn mock_permission(people: Vec<Person>) -> Permission {
     Permission { people }
 }
 
-fn mock_person(name: impl Into<String>, github_id: i32) -> Person {
+fn mock_person(name: impl Into<String>, github_id: i64) -> Person {
     let name = name.into();
     let github = name.clone();
     Person {
@@ -69,7 +69,7 @@ fn mock_person(name: impl Into<String>, github_id: i32) -> Person {
 
 async fn create_user(
     name: &str,
-    gh_id: i32,
+    account_id: i64,
     is_admin: bool,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
@@ -77,12 +77,22 @@ async fn create_user(
         .values((
             users::name.eq(name),
             users::gh_login.eq(name),
-            users::gh_id.eq(gh_id),
+            users::gh_id.eq(account_id as i32),
             users::gh_encrypted_token.eq(&[]),
             users::is_admin.eq(is_admin),
         ))
         .returning(users::id)
         .get_result::<i32>(conn)
+        .await?;
+
+    diesel::insert_into(oauth_github::table)
+        .values((
+            oauth_github::user_id.eq(user_id),
+            oauth_github::login.eq(name),
+            oauth_github::account_id.eq(account_id),
+            oauth_github::encrypted_token.eq(&[]),
+        ))
+        .execute(conn)
         .await?;
 
     diesel::insert_into(emails::table)
@@ -97,11 +107,12 @@ async fn create_user(
     Ok(())
 }
 
-async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<(String, i32)>> {
+async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<(String, i64)>> {
     users::table
-        .select((users::gh_login, users::gh_id))
+        .inner_join(oauth_github::table)
+        .select((oauth_github::login, oauth_github::account_id))
         .filter(users::is_admin.eq(true))
-        .order(users::gh_id.asc())
+        .order(oauth_github::account_id.asc())
         .get_results(conn)
         .await
 }

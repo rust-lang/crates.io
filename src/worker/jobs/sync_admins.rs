@@ -1,5 +1,5 @@
 use crate::email::EmailMessage;
-use crate::schema::{emails, users};
+use crate::schema::{emails, oauth_github, users};
 use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
@@ -34,7 +34,7 @@ impl BackgroundJob for SyncAdmins {
 
         let mut conn = ctx.deadpool.get().await?;
 
-        let format_repo_admins = |github_ids: &HashSet<i32>| {
+        let format_repo_admins = |github_ids: &HashSet<i64>| {
             repo_admins
                 .iter()
                 .filter(|m| github_ids.contains(&m.github_id))
@@ -44,11 +44,15 @@ impl BackgroundJob for SyncAdmins {
 
         // Existing admins from the database.
 
-        let database_admins = users::table
+        let database_admins = (users::table.inner_join(oauth_github::table))
             .left_join(emails::table)
-            .select((users::gh_id, users::gh_login, emails::email.nullable()))
+            .select((
+                oauth_github::account_id,
+                oauth_github::login,
+                emails::email.nullable(),
+            ))
             .filter(users::is_admin.eq(true))
-            .get_results::<(i32, String, Option<String>)>(&mut conn)
+            .get_results::<(i64, String, Option<String>)>(&mut conn)
             .await?;
 
         let database_admin_ids = database_admins
@@ -56,7 +60,7 @@ impl BackgroundJob for SyncAdmins {
             .map(|(gh_id, _, _)| *gh_id)
             .collect::<HashSet<_>>();
 
-        let format_database_admins = |github_ids: &HashSet<i32>| {
+        let format_database_admins = |github_ids: &HashSet<i64>| {
             database_admins
                 .iter()
                 .filter(|(gh_id, _, _)| github_ids.contains(gh_id))
@@ -77,12 +81,31 @@ impl BackgroundJob for SyncAdmins {
             let new_admins = format_repo_admins(&new_admin_ids).join(", ");
             debug!("Granting admin access: {new_admins}");
 
-            diesel::update(users::table)
-                .filter(users::gh_id.eq_any(&new_admin_ids))
+            // Really we want to set users.is_admin to true if their joined oauth_github.account_id
+            // is in new_admin_ids, but diesel doesn't support inner_joins with updates yet:
+            // <https://github.com/diesel-rs/diesel/issues/1478>
+            // So instead, do 2 queries to first get the user ids, then do the update.
+            let new_admin_user_account_ids = oauth_github::table
+                .select((oauth_github::user_id, oauth_github::account_id))
+                .filter(oauth_github::account_id.eq_any(&new_admin_ids))
+                .get_results::<(i32, i64)>(&mut conn)
+                .await?;
+            let new_admin_user_ids: Vec<_> = new_admin_user_account_ids
+                .iter()
+                .map(|(user_id, _)| user_id)
+                .collect();
+            let updated_user_ids = diesel::update(users::table)
+                .filter(users::id.eq_any(&new_admin_user_ids))
                 .set(users::is_admin.eq(true))
-                .returning(users::gh_id)
+                .returning(users::id)
                 .get_results::<i32>(&mut conn)
-                .await?
+                .await?;
+            new_admin_user_account_ids
+                .into_iter()
+                .filter_map(|(user_id, account_id)| {
+                    updated_user_ids.contains(&user_id).then_some(account_id)
+                })
+                .collect()
         };
 
         // New admins from the team repo that have been granted admin
@@ -121,12 +144,28 @@ impl BackgroundJob for SyncAdmins {
             let obsolete_admins = format_database_admins(&obsolete_admin_ids).join(", ");
             debug!("Revoking admin access: {obsolete_admins}");
 
-            diesel::update(users::table)
-                .filter(users::gh_id.eq_any(&obsolete_admin_ids))
+            // Similarly with the new admins, we have to do 2 queries here
+            let removed_admin_user_account_ids = oauth_github::table
+                .select((oauth_github::user_id, oauth_github::account_id))
+                .filter(oauth_github::account_id.eq_any(&obsolete_admin_ids))
+                .get_results::<(i32, i64)>(&mut conn)
+                .await?;
+            let removed_admin_user_ids: Vec<_> = removed_admin_user_account_ids
+                .iter()
+                .map(|(user_id, _)| user_id)
+                .collect();
+            let updated_user_ids = diesel::update(users::table)
+                .filter(users::id.eq_any(&removed_admin_user_ids))
                 .set(users::is_admin.eq(false))
-                .returning(users::gh_id)
+                .returning(users::id)
                 .get_results::<i32>(&mut conn)
-                .await?
+                .await?;
+            removed_admin_user_account_ids
+                .into_iter()
+                .filter_map(|(user_id, account_id)| {
+                    updated_user_ids.contains(&user_id).then_some(account_id)
+                })
+                .collect()
         };
 
         let removed_admin_ids = HashSet::from_iter(removed_admin_ids);
