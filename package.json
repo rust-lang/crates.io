@@ -171,7 +171,7 @@
     "qunit-dom": "3.5.0",
     "tracked-built-ins": "4.1.0",
     "typescript": "5.9.3",
-    "webpack": "5.105.0"
+    "webpack": "5.105.2"
   },
   "resolutions": {
     "@babel/runtime": "7.28.6",
