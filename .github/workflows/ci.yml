@@ -46,7 +46,7 @@ jobs:
           # (see https://github.com/tj-actions/changed-files/blob/v46.0.5/README.md#usage-)
           fetch-depth: 0
 
-      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+      - uses: tj-actions/changed-files@8cba46e29c11878d930bca7870bb54394d3e8b21 # v47.0.2
         id: changed-files
         with:
           files_yaml_from_source_file: .github/changed-files.yml
