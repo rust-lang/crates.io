@@ -1,5 +1,5 @@
 use crate::email::EmailMessage;
-use crate::schema::{emails, users};
+use crate::schema::{emails, oauth_github, users};
 use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
@@ -30,11 +30,11 @@ impl BackgroundJob for SyncAdmins {
         let repo_admin_github_ids = repo_admins
             .iter()
             .map(|m| m.github_id)
-            .collect::<HashSet<_>>();
+            .collect::<HashSet<i64>>();
 
         let mut conn = ctx.deadpool.get().await?;
 
-        let format_repo_admins = |github_ids: &HashSet<i32>| {
+        let format_repo_admins = |github_ids: &HashSet<i64>| {
             repo_admins
                 .iter()
                 .filter(|m| github_ids.contains(&m.github_id))
@@ -42,63 +42,82 @@ impl BackgroundJob for SyncAdmins {
                 .collect::<Vec<_>>()
         };
 
-        // Existing admins from the database.
+        #[derive(Debug, Queryable)]
+        struct UserData {
+            id: i32,
+            gh_login: String,
+            is_admin: bool,
+            account_id: i64,
+            email: Option<String>,
+        }
 
-        let database_admins = users::table
+        // Fetch all database info for all accounts that are either currently marked as admins
+        // or are admins according to the team repo.
+        let database_user_data = (users::table.inner_join(oauth_github::table))
             .left_join(emails::table)
-            .select((users::gh_id, users::gh_login, emails::email.nullable()))
-            .filter(users::is_admin.eq(true))
-            .get_results::<(i32, String, Option<String>)>(&mut conn)
+            .select((
+                users::id,
+                users::gh_login,
+                users::is_admin,
+                oauth_github::account_id,
+                emails::email.nullable(),
+            ))
+            .filter(
+                users::is_admin
+                    .eq(true)
+                    .or(oauth_github::account_id.eq_any(&repo_admin_github_ids)),
+            )
+            .get_results::<UserData>(&mut conn)
             .await?;
 
-        let database_admin_github_ids = database_admins
+        // All the relevant GitHub IDs we have in the database
+        let database_user_github_ids = database_user_data
             .iter()
-            .map(|(gh_id, _, _)| *gh_id)
-            .collect::<HashSet<_>>();
+            .map(|u| u.account_id)
+            .collect::<HashSet<i64>>();
 
-        let format_database_admins = |github_ids: &HashSet<i32>| {
-            database_admins
+        let format_database_users = |user_ids: &HashSet<i32>| {
+            database_user_data
                 .iter()
-                .filter(|(gh_id, _, _)| github_ids.contains(gh_id))
-                .map(|(gh_id, login, _)| format!("{login} (github_id: {gh_id})"))
+                .filter(|u| user_ids.contains(&u.id))
+                .map(|u| format!("{} (github_id: {})", u.gh_login, u.account_id))
                 .collect::<Vec<_>>()
         };
 
         // New admins from the team repo that don't have admin access yet.
+        let new_admin_user_ids = database_user_data
+            .iter()
+            .filter_map(|u| {
+                (repo_admin_github_ids.contains(&u.account_id) && !u.is_admin).then_some(u.id)
+            })
+            .collect::<HashSet<i32>>();
 
-        let new_admin_github_ids = repo_admin_github_ids
-            .difference(&database_admin_github_ids)
-            .copied()
-            .collect::<HashSet<_>>();
-
-        let added_admin_github_ids = if new_admin_github_ids.is_empty() {
+        let added_admin_user_ids = if new_admin_user_ids.is_empty() {
             Vec::new()
         } else {
-            let new_admins = format_repo_admins(&new_admin_github_ids).join(", ");
+            let new_admins = format_database_users(&new_admin_user_ids).join(", ");
             debug!("Granting admin access: {new_admins}");
 
             diesel::update(users::table)
-                .filter(users::gh_id.eq_any(&new_admin_github_ids))
+                .filter(users::id.eq_any(&new_admin_user_ids))
                 .set(users::is_admin.eq(true))
-                .returning(users::gh_id)
+                .returning(users::id)
                 .get_results::<i32>(&mut conn)
                 .await?
         };
 
         // New admins from the team repo that have been granted admin
         // access now.
-
-        let added_admin_github_ids = HashSet::from_iter(added_admin_github_ids);
-        if !added_admin_github_ids.is_empty() {
-            let added_admins = format_repo_admins(&added_admin_github_ids).join(", ");
+        let added_admin_user_ids = HashSet::from_iter(added_admin_user_ids);
+        if !added_admin_user_ids.is_empty() {
+            let added_admins = format_database_users(&added_admin_user_ids).join(", ");
             info!("Granted admin access: {added_admins}");
         }
 
         // New admins from the team repo that don't have a crates.io
-        // account yet.
-
-        let skipped_new_admin_github_ids = new_admin_github_ids
-            .difference(&added_admin_github_ids)
+        // account yet, so we can't find their GitHub ID in the database.
+        let skipped_new_admin_github_ids = repo_admin_github_ids
+            .difference(&database_user_github_ids)
             .copied()
             .collect::<HashSet<_>>();
 
@@ -109,50 +128,58 @@ impl BackgroundJob for SyncAdmins {
 
         // Existing admins from the database that are no longer in the
         // team repo.
+        let obsolete_admin_user_ids = database_user_data
+            .iter()
+            .filter_map(|u| {
+                (u.is_admin && !repo_admin_github_ids.contains(&u.account_id)).then_some(u.id)
+            })
+            .collect::<HashSet<i32>>();
 
-        let obsolete_admin_github_ids = database_admin_github_ids
-            .difference(&repo_admin_github_ids)
-            .copied()
-            .collect::<HashSet<_>>();
-
-        let removed_admin_github_ids = if obsolete_admin_github_ids.is_empty() {
+        let removed_admin_user_ids = if obsolete_admin_user_ids.is_empty() {
             Vec::new()
         } else {
-            let obsolete_admins = format_database_admins(&obsolete_admin_github_ids).join(", ");
+            let obsolete_admins = format_database_users(&obsolete_admin_user_ids).join(", ");
             debug!("Revoking admin access: {obsolete_admins}");
 
             diesel::update(users::table)
-                .filter(users::gh_id.eq_any(&obsolete_admin_github_ids))
+                .filter(users::id.eq_any(&obsolete_admin_user_ids))
                 .set(users::is_admin.eq(false))
-                .returning(users::gh_id)
+                .returning(users::id)
                 .get_results::<i32>(&mut conn)
                 .await?
         };
 
-        let removed_admin_github_ids = HashSet::from_iter(removed_admin_github_ids);
-        if !removed_admin_github_ids.is_empty() {
-            let removed_admins = format_database_admins(&removed_admin_github_ids).join(", ");
+        let removed_admin_user_ids = HashSet::from_iter(removed_admin_user_ids);
+        if !removed_admin_user_ids.is_empty() {
+            let removed_admins = format_database_users(&removed_admin_user_ids).join(", ");
             info!("Revoked admin access: {removed_admins}");
         }
 
-        if added_admin_github_ids.is_empty() && removed_admin_github_ids.is_empty() {
+        if added_admin_user_ids.is_empty() && removed_admin_user_ids.is_empty() {
             return Ok(());
         }
 
-        let added_admins = format_repo_admins(&added_admin_github_ids);
-        let removed_admins = format_database_admins(&removed_admin_github_ids);
+        let added_admins = format_database_users(&added_admin_user_ids);
+        let removed_admins = format_database_users(&removed_admin_user_ids);
         let context = context! { added_admins, removed_admins };
 
-        for database_admin in &database_admins {
-            let (github_id, login, email_address) = database_admin;
-            if let Some(email_address) = email_address {
+        // Attempt to notify admins that were in the database previously of any changes via email.
+        for database_admin in database_user_data.iter().filter(|u| u.is_admin) {
+            let UserData {
+                account_id,
+                gh_login,
+                email,
+                ..
+            } = database_admin;
+            if let Some(email_address) = email {
                 if let Err(error) = send_email(&ctx, email_address, &context).await {
                     warn!(
-                        "Failed to send email to admin {login} ({email_address}, github_id: {github_id}): {error:?}",
+                        "Failed to send email to admin {gh_login} \
+                        ({email_address}, github_id: {account_id}): {error:?}"
                     );
                 }
             } else {
-                warn!("No email address found for admin {login} (github_id: {github_id})",);
+                warn!("No email address found for admin {gh_login} (github_id: {account_id})",);
             }
         }
 
