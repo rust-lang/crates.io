@@ -88,6 +88,14 @@ Rust. Includes HTTP API wrappers as well. Non-idiomatic or unsafe
 bindings can be found in External FFI bindings.
 """
 
+[artificial-intelligence]
+name = "Artificial intelligence"
+description = """
+Crates for machine learning, deep learning, large language models,
+AI agents, and related tooling. Crates focused specifically on
+computer vision belong in the Computer vision category.
+"""
+
 [asynchronous]
 name = "Asynchronous"
 description = """
@@ -507,8 +515,8 @@ Rust.
 [science]
 name = "Science"
 description = """
-Crates related to solving problems involving physics, chemistry, 
-biology, machine learning, geoscience, and other scientific fields.
+Crates related to solving problems involving physics, chemistry,
+biology, geoscience, and other scientific fields.
 """
 
 [science.categories.computational-chemistry]
