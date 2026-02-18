@@ -44,7 +44,7 @@
     "@storybook/addon-vitest": "10.2.8",
     "@storybook/sveltekit": "10.2.8",
     "@sveltejs/adapter-static": "3.0.10",
-    "@sveltejs/kit": "2.51.0",
+    "@sveltejs/kit": "2.52.0",
     "@sveltejs/vite-plugin-svelte": "6.2.4",
     "@types/node": "24.10.13",
     "@types/semver": "7.7.1",
