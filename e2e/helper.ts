@@ -57,17 +57,20 @@ export const test = base.extend<AppOptions & AppFixtures>({
   //
   // We are explicitly not using the `createWorkerFixture()`function, because
   // uses `auto: true`, and we want to be explicit about our usage of the fixture.
-  msw: async ({ page }, use) => {
-    const worker = await createWorker(page, handlers);
-    const authenticateAs = async function (user) {
-      await db.mswSession.create({ user });
-      await page.addInitScript("globalThis.localStorage.setItem('isLoggedIn', '1')");
-    };
+  msw: [
+    async ({ page }, use) => {
+      const worker = await createWorker(page, handlers);
+      const authenticateAs = async function (user) {
+        await db.mswSession.create({ user });
+        await page.addInitScript("globalThis.localStorage.setItem('isLoggedIn', '1')");
+      };
 
-    await use({ worker, db, authenticateAs });
-    await db.reset();
-    worker.resetCookieStore();
-  },
+      await use({ worker, db, authenticateAs });
+      await db.reset();
+      worker.resetCookieStore();
+    },
+    { auto: true, scope: 'test' },
+  ],
   ember: [
     async ({ page, emberOptions }, use) => {
       let ember = new EmberPage(page);

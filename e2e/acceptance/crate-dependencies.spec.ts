@@ -30,9 +30,7 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-dev-dependencies] li')).toHaveCount(0);
   });
 
-  test('shows an error page if crate not found', async ({ page, msw }) => {
-    void msw;
-
+  test('shows an error page if crate not found', async ({ page }) => {
     await page.goto('/crates/foo/1.0.0/dependencies');
     await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();

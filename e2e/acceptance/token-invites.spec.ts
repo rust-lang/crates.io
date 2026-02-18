@@ -19,9 +19,7 @@ test.describe('Acceptance | /accept-invite/:token', { tag: '@acceptance' }, () =
   test('shows error for unknown token', async ({ page }) => {
     await page.goto('/accept-invite/unknown');
     await expect(page).toHaveURL('/accept-invite/unknown');
-    await expect(page.locator('[data-test-error-message]')).toHaveText(
-      'You may want to visit crates.io/me/pending-invites to try again.',
-    );
+    await expect(page.locator('[data-test-error-message]')).toHaveText('Not Found');
   });
 
   test('shows error for expired token', async ({ page, msw }) => {
