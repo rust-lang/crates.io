@@ -28,17 +28,32 @@ async fn test_sync_admins_job() -> anyhow::Result<()> {
     create_user("existing-admin", 1, true, &mut conn).await?;
     create_user("obsolete-admin", 2, true, &mut conn).await?;
     create_user("new-admin", 3, false, &mut conn).await?;
+
+    // When we allow for accounts to be associated with services other than GitHub, this accounts
+    // for the case where:
+    // - User was an admin via GitHub (for the foreseeable future, admins will still need GitHub)
+    // - User adds a login via some other service and removes their GitHub account association
+    // - User leaves the crates.io admin team
+    // - Sync admins runs
+    // The user should  be an admin before syncing but not after syncing.
+    create_user("obsolete-admin-without-github", 5, true, &mut conn).await?;
+    delete_oauth_github_from_user(5, &mut conn).await?;
+
     create_user("unrelated-user", 42, false, &mut conn).await?;
 
     let admins = get_admins(&mut conn).await?;
-    let expected_admins = vec![("existing-admin".into(), 1), ("obsolete-admin".into(), 2)];
+    let expected_admins: Vec<String> = vec![
+        "existing-admin".into(),
+        "obsolete-admin".into(),
+        "obsolete-admin-without-github".into(),
+    ];
     assert_eq!(admins, expected_admins);
 
     SyncAdmins.enqueue(&mut conn).await?;
     app.run_pending_background_jobs().await;
 
     let admins = get_admins(&mut conn).await?;
-    let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
+    let expected_admins: Vec<String> = vec!["existing-admin".into(), "new-admin".into()];
     assert_eq!(admins, expected_admins);
 
     assert_snapshot!(app.emails_snapshot().await);
@@ -107,12 +122,21 @@ async fn create_user(
     Ok(())
 }
 
-async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<(String, i64)>> {
+async fn delete_oauth_github_from_user(
+    account_id: i64,
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<()> {
+    diesel::delete(oauth_github::table.filter(oauth_github::account_id.eq(account_id)))
+        .execute(conn)
+        .await?;
+    Ok(())
+}
+
+async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<String>> {
     users::table
-        .inner_join(oauth_github::table)
-        .select((oauth_github::login, oauth_github::account_id))
+        .select(users::gh_login)
         .filter(users::is_admin.eq(true))
-        .order(oauth_github::account_id.asc())
+        .order(users::id.asc())
         .get_results(conn)
         .await
 }
