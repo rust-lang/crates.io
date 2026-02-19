@@ -42,32 +42,30 @@ impl BackgroundJob for SyncAdmins {
                 .collect::<Vec<_>>()
         };
 
-        #[derive(Debug, Queryable)]
+        #[derive(Debug, HasQuery)]
+        #[diesel(base_query = users::table.left_join(oauth_github::table).left_join(emails::table))]
         struct UserData {
+            #[diesel(select_expression = users::id)]
             id: i32,
+            #[diesel(select_expression = users::gh_login)]
             gh_login: String,
+            #[diesel(select_expression = users::is_admin)]
             is_admin: bool,
+            #[diesel(select_expression = oauth_github::account_id.nullable())]
             account_id: Option<i64>,
+            #[diesel(select_expression = emails::email.nullable())]
             email: Option<String>,
         }
 
         // Fetch all database info for all accounts that are either currently marked as admins
         // or are admins according to the team repo.
-        let database_user_data = (users::table.left_join(oauth_github::table))
-            .left_join(emails::table)
-            .select((
-                users::id,
-                users::gh_login,
-                users::is_admin,
-                oauth_github::account_id.nullable(),
-                emails::email.nullable(),
-            ))
+        let database_user_data = UserData::query()
             .filter(
                 users::is_admin
                     .eq(true)
                     .or(oauth_github::account_id.eq_any(&repo_admin_github_ids)),
             )
-            .get_results::<UserData>(&mut conn)
+            .get_results(&mut conn)
             .await?;
 
         // All the relevant GitHub IDs we have in the database
