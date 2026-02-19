@@ -47,19 +47,19 @@ impl BackgroundJob for SyncAdmins {
             id: i32,
             gh_login: String,
             is_admin: bool,
-            account_id: i64,
+            account_id: Option<i64>,
             email: Option<String>,
         }
 
         // Fetch all database info for all accounts that are either currently marked as admins
         // or are admins according to the team repo.
-        let database_user_data = (users::table.inner_join(oauth_github::table))
+        let database_user_data = (users::table.left_join(oauth_github::table))
             .left_join(emails::table)
             .select((
                 users::id,
                 users::gh_login,
                 users::is_admin,
-                oauth_github::account_id,
+                oauth_github::account_id.nullable(),
                 emails::email.nullable(),
             ))
             .filter(
@@ -73,14 +73,22 @@ impl BackgroundJob for SyncAdmins {
         // All the relevant GitHub IDs we have in the database
         let database_user_github_ids = database_user_data
             .iter()
-            .map(|u| u.account_id)
+            .flat_map(|u| u.account_id)
             .collect::<HashSet<i64>>();
 
         let format_database_users = |user_ids: &HashSet<i32>| {
             database_user_data
                 .iter()
                 .filter(|u| user_ids.contains(&u.id))
-                .map(|u| format!("{} (github_id: {})", u.gh_login, u.account_id))
+                .map(|u| {
+                    format!(
+                        "{} (github_id: {})",
+                        u.gh_login,
+                        u.account_id
+                            .map(|id| id.to_string())
+                            .unwrap_or("None".into())
+                    )
+                })
                 .collect::<Vec<_>>()
         };
 
@@ -88,7 +96,10 @@ impl BackgroundJob for SyncAdmins {
         let new_admin_user_ids = database_user_data
             .iter()
             .filter_map(|u| {
-                (repo_admin_github_ids.contains(&u.account_id) && !u.is_admin).then_some(u.id)
+                (u.account_id
+                    .is_some_and(|account_id| repo_admin_github_ids.contains(&account_id))
+                    && !u.is_admin)
+                    .then_some(u.id)
             })
             .collect::<HashSet<i32>>();
 
@@ -131,7 +142,10 @@ impl BackgroundJob for SyncAdmins {
         let obsolete_admin_user_ids = database_user_data
             .iter()
             .filter_map(|u| {
-                (u.is_admin && !repo_admin_github_ids.contains(&u.account_id)).then_some(u.id)
+                (u.is_admin
+                    && u.account_id
+                        .is_none_or(|account_id| !repo_admin_github_ids.contains(&account_id)))
+                .then_some(u.id)
             })
             .collect::<HashSet<i32>>();
 
@@ -175,11 +189,11 @@ impl BackgroundJob for SyncAdmins {
                 if let Err(error) = send_email(&ctx, email_address, &context).await {
                     warn!(
                         "Failed to send email to admin {gh_login} \
-                        ({email_address}, github_id: {account_id}): {error:?}"
+                        ({email_address}, github_id: {account_id:?}): {error:?}"
                     );
                 }
             } else {
-                warn!("No email address found for admin {gh_login} (github_id: {account_id})",);
+                warn!("No email address found for admin {gh_login} (github_id: {account_id:?})",);
             }
         }
 
