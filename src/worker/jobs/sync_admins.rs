@@ -93,12 +93,8 @@ impl BackgroundJob for SyncAdmins {
         // New admins from the team repo that don't have admin access yet.
         let new_admin_user_ids = database_user_data
             .iter()
-            .filter_map(|u| {
-                (u.account_id
-                    .is_some_and(|account_id| repo_admin_github_ids.contains(&account_id))
-                    && !u.is_admin)
-                    .then_some(u.id)
-            })
+            .filter(|u| !u.is_admin)
+            .map(|u| u.id)
             .collect::<HashSet<i32>>();
 
         let added_admin_user_ids = if new_admin_user_ids.is_empty() {
@@ -139,12 +135,11 @@ impl BackgroundJob for SyncAdmins {
         // team repo.
         let obsolete_admin_user_ids = database_user_data
             .iter()
-            .filter_map(|u| {
-                (u.is_admin
-                    && u.account_id
-                        .is_none_or(|account_id| !repo_admin_github_ids.contains(&account_id)))
-                .then_some(u.id)
+            .filter(|u| {
+                u.account_id
+                    .is_none_or(|account_id| !repo_admin_github_ids.contains(&account_id))
             })
+            .map(|u| u.id)
             .collect::<HashSet<i32>>();
 
         let removed_admin_user_ids = if obsolete_admin_user_ids.is_empty() {
