@@ -12,7 +12,7 @@ anyhow = "=1.0.102"
 chrono = { version = "=0.4.43", default-features = false, features = ["clock", "serde"] }
 crates_io_version = { path = "../crates_io_version" }
 flate2 = "=1.1.9"
-minijinja = "=2.15.1"
+minijinja = "=2.16.0"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 tar = "=0.4.44"
