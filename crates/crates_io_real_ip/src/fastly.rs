@@ -12,6 +12,8 @@ pub const FASTLY_NETWORKS: &[IpNetwork] = &[
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(103, 245, 222, 0), 23).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(103, 245, 224, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(104, 156, 80, 0), 20).unwrap()),
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(140, 248, 64, 0), 18).unwrap()),
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(140, 248, 128, 0), 17).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(146, 75, 0, 0), 17).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(151, 101, 0, 0), 16).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(157, 52, 64, 0), 18).unwrap()),
