@@ -84,6 +84,14 @@ export class SessionState {
   state: 'checking' | 'logged-out' | 'logging-in' | 'logged-in' | 'logging-out' = $state('checking');
   currentUser: AuthenticatedUser | null = $state(null);
 
+  /**
+   * Resolves once the initial user authentication check completes
+   * and `currentUser` has been set via `setUser()`. Layouts that
+   * require an authenticated user can `{#await}` this to avoid
+   * rendering before `currentUser` is available.
+   */
+  initialPromise: Promise<void> | null = null;
+
   // TODO: implement `ownedCrates` (loaded from the `/api/v1/me` response)
   // TODO: implement sudo mode (`sudoEnabledUntil`, `isSudoEnabled`, `setSudo()`)
   //   Sudo mode enables admin actions for a limited duration. The expiry

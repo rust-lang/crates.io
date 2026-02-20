@@ -7,6 +7,4 @@ export async function load({ parent }) {
   if (!user) {
     error(401, { message: 'This page requires authentication', loginNeeded: true });
   }
-
-  return { user };
 }
