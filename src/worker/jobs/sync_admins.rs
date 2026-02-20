@@ -119,8 +119,12 @@ impl BackgroundJob for SyncAdmins {
             info!("Granted admin access: {added_admins}");
         }
 
-        // New admins from the team repo that don't have a crates.io
-        // account yet, so we can't find their GitHub ID in the database.
+        // From the set of all GitHub IDs of admins from the team repo,
+        // subtract all GitHub IDs we found in the database (whether they were already admins or
+        // whether we just added them; both are included in `database_user_github_ids`).
+        // This leaves the GitHub IDs from the team repo that we _weren't_ able to find in the
+        // database to make them admins, likely because they don't have a crates.io account
+        // associated with their GitHub account yet.
         let skipped_new_admin_github_ids = repo_admin_github_ids
             .difference(&database_user_github_ids)
             .copied()
