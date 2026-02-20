@@ -197,6 +197,8 @@ test detail
 
   test.describe('reporting a crate from crate page', () => {
     test.beforeEach(async ({ page, msw }) => {
+      let user = await msw.db.user.create({});
+      await msw.authenticateAs(user);
       await page.goto('/crates/nanomsg');
       await page.getByTestId('link-crate-report').click();
       await expect(page).toHaveURL('/support?crate=nanomsg&inquire=crate-violation');

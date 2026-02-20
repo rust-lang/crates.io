@@ -201,6 +201,14 @@ test detail
 
   module('reporting a crate from crate page', function () {
     async function prepare(context, assert) {
+      let user = await context.db.user.create({
+        login: 'johnnydee',
+        name: 'John Doe',
+        email: 'john@doe.com',
+        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+      });
+      await context.authenticateAs(user);
+
       await visit('/crates/nanomsg');
       assert.strictEqual(currentURL(), '/crates/nanomsg');
 
@@ -235,6 +243,13 @@ test detail
       assert.strictEqual(currentURL(), '/support?crate=nanomsg&inquire=crate-violation');
       assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
     }
+
+    test('is not available if not logged in', async function (assert) {
+      await visit('/crates/nanomsg');
+      assert.strictEqual(currentURL(), '/crates/nanomsg');
+
+      assert.dom('[data-test-id="link-crate-report"]').doesNotExist();
+    });
 
     test('empty crate should shows errors', async function (assert) {
       await prepare(this, assert);

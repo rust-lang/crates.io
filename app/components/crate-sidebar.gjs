@@ -28,6 +28,8 @@ import { simplifyUrl } from './crate-sidebar/link';
 export default class CrateSidebar extends Component {
   @service playground;
   @service sentry;
+  /** @type {import("../services/session").default} */
+  @service session;
 
   get showHomepage() {
     let { repository, homepage } = this.args.crate;
@@ -214,14 +216,16 @@ export default class CrateSidebar extends Component {
           {{/unless}}
         {{/if}}
 
-        <LinkTo
-          @route='support'
-          @query={{hash inquire='crate-violation' crate=@crate.name}}
-          data-test-id='link-crate-report'
-          class='report-button button button--red button--small'
-        >
-          Report crate
-        </LinkTo>
+        {{#if this.session.currentUser}}
+          <LinkTo
+            @route='support'
+            @query={{hash inquire='crate-violation' crate=@crate.name}}
+            data-test-id='link-crate-report'
+            class='report-button button button--red button--small'
+          >
+            Report crate
+          </LinkTo>
+        {{/if}}
       </div>
     </section>
   </template>
