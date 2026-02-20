@@ -26,6 +26,30 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     expect(user.publishNotifications).toBe(true);
   });
 
+  test('persists updated setting after navigation', async ({ page, msw }) => {
+    let user = await msw.db.user.create({});
+    await msw.authenticateAs(user);
+
+    await page.goto('/settings/profile');
+    await expect(page).toHaveURL('/settings/profile');
+    await expect(page.locator('[data-test-notifications] input[type=checkbox]')).toBeChecked();
+
+    // Unsubscribe and save
+    await page.click('[data-test-notifications] input[type=checkbox]');
+    await page.click('[data-test-notifications] button');
+    await expect(page.locator('[data-test-notifications] input[type=checkbox]')).not.toBeChecked();
+
+    // Navigate away and back via client-side links
+    await page.click('[data-test-all-crates-link]');
+    await expect(page).toHaveURL('/crates');
+    await page.click('[data-test-user-menu] [data-test-toggle]');
+    await page.click('[data-test-user-menu] [data-test-settings]');
+    await expect(page).toHaveURL('/settings/profile');
+
+    // Checkbox should still reflect the saved value
+    await expect(page.locator('[data-test-notifications] input[type=checkbox]')).not.toBeChecked();
+  });
+
   test('loading state', async ({ page, msw }) => {
     let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
