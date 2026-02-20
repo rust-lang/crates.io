@@ -1,5 +1,5 @@
 use crate::util::TestApp;
-use crates_io::schema::{emails, users};
+use crates_io::schema::{emails, oauth_github, users};
 use crates_io::worker::jobs::SyncAdmins;
 use crates_io_team_repo::{MockTeamRepo, Permission, Person};
 use crates_io_worker::BackgroundJob;
@@ -28,17 +28,32 @@ async fn test_sync_admins_job() -> anyhow::Result<()> {
     create_user("existing-admin", 1, true, &mut conn).await?;
     create_user("obsolete-admin", 2, true, &mut conn).await?;
     create_user("new-admin", 3, false, &mut conn).await?;
+
+    // When we allow for accounts to be associated with services other than GitHub, this accounts
+    // for the case where:
+    // - User was an admin via GitHub (for the foreseeable future, admins will still need GitHub)
+    // - User adds a login via some other service and removes their GitHub account association
+    // - User leaves the crates.io admin team
+    // - Sync admins runs
+    // The user should  be an admin before syncing but not after syncing.
+    create_user("obsolete-admin-without-github", 5, true, &mut conn).await?;
+    delete_oauth_github_from_user(5, &mut conn).await?;
+
     create_user("unrelated-user", 42, false, &mut conn).await?;
 
     let admins = get_admins(&mut conn).await?;
-    let expected_admins = vec![("existing-admin".into(), 1), ("obsolete-admin".into(), 2)];
+    let expected_admins: Vec<String> = vec![
+        "existing-admin".into(),
+        "obsolete-admin".into(),
+        "obsolete-admin-without-github".into(),
+    ];
     assert_eq!(admins, expected_admins);
 
     SyncAdmins.enqueue(&mut conn).await?;
     app.run_pending_background_jobs().await;
 
     let admins = get_admins(&mut conn).await?;
-    let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
+    let expected_admins: Vec<String> = vec!["existing-admin".into(), "new-admin".into()];
     assert_eq!(admins, expected_admins);
 
     assert_snapshot!(app.emails_snapshot().await);
@@ -48,7 +63,7 @@ async fn test_sync_admins_job() -> anyhow::Result<()> {
     SyncAdmins.enqueue(&mut conn).await?;
     app.run_pending_background_jobs().await;
 
-    assert_eq!(app.emails().await.len(), 2);
+    assert_eq!(app.emails().await.len(), 3);
 
     Ok(())
 }
@@ -57,7 +72,7 @@ fn mock_permission(people: Vec<Person>) -> Permission {
     Permission { people }
 }
 
-fn mock_person(name: impl Into<String>, github_id: i32) -> Person {
+fn mock_person(name: impl Into<String>, github_id: i64) -> Person {
     let name = name.into();
     let github = name.clone();
     Person {
@@ -69,7 +84,7 @@ fn mock_person(name: impl Into<String>, github_id: i32) -> Person {
 
 async fn create_user(
     name: &str,
-    gh_id: i32,
+    account_id: i64,
     is_admin: bool,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
@@ -77,12 +92,22 @@ async fn create_user(
         .values((
             users::name.eq(name),
             users::gh_login.eq(name),
-            users::gh_id.eq(gh_id),
+            users::gh_id.eq(account_id as i32),
             users::gh_encrypted_token.eq(&[]),
             users::is_admin.eq(is_admin),
         ))
         .returning(users::id)
         .get_result::<i32>(conn)
+        .await?;
+
+    diesel::insert_into(oauth_github::table)
+        .values((
+            oauth_github::user_id.eq(user_id),
+            oauth_github::login.eq(name),
+            oauth_github::account_id.eq(account_id),
+            oauth_github::encrypted_token.eq(&[]),
+        ))
+        .execute(conn)
         .await?;
 
     diesel::insert_into(emails::table)
@@ -97,11 +122,21 @@ async fn create_user(
     Ok(())
 }
 
-async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<(String, i32)>> {
+async fn delete_oauth_github_from_user(
+    account_id: i64,
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<()> {
+    diesel::delete(oauth_github::table.filter(oauth_github::account_id.eq(account_id)))
+        .execute(conn)
+        .await?;
+    Ok(())
+}
+
+async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<String>> {
     users::table
-        .select((users::gh_login, users::gh_id))
+        .select(users::gh_login)
         .filter(users::is_admin.eq(true))
-        .order(users::gh_id.asc())
+        .order(users::id.asc())
         .get_results(conn)
         .await
 }

@@ -21,7 +21,7 @@ pub struct Permission {
 pub struct Person {
     pub name: String,
     pub github: String,
-    pub github_id: i32,
+    pub github_id: i64,
 }
 
 pub struct TeamRepoImpl {

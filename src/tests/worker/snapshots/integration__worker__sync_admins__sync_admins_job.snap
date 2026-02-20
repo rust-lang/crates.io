@@ -1,6 +1,7 @@
 ---
 source: src/tests/worker/sync_admins.rs
 expression: app.emails_snapshot().await
+snapshot_kind: text
 ---
 To: existing-admin@crates.io
 From: crates.io <noreply@crates.io>
@@ -20,6 +21,7 @@ Granted admin access:
 
 Revoked admin access:
 - obsolete-admin (github_id: 2)
+- obsolete-admin-without-github (github_id: None)
 
 
 --
@@ -38,6 +40,7 @@ Content-Transfer-Encoding: 7bit
 <p>Revoked admin access:</p>
 <ul>
 <li>obsolete-admin (github_id: 2)</li>
+<li>obsolete-admin-without-github (github_id: None)</li>
 </ul>
 
 
@@ -64,6 +67,7 @@ Granted admin access:
 
 Revoked admin access:
 - obsolete-admin (github_id: 2)
+- obsolete-admin-without-github (github_id: None)
 
 
 --
@@ -82,6 +86,53 @@ Content-Transfer-Encoding: 7bit
 <p>Revoked admin access:</p>
 <ul>
 <li>obsolete-admin (github_id: 2)</li>
+<li>obsolete-admin-without-github (github_id: None)</li>
+</ul>
+
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
+----------------------------------------
+
+To: obsolete-admin-without-github@crates.io
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Admin account changes
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+
+Granted admin access:
+
+- new-admin (github_id: 3)
+
+Revoked admin access:
+- obsolete-admin (github_id: 2)
+- obsolete-admin-without-github (github_id: None)
+
+
+--
+The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+
+<p>Granted admin access:</p>
+
+<ul>
+<li>new-admin (github_id: 3)</li>
+
+</ul>
+<p>Revoked admin access:</p>
+<ul>
+<li>obsolete-admin (github_id: 2)</li>
+<li>obsolete-admin-without-github (github_id: None)</li>
 </ul>
 
 
