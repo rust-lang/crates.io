@@ -455,8 +455,8 @@ importers:
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(msw@2.12.10(@types/node@24.10.13)(typescript@5.9.3))(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))(vitest@4.0.18))(vitest@4.0.18)
       chromatic:
-        specifier: 15.1.0
-        version: 15.1.0
+        specifier: 15.1.1
+        version: 15.1.1
       eslint:
         specifier: 9.39.2
         version: 9.39.2(jiti@2.6.1)
@@ -3822,8 +3822,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@15.1.0:
-    resolution: {integrity: sha512-XODNgiczeX5SpaWsCQLEwGpXrF2QVPb9bka7nHa8NQssyRRTt9EI8jVH8BRDUPcrQKqQqmXmxOy2Cq4IK1ydFQ==}
+  chromatic@15.1.1:
+    resolution: {integrity: sha512-T42eLy1fuckVIzZAoryYjxOEFXgOC9BUi+oT0VjmCz9PaJ/tvItTagIxIxA65vgrtCymXKSZDrGe7Hg2y7iAMA==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -14471,7 +14471,7 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@15.1.0: {}
+  chromatic@15.1.1: {}
 
   chrome-trace-event@1.0.4: {}
 
