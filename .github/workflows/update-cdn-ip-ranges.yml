@@ -1,4 +1,4 @@
-name: Update AWS IP Ranges
+name: Update CDN IP Ranges
 
 on:
   # run if manually triggered
@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: update-aws-ip-ranges
+  group: update-cdn-ip-ranges
   cancel-in-progress: true
 
 env:
@@ -65,7 +65,7 @@ jobs:
       - run: cargo check --package crates_io_real_ip
         if: steps.git-diff.outcome == 'failure'
 
-      - run: git commit --all --message "Update AWS IP ranges data"
+      - run: git commit --all --message "Update CDN IP ranges data"
         if: steps.git-diff.outcome == 'failure'
 
       - run: git push origin main

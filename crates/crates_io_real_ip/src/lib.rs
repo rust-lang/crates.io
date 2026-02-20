@@ -4,21 +4,25 @@ use std::net::IpAddr;
 use std::str::from_utf8;
 
 mod cloudfront;
+mod fastly;
 
 pub use cloudfront::CLOUDFRONT_NETWORKS;
+pub use fastly::FASTLY_NETWORKS;
 
 const X_FORWARDED_FOR: &str = "X-Forwarded-For";
 
-fn is_cloud_front_ip(ip: &IpAddr) -> bool {
+fn is_cdn_ip(ip: &IpAddr) -> bool {
     CLOUDFRONT_NETWORKS
         .iter()
+        .chain(FASTLY_NETWORKS.iter())
         .any(|trusted_proxy| trusted_proxy.contains(*ip))
 }
 
 /// Extracts the client IP address from the `X-Forwarded-For` header.
 ///
-/// This function will return the last valid non-CloudFront IP address in the
-/// `X-Forwarded-For` header, if any.
+/// This function will return the last valid non-CDN IP address in the
+/// `X-Forwarded-For` header, if any. IP addresses belonging to known
+/// CDN networks (CloudFront, Fastly) are filtered out.
 pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
     headers
         .get_all(X_FORWARDED_FOR)
@@ -27,7 +31,7 @@ pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
             parse_xff_header(header)
                 .into_iter()
                 .filter_map(|r| r.ok())
-                .filter(|ip| !is_cloud_front_ip(ip))
+                .filter(|ip| !is_cdn_ip(ip))
         })
         .next_back()
 }
@@ -89,6 +93,11 @@ mod tests {
         test(vec![b"130.176.118.147"], None);
         test(vec![b"1.1.1.1, 130.176.118.147"], Some("1.1.1.1"));
         test(vec![b"1.1.1.1, 2.2.2.2, 130.176.118.147"], Some("2.2.2.2"));
+
+        // Fastly behavior (151.101.0.0/16)
+        test(vec![b"151.101.0.1"], None);
+        test(vec![b"1.1.1.1, 151.101.0.1"], Some("1.1.1.1"));
+        test(vec![b"1.1.1.1, 2.2.2.2, 151.101.0.1"], Some("2.2.2.2"));
 
         // Multiple headers behavior
         test(vec![b"1.1.1.1, 2.2.2.2", b"3.3.3.3"], Some("3.3.3.3"));

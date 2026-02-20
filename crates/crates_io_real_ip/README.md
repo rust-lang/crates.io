@@ -5,13 +5,16 @@ Extract real client IP addresses from X-Forwarded-For headers
 ## Description
 
 This crate provides functionality to extract the real client IP address from
-X-Forwarded-For headers when running behind AWS CloudFront. It filters out
-CloudFront proxy IPs to find the actual client IP.
+X-Forwarded-For headers when running behind CDN proxies. It filters out
+known CDN proxy IPs (CloudFront, Fastly) to find the actual client IP.
 
-The crate includes CloudFront IP ranges from <https://ip-ranges.amazonaws.com/ip-ranges.json>
-as compile-time constants, eliminating the need to fetch and parse the data at runtime.
+The crate includes IP ranges from the following sources as compile-time constants,
+eliminating the need to fetch and parse the data at runtime:
 
-An hourly GitHub Actions workflow updates the CloudFront IP ranges automatically
+- CloudFront: <https://ip-ranges.amazonaws.com/ip-ranges.json>
+- Fastly: <https://api.fastly.com/public-ip-list>
+
+An hourly GitHub Actions workflow updates the CDN IP ranges automatically
 and commits any changes directly to the main branch.
 
 ## Usage
