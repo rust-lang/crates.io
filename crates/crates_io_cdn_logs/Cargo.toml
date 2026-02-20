@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.101"
+anyhow = "=1.0.102"
 async-compression = { version = "=0.4.40", features = ["gzip", "tokio", "zstd"] }
 chrono = { version = "=0.4.43", features = ["serde"] }
 derive_more = { version = "=2.1.1", features = ["deref"] }
