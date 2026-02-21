@@ -8,10 +8,18 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Route | support', function (hooks) {
   setupApplicationTest(hooks);
 
+  async function prepare(context) {
+    let user = await context.db.user.create({});
+    await context.authenticateAs(user);
+  }
+
   test('footer should always point to /support without query parameters', async function (assert) {
+    // Link to /support when not authenticated is fine
     await visit('/');
     assert.dom('footer [data-test-support-link]').hasAttribute('href', '/support');
 
+    // But visiting /support requires authentication
+    await prepare(this);
     await visit('/support?inquire=crate-violation&crate=foo');
     assert.dom('footer [data-test-support-link]').hasAttribute('href', '/support');
 
@@ -20,6 +28,8 @@ module('Route | support', function (hooks) {
   });
 
   test('should not retain query params when exiting and then returning', async function (assert) {
+    await prepare(this);
+
     await visit('/support?inquire=crate-violation');
     assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
     assert

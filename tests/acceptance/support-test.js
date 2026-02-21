@@ -25,7 +25,27 @@ module('Acceptance | support', function (hooks) {
     };
   });
 
+  async function prepare(context) {
+    let user = await context.db.user.create({
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+    });
+    await context.authenticateAs(user);
+  }
+
+  test('is not available if not logged in', async function (assert) {
+    await visit('/support');
+    assert.strictEqual(currentURL(), '/support');
+
+    assert.dom('[data-test-title]').hasText('This page requires authentication');
+    assert.dom('[data-test-login]').exists();
+  });
+
   test('shows an inquire list', async function (assert) {
+    await prepare(this);
+
     await visit('/support');
     assert.strictEqual(currentURL(), '/support');
 
@@ -46,6 +66,8 @@ module('Acceptance | support', function (hooks) {
   });
 
   test('shows an inquire list if given inquire is not supported', async function (assert) {
+    await prepare(this);
+
     await visit('/support?inquire=not-supported-inquire');
     assert.strictEqual(currentURL(), '/support?inquire=not-supported-inquire');
 
@@ -64,6 +86,14 @@ module('Acceptance | support', function (hooks) {
 
   module('reporting a crate from support page', function () {
     async function prepare(context, assert) {
+      let user = await context.db.user.create({
+        login: 'johnnydee',
+        name: 'John Doe',
+        email: 'john@doe.com',
+        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+      });
+      await context.authenticateAs(user);
+
       await visit('/support');
       await click('[data-test-id="link-crate-violation"]');
       assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
@@ -352,6 +382,8 @@ test detail
   });
 
   test('malicious code reports are sent to security@rust-lang.org too', async function (assert) {
+    await prepare(this);
+
     await visit('/support');
     await click('[data-test-id="link-crate-violation"]');
     assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
@@ -390,6 +422,8 @@ test detail
   });
 
   test('shows help text for vulnerability reports', async function (assert) {
+    await prepare(this);
+
     await visit('/support');
     await click('[data-test-id="link-crate-violation"]');
     assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
