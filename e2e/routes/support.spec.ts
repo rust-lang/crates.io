@@ -12,7 +12,10 @@ test.describe('Route | support', { tag: '@routes' }, () => {
     await expect(page.locator('footer [data-test-support-link]')).toHaveAttribute('href', '/support');
   });
 
-  test('should not retain query params when exiting and then returning', async ({ page }) => {
+  test('should not retain query params when exiting and then returning', async ({ page, msw }) => {
+    let user = await msw.db.user.create({});
+    await msw.authenticateAs(user);
+
     await page.goto('/support?inquire=crate-violation');
     await expect(page).toHaveURL('/support?inquire=crate-violation');
     let section = page.getByTestId('support-main-content').locator('section');

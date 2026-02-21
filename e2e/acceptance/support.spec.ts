@@ -2,6 +2,9 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ page, msw }) => {
+    let user = await msw.db.user.create({});
+    await msw.authenticateAs(user);
+
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.0' });
 
