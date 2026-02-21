@@ -40,6 +40,7 @@ const REASONS = [
 
 export default class CrateReportForm extends Component {
   @service store;
+  @service session;
 
   @tracked crate = '';
   @tracked selectedReasons = [];
@@ -114,6 +115,9 @@ ${reasons}
 Additional details:
 
 ${this.detail}
+
+Thanks,
+${this.session.currentUser.login}
 `;
     let subject = `The "${crate}" crate`;
     if (isMaliciousCodeReport) {

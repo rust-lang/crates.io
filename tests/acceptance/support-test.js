@@ -181,6 +181,9 @@ module('Acceptance | support', function (hooks) {
 Additional details:
 
 
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -219,6 +222,9 @@ Additional details:
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -328,6 +334,9 @@ test detail
 Additional details:
 
 
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -364,6 +373,9 @@ Additional details:
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -405,6 +417,9 @@ test detail
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
     let subject = `[SECURITY] The "nanomsg" crate`;
     let addresses = 'help@crates.io,security@rust-lang.org';
