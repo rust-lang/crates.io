@@ -13,7 +13,7 @@ workspace = true
 [dependencies]
 anyhow = "=1.0.102"
 bytes = "=1.11.1"
-cargo-manifest = "=0.19.1"
+cargo-manifest = "=0.20.0"
 chrono = "=0.4.43"
 crates_io_api_types = { path = "../crates_io_api_types" }
 crates_io_database = { path = "../crates_io_database" }
