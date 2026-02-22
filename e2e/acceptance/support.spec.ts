@@ -2,6 +2,14 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ page, msw }) => {
+    let user = await msw.db.user.create({
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+    });
+    await msw.authenticateAs(user);
+
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.0' });
 
@@ -139,6 +147,9 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
 Additional details:
 
 
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -184,6 +195,9 @@ Additional details:
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -197,6 +211,8 @@ test detail
 
   test.describe('reporting a crate from crate page', () => {
     test.beforeEach(async ({ page, msw }) => {
+      let user = await msw.db.user.create({});
+      await msw.authenticateAs(user);
       await page.goto('/crates/nanomsg');
       await page.getByTestId('link-crate-report').click();
       await expect(page).toHaveURL('/support?crate=nanomsg&inquire=crate-violation');
@@ -263,6 +279,9 @@ test detail
 Additional details:
 
 
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -304,6 +323,9 @@ Additional details:
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -350,6 +372,9 @@ test detail
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
     let subject = `[SECURITY] The "nanomsg" crate`;
     let addresses = 'help@crates.io,security@rust-lang.org';

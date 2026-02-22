@@ -25,7 +25,27 @@ module('Acceptance | support', function (hooks) {
     };
   });
 
+  async function prepare(context) {
+    let user = await context.db.user.create({
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+    });
+    await context.authenticateAs(user);
+  }
+
+  test('is not available if not logged in', async function (assert) {
+    await visit('/support');
+    assert.strictEqual(currentURL(), '/support');
+
+    assert.dom('[data-test-title]').hasText('This page requires authentication');
+    assert.dom('[data-test-login]').exists();
+  });
+
   test('shows an inquire list', async function (assert) {
+    await prepare(this);
+
     await visit('/support');
     assert.strictEqual(currentURL(), '/support');
 
@@ -46,6 +66,8 @@ module('Acceptance | support', function (hooks) {
   });
 
   test('shows an inquire list if given inquire is not supported', async function (assert) {
+    await prepare(this);
+
     await visit('/support?inquire=not-supported-inquire');
     assert.strictEqual(currentURL(), '/support?inquire=not-supported-inquire');
 
@@ -64,6 +86,14 @@ module('Acceptance | support', function (hooks) {
 
   module('reporting a crate from support page', function () {
     async function prepare(context, assert) {
+      let user = await context.db.user.create({
+        login: 'johnnydee',
+        name: 'John Doe',
+        email: 'john@doe.com',
+        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+      });
+      await context.authenticateAs(user);
+
       await visit('/support');
       await click('[data-test-id="link-crate-violation"]');
       assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
@@ -151,6 +181,9 @@ module('Acceptance | support', function (hooks) {
 Additional details:
 
 
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -189,6 +222,9 @@ Additional details:
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -201,6 +237,14 @@ test detail
 
   module('reporting a crate from crate page', function () {
     async function prepare(context, assert) {
+      let user = await context.db.user.create({
+        login: 'johnnydee',
+        name: 'John Doe',
+        email: 'john@doe.com',
+        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+      });
+      await context.authenticateAs(user);
+
       await visit('/crates/nanomsg');
       assert.strictEqual(currentURL(), '/crates/nanomsg');
 
@@ -235,6 +279,13 @@ test detail
       assert.strictEqual(currentURL(), '/support?crate=nanomsg&inquire=crate-violation');
       assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
     }
+
+    test('is not available if not logged in', async function (assert) {
+      await visit('/crates/nanomsg');
+      assert.strictEqual(currentURL(), '/crates/nanomsg');
+
+      assert.dom('[data-test-id="link-crate-report"]').doesNotExist();
+    });
 
     test('empty crate should shows errors', async function (assert) {
       await prepare(this, assert);
@@ -290,6 +341,9 @@ test detail
 Additional details:
 
 
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -326,6 +380,9 @@ Additional details:
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
       let subject = `The "nanomsg" crate`;
       let address = 'help@crates.io';
@@ -337,6 +394,8 @@ test detail
   });
 
   test('malicious code reports are sent to security@rust-lang.org too', async function (assert) {
+    await prepare(this);
+
     await visit('/support');
     await click('[data-test-id="link-crate-violation"]');
     assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
@@ -365,6 +424,9 @@ test detail
 Additional details:
 
 test detail
+
+Thanks,
+johnnydee
 `;
     let subject = `[SECURITY] The "nanomsg" crate`;
     let addresses = 'help@crates.io,security@rust-lang.org';
@@ -375,6 +437,8 @@ test detail
   });
 
   test('shows help text for vulnerability reports', async function (assert) {
+    await prepare(this);
+
     await visit('/support');
     await click('[data-test-id="link-crate-violation"]');
     assert.strictEqual(currentURL(), '/support?inquire=crate-violation');

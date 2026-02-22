@@ -21,10 +21,14 @@
   import { formatShortNum } from '$lib/utils/format-short-num';
   import { buildPlaygroundLink } from '$lib/utils/playground';
   import { getPurl } from '$lib/utils/purl';
+  import { getSession } from '$lib/utils/session.svelte';
   import Edition from './Edition.svelte';
   import InstallInstructions from './InstallInstructions.svelte';
   import Link, { simplifyUrl } from './Link.svelte';
   import Msrv from './Msrv.svelte';
+
+  let session = getSession();
+  let currentUser = $derived(session.currentUser);
 
   const PLAYGROUND_TOOLTIP =
     'The top 100 crates are available on the Rust Playground for you to try out directly in your browser.';
@@ -216,10 +220,12 @@
       <!-- Silently ignore playground loading failures -->
     {/await}
 
-    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-    <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
-      Report crate
-    </a>
+    {#if currentUser}
+      <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+      <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
+        Report crate
+      </a>
+    {/if}
   </div>
 </section>
 
