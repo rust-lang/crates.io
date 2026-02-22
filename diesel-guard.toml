@@ -11,7 +11,7 @@ framework = "diesel"
 # start_after = "2024_01_01_000000"  # underscores
 # start_after = "2024-01-01-000000"  # dashes
 # start_after = "20240101000000"     # no separators
-start_after = "2025-09-04-000000"
+start_after = "2026-02-22-000000"
 
 # Whether to check down.sql files in addition to up.sql
 # Default: false
