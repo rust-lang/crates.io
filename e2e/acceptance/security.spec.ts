@@ -65,9 +65,11 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       'https://github.com/advisories/GHSA-abcd-1234-efgh',
     );
 
-    // Check CVSS is displayed with link to calculator
+    // Check CVSS is displayed with calculated score and link to calculator
     await expect(advisory1.locator('[data-test-cvss]')).toBeVisible();
     await expect(advisory1.locator('[data-test-cvss]')).toContainText('CVSS:');
+    await expect(advisory1.locator('[data-test-cvss] span')).toHaveText('7.5 (High)');
+    await expect(advisory1.locator('[data-test-cvss] span')).toHaveClass(/severity-high/);
     await expect(advisory1.locator('[data-test-cvss] a')).toHaveText('CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H');
     await expect(advisory1.locator('[data-test-cvss] a')).toHaveAttribute(
       'href',
@@ -247,7 +249,9 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
 
     let advisory = page.locator('[data-test-list] li').first();
     await expect(advisory.locator('[data-test-cvss]')).toBeVisible();
-    // Should show V4, not V3
+    // Should show V4 score (interpolated) and vector, not V3
+    await expect(advisory.locator('[data-test-cvss] span')).toHaveText('8.7 (High)');
+    await expect(advisory.locator('[data-test-cvss] span')).toHaveClass(/severity-high/);
     await expect(advisory.locator('[data-test-cvss] a')).toHaveText(
       'CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N',
     );
@@ -255,6 +259,29 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       'href',
       'https://www.first.org/cvss/calculator/4.0#CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N',
     );
+  });
+
+  test('calculates CVSS 4.0 scores with interpolation', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'cvss4-interp-test' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+
+    let advisories = [
+      {
+        id: 'TEST-CVSS-INTERP',
+        summary: 'Advisory with CVSS 4.0 requiring interpolation',
+        details: 'Testing interpolation calculation.',
+        severity: [{ type: 'CVSS_V4', score: 'CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N' }],
+      },
+    ];
+
+    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    await page.goto('/crates/cvss4-interp-test/security');
+
+    let advisory = page.locator('[data-test-list] > li').first();
+    await expect(advisory.locator('[data-test-cvss]')).toBeVisible();
+    // Should calculate to 4.1 with interpolation (not 4.6 from simple lookup)
+    await expect(advisory.locator('[data-test-cvss] span')).toHaveText('4.1 (Medium)');
+    await expect(advisory.locator('[data-test-cvss] span')).toHaveClass(/severity-medium/);
   });
 
   test('supports CVSS 3.0 vectors', async ({ page, msw }) => {
@@ -275,6 +302,8 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
 
     let advisory = page.locator('[data-test-list] > li').first();
     await expect(advisory.locator('[data-test-cvss]')).toBeVisible();
+    await expect(advisory.locator('[data-test-cvss] span')).toHaveText('9.8 (Critical)');
+    await expect(advisory.locator('[data-test-cvss] span')).toHaveClass(/severity-critical/);
     await expect(advisory.locator('[data-test-cvss] a')).toHaveText('CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H');
     await expect(advisory.locator('[data-test-cvss] a')).toHaveAttribute(
       'href',
