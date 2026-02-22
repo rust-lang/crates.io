@@ -311,11 +311,13 @@ linking with `cc` failed: exit code: 1``, you're probably missing some
 
 #### Environment variables
 
-Copy the `.env.sample` file to `.env`. Modify the settings as appropriate;
-minimally you'll need to specify or modify the value of the `DATABASE_URL` var.
-Try using `postgres://postgres@localhost/cargo_registry` first.
+Copy the `.env.sample` file to `.env` and then modify `.env` as appropriate. On
+Unix systems, the default configuration will use a local Unix socket which does
+not require setting a password for the database user.
 
-> If that doesn't work, change this by filling in this template with the
+On other platforms, or if connecting to your database over IP:
+
+> Change this by filling in this template with the
 > appropriate values where there are `[]`s:
 >
 > ```text
@@ -465,7 +467,7 @@ In your `.env` file, set `TEST_DATABASE_URL` to a value that's the same as
 connection will be used to create new databases for the tests, with names
 prefixed with the database name from `TEST_DATABASE_URL`.
 
-Example: `postgres://postgres@localhost/cargo_registry_test`.
+Example: `postgres:///cargo_registry_test`.
 
 Create the test database by running:
 
