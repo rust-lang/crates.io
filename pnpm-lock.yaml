@@ -485,8 +485,8 @@ importers:
         specifier: 3.8.1
         version: 3.8.1
       prettier-plugin-svelte:
-        specifier: 3.4.1
-        version: 3.4.1(prettier@3.8.1)(svelte@5.51.5)
+        specifier: 3.5.0
+        version: 3.5.0(prettier@3.8.1)(svelte@5.51.5)
       storybook:
         specifier: 10.2.9
         version: 10.2.9(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -7894,8 +7894,8 @@ packages:
     peerDependencies:
       prettier: '>= 3.0.0'
 
-  prettier-plugin-svelte@3.4.1:
-    resolution: {integrity: sha512-xL49LCloMoZRvSwa6IEdN2GV6cq2IqpYGstYtMT+5wmml1/dClEoI0MZR78MiVPpu6BdQFfN0/y73yO6+br5Pg==}
+  prettier-plugin-svelte@3.5.0:
+    resolution: {integrity: sha512-2lLO/7EupnjO/95t+XZesXs8Bf3nYLIDfCo270h5QWbj/vjLqmrQ1LiRk9LPggxSDsnVYfehamZNf+rgQYApZg==}
     peerDependencies:
       prettier: ^3.0.0
       svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
@@ -19504,7 +19504,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  prettier-plugin-svelte@3.4.1(prettier@3.8.1)(svelte@5.51.5):
+  prettier-plugin-svelte@3.5.0(prettier@3.8.1)(svelte@5.51.5):
     dependencies:
       prettier: 3.8.1
       svelte: 5.51.5
