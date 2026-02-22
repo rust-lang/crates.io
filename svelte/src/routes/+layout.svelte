@@ -49,7 +49,7 @@
   setSession(sessionState);
 
   // svelte-ignore state_referenced_locally
-  data.userPromise.then(user => sessionState.setUser(user));
+  sessionState.initialPromise = data.userPromise.then(user => sessionState.setUser(user));
 </script>
 
 <svelte:head>
