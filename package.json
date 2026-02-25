@@ -90,7 +90,7 @@
     "@embroider/compat": "3.9.3",
     "@embroider/core": "3.5.9",
     "@embroider/webpack": "4.1.2",
-    "@eslint/eslintrc": "3.3.3",
+    "@eslint/eslintrc": "3.3.4",
     "@eslint/js": "9.39.3",
     "@glimmer/component": "2.0.0",
     "@glimmer/tracking": "1.1.2",
