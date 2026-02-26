@@ -455,8 +455,8 @@ importers:
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(msw@2.12.10(@types/node@24.10.13)(typescript@5.9.3))(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))(vitest@4.0.18))(vitest@4.0.18)
       chromatic:
-        specifier: 15.1.1
-        version: 15.1.1
+        specifier: 15.2.0
+        version: 15.2.0
       eslint:
         specifier: 9.39.3
         version: 9.39.3(jiti@2.6.1)
@@ -3528,6 +3528,7 @@ packages:
   basic-ftp@5.1.0:
     resolution: {integrity: sha512-RkaJzeJKDbaDWTIPiJwubyljaEPwpVWkm9Rt5h9Nd6h7tEXTJ3VB4qxdZBioV7JO5yLUaOKwz7vDOzlncUsegw==}
     engines: {node: '>=10.0.0'}
+    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
 
   better-path-resolve@1.0.0:
     resolution: {integrity: sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g==}
@@ -3869,8 +3870,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@15.1.1:
-    resolution: {integrity: sha512-T42eLy1fuckVIzZAoryYjxOEFXgOC9BUi+oT0VjmCz9PaJ/tvItTagIxIxA65vgrtCymXKSZDrGe7Hg2y7iAMA==}
+  chromatic@15.2.0:
+    resolution: {integrity: sha512-c9tDfE62aiPVPnVab8jQLz+9c9II/CUFZ6T2Kk3hi2hSL+HLkRwX3zjwRYW1z9Shn57R/ORBEpQ3ftufp8EgWA==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -14580,7 +14581,7 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@15.1.1: {}
+  chromatic@15.2.0: {}
 
   chrome-trace-event@1.0.4: {}
 
