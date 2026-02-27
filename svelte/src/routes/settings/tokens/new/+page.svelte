@@ -18,6 +18,7 @@
   let notifications = getNotifications();
   let client = createClient({ fetch });
   let id = $props.id();
+  let { data } = $props();
   let tokenPageState = getTokenPageState();
 
   class CratePattern {
@@ -56,14 +57,17 @@
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
   }
 
-  let name = $state('');
+  // svelte-ignore state_referenced_locally
+  let existingToken = data.existingToken;
+
+  let name = $state(existingToken?.name ?? '');
   let nameInvalid = $state(false);
   let expirySelection = $state('90');
   let expiryDateInput = $state('');
   let expiryDateInvalid = $state(false);
-  let scopes = $state<string[]>([]);
+  let scopes = $state<string[]>(existingToken?.endpoint_scopes ?? []);
   let scopesInvalid = $state(false);
-  let crateScopes = $state<CratePattern[]>([]);
+  let crateScopes = $state<CratePattern[]>(existingToken?.crate_scopes?.map(p => new CratePattern(p)) ?? []);
   let isSaving = $state(false);
 
   let today = $derived(new Date().toISOString().slice(0, 10));
@@ -177,8 +181,6 @@
 
 <SettingsPage>
   <h2>New API Token</h2>
-
-  <!-- TODO: Pre-fill form from existing token (Phase 6) -->
 
   <form class="form" onsubmit={handleSubmit}>
     <div class="form-group" data-test-name-group>
