@@ -62,6 +62,7 @@ Router.map(function () {
   // of the URL to be `/security`.
   this.route('security');
   this.route('data-access');
+  this.route('rate-limits');
   this.route('docs', function () {
     this.route('trusted-publishing');
   });

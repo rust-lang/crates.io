@@ -37,6 +37,7 @@ const EMPTY_SUPPORT_QUERY_PARAMS = Object.fromEntries(SUPPORT_QUERY_PARAMS.map(k
           <li><a href='https://foundation.rust-lang.org/policies/privacy-policy/'>Privacy Policy</a></li>
           <li><a href='https://www.rust-lang.org/policies/code-of-conduct'>Code of Conduct</a></li>
           <li><LinkTo @route='data-access'>Data Access</LinkTo></li>
+          <li><LinkTo @route='rate-limits'>Rate Limits</LinkTo></li>
         </ul>
       </div>
 
