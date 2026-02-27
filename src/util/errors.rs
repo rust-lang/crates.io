@@ -217,6 +217,14 @@ impl From<JoinError> for BoxedAppError {
 impl From<GitHubError> for BoxedAppError {
     fn from(error: GitHubError) -> Self {
         match error {
+            GitHubError::AccessDenied { org_name } => custom(
+                StatusCode::FORBIDDEN,
+                format!(
+                    "GitHub organization '{org_name}' has restricted OAuth access. \
+                     To publish, a '{org_name}' administrator must approve the 'crates.io' \
+                     application in the organization's 'Third-party access' settings."
+                ),
+            ),
             GitHubError::Permission(_) => custom(
                 StatusCode::FORBIDDEN,
                 "It looks like you don't have permission \
