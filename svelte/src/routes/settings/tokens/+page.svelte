@@ -1,11 +1,15 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
 
+  import { onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
   import { formatDistanceToNow } from 'date-fns';
   import { SvelteSet } from 'svelte/reactivity';
 
+  import CopyIcon from '$lib/assets/copy.svg?component';
+  import CopyButton from '$lib/components/CopyButton.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PatternDescription from '$lib/components/PatternDescription.svelte';
@@ -13,6 +17,7 @@
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { getNotifications } from '$lib/notifications.svelte';
   import { scopeDescription } from '$lib/utils/token-scopes';
+  import { getTokenPageState } from './+layout.svelte';
 
   type ApiToken = components['schemas']['ApiToken'];
 
@@ -23,6 +28,15 @@
 
   let revokedTokenIds = new SvelteSet<number>();
   let revokingTokenIds = new SvelteSet<number>();
+
+  let tokenPageState = getTokenPageState();
+  let pendingToken = $derived(tokenPageState.pendingToken);
+
+  let isClipboardSupported = browser && Boolean(navigator.clipboard?.writeText);
+
+  onDestroy(() => {
+    tokenPageState.pendingToken = null;
+  });
 
   let sortedTokens = $derived(sortTokens(data.tokens.filter(t => !revokedTokenIds.has(t.id))));
 
@@ -157,7 +171,24 @@
             {/if}
           </div>
 
-          <!-- TODO: Raw token display (Phase 5) -->
+          {#if pendingToken?.id === token.id}
+            <div class="new-token">
+              <div class="new-token-explainer">
+                Make sure to copy your API token now. You won't be able to see it again!
+              </div>
+
+              <div class="token-display">
+                <span class="token-value" data-test-token>{pendingToken.token}</span>
+
+                {#if isClipboardSupported}
+                  <CopyButton copyText={pendingToken.token} class="copy-button button-reset">
+                    <span class="sr-only">Copy</span>
+                    <CopyIcon aria-hidden="true" class="copy-button-icon" />
+                  </CopyButton>
+                {/if}
+              </div>
+            </div>
+          {/if}
 
           <div class="actions">
             <!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -271,6 +302,45 @@
     margin-left: var(--space-xs);
   }
 
+  .new-token {
+    margin-top: var(--space-s);
+  }
+
+  .new-token-explainer {
+    font-size: 20px;
+  }
+
+  .token-display {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    background: var(--main-color);
+    color: light-dark(white, #141413);
+    font-family: var(--font-monospace);
+    border-radius: var(--space-3xs);
+    margin-top: var(--space-xs);
+  }
+
+  .token-value {
+    padding: var(--space-s);
+    user-select: all;
+  }
+
+  .token-display :global(.copy-button) {
+    align-self: stretch;
+    padding: 0 var(--space-s);
+    cursor: pointer;
+
+    &:hover {
+      color: light-dark(#ddd8b2, #65655e);
+    }
+  }
+
+  .token-display :global(.copy-button-icon) {
+    width: auto;
+    height: 1.3em;
+  }
+
   .empty-state {
     display: grid;
     place-items: center;
@@ -312,6 +382,11 @@
 
       .metadata {
         grid-area: metadata;
+      }
+
+      .new-token {
+        grid-area: details;
+        margin-bottom: 0;
       }
 
       .actions {

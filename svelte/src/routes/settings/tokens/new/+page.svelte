@@ -11,12 +11,14 @@
   import SettingsPage from '$lib/components/SettingsPage.svelte';
   import { getNotifications } from '$lib/notifications.svelte';
   import { scopeDescription } from '$lib/utils/token-scopes';
+  import { getTokenPageState } from '../+layout.svelte';
 
   const ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'trusted-publishing', 'yank'];
 
   let notifications = getNotifications();
   let client = createClient({ fetch });
   let id = $props.id();
+  let tokenPageState = getTokenPageState();
 
   class CratePattern {
     pattern = $state('');
@@ -155,7 +157,8 @@
         throw new Error();
       }
 
-      // TODO: Store raw token in layout context for display (Phase 5)
+      let apiToken = result.data.api_token;
+      tokenPageState.pendingToken = { id: apiToken.id, token: apiToken.token };
 
       await goto(resolve('/settings/tokens'));
     } catch {
