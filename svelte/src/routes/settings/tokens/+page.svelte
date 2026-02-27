@@ -2,19 +2,29 @@
   import type { components } from '@crates-io/api-client';
 
   import { resolve } from '$app/paths';
+  import { createClient } from '@crates-io/api-client';
   import { formatDistanceToNow } from 'date-fns';
+  import { SvelteSet } from 'svelte/reactivity';
 
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PatternDescription from '$lib/components/PatternDescription.svelte';
   import SettingsPage from '$lib/components/SettingsPage.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
+  import { getNotifications } from '$lib/notifications.svelte';
   import { scopeDescription } from '$lib/utils/token-scopes';
 
   type ApiToken = components['schemas']['ApiToken'];
 
+  let notifications = getNotifications();
+  let client = createClient({ fetch });
+
   let { data } = $props();
 
-  let sortedTokens = $derived(sortTokens(data.tokens));
+  let revokedTokenIds = new SvelteSet<number>();
+  let revokingTokenIds = new SvelteSet<number>();
+
+  let sortedTokens = $derived(sortTokens(data.tokens.filter(t => !revokedTokenIds.has(t.id))));
 
   function isExpired(token: ApiToken): boolean {
     return !!token.expired_at && new Date(token.expired_at) < new Date();
@@ -35,6 +45,25 @@
   function formatScopes(scopes: string[]): { type: string; value: string }[] {
     // We hardcode `en-US` here because the rest of the interface text is also currently displayed only in English.
     return new Intl.ListFormat('en-US').formatToParts(scopes);
+  }
+
+  async function revokeToken(token: ApiToken) {
+    revokingTokenIds.add(token.id);
+    try {
+      let result = await client.DELETE('/api/v1/me/tokens/{id}', {
+        params: { path: { id: token.id } },
+      });
+
+      if (result.error) {
+        throw new Error();
+      }
+
+      revokedTokenIds.add(token.id);
+    } catch {
+      notifications.error('An unknown error occurred while revoking this token');
+    } finally {
+      revokingTokenIds.delete(token.id);
+    }
   }
 </script>
 
@@ -140,7 +169,20 @@
               Regenerate
             </a>
             <!-- eslint-enable svelte/no-navigation-without-resolve -->
-            <!-- TODO: Revoke button (Phase 3) -->
+            {#if !isExpired(token)}
+              <button
+                type="button"
+                class="revoke-button button button--tan button--small"
+                disabled={revokingTokenIds.has(token.id)}
+                data-test-revoke-token-button
+                onclick={() => revokeToken(token)}
+              >
+                Revoke
+              </button>
+              {#if revokingTokenIds.has(token.id)}
+                <LoadingSpinner class="spinner" data-test-saving-spinner />
+              {/if}
+            {/if}
           </div>
         </li>
       {/each}
@@ -218,6 +260,15 @@
   .regenerate-button {
     flex-grow: 1;
     border-radius: var(--space-3xs);
+  }
+
+  .revoke-button {
+    flex-grow: 1;
+    border-radius: var(--space-3xs);
+  }
+
+  .actions > :global(.spinner) {
+    margin-left: var(--space-xs);
   }
 
   .empty-state {
