@@ -147,7 +147,10 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
 
   test('API tokens are only visible in plaintext until the page is left', async ({ page, msw }) => {
     await page.goto('/settings/tokens');
+
     await page.click('[data-test-new-token-button]');
+    await expect(page).toHaveURL('/settings/tokens/new');
+
     await page.fill('[data-test-name]', 'the new token');
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
@@ -173,6 +176,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-api-token]')).toHaveCount(3);
 
     await page.click('[data-test-new-token-button]');
+    await expect(page).toHaveURL('/settings/tokens/new');
 
     // favor navigation via link click over page.goto
     await page.getByRole('link', { name: 'Profile' }).click();
