@@ -26,10 +26,6 @@
   });
 </script>
 
-<svelte:head>
-  <title>{orgName}/{data.team.name} - crates.io</title>
-</svelte:head>
-
 <PageHeader style="display: flex; align-items: center;" data-test-heading>
   <UserAvatar
     user={{ ...data.team, kind: 'team' }}

@@ -12,6 +12,7 @@
   import CopyButton from '$lib/components/CopyButton.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import PageTitle from '$lib/components/PageTitle.svelte';
   import PatternDescription from '$lib/components/PatternDescription.svelte';
   import SettingsPage from '$lib/components/SettingsPage.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
@@ -81,9 +82,7 @@
   }
 </script>
 
-<svelte:head>
-  <title>API Tokens | crates.io: Rust Package Registry</title>
-</svelte:head>
+<PageTitle title="Settings" />
 
 <PageHeader title="Account Settings" />
 

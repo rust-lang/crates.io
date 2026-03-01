@@ -1,6 +1,7 @@
 <script lang="ts">
   import CrateList from '$lib/components/CrateList.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import PageTitle from '$lib/components/PageTitle.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
@@ -28,9 +29,7 @@
   });
 </script>
 
-<svelte:head>
-  <title>{data.keyword} - Keywords - crates.io</title>
-</svelte:head>
+<PageTitle title="{data.keyword} - Keywords" />
 
 <PageHeader title="All Crates" suffix="for keyword '{data.keyword}'" />
 
