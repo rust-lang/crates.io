@@ -1106,20 +1106,20 @@ packages:
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
 
-  '@chevrotain/cst-dts-gen@11.1.1':
-    resolution: {integrity: sha512-fRHyv6/f542qQqiRGalrfJl/evD39mAvbJLCekPazhiextEatq1Jx1K/i9gSd5NNO0ds03ek0Cbo/4uVKmOBcw==}
+  '@chevrotain/cst-dts-gen@11.1.2':
+    resolution: {integrity: sha512-XTsjvDVB5nDZBQB8o0o/0ozNelQtn2KrUVteIHSlPd2VAV2utEb6JzyCJaJ8tGxACR4RiBNWy5uYUHX2eji88Q==}
 
-  '@chevrotain/gast@11.1.1':
-    resolution: {integrity: sha512-Ko/5vPEYy1vn5CbCjjvnSO4U7GgxyGm+dfUZZJIWTlQFkXkyym0jFYrWEU10hyCjrA7rQtiHtBr0EaZqvHFZvg==}
+  '@chevrotain/gast@11.1.2':
+    resolution: {integrity: sha512-Z9zfXR5jNZb1Hlsd/p+4XWeUFugrHirq36bKzPWDSIacV+GPSVXdk+ahVWZTwjhNwofAWg/sZg58fyucKSQx5g==}
 
-  '@chevrotain/regexp-to-ast@11.1.1':
-    resolution: {integrity: sha512-ctRw1OKSXkOrR8VTvOxrQ5USEc4sNrfwXHa1NuTcR7wre4YbjPcKw+82C2uylg/TEwFRgwLmbhlln4qkmDyteg==}
+  '@chevrotain/regexp-to-ast@11.1.2':
+    resolution: {integrity: sha512-nMU3Uj8naWer7xpZTYJdxbAs6RIv/dxYzkYU8GSwgUtcAAlzjcPfX1w+RKRcYG8POlzMeayOQ/znfwxEGo5ulw==}
 
-  '@chevrotain/types@11.1.1':
-    resolution: {integrity: sha512-wb2ToxG8LkgPYnKe9FH8oGn3TMCBdnwiuNC5l5y+CtlaVRbCytU0kbVsk6CGrqTL4ZN4ksJa0TXOYbxpbthtqw==}
+  '@chevrotain/types@11.1.2':
+    resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
 
-  '@chevrotain/utils@11.1.1':
-    resolution: {integrity: sha512-71eTYMzYXYSFPrbg/ZwftSaSDld7UYlS8OQa3lNnn9jzNtpFbaReRRyghzqS7rI3CDaorqpPJJcXGHK+FE1TVQ==}
+  '@chevrotain/utils@11.1.2':
+    resolution: {integrity: sha512-4mudFAQ6H+MqBTfqLmU7G1ZwRzCLfJEooL/fsF6rCX5eePMbGhoy5n4g+G4vlh2muDcsCTJtL+uKbOzWxs5LHA==}
 
   '@chromatic-com/storybook@5.0.1':
     resolution: {integrity: sha512-v80QBwVd8W6acH5NtDgFlUevIBaMZAh1pYpBiB40tuNzS242NTHeQHBDGYwIAbWKDnt1qfjJpcpL6pj5kAr4LA==}
@@ -1536,8 +1536,8 @@ packages:
   '@ember-tooling/classic-build-app-blueprint@6.11.0':
     resolution: {integrity: sha512-ZqwAC+3X3HFcBcmbyyBRh0KXkQSuW+L6Rry9Q7vmGFoQ+wQQnDQ9MS+TXz72VqP47+MGfZRJXWfCeqEUTpuSRg==}
 
-  '@ember/app-blueprint@6.11.0':
-    resolution: {integrity: sha512-zsY7HqSktkVH9vRup8g0jC8+lvRk0bvEeQ22zUVej5H1WHRZzN70N9nGH3Oibgo/d4qZIZT7WNqktm1ctxDYYQ==}
+  '@ember/app-blueprint@6.11.1':
+    resolution: {integrity: sha512-Bq9+s/EQYPYVFNU3ZXgwxLuF9WbPtyEcv0sSi5f29WIvt7vxVbeF+IADLlLimT+GYTBYfqjdFCsUlkhyM1pI8A==}
 
   '@ember/edition-utils@1.2.0':
     resolution: {integrity: sha512-VmVq/8saCaPdesQmftPqbFtxJWrzxNGSQ+e8x8LLe3Hjm36pJ04Q8LeORGZkAeOhldoUX9seLGmSaHeXkIqoog==}
@@ -3519,8 +3519,8 @@ packages:
   brace-expansion@2.0.2:
     resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
-  brace-expansion@5.0.3:
-    resolution: {integrity: sha512-fy6KJm2RawA5RcHkLa1z/ScpBeA762UF9KmZQxwIbDtRJrgLzM10depAiEQ+CXYcoiqW1/m96OAAoke2nE9EeA==}
+  brace-expansion@5.0.4:
+    resolution: {integrity: sha512-h+DEnpVvxmfVefa4jFbCf5HdH5YMDXRsmKflpf1pILZWRFlTbJpxeU55nJl4Smt5HQaGzg1o6RHFPJaOqnmBDg==}
     engines: {node: 18 || 20 || >=22}
 
   braces@2.3.2:
@@ -3731,8 +3731,8 @@ packages:
     resolution: {integrity: sha512-RbsNrFyhwkx+6psk/0fK/Q9orOUr9VMxohGd8vTa4djf4TGLfblBgUfqZChrZuW0Q+mz2eBPFLusw9Jfukzmhg==}
     hasBin: true
 
-  caniuse-lite@1.0.30001774:
-    resolution: {integrity: sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA==}
+  caniuse-lite@1.0.30001775:
+    resolution: {integrity: sha512-s3Qv7Lht9zbVKE9XoTyRG6wVDCKdtOFIjBGg3+Yhn6JaytuNKPIjBMTMIY1AnOH3seL5mvF+x33oGAyK3hVt3A==}
 
   capture-exit@2.0.0:
     resolution: {integrity: sha512-PiT/hQmTonHhl/HFGN+Lx3JJUznrVYJ3+AQsnthneZbvW7x+f08Tk7yLJTLEOUvBTbduLeeBkxEaYXUOUrRq6g==}
@@ -3797,8 +3797,8 @@ packages:
     peerDependencies:
       chevrotain: ^11.0.0
 
-  chevrotain@11.1.1:
-    resolution: {integrity: sha512-f0yv5CPKaFxfsPTBzX7vGuim4oIC1/gcS7LUGdBSwl2dU6+FON6LVUksdOo1qJjoUvXNn45urgh8C+0a24pACQ==}
+  chevrotain@11.1.2:
+    resolution: {integrity: sha512-opLQzEVriiH1uUQ4Kctsd49bRoFDXGGSC4GUqj7pGyxM3RehRhvTlZJc1FL/Flew2p5uwxa1tUDWKzI4wNM8pg==}
 
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
@@ -4627,8 +4627,8 @@ packages:
   dedent-js@1.0.1:
     resolution: {integrity: sha512-OUepMozQULMLUmhxS95Vudo0jb0UchLimi3+pQ2plj61Fcy8axbP9hbiD4Sz6DPqn6XG3kfmziVfQ1rSys5AJQ==}
 
-  dedent@1.7.1:
-    resolution: {integrity: sha512-9JmrhGZpOlEgOLdQgSm0zxFaYoQon408V1v49aqTWuXENVlnCuY9JBZcXZiCsZQWDjTm5Qf/nIvAy77mXDAjEg==}
+  dedent@1.7.2:
+    resolution: {integrity: sha512-WzMx3mW98SN+zn3hgemf4OzdmyNhhhKz5Ay0pUfQiMQ3e1g+xmTJWp/pKdwKVXhdSkAEGIIzqeuWrL3mV/AXbA==}
     peerDependencies:
       babel-plugin-macros: ^3.1.0
     peerDependenciesMeta:
@@ -5141,8 +5141,8 @@ packages:
     resolution: {integrity: sha512-2RZdgEbXmp5+dVbRm0P7HQUImZpICccJy7rN7Tv+SFa55pH+lxnuw6/K1ZxxBfHoYpSkHLAO92oa8O4SwFXA2A==}
     engines: {node: '>=10.2.0'}
 
-  enhanced-resolve@5.19.0:
-    resolution: {integrity: sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg==}
+  enhanced-resolve@5.20.0:
+    resolution: {integrity: sha512-/ce7+jQ1PQ6rVXwe+jKEg5hW5ciicHwIQUagZkp6IufBoY3YDgdTTY1azVs0qoRgVmvsNB+rbjLJxDAeHHtwsQ==}
     engines: {node: '>=10.13.0'}
 
   ensure-posix-path@1.1.1:
@@ -7946,8 +7946,8 @@ packages:
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
 
-  pump@3.0.3:
-    resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
+  pump@3.0.4:
+    resolution: {integrity: sha512-VS7sjc6KR7e1ukRFhQSY5LM2uBWAUPiOPa/A3mkKmiMwSmRFUITt0xuj+/lesgnCv+dPIEYlkzrcyXgquIHMcA==}
 
   punycode.js@2.3.1:
     resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
@@ -8338,8 +8338,8 @@ packages:
   sax@1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
 
-  sax@1.4.4:
-    resolution: {integrity: sha512-1n3r/tGXO6b6VXMdFT54SHzT9ytu9yr7TaELowdYpMqY/Ao7EnlQGmAQ1+RatX7Tkkdm6hONI2owqNx2aZj5Sw==}
+  sax@1.5.0:
+    resolution: {integrity: sha512-21IYA3Q5cQf089Z6tgaUTr7lDAyzoTPx5HRtbhsME8Udispad8dC/+sziTNugOEx54ilvatQ9YCzl4KQLPcRHA==}
     engines: {node: '>=11.0.0'}
 
   saxes@5.0.1:
@@ -10796,22 +10796,22 @@ snapshots:
 
   '@braintree/sanitize-url@7.1.2': {}
 
-  '@chevrotain/cst-dts-gen@11.1.1':
+  '@chevrotain/cst-dts-gen@11.1.2':
     dependencies:
-      '@chevrotain/gast': 11.1.1
-      '@chevrotain/types': 11.1.1
+      '@chevrotain/gast': 11.1.2
+      '@chevrotain/types': 11.1.2
       lodash-es: 4.17.23
 
-  '@chevrotain/gast@11.1.1':
+  '@chevrotain/gast@11.1.2':
     dependencies:
-      '@chevrotain/types': 11.1.1
+      '@chevrotain/types': 11.1.2
       lodash-es: 4.17.23
 
-  '@chevrotain/regexp-to-ast@11.1.1': {}
+  '@chevrotain/regexp-to-ast@11.1.2': {}
 
-  '@chevrotain/types@11.1.1': {}
+  '@chevrotain/types@11.1.2': {}
 
-  '@chevrotain/utils@11.1.1': {}
+  '@chevrotain/utils@11.1.2': {}
 
   '@chromatic-com/storybook@5.0.1(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))':
     dependencies:
@@ -11338,7 +11338,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ember/app-blueprint@6.11.0':
+  '@ember/app-blueprint@6.11.1':
     dependencies:
       chalk: 4.1.2
       ejs: 3.1.10
@@ -12554,7 +12554,7 @@ snapshots:
       '@storybook/csf': 0.1.13
       '@storybook/svelte': 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.5)
       '@sveltejs/vite-plugin-svelte': 6.2.4(svelte@5.53.5)(vite@7.3.1(@types/node@24.10.14)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))
-      dedent: 1.7.1
+      dedent: 1.7.2
       es-toolkit: 1.44.0
       esrap: 1.4.9
       magic-string: 0.30.21
@@ -12742,7 +12742,7 @@ snapshots:
 
   '@types/chai-as-promised@7.1.8':
     dependencies:
-      '@types/chai': 5.2.3
+      '@types/chai': 4.3.20
 
   '@types/chai@4.3.20': {}
 
@@ -13633,7 +13633,7 @@ snapshots:
   autoprefixer@10.4.27(postcss@8.5.6):
     dependencies:
       browserslist: 4.28.1
-      caniuse-lite: 1.0.30001774
+      caniuse-lite: 1.0.30001775
       fraction.js: 5.3.4
       picocolors: 1.1.1
       postcss: 8.5.6
@@ -13895,7 +13895,7 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
 
-  brace-expansion@5.0.3:
+  brace-expansion@5.0.4:
     dependencies:
       balanced-match: 4.0.4
 
@@ -14284,7 +14284,7 @@ snapshots:
   browserslist@4.28.1:
     dependencies:
       baseline-browser-mapping: 2.10.0
-      caniuse-lite: 1.0.30001774
+      caniuse-lite: 1.0.30001775
       electron-to-chromium: 1.5.302
       node-releases: 2.0.27
       update-browserslist-db: 1.2.3(browserslist@4.28.1)
@@ -14355,7 +14355,7 @@ snapshots:
     dependencies:
       tmp: 0.0.28
 
-  caniuse-lite@1.0.30001774: {}
+  caniuse-lite@1.0.30001775: {}
 
   capture-exit@2.0.0:
     dependencies:
@@ -14426,18 +14426,18 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
 
-  chevrotain-allstar@0.3.1(chevrotain@11.1.1):
+  chevrotain-allstar@0.3.1(chevrotain@11.1.2):
     dependencies:
-      chevrotain: 11.1.1
+      chevrotain: 11.1.2
       lodash-es: 4.17.23
 
-  chevrotain@11.1.1:
+  chevrotain@11.1.2:
     dependencies:
-      '@chevrotain/cst-dts-gen': 11.1.1
-      '@chevrotain/gast': 11.1.1
-      '@chevrotain/regexp-to-ast': 11.1.1
-      '@chevrotain/types': 11.1.1
-      '@chevrotain/utils': 11.1.1
+      '@chevrotain/cst-dts-gen': 11.1.2
+      '@chevrotain/gast': 11.1.2
+      '@chevrotain/regexp-to-ast': 11.1.2
+      '@chevrotain/types': 11.1.2
+      '@chevrotain/utils': 11.1.2
       lodash-es: 4.17.23
 
   chokidar@4.0.3:
@@ -15101,7 +15101,7 @@ snapshots:
 
   dedent-js@1.0.1: {}
 
-  dedent@1.7.1: {}
+  dedent@1.7.2: {}
 
   deep-eql@5.0.2: {}
 
@@ -15589,7 +15589,7 @@ snapshots:
       '@ember-tooling/blueprint-model': 0.5.0
       '@ember-tooling/classic-build-addon-blueprint': 6.11.0
       '@ember-tooling/classic-build-app-blueprint': 6.11.0
-      '@ember/app-blueprint': 6.11.0
+      '@ember/app-blueprint': 6.11.1
       '@pnpm/find-workspace-dir': 1000.1.4
       babel-remove-types: 1.1.0
       broccoli: 4.0.0
@@ -16118,7 +16118,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  enhanced-resolve@5.19.0:
+  enhanced-resolve@5.20.0:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.0
@@ -17095,11 +17095,11 @@ snapshots:
 
   get-stream@4.1.0:
     dependencies:
-      pump: 3.0.3
+      pump: 3.0.4
 
   get-stream@5.2.0:
     dependencies:
-      pump: 3.0.3
+      pump: 3.0.4
 
   get-stream@9.0.1:
     dependencies:
@@ -18029,8 +18029,8 @@ snapshots:
 
   langium@4.2.1:
     dependencies:
-      chevrotain: 11.1.1
-      chevrotain-allstar: 0.3.1(chevrotain@11.1.1)
+      chevrotain: 11.1.2
+      chevrotain-allstar: 0.3.1(chevrotain@11.1.2)
       vscode-languageserver: 9.0.1
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
@@ -18559,7 +18559,7 @@ snapshots:
 
   minimatch@10.2.4:
     dependencies:
-      brace-expansion: 5.0.3
+      brace-expansion: 5.0.4
 
   minimatch@3.1.5:
     dependencies:
@@ -19498,7 +19498,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  pump@3.0.3:
+  pump@3.0.4:
     dependencies:
       end-of-stream: 1.4.5
       once: 1.4.0
@@ -19907,7 +19907,7 @@ snapshots:
 
   sax@1.2.4: {}
 
-  sax@1.4.4: {}
+  sax@1.5.0: {}
 
   saxes@5.0.1:
     dependencies:
@@ -20522,7 +20522,7 @@ snapshots:
       css-what: 6.2.2
       csso: 5.0.5
       picocolors: 1.1.1
-      sax: 1.4.4
+      sax: 1.5.0
 
   symbol-tree@3.2.4: {}
 
@@ -21214,7 +21214,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.16.0)
       browserslist: 4.28.1
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.19.0
+      enhanced-resolve: 5.20.0
       es-module-lexer: 2.0.0
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -21246,7 +21246,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.16.0)
       browserslist: 4.28.1
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.19.0
+      enhanced-resolve: 5.20.0
       es-module-lexer: 2.0.0
       eslint-scope: 5.1.1
       events: 3.3.0
