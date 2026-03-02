@@ -168,8 +168,6 @@ impl GitHubClient for RealGitHubClient {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GitHubError {
-    #[error("GitHub organization '{org_name}' has restricted OAuth access")]
-    AccessDenied { org_name: String },
     #[error(transparent)]
     Permission(anyhow::Error),
     #[error(transparent)]

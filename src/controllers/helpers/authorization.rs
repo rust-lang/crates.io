@@ -1,6 +1,8 @@
 use crate::models::{Owner, User};
+use crate::util::errors::{BoxedAppError, custom};
 use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crates_io_github::{GitHubClient, GitHubError};
+use http::StatusCode;
 
 /// Access rights to the crate (publishing and ownership management)
 /// NOTE: The order of these variants matters!
@@ -25,7 +27,7 @@ impl Rights {
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
         encryption: &GitHubTokenEncryption,
-    ) -> Result<Self, GitHubError> {
+    ) -> Result<Self, BoxedAppError> {
         let token = encryption
             .decrypt(&user.gh_encrypted_token)
             .map_err(GitHubError::Other)?;
@@ -54,9 +56,16 @@ impl Rights {
                                 .map(|(_, org, _)| org.to_string())
                                 .unwrap_or_else(|| "unknown".to_string());
 
-                            return Err(GitHubError::AccessDenied { org_name });
+                            return Err(custom(
+                                StatusCode::FORBIDDEN,
+                                format!(
+                                    "GitHub organization '{org_name}' has restricted OAuth access. \
+                                     To publish, a '{org_name}' administrator must approve the 'crates.io' \
+                                     application in the organization's 'Third-party access' settings."
+                                ),
+                            ));
                         }
-                        Err(e) => return Err(e),
+                        Err(e) => return Err(e.into()),
                     };
 
                     if is_team_member {
