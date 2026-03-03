@@ -1,5 +1,10 @@
 import PageHeader from 'crates-io/components/page-header';
 import TextContent from 'crates-io/components/text-content';
+import { LinkTo } from '@ember/routing';
+
+import { SUPPORT_QUERY_PARAMS } from '../controllers/support';
+
+const EMPTY_SUPPORT_QUERY_PARAMS = Object.fromEntries(SUPPORT_QUERY_PARAMS.map(k => [k, null]));
 
 <template>
   <PageHeader @title='Publishing Rate Limits' />
@@ -37,8 +42,9 @@ import TextContent from 'crates-io/components/text-content';
     </p>
 
     <p>
-      We are unlikely to grant exceptions to these rate limits, to preserve the performance of the system and quantity
-      of crates published for everyone's benefit.
+      We will only grant exceptions to these rate limits in exceptional circumstances, to preserve the performance of
+      the system and quantity of crates published for everyone's benefit. See
+      <LinkTo @route='support' @query={{EMPTY_SUPPORT_QUERY_PARAMS}}>the support page</LinkTo>.
     </p>
 
     <p>
