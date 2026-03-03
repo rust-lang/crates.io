@@ -35,7 +35,7 @@
         <li><a href="https://foundation.rust-lang.org/policies/privacy-policy/">Privacy Policy</a></li>
         <li><a href="https://www.rust-lang.org/policies/code-of-conduct">Code of Conduct</a></li>
         <li><a href={resolve('/data-access')}>Data Access</a></li>
-        <li><a href={resolve('/rate-limits')}>Rate Limits</a></li>
+        <li><a href={resolve('/docs/rate-limits')}>Rate Limits</a></li>
       </ul>
     </div>
 
