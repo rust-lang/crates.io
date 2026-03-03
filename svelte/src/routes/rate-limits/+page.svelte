@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+
   import PageHeader from '$lib/components/PageHeader.svelte';
   import TextContent from '$lib/components/TextContent.svelte';
 </script>
@@ -34,8 +36,9 @@
   <p>The rate limiting error message will give the time at which you may send the next publish.</p>
 
   <p>
-    We are unlikely to grant exceptions to these rate limits, to preserve the performance of the system and quantity of
-    crates published for everyone's benefit.
+    We will only grant exceptions to these rate limits in exceptional circumstances, to preserve the performance of the
+    system and quantity of crates published for everyone's benefit. See
+    <a href={resolve('/support')}>the support page</a>.
   </p>
 
   <p>Please plan your publishes according to these limits.</p>
