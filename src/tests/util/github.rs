@@ -53,6 +53,9 @@ impl MockData {
         mock.expect_current_user()
             .returning(|_auth| self.current_user());
 
+        mock.expect_get_user_by_id()
+            .returning(|account_id, _client_id, _client_secret| self.get_user_by_id(account_id));
+
         mock.expect_org_by_name()
             .returning(|org_name, _auth| self.org_by_name(org_name));
 
@@ -72,6 +75,21 @@ impl MockData {
 
     fn current_user(&self) -> Result<GitHubUser, GitHubError> {
         let user = &self.users[0];
+        Ok(GitHubUser {
+            id: user.id,
+            login: user.login.into(),
+            name: Some(user.name.into()),
+            email: Some(user.email.into()),
+            avatar_url: Some(format!("https://avatars.example.com/{}", user.id)),
+        })
+    }
+
+    fn get_user_by_id(&self, account_id: i64) -> Result<GitHubUser, GitHubError> {
+        let user = self
+            .users
+            .iter()
+            .find(|user| user.id as i64 == account_id)
+            .ok_or_else(not_found)?;
         Ok(GitHubUser {
             id: user.id,
             login: user.login.into(),
