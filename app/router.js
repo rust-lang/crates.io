@@ -62,9 +62,9 @@ Router.map(function () {
   // of the URL to be `/security`.
   this.route('security');
   this.route('data-access');
-  this.route('rate-limits');
   this.route('docs', function () {
     this.route('trusted-publishing');
+    this.route('rate-limits');
   });
   this.route('confirm', { path: '/confirm/:email_token' });
   this.route('accept-invite', { path: '/accept-invite/:token' });
