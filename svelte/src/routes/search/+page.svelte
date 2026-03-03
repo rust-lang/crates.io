@@ -5,6 +5,7 @@
   import Alert from '$lib/components/Alert.svelte';
   import CrateList from '$lib/components/CrateList.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import PageTitle from '$lib/components/PageTitle.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
@@ -43,12 +44,10 @@
     }
   });
 
-  let pageTitle = $derived('Search Results' + (data.q ? ` for '${data.q}'` : ''));
+  let searchTitle = $derived('Search Results' + (data.q ? ` for '${data.q}'` : ''));
 </script>
 
-<svelte:head>
-  <title>{pageTitle} - crates.io</title>
-</svelte:head>
+<PageTitle title={searchTitle} />
 
 <PageHeader title="Search Results" suffix={data.q ? `for '${data.q}'` : undefined} data-test-header />
 

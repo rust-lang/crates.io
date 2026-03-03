@@ -9,6 +9,7 @@
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import TooltipContainer from '$lib/components/TooltipContainer.svelte';
   import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
+  import { PageTitleState, setPageTitle } from '$lib/page-title.svelte';
   import { ProgressState, setProgressContext } from '$lib/progress.svelte';
   import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
   import { setTooltipContext } from '$lib/tooltip.svelte';
@@ -27,6 +28,9 @@
   $effect(() => {
     document.documentElement.dataset.colorScheme = colorScheme.resolvedScheme;
   });
+
+  let pageTitle = new PageTitleState();
+  setPageTitle(pageTitle);
 
   let searchFormContext = new SearchFormContext();
   setSearchFormContext(searchFormContext);
@@ -53,7 +57,7 @@
 </script>
 
 <svelte:head>
-  <title>crates.io: Rust Package Registry</title>
+  <title>{pageTitle.title}</title>
 </svelte:head>
 
 {#if !__TEST__}

@@ -63,10 +63,6 @@
   }
 </script>
 
-<svelte:head>
-  <title>{crate.name} - crates.io: Rust Package Registry</title>
-</svelte:head>
-
 <CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} />
 
 <div class="crate-info">

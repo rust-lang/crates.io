@@ -10,10 +10,6 @@
   let descriptions = $derived(data.descriptionMap);
 </script>
 
-<svelte:head>
-  <title>{data.crate.name} - crates.io: Rust Package Registry</title>
-</svelte:head>
-
 <CrateHeader crate={data.crate} version={data.version} versionNum={data.version.num} />
 
 <h2 class="heading">Dependencies</h2>

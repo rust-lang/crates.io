@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths';
 
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import PageTitle from '$lib/components/PageTitle.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
@@ -13,9 +14,7 @@
   let currentSortBy = $derived(data.sort === 'crates' ? '# Crates' : 'Alphabetical');
 </script>
 
-<svelte:head>
-  <title>Categories - crates.io</title>
-</svelte:head>
+<PageTitle title="Categories" />
 
 <PageHeader title="All Categories" />
 

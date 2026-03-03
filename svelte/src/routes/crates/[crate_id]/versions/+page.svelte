@@ -65,10 +65,6 @@
   }
 </script>
 
-<svelte:head>
-  <title>{data.crate.name} - Versions - crates.io</title>
-</svelte:head>
-
 <CrateHeader crate={data.crate} />
 
 <div class="results-meta">

@@ -23,10 +23,6 @@
   });
 </script>
 
-<svelte:head>
-  <title>{data.user.login} - crates.io</title>
-</svelte:head>
-
 <PageHeader style="display: flex; align-items: center; gap: var(--space-xs);" data-test-heading>
   <UserAvatar user={{ ...data.user, kind: 'user' }} size="medium" data-test-avatar />
   <h1 data-test-username>{data.user.login}</h1>

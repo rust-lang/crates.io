@@ -1,12 +1,11 @@
 <script lang="ts">
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import PageTitle from '$lib/components/PageTitle.svelte';
 
   let { data } = $props();
 </script>
 
-<svelte:head>
-  <title>Category Slugs - crates.io</title>
-</svelte:head>
+<PageTitle title="Category Slugs" />
 
 <PageHeader title="All Valid Category Slugs" />
 
