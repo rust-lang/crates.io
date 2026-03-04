@@ -50,7 +50,7 @@ impl Rights {
                         .await
                     {
                         Ok(membership) => membership.is_some_and(|m| m.is_active()),
-                        Err(GitHubError::Permission(_)) => {
+                        Err(GitHubError::Forbidden(_)) => {
                             let org_name = team
                                 .split_login()
                                 .map(|(_, org, _)| org.to_string())
@@ -60,7 +60,7 @@ impl Rights {
                                 StatusCode::FORBIDDEN,
                                 format!(
                                     "GitHub organization '{org_name}' has restricted OAuth access. \
-                                     To publish, a '{org_name}' administrator must approve the 'crates.io' \
+                                     A '{org_name}' administrator must approve the 'crates.io' \
                                      application in the organization's 'Third-party access' settings."
                                 ),
                             ));

@@ -23,7 +23,7 @@ async fn publish_with_org_restrictions() {
     github
         .expect_team_membership()
         .returning(|_org_id, _team_id, _username, _token| {
-            Err(GitHubError::Permission(anyhow::anyhow!("403 Forbidden")))
+            Err(GitHubError::Forbidden(anyhow::anyhow!("403 Forbidden")))
         });
 
     let (app, _, owner, _owner_token) = TestApp::full().with_github(github).with_token().await;
@@ -53,5 +53,5 @@ async fn publish_with_org_restrictions() {
     let response = token.publish_crate(crate_to_publish).await;
 
     assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"GitHub organization 'servo' has restricted OAuth access. To publish, a 'servo' administrator must approve the 'crates.io' application in the organization's 'Third-party access' settings."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"GitHub organization 'servo' has restricted OAuth access. A 'servo' administrator must approve the 'crates.io' application in the organization's 'Third-party access' settings."}]}"#);
 }

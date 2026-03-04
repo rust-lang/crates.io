@@ -169,7 +169,9 @@ impl GitHubClient for RealGitHubClient {
 #[derive(Debug, thiserror::Error)]
 pub enum GitHubError {
     #[error(transparent)]
-    Permission(anyhow::Error),
+    Unauthorized(anyhow::Error),
+    #[error(transparent)]
+    Forbidden(anyhow::Error),
     #[error(transparent)]
     NotFound(anyhow::Error),
     #[error(transparent)]
@@ -181,7 +183,8 @@ impl From<reqwest::Error> for GitHubError {
         use reqwest::StatusCode as Status;
 
         match error.status() {
-            Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => Self::Permission(error.into()),
+            Some(Status::UNAUTHORIZED) => Self::Unauthorized(error.into()),
+            Some(Status::FORBIDDEN) => Self::Forbidden(error.into()),
             Some(Status::NOT_FOUND) => Self::NotFound(error.into()),
             _ => Self::Other(error.into()),
         }
