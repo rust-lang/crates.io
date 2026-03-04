@@ -10,6 +10,7 @@ mod edition;
 mod emails;
 mod features;
 mod git;
+mod github_org_restrictions;
 mod inheritance;
 mod keywords;
 mod links;

@@ -217,7 +217,12 @@ impl From<JoinError> for BoxedAppError {
 impl From<GitHubError> for BoxedAppError {
     fn from(error: GitHubError) -> Self {
         match error {
-            GitHubError::Permission(_) => custom(
+            GitHubError::Unauthorized(_) => custom(
+                StatusCode::UNAUTHORIZED,
+                "It looks like your GitHub session has expired or the token was revoked. \
+                 Please try logging out and logging back in to re-authenticate.",
+            ),
+            GitHubError::Forbidden(_) => custom(
                 StatusCode::FORBIDDEN,
                 "It looks like you don't have permission \
                      to query a necessary property from GitHub \

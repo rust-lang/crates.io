@@ -1,6 +1,8 @@
 use crate::models::{Owner, User};
+use crate::util::errors::{BoxedAppError, custom};
 use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crates_io_github::{GitHubClient, GitHubError};
+use http::StatusCode;
 
 /// Access rights to the crate (publishing and ownership management)
 /// NOTE: The order of these variants matters!
@@ -25,7 +27,7 @@ impl Rights {
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
         encryption: &GitHubTokenEncryption,
-    ) -> Result<Self, GitHubError> {
+    ) -> Result<Self, BoxedAppError> {
         let token = encryption
             .decrypt(&user.gh_encrypted_token)
             .map_err(GitHubError::Other)?;
@@ -43,10 +45,28 @@ impl Rights {
                     // Note that we're assuming that the given user is the one interested in
                     // the answer. If this is not the case, then we could accidentally leak
                     // private membership information here.
-                    let is_team_member = gh_client
+                    let is_team_member = match gh_client
                         .team_membership(team.org_id, team.github_id, &user.gh_login, &token)
-                        .await?
-                        .is_some_and(|m| m.is_active());
+                        .await
+                    {
+                        Ok(membership) => membership.is_some_and(|m| m.is_active()),
+                        Err(GitHubError::Forbidden(_)) => {
+                            let org_name = team
+                                .split_login()
+                                .map(|(_, org, _)| org.to_string())
+                                .unwrap_or_else(|| "unknown".to_string());
+
+                            return Err(custom(
+                                StatusCode::FORBIDDEN,
+                                format!(
+                                    "GitHub organization '{org_name}' has restricted OAuth access. \
+                                     A '{org_name}' administrator must approve the 'crates.io' \
+                                     application in the organization's 'Third-party access' settings."
+                                ),
+                            ));
+                        }
+                        Err(e) => return Err(e.into()),
+                    };
 
                     if is_team_member {
                         best = Self::Publish;
