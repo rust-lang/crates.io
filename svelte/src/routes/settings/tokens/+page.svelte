@@ -130,20 +130,32 @@
               {#if token.endpoint_scopes}
                 <div class="endpoint-scopes" data-test-endpoint-scopes>
                   Scopes:
-                  {#each formatScopes(token.endpoint_scopes) as part, i (i)}{#if part.type === 'element'}<strong
-                        >{part.value}<Tooltip text={scopeDescription(part.value)} /></strong
-                      >{:else}{part.value}{/if}{/each}
+                  {#each formatScopes(token.endpoint_scopes) as part, i (i)}
+                    {#if part.type === 'element'}
+                      <strong>
+                        <Tooltip text={scopeDescription(part.value)} />
+                        {part.value}
+                      </strong>
+                    {:else}
+                      {part.value}
+                    {/if}
+                  {/each}
                 </div>
               {/if}
 
               {#if token.crate_scopes}
                 <div class="crate-scopes" data-test-crate-scopes>
                   Crates:
-                  {#each formatScopes(token.crate_scopes) as part, i (i)}{#if part.type === 'element'}<strong
-                        >{part.value}<Tooltip>
-                          <PatternDescription pattern={part.value} />
-                        </Tooltip></strong
-                      >{:else}{part.value}{/if}{/each}
+                  {#each formatScopes(token.crate_scopes) as part, i (i)}
+                    {#if part.type === 'element'}
+                      <strong>
+                        <Tooltip><PatternDescription pattern={part.value} /></Tooltip>
+                        {part.value}
+                      </strong>
+                    {:else}
+                      {part.value}
+                    {/if}
+                  {/each}
                 </div>
               {/if}
             </div>
