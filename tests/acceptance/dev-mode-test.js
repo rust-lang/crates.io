@@ -21,7 +21,7 @@ if (s.has('devmode')) {
       await this.db.version.create({ crate, num: '0.1.0' });
       await this.db.crateOwnership.create({ crate, user });
 
-      crate = this.db.crate.create({ name: 'bar' });
+      crate = await this.db.crate.create({ name: 'bar' });
       await this.db.version.create({ crate, num: '1.0.0' });
 
       let router = this.owner.lookup('service:router');
