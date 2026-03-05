@@ -106,6 +106,9 @@ importers:
       '@mainmatter/ember-api-actions':
         specifier: 0.6.0
         version: 0.6.0
+      '@msw/playwright':
+        specifier: 0.6.5
+        version: 0.6.5(msw@2.12.10(@types/node@24.11.0)(typescript@5.9.3))
       '@percy/cli':
         specifier: 1.31.8
         version: 1.31.8(typescript@5.9.3)
@@ -298,9 +301,6 @@ importers:
       msw:
         specifier: 2.12.10
         version: 2.12.10(@types/node@24.11.0)(typescript@5.9.3)
-      playwright-msw:
-        specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.58.2)(msw@2.12.10(@types/node@24.11.0)(typescript@5.9.3))
       postcss:
         specifier: 8.5.6
         version: 8.5.6
@@ -2193,9 +2193,11 @@ packages:
   '@msw/data@1.1.2':
     resolution: {integrity: sha512-beEM1cfb59FdoSV9pmWI+Vllf+QxoYtIDiVE9b1awVAWTa9eeDIZAi1qispBuSSnzZam6lIljCFPYJbXOwEbvA==}
 
-  '@mswjs/cookies@1.1.1':
-    resolution: {integrity: sha512-W68qOHEjx1iD+4VjQudlx26CPIoxmIAtK4ZCexU0/UJBG6jYhcuyzKJx+Iw8uhBIGd9eba64XgWVgo20it1qwA==}
-    engines: {node: '>=18'}
+  '@msw/playwright@0.6.5':
+    resolution: {integrity: sha512-inqYTLiJk0dnsQD5XMo5dIt2aZYTw8DtSr1Unfa4tLJmGIU6+qwpCkmWrNksqkBuc/nCz6nxmqSgkkZ87b+btA==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      msw: ^2.12.10
 
   '@mswjs/interceptors@0.41.3':
     resolution: {integrity: sha512-cXu86tF4VQVfwz8W1SPbhoRyHJkti6mjH/XJIxp40jhO4j2k1m4KYrEykxqWPkFF3vrK4rgQppBh//AwyGSXPA==}
@@ -7604,13 +7606,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright-msw@3.0.1:
-    resolution: {integrity: sha512-w2bVjt7kPIThOQF9OS/1vDDs0HsQfV9inxMVSUv74x/zhCcrgzVN47xpPk84okf3OcCRHHBJKq8sNeBfCDyhMg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@playwright/test': '>=1.20.0'
-      msw: ^2.0.0
-
   playwright@1.58.2:
     resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
     engines: {node: '>=18'}
@@ -7962,7 +7957,6 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.14.2:
@@ -12172,7 +12166,11 @@ snapshots:
       outvariant: 1.4.3
       rettime: 0.7.0
 
-  '@mswjs/cookies@1.1.1': {}
+  '@msw/playwright@0.6.5(msw@2.12.10(@types/node@24.11.0)(typescript@5.9.3))':
+    dependencies:
+      '@mswjs/interceptors': 0.41.3
+      msw: 2.12.10(@types/node@24.11.0)(typescript@5.9.3)
+      outvariant: 1.4.3
 
   '@mswjs/interceptors@0.41.3':
     dependencies:
@@ -19111,13 +19109,6 @@ snapshots:
       find-up: 3.0.0
 
   playwright-core@1.58.2: {}
-
-  playwright-msw@3.0.1(@playwright/test@1.58.2)(msw@2.12.10(@types/node@24.11.0)(typescript@5.9.3)):
-    dependencies:
-      '@mswjs/cookies': 1.1.1
-      '@playwright/test': 1.58.2
-      msw: 2.12.10(@types/node@24.11.0)(typescript@5.9.3)
-      strict-event-emitter: 0.5.1
 
   playwright@1.58.2:
     dependencies:
