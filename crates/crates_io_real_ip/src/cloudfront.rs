@@ -80,6 +80,8 @@ pub const CLOUDFRONT_NETWORKS: &[IpNetwork] = &[
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(18, 244, 0, 0), 15).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 91, 0, 0), 19).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 228, 212, 0), 24).unwrap()),
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 228, 213, 0), 24).unwrap()),
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 228, 214, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 228, 220, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 228, 221, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 228, 222, 0), 24).unwrap()),
