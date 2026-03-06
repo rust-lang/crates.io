@@ -2704,7 +2704,27 @@ export interface operations {
     };
     list_reverse_dependencies: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description The page number to request.
+                 *
+                 *     This parameter is mutually exclusive with `seek` and not supported for
+                 *     all requests.
+                 */
+                page?: number;
+                /** @description The number of items to request per page. */
+                per_page?: number;
+                /**
+                 * @description The seek key to request.
+                 *
+                 *     This parameter is mutually exclusive with `page` and not supported for
+                 *     all requests.
+                 *
+                 *     The seek key can usually be found in the `meta.next_page` field of
+                 *     paginated responses.
+                 */
+                seek?: string;
+            };
             header?: never;
             path: {
                 /** @description Name of the crate */

@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::controllers::helpers::pagination::PaginationOptions;
+use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::controllers::krate::CratePath;
 use crate::models::{CrateName, User, Version, VersionOwnerAction};
 use crate::util::errors::AppResult;
@@ -33,7 +33,7 @@ pub struct RevDepsMeta {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/reverse_dependencies",
-    params(CratePath),
+    params(CratePath, PaginationQueryParams),
     tag = "crates",
     responses((status = 200, description = "Successful Response", body = inline(RevDepsResponse))),
 )]
