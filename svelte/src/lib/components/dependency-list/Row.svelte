@@ -8,7 +8,7 @@
   import Placeholder from '$lib/components/Placeholder.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
 
-  type Dependency = components['schemas']['EncodableDependency'];
+  type Dependency = components['schemas']['Dependency'];
 
   interface Props {
     dependency: Dependency;

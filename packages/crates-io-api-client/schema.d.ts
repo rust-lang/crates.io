@@ -1025,6 +1025,15 @@ export interface components {
              */
             name: string;
         };
+        ApiTokenWithToken: components["schemas"]["ApiToken"] & {
+            /**
+             * @description The plaintext API token.
+             *
+             *     Only available when the token is created.
+             * @example a1b2c3d4e5f6g7h8i9j0
+             */
+            token: string;
+        };
         AuthenticatedUser: {
             /**
              * @description The user's avatar URL, if set.
@@ -1317,16 +1326,7 @@ export interface components {
              */
             inviter_id: number;
         };
-        EncodableApiTokenWithToken: components["schemas"]["ApiToken"] & {
-            /**
-             * @description The plaintext API token.
-             *
-             *     Only available when the token is created.
-             * @example a1b2c3d4e5f6g7h8i9j0
-             */
-            token: string;
-        };
-        EncodableDependency: {
+        Dependency: {
             /**
              * @description The name of the crate this dependency points to.
              * @example serde
@@ -2742,7 +2742,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description The list of reverse dependencies of the crate. */
-                        dependencies: components["schemas"]["EncodableDependency"][];
+                        dependencies: components["schemas"]["Dependency"][];
                         meta: {
                             /**
                              * Format: int64
@@ -2950,7 +2950,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        dependencies: components["schemas"]["EncodableDependency"][];
+                        dependencies: components["schemas"]["Dependency"][];
                     };
                 };
             };
@@ -3469,7 +3469,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        api_token: components["schemas"]["EncodableApiTokenWithToken"];
+                        api_token: components["schemas"]["ApiTokenWithToken"];
                     };
                 };
             };
