@@ -143,6 +143,7 @@ pub struct InvitationResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = Dependency)]
 pub struct EncodableDependency {
     /// An opaque identifier for the dependency.
     #[schema(example = 169)]
@@ -638,6 +639,7 @@ impl From<Team> for EncodableTeam {
 }
 
 #[derive(Serialize, Debug, utoipa::ToSchema)]
+#[schema(as = ApiTokenWithToken)]
 pub struct EncodableApiTokenWithToken {
     #[serde(flatten)]
     pub token: ApiToken,

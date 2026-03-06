@@ -5,7 +5,7 @@
 
   import Row from './Row.svelte';
 
-  type Dependency = components['schemas']['EncodableDependency'];
+  type Dependency = components['schemas']['Dependency'];
 
   const { Story } = defineMeta({
     title: 'dependency-list/Row',
