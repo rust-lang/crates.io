@@ -1,5 +1,4 @@
 import { expect, test } from '@/e2e/helper';
-import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Dashboard', { tag: '@acceptance' }, () => {
   test('shows "page requires authentication" error when not logged in', async ({ page }) => {
@@ -40,7 +39,7 @@ test.describe('Acceptance | Dashboard', { tag: '@acceptance' }, () => {
     }
 
     {
-      let crate = await msw.db.crate.create({ name: 'nanomsg' });
+      let crate = await msw.db.crate.create({ name: 'nanomsg', downloads: 3892 });
       await msw.db.crateOwnership.create({ crate, user });
       await msw.db.version.create({ crate, num: '0.1.0' });
       user = await msw.db.user.update(q => q.where({ id: user.id }), {
@@ -49,9 +48,6 @@ test.describe('Acceptance | Dashboard', { tag: '@acceptance' }, () => {
         },
       });
     }
-
-    let response = HttpResponse.json({ total_downloads: 3892 });
-    await msw.worker.use(http.get(`/api/v1/users/${user.id}/stats`, () => response));
 
     await page.goto('/dashboard');
     await expect(page).toHaveURL('/dashboard');

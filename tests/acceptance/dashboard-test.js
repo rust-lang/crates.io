@@ -2,7 +2,6 @@ import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
-import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
@@ -49,7 +48,7 @@ module('Acceptance | Dashboard', function (hooks) {
     }
 
     {
-      let crate = await this.db.crate.create({ name: 'nanomsg' });
+      let crate = await this.db.crate.create({ name: 'nanomsg', downloads: 3892 });
       await this.db.crateOwnership.create({ crate, user });
       await this.db.version.create({ crate, num: '0.1.0' });
       user = await this.db.user.update(q => q.where({ id: user.id }), {
@@ -58,8 +57,6 @@ module('Acceptance | Dashboard', function (hooks) {
         },
       });
     }
-
-    this.worker.use(http.get(`/api/v1/users/${user.id}/stats`, () => HttpResponse.json({ total_downloads: 3892 })));
 
     await visit('/dashboard');
     assert.strictEqual(currentURL(), '/dashboard');
