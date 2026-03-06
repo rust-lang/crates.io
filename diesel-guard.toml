@@ -1,6 +1,7 @@
 # diesel-guard configuration file
 
 framework = "diesel"
+postgres_version = 16
 
 # Skip checking migrations created before this timestamp
 # Useful for retrofitting diesel-guard into existing projects
@@ -31,4 +32,4 @@ start_after = "2026-02-22-000000"
 # disable_checks = ["AddColumnCheck", "DropColumnCheck"]
 #
 # Default: [] (all checks enabled)
-disable_checks = ["AddColumnCheck"]
+disable_checks = []
