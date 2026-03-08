@@ -32,7 +32,7 @@
   class:detailed={showDetailedList}
   data-test-owners={showDetailedList ? 'detailed' : 'basic'}
 >
-  {#each owners as owner (owner.id)}
+  {#each owners as owner (`${owner.kind}:${owner.id}`)}
     {@const isTeam = owner.kind === 'team'}
     {@const href = isTeam
       ? resolve('/teams/[team_id]', { team_id: owner.login })
