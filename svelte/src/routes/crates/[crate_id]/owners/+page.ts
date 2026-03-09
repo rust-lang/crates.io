@@ -1,3 +1,6 @@
+import { resolve } from '$app/paths';
+import { redirect } from '@sveltejs/kit';
+
 export function load({ params }) {
-  return { crate_id: params.crate_id };
+  redirect(308, resolve('/crates/[crate_id]/settings', { crate_id: params.crate_id }));
 }
