@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
 
+  import { invalidateAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
@@ -15,6 +16,9 @@
 
   let notifications = getNotifications();
   let client = createClient({ fetch });
+
+  let addOwnerVisible = $state(false);
+  let username = $state('');
 
   let crate_id = $derived(data.crate.id);
   let crateName = $derived(data.crate.name);
@@ -65,6 +69,38 @@
       notifications.error(message);
     }
   }
+
+  async function addOwner(event: SubmitEvent) {
+    event.preventDefault();
+
+    let name = username;
+
+    try {
+      let result = await client.PUT('/api/v1/crates/{name}/owners', {
+        params: { path: { name: crateName } },
+        body: { owners: [name] },
+      });
+
+      if (!result.response.ok) {
+        let detail = (result.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+        throw new Error(detail ?? '');
+      }
+
+      if (name.includes(':')) {
+        notifications.success(`Team ${name} was added as a crate owner`);
+        await invalidateAll();
+      } else {
+        notifications.success(`An invite has been sent to ${name}`);
+      }
+      addOwnerVisible = false;
+    } catch (error) {
+      let message = 'Error sending invite';
+      if (error instanceof Error && error.message) {
+        message += `: ${error.message}`;
+      }
+      notifications.error(message);
+    }
+  }
 </script>
 
 <PageTitle title="Manage Crate Settings" />
@@ -73,7 +109,35 @@
 
 <div class="header">
   <h2>Owners</h2>
+  {#if !addOwnerVisible}
+    <button
+      type="button"
+      class="button button--small"
+      data-test-add-owner-button
+      onclick={() => {
+        addOwnerVisible = true;
+        username = '';
+      }}
+    >
+      Add Owner
+    </button>
+  {/if}
 </div>
+
+{#if addOwnerVisible}
+  <form class="add-owner-form" onsubmit={addOwner}>
+    <label class="add-owner-label" for="new-owner-username">Username</label>
+    <input
+      type="text"
+      id="new-owner-username"
+      bind:value={username}
+      placeholder="Username"
+      class="add-owner-input"
+      name="username"
+    />
+    <button type="submit" disabled={!username} class="button button--small" data-test-save-button>Add</button>
+  </form>
+{/if}
 
 <div class="list" data-test-owners>
   {#each teamOwners as team (team.id)}
@@ -143,6 +207,27 @@
 
   .header > h2 {
     margin: 0;
+  }
+
+  .add-owner-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    padding: var(--space-s) var(--space-m);
+    background-color: light-dark(white, #141413);
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    margin-bottom: var(--space-s);
+  }
+
+  .add-owner-label {
+    font-weight: bold;
+  }
+
+  .add-owner-input {
+    width: 400px;
   }
 
   .list {
