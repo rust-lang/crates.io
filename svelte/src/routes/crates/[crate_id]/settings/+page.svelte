@@ -2,18 +2,24 @@
   import type { components } from '@crates-io/api-client';
 
   import { resolve } from '$app/paths';
+  import { createClient } from '@crates-io/api-client';
 
   import CrateHeader from '$lib/components/CrateHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import UserAvatar from '$lib/components/UserAvatar.svelte';
+  import { getNotifications } from '$lib/notifications.svelte';
 
   type Owner = components['schemas']['Owner'];
 
   let { data } = $props();
 
-  let crate_id = $derived(data.crate.id);
+  let notifications = getNotifications();
+  let client = createClient({ fetch });
 
-  let owners = $derived(data.owners);
+  let crate_id = $derived(data.crate.id);
+  let crateName = $derived(data.crate.name);
+
+  let owners = $derived([...data.owners]);
   let teamOwners = $derived(owners.filter(o => o.kind === 'team'));
   let userOwners = $derived(owners.filter(o => o.kind === 'user'));
 
@@ -26,6 +32,38 @@
   function teamDisplayName(owner: Owner): string {
     let orgName = owner.login.split(':')[1];
     return owner.name ? `${orgName}/${owner.name}` : owner.login;
+  }
+
+  async function removeOwner(owner: Owner) {
+    let isTeam = owner.kind === 'team';
+    let displayName = isTeam ? teamDisplayName(owner) : owner.login;
+    let subject = isTeam ? `team ${displayName}` : `user ${displayName}`;
+
+    try {
+      let result = await client.DELETE('/api/v1/crates/{name}/owners', {
+        params: { path: { name: crateName } },
+        body: { owners: [owner.login] },
+      });
+
+      if (!result.response.ok) {
+        let detail = (result.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+        throw new Error(detail ?? '');
+      }
+
+      owners = owners.filter(o => !(o.kind === owner.kind && o.id === owner.id));
+
+      if (isTeam) {
+        notifications.success(`Team ${displayName} removed as crate owner`);
+      } else {
+        notifications.success(`User ${displayName} removed as crate owner`);
+      }
+    } catch (error) {
+      let message = `Failed to remove the ${subject} as crate owner`;
+      if (error instanceof Error && error.message) {
+        message += `: ${error.message}`;
+      }
+      notifications.error(message);
+    }
   }
 </script>
 
@@ -50,7 +88,14 @@
         {teamDisplayName(team)}
       </a>
       <div class="email-column"></div>
-      <button type="button" class="button button--small" data-test-remove-owner-button>Remove</button>
+      <button
+        type="button"
+        class="button button--small"
+        data-test-remove-owner-button
+        onclick={() => removeOwner(team)}
+      >
+        Remove
+      </button>
     </div>
   {/each}
   {#each userOwners as user (user.id)}
@@ -65,7 +110,14 @@
         {user.name ?? user.login}
       </a>
       <div class="email-column"></div>
-      <button type="button" class="button button--small" data-test-remove-owner-button>Remove</button>
+      <button
+        type="button"
+        class="button button--small"
+        data-test-remove-owner-button
+        onclick={() => removeOwner(user)}
+      >
+        Remove
+      </button>
     </div>
   {/each}
 </div>
