@@ -53,7 +53,7 @@ jobs:
 
     outputs:
       backend-lint: ${{ steps.changed-files.outputs.backend_lint_any_modified }}
-      backend-deps: ${{ steps.steps.changed-files.outputs.backend_deps_any_modified || github.event_name == 'push' }}
+      backend-deps: ${{ steps.changed-files.outputs.backend_deps_any_modified || github.event_name == 'push' }}
       backend-migrations: ${{ steps.changed-files.outputs.backend_migrations_any_modified }}
       backend-test: ${{ steps.changed-files.outputs.backend_test_any_modified }}
       frontend-lint: ${{ steps.changed-files.outputs.frontend_lint_any_modified }}
