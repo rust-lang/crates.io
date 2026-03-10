@@ -164,6 +164,10 @@ created_at = "public"
 [metadata.columns]
 total_downloads = "public"
 
+[metadata_github_refresh.columns]
+highest_processed_user_id = "private"
+batch_size = "private"
+
 [oauth_github.columns]
 user_id = "private"
 account_id = "private"
