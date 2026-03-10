@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: Feature request
     about: Suggest an idea for this project
-    url: https://github.com/rust-lang/crates.io/discussions/new
+    url: https://github.com/rust-lang/crates.io/discussions/new?category=feature-requests
