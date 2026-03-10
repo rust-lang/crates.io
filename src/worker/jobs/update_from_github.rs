@@ -22,7 +22,7 @@ impl BackgroundJob for UpdateFromGithub {
 
         let metadata = get_state_params(&mut conn).await?;
 
-        let crates_io_users = next_user_batch().await?;
+        let crates_io_users = next_user_batch(metadata, &mut conn).await?;
 
         let updates = refresh_users(crates_io_users).await?;
 
@@ -55,8 +55,19 @@ async fn get_state_params(conn: &mut AsyncPgConnection) -> anyhow::Result<Metada
     })
 }
 
-async fn next_user_batch() -> anyhow::Result<Vec<User>> {
-    todo!();
+async fn next_user_batch(
+    MetadataGithubRefresh {
+        highest_processed_user_id,
+        batch_size,
+    }: MetadataGithubRefresh,
+    conn: &mut AsyncPgConnection,
+) -> anyhow::Result<Vec<User>> {
+    Ok(User::query()
+        .filter(users::id.gt(highest_processed_user_id))
+        .order(users::id.asc())
+        .limit(batch_size)
+        .load(conn)
+        .await?)
 }
 
 #[derive(Debug, Clone)]
@@ -90,6 +101,19 @@ mod tests {
     use super::*;
     use crates_io_test_db::TestDatabase;
 
+    async fn new_user(username: &str, conn: &mut AsyncPgConnection) -> User {
+        use crate::models::NewUser;
+
+        NewUser::builder()
+            .gh_id(0)
+            .gh_login(username)
+            .gh_encrypted_token(&[])
+            .build()
+            .insert(conn)
+            .await
+            .unwrap()
+    }
+
     #[tokio::test]
     async fn load_params_from_metadata_table() {
         let db = TestDatabase::new();
@@ -103,5 +127,44 @@ mod tests {
                 batch_size: 100,
             }
         );
+    }
+
+    async fn user_batch(
+        highest_processed_user_id: i32,
+        batch_size: i64,
+        conn: &mut AsyncPgConnection,
+    ) -> Vec<User> {
+        next_user_batch(
+            MetadataGithubRefresh {
+                highest_processed_user_id,
+                batch_size,
+            },
+            conn,
+        )
+        .await
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn get_batches_as_specified() {
+        let db = TestDatabase::new();
+        let mut conn = db.async_connect().await;
+
+        let u1 = new_user("foo", &mut conn).await;
+        let u2 = new_user("baz", &mut conn).await;
+        let u3 = new_user("bar", &mut conn).await;
+        let users = vec![u1, u2, u3];
+
+        let all = user_batch(0, 100, &mut conn).await;
+        assert_eq!(&all[..], &users[..]);
+
+        let limit_num = user_batch(0, 2, &mut conn).await;
+        assert_eq!(&limit_num[..], &users[0..=1]);
+
+        let change_start = user_batch(1, 100, &mut conn).await;
+        assert_eq!(&change_start[..], &users[1..=2]);
+
+        let limit_num_and_change_start = user_batch(1, 1, &mut conn).await;
+        assert_eq!(&limit_num_and_change_start[..], &users[1..=1]);
     }
 }
