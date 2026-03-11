@@ -10,7 +10,12 @@
   let descriptions = $derived(data.descriptionMap);
 </script>
 
-<CrateHeader crate={data.crate} version={data.version} versionNum={data.version.num} />
+<CrateHeader
+  crate={data.crate}
+  version={data.version}
+  versionNum={data.version.num}
+  ownersPromise={data.ownersPromise}
+/>
 
 <h2 class="heading">Dependencies</h2>
 {#if normal.length > 0}

@@ -63,7 +63,7 @@
   }
 </script>
 
-<CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} />
+<CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} {ownersPromise} />
 
 <div class="crate-info">
   <div class="docs" data-test-docs>

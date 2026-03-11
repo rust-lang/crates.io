@@ -65,7 +65,7 @@
   }
 </script>
 
-<CrateHeader crate={data.crate} />
+<CrateHeader crate={data.crate} ownersPromise={data.ownersPromise} />
 
 <div class="results-meta">
   <span class="page-description text--small" data-test-page-description>

@@ -3,6 +3,7 @@
 
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
+  import SessionDecorator from '$lib/storybook/SessionDecorator.svelte';
   import CrateHeader from './CrateHeader.svelte';
 
   const { Story } = defineMeta({
@@ -11,9 +12,35 @@
     tags: ['autodocs'],
   });
 
+  type AuthenticatedUser = components['schemas']['AuthenticatedUser'];
   type Crate = components['schemas']['Crate'];
+  type Owner = components['schemas']['Owner'];
   type Version = components['schemas']['Version'];
   type Keyword = components['schemas']['Keyword'];
+
+  const ownerUser: AuthenticatedUser = {
+    id: 42,
+    login: 'johndoe',
+    name: 'John Doe',
+    avatar: 'https://avatars.githubusercontent.com/u/1234567?v=4',
+    email: 'john@example.com',
+    email_verified: true,
+    email_verification_sent: true,
+    is_admin: false,
+    publish_notifications: true,
+    url: 'https://github.com/johndoe',
+  };
+
+  const owners: Owner[] = [
+    {
+      id: 42,
+      login: 'johndoe',
+      kind: 'user',
+      url: 'https://github.com/johndoe',
+      name: 'John Doe',
+      avatar: 'https://avatars.githubusercontent.com/u/1234567?v=4',
+    },
+  ];
 
   const baseCrate: Crate = {
     id: 'serde',
@@ -152,3 +179,15 @@
     versionNum: '1.0.215',
   }}
 />
+
+<Story name="Crate Owner" asChild>
+  <SessionDecorator user={ownerUser}>
+    <CrateHeader
+      crate={baseCrate}
+      version={baseVersion}
+      versionNum="1.0.215"
+      keywords={sampleKeywords}
+      ownersPromise={Promise.resolve(owners)}
+    />
+  </SessionDecorator>
+</Story>

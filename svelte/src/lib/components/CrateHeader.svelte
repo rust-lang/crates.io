@@ -12,6 +12,7 @@
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];
   type Keyword = components['schemas']['Keyword'];
+  type Owner = components['schemas']['Owner'];
 
   interface Props {
     /** The crate to display in the header. */
@@ -31,15 +32,15 @@
 
     /** The keywords associated with this crate. */
     keywords?: Keyword[];
+
+    /** The owners of this crate, used to determine if the Settings tab should be shown. */
+    ownersPromise?: Promise<Owner[]>;
   }
 
-  let { crate, version, versionNum: version_num, keywords = [] }: Props = $props();
+  let { crate, version, versionNum: version_num, keywords = [], ownersPromise }: Props = $props();
   let crate_id = $derived(crate.id);
 
   let session = getSession();
-
-  // TODO: implement isOwner check using session service
-  let isOwner = $derived(false);
 
   let readmeHref = $derived(
     version_num
@@ -115,9 +116,11 @@
   <NavTabs.Tab href={depsHref} data-test-deps-tab>Dependencies</NavTabs.Tab>
   <NavTabs.Tab href={revDepsHref} data-test-rev-deps-tab>Dependents</NavTabs.Tab>
   <NavTabs.Tab href={securityHref} data-test-security-tab>Security</NavTabs.Tab>
-  {#if isOwner}
-    <NavTabs.Tab href={settingsHref} data-test-settings-tab>Settings</NavTabs.Tab>
-  {/if}
+  {#await ownersPromise then owners}
+    {#if owners?.some(o => o.kind === 'user' && o.id === session.currentUser?.id)}
+      <NavTabs.Tab href={settingsHref} data-test-settings-tab>Settings</NavTabs.Tab>
+    {/if}
+  {/await}
 </NavTabs.Root>
 
 <style>
