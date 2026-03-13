@@ -22,4 +22,4 @@ tempfile = "=3.27.0"
 thiserror = "=2.0.18"
 tokio = { version = "=1.50.0", features = ["fs", "macros", "process", "rt-multi-thread"]}
 tracing = "=0.1.44"
-tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
