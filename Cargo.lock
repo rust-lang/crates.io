@@ -1519,7 +1519,7 @@ dependencies = [
  "tokio",
  "tokio-postgres",
  "tokio-util",
- "toml 1.0.1+spec-1.1.0",
+ "toml 1.0.6+spec-1.1.0",
  "tower",
  "tower-http",
  "tracing",
@@ -1615,7 +1615,7 @@ dependencies = [
  "tar",
  "tempfile",
  "tokio",
- "toml 1.0.1+spec-1.1.0",
+ "toml 1.0.6+spec-1.1.0",
  "tracing",
  "zip",
 ]
@@ -1872,7 +1872,7 @@ dependencies = [
  "diesel-async",
  "semver",
  "serde_json",
- "toml 1.0.1+spec-1.1.0",
+ "toml 1.0.6+spec-1.1.0",
 ]
 
 [[package]]
@@ -6751,9 +6751,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "1.0.1+spec-1.1.0"
+version = "1.0.6+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbe30f93627849fa362d4a602212d41bb237dc2bd0f8ba0b2ce785012e124220"
+checksum = "399b1124a3c9e16766831c6bba21e50192572cdd98706ea114f9502509686ffc"
 dependencies = [
  "indexmap",
  "serde_core",
