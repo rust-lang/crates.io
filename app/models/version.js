@@ -192,7 +192,7 @@ export default class Version extends Model {
   });
 
   loadDocsStatusTask = task(async () => {
-    return await ajax(`https://docs.rs/crate/${this.crateName}/=${this.num}/status.json`);
+    return await ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/status.json`);
   });
 
   get docsRsResponse() {

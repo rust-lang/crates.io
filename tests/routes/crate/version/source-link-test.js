@@ -13,7 +13,12 @@ module('Route | crate.version | source link', function (hooks) {
     await this.db.version.create({ crate, num: '1.0.0' });
 
     let response = HttpResponse.json({ doc_status: false, version: '1.0.0' });
-    this.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
+    this.worker.use(
+      http.get('https://docs.rs/crate/:crate/:version/status.json', ({ params }) => {
+        assert.strictEqual(params.version, '1.0.0');
+        return response;
+      }),
+    );
 
     await visit('/crates/foo');
     assert.dom('[data-test-source-link] a').hasAttribute('href', 'https://docs.rs/crate/foo/1.0.0/source/');
