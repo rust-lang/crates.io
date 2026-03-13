@@ -38,7 +38,7 @@ impl BackgroundJob for UpdateFromGithub {
         )
         .await?;
 
-        apply_updates(updates).await?;
+        apply_updates(updates, &mut conn).await?;
 
         Ok(())
     }
@@ -167,7 +167,7 @@ async fn refresh_user(
     }
 }
 
-async fn apply_updates(updates: Vec<UsernameUpdate>) -> anyhow::Result<()> {
+async fn apply_updates(updates: Vec<UsernameUpdate>, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
     todo!();
 }
 
@@ -327,5 +327,43 @@ mod tests {
                 } // User 7 doesn't need an update because GitHub was down when we requested it
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn apply_updates_as_specified() {
+        let db = TestDatabase::new();
+        let mut conn = db.async_connect().await;
+
+        let u1 = new_user("dont_update_me", &mut conn).await;
+        let u2 = new_user("update_me", &mut conn).await;
+        let u3 = new_user("already_updated", &mut conn).await;
+
+        let updates = vec![
+            // no update for u1, so it should be unchanged in the database
+            UsernameUpdate {
+                id: u2.id,
+                new_username: "something_else".into(),
+            },
+            UsernameUpdate {
+                id: u3.id,
+                new_username: u3.gh_login.clone(),
+            },
+            UsernameUpdate {
+                id: u3.id + 1,
+                new_username: "dont_insert_this_nonexistent_user".into(),
+            },
+        ];
+
+        apply_updates(updates, &mut conn).await.unwrap();
+
+        let all = user_batch(0, 100, &mut conn).await;
+        assert_eq!(all, vec![
+            u1,
+            User {
+                gh_login: "something_else".into(),
+               ..u2
+            },
+            u3,
+        ]);
     }
 }
