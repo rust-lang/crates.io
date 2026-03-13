@@ -25,7 +25,7 @@ clap = { version = "=4.5.60", features = ["derive"] }
 criterion = { version = "=0.8.2", features = ["async_tokio"] }
 insta = "=1.46.3"
 tokio = { version = "=1.50.0", features = ["fs", "macros", "rt", "rt-multi-thread"] }
-tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
 
 [[bench]]
 name = "count_downloads"

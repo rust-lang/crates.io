@@ -24,4 +24,4 @@ tracing = "=0.1.44"
 clap = { version = "=4.5.60", features = ["derive", "env", "unicode", "wrap_help"] }
 secrecy = "=0.10.3"
 tokio = { version = "=1.50.0", features = ["macros", "rt-multi-thread"] }
-tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }

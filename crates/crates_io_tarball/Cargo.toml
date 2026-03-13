@@ -32,5 +32,5 @@ indicatif = { version = "=0.18.4", features = ["rayon"] }
 insta = "=1.46.3"
 rayon = "=1.11.0"
 tar = { version = "=0.4.44" }
-tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
 walkdir = "=2.5.0"
