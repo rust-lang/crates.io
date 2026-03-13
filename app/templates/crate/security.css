@@ -16,6 +16,7 @@
   border-radius: var(--space-3xs);
   padding: var(--space-m) var(--space-l);
   list-style: none;
+  overflow-wrap: break-word;
 }
 
 .no-results {
