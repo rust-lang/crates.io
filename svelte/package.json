@@ -45,7 +45,7 @@
     "@storybook/sveltekit": "10.2.17",
     "@sveltejs/adapter-static": "3.0.10",
     "@sveltejs/kit": "2.53.4",
-    "@sveltejs/vite-plugin-svelte": "6.2.4",
+    "@sveltejs/vite-plugin-svelte": "7.0.0",
     "@types/node": "24.12.0",
     "@types/semver": "7.7.1",
     "@vitest/browser-playwright": "4.0.18",
