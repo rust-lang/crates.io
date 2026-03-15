@@ -203,23 +203,74 @@ mod tests {
     #[tokio::test]
     async fn category_toplevel_orders_by_crates_cnt_when_sort_given() {
         use self::categories;
-
-        let new_cat = |category, slug, crates_cnt| {
-            (
-                categories::category.eq(category),
-                categories::slug.eq(slug),
-                categories::crates_cnt.eq(crates_cnt),
-            )
-        };
+        use crate::schema::crates;
+        use crate::schema::crates_categories;
 
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
         diesel::insert_into(categories::table)
             .values(&vec![
-                new_cat("Cat 1", "cat1", 0),
-                new_cat("Cat 2", "cat2", 2),
-                new_cat("Cat 3", "cat3", 1),
+                (
+                    categories::category.eq("Cat 1"),
+                    categories::slug.eq("cat1"),
+                ),
+                (
+                    categories::category.eq("Cat 2"),
+                    categories::slug.eq("cat2"),
+                ),
+                (
+                    categories::category.eq("Cat 3"),
+                    categories::slug.eq("cat3"),
+                ),
+            ])
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        let _cat1: Category = Category::by_slug("cat1")
+            .select(Category::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
+        let cat2: Category = Category::by_slug("cat2")
+            .select(Category::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
+        let cat3: Category = Category::by_slug("cat3")
+            .select(Category::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
+
+        let insert_crate = |name: &'static str| {
+            diesel::insert_into(crates::table)
+                .values(crates::name.eq(name))
+                .returning(crates::id)
+        };
+
+        // Cat 1: 0 crates
+        // Cat 2: 2 crates
+        let k1: i32 = insert_crate("k1").get_result(&mut conn).await.unwrap();
+        let k2: i32 = insert_crate("k2").get_result(&mut conn).await.unwrap();
+        // Cat 3: 1 crate
+        let k3: i32 = insert_crate("k3").get_result(&mut conn).await.unwrap();
+
+        diesel::insert_into(crates_categories::table)
+            .values(&vec![
+                (
+                    crates_categories::crate_id.eq(k1),
+                    crates_categories::category_id.eq(cat2.id),
+                ),
+                (
+                    crates_categories::crate_id.eq(k2),
+                    crates_categories::category_id.eq(cat2.id),
+                ),
+                (
+                    crates_categories::crate_id.eq(k3),
+                    crates_categories::category_id.eq(cat3.id),
+                ),
             ])
             .execute(&mut conn)
             .await
@@ -283,30 +334,79 @@ mod tests {
     #[tokio::test]
     async fn category_toplevel_includes_subcategories_in_crate_cnt() {
         use self::categories;
-
-        let new_cat = |category, slug, crates_cnt| {
-            (
-                categories::category.eq(category),
-                categories::slug.eq(slug),
-                categories::crates_cnt.eq(crates_cnt),
-            )
-        };
+        use crate::schema::crates;
+        use crate::schema::crates_categories;
 
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
         diesel::insert_into(categories::table)
             .values(&vec![
-                new_cat("Cat 1", "cat1", 1),
-                new_cat("Cat 1::sub", "cat1::sub", 2),
-                new_cat("Cat 2", "cat2", 3),
-                new_cat("Cat 2::Sub 1", "cat2::sub1", 4),
-                new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
-                new_cat("Cat 3", "cat3", 6),
+                (
+                    categories::category.eq("Cat 1"),
+                    categories::slug.eq("cat1"),
+                ),
+                (
+                    categories::category.eq("Cat 1::sub"),
+                    categories::slug.eq("cat1::sub"),
+                ),
+                (
+                    categories::category.eq("Cat 2"),
+                    categories::slug.eq("cat2"),
+                ),
+                (
+                    categories::category.eq("Cat 2::Sub 1"),
+                    categories::slug.eq("cat2::sub1"),
+                ),
+                (
+                    categories::category.eq("Cat 2::Sub 2"),
+                    categories::slug.eq("cat2::sub2"),
+                ),
+                (
+                    categories::category.eq("Cat 3"),
+                    categories::slug.eq("cat3"),
+                ),
             ])
             .execute(&mut conn)
             .await
             .unwrap();
+
+        let mut crate_idx = 0;
+        // Total crates insertion loop
+        let slugs = vec![
+            ("cat1", 1),
+            ("cat1::sub", 2),
+            ("cat2", 3),
+            ("cat2::sub1", 4),
+            ("cat2::sub2", 5),
+            ("cat3", 6),
+        ];
+
+        for (slug, count) in slugs {
+            let cat_id: i32 = Category::by_slug(slug)
+                .select(categories::id)
+                .first::<i32>(&mut conn)
+                .await
+                .unwrap();
+            for _i in 0..count {
+                crate_idx += 1;
+                let name = format!("k_{}", crate_idx);
+                let k_id: i32 = diesel::insert_into(crates::table)
+                    .values(crates::name.eq(name))
+                    .returning(crates::id)
+                    .get_result(&mut conn)
+                    .await
+                    .unwrap();
+                diesel::insert_into(crates_categories::table)
+                    .values((
+                        crates_categories::crate_id.eq(k_id),
+                        crates_categories::category_id.eq(cat_id),
+                    ))
+                    .execute(&mut conn)
+                    .await
+                    .unwrap();
+            }
+        }
 
         let cats = Category::toplevel(&mut conn, "crates", 10, 0)
             .await
@@ -325,30 +425,78 @@ mod tests {
     #[tokio::test]
     async fn category_toplevel_applies_limit_and_offset_after_grouping() {
         use self::categories;
-
-        let new_cat = |category, slug, crates_cnt| {
-            (
-                categories::category.eq(category),
-                categories::slug.eq(slug),
-                categories::crates_cnt.eq(crates_cnt),
-            )
-        };
+        use crate::schema::crates;
+        use crate::schema::crates_categories;
 
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
         diesel::insert_into(categories::table)
             .values(&vec![
-                new_cat("Cat 1", "cat1", 1),
-                new_cat("Cat 1::sub", "cat1::sub", 2),
-                new_cat("Cat 2", "cat2", 3),
-                new_cat("Cat 2::Sub 1", "cat2::sub1", 4),
-                new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
-                new_cat("Cat 3", "cat3", 6),
+                (
+                    categories::category.eq("Cat 1"),
+                    categories::slug.eq("cat1"),
+                ),
+                (
+                    categories::category.eq("Cat 1::sub"),
+                    categories::slug.eq("cat1::sub"),
+                ),
+                (
+                    categories::category.eq("Cat 2"),
+                    categories::slug.eq("cat2"),
+                ),
+                (
+                    categories::category.eq("Cat 2::Sub 1"),
+                    categories::slug.eq("cat2::sub1"),
+                ),
+                (
+                    categories::category.eq("Cat 2::Sub 2"),
+                    categories::slug.eq("cat2::sub2"),
+                ),
+                (
+                    categories::category.eq("Cat 3"),
+                    categories::slug.eq("cat3"),
+                ),
             ])
             .execute(&mut conn)
             .await
             .unwrap();
+
+        let mut crate_idx = 0;
+        let slugs = vec![
+            ("cat1", 1),
+            ("cat1::sub", 2),
+            ("cat2", 3),
+            ("cat2::sub1", 4),
+            ("cat2::sub2", 5),
+            ("cat3", 6),
+        ];
+
+        for (slug, count) in slugs {
+            let cat_id: i32 = Category::by_slug(slug)
+                .select(categories::id)
+                .first::<i32>(&mut conn)
+                .await
+                .unwrap();
+            for _ in 0..count {
+                crate_idx += 1;
+                let name = format!("k_{}", crate_idx);
+                let k_id: i32 = diesel::insert_into(crates::table)
+                    .values(crates::name.eq(name))
+                    .returning(crates::id)
+                    .get_result(&mut conn)
+                    .await
+                    .unwrap();
+                diesel::insert_into(crates_categories::table)
+                    .values((
+                        crates_categories::crate_id.eq(k_id),
+                        crates_categories::category_id.eq(cat_id),
+                    ))
+                    .execute(&mut conn)
+                    .await
+                    .unwrap();
+            }
+        }
 
         let cats = Category::toplevel(&mut conn, "crates", 2, 0)
             .await
@@ -372,32 +520,84 @@ mod tests {
     #[tokio::test]
     async fn category_parent_categories_includes_path_to_node_with_count() {
         use self::categories;
-
-        let new_cat = |category, slug, crates_cnt| {
-            (
-                categories::category.eq(category),
-                categories::slug.eq(slug),
-                categories::crates_cnt.eq(crates_cnt),
-            )
-        };
+        use crate::schema::crates;
+        use crate::schema::crates_categories;
 
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
         diesel::insert_into(categories::table)
             .values(&vec![
-                new_cat("Cat 1", "cat1", 1),
-                new_cat("Cat 1::sub1", "cat1::sub1", 2),
-                new_cat("Cat 1::sub2", "cat1::sub2", 2),
-                new_cat("Cat 1::sub1::subsub1", "cat1::sub1::subsub1", 2),
-                new_cat("Cat 2", "cat2", 3),
-                new_cat("Cat 2::Sub 1", "cat2::sub1", 4),
-                new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
-                new_cat("Cat 3", "cat3", 200),
+                (
+                    categories::category.eq("Cat 1"),
+                    categories::slug.eq("cat1"),
+                ),
+                (
+                    categories::category.eq("Cat 1::sub1"),
+                    categories::slug.eq("cat1::sub1"),
+                ),
+                (
+                    categories::category.eq("Cat 1::sub2"),
+                    categories::slug.eq("cat1::sub2"),
+                ),
+                (
+                    categories::category.eq("Cat 1::sub1::subsub1"),
+                    categories::slug.eq("cat1::sub1::subsub1"),
+                ),
+                (
+                    categories::category.eq("Cat 2"),
+                    categories::slug.eq("cat2"),
+                ),
+                (
+                    categories::category.eq("Cat 2::Sub 1"),
+                    categories::slug.eq("cat2::sub1"),
+                ),
+                (
+                    categories::category.eq("Cat 2::Sub 2"),
+                    categories::slug.eq("cat2::sub2"),
+                ),
+                (
+                    categories::category.eq("Cat 3"),
+                    categories::slug.eq("cat3"),
+                ),
             ])
             .execute(&mut conn)
             .await
             .unwrap();
+
+        let mut crate_idx = 0;
+        let slugs = vec![
+            ("cat1", 1),
+            ("cat1::sub1", 2),
+            ("cat1::sub2", 2),
+            ("cat1::sub1::subsub1", 2),
+        ];
+
+        for (slug, count) in slugs {
+            let cat_id: i32 = Category::by_slug(slug)
+                .select(categories::id)
+                .first::<i32>(&mut conn)
+                .await
+                .unwrap();
+            for _ in 0..count {
+                crate_idx += 1;
+                let name = format!("k_{}", crate_idx);
+                let k_id: i32 = diesel::insert_into(crates::table)
+                    .values(crates::name.eq(name))
+                    .returning(crates::id)
+                    .get_result(&mut conn)
+                    .await
+                    .unwrap();
+                diesel::insert_into(crates_categories::table)
+                    .values((
+                        crates_categories::crate_id.eq(k_id),
+                        crates_categories::category_id.eq(cat_id),
+                    ))
+                    .execute(&mut conn)
+                    .await
+                    .unwrap();
+            }
+        }
 
         let cat: Category = Category::by_slug("cat1::sub1")
             .select(Category::as_select())
@@ -413,5 +613,97 @@ mod tests {
         assert_eq!(parents[0].crates_cnt, 7);
         assert_eq!(subcats.len(), 1);
         assert_eq!(subcats[0].slug, "cat1::sub1::subsub1");
+    }
+
+    #[tokio::test]
+    async fn category_toplevel_unique_count_reproduction() {
+        use self::categories;
+        use crate::schema::crates;
+        use crate::schema::crates_categories;
+
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        // 1. Create a crate
+        let crate_id: i32 = diesel::insert_into(crates::table)
+            .values(crates::name.eq("crate_a"))
+            .returning(crates::id)
+            .get_result(&mut conn)
+            .await
+            .unwrap();
+
+        let crate_id_2: i32 = diesel::insert_into(crates::table)
+            .values(crates::name.eq("crate_b"))
+            .returning(crates::id)
+            .get_result(&mut conn)
+            .await
+            .unwrap();
+
+        // 2. Setup categories
+        diesel::insert_into(categories::table)
+            .values(&vec![
+                (
+                    categories::category.eq("Science"),
+                    categories::slug.eq("science"),
+                ),
+                (
+                    categories::category.eq("Science::Chemistry"),
+                    categories::slug.eq("science::chemistry"),
+                ),
+                (
+                    categories::category.eq("Science::Physics"),
+                    categories::slug.eq("science::physics"),
+                ),
+            ])
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        let chem: Category = Category::by_slug("science::chemistry")
+            .select(Category::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
+        let phys: Category = Category::by_slug("science::physics")
+            .select(Category::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
+
+        // 3. Link the SAME crate to BOTH subcategories
+        diesel::insert_into(crates_categories::table)
+            .values(&vec![
+                (
+                    crates_categories::crate_id.eq(crate_id),
+                    crates_categories::category_id.eq(chem.id),
+                ),
+                (
+                    crates_categories::crate_id.eq(crate_id),
+                    crates_categories::category_id.eq(phys.id),
+                ),
+                (
+                    crates_categories::crate_id.eq(crate_id_2),
+                    crates_categories::category_id.eq(phys.id),
+                ),
+            ])
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        // EXECUTE: Fetch top-level categories
+        let cats = Category::toplevel(&mut conn, "crates", 10, 0)
+            .await
+            .unwrap();
+
+        let science = cats
+            .iter()
+            .find(|c| c.slug == "science")
+            .expect("Parent category not found");
+
+        // VERIFY: The parent count should be 2 (unique).
+        assert_eq!(
+            science.crates_cnt, 2,
+            "Parent category should only count the unique crate once!"
+        );
     }
 }
