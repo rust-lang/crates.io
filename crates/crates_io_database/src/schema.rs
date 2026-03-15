@@ -668,6 +668,19 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
 
+    /// Track where we are in refreshing user GitHub info from the GitHub API in batches in jobs
+    metadata_github_refresh (highest_processed_user_id) {
+        /// The number of users to request in the next batch.
+        batch_size -> Int8,
+        /// The highest crates.io user ID that was processed in a previously completed batch. The next run will request a batch of users with IDs greater than this.
+        highest_processed_user_id -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     /// GitHub-specific account information associated with a crates.io account
     oauth_github (account_id) {
         /// GitHub ID returned from the oAuth response
@@ -1296,6 +1309,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     follows,
     keywords,
     metadata,
+    metadata_github_refresh,
     oauth_github,
     processed_log_files,
     publish_limit_buckets,

@@ -21,6 +21,12 @@ type Result<T> = std::result::Result<T, GitHubError>;
 pub trait GitHubClient: Send + Sync {
     async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser>;
     async fn get_user(&self, name: &str, auth: &AccessToken) -> Result<GitHubUser>;
+    async fn get_user_by_id(
+        &self,
+        account_id: i64,
+        username: &str,
+        password: &str,
+    ) -> Result<GitHubUser>;
     async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization>;
     async fn team_by_name(
         &self,
@@ -106,6 +112,16 @@ impl GitHubClient for RealGitHubClient {
     async fn get_user(&self, name: &str, auth: &AccessToken) -> Result<GitHubUser> {
         let url = format!("/users/{name}");
         self.request(&url, auth).await
+    }
+
+    async fn get_user_by_id(
+        &self,
+        account_id: i64,
+        username: &str,
+        password: &str,
+    ) -> Result<GitHubUser> {
+        let url = format!("/user/{account_id}");
+        self.request_basic(&url, username, password).await
     }
 
     async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization> {

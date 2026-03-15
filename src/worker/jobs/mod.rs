@@ -18,6 +18,7 @@ mod sync_admins;
 pub mod trustpub;
 mod typosquat;
 mod update_default_version;
+mod update_from_github;
 
 pub use self::analyze_crate_file::AnalyzeCrateFile;
 pub use self::archive_version_downloads::ArchiveVersionDownloads;
@@ -41,3 +42,4 @@ pub use self::send_publish_notifications::SendPublishNotificationsJob;
 pub use self::sync_admins::SyncAdmins;
 pub use self::typosquat::CheckTyposquat;
 pub use self::update_default_version::UpdateDefaultVersion;
+pub use self::update_from_github::UpdateFromGithub;
