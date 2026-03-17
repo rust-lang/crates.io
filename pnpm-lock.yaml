@@ -191,8 +191,8 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
       ember-eslint-parser:
-        specifier: 0.7.0
-        version: 0.7.0(@babel/core@7.29.0)(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+        specifier: 0.8.0
+        version: 0.8.0(@babel/core@7.29.0)(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       ember-event-helpers:
         specifier: 0.1.1
         version: 0.1.1
@@ -5008,8 +5008,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  ember-eslint-parser@0.7.0:
-    resolution: {integrity: sha512-QvlYIXWPlPUqjuHrfBLAzax59A0X/YjGU2mMvwqwTexLi/r+hPqCen+CCfR3AZojjehsrT5bEXhj4igQx2z2sQ==}
+  ember-eslint-parser@0.8.0:
+    resolution: {integrity: sha512-sym+9A65zLndt/gH1nTJZXMVtBJrDp/3BXKzj3Ds91tS6w9SmtO+/GTBbWFg4OcIqBAYnX+rBzYwKWLcmbukCA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       '@babel/core': ^7.23.6
@@ -15842,7 +15842,7 @@ snapshots:
       - eslint
       - typescript
 
-  ember-eslint-parser@0.7.0(@babel/core@7.29.0)(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3):
+  ember-eslint-parser@0.8.0(@babel/core@7.29.0)(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3):
     dependencies:
       '@babel/core': 7.29.0
       '@babel/eslint-parser': 7.28.6(@babel/core@7.29.0)(eslint@9.39.4(jiti@2.6.1))
