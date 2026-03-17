@@ -512,8 +512,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0(@types/node@24.12.0)(@vitest/browser-playwright@4.1.0)(jsdom@25.0.1)(msw@2.12.10(@types/node@24.12.0)(typescript@5.9.3))(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))
       vitest-browser-svelte:
-        specifier: 2.0.2
-        version: 2.0.2(svelte@5.53.11)(vitest@4.1.0)
+        specifier: 2.1.0
+        version: 2.1.0(svelte@5.53.11)(vitest@4.1.0)
 
 packages:
 
@@ -9294,8 +9294,8 @@ packages:
       vite:
         optional: true
 
-  vitest-browser-svelte@2.0.2:
-    resolution: {integrity: sha512-OLJVYoIYflwToFIy3s41pZ9mVp6dwXfYd8IIsWoc57g8DyN3SxsNJ5GB1xWFPxLFlKM+1MPExjPxLaqdELrfRQ==}
+  vitest-browser-svelte@2.1.0:
+    resolution: {integrity: sha512-Uqcqn9gKhYoNOn5uGOQHSPIEGHgIz25zPP6R63LQ5+yEVHfDXdOKBMba9pBlPIgp31AxYbV9h43j9+W+5M5y+A==}
     peerDependencies:
       svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
       vitest: ^4.0.0
@@ -21079,8 +21079,9 @@ snapshots:
     optionalDependencies:
       vite: 7.3.1(@types/node@24.12.0)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2)
 
-  vitest-browser-svelte@2.0.2(svelte@5.53.11)(vitest@4.1.0):
+  vitest-browser-svelte@2.1.0(svelte@5.53.11)(vitest@4.1.0):
     dependencies:
+      '@playwright/test': 1.58.2
       '@testing-library/svelte-core': 1.0.0(svelte@5.53.11)
       svelte: 5.53.11
       vitest: 4.1.0(@types/node@24.12.0)(@vitest/browser-playwright@4.1.0)(jsdom@25.0.1)(msw@2.12.10(@types/node@24.12.0)(typescript@5.9.3))(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))
