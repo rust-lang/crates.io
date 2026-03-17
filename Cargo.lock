@@ -530,9 +530,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudfront"
-version = "1.113.0"
+version = "1.114.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c75ec35f8c6e83e537f8fd1047235dd17ddc568f87892bfa38aaa46f70f1bad0"
+checksum = "a52f9d42eb3442fc973ee6946dbb3f67723f99c6c6abc1e80bf5277f9bc36d83"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -554,9 +554,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sqs"
-version = "1.96.0"
+version = "1.97.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "161a1c4332072b8e44a3a0a6f817440f72c00ab1ae9b6b68ed63e882cd97394c"
+checksum = "4d497fb382b906b04167e62848ad00e56c5ad523791a461d5a5611c186531d81"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -722,9 +722,9 @@ dependencies = [
 
 [[package]]
 name = "aws-smithy-types"
-version = "1.4.6"
+version = "1.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2b1117b3b2bbe166d11199b540ceed0d0f7676e36e7b962b5a437a9971eac75"
+checksum = "9d73dbfbaa8e4bc57b9045137680b958d274823509a360abfd8e1d514d40c95c"
 dependencies = [
  "base64-simd",
  "bytes",
