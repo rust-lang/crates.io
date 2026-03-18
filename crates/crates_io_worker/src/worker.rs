@@ -82,8 +82,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                         .catch_unwind()
                         .await
                         .map_err(|e| try_to_extract_panic_info(&e))
-                        // TODO: Replace with flatten() once that stabilizes
-                        .and_then(std::convert::identity)
+                        .flatten()
                 });
 
                 let result = future.instrument(span.clone()).await;
