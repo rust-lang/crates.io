@@ -16,7 +16,7 @@ cargo-manifest = "=0.19.1"
 flate2 = { version = "=1.1.9", optional = true }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
-tar = { version = "=0.4.44", optional = true }
+tar = { version = "=0.4.45", optional = true }
 thiserror = "=2.0.18"
 tracing = "=0.1.44"
 tokio = { version = "=1.50.0", features = ["io-util", "macros", "rt-multi-thread"] }
@@ -31,6 +31,6 @@ flate2 = { version = "=1.1.9" }
 indicatif = { version = "=0.18.4", features = ["rayon"] }
 insta = "=1.46.3"
 rayon = "=1.11.0"
-tar = { version = "=0.4.44" }
+tar = { version = "=0.4.45" }
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
 walkdir = "=2.5.0"
