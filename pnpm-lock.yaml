@@ -107,8 +107,8 @@ importers:
         specifier: 0.6.0
         version: 0.6.0
       '@msw/playwright':
-        specifier: 0.6.5
-        version: 0.6.5(msw@2.12.12(@types/node@24.12.0)(typescript@5.9.3))
+        specifier: 0.6.6
+        version: 0.6.6(msw@2.12.12(@types/node@24.12.0)(typescript@5.9.3))
       '@percy/cli':
         specifier: 1.31.9
         version: 1.31.9(typescript@5.9.3)
@@ -2196,8 +2196,8 @@ packages:
   '@msw/data@1.1.2':
     resolution: {integrity: sha512-beEM1cfb59FdoSV9pmWI+Vllf+QxoYtIDiVE9b1awVAWTa9eeDIZAi1qispBuSSnzZam6lIljCFPYJbXOwEbvA==}
 
-  '@msw/playwright@0.6.5':
-    resolution: {integrity: sha512-inqYTLiJk0dnsQD5XMo5dIt2aZYTw8DtSr1Unfa4tLJmGIU6+qwpCkmWrNksqkBuc/nCz6nxmqSgkkZ87b+btA==}
+  '@msw/playwright@0.6.6':
+    resolution: {integrity: sha512-sTUDIxXmjOodekAZupL0eE71LsPDlsUlTJYo58klW65IpVKgZWNAigh/TiidHMKDTanz88ZAkks+edEh9fcPxw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       msw: ^2.12.10
@@ -12219,7 +12219,7 @@ snapshots:
       outvariant: 1.4.3
       rettime: 0.7.0
 
-  '@msw/playwright@0.6.5(msw@2.12.12(@types/node@24.12.0)(typescript@5.9.3))':
+  '@msw/playwright@0.6.6(msw@2.12.12(@types/node@24.12.0)(typescript@5.9.3))':
     dependencies:
       '@mswjs/interceptors': 0.41.3
       msw: 2.12.12(@types/node@24.12.0)(typescript@5.9.3)
