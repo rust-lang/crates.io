@@ -15,7 +15,7 @@ use crates_io_github::GitHubClient;
 use crates_io_trustpub::github::GITHUB_ISSUER_URL;
 use crates_io_trustpub::gitlab::GITLAB_ISSUER_URL;
 use crates_io_trustpub::keystore::{OidcKeyStore, RealOidcKeyStore};
-use deadpool_diesel::Runtime;
+use deadpool_runtime::Runtime;
 use derive_more::Deref;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
