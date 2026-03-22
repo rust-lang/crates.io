@@ -48,7 +48,7 @@ export default http.get('/api/private/crate_owner_invitations', ({ request }) =>
   let users = Array.from(new Set([...inviters, ...invitees])).sort((a, b) => a.id - b.id);
 
   return HttpResponse.json({
-    crate_owner_invitations: invites.map(invite => serializeInvite(invite)),
+    invitations: invites.map(invite => serializeInvite(invite)),
     users: users.map(user => serializeUser(user)),
     meta: { next_page: nextPage },
   });

@@ -32,7 +32,7 @@ test('happy path (invitee_id)', async function () {
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
-      "crate_owner_invitations": [
+      "invitations": [
         {
           "crate_id": 1,
           "crate_name": "nanomsg",
@@ -88,7 +88,7 @@ test('happy path with empty response (invitee_id)', async function () {
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
-      "crate_owner_invitations": [],
+      "invitations": [],
       "meta": {
         "next_page": null,
       },
@@ -112,13 +112,13 @@ test('happy path with pagination (invitee_id)', async function () {
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
   expect(response.status).toBe(200);
   let responseJSON = await response.json();
-  expect(responseJSON['crate_owner_invitations'].length).toBe(10);
+  expect(responseJSON['invitations'].length).toBe(10);
   expect(responseJSON.meta['next_page']).toBeTruthy();
 
   response = await fetch(`/api/private/crate_owner_invitations${responseJSON.meta['next_page']}`);
   expect(response.status).toBe(200);
   responseJSON = await response.json();
-  expect(responseJSON['crate_owner_invitations'].length).toBe(5);
+  expect(responseJSON['invitations'].length).toBe(5);
   expect(responseJSON.meta['next_page']).toBe(null);
 });
 
@@ -152,7 +152,7 @@ test('happy path (crate_name)', async function () {
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
-      "crate_owner_invitations": [
+      "invitations": [
         {
           "crate_id": 2,
           "crate_name": "ember-rs",
