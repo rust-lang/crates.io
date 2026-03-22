@@ -52,11 +52,11 @@ impl BackgroundJob for InvalidateCdns {
 
         // Queue CloudFront invalidations for batch processing instead of calling directly
         if ctx.cloudfront().is_some() {
-            let mut conn = ctx.deadpool.get().await?;
+            let conn = ctx.deadpool.get().await?;
 
             let dist = CloudFrontDistribution::Static;
             let result =
-                CloudFrontInvalidationQueueItem::queue_paths(&mut conn, dist, &self.paths).await;
+                CloudFrontInvalidationQueueItem::queue_paths(&conn, dist, &self.paths).await;
             result.context("Failed to queue CloudFront invalidation paths")?;
 
             // Schedule the processing job to handle the queued paths

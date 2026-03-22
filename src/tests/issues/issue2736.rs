@@ -28,7 +28,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
         .user_id(foo1.as_model().id)
         .created_by(someone_else.as_model().id)
         .build()
-        .insert(&mut conn)
+        .insert(&conn)
         .await?;
 
     // - `foo` deleted their GitHub account (but crates.io has no real knowledge of this)
@@ -46,7 +46,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     assert_ne!(github_ids[0], github_ids[1]);
 
     // - The new `foo` account is NOT an owner of the crate
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     assert_none!(owners.iter().find(|o| o.id() == foo2.as_model().id));
 
@@ -55,7 +55,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 1);
     assert_eq!(owners[0].id(), someone_else.as_model().id);
 

@@ -43,7 +43,7 @@ async fn prepare_with_config(
 
     let mut new_oidc_config = new_oidc_config(krate.id);
     adjust_config(&mut new_oidc_config);
-    new_oidc_config.insert(&mut conn).await?;
+    new_oidc_config.insert(&conn).await?;
 
     Ok(client)
 }
@@ -178,7 +178,7 @@ async fn test_unsupported_issuer() -> anyhow::Result<()> {
         .build(&mut conn)
         .await?;
 
-    new_oidc_config(krate.id).insert(&mut conn).await?;
+    new_oidc_config(krate.id).insert(&conn).await?;
 
     let body = default_claims().as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;
@@ -222,7 +222,7 @@ async fn test_unknown_key() -> anyhow::Result<()> {
 
     let owner_id = cookie.as_model().id;
     let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
-    new_oidc_config(krate.id).insert(&mut conn).await?;
+    new_oidc_config(krate.id).insert(&conn).await?;
 
     let body = default_claims().as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;
@@ -250,7 +250,7 @@ async fn test_key_store_error() -> anyhow::Result<()> {
 
     let owner_id = cookie.as_model().id;
     let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
-    new_oidc_config(krate.id).insert(&mut conn).await?;
+    new_oidc_config(krate.id).insert(&conn).await?;
 
     let body = default_claims().as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;

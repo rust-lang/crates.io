@@ -35,7 +35,7 @@ pub async fn rebuild_version_docs(
 
     // Check that the user is an owner of the crate, or a team member (= publish rights)
     let user = auth.user();
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     let encryption = &app.config.gh_token_encryption;
     if Rights::get(user, &*app.github, &owners, encryption).await? < Rights::Publish {
         return Err(custom(

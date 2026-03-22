@@ -50,7 +50,7 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
         .gh_login("other_user")
         .gh_encrypted_token(&[])
         .build()
-        .insert(&mut conn)
+        .insert(&conn)
         .await?;
 
     CrateBuilder::new("krate", other_user.id)

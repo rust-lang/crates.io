@@ -190,7 +190,7 @@ pub async fn create_api_token(
         .transpose()
         .map_err(|_err| bad_request("invalid endpoint scope"))?;
 
-    let recipient = user.email(&mut conn).await?;
+    let recipient = user.email(&conn).await?;
 
     let plaintext = PlainToken::generate();
 
@@ -219,7 +219,7 @@ pub async fn create_api_token(
     }
 
     let api_token = EncodableApiTokenWithToken {
-        token: new_token.insert(&mut conn).await?,
+        token: new_token.insert(&conn).await?,
         plaintext: plaintext.expose_secret().to_string(),
     };
 

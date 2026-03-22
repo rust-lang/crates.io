@@ -91,7 +91,7 @@ pub struct NewCrate<'a> {
 }
 
 impl NewCrate<'_> {
-    pub async fn update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Crate> {
+    pub async fn update(&self, mut conn: &AsyncPgConnection) -> QueryResult<Crate> {
         use diesel::update;
 
         update(crates::table)
@@ -104,7 +104,7 @@ impl NewCrate<'_> {
                 crates::repository.eq(self.repository),
             ))
             .returning(Crate::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 
@@ -186,13 +186,13 @@ impl Crate {
 
     pub async fn find_version(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         version: &str,
     ) -> QueryResult<Option<Version>> {
         Version::belonging_to(self)
             .filter(versions::num.eq(version))
             .select(Version::as_select())
-            .first(conn)
+            .first(&mut conn)
             .await
             .optional()
     }
@@ -200,23 +200,23 @@ impl Crate {
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate,
     /// where all top versions are not yanked.
-    pub async fn top_versions(&self, conn: &mut AsyncPgConnection) -> QueryResult<TopVersions> {
+    pub async fn top_versions(&self, mut conn: &AsyncPgConnection) -> QueryResult<TopVersions> {
         Ok(TopVersions::from_date_version_pairs(
             Version::belonging_to(self)
                 .filter(versions::yanked.eq(false))
                 .select((versions::created_at, versions::num))
-                .load(conn)
+                .load(&mut conn)
                 .await?,
         ))
     }
 
-    pub async fn owners(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+    pub async fn owners(&self, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .order((crate_owners::owner_id, crate_owners::owner_kind))
             .inner_join(users::table)
             .select(User::as_select())
-            .load(conn)
+            .load(&mut conn)
             .await?
             .into_iter()
             .map(Owner::User);
@@ -226,7 +226,7 @@ impl Crate {
             .order((crate_owners::owner_id, crate_owners::owner_kind))
             .inner_join(teams::table)
             .select(Team::as_select())
-            .load(conn)
+            .load(&mut conn)
             .await?
             .into_iter()
             .map(Owner::Team);
@@ -236,7 +236,7 @@ impl Crate {
 
     pub async fn owner_remove(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         login: &str,
     ) -> Result<(), OwnerRemoveError> {
         let query = diesel::sql_query(
@@ -270,7 +270,7 @@ impl Crate {
         let num_updated_rows = query
             .bind::<Integer, _>(self.id)
             .bind::<Text, _>(login)
-            .execute(conn)
+            .execute(&mut conn)
             .await?;
 
         if num_updated_rows == 0 {
@@ -284,7 +284,7 @@ impl Crate {
     #[instrument(skip_all, fields(krate.name = %self.name))]
     pub async fn reverse_dependencies(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         offset: i64,
         limit: i64,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
@@ -296,7 +296,7 @@ impl Crate {
                 .bind::<Integer, _>(self.id)
                 .bind::<BigInt, _>(offset)
                 .bind::<BigInt, _>(limit)
-                .load(conn)
+                .load(&mut conn)
                 .await?;
 
         Ok(rows.records_and_total())

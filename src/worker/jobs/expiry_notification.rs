@@ -159,14 +159,14 @@ mod tests {
             .gh_login("a")
             .gh_encrypted_token(&[])
             .build()
-            .insert(&mut conn)
+            .insert(&conn)
             .await?;
 
         NewEmail::builder()
             .user_id(user.id)
             .email("testuser@test.com")
             .build()
-            .insert(&mut conn)
+            .insert(&conn)
             .await?;
 
         let token = PlainToken::generate();

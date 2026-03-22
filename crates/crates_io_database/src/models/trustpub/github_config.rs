@@ -18,11 +18,11 @@ pub struct GitHubConfig {
 }
 
 impl GitHubConfig {
-    pub async fn count_for_crate(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<i64> {
+    pub async fn count_for_crate(mut conn: &AsyncPgConnection, crate_id: i32) -> QueryResult<i64> {
         trustpub_configs_github::table
             .filter(trustpub_configs_github::crate_id.eq(crate_id))
             .count()
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }
@@ -39,10 +39,10 @@ pub struct NewGitHubConfig<'a> {
 }
 
 impl NewGitHubConfig<'_> {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<GitHubConfig> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<GitHubConfig> {
         self.insert_into(trustpub_configs_github::table)
             .returning(GitHubConfig::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }

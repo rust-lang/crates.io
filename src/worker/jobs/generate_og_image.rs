@@ -112,7 +112,7 @@ impl BackgroundJob for GenerateOgImage {
             let distribution = CloudFrontDistribution::Static;
             let paths = std::slice::from_ref(&og_image_path);
             let result =
-                CloudFrontInvalidationQueueItem::queue_paths(&mut conn, distribution, paths).await;
+                CloudFrontInvalidationQueueItem::queue_paths(&conn, distribution, paths).await;
             if let Err(error) = result {
                 warn!("Failed to queue CloudFront invalidation for {crate_name}: {error}");
             } else if let Err(error) = ProcessCloudfrontInvalidationQueue.enqueue(&conn).await {

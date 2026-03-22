@@ -42,7 +42,7 @@ pub struct Version {
 impl Version {
     pub async fn record_readme_rendering(
         version_id: i32,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> QueryResult<usize> {
         use diesel::dsl::now;
 
@@ -51,7 +51,7 @@ impl Version {
             .on_conflict(readme_renderings::version_id)
             .do_update()
             .set(readme_renderings::rendered_at.eq(now))
-            .execute(conn)
+            .execute(&mut conn)
             .await
     }
 
@@ -109,11 +109,11 @@ pub struct NewVersion<'a> {
 }
 
 impl NewVersion<'_> {
-    pub async fn save(&self, conn: &mut AsyncPgConnection) -> QueryResult<Version> {
+    pub async fn save(&self, mut conn: &AsyncPgConnection) -> QueryResult<Version> {
         diesel::insert_into(versions::table)
             .values(self)
             .returning(Version::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }

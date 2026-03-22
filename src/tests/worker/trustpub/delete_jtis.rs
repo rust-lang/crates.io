@@ -17,13 +17,13 @@ async fn test_expiry() -> anyhow::Result<()> {
         expires_at: Utc::now() + TimeDelta::minutes(30),
         jti: "foo",
     };
-    jti.insert(&mut conn).await?;
+    jti.insert(&conn).await?;
 
     let jti = NewUsedJti {
         expires_at: Utc::now() - TimeDelta::minutes(5),
         jti: "bar",
     };
-    jti.insert(&mut conn).await?;
+    jti.insert(&conn).await?;
 
     DeleteExpiredJtis.enqueue(&conn).await?;
     app.run_pending_background_jobs().await;

@@ -15,9 +15,9 @@ async fn record_rerendered_readme_time() -> anyhow::Result<()> {
         .expect_build(c.id, user.id, &mut conn)
         .await;
 
-    let mut conn = app.db_conn().await;
-    Version::record_readme_rendering(version.id, &mut conn).await?;
-    Version::record_readme_rendering(version.id, &mut conn).await?;
+    let conn = app.db_conn().await;
+    Version::record_readme_rendering(version.id, &conn).await?;
+    Version::record_readme_rendering(version.id, &conn).await?;
 
     Ok(())
 }

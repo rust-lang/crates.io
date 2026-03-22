@@ -74,7 +74,7 @@ async fn show_latest_user_case_insensitively() {
 #[tokio::test(flavor = "multi_thread")]
 async fn user_without_github_account() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
 
     let new_user = NewUser::builder()
         // The gh_id column will eventually be removed; there are currently records in production
@@ -84,7 +84,7 @@ async fn user_without_github_account() {
         .name("I deleted my github account")
         .gh_encrypted_token(&[])
         .build();
-    new_user.insert(&mut conn).await.unwrap();
+    new_user.insert(&conn).await.unwrap();
     // This user doesn't have a linked record in `oauth_github`
 
     // The crates.io username still exists

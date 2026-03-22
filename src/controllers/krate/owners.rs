@@ -47,7 +47,7 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<Use
     let krate = path.load_crate(&mut conn).await?;
 
     let users = krate
-        .owners(&mut conn)
+        .owners(&conn)
         .await?
         .into_iter()
         .map(Owner::into)
@@ -73,7 +73,7 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
     let mut conn = state.db_read().await?;
     let krate = path.load_crate(&mut conn).await?;
 
-    let teams = Team::owning(&krate, &mut conn)
+    let teams = Team::owning(&krate, &conn)
         .await?
         .into_iter()
         .map(Owner::into)
@@ -95,7 +95,7 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
 
     let krate = path.load_crate(&mut conn).await?;
 
-    let users = User::owning(&krate, &mut conn)
+    let users = User::owning(&krate, &conn)
         .await?
         .into_iter()
         .map(Owner::into)

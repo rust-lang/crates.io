@@ -128,11 +128,11 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
-        let mut conn = self.db_conn().await;
+        let conn = self.db_conn().await;
 
         let email = format!("{username}@example.com");
 
-        let user = crate::new_user(username).insert(&mut conn).await.unwrap();
+        let user = crate::new_user(username).insert(&conn).await.unwrap();
 
         let new_email = NewEmail::builder()
             .user_id(user.id)
@@ -140,7 +140,7 @@ impl TestApp {
             .verified(true)
             .build();
 
-        new_email.insert(&mut conn).await.unwrap();
+        new_email.insert(&conn).await.unwrap();
 
         MockCookieUser {
             app: self.clone(),

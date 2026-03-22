@@ -50,8 +50,8 @@ pub struct VersionOwnerAction {
 }
 
 impl VersionOwnerAction {
-    pub async fn all(conn: &mut AsyncPgConnection) -> QueryResult<Vec<Self>> {
-        Self::query().load(conn).await
+    pub async fn all(mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
+        Self::query().load(&mut conn).await
     }
 
     pub async fn by_version(
@@ -70,14 +70,14 @@ impl VersionOwnerAction {
     }
 
     pub async fn for_versions(
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         versions: &[&Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
         Ok(Self::belonging_to(versions)
             .inner_join(users::table)
             .select((VersionOwnerAction::as_select(), User::as_select()))
             .order(version_owner_actions::dsl::id)
-            .load(conn)
+            .load(&mut conn)
             .await?
             .grouped_by(versions))
     }
@@ -94,11 +94,11 @@ pub struct NewVersionOwnerAction {
 }
 
 impl NewVersionOwnerAction {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<VersionOwnerAction> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<VersionOwnerAction> {
         diesel::insert_into(version_owner_actions::table)
             .values(self)
             .returning(VersionOwnerAction::as_select())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }

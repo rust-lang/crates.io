@@ -53,7 +53,7 @@ async fn user_total_downloads() -> anyhow::Result<()> {
         .execute(&mut conn)
         .await?;
     no_longer_my_krate
-        .owner_remove(&mut conn, &user.gh_login)
+        .owner_remove(&conn, &user.gh_login)
         .await
         .unwrap();
 

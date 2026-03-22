@@ -18,11 +18,11 @@ pub struct GitLabConfig {
 }
 
 impl GitLabConfig {
-    pub async fn count_for_crate(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<i64> {
+    pub async fn count_for_crate(mut conn: &AsyncPgConnection, crate_id: i32) -> QueryResult<i64> {
         trustpub_configs_gitlab::table
             .filter(trustpub_configs_gitlab::crate_id.eq(crate_id))
             .count()
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }
@@ -38,10 +38,10 @@ pub struct NewGitLabConfig<'a> {
 }
 
 impl NewGitLabConfig<'_> {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<GitLabConfig> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<GitLabConfig> {
         self.insert_into(trustpub_configs_gitlab::table)
             .returning(GitLabConfig::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }
@@ -78,7 +78,7 @@ mod tests {
         };
 
         // Insert the config
-        let inserted_config = new_config.insert(&mut conn).await.unwrap();
+        let inserted_config = new_config.insert(&conn).await.unwrap();
 
         // Retrieve the config
         let retrieved_config = GitLabConfig::query()

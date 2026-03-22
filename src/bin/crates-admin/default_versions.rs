@@ -33,8 +33,8 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
 
     for crate_id in crate_ids.into_iter().progress_with(pb.clone()) {
         let result = match command {
-            Command::Update => update_default_version(crate_id, &mut conn).await,
-            Command::Verify => verify_default_version(crate_id, &mut conn).await,
+            Command::Update => update_default_version(crate_id, &conn).await,
+            Command::Verify => verify_default_version(crate_id, &conn).await,
         };
 
         if let Err(error) = result {

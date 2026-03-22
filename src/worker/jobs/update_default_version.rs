@@ -33,7 +33,7 @@ impl BackgroundJob for UpdateDefaultVersion {
         info!("Updating default version for crate {crate_id}");
         let mut conn = ctx.deadpool.get().await?;
 
-        match update_default_version(crate_id, &mut conn).await {
+        match update_default_version(crate_id, &conn).await {
             Ok(_) => {
                 info!("Successfully updated default version for crate {crate_id}");
             }

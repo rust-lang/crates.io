@@ -25,7 +25,7 @@ pub struct NewCrateOwnerInvitation {
 impl NewCrateOwnerInvitation {
     pub async fn create(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
         // Before actually creating the invite, check if an expired invitation already exists
         // and delete it from the database. This allows obtaining a new invite if the old one
@@ -34,7 +34,7 @@ impl NewCrateOwnerInvitation {
             .filter(crate_owner_invitations::invited_user_id.eq(self.invited_user_id))
             .filter(crate_owner_invitations::crate_id.eq(self.crate_id))
             .filter(crate_owner_invitations::expires_at.le(Utc::now()))
-            .execute(conn)
+            .execute(&mut conn)
             .await?;
 
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
@@ -44,7 +44,7 @@ impl NewCrateOwnerInvitation {
             // deleted before doing this INSERT.
             .on_conflict_do_nothing()
             .returning(CrateOwnerInvitation::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
             .optional()?;
 
@@ -74,18 +74,18 @@ impl CrateOwnerInvitation {
     pub async fn find_by_id(
         user_id: i32,
         crate_id: i32,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> QueryResult<Self> {
         CrateOwnerInvitation::query()
             .find((user_id, crate_id))
-            .first(conn)
+            .first(&mut conn)
             .await
     }
 
-    pub async fn find_by_token(token: &str, conn: &mut AsyncPgConnection) -> QueryResult<Self> {
+    pub async fn find_by_token(token: &str, mut conn: &AsyncPgConnection) -> QueryResult<Self> {
         CrateOwnerInvitation::query()
             .filter(crate_owner_invitations::token.eq(token))
-            .first(conn)
+            .first(&mut conn)
             .await
     }
 
@@ -125,12 +125,12 @@ impl CrateOwnerInvitation {
         .await
     }
 
-    pub async fn decline(self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+    pub async fn decline(self, mut conn: &AsyncPgConnection) -> QueryResult<()> {
         // The check to prevent declining expired invitations is *explicitly* missing. We do not
         // care if an expired invitation is declined, as that just removes the invitation from the
         // database.
 
-        diesel::delete(&self).execute(conn).await?;
+        diesel::delete(&self).execute(&mut conn).await?;
         Ok(())
     }
 

@@ -94,7 +94,7 @@ async fn test_remove_uppercase_user() {
         .user_id(user2.as_model().id)
         .created_by(cookie.as_model().id)
         .build()
-        .insert(&mut conn)
+        .insert(&conn)
         .await
         .unwrap();
 

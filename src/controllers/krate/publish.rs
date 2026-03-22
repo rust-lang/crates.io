@@ -229,7 +229,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     }
 
     let verified_email_address = if let Some(user) = auth.user() {
-        let verified_email_address = user.verified_email(&mut conn).await?;
+        let verified_email_address = user.verified_email(&conn).await?;
         Some(verified_email_address.ok_or_else(|| verified_email_error(&app.config.domain_name))?)
     } else {
         None

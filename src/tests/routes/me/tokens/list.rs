@@ -31,11 +31,11 @@ async fn list_empty() {
 #[tokio::test(flavor = "multi_thread")]
 async fn list_tokens() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
     let id = user.as_model().id;
 
     let new_token = NewApiToken::builder().name("bar").user_id(id).build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let new_token = NewApiToken::builder()
         .name("baz")
@@ -46,14 +46,14 @@ async fn list_tokens() {
         ])
         .endpoint_scopes(vec![EndpointScope::PublishUpdate])
         .build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let new_token = NewApiToken::builder()
         .name("qux")
         .user_id(id)
         .expired_at(Utc::now() - Duration::days(1))
         .build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let response = user.get::<()>("/api/v1/me/tokens").await;
     assert_snapshot!(response.status(), @"200 OK");
@@ -72,11 +72,11 @@ async fn list_recently_expired_tokens() {
     }
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
     let id = user.as_model().id;
 
     let new_token = NewApiToken::builder().name("bar").user_id(id).build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let new_token = NewApiToken::builder()
         .name("ancient")
@@ -88,14 +88,14 @@ async fn list_recently_expired_tokens() {
         .endpoint_scopes(vec![EndpointScope::PublishUpdate])
         .expired_at(Utc::now() - Duration::days(31))
         .build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let new_token = NewApiToken::builder()
         .name("recent")
         .user_id(id)
         .expired_at(Utc::now() - Duration::days(1))
         .build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let response = user.get::<()>("/api/v1/me/tokens?expired_days=30").await;
     assert_snapshot!(response.status(), @"200 OK");
@@ -118,14 +118,14 @@ async fn list_recently_expired_tokens() {
 #[tokio::test(flavor = "multi_thread")]
 async fn list_tokens_exclude_revoked() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
     let id = user.as_model().id;
 
     let new_token = NewApiToken::builder().name("bar").user_id(id).build();
-    let token1 = assert_ok!(new_token.insert(&mut conn).await);
+    let token1 = assert_ok!(new_token.insert(&conn).await);
 
     let new_token = NewApiToken::builder().name("baz").user_id(id).build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     // List tokens expecting them all to be there.
     let response = user.get::<()>("/api/v1/me/tokens").await;

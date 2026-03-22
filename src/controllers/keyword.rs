@@ -90,8 +90,8 @@ pub async fn find_keyword(
     Path(name): Path<String>,
     state: AppState,
 ) -> AppResult<Json<GetResponse>> {
-    let mut conn = state.db_read().await?;
-    let kw = Keyword::find_by_keyword(&mut conn, &name).await?;
+    let conn = state.db_read().await?;
+    let kw = Keyword::find_by_keyword(&conn, &name).await?;
     let keyword = EncodableKeyword::from(kw);
     Ok(Json(GetResponse { keyword }))
 }

@@ -41,13 +41,13 @@ async fn create_token_no_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_exceeded_tokens_per_user() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
     let id = user.as_model().id;
 
     for i in 0..1000 {
         let name = format!("token {i}");
         let new_token = NewApiToken::builder().name(name).user_id(id).build();
-        assert_ok!(new_token.insert(&mut conn).await);
+        assert_ok!(new_token.insert(&conn).await);
     }
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;

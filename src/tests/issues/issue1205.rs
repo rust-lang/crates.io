@@ -25,7 +25,7 @@ async fn test_issue_1205() -> anyhow::Result<()> {
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"team github:rustaudio:owners has been added as an owner of crate deepspeech-sys","ok":true}"#);
 
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     assert_eq!(owners[0].login(), "foo");
     assert_eq!(owners[1].login(), "github:rustaudio:owners");
@@ -36,7 +36,7 @@ async fn test_issue_1205() -> anyhow::Result<()> {
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"team github:rustaudio:cratesio-push has been added as an owner of crate deepspeech-sys","ok":true}"#);
 
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     assert_eq!(owners[0].login(), "foo");
     assert_eq!(owners[1].login(), "github:rustaudio:cratesio-push");

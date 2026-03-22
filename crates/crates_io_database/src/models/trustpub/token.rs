@@ -14,9 +14,9 @@ pub struct NewToken<'a> {
 }
 
 impl NewToken<'_> {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<()> {
         self.insert_into(trustpub_tokens::table)
-            .execute(conn)
+            .execute(&mut conn)
             .await?;
 
         Ok(())

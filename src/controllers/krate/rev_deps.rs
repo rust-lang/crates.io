@@ -50,7 +50,7 @@ pub async fn list_reverse_dependencies(
 
     let offset = pagination_options.offset().unwrap_or_default();
     let limit = pagination_options.per_page;
-    let (rev_deps, total) = krate.reverse_dependencies(&mut conn, offset, limit).await?;
+    let (rev_deps, total) = krate.reverse_dependencies(&conn, offset, limit).await?;
 
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
@@ -72,7 +72,7 @@ pub async fn list_reverse_dependencies(
         .map(|(v, ..)| v)
         .collect::<Vec<_>>();
 
-    let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
+    let actions = VersionOwnerAction::for_versions(&conn, &versions).await?;
 
     let versions = versions_and_publishers
         .into_iter()

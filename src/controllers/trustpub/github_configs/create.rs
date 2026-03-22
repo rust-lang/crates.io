@@ -56,7 +56,7 @@ pub async fn create_trustpub_github_config(
     let krate = load_crate(&mut conn, &json_config.krate).await?;
 
     // Check if the crate has reached the maximum number of configs
-    let config_count = GitHubConfig::count_for_crate(&mut conn, krate.id).await?;
+    let config_count = GitHubConfig::count_for_crate(&conn, krate.id).await?;
     if config_count >= MAX_CONFIGS_PER_CRATE as i64 {
         let message = format!(
             "This crate already has the maximum number of GitHub Trusted Publishing configurations ({})",
@@ -115,7 +115,7 @@ pub async fn create_trustpub_github_config(
         environment: json_config.environment.as_deref(),
     };
 
-    let saved_config = new_config.insert(&mut conn).await?;
+    let saved_config = new_config.insert(&conn).await?;
 
     // Send notification emails to crate owners
 

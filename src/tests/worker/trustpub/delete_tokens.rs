@@ -19,7 +19,7 @@ async fn test_expiry() -> anyhow::Result<()> {
         crate_ids: &[1],
         trustpub_data: None,
     };
-    token.insert(&mut conn).await?;
+    token.insert(&conn).await?;
 
     let token = NewToken {
         expires_at: Utc::now() - TimeDelta::minutes(5),
@@ -27,7 +27,7 @@ async fn test_expiry() -> anyhow::Result<()> {
         crate_ids: &[2],
         trustpub_data: None,
     };
-    token.insert(&mut conn).await?;
+    token.insert(&conn).await?;
 
     DeleteExpiredTokens.enqueue(&conn).await?;
     app.run_pending_background_jobs().await;

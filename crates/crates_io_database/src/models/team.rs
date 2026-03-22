@@ -37,7 +37,7 @@ pub struct NewTeam<'a> {
 }
 
 impl NewTeam<'_> {
-    pub async fn create_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Team> {
+    pub async fn create_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<Team> {
         use diesel::insert_into;
 
         insert_into(teams::table)
@@ -46,19 +46,19 @@ impl NewTeam<'_> {
             .do_update()
             .set(self)
             .returning(Team::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }
 
 impl Team {
-    pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)
             .select(Team::as_select())
             .filter(crate_owners::owner_kind.eq(OwnerKind::Team))
-            .load(conn)
+            .load(&mut conn)
             .await?
             .into_iter()
             .map(Owner::Team);

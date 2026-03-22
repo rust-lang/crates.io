@@ -111,7 +111,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 
         let mut tasks = Vec::with_capacity(page_size);
         for (version, krate_name) in versions {
-            Version::record_readme_rendering(version.id, &mut conn)
+            Version::record_readme_rendering(version.id, &conn)
                 .await
                 .context("Couldn't record rendering time")?;
 

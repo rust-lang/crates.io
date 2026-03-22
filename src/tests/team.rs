@@ -108,7 +108,7 @@ async fn add_renamed_team() -> anyhow::Result<()> {
         .github_id(2001)
         .build();
 
-    new_team.create_or_update(&mut conn).await?;
+    new_team.create_or_update(&conn).await?;
 
     assert_eq!(teams::table.count().get_result::<i64>(&mut conn).await?, 1);
 
@@ -142,7 +142,7 @@ async fn add_team_mixed_case() -> anyhow::Result<()> {
         .good();
 
     let krate: Crate = Crate::by_name("foo_mixed_case").first(&mut conn).await?;
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -171,7 +171,7 @@ async fn add_team_as_org_owner() -> anyhow::Result<()> {
         .good();
 
     let krate: Crate = Crate::by_name("foo_org_owner").first(&mut conn).await?;
-    let owners = krate.owners(&mut conn).await?;
+    let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -291,7 +291,7 @@ async fn remove_nonexistent_team() {
         .github_id(5678)
         .org_id(1234)
         .build()
-        .create_or_update(&mut conn)
+        .create_or_update(&conn)
         .await
         .expect("couldn't insert nonexistent team");
 
@@ -300,7 +300,7 @@ async fn remove_nonexistent_team() {
         .team_id(team.id)
         .created_by(user.as_model().id)
         .build()
-        .insert(&mut conn)
+        .insert(&conn)
         .await
         .unwrap();
 
@@ -461,7 +461,7 @@ async fn crates_by_team_id() -> anyhow::Result<()> {
     let user = user.as_model();
 
     let t = new_team("github:test-org:team")
-        .create_or_update(&mut conn)
+        .create_or_update(&conn)
         .await?;
     let krate = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
@@ -487,13 +487,13 @@ async fn crates_by_team_id_not_including_deleted_owners() -> anyhow::Result<()> 
         .github_id(2001)
         .build();
 
-    let t = new_team.create_or_update(&mut conn).await?;
+    let t = new_team.create_or_update(&conn).await?;
 
     let krate = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
         .await;
     add_team_to_crate(&t, &krate, user, &mut conn).await?;
-    krate.owner_remove(&mut conn, &t.login).await.unwrap();
+    krate.owner_remove(&conn, &t.login).await.unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 0);

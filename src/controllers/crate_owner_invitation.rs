@@ -362,12 +362,12 @@ pub async fn handle_crate_owner_invitation(
         .await?
         .user_id();
     let invitation =
-        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &mut conn).await?;
+        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn).await?;
 
     if crate_invite.accepted {
         invitation.accept(&mut conn).await?;
     } else {
-        invitation.decline(&mut conn).await?;
+        invitation.decline(&conn).await?;
     }
 
     Ok(Json(HandleResponse {
@@ -390,7 +390,7 @@ pub async fn accept_crate_owner_invitation_with_token(
     Path(token): Path<String>,
 ) -> AppResult<Json<HandleResponse>> {
     let mut conn = state.db_write().await?;
-    let invitation = CrateOwnerInvitation::find_by_token(&token, &mut conn).await?;
+    let invitation = CrateOwnerInvitation::find_by_token(&token, &conn).await?;
 
     let crate_id = invitation.crate_id;
     invitation.accept(&mut conn).await?;

@@ -333,7 +333,7 @@ impl MockCookieUser {
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<DateTime<Utc>>,
     ) -> MockTokenUser {
-        let mut conn = self.app().db_conn().await;
+        let conn = self.app().db_conn().await;
 
         let plaintext = PlainToken::generate();
 
@@ -346,7 +346,7 @@ impl MockCookieUser {
             .maybe_expired_at(expired_at)
             .build();
 
-        let token = new_token.insert(&mut conn).await.unwrap();
+        let token = new_token.insert(&conn).await.unwrap();
 
         MockTokenUser {
             app: self.app.clone(),

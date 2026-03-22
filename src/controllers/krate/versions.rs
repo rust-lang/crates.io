@@ -109,7 +109,7 @@ pub async fn list_versions(
         .iter()
         .map(|(v, _)| v)
         .collect::<Vec<_>>();
-    let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
+    let actions = VersionOwnerAction::for_versions(&conn, &versions).await?;
     let versions = versions_and_publishers
         .data
         .into_iter()

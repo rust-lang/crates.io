@@ -41,7 +41,7 @@ async fn publish_with_org_restrictions() {
 
     // Add the team as an owner
     let team = new_team("github:servo:graphics")
-        .create_or_update(&mut conn)
+        .create_or_update(&conn)
         .await
         .unwrap();
     add_team_to_crate(&team, &krate, owner_model, &mut conn)

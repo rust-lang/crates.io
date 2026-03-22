@@ -28,25 +28,25 @@ pub struct User {
 }
 
 impl User {
-    pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
-        User::query().find(id).first(conn).await
+    pub async fn find(mut conn: &AsyncPgConnection, id: i32) -> QueryResult<User> {
+        User::query().find(id).first(&mut conn).await
     }
 
-    pub async fn find_by_login(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
+    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
         User::query()
             .filter(lower(users::gh_login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
             .order(users::gh_id.desc())
-            .first(conn)
+            .first(&mut conn)
             .await
     }
 
-    pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(User::as_select())
             .filter(crate_owners::crate_id.eq(krate.id))
-            .load(conn)
+            .load(&mut conn)
             .await?
             .into_iter()
             .map(Owner::User);
@@ -58,21 +58,21 @@ impl User {
     /// belonging to a given user
     pub async fn verified_email(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
-            .first(conn)
+            .first(&mut conn)
             .await
             .optional()
     }
 
     /// Queries for the email belonging to a particular user
-    pub async fn email(&self, conn: &mut AsyncPgConnection) -> QueryResult<Option<String>> {
+    pub async fn email(&self, mut conn: &AsyncPgConnection) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
-            .first(conn)
+            .first(&mut conn)
             .await
             .optional()
     }
@@ -91,16 +91,16 @@ pub struct NewUser<'a> {
 
 impl NewUser<'_> {
     /// Inserts the user into the database, or fails if the user already exists.
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<User> {
         diesel::insert_into(users::table)
             .values(self)
             .returning(User::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 
     /// Inserts the user into the database, or updates an existing one.
-    pub async fn insert_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
+    pub async fn insert_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<User> {
         diesel::insert_into(users::table)
             .values(self)
             // We need the `WHERE gh_id > 0` condition here because `gh_id` set
@@ -120,7 +120,7 @@ impl NewUser<'_> {
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
             .returning(User::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }
@@ -184,7 +184,7 @@ impl NewOauthGithub<'_> {
     ///
     /// This function should be called if there is no current user and should update the encrypted
     /// token, login, or avatar if those have changed.
-    pub async fn insert_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<OauthGithub> {
+    pub async fn insert_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<OauthGithub> {
         diesel::insert_into(oauth_github::table)
             .values(self)
             .on_conflict(oauth_github::account_id)
@@ -194,7 +194,7 @@ impl NewOauthGithub<'_> {
                 oauth_github::login.eq(excluded(oauth_github::login)),
                 oauth_github::avatar.eq(excluded(oauth_github::avatar)),
             ))
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }

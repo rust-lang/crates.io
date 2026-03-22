@@ -27,12 +27,12 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_token_with_scopes() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
     let user_model = user.as_model();
     let id = user_model.id;
 
     let new_token = NewApiToken::builder().name("bar").user_id(id).build();
-    assert_ok!(new_token.insert(&mut conn).await);
+    assert_ok!(new_token.insert(&conn).await);
 
     let new_token = NewApiToken::builder()
         .name("baz")
@@ -44,7 +44,7 @@ async fn show_token_with_scopes() {
         .endpoint_scopes(vec![EndpointScope::PublishUpdate])
         .expired_at(Utc::now() - Duration::days(31))
         .build();
-    let token = assert_ok!(new_token.insert(&mut conn).await);
+    let token = assert_ok!(new_token.insert(&conn).await);
 
     let url = format!("/api/v1/me/tokens/{}", token.id);
     let response = user.get::<()>(&url).await;
@@ -66,12 +66,12 @@ async fn show_with_anonymous_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_other_user_token() {
     let (app, _, user1) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
     let user2 = app.db_new_user("baz").await;
     let user2 = user2.as_model();
 
     let new_token = NewApiToken::builder().name("bar").user_id(user2.id).build();
-    let token = assert_ok!(new_token.insert(&mut conn).await);
+    let token = assert_ok!(new_token.insert(&conn).await);
 
     let url = format!("/api/v1/me/tokens/{}", token.id);
     let response = user1.get::<()>(&url).await;

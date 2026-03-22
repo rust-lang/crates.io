@@ -29,15 +29,15 @@ pub struct CrateKeyword {
 }
 
 impl Keyword {
-    pub async fn find_by_keyword(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Keyword> {
+    pub async fn find_by_keyword(mut conn: &AsyncPgConnection, name: &str) -> QueryResult<Keyword> {
         Keyword::query()
             .filter(keywords::keyword.eq(lower(name)))
-            .first(conn)
+            .first(&mut conn)
             .await
     }
 
     pub async fn find_or_create_all(
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         names: &[&str],
     ) -> QueryResult<Vec<Keyword>> {
         let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
@@ -50,12 +50,12 @@ impl Keyword {
         diesel::insert_into(keywords::table)
             .values(&new_keywords)
             .on_conflict_do_nothing()
-            .execute(conn)
+            .execute(&mut conn)
             .await?;
 
         Keyword::query()
             .filter(keywords::keyword.eq_any(&lowercase_names))
-            .load(conn)
+            .load(&mut conn)
             .await
     }
 
@@ -124,9 +124,7 @@ mod tests {
             .await
             .unwrap();
 
-        let associated = Keyword::find_or_create_all(&mut conn, &["no"])
-            .await
-            .unwrap();
+        let associated = Keyword::find_or_create_all(&conn, &["no"]).await.unwrap();
         assert_eq!(associated.len(), 1);
         assert_eq!(associated.iter().next().unwrap().keyword, "no");
     }

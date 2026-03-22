@@ -112,7 +112,7 @@ pub async fn get_authenticated_user_updates(
 
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
-    let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
+    let actions = VersionOwnerAction::for_versions(&conn, &versions).await?;
     let data = data
         .into_iter()
         .zip(actions)

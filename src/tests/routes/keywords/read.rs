@@ -14,12 +14,12 @@ struct GoodKeyword {
 async fn show() -> anyhow::Result<()> {
     let url = "/api/v1/keywords/foo";
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
 
     let response = anon.get::<()>(url).await;
     assert_snapshot!(response.status(), @"404 Not Found");
 
-    Keyword::find_or_create_all(&mut conn, &["foo"]).await?;
+    Keyword::find_or_create_all(&conn, &["foo"]).await?;
 
     let json: GoodKeyword = anon.get(url).await.good();
     assert_eq!(json.keyword.keyword.as_str(), "foo");
@@ -31,12 +31,12 @@ async fn show() -> anyhow::Result<()> {
 async fn uppercase() -> anyhow::Result<()> {
     let url = "/api/v1/keywords/UPPER";
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
 
     let response = anon.get::<()>(url).await;
     assert_snapshot!(response.status(), @"404 Not Found");
 
-    Keyword::find_or_create_all(&mut conn, &["UPPER"]).await?;
+    Keyword::find_or_create_all(&conn, &["UPPER"]).await?;
 
     let json: GoodKeyword = anon.get(url).await.good();
     assert_eq!(json.keyword.keyword.as_str(), "upper");
@@ -55,7 +55,7 @@ async fn update_crate() -> anyhow::Result<()> {
         json.keyword.crates_cnt as usize
     }
 
-    Keyword::find_or_create_all(&mut conn, &["kw1", "kw2"]).await?;
+    Keyword::find_or_create_all(&conn, &["kw1", "kw2"]).await?;
     let krate = CrateBuilder::new("fookey", user.id)
         .expect_build(&mut conn)
         .await;

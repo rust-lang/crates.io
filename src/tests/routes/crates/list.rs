@@ -23,7 +23,7 @@ async fn index() -> anyhow::Result<()> {
         assert_eq!(json.meta.total, 0);
     }
 
-    let user_id = new_user("foo").insert(&mut conn).await?.id;
+    let user_id = new_user("foo").insert(&conn).await?.id;
 
     let krate = CrateBuilder::new("fooindex", user_id)
         .expect_build(&mut conn)
@@ -1198,7 +1198,7 @@ async fn crates_by_user_id_not_including_deleted_owners() -> anyhow::Result<()> 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&mut conn, "foo").await.unwrap();
+    krate.owner_remove(&conn, "foo").await.unwrap();
 
     for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);

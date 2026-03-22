@@ -29,11 +29,11 @@ pub struct NewApiToken {
 }
 
 impl NewApiToken {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<ApiToken> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<ApiToken> {
         diesel::insert_into(api_tokens::table)
             .values(self)
             .returning(ApiToken::as_returning())
-            .get_result(conn)
+            .get_result(&mut conn)
             .await
     }
 }

@@ -435,7 +435,7 @@ async fn github_secret_alert_revokes_trustpub_token_multiple_users() {
         .user_id(user2.as_model().id)
         .created_by(user1.as_model().id)
         .build()
-        .insert(&mut conn)
+        .insert(&conn)
         .await
         .unwrap();
 

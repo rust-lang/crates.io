@@ -15,10 +15,10 @@ impl<'a> NewUsedJti<'a> {
         Self { jti, expires_at }
     }
 
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<usize> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<usize> {
         diesel::insert_into(trustpub_used_jtis::table)
             .values(self)
-            .execute(conn)
+            .execute(&mut conn)
             .await
     }
 }

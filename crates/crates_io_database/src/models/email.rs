@@ -27,10 +27,10 @@ pub struct NewEmail<'a> {
 }
 
 impl NewEmail<'_> {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<()> {
         diesel::insert_into(emails::table)
             .values(self)
-            .execute(conn)
+            .execute(&mut conn)
             .await?;
 
         Ok(())
@@ -40,13 +40,13 @@ impl NewEmail<'_> {
     /// or does nothing if it already exists and returns `None`.
     pub async fn insert_if_missing(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> QueryResult<Option<SecretString>> {
         diesel::insert_into(emails::table)
             .values(self)
             .on_conflict_do_nothing()
             .returning(emails::token)
-            .get_result::<String>(conn)
+            .get_result::<String>(&mut conn)
             .await
             .map(Into::into)
             .optional()
@@ -54,7 +54,7 @@ impl NewEmail<'_> {
 
     pub async fn insert_or_update(
         &self,
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> QueryResult<SecretString> {
         diesel::insert_into(emails::table)
             .values(self)
@@ -62,7 +62,7 @@ impl NewEmail<'_> {
             .do_update()
             .set(self)
             .returning(emails::token)
-            .get_result::<String>(conn)
+            .get_result::<String>(&mut conn)
             .await
             .map(Into::into)
     }

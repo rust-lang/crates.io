@@ -75,7 +75,7 @@ pub struct NewCloudFrontInvalidationQueueItem<'a> {
 impl CloudFrontInvalidationQueueItem {
     /// Queue multiple invalidation paths for later processing
     pub async fn queue_paths(
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         distribution: CloudFrontDistribution,
         paths: &[String],
     ) -> QueryResult<usize> {
@@ -86,13 +86,13 @@ impl CloudFrontInvalidationQueueItem {
 
         diesel::insert_into(cloudfront_invalidation_queue::table)
             .values(&new_items)
-            .execute(conn)
+            .execute(&mut conn)
             .await
     }
 
     /// Fetch the oldest paths from the queue for a specific distribution
     pub async fn fetch_batch(
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         distribution: CloudFrontDistribution,
         limit: i64,
     ) -> QueryResult<Vec<CloudFrontInvalidationQueueItem>> {
@@ -101,18 +101,18 @@ impl CloudFrontInvalidationQueueItem {
             .filter(cloudfront_invalidation_queue::distribution.eq(distribution))
             .order(cloudfront_invalidation_queue::created_at.asc())
             .limit(limit)
-            .load(conn)
+            .load(&mut conn)
             .await
     }
 
     /// Remove queue items by their IDs
     pub async fn remove_items(
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
         item_ids: &[i64],
     ) -> QueryResult<usize> {
         diesel::delete(cloudfront_invalidation_queue::table)
             .filter(cloudfront_invalidation_queue::id.eq_any(item_ids))
-            .execute(conn)
+            .execute(&mut conn)
             .await
     }
 }

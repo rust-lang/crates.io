@@ -148,7 +148,7 @@ pub async fn find_crate(
             .iter()
             .map(|(v, _)| v)
             .collect::<Vec<_>>();
-        let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
+        let actions = VersionOwnerAction::for_versions(&conn, &versions).await?;
         Some(
             versions_and_publishers
                 .into_iter()

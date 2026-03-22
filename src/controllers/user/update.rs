@@ -72,7 +72,7 @@ pub async fn update_user(
             .await?;
 
         if !publish_notifications {
-            let email_address = user.verified_email(&mut conn).await?;
+            let email_address = user.verified_email(&conn).await?;
 
             if let Some(email_address) = email_address {
                 let email = EmailMessage::from_template(
@@ -113,7 +113,7 @@ pub async fn update_user(
             .email(user_email)
             .build();
 
-        let token = new_email.insert_or_update(&mut conn).await;
+        let token = new_email.insert_or_update(&conn).await;
         let token = token.map_err(|_| server_error("Error in creating token"))?;
 
         // This swallows any errors that occur while attempting to send the email. Some users have
