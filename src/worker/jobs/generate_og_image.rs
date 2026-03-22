@@ -53,10 +53,10 @@ impl BackgroundJob for GenerateOgImage {
 
         info!("Generating OG image for crate {crate_name}");
 
-        let mut conn = ctx.deadpool.get().await?;
+        let conn = ctx.deadpool.get().await?;
 
         // Fetch crate data
-        let row = fetch_crate_data(crate_name, &mut conn).await;
+        let row = fetch_crate_data(crate_name, &conn).await;
         let row = row.context("Failed to fetch crate data")?;
         let Some(row) = row else {
             error!("Crate '{crate_name}' not found or has no default version");
@@ -66,7 +66,7 @@ impl BackgroundJob for GenerateOgImage {
         let keywords: Vec<&str> = row.keywords.iter().flatten().map(|k| k.as_str()).collect();
 
         // Fetch user owners
-        let owners = fetch_user_owners(row._crate_id, &mut conn).await;
+        let owners = fetch_user_owners(row._crate_id, &conn).await;
         let owners = owners.context("Failed to fetch crate owners")?;
         let authors: Vec<OgImageAuthorData<'_>> = owners
             .iter()
@@ -176,11 +176,11 @@ impl QueryRow {
 /// Fetches crate data and default version information by crate name
 async fn fetch_crate_data(
     crate_name: &str,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> QueryResult<Option<QueryRow>> {
     QueryRow::query()
         .filter(crates::name.eq(crate_name))
-        .first(conn)
+        .first(&mut conn)
         .await
         .optional()
 }
@@ -188,7 +188,7 @@ async fn fetch_crate_data(
 /// Fetches user owners and their avatars for a crate by crate ID
 async fn fetch_user_owners(
     crate_id: i32,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> QueryResult<Vec<(String, Option<String>)>> {
     crate_owners::table
         .inner_join(users::table.on(crate_owners::owner_id.eq(users::id)))
@@ -196,6 +196,6 @@ async fn fetch_user_owners(
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .filter(crate_owners::deleted.eq(false))
         .select((users::gh_login, users::gh_avatar))
-        .load(conn)
+        .load(&mut conn)
         .await
 }

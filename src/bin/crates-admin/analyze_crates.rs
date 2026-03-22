@@ -30,7 +30,7 @@ pub async fn run(opts: Options) -> anyhow::Result<()> {
     let conn = db::oneoff_connection().await;
     let mut conn = conn.context("Failed to connect to the database")?;
 
-    let results = load_versions(&opts, &mut conn).await;
+    let results = load_versions(&opts, &conn).await;
     let results = results.context("Failed to load versions")?;
     if results.is_empty() {
         println!("No matching versions found.");
@@ -90,7 +90,7 @@ pub async fn run(opts: Options) -> anyhow::Result<()> {
 
 async fn load_versions(
     opts: &Options,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> QueryResult<Vec<(i32, bool)>> {
     let mut query = versions::table
         .inner_join(crates::table)
@@ -116,7 +116,7 @@ async fn load_versions(
         }
     }
 
-    query.load(conn).await
+    query.load(&mut conn).await
 }
 
 /// Parse crate specification in the format "crate@version" or just "crate"

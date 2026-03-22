@@ -35,8 +35,8 @@ impl BackgroundJob for SyncUpdatesFeed {
         let domain = &ctx.config.domain_name;
 
         info!("Loading latest {NUM_ITEMS} version updates from the database…");
-        let mut conn = ctx.deadpool.get().await?;
-        let version_updates = load_version_updates(&mut conn).await?;
+        let conn = ctx.deadpool.get().await?;
+        let version_updates = load_version_updates(&conn).await?;
 
         let link = rss::extension::atom::Link {
             href: ctx.storage.feed_url(&feed_id),
@@ -69,7 +69,7 @@ impl BackgroundJob for SyncUpdatesFeed {
 
         let dist = CloudFrontDistribution::Static;
         let path = object_store::path::Path::from(&feed_id);
-        if let Err(error) = ctx.invalidate_cdns(&mut conn, dist, path.as_ref()).await {
+        if let Err(error) = ctx.invalidate_cdns(&conn, dist, path.as_ref()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
@@ -84,13 +84,13 @@ impl BackgroundJob for SyncUpdatesFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] versions
 /// then the list will be padded with older versions until [`NUM_ITEMS`] are
 /// returned.
-async fn load_version_updates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<VersionUpdate>> {
+async fn load_version_updates(mut conn: &AsyncPgConnection) -> QueryResult<Vec<VersionUpdate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let updates = VersionUpdate::query()
         .filter(versions::created_at.gt(threshold_dt))
         .order(versions::created_at.desc())
-        .load(conn)
+        .load(&mut conn)
         .await?;
 
     let num_updates = updates.len();
@@ -101,7 +101,7 @@ async fn load_version_updates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<V
     VersionUpdate::query()
         .order(versions::created_at.desc())
         .limit(NUM_ITEMS)
-        .load(conn)
+        .load(&mut conn)
         .await
 }
 
@@ -184,7 +184,7 @@ mod tests {
 
         let now = chrono::Utc::now();
 
-        let updates = assert_ok!(load_version_updates(&mut conn).await);
+        let updates = assert_ok!(load_version_updates(&conn).await);
         assert_eq!(updates.len(), 0);
 
         let foo = create_crate(&mut conn, "foo").await;
@@ -198,7 +198,7 @@ mod tests {
         ];
         join_all(futures).await;
 
-        let updates = assert_ok!(load_version_updates(&mut conn).await);
+        let updates = assert_ok!(load_version_updates(&conn).await);
         assert_eq!(updates.len(), 4);
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
 
@@ -211,7 +211,7 @@ mod tests {
         }
         join_all(futures).await;
 
-        let updates = assert_ok!(load_version_updates(&mut conn).await);
+        let updates = assert_ok!(load_version_updates(&conn).await);
         assert_eq!(updates.len() as i64, NUM_ITEMS);
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
 
@@ -224,7 +224,7 @@ mod tests {
         }
         join_all(futures).await;
 
-        let updates = assert_ok!(load_version_updates(&mut conn).await);
+        let updates = assert_ok!(load_version_updates(&conn).await);
         assert_eq!(updates.len() as i64, NUM_ITEMS + 10);
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
     }

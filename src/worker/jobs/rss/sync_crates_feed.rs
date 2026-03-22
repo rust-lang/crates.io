@@ -35,8 +35,8 @@ impl BackgroundJob for SyncCratesFeed {
         let domain = &ctx.config.domain_name;
 
         info!("Loading latest {NUM_ITEMS} crates from the database…");
-        let mut conn = ctx.deadpool.get().await?;
-        let new_crates = load_new_crates(&mut conn).await?;
+        let conn = ctx.deadpool.get().await?;
+        let new_crates = load_new_crates(&conn).await?;
 
         let link = rss::extension::atom::Link {
             href: ctx.storage.feed_url(&feed_id),
@@ -69,7 +69,7 @@ impl BackgroundJob for SyncCratesFeed {
 
         let dist = CloudFrontDistribution::Static;
         let path = object_store::path::Path::from(&feed_id);
-        if let Err(error) = ctx.invalidate_cdns(&mut conn, dist, path.as_ref()).await {
+        if let Err(error) = ctx.invalidate_cdns(&conn, dist, path.as_ref()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
@@ -84,13 +84,13 @@ impl BackgroundJob for SyncCratesFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] crates
 /// then the list will be padded with older crates until [`NUM_ITEMS`] are
 /// returned.
-async fn load_new_crates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<NewCrate>> {
+async fn load_new_crates(mut conn: &AsyncPgConnection) -> QueryResult<Vec<NewCrate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let new_crates = NewCrate::query()
         .filter(crates::created_at.gt(threshold_dt))
         .order(crates::created_at.desc())
-        .load(conn)
+        .load(&mut conn)
         .await?;
 
     let num_new_crates = new_crates.len();
@@ -101,7 +101,7 @@ async fn load_new_crates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<NewCra
     NewCrate::query()
         .order(crates::created_at.desc())
         .limit(NUM_ITEMS)
-        .load(conn)
+        .load(&mut conn)
         .await
 }
 
@@ -167,11 +167,11 @@ mod tests {
         crate::util::tracing::init_for_test();
 
         let db = TestDatabase::new();
-        let mut conn = db.async_connect().await;
+        let conn = db.async_connect().await;
 
         let now = chrono::Utc::now();
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
+        let new_crates = assert_ok!(load_new_crates(&conn).await);
         assert_eq!(new_crates.len(), 0);
 
         // If there are less than NUM_ITEMS crates, they should all be returned
@@ -183,7 +183,7 @@ mod tests {
         ];
         join_all(futures).await;
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
+        let new_crates = assert_ok!(load_new_crates(&conn).await);
         assert_eq!(new_crates.len(), 4);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
 
@@ -196,7 +196,7 @@ mod tests {
         }
         join_all(futures).await;
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
+        let new_crates = assert_ok!(load_new_crates(&conn).await);
         assert_eq!(new_crates.len() as i64, NUM_ITEMS);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
 
@@ -209,7 +209,7 @@ mod tests {
         }
         join_all(futures).await;
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
+        let new_crates = assert_ok!(load_new_crates(&conn).await);
         assert_eq!(new_crates.len() as i64, NUM_ITEMS + 10);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
     }

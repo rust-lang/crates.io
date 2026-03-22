@@ -37,7 +37,7 @@ impl ProcessCloudfrontInvalidationQueue {
     #[instrument(skip_all, fields(distribution = %distribution.as_str()))]
     async fn process_batch(
         &self,
-        conn: &mut AsyncPgConnection,
+        conn: &AsyncPgConnection,
         cloudfront: &CloudFront,
         distribution: CloudFrontDistribution,
     ) -> anyhow::Result<usize> {
@@ -123,14 +123,12 @@ impl BackgroundJob for ProcessCloudfrontInvalidationQueue {
             return Ok(());
         };
 
-        let mut conn = ctx.deadpool.get().await?;
+        let conn = ctx.deadpool.get().await?;
 
         // Process batches for each distribution until the queues are empty
         for distribution in DISTRIBUTIONS {
             loop {
-                let item_count = self
-                    .process_batch(&mut conn, cloudfront, distribution)
-                    .await?;
+                let item_count = self.process_batch(&conn, cloudfront, distribution).await?;
                 if item_count == 0 {
                     break;
                 }

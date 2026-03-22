@@ -65,7 +65,7 @@ mod tests {
             ("future-file", now + one_hour * 7 * 24),
         ];
         insert(&mut conn, inserts).await;
-        assert_debug_snapshot!(paths_in_table(&mut conn).await, @r#"
+        assert_debug_snapshot!(paths_in_table(&conn).await, @r#"
         [
             "very-old-file",
             "old-file",
@@ -76,7 +76,7 @@ mod tests {
         "#);
 
         run(&mut conn).await.unwrap();
-        assert_debug_snapshot!(paths_in_table(&mut conn).await, @r#"
+        assert_debug_snapshot!(paths_in_table(&conn).await, @r#"
         [
             "newish-file",
             "brand-new-file",
@@ -105,10 +105,10 @@ mod tests {
     }
 
     /// Read all paths from the `processed_log_files` table.
-    async fn paths_in_table(conn: &mut AsyncPgConnection) -> Vec<String> {
+    async fn paths_in_table(mut conn: &AsyncPgConnection) -> Vec<String> {
         processed_log_files::table
             .select(processed_log_files::path)
-            .load::<String>(conn)
+            .load::<String>(&mut conn)
             .await
             .unwrap()
     }

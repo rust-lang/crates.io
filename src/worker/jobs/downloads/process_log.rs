@@ -372,8 +372,8 @@ async fn already_processed(
 ) -> anyhow::Result<bool> {
     let path = path.into();
 
-    let mut conn = db_pool.get().await?;
-    let already_processed = already_processed_inner(path, &mut conn).await?;
+    let conn = db_pool.get().await?;
+    let already_processed = already_processed_inner(path, &conn).await?;
 
     Ok(already_processed)
 }
@@ -386,12 +386,12 @@ async fn already_processed(
 /// the path into the `processed_log_files` table yet.
 async fn already_processed_inner(
     path: impl Into<String>,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> QueryResult<bool> {
     use crate::schema::processed_log_files;
 
     let query = processed_log_files::table.filter(processed_log_files::path.eq(path.into()));
-    select(exists(query)).get_result(conn).await
+    select(exists(query)).get_result(&mut conn).await
 }
 
 /// Inserts the given path into the `processed_log_files` table to mark it as
@@ -534,8 +534,8 @@ mod tests {
     /// Queries all version downloads from the database and returns them as a
     /// [`Vec`] of strings for use with [`assert_debug_snapshot!()`].
     async fn all_version_downloads(db_pool: Pool<AsyncPgConnection>) -> Vec<String> {
-        let mut conn = db_pool.get().await.unwrap();
-        let downloads = query_all_version_downloads(&mut conn).await;
+        let conn = db_pool.get().await.unwrap();
+        let downloads = query_all_version_downloads(&conn).await;
 
         downloads
             .into_iter()
@@ -548,7 +548,7 @@ mod tests {
     /// Queries all version downloads from the database and returns them as a
     /// [`Vec`] of tuples.
     async fn query_all_version_downloads(
-        conn: &mut AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> Vec<(String, String, i32, i32, NaiveDate, bool)> {
         version_downloads::table
             .inner_join(versions::table)
@@ -562,7 +562,7 @@ mod tests {
                 version_downloads::processed,
             ))
             .order((crates::name, versions::num, version_downloads::date))
-            .load(conn)
+            .load(&mut conn)
             .await
             .unwrap()
     }

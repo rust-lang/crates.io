@@ -77,7 +77,7 @@ impl Environment {
     /// Invalidate a file in all registered CDNs.
     pub(crate) async fn invalidate_cdns(
         &self,
-        conn: &mut AsyncPgConnection,
+        conn: &AsyncPgConnection,
         distribution: CloudFrontDistribution,
         path: &str,
     ) -> anyhow::Result<()> {

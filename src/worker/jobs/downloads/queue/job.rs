@@ -155,9 +155,9 @@ async fn process_body(body: &str, connection_pool: &Pool<AsyncPgConnection>) -> 
     }
 
     let conn = connection_pool.get().await;
-    let mut conn = conn.context("Failed to acquire database connection")?;
+    let conn = conn.context("Failed to acquire database connection")?;
 
-    enqueue_jobs(jobs, &mut conn).await
+    enqueue_jobs(jobs, &conn).await
 }
 
 /// Extracts a list of [`ProcessCdnLog`] jobs from a message.
@@ -203,10 +203,7 @@ fn is_ignored_path(path: &str) -> bool {
     path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
 }
 
-async fn enqueue_jobs(
-    jobs: Vec<ProcessCdnLog>,
-    conn: &mut AsyncPgConnection,
-) -> anyhow::Result<()> {
+async fn enqueue_jobs(jobs: Vec<ProcessCdnLog>, conn: &AsyncPgConnection) -> anyhow::Result<()> {
     for job in jobs {
         let path = &job.path;
 
@@ -264,7 +261,7 @@ mod tests {
         assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"123");
-        assert_snapshot!(open_jobs(&mut connection_pool.get().await.unwrap()).await, @"us-west-1 | bucket | path");
+        assert_snapshot!(open_jobs(&connection_pool.get().await.unwrap()).await, @"us-west-1 | bucket | path");
     }
 
     #[tokio::test]
@@ -312,7 +309,7 @@ mod tests {
         assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
-        assert_snapshot!(open_jobs(&mut connection_pool.get().await.unwrap()).await, @r"
+        assert_snapshot!(open_jobs(&connection_pool.get().await.unwrap()).await, @r"
         us-west-1 | bucket | path1
         us-west-1 | bucket | path2
         us-west-1 | bucket | path3
@@ -360,7 +357,7 @@ mod tests {
         assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1");
-        assert_snapshot!(open_jobs(&mut connection_pool.get().await.unwrap()).await, @"");
+        assert_snapshot!(open_jobs(&connection_pool.get().await.unwrap()).await, @"");
     }
 
     #[test]
@@ -421,10 +418,10 @@ mod tests {
             .build()
     }
 
-    async fn open_jobs(conn: &mut AsyncPgConnection) -> String {
+    async fn open_jobs(mut conn: &AsyncPgConnection) -> String {
         let jobs = background_jobs::table
             .select((background_jobs::job_type, background_jobs::data))
-            .load::<(String, serde_json::Value)>(conn)
+            .load::<(String, serde_json::Value)>(&mut conn)
             .await
             .unwrap();
 

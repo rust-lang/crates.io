@@ -86,7 +86,7 @@ async fn check_failing_background_jobs(
 
 /// Check for an `update_downloads` job that has run longer than expected
 async fn check_stalled_update_downloads(
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
     pagerduty: &PagerdutyClient,
 ) -> Result<()> {
     use chrono::{DateTime, Utc};
@@ -101,7 +101,7 @@ async fn check_stalled_update_downloads(
     let start_time: Result<DateTime<Utc>, _> = background_jobs::table
         .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
         .select(background_jobs::created_at)
-        .first(conn)
+        .first(&mut conn)
         .await;
 
     if let Ok(start_time) = start_time {
@@ -131,7 +131,7 @@ async fn check_stalled_update_downloads(
 
 /// Check for known spam patterns
 async fn check_spam_attack(
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
     pagerduty: &PagerdutyClient,
 ) -> Result<()> {
     const EVENT_KEY: &str = "spam_attack";
@@ -149,7 +149,7 @@ async fn check_spam_attack(
     let bad_crate: Option<String> = crates::table
         .filter(canon_crate_name(crates::name).eq_any(bad_crate_names))
         .select(crates::name)
-        .first(conn)
+        .first(&mut conn)
         .await
         .optional()?;
 

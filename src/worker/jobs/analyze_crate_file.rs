@@ -45,7 +45,7 @@ impl BackgroundJob for AnalyzeCrateFile {
 
         let mut conn = env.deadpool.get().await?;
 
-        let Some((krate, version)) = get_crate_version_info(version_id, &mut conn).await? else {
+        let Some((krate, version)) = get_crate_version_info(version_id, &conn).await? else {
             warn!("version_id={version_id} not found in database, skipping analysis");
             return Ok(());
         };
@@ -60,7 +60,7 @@ impl BackgroundJob for AnalyzeCrateFile {
             "Crate file analysis completed for {krate}@{version} (version_id={version_id})"
         );
 
-        if let Err(err) = handle_og_image_rerender(&krate, version_id, &mut conn).await {
+        if let Err(err) = handle_og_image_rerender(&krate, version_id, &conn).await {
             warn!(
                 "Failed to schedule OG image rerender for {krate}@{version} (version_id={version_id}): {err}"
             );
@@ -74,13 +74,13 @@ impl BackgroundJob for AnalyzeCrateFile {
 #[instrument(skip(conn))]
 async fn get_crate_version_info(
     version_id: i32,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> anyhow::Result<Option<(String, String)>> {
     versions::table
         .find(version_id)
         .inner_join(crates::table)
         .select((crates::name, versions::num))
-        .first::<(String, String)>(conn)
+        .first::<(String, String)>(&mut conn)
         .await
         .optional()
         .context("Failed to query crate and version info")
@@ -156,12 +156,12 @@ async fn update_version_linecount_stats(
 async fn handle_og_image_rerender(
     crate_name: &str,
     version_id: i32,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> anyhow::Result<()> {
     let is_default_version = diesel::select(exists(
         default_versions::table.filter(default_versions::version_id.eq(version_id)),
     ))
-    .get_result::<bool>(conn)
+    .get_result::<bool>(&mut conn)
     .await?;
 
     if is_default_version {
