@@ -15,12 +15,12 @@ use serde::Serialize;
 
 async fn follow_target(
     crate_name: &str,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
     user_id: i32,
 ) -> AppResult<Follow> {
     let crate_id = Crate::by_name(crate_name)
         .select(crates::id)
-        .first(conn)
+        .first(&mut conn)
         .await
         .optional()?
         .ok_or_else(|| crate_not_found(crate_name))?;
@@ -43,7 +43,7 @@ async fn follow_target(
 pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
-    let follow = follow_target(&path.name, &mut conn, user_id).await?;
+    let follow = follow_target(&path.name, &conn, user_id).await?;
     diesel::insert_into(follows::table)
         .values(&follow)
         .on_conflict_do_nothing()
@@ -68,7 +68,7 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
 pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
-    let follow = follow_target(&path.name, &mut conn, user_id).await?;
+    let follow = follow_target(&path.name, &conn, user_id).await?;
     diesel::delete(&follow).execute(&mut conn).await?;
 
     Ok(OkResponse::new())
@@ -102,7 +102,7 @@ pub async fn get_following_crate(
         .await?
         .user_id();
 
-    let follow = follow_target(&path.name, &mut conn, user_id).await?;
+    let follow = follow_target(&path.name, &conn, user_id).await?;
     let following = diesel::select(exists(follows::table.find(follow.id())))
         .get_result(&mut conn)
         .await?;

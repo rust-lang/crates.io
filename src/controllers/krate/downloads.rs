@@ -88,7 +88,7 @@ pub async fn get_crate_downloads(
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 
-    let crate_id: i32 = path.load_crate_id(&mut conn).await?;
+    let crate_id: i32 = path.load_crate_id(&conn).await?;
 
     let mut versions: Vec<Version> = Version::query()
         .filter(versions::crate_id.eq(crate_id))

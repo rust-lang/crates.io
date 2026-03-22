@@ -67,7 +67,7 @@ pub async fn delete_crate(
     let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
 
     // Check that the crate exists
-    let krate = path.load_crate(&mut conn).await?;
+    let krate = path.load_crate(&conn).await?;
 
     // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
     let user = auth.user();
@@ -93,7 +93,7 @@ pub async fn delete_crate(
             return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
         }
 
-        let downloads = get_crate_downloads(&mut conn, krate.id).await?;
+        let downloads = get_crate_downloads(&conn, krate.id).await?;
         if downloads > max_downloads(&age) {
             let msg = format!(
                 "only crates with less than {DOWNLOADS_PER_MONTH_LIMIT} downloads per month can be deleted after 72 hours"
@@ -104,7 +104,7 @@ pub async fn delete_crate(
 
     // All crates with reverse dependencies are blocked from being deleted to avoid unexpected
     // historical index changes.
-    if has_rev_dep(&mut conn, krate.id).await? {
+    if has_rev_dep(&conn, krate.id).await? {
         let msg = "only crates without reverse dependencies can be deleted";
         return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
     }
@@ -171,11 +171,11 @@ pub async fn delete_crate(
     Ok(StatusCode::NO_CONTENT)
 }
 
-async fn get_crate_downloads(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<u64> {
+async fn get_crate_downloads(mut conn: &AsyncPgConnection, crate_id: i32) -> QueryResult<u64> {
     let downloads = crate_downloads::table
         .find(crate_id)
         .select(crate_downloads::downloads)
-        .first::<i64>(conn)
+        .first::<i64>(&mut conn)
         .await
         .optional()?;
 
@@ -188,11 +188,11 @@ pub fn max_downloads(age: &TimeDelta) -> u64 {
     DOWNLOADS_PER_MONTH_LIMIT * age_months
 }
 
-async fn has_rev_dep(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<bool> {
+async fn has_rev_dep(mut conn: &AsyncPgConnection, crate_id: i32) -> QueryResult<bool> {
     let rev_dep = dependencies::table
         .filter(dependencies::crate_id.eq(crate_id))
         .select(dependencies::id)
-        .first::<i32>(conn)
+        .first::<i32>(&mut conn)
         .await
         .optional()?;
 

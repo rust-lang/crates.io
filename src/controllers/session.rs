@@ -231,10 +231,10 @@ async fn create_or_update_user(
     .await
 }
 
-async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
+async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
     User::query()
         .filter(users::gh_id.eq(gh_id))
-        .first(conn)
+        .first(&mut conn)
         .await
         .optional()
 }

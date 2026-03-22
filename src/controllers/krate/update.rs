@@ -62,7 +62,7 @@ pub async fn update_crate(
     let mut conn = app.db_write().await?;
 
     // Check that the crate exists
-    let krate = path.load_crate(&mut conn).await?;
+    let krate = path.load_crate(&conn).await?;
 
     // Check that the user is authenticated with appropriate permissions
     let auth = AuthCheck::default()

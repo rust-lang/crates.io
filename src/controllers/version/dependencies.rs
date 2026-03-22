@@ -33,7 +33,7 @@ pub async fn get_version_dependencies(
     path: CrateVersionPath,
 ) -> AppResult<Json<Response>> {
     let mut conn = state.db_read().await?;
-    let version = path.load_version(&mut conn).await?;
+    let version = path.load_version(&conn).await?;
 
     let dependencies = Dependency::belonging_to(&version)
         .inner_join(crates::table)

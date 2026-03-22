@@ -46,7 +46,7 @@ pub async fn list_reverse_dependencies(
 
     let pagination_options = PaginationOptions::builder().gather(&req)?;
 
-    let krate = path.load_crate(&mut conn).await?;
+    let krate = path.load_crate(&conn).await?;
 
     let offset = pagination_options.offset().unwrap_or_default();
     let limit = pagination_options.per_page;

@@ -72,7 +72,7 @@ async fn list_by_crate(
         .await?;
     let auth_user = auth.user();
 
-    let krate = load_crate(&mut conn, krate_name).await?;
+    let krate = load_crate(&conn, krate_name).await?;
 
     // Check if the authenticated user is an owner of the crate
     let is_owner = select(exists(

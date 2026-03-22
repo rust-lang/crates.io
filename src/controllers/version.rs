@@ -30,20 +30,20 @@ pub struct CrateVersionPath {
 }
 
 impl CrateVersionPath {
-    pub async fn load_version(&self, conn: &mut AsyncPgConnection) -> AppResult<Version> {
+    pub async fn load_version(&self, conn: &AsyncPgConnection) -> AppResult<Version> {
         Ok(self.load_version_and_crate(conn).await?.0)
     }
 
     pub async fn load_version_and_crate(
         &self,
-        conn: &mut AsyncPgConnection,
+        conn: &AsyncPgConnection,
     ) -> AppResult<(Version, Crate)> {
         version_and_crate(conn, &self.name, &self.version).await
     }
 }
 
 async fn version_and_crate(
-    conn: &mut AsyncPgConnection,
+    conn: &AsyncPgConnection,
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {

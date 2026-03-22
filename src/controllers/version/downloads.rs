@@ -83,7 +83,7 @@ pub async fn get_version_downloads(
     params: DownloadsQueryParams,
 ) -> AppResult<Json<DownloadsResponse>> {
     let mut conn = app.db_read().await?;
-    let version = path.load_version(&mut conn).await?;
+    let version = path.load_version(&conn).await?;
 
     let cutoff_end_date = params
         .before_date

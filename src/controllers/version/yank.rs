@@ -69,7 +69,7 @@ async fn modify_yank(
     // lifetime issues with `req`.
 
     let mut conn = state.db_write().await?;
-    let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
+    let (mut version, krate) = path.load_version_and_crate(&conn).await?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 
     state

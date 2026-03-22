@@ -86,9 +86,9 @@ pub async fn list_versions(
     pagination: PaginationQueryParams,
     req: Parts,
 ) -> AppResult<Json<ListResponse>> {
-    let mut conn = state.db_read().await?;
+    let conn = state.db_read().await?;
 
-    let crate_id = path.load_crate_id(&mut conn).await?;
+    let crate_id = path.load_crate_id(&conn).await?;
 
     // To keep backward compatibility, we paginate only if per_page is provided
     let pagination = match pagination.per_page {
@@ -101,8 +101,7 @@ pub async fn list_versions(
         None => None,
     };
 
-    let versions_and_publishers =
-        list(crate_id, pagination.as_ref(), &params, &req, &mut conn).await?;
+    let versions_and_publishers = list(crate_id, pagination.as_ref(), &params, &req, &conn).await?;
 
     let versions = versions_and_publishers
         .data
@@ -133,7 +132,7 @@ async fn list(
     options: Option<&PaginationOptions>,
     params: &ListQueryParams,
     req: &Parts,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
@@ -192,7 +191,7 @@ async fn list(
         query = query.order((versions::semver_ord.desc(), versions::id.desc()));
     }
 
-    let data: Vec<(Version, Option<User>)> = query.load(conn).await?;
+    let data: Vec<(Version, Option<User>)> = query.load(&mut conn).await?;
     let mut next_page = None;
     if let Some(options) = options {
         next_page = next_seek_params(&data, options, |last| seek.to_payload(last))?
@@ -207,7 +206,7 @@ async fn list(
                 .filter(not(versions::yanked))
                 .select(versions::num)
                 .order(versions::semver_ord.desc())
-                .load_stream::<String>(conn)
+                .load_stream::<String>(&mut conn)
                 .await?
                 .try_for_each(|num| {
                     if let Ok(semver) = semver::Version::parse(&num) {
@@ -240,7 +239,7 @@ async fn list(
     // Since the total count is retrieved through an additional query, to maintain consistency
     // with other pagination methods, we only make a count query while data is not empty.
     let total = if !data.is_empty() {
-        make_base_query().count().get_result(conn).await?
+        make_base_query().count().get_result(&mut conn).await?
     } else {
         0
     };

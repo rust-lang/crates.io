@@ -713,7 +713,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 /// the last 24 hours.
 async fn count_versions_published_today(
     crate_id: i32,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> QueryResult<i64> {
     use diesel::dsl::{IntervalDsl, now};
 
@@ -721,7 +721,7 @@ async fn count_versions_published_today(
         .filter(versions::crate_id.eq(crate_id))
         .filter(versions::created_at.gt(now.into_sql::<Timestamptz>() - 24.hours()))
         .count()
-        .get_result(conn)
+        .get_result(&mut conn)
         .await
 }
 
@@ -789,11 +789,11 @@ async fn read_tarball_bytes<R: AsyncRead + Unpin>(
 }
 
 #[instrument(skip_all)]
-async fn is_reserved_name(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<bool> {
+async fn is_reserved_name(name: &str, mut conn: &AsyncPgConnection) -> QueryResult<bool> {
     select(exists(reserved_crate_names::table.filter(
         canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
     )))
-    .get_result(conn)
+    .get_result(&mut conn)
     .await
 }
 

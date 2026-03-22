@@ -27,27 +27,27 @@ pub struct CratePath {
 }
 
 impl CratePath {
-    pub async fn load_crate(&self, conn: &mut AsyncPgConnection) -> AppResult<Crate> {
+    pub async fn load_crate(&self, conn: &AsyncPgConnection) -> AppResult<Crate> {
         load_crate(conn, &self.name).await
     }
 
-    pub async fn load_crate_id(&self, conn: &mut AsyncPgConnection) -> AppResult<i32> {
+    pub async fn load_crate_id(&self, conn: &AsyncPgConnection) -> AppResult<i32> {
         load_crate_id(conn, &self.name).await
     }
 }
 
-pub async fn load_crate(conn: &mut AsyncPgConnection, name: &str) -> AppResult<Crate> {
+pub async fn load_crate(mut conn: &AsyncPgConnection, name: &str) -> AppResult<Crate> {
     Crate::by_name(name)
-        .first(conn)
+        .first(&mut conn)
         .await
         .optional()?
         .ok_or_else(|| crate_not_found(name))
 }
 
-pub async fn load_crate_id(conn: &mut AsyncPgConnection, name: &str) -> AppResult<i32> {
+pub async fn load_crate_id(mut conn: &AsyncPgConnection, name: &str) -> AppResult<i32> {
     Crate::by_name(name)
         .select(crates::id)
-        .first(conn)
+        .first(&mut conn)
         .await
         .optional()?
         .ok_or_else(|| crate_not_found(name))

@@ -53,7 +53,7 @@ pub async fn list_crate_owner_invitations_for_user(
 
     let PrivateListResponse {
         invitations, users, ..
-    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &mut conn).await?;
+    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &conn).await?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
     let crate_owner_invitations = invitations
@@ -115,7 +115,7 @@ pub async fn list_crate_owner_invitations(
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
-    let list = prepare_list(&app, &req, auth, filter, &mut conn).await?;
+    let list = prepare_list(&app, &req, auth, filter, &conn).await?;
     Ok(Json(list))
 }
 
@@ -145,7 +145,7 @@ async fn prepare_list(
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> AppResult<PrivateListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
@@ -164,7 +164,7 @@ async fn prepare_list(
         match filter {
             ListFilter::CrateName(crate_name) => {
                 // Only allow crate owners to query pending invitations for their crate.
-                let krate: Crate = Crate::by_name(&crate_name).first(conn).await?;
+                let krate: Crate = Crate::by_name(&crate_name).first(&mut conn).await?;
                 let owners = krate.owners(conn).await?;
                 let encryption = &state.config.gh_token_encryption;
                 if Rights::get(user, &*state.github, &owners, encryption).await? != Rights::Full {
@@ -200,7 +200,7 @@ async fn prepare_list(
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
-        Page::Unspecified => query.load(conn).await?,
+        Page::Unspecified => query.load(&mut conn).await?,
         Page::Seek(s) => {
             let seek_key: (i32, i32) = s.decode()?;
             query
@@ -211,7 +211,7 @@ async fn prepare_list(
                             .and(crate_owner_invitations::invited_user_id.gt(seek_key.1)),
                     ),
                 )
-                .load(conn)
+                .load(&mut conn)
                 .await?
         }
         Page::Numeric(_) => unreachable!("page-based pagination is disabled"),
@@ -248,7 +248,7 @@ async fn prepare_list(
         let new_names: Vec<(i32, String)> = crates::table
             .select((crates::id, crates::name))
             .filter(crates::id.eq_any(missing_crate_names))
-            .load(conn)
+            .load(&mut conn)
             .await?;
         for (id, name) in new_names.into_iter() {
             crate_names.insert(id, name);
@@ -267,7 +267,7 @@ async fn prepare_list(
     if !missing_users.is_empty() {
         let new_users: Vec<User> = User::query()
             .filter(users::id.eq_any(missing_users))
-            .load(conn)
+            .load(&mut conn)
             .await?;
         for user in new_users.into_iter() {
             users.insert(user.id, user);

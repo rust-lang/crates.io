@@ -27,8 +27,8 @@ pub struct GetResponse {
     responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
 pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<Json<GetResponse>> {
-    let mut conn = state.db_read().await?;
-    let (version, krate) = path.load_version_and_crate(&mut conn).await?;
+    let conn = state.db_read().await?;
+    let (version, krate) = path.load_version_and_crate(&conn).await?;
     let (actions, published_by) = tokio::try_join!(
         VersionOwnerAction::by_version(&conn, &version),
         version.published_by(&conn),

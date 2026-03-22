@@ -54,7 +54,7 @@ pub async fn update_version(
     Json(update_request): Json<VersionUpdateRequest>,
 ) -> AppResult<Json<UpdateResponse>> {
     let mut conn = state.db_write().await?;
-    let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
+    let (mut version, krate) = path.load_version_and_crate(&conn).await?;
     validate_yank_update(&update_request.version, &version)?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 

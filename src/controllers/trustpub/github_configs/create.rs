@@ -53,7 +53,7 @@ pub async fn create_trustpub_github_config(
         .await?;
     let auth_user = auth.user();
 
-    let krate = load_crate(&mut conn, &json_config.krate).await?;
+    let krate = load_crate(&conn, &json_config.krate).await?;
 
     // Check if the crate has reached the maximum number of configs
     let config_count = GitHubConfig::count_for_crate(&conn, krate.id).await?;

@@ -218,7 +218,7 @@ async fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
     state: &AppState,
-    conn: &mut AsyncPgConnection,
+    conn: &AsyncPgConnection,
 ) -> anyhow::Result<()> {
     let user = User::find(conn, token.user_id)
         .await
@@ -248,13 +248,13 @@ async fn send_trustpub_notification_emails(
     crate_ids: &[i32],
     alert: &GitHubSecretAlert,
     state: &AppState,
-    conn: &mut AsyncPgConnection,
+    mut conn: &AsyncPgConnection,
 ) -> anyhow::Result<()> {
     // Build a mapping from crate_id to crate_name directly from the query
     let crate_id_to_name: HashMap<i32, String> = crates::table
         .select((crates::id, crates::name))
         .filter(crates::id.eq_any(crate_ids))
-        .load_stream::<(i32, String)>(conn)
+        .load_stream::<(i32, String)>(&mut conn)
         .await?
         .try_fold(HashMap::new(), |mut map, (id, name)| {
             map.insert(id, name);
@@ -272,7 +272,7 @@ async fn send_trustpub_notification_emails(
         .filter(emails::verified.eq(true))
         .select((crate_owners::crate_id, emails::email))
         .order((emails::email, crate_owners::crate_id))
-        .load::<(i32, String)>(conn)
+        .load::<(i32, String)>(&mut conn)
         .await
         .context("Failed to query crate owners")?;
 
