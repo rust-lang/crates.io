@@ -324,8 +324,9 @@ struct ResponseMeta {
     next_page: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct OwnerInvitation {
+    #[schema(inline)]
     crate_owner_invite: InvitationResponse,
 }
 
@@ -342,6 +343,7 @@ pub struct HandleResponse {
     params(
         ("crate_id" = i32, Path, description = "ID of the crate"),
     ),
+    request_body = inline(OwnerInvitation),
     security(
         ("api_token" = []),
         ("cookie" = []),

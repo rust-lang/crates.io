@@ -3361,7 +3361,25 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    crate_owner_invite: {
+                        /**
+                         * @description Whether the invitation was accepted.
+                         * @example true
+                         */
+                        accepted: boolean;
+                        /**
+                         * Format: int32
+                         * @description The opaque identifier for the crate this invitation is for.
+                         * @example 42
+                         */
+                        crate_id: number;
+                    };
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

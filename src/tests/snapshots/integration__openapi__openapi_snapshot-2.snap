@@ -3909,6 +3909,41 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "crate_owner_invite": {
+                    "properties": {
+                      "accepted": {
+                        "description": "Whether the invitation was accepted.",
+                        "example": true,
+                        "type": "boolean"
+                      },
+                      "crate_id": {
+                        "description": "The opaque identifier for the crate this invitation is for.",
+                        "example": 42,
+                        "format": "int32",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "crate_id",
+                      "accepted"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "crate_owner_invite"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
