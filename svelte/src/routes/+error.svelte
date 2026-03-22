@@ -6,6 +6,8 @@
 
   let session = getSession();
 
+  const DEFAULT_MESSAGE = 'Page not found';
+
   function goBack() {
     history.back();
   }
@@ -19,7 +21,9 @@
   <div class="content">
     <img src={Ferris} alt="" class="logo" />
 
-    <h1 class="title" data-test-title>{page.error?.message ?? 'Page not found'}</h1>
+    <h1 class="title" data-test-title>
+      {page.status === 404 ? DEFAULT_MESSAGE : (page.error?.message ?? DEFAULT_MESSAGE)}
+    </h1>
 
     {#if page.error?.details}
       <p class="details" data-test-details>{page.error.details}</p>
