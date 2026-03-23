@@ -97,7 +97,7 @@
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@mainmatter/ember-api-actions": "0.6.0",
     "@msw/playwright": "0.6.6",
-    "@percy/cli": "1.31.9",
+    "@percy/cli": "1.31.10",
     "@percy/ember": "5.0.0",
     "@percy/playwright": "1.0.10",
     "@playwright/test": "1.58.2",
