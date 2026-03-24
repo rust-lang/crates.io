@@ -3757,9 +3757,9 @@ dependencies = [
 
 [[package]]
 name = "json-subscriber"
-version = "0.2.7"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6456771bcb3511e2afa6a6a8c9ce2730be80803116a2839931476740ab3b86bc"
+checksum = "ace9335c952ff02bc93370d5bf93383f311607de1e83fb5db51628edd0bbe300"
 dependencies = [
  "serde",
  "serde_json",
