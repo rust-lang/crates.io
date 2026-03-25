@@ -15,6 +15,10 @@ if [ -f "$TARBALL_PATH" ]; then
     echo "Skipping https://static.crates.io/db-dump.tar.gz download since it exists already "
 else
     echo "Downloading https://static.crates.io/db-dump.tar.gz to the 'tmp' folder"
+
+    # Ensure the directory exists.
+    mkdir -p "$(dirname "$TARBALL_PATH")"
+
     curl https://static.crates.io/db-dump.tar.gz -L --output $TARBALL_PATH
 fi
 
