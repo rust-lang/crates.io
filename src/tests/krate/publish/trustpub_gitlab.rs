@@ -12,10 +12,10 @@ use diesel::QueryResult;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::{assert_json_snapshot, assert_snapshot};
-use p256::ecdsa::signature::digest::Output;
 use secrecy::ExposeSecret;
 use serde_json::json;
 use sha2::Sha256;
+use sha2::digest::Output;
 
 /// Test the full flow of publishing a crate with OIDC authentication
 /// (aka. "Trusted Publishing")
