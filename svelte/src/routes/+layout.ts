@@ -10,6 +10,7 @@ export async function load({ fetch }) {
 
   return {
     playgroundCratesPromise: loadPlaygroundCrates(fetch),
+    siteMetadataPromise: client.GET('/api/v1/site_metadata'),
     userPromise: loadUser(client),
   };
 }

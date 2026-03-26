@@ -54,6 +54,20 @@
 
   // svelte-ignore state_referenced_locally
   sessionState.initialPromise = data.userPromise.then(user => sessionState.setUser(user));
+
+  const READ_ONLY_MESSAGE =
+    'crates.io is currently in read-only mode for maintenance reasons. Some functionality will be temporarily unavailable.';
+
+  data.siteMetadataPromise
+    .then(response => {
+      if (!response.data) return;
+      let { read_only, banner_message } = response.data;
+      let message = banner_message ?? (read_only ? READ_ONLY_MESSAGE : undefined);
+      if (message) {
+        notifications.info(message, { autoClear: false });
+      }
+    })
+    .catch(() => {});
 </script>
 
 <svelte:head>
