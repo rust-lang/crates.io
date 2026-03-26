@@ -1,6 +1,10 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+// Match Ember.js behavior of accepting trailing slashes on crate URLs.
+// This can likely be removed once the Ember.js app is fully replaced.
+export const trailingSlash = 'ignore';
+
 export async function load({ fetch, params }) {
   let client = createClient({ fetch });
 
