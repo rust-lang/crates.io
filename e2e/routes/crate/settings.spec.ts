@@ -173,7 +173,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         });
 
         // Mock the server to return an error when trying to delete the config
-        await msw.worker.use(
+        msw.worker.use(
           http.delete(`/api/v1/trusted_publishing/github_configs/${config.id}`, () => {
             return HttpResponse.json({ errors: [{ detail: 'Server error' }] }, { status: 500 });
           }),
@@ -260,7 +260,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         });
 
         // Mock the server to return an error when trying to delete the config
-        await msw.worker.use(
+        msw.worker.use(
           http.delete(`/api/v1/trusted_publishing/gitlab_configs/${config.id}`, () => {
             return HttpResponse.json({ errors: [{ detail: 'Server error' }] }, { status: 500 });
           }),
@@ -506,7 +506,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         });
 
         let deferred = defer();
-        await msw.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
+        msw.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
 
         await page.goto('/crates/foo/settings');
 

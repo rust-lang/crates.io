@@ -26,7 +26,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await prepare(msw);
 
     let followingDeferred = defer();
-    await msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => followingDeferred.promise));
+    msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => followingDeferred.promise));
 
     await page.goto('/crates/nanomsg');
 
@@ -42,7 +42,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await expect(spinner).toHaveCount(0);
 
     let followDeferred = defer();
-    await msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => followDeferred.promise));
+    msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => followDeferred.promise));
     await followButton.click();
     await expect(followButton).toHaveText('Loading…');
     await expect(followButton).toBeDisabled();
@@ -54,7 +54,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await expect(spinner).toHaveCount(0);
 
     let unfollowDeferred = defer();
-    await msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => unfollowDeferred.promise));
+    msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => unfollowDeferred.promise));
     await followButton.click();
     await expect(followButton).toHaveText('Loading…');
     await expect(followButton).toBeDisabled();
@@ -70,7 +70,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await prepare(msw);
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => error));
+    msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => error));
 
     await page.goto('/crates/nanomsg');
     const followButton = page.locator('[data-test-follow-button]');
@@ -85,7 +85,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await prepare(msw);
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => error));
+    msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => error));
 
     await page.goto('/crates/nanomsg');
     await page.locator('[data-test-follow-button]').click();
@@ -98,7 +98,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await prepare(msw, { following: true });
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => error));
+    msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => error));
 
     await page.goto('/crates/nanomsg');
     await page.locator('[data-test-follow-button]').click();

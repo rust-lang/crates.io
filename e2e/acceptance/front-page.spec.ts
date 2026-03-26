@@ -43,7 +43,7 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
   });
 
   test('error handling', async ({ page, msw }) => {
-    await msw.worker.use(http.get('/api/v1/summary', () => HttpResponse.json({}, { status: 500 })));
+    msw.worker.use(http.get('/api/v1/summary', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/');
     await expect(page.locator('[data-test-lists]')).toHaveCount(0);
@@ -53,7 +53,7 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await msw.worker.resetHandlers();
 
     let deferred = defer();
-    await msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
+    msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
 
     const button = page.locator('[data-test-try-again-button]');
     await button.click();

@@ -105,7 +105,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
   });
 
   test('failed API tokens revocation shows an error', async ({ page, msw }) => {
-    await msw.worker.use(http.delete('/api/v1/me/tokens/:id', () => HttpResponse.json({}, { status: 500 })));
+    msw.worker.use(http.delete('/api/v1/me/tokens/:id', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/settings/tokens');
     await expect(page).toHaveURL('/settings/tokens');

@@ -103,7 +103,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     await msw.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.get('/api/v1/crates', () => error));
+    msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.goto('/');
     await page.fill('[data-test-search-input]', 'rust');
@@ -114,7 +114,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
     await msw.worker.resetHandlers();
     let deferred = defer();
-    await msw.worker.use(http.get('/api/v1/crates', () => deferred.promise));
+    msw.worker.use(http.get('/api/v1/crates', () => deferred.promise));
 
     await page.click('[data-test-try-again-button]');
     await expect(page.locator('[data-test-page-header] [data-test-spinner]')).toBeVisible();
@@ -138,7 +138,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-try-again-button]')).toHaveCount(0);
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.get('/api/v1/crates', () => error));
+    msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.fill('[data-test-search-input]', 'ru');
     await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
@@ -148,7 +148,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
     await msw.worker.resetHandlers();
     let deferred = defer();
-    await msw.worker.use(http.get('/api/v1/crates', () => deferred.promise));
+    msw.worker.use(http.get('/api/v1/crates', () => deferred.promise));
 
     await page.click('[data-test-try-again-button]');
     await expect(page.locator('[data-test-page-header] [data-test-spinner]')).toBeVisible();
@@ -161,7 +161,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('passes query parameters to the backend', async ({ page, msw }) => {
-    await msw.worker.use(
+    msw.worker.use(
       http.get('/api/v1/crates', function ({ request }) {
         let url = new URL(request.url);
         expect(Object.fromEntries(url.searchParams.entries())).toEqual({
@@ -180,7 +180,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('supports `keyword:bla` filters', async ({ page, msw }) => {
-    await msw.worker.use(
+    msw.worker.use(
       http.get('/api/v1/crates', function ({ request }) {
         let url = new URL(request.url);
         expect(Object.fromEntries(url.searchParams.entries())).toEqual({
@@ -199,7 +199,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('`all_keywords` query parameter takes precedence over `keyword` filters', async ({ page, msw }) => {
-    await msw.worker.use(
+    msw.worker.use(
       http.get('/api/v1/crates', function ({ request }) {
         let url = new URL(request.url);
         expect(Object.fromEntries(url.searchParams.entries())).toEqual({

@@ -87,7 +87,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     let detail =
       'Page 1 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.';
     let error = HttpResponse.json({ errors: [{ detail }] }, { status: 400 });
-    await msw.worker.use(http.get('/api/v1/crates', () => error));
+    msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.goto('/crates');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();

@@ -107,7 +107,7 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
     await msw.authenticateAs(user);
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.put('/api/v1/users/:user_id', () => error));
+    msw.worker.use(http.put('/api/v1/users/:user_id', () => error));
 
     await page.goto('/settings/profile');
     const emailInput = page.locator('[data-test-email-input]');
@@ -154,7 +154,7 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
       await msw.authenticateAs(user);
 
       let error = HttpResponse.json({}, { status: 500 });
-      await msw.worker.use(http.put('/api/v1/users/:user_id/resend', () => error));
+      msw.worker.use(http.put('/api/v1/users/:user_id/resend', () => error));
 
       await page.goto('/settings/profile');
       await expect(page).toHaveURL('/settings/profile');

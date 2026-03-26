@@ -31,7 +31,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
   test('successful login', async ({ page, msw }) => {
     await setupGitHubOAuthRoutes(page);
 
-    await msw.worker.use(
+    msw.worker.use(
       http.get('/api/private/session/authorize', async ({ request }) => {
         let url = new URL(request.url);
         expect([...url.searchParams.keys()]).toEqual(['code', 'state']);
@@ -66,7 +66,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
   test('failed login', async ({ page, msw }) => {
     await setupGitHubOAuthRoutes(page);
 
-    await msw.worker.use(
+    msw.worker.use(
       http.get('/api/private/session/authorize', () =>
         HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),
       ),

@@ -26,7 +26,7 @@ test.describe('Acceptance | /accept-invite/:token', { tag: '@acceptance' }, () =
     let errorMessage =
       'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
     let error = HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 410 });
-    await msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/accept/:token', () => error));
+    msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/accept/:token', () => error));
 
     await page.goto('/accept-invite/secret123');
     await expect(page).toHaveURL('/accept-invite/secret123');

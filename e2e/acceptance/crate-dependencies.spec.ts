@@ -40,7 +40,7 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
   });
 
   test('shows an error page if crate fails to load', async ({ page, msw }) => {
-    await msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
+    msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/1.0.0/dependencies');
     await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
@@ -67,7 +67,7 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await msw.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.get('/api/v1/crates/:crate_name/:version_num/dependencies', () => error));
+    msw.worker.use(http.get('/api/v1/crates/:crate_name/:version_num/dependencies', () => error));
 
     await page.goto('/crates/foo/1.0.0/dependencies');
     await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
@@ -90,7 +90,7 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await msw.db.dependency.create({ crate: bar, version, req: '^2.0.0', kind: 'normal' });
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.get('/api/v1/crates', () => error));
+    msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.goto('/crates/nanomsg/dependencies');
     await expect(page).toHaveURL('/crates/nanomsg/0.6.1/dependencies');

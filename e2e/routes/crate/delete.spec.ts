@@ -65,7 +65,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await prepare(msw);
 
     let deferred = defer();
-    await msw.worker.use(http.delete('/api/v1/crates/:name', () => deferred.promise));
+    msw.worker.use(http.delete('/api/v1/crates/:name', () => deferred.promise));
 
     await page.goto('/crates/foo/delete');
     await page.fill('[data-test-reason]', "I don't need this crate anymore");
@@ -83,7 +83,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await prepare(msw);
 
     let payload = { errors: [{ detail: 'only crates without reverse dependencies can be deleted after 72 hours' }] };
-    await msw.worker.use(http.delete('/api/v1/crates/:name', () => HttpResponse.json(payload, { status: 422 })));
+    msw.worker.use(http.delete('/api/v1/crates/:name', () => HttpResponse.json(payload, { status: 422 })));
 
     await page.goto('/crates/foo/delete');
     await page.fill('[data-test-reason]', "I don't need this crate anymore");

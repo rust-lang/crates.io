@@ -146,9 +146,7 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await msw.db.version.create({ crate, num: '1.0.0', readme: 'foo' });
 
     // Simulate a server error when fetching the README
-    await msw.worker.use(
-      http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('', { status: 500 })),
-    );
+    msw.worker.use(http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('', { status: 500 })));
 
     await page.goto('/crates/serde');
     await expect(page.locator('[data-test-readme-error]')).toBeVisible();

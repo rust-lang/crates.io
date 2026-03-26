@@ -69,7 +69,7 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     let { foo } = await prepare(msw);
 
     let error = HttpResponse.json({}, { status: 500 });
-    await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
+    msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);

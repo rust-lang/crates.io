@@ -245,7 +245,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
 
       // Mock the server to return an error
       let deferred = defer();
-      await msw.worker.use(http.post('/api/v1/trusted_publishing/github_configs', () => deferred.promise));
+      msw.worker.use(http.post('/api/v1/trusted_publishing/github_configs', () => deferred.promise));
 
       await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
       await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -292,7 +292,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
         await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
         await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
-        await msw.worker.use(
+        msw.worker.use(
           http.head('https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml', () => {
             return new HttpResponse(null, { status: 200 });
           }),
@@ -317,7 +317,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
         await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
         await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
-        await msw.worker.use(
+        msw.worker.use(
           http.head('https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/missing.yml', () => {
             return new HttpResponse(null, { status: 404 });
           }),
@@ -342,7 +342,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
         await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
         await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
-        await msw.worker.use(
+        msw.worker.use(
           http.head('https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml', () => {
             return new HttpResponse(null, { status: 500 });
           }),
@@ -463,7 +463,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
 
       // Mock the server to return an error
       let deferred = defer();
-      await msw.worker.use(http.post('/api/v1/trusted_publishing/gitlab_configs', () => deferred.promise));
+      msw.worker.use(http.post('/api/v1/trusted_publishing/gitlab_configs', () => deferred.promise));
 
       await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
       await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);

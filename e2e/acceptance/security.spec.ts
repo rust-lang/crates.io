@@ -31,7 +31,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
 
     await page.goto('/crates/foo/security');
 
@@ -92,7 +92,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     let crate = await msw.db.crate.create({ name: 'safe-crate' });
     await msw.db.version.create({ crate, num: '1.0.0' });
 
-    await msw.worker.use(
+    msw.worker.use(
       http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.text('not found', { status: 404 })),
     );
 
@@ -106,7 +106,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     let crate = await msw.db.crate.create({ name: 'error-crate' });
     await msw.db.version.create({ crate, num: '1.0.0' });
 
-    await msw.worker.use(
+    msw.worker.use(
       http.get('https://rustsec.org/packages/:crateId.json', () =>
         HttpResponse.text('Internal Server Error', { status: 500 }),
       ),
@@ -133,7 +133,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
 
     await page.goto('/crates/xss-test/security');
 
@@ -178,7 +178,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
     await page.goto('/crates/unmaintained-test/security');
 
     // Should only show 2 advisories (the unmaintained one should be filtered out)
@@ -211,7 +211,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
     await page.goto('/crates/withdrawn-test/security');
 
     // Should only show 1 advisory (the withdrawn one should be filtered out)
@@ -242,7 +242,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
     await page.goto('/crates/cvss-test/security');
 
     let advisory = page.locator('[data-test-list] li').first();
@@ -270,7 +270,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
       },
     ];
 
-    await msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
+    msw.worker.use(http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.json(advisories)));
     await page.goto('/crates/cvss30-test/security');
 
     let advisory = page.locator('[data-test-list] > li').first();

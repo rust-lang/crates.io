@@ -55,7 +55,7 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     await msw.authenticateAs(user);
 
     let deferred = defer();
-    await msw.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));
+    msw.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));
 
     await page.goto('/settings/profile');
     await expect(page).toHaveURL('/settings/profile');
@@ -75,7 +75,7 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
-    await msw.worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.text('', { status: 500 })));
+    msw.worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.text('', { status: 500 })));
 
     await page.goto('/settings/profile');
     await expect(page).toHaveURL('/settings/profile');

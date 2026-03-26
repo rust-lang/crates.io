@@ -12,7 +12,7 @@ test.describe('Route | team', { tag: '@routes' }, () => {
   });
 
   test('server error causes the error page to be shown', async ({ page, msw }) => {
-    await msw.worker.use(http.get('/api/v1/teams/:id', () => HttpResponse.json({}, { status: 500 })));
+    msw.worker.use(http.get('/api/v1/teams/:id', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/teams/foo');
     await expect(page).toHaveURL('/teams/foo');

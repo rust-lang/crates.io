@@ -34,7 +34,7 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
     // we are intentionally returning a 200 response here, because is what
     // the real backend also returns due to legacy reasons
     let error = HttpResponse.json({ errors: [{ detail: 'nope' }] });
-    await msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
+    msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
 
     await page.goto(`/crates/${crate.name}/settings`);
     await page.click(`[data-test-owner-user="${user2.login}"] [data-test-remove-owner-button]`);
@@ -59,7 +59,7 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
     // we are intentionally returning a 200 response here, because is what
     // the real backend also returns due to legacy reasons
     let error = HttpResponse.json({ errors: [{ detail: 'nope' }] });
-    await msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
+    msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
 
     await page.goto(`/crates/${crate.name}/settings`);
     await page.click(`[data-test-owner-team="${team1.login}"] [data-test-remove-owner-button]`);
