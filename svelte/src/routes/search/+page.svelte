@@ -1,6 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import type { paths } from '@crates-io/api-client';
+
+  import { onMount, untrack } from 'svelte';
   import { page } from '$app/state';
+  import { createClient } from '@crates-io/api-client';
 
   import Alert from '$lib/components/Alert.svelte';
   import CrateList from '$lib/components/CrateList.svelte';
@@ -11,7 +14,7 @@
   import * as SortDropdown from '$lib/components/sort-dropdown';
   import { getSearchFormContext } from '$lib/search-form.svelte';
   import { calculatePagination } from '$lib/utils/pagination';
-  import { hasMultiCategoryFilter } from '$lib/utils/search';
+  import { hasMultiCategoryFilter, processSearchQuery } from '$lib/utils/search';
 
   const MAX_PAGES = 20;
 
@@ -27,7 +30,67 @@
     searchFormContext.value = '';
   });
 
-  let pagination = $derived(calculatePagination(data.page, data.perPage, data.cratesResponse.meta.total, MAX_PAGES));
+  type CratesResponse = paths['/api/v1/crates']['get']['responses']['200']['content']['application/json'];
+
+  // Tracks the last successful response, persisting across failed requests
+  let cratesResponse: CratesResponse | undefined = $state();
+  let lastCompletedHadError: boolean = $state(false);
+  let loading: boolean = $state(false);
+  let hasCompleted: boolean = $state(false);
+
+  let client = createClient({ fetch });
+  let abortController: AbortController | undefined;
+
+  async function fetchData() {
+    // Cancel any in-flight request
+    abortController?.abort();
+    abortController = new AbortController();
+    let { signal } = abortController;
+
+    loading = true;
+
+    let query = data.q.trim();
+    let searchParams = data.allKeywords
+      ? { page: data.page, per_page: data.perPage, sort: data.sort, q: query, all_keywords: data.allKeywords }
+      : { page: data.page, per_page: data.perPage, sort: data.sort, ...processSearchQuery(query) };
+
+    try {
+      let response = await client.GET('/api/v1/crates', { params: { query: searchParams }, signal });
+
+      if (signal.aborted) return;
+
+      if (response.error) {
+        throw new Error('Failed to load search results');
+      }
+
+      cratesResponse = response.data;
+      lastCompletedHadError = false;
+    } catch {
+      if (signal.aborted) return;
+      lastCompletedHadError = true;
+    } finally {
+      if (!signal.aborted) {
+        loading = false;
+        hasCompleted = true;
+      }
+    }
+  }
+
+  let firstResultPending = $derived(!hasCompleted && loading);
+
+  $effect(() => {
+    // Re-fetch when any query param changes
+    void data.q;
+    void data.page;
+    void data.sort;
+    void data.allKeywords;
+
+    untrack(() => fetchData());
+  });
+
+  let pagination = $derived(
+    cratesResponse ? calculatePagination(data.page, data.perPage, cratesResponse.meta.total, MAX_PAGES) : undefined,
+  );
 
   let currentSortBy = $derived.by(() => {
     switch (data.sort) {
@@ -49,7 +112,12 @@
 
 <PageTitle title={searchTitle} />
 
-<PageHeader title="Search Results" suffix={data.q ? `for '${data.q}'` : undefined} data-test-header />
+<PageHeader
+  title="Search Results"
+  suffix={data.q ? `for '${data.q}'` : undefined}
+  showSpinner={loading}
+  data-test-header
+/>
 
 {#if hasMultiCategoryFilter(data.q)}
   <Alert variant="warning">
@@ -57,12 +125,30 @@
   </Alert>
 {/if}
 
-{#if data.cratesResponse.meta.total > 0}
+{#if firstResultPending}
+  <h2>Loading search results...</h2>
+{:else if lastCompletedHadError}
+  <p data-test-error-message>
+    Unfortunately something went wrong while loading the search results. Feel free to try again, or let the
+    <a href="mailto:help@crates.io">crates.io team</a>
+    know if the problem persists.
+  </p>
+
+  <button
+    type="button"
+    disabled={loading}
+    class="try-again-button button"
+    data-test-try-again-button
+    onclick={fetchData}
+  >
+    Try Again
+  </button>
+{:else if cratesResponse && cratesResponse.meta.total > 0 && pagination}
   <div class="results-meta">
     <ResultsCount
       start={pagination.currentPageStart}
       end={pagination.currentPageEnd}
-      total={data.cratesResponse.meta.total}
+      total={cratesResponse.meta.total}
       data-test-search-nav
     />
 
@@ -78,7 +164,7 @@
     </div>
   </div>
 
-  <CrateList crates={data.cratesResponse.crates} style="margin-bottom: var(--space-s);" />
+  <CrateList crates={cratesResponse.crates} style="margin-bottom: var(--space-s);" />
 
   <Pagination {pagination} />
 {:else}
@@ -93,5 +179,10 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--space-s);
+  }
+
+  .try-again-button {
+    align-self: center;
+    margin-top: var(--space-m);
   }
 </style>
