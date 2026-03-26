@@ -7,6 +7,7 @@
 
   import CrateIcon from '$lib/assets/crate.svg?component';
   import DownloadIcon from '$lib/assets/download.svg?component';
+  import { loadMermaid } from '$lib/attachments/mermaid';
   import CrateSidebar from '$lib/components/crate-sidebar/CrateSidebar.svelte';
   import CrateHeader from '$lib/components/CrateHeader.svelte';
   import DownloadChart from '$lib/components/download-chart/DownloadChart.svelte';
@@ -58,6 +59,17 @@
   let retryReadmePromise = $state<typeof readmePromise | null>(null);
   let activeReadmePromise = $derived(retryReadmePromise ?? readmePromise);
 
+  // Ensure the mermaid library is loaded before the README is rendered,
+  // so that the `renderMermaids` attachment can use it synchronously.
+  let readmeWithMermaid = $derived(
+    activeReadmePromise.then(async html => {
+      if (html?.includes('language-mermaid')) {
+        await loadMermaid().catch(e => console.error(e));
+      }
+      return html;
+    }),
+  );
+
   function retryReadme() {
     retryReadmePromise = loadReadme(fetch, crate.name, version.num);
   }
@@ -67,7 +79,7 @@
 
 <div class="crate-info">
   <div class="docs" data-test-docs>
-    {#await activeReadmePromise}
+    {#await readmeWithMermaid}
       <ReadmePlaceholder />
     {:then readme}
       {#if readme}
