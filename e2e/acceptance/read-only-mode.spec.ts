@@ -1,6 +1,8 @@
 import { AppFixtures, expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
+const TEST_APP = process.env.TEST_APP ?? 'ember';
+
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   test('notification is not shown for read-write mode', async ({ page }) => {
     await page.goto('/');
@@ -23,7 +25,10 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
-    await checkSentryEventsNumber(ember, 0);
+
+    if (TEST_APP === 'ember') {
+      await checkSentryEventsNumber(ember, 0);
+    }
   });
 
   test('client errors are reported on sentry', async ({ page, msw, ember }) => {
@@ -31,8 +36,11 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
-    await checkSentryEventsNumber(ember, 1);
-    await checkSentryEventsHasName(ember, ['AjaxError']);
+
+    if (TEST_APP === 'ember') {
+      await checkSentryEventsNumber(ember, 1);
+      await checkSentryEventsHasName(ember, ['AjaxError']);
+    }
   });
 
   test('banner message is shown when present', async ({ page, msw }) => {
