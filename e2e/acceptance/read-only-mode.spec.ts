@@ -2,11 +2,6 @@ import { AppFixtures, expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ context }) => {
-    // Block some assets requests for each test in this file.
-    await context.route(/(css|png|woff|reload\.js)$/, route => route.abort());
-  });
-
   test('notification is not shown for read-write mode', async ({ page }) => {
     await page.goto('/');
 
