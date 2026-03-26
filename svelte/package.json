@@ -40,7 +40,7 @@
     "@poppanator/sveltekit-svg": "6.0.1",
     "@storybook/addon-a11y": "10.3.1",
     "@storybook/addon-docs": "10.3.1",
-    "@storybook/addon-svelte-csf": "5.0.12",
+    "@storybook/addon-svelte-csf": "5.1.0",
     "@storybook/addon-vitest": "10.3.1",
     "@storybook/sveltekit": "10.3.1",
     "@sveltejs/adapter-static": "3.0.10",
