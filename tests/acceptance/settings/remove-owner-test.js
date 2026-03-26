@@ -41,10 +41,10 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
   test('remove a user crate owner (error behavior)', async function (assert) {
     let { crate, user2 } = await prepare(this);
 
-    // we are intentionally returning a 200 response here, because is what
-    // the real backend also returns due to legacy reasons
     this.worker.use(
-      http.delete('/api/v1/crates/nanomsg/owners', () => HttpResponse.json({ errors: [{ detail: 'nope' }] })),
+      http.delete('/api/v1/crates/nanomsg/owners', () =>
+        HttpResponse.json({ errors: [{ detail: 'nope' }] }, { status: 400 }),
+      ),
     );
 
     await visit(`/crates/${crate.name}/settings`);
@@ -69,10 +69,10 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
   test('remove a team crate owner (error behavior)', async function (assert) {
     let { crate, team1 } = await prepare(this);
 
-    // we are intentionally returning a 200 response here, because is what
-    // the real backend also returns due to legacy reasons
     this.worker.use(
-      http.delete('/api/v1/crates/nanomsg/owners', () => HttpResponse.json({ errors: [{ detail: 'nope' }] })),
+      http.delete('/api/v1/crates/nanomsg/owners', () =>
+        HttpResponse.json({ errors: [{ detail: 'nope' }] }, { status: 400 }),
+      ),
     );
 
     await visit(`/crates/${crate.name}/settings`);

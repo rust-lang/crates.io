@@ -31,9 +31,7 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
   });
 
   test('remove a user crate owner (error behavior)', async ({ page, msw }) => {
-    // we are intentionally returning a 200 response here, because is what
-    // the real backend also returns due to legacy reasons
-    let error = HttpResponse.json({ errors: [{ detail: 'nope' }] });
+    let error = HttpResponse.json({ errors: [{ detail: 'nope' }] }, { status: 400 });
     msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
 
     await page.goto(`/crates/${crate.name}/settings`);
@@ -56,9 +54,7 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
   });
 
   test('remove a team crate owner (error behavior)', async ({ page, msw }) => {
-    // we are intentionally returning a 200 response here, because is what
-    // the real backend also returns due to legacy reasons
-    let error = HttpResponse.json({ errors: [{ detail: 'nope' }] });
+    let error = HttpResponse.json({ errors: [{ detail: 'nope' }] }, { status: 400 });
     msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
 
     await page.goto(`/crates/${crate.name}/settings`);
