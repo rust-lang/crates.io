@@ -54,7 +54,7 @@
 
   let hasLinks = $derived(crate.homepage || crate.repository);
 
-  let reportUrl = $derived(`${resolve('/support')}?inquire=crate-violation&crate=${encodeURIComponent(crate.name)}`);
+  let reportUrl = $derived(`${resolve('/support')}?crate=${encodeURIComponent(crate.name)}&inquire=crate-violation`);
 
   let purl = $derived(getPurl(crate.name, version.num));
 </script>
