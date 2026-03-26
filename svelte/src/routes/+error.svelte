@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { page } from '$app/state';
 
   import Ferris from '$lib/assets/cuddlyferris.svg?url';
@@ -6,7 +6,12 @@
 
   let session = getSession();
 
-  const DEFAULT_MESSAGE = 'Page not found';
+  function errorMessage(page: { status: number; error: { message: string } | null }) {
+    if (page.status === 404 && page.error?.message === 'Not Found') {
+      return 'Page not found';
+    }
+    return page.error?.message ?? 'Page not found';
+  }
 
   function goBack() {
     history.back();
@@ -22,7 +27,7 @@
     <img src={Ferris} alt="" class="logo" />
 
     <h1 class="title" data-test-title>
-      {page.status === 404 ? DEFAULT_MESSAGE : (page.error?.message ?? DEFAULT_MESSAGE)}
+      {errorMessage(page)}
     </h1>
 
     {#if page.error?.details}
