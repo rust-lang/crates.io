@@ -16,9 +16,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
     await expect(page.locator('[data-test-header]')).toHaveText("Search Results for 'rust'");
     await expect(page.locator('[data-test-search-nav]')).toHaveText('Displaying 1-7 of 7 total results');
-    await expect(page.locator('[data-test-search-sort]')).toHaveText(
-      'Sort by Relevance Relevance All-Time Downloads Recent Downloads Recent Updates Newly Added',
-    );
+    await expect(page.locator('[data-test-search-sort] [data-test-current-order]')).toHaveText('Relevance');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-crate-link]')).toHaveText('kinetic-rust');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-version]')).toHaveText('v0.0.16');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-crate-spec]')).toHaveRole('heading');
