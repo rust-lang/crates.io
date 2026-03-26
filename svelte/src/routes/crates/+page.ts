@@ -17,8 +17,8 @@ export async function load({ fetch, url }) {
   return { cratesResponse, page, perPage, sort, letter };
 }
 
-function loadCratesError(status: number): never {
-  error(status, { message: 'Failed to load crate list', tryAgain: true });
+function loadCratesError(status: number, details?: string): never {
+  error(status, { message: 'Failed to load crate list', details, tryAgain: true });
 }
 
 async function loadCrates(
@@ -34,9 +34,10 @@ async function loadCrates(
   }
 
   let status = response.response.status;
-  if (response.error) {
-    loadCratesError(status);
+  if (!response.response.ok) {
+    let details = (response.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+    loadCratesError(status, details);
   }
 
-  return response.data;
+  return response.data!;
 }
