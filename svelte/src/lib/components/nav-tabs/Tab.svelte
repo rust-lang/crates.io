@@ -17,7 +17,7 @@
 
 <li {...restProps}>
   <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-  <a {href} class="link" class:active={isActive} data-test-active={isActive}>
+  <a {href} class="link" class:active={isActive} data-test-active={isActive || undefined}>
     {@render children()}
   </a>
 </li>
