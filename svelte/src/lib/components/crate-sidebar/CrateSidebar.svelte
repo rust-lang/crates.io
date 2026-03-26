@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
+  import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
 
   import { resolve } from '$app/paths';
@@ -41,9 +42,18 @@
     owners: Owner[];
     requestedVersion?: boolean;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
+    docsRsStatusPromise: Promise<DocsRsStatus | null>;
   }
 
-  let { crate, version, categories, owners, requestedVersion = false, playgroundCratesPromise }: Props = $props();
+  let {
+    crate,
+    version,
+    categories,
+    owners,
+    requestedVersion = false,
+    playgroundCratesPromise,
+    docsRsStatusPromise,
+  }: Props = $props();
 
   let canHover = new MediaQuery('hover: hover', false);
 
@@ -52,11 +62,44 @@
     return homepage && (!repository || simplifyUrl(repository) !== simplifyUrl(homepage));
   });
 
-  let hasLinks = $derived(crate.homepage || crate.repository);
-
   let reportUrl = $derived(`${resolve('/support')}?crate=${encodeURIComponent(crate.name)}&inquire=crate-violation`);
 
   let purl = $derived(getPurl(crate.name, version.num));
+
+  /** Computes the documentation link for a crate version. */
+  function computeDocumentationLink(docsRsStatus: DocsRsStatus | null): string | null {
+    let { documentation, name } = crate;
+
+    // if this is *not* a docs.rs link we'll return it directly
+    if (documentation && !documentation.startsWith('https://docs.rs/')) {
+      return documentation;
+    }
+
+    // if we know about a successful docs.rs build, we'll return a link to that
+    if (docsRsStatus?.doc_status === true) {
+      return `https://docs.rs/${name}/${version.num}`;
+    }
+
+    // finally, we'll return the specified documentation link, whatever it is
+    return documentation ?? null;
+  }
+
+  /**
+   * Computes the "Browse source" link for a crate version.
+   *
+   * Returns a link to docs.rs if we get any successful response from docs.rs,
+   * so that we show the source link regardless of this crate being a library or
+   * binary, regardless of whether the docs built successfully, regardless of
+   * whether the build is queued or completed, and regardless of whether a
+   * documentation link is specified.
+   */
+  function computeSourceLink(docsRsStatus: DocsRsStatus | null): string | null {
+    if (docsRsStatus) {
+      return `https://docs.rs/crate/${crate.name}/${version.num}/source/`;
+    }
+
+    return null;
+  }
 </script>
 
 <section aria-label="Crate metadata" class="sidebar">
@@ -151,28 +194,37 @@
     </div>
   {/if}
 
-  {#if hasLinks}
-    <div class="links">
-      {#if showHomepage}
-        <Link title="Homepage" url={crate.homepage!} data-test-homepage-link />
-      {/if}
+  {#snippet linksSection(docsRsStatus: DocsRsStatus | null)}
+    {@const documentationLink = computeDocumentationLink(docsRsStatus)}
+    {@const sourceLink = computeSourceLink(docsRsStatus)}
+    {#if showHomepage || documentationLink || sourceLink || crate.repository}
+      <div class="links">
+        {#if showHomepage}
+          <Link title="Homepage" url={crate.homepage!} data-test-homepage-link />
+        {/if}
 
-      <!-- TODO: Documentation link
-           Requires async docs.rs status check to determine if docs are available.
-           Falls back to crate.documentation if not a docs.rs link.
-           See app/models/version.js documentationLink getter.
-      -->
+        {#if documentationLink}
+          <Link title="Documentation" url={documentationLink} data-test-docs-link />
+        {/if}
 
-      <!-- TODO: Browse source link
-           Requires async docs.rs status check.
-           See app/models/version.js sourceLink getter.
-      -->
+        {#if sourceLink}
+          <Link title="Browse source" url={sourceLink} data-test-source-link />
+        {/if}
 
-      {#if crate.repository}
-        <Link title="Repository" url={crate.repository} data-test-repository-link />
-      {/if}
-    </div>
-  {/if}
+        {#if crate.repository}
+          <Link title="Repository" url={crate.repository} data-test-repository-link />
+        {/if}
+      </div>
+    {/if}
+  {/snippet}
+
+  {#await docsRsStatusPromise}
+    {@render linksSection(null)}
+  {:then docsRsStatus}
+    {@render linksSection(docsRsStatus)}
+  {:catch}
+    {@render linksSection(null)}
+  {/await}
 
   <div>
     <h2 class="heading">Owners</h2>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
+  import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
 
   import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
@@ -17,12 +18,29 @@
     owners: Owner[];
     requestedVersion?: boolean;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
+    docsRsStatusPromise: Promise<DocsRsStatus | null>;
   }
 
-  let { crate, version, categories = [], owners, playgroundCratesPromise, requestedVersion = false }: Props = $props();
+  let {
+    crate,
+    version,
+    categories = [],
+    owners,
+    playgroundCratesPromise,
+    docsRsStatusPromise,
+    requestedVersion = false,
+  }: Props = $props();
 
   let notifications = new NotificationsState();
   setNotifications(notifications);
 </script>
 
-<CrateSidebar {crate} {version} {categories} {owners} {playgroundCratesPromise} {requestedVersion} />
+<CrateSidebar
+  {crate}
+  {version}
+  {categories}
+  {owners}
+  {playgroundCratesPromise}
+  {docsRsStatusPromise}
+  {requestedVersion}
+/>

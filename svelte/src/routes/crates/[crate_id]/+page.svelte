@@ -16,5 +16,6 @@
   ownersPromise={data.ownersPromise}
   readmePromise={data.readmePromise}
   playgroundCratesPromise={data.playgroundCratesPromise}
+  docsRsStatusPromise={data.docsRsStatusPromise}
   {downloadsPromise}
 />

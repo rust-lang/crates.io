@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
   import type { DownloadChartData } from '$lib/components/download-chart/data';
+  import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
 
   import { resolve } from '$app/paths';
@@ -31,6 +32,7 @@
     requestedVersion?: string;
     readmePromise: Promise<string | null>;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
+    docsRsStatusPromise: Promise<DocsRsStatus | null>;
     downloadsPromise: Promise<DownloadChartData>;
   }
 
@@ -43,6 +45,7 @@
     requestedVersion,
     readmePromise,
     playgroundCratesPromise,
+    docsRsStatusPromise,
     downloadsPromise,
   }: Props = $props();
   let owners: Owner[] = $state([]);
@@ -107,6 +110,7 @@
       {owners}
       requestedVersion={requestedVersion !== undefined}
       {playgroundCratesPromise}
+      {docsRsStatusPromise}
     />
   </div>
 </div>

@@ -1,5 +1,6 @@
 import { createClient } from '@crates-io/api-client';
 
+import { loadDocsRsStatus } from '$lib/utils/docs-rs';
 import { loadReadme } from '$lib/utils/readme';
 
 export async function load({ fetch, params, parent }) {
@@ -10,8 +11,9 @@ export async function load({ fetch, params, parent }) {
 
   let { crate, defaultVersion } = await parent();
   let readmePromise = loadReadme(fetch, crate.name, defaultVersion.num);
+  let docsRsStatusPromise = loadDocsRsStatus(fetch, crate.name, defaultVersion.num);
 
-  return { readmePromise, downloadsPromise };
+  return { readmePromise, downloadsPromise, docsRsStatusPromise };
 }
 
 /**

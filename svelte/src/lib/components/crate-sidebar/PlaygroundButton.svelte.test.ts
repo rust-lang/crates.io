@@ -98,8 +98,9 @@ describe('CrateSidebar Playground Button', () => {
     let version = createVersion('1.0.0');
     let owners = [createOwner(1)];
     let playgroundCratesPromise = Promise.resolve(PLAYGROUND_CRATES);
+    let docsRsStatusPromise = Promise.resolve(null);
 
-    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise });
+    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise, docsRsStatusPromise });
 
     // Button should not exist for crates not in the playground list
     expect(page.getByCSS('[data-test-playground-button]').query()).toBeNull();
@@ -110,8 +111,9 @@ describe('CrateSidebar Playground Button', () => {
     let version = createVersion('1.0.0');
     let owners = [createOwner(1)];
     let playgroundCratesPromise = Promise.resolve(PLAYGROUND_CRATES);
+    let docsRsStatusPromise = Promise.resolve(null);
 
-    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise });
+    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise, docsRsStatusPromise });
 
     let expectedHref =
       'https://play.rust-lang.org/?edition=2021&code=use%20aho_corasick%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60aho_corasick%60%20crate%20here%0A%7D';
@@ -125,8 +127,15 @@ describe('CrateSidebar Playground Button', () => {
     let version = createVersion('1.0.0');
     let owners = [createOwner(1)];
     let deferred = defer<PlaygroundCrate[]>();
+    let docsRsStatusPromise = Promise.resolve(null);
 
-    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise: deferred.promise });
+    render(CrateSidebarTestWrapper, {
+      crate,
+      version,
+      owners,
+      playgroundCratesPromise: deferred.promise,
+      docsRsStatusPromise,
+    });
 
     await expect.element(page.getByCSS('[data-test-owners]')).toBeVisible();
 
@@ -142,8 +151,9 @@ describe('CrateSidebar Playground Button', () => {
     let version = createVersion('1.0.0');
     let owners = [createOwner(1)];
     let playgroundCratesPromise = Promise.reject(new Error('Failed to load'));
+    let docsRsStatusPromise = Promise.resolve(null);
 
-    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise });
+    render(CrateSidebarTestWrapper, { crate, version, owners, playgroundCratesPromise, docsRsStatusPromise });
 
     // Button should not exist when the request fails
     expect(page.getByCSS('[data-test-playground-button]').query()).toBeNull();
