@@ -1,20 +1,21 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-const PER_PAGE = 100;
+const DEFAULT_PER_PAGE = 100;
 
 export async function load({ fetch, params, url }) {
   let client = createClient({ fetch });
 
   let crateName = params.crate_id;
   let sort = url.searchParams.get('sort') ?? 'date';
+  let perPage = Number(url.searchParams.get('per_page')) || DEFAULT_PER_PAGE;
 
   let response;
   try {
     response = await client.GET('/api/v1/crates/{name}/versions', {
       params: {
         path: { name: crateName },
-        query: { sort, per_page: PER_PAGE, include: 'release_tracks' },
+        query: { sort, per_page: perPage, include: 'release_tracks' },
       },
     });
   } catch (_error) {
