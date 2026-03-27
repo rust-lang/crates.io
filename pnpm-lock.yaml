@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@babel/runtime': 7.29.2
-  ember-auto-import: 2.12.1
+  ember-auto-import: 2.13.0
   ember-get-config: 2.1.1
   ember-inflector: 6.0.0
   ember-modifier: 4.3.0
@@ -143,8 +143,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(@babel/core@7.29.0)(@ember/test-helpers@5.4.1(@babel/core@7.29.0))(@ember/test-waiters@4.1.1(@babel/core@7.29.0))(axe-core@4.11.1)(qunit@2.25.0)
       ember-auto-import:
-        specifier: 2.12.1
-        version: 2.12.1(webpack@5.105.4)
+        specifier: 2.13.0
+        version: 2.13.0(webpack@5.105.4)
       ember-cli:
         specifier: 6.11.0
         version: 6.11.0(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.8)
@@ -5146,8 +5146,8 @@ packages:
       qunit:
         optional: true
 
-  ember-auto-import@2.12.1:
-    resolution: {integrity: sha512-wyvl+aJJKOKbRSLqq6CyMsNrvurmX4SIWHHqZdC5giZ7P8ECGmcn9W9HFoVLpwXkFJoXhNV4L7mqqcU6881t0w==}
+  ember-auto-import@2.13.0:
+    resolution: {integrity: sha512-P6COSWDDC6qpgNdc33PyAubhTHUkKc1gUfP2oR4BZoHhUVoEMHiSOECHISd5a2J8DaNrcpFcZmjgb1vJ2ydkjw==}
     engines: {node: 12.* || 14.* || >= 16}
 
   ember-cli-babel-plugin-helpers@1.1.1:
@@ -12743,7 +12743,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@5.9.3)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@5.9.3)':
     dependencies:
@@ -12760,7 +12763,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@5.9.3)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@5.9.3)':
     dependencies:
@@ -12796,7 +12802,10 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@5.9.3)
       yaml: 2.8.2
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@5.9.3)':
     dependencies:
@@ -12804,7 +12813,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@5.9.3)':
     dependencies:
@@ -12876,7 +12888,7 @@ snapshots:
   '@percy/ember@5.0.0(@babel/core@7.29.0)(webpack@5.105.4)':
     dependencies:
       '@percy/sdk-utils': 1.31.9
-      ember-auto-import: 2.12.1(webpack@5.105.4)
+      ember-auto-import: 2.13.0(webpack@5.105.4)
       ember-cli-babel: 8.3.1(@babel/core@7.29.0)
     transitivePeerDependencies:
       - '@babel/core'
@@ -13075,7 +13087,7 @@ snapshots:
       '@embroider/macros': 1.20.1(@babel/core@7.29.0)
       '@sentry/browser': 10.45.0
       '@sentry/core': 10.45.0
-      ember-auto-import: 2.12.1(webpack@5.105.4)
+      ember-auto-import: 2.13.0(webpack@5.105.4)
       ember-cli-babel: 8.3.1(@babel/core@7.29.0)
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
@@ -14035,7 +14047,7 @@ snapshots:
 
   '@zestia/ember-auto-focus@5.1.0(@babel/core@7.29.0)(ember-source@6.11.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.105.4)':
     dependencies:
-      ember-auto-import: 2.12.1(webpack@5.105.4)
+      ember-auto-import: 2.13.0(webpack@5.105.4)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
       ember-modifier: 4.3.0(@babel/core@7.29.0)
@@ -15986,7 +15998,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-auto-import@2.12.1(webpack@5.105.4):
+  ember-auto-import@2.13.0(webpack@5.105.4):
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.29.0)
