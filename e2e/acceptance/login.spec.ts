@@ -31,6 +31,8 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
   test('successful login', async ({ page, msw }) => {
     await setupGitHubOAuthRoutes(page);
 
+    let user = await msw.db.user.create({ name: 'John Doe' });
+
     msw.worker.use(
       http.get('/api/private/session/authorize', async ({ request }) => {
         let url = new URL(request.url);
@@ -38,24 +40,9 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
         expect(url.searchParams.get('code')).toBe(MOCK_CODE);
         expect(url.searchParams.get('state')).toBe(MOCK_STATE);
 
-        let user = await msw.db.user.create({});
         await msw.db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
       }),
-
-      http.get('/api/v1/me', () =>
-        HttpResponse.json({
-          user: {
-            id: 42,
-            login: 'johnnydee',
-            name: 'John Doe',
-            email: 'john@doe.name',
-            avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
-            url: 'https://github.com/johnnydee',
-          },
-          owned_crates: [],
-        }),
-      ),
     );
 
     await page.goto('/');
