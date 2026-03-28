@@ -2,6 +2,7 @@ import type { operations } from '@crates-io/api-client';
 import type { NotificationsContext } from '$lib/notifications.svelte';
 
 import { createContext } from 'svelte';
+import { invalidateAll } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { createClient } from '@crates-io/api-client';
 
@@ -98,7 +99,6 @@ export class SessionState {
   //   timestamp is persisted in localStorage under the 'sudo' key so it
   //   survives page reloads. On user load, the stored expiry is checked
   //   and sudo mode is restored if still valid.
-  // TODO: implement saved transition (redirect to originally requested page after login)
   // TODO: integrate with Sentry (`sentry.setUser({ id })` after loading user)
 
   #client: ApiClient;
@@ -169,7 +169,7 @@ export class SessionState {
     this.currentUser = user;
     this.state = user ? 'logged-in' : 'logged-out';
 
-    // TODO: perform the originally saved transition, if it exists
+    await invalidateAll();
   }
 
   async logout(): Promise<void> {
