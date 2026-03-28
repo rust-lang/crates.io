@@ -263,8 +263,8 @@ importers:
         specifier: 0.5.1
         version: 0.5.1(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-prefer-let:
-        specifier: 4.2.0
-        version: 4.2.0
+        specifier: 4.2.1
+        version: 4.2.1
       eslint-plugin-prettier:
         specifier: 5.5.5
         version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))(prettier@3.8.1)
@@ -464,8 +464,8 @@ importers:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-prefer-let:
-        specifier: 4.2.0
-        version: 4.2.0
+        specifier: 4.2.1
+        version: 4.2.1
       eslint-plugin-storybook:
         specifier: 10.3.3
         version: 10.3.3(eslint@9.39.4(jiti@2.6.1))(storybook@10.3.3(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@6.0.2)
@@ -5564,8 +5564,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-prefer-let@4.2.0:
-    resolution: {integrity: sha512-i4XjGFrX3lODYQkqnaWB+FWbocYKHncicX4jm132cl0zBC49rPHorh0XcMkhnQwuoapJ3KwxELyoWHyLh4A0Lg==}
+  eslint-plugin-prefer-let@4.2.1:
+    resolution: {integrity: sha512-A/NdZwLOSetsQsTyIeRgWV9LY47CPt68tCFSY2N+M2Fqtd2YUQgDGKqj1QyZmqiPZ5VwJn8uz56aNboZFVKc0A==}
     engines: {node: '>=0.10.0'}
 
   eslint-plugin-prettier@5.5.5:
@@ -12748,7 +12748,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12765,7 +12768,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12801,7 +12807,10 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
       yaml: 2.8.2
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12809,7 +12818,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -17007,7 +17019,7 @@ snapshots:
       - '@babel/core'
       - typescript
 
-  eslint-plugin-prefer-let@4.2.0:
+  eslint-plugin-prefer-let@4.2.1:
     dependencies:
       requireindex: 1.2.0
 
