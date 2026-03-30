@@ -116,8 +116,8 @@ importers:
         specifier: 5.0.0
         version: 5.0.0(@babel/core@7.29.0)(webpack@5.105.4)
       '@percy/playwright':
-        specifier: 1.0.10
-        version: 1.0.10(playwright-core@1.58.2)
+        specifier: 1.1.0
+        version: 1.1.0(playwright-core@1.58.2)
       '@playwright/test':
         specifier: 1.58.2
         version: 1.58.2
@@ -2451,8 +2451,8 @@ packages:
     resolution: {integrity: sha512-BCJj6rptDDcocI8PqE++gKpaOzhGgkTfzzgjqKxWp7ElQdwe+WL7J/YdCiMzG5EvLYe1ly8gNVMvoWqk+kfjhA==}
     engines: {node: '>=14'}
 
-  '@percy/playwright@1.0.10':
-    resolution: {integrity: sha512-lq2Mbqz/SfguQn4PdbNwApmzZpA/3gWO7STLlyLNYd0r4btGd7Nfxyxkf/t78rgh2ErwGcLUuPbxGPpZ3XXLVw==}
+  '@percy/playwright@1.1.0':
+    resolution: {integrity: sha512-4js7xbz5RqEv/Fee3kypmiwsPsHrXGwGPWR7HWS5iNywh2qfK8O8mI/XfZb+FTFR6Ebi2Cy2vNNiaaoYKCsCPQ==}
     engines: {node: '>=14'}
     peerDependencies:
       playwright-core: '>=1'
@@ -2620,8 +2620,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/wasm-node@4.60.0':
-    resolution: {integrity: sha512-b4MyEi8S6dvHy0ZAwxO/zQPxpagdv+VZQDlTDaQJloif+axEHbjaJ+dkjN+uTs4mj8qT3nOidkGtDdNvVj7rrg==}
+  '@rollup/wasm-node@4.60.1':
+    resolution: {integrity: sha512-FAfGj5Ferzyna11iUwGdkYus/Y9d/H75PEpsseP5DZOsEsyPvP/Q7mJiSXhUYSEmyfHPaZyC8EsJCjqzDbtcfg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -12753,10 +12753,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12773,10 +12770,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12812,10 +12806,7 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
       yaml: 2.8.2
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12823,10 +12814,7 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12922,7 +12910,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@percy/playwright@1.0.10(playwright-core@1.58.2)':
+  '@percy/playwright@1.1.0(playwright-core@1.58.2)':
     dependencies:
       playwright-core: 1.58.2
 
@@ -13055,7 +13043,7 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.3
 
-  '@rollup/wasm-node@4.60.0':
+  '@rollup/wasm-node@4.60.1':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -17466,10 +17454,6 @@ snapshots:
     dependencies:
       pend: 1.2.0
 
-  fdir@6.5.0(picomatch@4.0.3):
-    optionalDependencies:
-      picomatch: 4.0.3
-
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
       picomatch: 4.0.4
@@ -21854,10 +21838,10 @@ snapshots:
   vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.27.4
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
       postcss: 8.5.8
-      rollup: '@rollup/wasm-node@4.60.0'
+      rollup: '@rollup/wasm-node@4.60.1'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.12.0

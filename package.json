@@ -99,7 +99,7 @@
     "@msw/playwright": "0.6.6",
     "@percy/cli": "1.31.10",
     "@percy/ember": "5.0.0",
-    "@percy/playwright": "1.0.10",
+    "@percy/playwright": "1.1.0",
     "@playwright/test": "1.58.2",
     "@sinonjs/fake-timers": "15.1.1",
     "@types/node": "24.12.0",
