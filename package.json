@@ -108,7 +108,7 @@
     "broccoli-asset-rev": "3.0.0",
     "broccoli-funnel": "3.0.8",
     "ember-a11y-testing": "8.0.0",
-    "ember-auto-import": "2.13.0",
+    "ember-auto-import": "2.13.1",
     "ember-cli": "6.11.2",
     "ember-cli-babel": "8.3.1",
     "ember-cli-bundle-analyzer": "1.0.0",
@@ -175,7 +175,7 @@
   },
   "resolutions": {
     "@babel/runtime": "7.29.2",
-    "ember-auto-import": "2.13.0",
+    "ember-auto-import": "2.13.1",
     "ember-get-config": "2.1.1",
     "ember-inflector": "6.0.0",
     "ember-modifier": "4.3.0",
