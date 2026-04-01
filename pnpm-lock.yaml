@@ -26,7 +26,7 @@ importers:
         version: 3.4.0
       '@sentry/ember':
         specifier: 10.46.0
-        version: 10.46.0(ember-cli@6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8))(webpack@5.105.4)
+        version: 10.46.0(ember-cli@6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8))(webpack@5.105.4)
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
@@ -146,8 +146,8 @@ importers:
         specifier: 2.13.0
         version: 2.13.0(webpack@5.105.4)
       ember-cli:
-        specifier: 6.11.0
-        version: 6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)
+        specifier: 6.11.2
+        version: 6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)
       ember-cli-babel:
         specifier: 8.3.1
         version: 8.3.1(@babel/core@7.29.0)
@@ -156,7 +156,7 @@ importers:
         version: 1.0.0
       ember-cli-dependency-checker:
         specifier: 3.3.3
-        version: 3.3.3(ember-cli@6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8))
+        version: 3.3.3(ember-cli@6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -1533,11 +1533,11 @@ packages:
   '@ember-tooling/blueprint-model@0.5.0':
     resolution: {integrity: sha512-2zAebSmmzpUO2wt6EyfX5TlcmvB9cTkteuZ3QhPmXLMthUpU5nUifcz3hlYcXPK7WM0HdO9qL4GdGQCoxhzaGg==}
 
-  '@ember-tooling/classic-build-addon-blueprint@6.11.0':
-    resolution: {integrity: sha512-YDZlXLg+nzp2wDGEA7eJKTxF7d9d6WEjgALQkoOnardWQCS0Trr3Ce2itVySsadB8CX1Sqrze4qCQjw1XMAjqg==}
+  '@ember-tooling/classic-build-addon-blueprint@6.11.2':
+    resolution: {integrity: sha512-csfwl0IOK/J8rIfRoQcpaAsIe/R326ZubcH6gIhe4EfAl5vxg4cbpDr2ZF4N037PTiCnDWoD1PQFRT0Lmyb0zA==}
 
-  '@ember-tooling/classic-build-app-blueprint@6.11.0':
-    resolution: {integrity: sha512-ZqwAC+3X3HFcBcmbyyBRh0KXkQSuW+L6Rry9Q7vmGFoQ+wQQnDQ9MS+TXz72VqP47+MGfZRJXWfCeqEUTpuSRg==}
+  '@ember-tooling/classic-build-app-blueprint@6.11.2':
+    resolution: {integrity: sha512-5XPJBmdn/vYx5oDuxNhii8AqAqaXAcqLq80Q1DwGo4lXUauMflbLApgy+ddCOPNXj2VADTrOvo1m6VW8olrqsw==}
 
   '@ember/app-blueprint@6.11.2':
     resolution: {integrity: sha512-qbj9Irg70OX+t0yJvdB9aUxktpuuSrMV0vYiFHj8Kn7sbE8eyeV4ge+NSB+KxTg9Kmw7Ugq0wFefBZWuAxFG0Q==}
@@ -5206,8 +5206,8 @@ packages:
     resolution: {integrity: sha512-rk7GY+FmLn/2e22HsZs0Ycrz8HQ1W3Fv+2TFOuEFW9optnDXDgkntPBIl6gact/LHsfBM5RKbM3dHsIIeLgl0Q==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-cli@6.11.0:
-    resolution: {integrity: sha512-c+5m4KgPr1hi7+64+SAfphIeCFZMuKTR+QSM0PPmEJhXibtCJd+8Ag5IrBMJ5urhX4jUtZ3skc0/Zln67CiGjQ==}
+  ember-cli@6.11.2:
+    resolution: {integrity: sha512-l7whnquetTEdblOB76ihpllesZKSUk26lMd/oPDN2VtToNGTXBrtBJADZIdyQ6fqo9IQz4lUfv7R8FC8U5HO7Q==}
     engines: {node: '>= 20.19.0'}
     hasBin: true
 
@@ -7105,6 +7105,7 @@ packages:
 
   lodash@4.18.0:
     resolution: {integrity: sha512-l1mfj2atMqndAHI3ls7XqPxEjV2J9ZkcNyHpoZA3r2T1LLwDB69jgkMWh71YKwhBbK0G2f4WSn05ahmQXVxupA==}
+    deprecated: Bad release. Please use lodash@4.17.21 instead.
 
   log-symbols@2.2.0:
     resolution: {integrity: sha512-VeIAFslyIerEJLXHziedo2basKbMKtTw3vfn5IzG0XTjhAVEJyNHnL2p7vc+wBDSdQuUpNw3M2u6xb9QsAY5Eg==}
@@ -11689,7 +11690,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ember-tooling/classic-build-addon-blueprint@6.11.0':
+  '@ember-tooling/classic-build-addon-blueprint@6.11.2':
     dependencies:
       '@ember-tooling/blueprint-model': 0.5.0
       chalk: 5.6.2
@@ -11703,7 +11704,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ember-tooling/classic-build-app-blueprint@6.11.0':
+  '@ember-tooling/classic-build-app-blueprint@6.11.2':
     dependencies:
       '@ember-tooling/blueprint-model': 0.5.0
       chalk: 5.6.2
@@ -12695,10 +12696,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12715,10 +12713,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12754,10 +12749,7 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
       yaml: 2.8.3
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12765,10 +12757,7 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -13030,7 +13019,7 @@ snapshots:
 
   '@sentry/core@10.46.0': {}
 
-  '@sentry/ember@10.46.0(ember-cli@6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8))(webpack@5.105.4)':
+  '@sentry/ember@10.46.0(ember-cli@6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8))(webpack@5.105.4)':
     dependencies:
       '@babel/core': 7.29.0
       '@embroider/macros': 1.20.2(@babel/core@7.29.0)
@@ -13041,7 +13030,7 @@ snapshots:
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
     optionalDependencies:
-      ember-cli: 6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)
+      ember-cli: 6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -16055,10 +16044,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.3(ember-cli@6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)):
+  ember-cli-dependency-checker@3.3.3(ember-cli@6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)
+      ember-cli: 6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8)
       find-yarn-workspace-root: 2.0.0
       is-git-url: 1.0.0
       resolve: 1.22.11
@@ -16214,12 +16203,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@6.11.0(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8):
+  ember-cli@6.11.2(@babel/core@7.29.0)(@types/node@24.12.0)(ejs@3.1.10)(handlebars@4.7.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(underscore@1.13.8):
     dependencies:
       '@ember-tooling/blueprint-blueprint': 0.2.1
       '@ember-tooling/blueprint-model': 0.5.0
-      '@ember-tooling/classic-build-addon-blueprint': 6.11.0
-      '@ember-tooling/classic-build-app-blueprint': 6.11.0
+      '@ember-tooling/classic-build-addon-blueprint': 6.11.2
+      '@ember-tooling/classic-build-app-blueprint': 6.11.2
       '@ember/app-blueprint': 6.11.2
       '@pnpm/find-workspace-dir': 1000.1.5
       babel-remove-types: 1.1.0
