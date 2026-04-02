@@ -93,7 +93,6 @@ export class SessionState {
    */
   initialPromise: Promise<void> | null = null;
 
-  // TODO: implement `ownedCrates` (loaded from the `/api/v1/me` response)
   // TODO: implement sudo mode (`sudoEnabledUntil`, `isSudoEnabled`, `setSudo()`)
   //   Sudo mode enables admin actions for a limited duration. The expiry
   //   timestamp is persisted in localStorage under the 'sudo' key so it
