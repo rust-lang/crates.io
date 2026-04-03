@@ -19,7 +19,7 @@ serde_json = "=1.0.149"
 tar = { version = "=0.4.45", optional = true }
 thiserror = "=2.0.18"
 tracing = "=0.1.44"
-tokio = { version = "=1.50.0", features = ["io-util", "macros", "rt-multi-thread"] }
+tokio = { version = "=1.51.0", features = ["io-util", "macros", "rt-multi-thread"] }
 async-compression = { version = "=0.4.41", default-features = false, features = ["gzip", "tokio"] }
 futures-util = "=0.3.32"
 
