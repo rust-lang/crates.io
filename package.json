@@ -101,7 +101,7 @@
     "@percy/ember": "5.0.0",
     "@percy/playwright": "1.1.0",
     "@playwright/test": "1.58.2",
-    "@sinonjs/fake-timers": "15.1.1",
+    "@sinonjs/fake-timers": "15.2.0",
     "@types/node": "24.12.0",
     "@types/sinonjs__fake-timers": "15.0.1",
     "@zestia/ember-auto-focus": "5.1.0",
