@@ -494,8 +494,8 @@ importers:
         specifier: 5.55.1
         version: 5.55.1
       svelte-check:
-        specifier: 4.4.5
-        version: 4.4.5(picomatch@4.0.4)(svelte@5.55.1)(typescript@6.0.2)
+        specifier: 4.4.6
+        version: 4.4.6(picomatch@4.0.4)(svelte@5.55.1)(typescript@6.0.2)
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -9060,8 +9060,8 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
-  svelte-check@4.4.5:
-    resolution: {integrity: sha512-1bSwIRCvvmSHrlK52fOlZmVtUZgil43jNL/2H18pRpa+eQjzGt6e3zayxhp1S7GajPFKNM/2PMCG+DZFHlG9fw==}
+  svelte-check@4.4.6:
+    resolution: {integrity: sha512-kP1zG81EWaFe9ZyTv4ZXv44Csi6Pkdpb7S3oj6m+K2ec/IcDg/a8LsFsnVLqm2nxtkSwsd5xPj/qFkTBgXHXjg==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
     peerDependencies:
@@ -12659,10 +12659,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12679,10 +12676,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12718,10 +12712,7 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
       yaml: 2.8.3
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12729,10 +12720,7 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -21072,7 +21060,7 @@ snapshots:
       svelte: 5.55.1
       zimmerframe: 1.1.2
 
-  svelte-check@4.4.5(picomatch@4.0.4)(svelte@5.55.1)(typescript@6.0.2):
+  svelte-check@4.4.6(picomatch@4.0.4)(svelte@5.55.1)(typescript@6.0.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       chokidar: 4.0.3
