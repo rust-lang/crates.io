@@ -38,6 +38,23 @@
         >
           Show Persistent
         </button>
+        <button
+          type="button"
+          onclick={() =>
+            notifications.info('The last word in this message is <strong>stronk</strong>.', { autoClear: false })}
+        >
+          Show HTML without HTML content enabled
+        </button>
+        <button
+          type="button"
+          onclick={() =>
+            notifications.info('The last word in this message is <strong>stronk</strong>.', {
+              autoClear: false,
+              htmlContent: true,
+            })}
+        >
+          Show HTML with HTML content enabled
+        </button>
         <button type="button" onclick={() => notifications.clearAll()}>Clear All</button>
       </div>
     {/snippet}

@@ -5,6 +5,7 @@ export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 export interface NotificationOptions {
   autoClear?: boolean;
   clearDuration?: number;
+  htmlContent?: boolean;
 }
 
 export class Notification {
@@ -12,28 +13,38 @@ export class Notification {
   message: string;
   autoClear: boolean;
   clearDuration: number;
+  htmlContent: boolean;
   remaining: number;
   startTime: number | undefined;
   timer: ReturnType<typeof setTimeout> | undefined;
   dismiss = $state(false);
 
-  constructor(options: { type: NotificationType; message: string; autoClear: boolean; clearDuration: number }) {
+  constructor(options: {
+    type: NotificationType;
+    message: string;
+    autoClear: boolean;
+    clearDuration: number;
+    htmlContent: boolean;
+  }) {
     this.type = options.type;
     this.message = options.message;
     this.autoClear = options.autoClear;
     this.clearDuration = options.clearDuration;
+    this.htmlContent = options.htmlContent;
     this.remaining = options.clearDuration;
   }
 }
 
 const DEFAULT_AUTO_CLEAR = !__TEST__;
 const DEFAULT_CLEAR_DURATION = 10_000;
+const DEFAULT_HTML_CONTENT = false;
 
 export class NotificationsState {
   content = $state.raw<Notification[]>([]);
 
   #defaultAutoClear = DEFAULT_AUTO_CLEAR;
   #defaultClearDuration = DEFAULT_CLEAR_DURATION;
+  #defaultHtmlContent = DEFAULT_HTML_CONTENT;
 
   addNotification(options: { message: string; type?: NotificationType } & NotificationOptions): Notification {
     if (!options.message) {
@@ -45,6 +56,7 @@ export class NotificationsState {
       message: options.message,
       autoClear: options.autoClear ?? this.#defaultAutoClear,
       clearDuration: options.clearDuration ?? this.#defaultClearDuration,
+      htmlContent: options.htmlContent ?? this.#defaultHtmlContent,
     });
 
     this.content = [...this.content, notification];

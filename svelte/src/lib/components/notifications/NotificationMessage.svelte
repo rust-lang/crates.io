@@ -58,7 +58,12 @@
   </div>
 
   <div class="notification__content">
-    {notification.message}
+    {#if notification.htmlContent}
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html notification.message}
+    {:else}
+      {notification.message}
+    {/if}
   </div>
 
   <button type="button" class="notification__close" onclick={handleClose} aria-label="Dismiss notification">
@@ -122,11 +127,9 @@
   }
 
   .notification__content {
-    display: flex;
     flex: 1 1 auto;
     min-width: 0;
     min-height: 0;
-    justify-content: space-between;
     padding: 0.5rem 1rem;
     word-break: break-word;
     line-height: 1.5;

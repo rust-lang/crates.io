@@ -64,7 +64,7 @@
       let { read_only, banner_message } = response.data;
       let message = banner_message ?? (read_only ? READ_ONLY_MESSAGE : undefined);
       if (message) {
-        notifications.info(message, { autoClear: false });
+        notifications.info(message, { autoClear: false, htmlContent: true });
       }
     })
     .catch(() => {});

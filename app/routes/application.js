@@ -73,7 +73,10 @@ export default class ApplicationRoute extends Route {
     }
 
     if (banner_message) {
-      this.notifications.info(banner_message, { autoClear: false });
+      // We have to enclose the banner message in a <div> with HTML content
+      // enabled, otherwise every element in the banner will be subject to the
+      // flex rules in the ember-cli-notifications CSS and things get weird.
+      this.notifications.info(`<div>${banner_message}</div>`, { autoClear: false, htmlContent: true });
     }
   });
 
