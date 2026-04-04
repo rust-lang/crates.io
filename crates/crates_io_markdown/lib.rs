@@ -93,7 +93,7 @@ impl<'a> MarkdownRenderer<'a> {
             .table(true)
             .tagfilter(true)
             .tasklist(true)
-            .header_ids("user-content-".to_string())
+            .header_id_prefix("user-content-".to_string())
             .footnotes(true)
             .build();
 
