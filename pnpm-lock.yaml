@@ -122,8 +122,8 @@ importers:
         specifier: 1.58.2
         version: 1.58.2
       '@sinonjs/fake-timers':
-        specifier: 15.2.0
-        version: 15.2.0
+        specifier: 15.2.1
+        version: 15.2.1
       '@types/node':
         specifier: 24.12.0
         version: 24.12.0
@@ -2629,8 +2629,8 @@ packages:
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@15.2.0':
-    resolution: {integrity: sha512-+SM3gQi95RWZLlD+Npy/UC5mHftlXwnVJMRpMyiqjrF4yNnbvi/Ubh3x9sLw6gxWSuibOn00uiLu1CKozehWlQ==}
+  '@sinonjs/fake-timers@15.2.1':
+    resolution: {integrity: sha512-QdfpQFIwYrTK8lFsII4bJ1AO1ZLbw7B+oxfP+/qSsiTrVerFp7aY2O+d2GNGrTxP58ezEbjbf7mTTLMsd7M7XQ==}
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
@@ -12524,7 +12524,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12541,7 +12544,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12577,7 +12583,10 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
       yaml: 2.8.3
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12585,7 +12594,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12876,7 +12888,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.2.0':
+  '@sinonjs/fake-timers@15.2.1':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
