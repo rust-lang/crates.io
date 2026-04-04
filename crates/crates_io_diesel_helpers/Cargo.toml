@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 diesel = { version = "=2.3.7", features = ["postgres"] }
-semver = "=1.0.27"
+semver = "=1.0.28"
 serde = { version = "=1.0.228", features = ["derive"] }
 
 [dev-dependencies]
