@@ -57,7 +57,7 @@
     "eslint-plugin-storybook": "10.3.3",
     "eslint-plugin-svelte": "3.16.0",
     "globals": "17.4.0",
-    "playwright": "1.58.2",
+    "playwright": "1.59.1",
     "prettier": "3.8.1",
     "prettier-plugin-svelte": "3.5.1",
     "storybook": "10.3.3",
