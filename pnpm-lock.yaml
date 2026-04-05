@@ -455,8 +455,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2(@vitest/browser@4.1.2(msw@2.12.14(@types/node@24.12.0)(typescript@6.0.2))(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.46.1)(yaml@2.8.3))(vitest@4.1.2))(vitest@4.1.2)
       chromatic:
-        specifier: 16.0.0
-        version: 16.0.0
+        specifier: 16.1.0
+        version: 16.1.0
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -4025,8 +4025,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@16.0.0:
-    resolution: {integrity: sha512-O81RVGDXXoreNeG894hjaUx08xep+C/BA6aJNMZkwSjH7Lln8IweZekBpBEoQPNNpjmHyZvcTIwN/aGitdK53Q==}
+  chromatic@16.1.0:
+    resolution: {integrity: sha512-7xyOUXe8jfY6c+g9S/U/cbvzVXMjdhh9cVZYvDp8dDGonjiKSbWO1dzWApdYHIiF2xj29pvWQB7N5LT6967IDw==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -12539,7 +12539,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12556,7 +12559,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12592,7 +12598,10 @@ snapshots:
       '@percy/cli-command': 1.31.10(typescript@6.0.2)
       yaml: 2.8.3
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -12600,7 +12609,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.10(typescript@6.0.2)':
     dependencies:
@@ -14865,7 +14877,7 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@16.0.0: {}
+  chromatic@16.1.0: {}
 
   chrome-trace-event@1.0.4: {}
 
