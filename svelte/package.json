@@ -55,7 +55,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-storybook": "10.3.3",
-    "eslint-plugin-svelte": "3.16.0",
+    "eslint-plugin-svelte": "3.17.0",
     "globals": "17.4.0",
     "playwright": "1.59.1",
     "prettier": "3.8.1",
