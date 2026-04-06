@@ -107,8 +107,8 @@ importers:
         specifier: 0.6.0
         version: 0.6.0
       '@msw/playwright':
-        specifier: 0.6.6
-        version: 0.6.6(msw@2.12.14(@types/node@24.12.0)(typescript@6.0.2))
+        specifier: 0.6.7
+        version: 0.6.7(msw@2.12.14(@types/node@24.12.0)(typescript@6.0.2))
       '@percy/cli':
         specifier: 1.31.11
         version: 1.31.11(typescript@6.0.2)
@@ -2161,8 +2161,8 @@ packages:
   '@msw/data@1.1.2':
     resolution: {integrity: sha512-beEM1cfb59FdoSV9pmWI+Vllf+QxoYtIDiVE9b1awVAWTa9eeDIZAi1qispBuSSnzZam6lIljCFPYJbXOwEbvA==}
 
-  '@msw/playwright@0.6.6':
-    resolution: {integrity: sha512-sTUDIxXmjOodekAZupL0eE71LsPDlsUlTJYo58klW65IpVKgZWNAigh/TiidHMKDTanz88ZAkks+edEh9fcPxw==}
+  '@msw/playwright@0.6.7':
+    resolution: {integrity: sha512-q7m2JtnN1Iz25xauqx5lkD+tbbDM3oXZBg67aXr4EbxK7IZKTh6c71bbTCnDi/F2SuHq/jPUfS8NJXPcdroARA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       msw: ^2.12.10
@@ -12395,7 +12395,7 @@ snapshots:
       outvariant: 1.4.3
       rettime: 0.7.0
 
-  '@msw/playwright@0.6.6(msw@2.12.14(@types/node@24.12.0)(typescript@6.0.2))':
+  '@msw/playwright@0.6.7(msw@2.12.14(@types/node@24.12.0)(typescript@6.0.2))':
     dependencies:
       '@mswjs/interceptors': 0.41.3
       msw: 2.12.14(@types/node@24.12.0)(typescript@6.0.2)
@@ -12529,7 +12529,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.11(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.11(typescript@6.0.2)':
     dependencies:
@@ -12546,7 +12549,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.11(typescript@6.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.11(typescript@6.0.2)':
     dependencies:
@@ -12582,7 +12588,10 @@ snapshots:
       '@percy/cli-command': 1.31.11(typescript@6.0.2)
       yaml: 2.8.3
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.11(typescript@6.0.2)':
     dependencies:
@@ -12590,7 +12599,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.11(typescript@6.0.2)':
     dependencies:
