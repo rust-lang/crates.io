@@ -14,6 +14,11 @@ overrides:
   rollup: npm:@rollup/wasm-node
   vite@7: 7.3.1
 
+patchedDependencies:
+  ember-cli-notifications@9.1.0:
+    hash: 8937c93a1727c1acfcd6131f4aa7bd7748c8ce7fa8aa9508e84a99ab3e281c90
+    path: patches/ember-cli-notifications@9.1.0.patch
+
 importers:
 
   .:
@@ -174,7 +179,7 @@ importers:
         version: 2.1.0
       ember-cli-notifications:
         specifier: 9.1.0
-        version: 9.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 9.1.0(patch_hash=8937c93a1727c1acfcd6131f4aa7bd7748c8ce7fa8aa9508e84a99ab3e281c90)(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
       ember-click-outside:
         specifier: 6.1.1
         version: 6.1.1(@babel/core@7.29.0)
@@ -15927,7 +15932,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-notifications@9.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
+  ember-cli-notifications@9.1.0(patch_hash=8937c93a1727c1acfcd6131f4aa7bd7748c8ce7fa8aa9508e84a99ab3e281c90)(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
     dependencies:
       '@embroider/addon-shim': 1.10.2
       decorator-transforms: 2.3.1(@babel/core@7.29.0)

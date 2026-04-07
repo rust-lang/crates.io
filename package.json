@@ -200,7 +200,10 @@
     ],
     "ignoredBuiltDependencies": [
       "core-js"
-    ]
+    ],
+    "patchedDependencies": {
+      "ember-cli-notifications@9.1.0": "patches/ember-cli-notifications@9.1.0.patch"
+    }
   },
   "browserslist": [
     "last 2 Chrome versions",
