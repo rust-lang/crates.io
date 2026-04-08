@@ -8,6 +8,7 @@
   import NotificationContainer from '$lib/components/notifications/NotificationContainer.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import TooltipContainer from '$lib/components/TooltipContainer.svelte';
+  import DismissedBannerMessages from '$lib/dismissed-banner-messages.svelte';
   import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
   import { PageTitleState, setPageTitle } from '$lib/page-title.svelte';
   import { ProgressState, setProgressContext } from '$lib/progress.svelte';
@@ -59,12 +60,33 @@
     'crates.io is currently in read-only mode for maintenance reasons. Some functionality will be temporarily unavailable.';
 
   data.siteMetadataPromise
-    .then(response => {
+    .then(async response => {
       if (!response.data) return;
       let { read_only, banner_message } = response.data;
+
+      // Check if the banner message has previously been dismissed. We do this
+      // _before_ the read only check, since we want that to be displayed no
+      // matter what.
+      //
+      // This will break with SSR. We may want to move the banner message
+      // handling to always run on the client in that case, rather than having
+      // to bridge cookies across both CSR and SSR.
+      if (banner_message) {
+        let seen = await DismissedBannerMessages.has(window.cookieStore, banner_message);
+        if (seen) {
+          banner_message = undefined;
+        }
+      }
+
       let message = banner_message ?? (read_only ? READ_ONLY_MESSAGE : undefined);
       if (message) {
-        notifications.info(message, { autoClear: false, htmlContent: true });
+        notifications.info(message, {
+          autoClear: false,
+          htmlContent: true,
+          onDismiss: async () => {
+            await DismissedBannerMessages.set(window.cookieStore, message);
+          },
+        });
       }
     })
     .catch(() => {});
