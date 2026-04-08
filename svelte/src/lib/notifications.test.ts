@@ -158,4 +158,18 @@ describe('NotificationsState', () => {
 
     expect(state.content[0]?.clearDuration).toBe(5000);
   });
+
+  it('onDismiss fires when a notification is removed', () => {
+    let state = new NotificationsState();
+    let dismissFired = false;
+    let notification = state.info('Message', {
+      onDismiss: local => {
+        expect(local).toBe(notification);
+        dismissFired = true;
+      },
+    });
+
+    state.removeNotification(notification);
+    expect(dismissFired).toBe(true);
+  });
 });

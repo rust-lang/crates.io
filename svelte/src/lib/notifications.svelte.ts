@@ -2,10 +2,13 @@ import { createContext } from 'svelte';
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 
+export type OnDismiss = (notification: Notification) => void;
+
 export interface NotificationOptions {
   autoClear?: boolean;
   clearDuration?: number;
   htmlContent?: boolean;
+  onDismiss?: OnDismiss;
 }
 
 export class Notification {
@@ -18,6 +21,7 @@ export class Notification {
   startTime: number | undefined;
   timer: ReturnType<typeof setTimeout> | undefined;
   dismiss = $state(false);
+  onDismiss?: OnDismiss;
 
   constructor(options: {
     type: NotificationType;
@@ -25,6 +29,7 @@ export class Notification {
     autoClear: boolean;
     clearDuration: number;
     htmlContent: boolean;
+    onDismiss?: OnDismiss;
   }) {
     this.type = options.type;
     this.message = options.message;
@@ -32,6 +37,7 @@ export class Notification {
     this.clearDuration = options.clearDuration;
     this.htmlContent = options.htmlContent;
     this.remaining = options.clearDuration;
+    this.onDismiss = options.onDismiss;
   }
 }
 
@@ -57,6 +63,7 @@ export class NotificationsState {
       autoClear: options.autoClear ?? this.#defaultAutoClear,
       clearDuration: options.clearDuration ?? this.#defaultClearDuration,
       htmlContent: options.htmlContent ?? this.#defaultHtmlContent,
+      onDismiss: options.onDismiss,
     });
 
     this.content = [...this.content, notification];
@@ -88,6 +95,7 @@ export class NotificationsState {
     if (!notification) return;
 
     notification.dismiss = true;
+    notification.onDismiss?.(notification);
 
     setTimeout(() => {
       this.content = this.content.filter(n => n !== notification);
