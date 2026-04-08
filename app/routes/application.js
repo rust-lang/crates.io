@@ -14,6 +14,7 @@ export default class ApplicationRoute extends Route {
   @service session;
   @service playground;
   @service sentry;
+  @service banner_message;
 
   async beforeModel(transition) {
     this.setSentryTransaction(transition);
@@ -70,13 +71,26 @@ export default class ApplicationRoute extends Route {
       banner_message =
         'crates.io is currently in read-only mode for maintenance reasons. ' +
         'Some functionality will be temporarily unavailable.';
+    } else if (banner_message) {
+      // Check if the banner message has previously been dismissed by this user.
+      let dismissed = await this.banner_message.previouslyDismissed(banner_message);
+      if (dismissed) {
+        banner_message = undefined;
+      }
     }
 
     if (banner_message) {
       // We have to enclose the banner message in a <div> with HTML content
       // enabled, otherwise every element in the banner will be subject to the
       // flex rules in the ember-cli-notifications CSS and things get weird.
-      this.notifications.info(`<div>${banner_message}</div>`, { autoClear: false, htmlContent: true });
+      this.notifications.info(`<div>${banner_message}</div>`, {
+        autoClear: false,
+        htmlContent: true,
+        onDismiss: async () => {
+          // Remember that the banner message was dismissed.
+          await this.banner_message.dismiss(banner_message);
+        },
+      });
     }
   });
 
