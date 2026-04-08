@@ -64,22 +64,6 @@ jobs:
       svelte: ${{ steps.changed-files.outputs.svelte_any_modified }}
       zizmor: ${{ steps.changed-files.outputs.zizmor_any_modified }}
 
-  percy-nonce:
-    name: Frontend / Percy Nonce
-    runs-on: ubuntu-latest
-    needs: filter-jobs
-    if: needs.filter-jobs.outputs.frontend-test == 'true' || needs.filter-jobs.outputs.e2e-test == 'true'
-
-    # persist job results to other jobs in the workflow
-    outputs:
-      nonce: ${{ steps.percy-nonce.outputs.nonce }}
-
-    steps:
-      # persist step results to other steps in the job
-      - id: percy-nonce
-        # adding a timestamp makes the nonce more unique for re-runs
-        run: echo "nonce=${{ github.run_id }}-$(date +%s)" >> $GITHUB_OUTPUT
-
   backend-lint:
     name: Backend / Lint
     runs-on: ubuntu-24.04
@@ -233,18 +217,11 @@ jobs:
   frontend-test:
     name: Frontend / Test
     runs-on: ubuntu-24.04
-    needs: [ filter-jobs, percy-nonce ]
+    needs: filter-jobs
     if: needs.filter-jobs.outputs.frontend-test == 'true'
 
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
-
-      # Percy secrets are included here to enable Percy's GitHub integration
-      # on community-submitted PRs
-      PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
-      PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
-      PERCY_PARALLEL_TOTAL: 2
-      PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -262,11 +239,7 @@ jobs:
 
       - run: pnpm install
 
-      - if: github.repository == 'rust-lang/crates.io'
-        run: pnpm percy exec --parallel -- pnpm test
-
-      - if: github.repository != 'rust-lang/crates.io'
-        run: pnpm test
+      - run: pnpm test
 
   msw-test:
     name: Frontend / Test (@crates-io/msw)
@@ -319,7 +292,7 @@ jobs:
   e2e-test:
     name: Frontend / Test (playwright)
     runs-on: ubuntu-24.04
-    needs: [ filter-jobs, percy-nonce ]
+    needs: filter-jobs
     timeout-minutes: 60
     if: needs.filter-jobs.outputs.e2e-test == 'true'
 
@@ -329,8 +302,6 @@ jobs:
       # Percy secrets are included here to enable Percy's GitHub integration
       # on community-submitted PRs
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
-      PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
-      PERCY_PARALLEL_TOTAL: 2
       PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
@@ -352,7 +323,7 @@ jobs:
       - run: pnpm playwright install chromium
 
       - if: github.repository == 'rust-lang/crates.io'
-        run: pnpm percy exec --parallel -- pnpm e2e
+        run: pnpm percy exec -- pnpm e2e
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: ${{ !cancelled() }}

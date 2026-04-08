@@ -1,7 +1,6 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -61,7 +60,5 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
       .hasText(
         'Visit your dashboard to view all of your crates, or account settings to manage email notification preferences for all of your crates.',
       );
-
-    await percySnapshot(assert);
   });
 });

@@ -1,8 +1,6 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
-
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
@@ -60,6 +58,5 @@ module('Acceptance | Dashboard', function (hooks) {
 
     await visit('/dashboard');
     assert.strictEqual(currentURL(), '/dashboard');
-    await percySnapshot(assert);
   });
 });

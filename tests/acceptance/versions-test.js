@@ -1,8 +1,6 @@
 import { click, currentURL, findAll, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
-
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | crate versions page', function (hooks) {
@@ -27,8 +25,6 @@ module('Acceptance | crate versions page', function (hooks) {
 
     let versions = findAll('[data-test-version]').map(it => it.dataset.testVersion);
     assert.deepEqual(versions, ['0.2.1', '0.3.0', '0.2.0', '0.1.0']);
-
-    await percySnapshot(assert);
 
     await click('[data-test-current-order]');
     await click('[data-test-semver-sort] a');

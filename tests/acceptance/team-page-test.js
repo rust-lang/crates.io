@@ -2,7 +2,6 @@ import { visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -20,7 +19,6 @@ module('Acceptance | team page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-org-name]').hasText('org');
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 

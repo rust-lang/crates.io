@@ -1,7 +1,6 @@
 import { click, currentURL, fillIn, findAll, getSettledState, waitFor } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
@@ -41,7 +40,6 @@ module('Acceptance | support', function (hooks) {
       ]),
     );
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 
@@ -79,7 +77,6 @@ module('Acceptance | support', function (hooks) {
       assert.dom('[data-test-id="fieldset-detail"]').exists();
       assert.dom('[data-test-id="report-button"]').hasText('Report to help@crates.io');
 
-      await percySnapshot(assert);
       await a11yAudit(axeConfig);
     });
 

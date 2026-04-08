@@ -3,7 +3,6 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -56,7 +55,6 @@ module('Route: crate.delete', function (hooks) {
     await visit('/crates/foo/delete');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
     assert.dom('[data-test-title]').hasText('Delete the foo crate?');
-    await percySnapshot(assert);
 
     await fillIn('[data-test-reason]', "I don't need this crate anymore");
     assert.dom('[data-test-delete-button]').isDisabled();
