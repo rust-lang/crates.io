@@ -58,6 +58,8 @@
   const READ_ONLY_MESSAGE =
     'crates.io is currently in read-only mode for maintenance reasons. Some functionality will be temporarily unavailable.';
 
+  // Site metadata is only processed at app startup
+  // svelte-ignore state_referenced_locally
   data.siteMetadataPromise
     .then(response => {
       if (!response.data) return;
