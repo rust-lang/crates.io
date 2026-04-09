@@ -300,6 +300,8 @@ checksum = "public"
 links = "public"
 rust_version = "public"
 has_lib = "public"
+# The following column is private for now, until we can guarantee a stable data schema.
+lib_name = "private"
 bin_names = "public"
 yank_message = "private"
 edition = "public"

@@ -1165,6 +1165,8 @@ diesel::table! {
         id -> Int4,
         /// The list of `keywords` in the `Cargo.toml` file of this version.
         keywords -> Array<Nullable<Text>>,
+        /// The library target name for this version (the Rust identifier used in `use` statements), or NULL if the version has no library target or has not been analyzed yet.
+        lib_name -> Nullable<Text>,
         /// The `license` column of the `versions` table.
         ///
         /// Its SQL type is `Nullable<Varchar>`.
