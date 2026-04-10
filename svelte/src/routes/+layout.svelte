@@ -72,7 +72,7 @@
       // handling to always run on the client in that case, rather than having
       // to bridge cookies across both CSR and SSR.
       if (banner_message) {
-        let seen = await DismissedBannerMessages.has(window.cookieStore, banner_message);
+        let seen = await DismissedBannerMessages.has(banner_message);
         if (seen) {
           banner_message = undefined;
         }
@@ -84,7 +84,7 @@
           autoClear: false,
           htmlContent: true,
           onDismiss: async () => {
-            await DismissedBannerMessages.set(window.cookieStore, message);
+            await DismissedBannerMessages.set(message);
           },
         });
       }

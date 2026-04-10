@@ -1,13 +1,6 @@
-const BANNER_MESSAGE_COOKIE_NAME = 'dismissed-banner-messages';
+import { getItem, setItem } from './utils/local-storage';
 
-export interface CookieStore {
-  get(name: string): Promise<Item | null>;
-  set(name: string, value: string): Promise<void>;
-}
-
-export interface Item {
-  value?: string;
-}
+const BANNER_MESSAGE_STORAGE_KEY = 'dismissed-banner-messages';
 
 async function hash(content: string) {
   let input = new TextEncoder().encode(content);
@@ -15,28 +8,28 @@ async function hash(content: string) {
   return new Uint8Array(output).toHex();
 }
 
-async function read(cookieStore: CookieStore) {
-  let raw = await cookieStore.get(BANNER_MESSAGE_COOKIE_NAME);
-  return new Set(raw?.value?.split(','));
+function read() {
+  let raw = getItem(BANNER_MESSAGE_STORAGE_KEY);
+  return new Set(raw?.split(','));
 }
 
-async function write(cookieStore: CookieStore, set: Set<string>) {
-  await cookieStore.set(BANNER_MESSAGE_COOKIE_NAME, [...set.values()].join(','));
+function write(set: Set<string>) {
+  setItem(BANNER_MESSAGE_STORAGE_KEY, [...set.values()].join(','));
 }
 
-async function has(cookieStore: CookieStore, content: string) {
+async function has(content: string) {
   let id = await hash(content);
-  let set = await read(cookieStore);
+  let set = read();
 
   return set.has(id);
 }
 
-async function set(cookieStore: CookieStore, content: string) {
+async function set(content: string) {
   let id = await hash(content);
-  let set = await read(cookieStore);
+  let set = read();
 
   set.add(id);
-  await write(cookieStore, set);
+  write(set);
 }
 
 export default { has, set };
