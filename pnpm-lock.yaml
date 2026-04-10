@@ -69,7 +69,7 @@ importers:
         version: 3.0.0(@types/node@24.12.2)
       '@ember/render-modifiers':
         specifier: 3.0.0
-        version: 3.0.0(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 3.0.0(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5))
       '@ember/string':
         specifier: 4.0.1
         version: 4.0.1
@@ -95,8 +95,8 @@ importers:
         specifier: 9.39.4
         version: 9.39.4
       '@glimmer/component':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.1.1
+        version: 2.1.1
       '@glimmer/tracking':
         specifier: 1.1.2
         version: 1.1.2
@@ -129,7 +129,7 @@ importers:
         version: 15.0.1
       '@zestia/ember-auto-focus':
         specifier: 5.1.0
-        version: 5.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.105.4)
+        version: 5.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5))(webpack@5.105.4)
       broccoli-asset-rev:
         specifier: 3.0.0
         version: 3.0.0
@@ -171,7 +171,7 @@ importers:
         version: 2.1.0
       ember-cli-notifications:
         specifier: 9.1.0
-        version: 9.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 9.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5))
       ember-click-outside:
         specifier: 6.1.1
         version: 6.1.1(@babel/core@7.29.0)
@@ -204,7 +204,7 @@ importers:
         version: 3.5.0(@babel/core@7.29.0)(@ember/test-helpers@5.4.1(@babel/core@7.29.0))
       ember-load-initializers:
         specifier: 3.0.1
-        version: 3.0.1(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        version: 3.0.1(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5))
       ember-modifier:
         specifier: 4.3.0
         version: 4.3.0(@babel/core@7.29.0)
@@ -225,7 +225,7 @@ importers:
         version: 10.2.3(@babel/core@7.29.0)(ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.105.4))
       ember-source:
         specifier: 6.12.0
-        version: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+        version: 6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)
       ember-svg-jar:
         specifier: 2.7.1
         version: 2.7.1(@babel/core@7.29.0)
@@ -1855,8 +1855,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@glimmer/component@2.0.0':
-    resolution: {integrity: sha512-eATSzBOUm0MZ9+YfJx7Y5p3gbwnaeMzLSSsCDn1ihDtUOIm5YYEV0ee0G7tXt/uKxowt8tXYn/EMbI9OlRF0CA==}
+  '@glimmer/component@2.1.1':
+    resolution: {integrity: sha512-zFZFaMbWy+9WOcDg/kCgrkGgqkLT39EE4FgyFD0MIkQO5coQsrRZyLsiBu1tbchyM+8hT8jAv+EQVUd8u+MdSQ==}
     engines: {node: '>= 18'}
 
   '@glimmer/env@0.1.7':
@@ -11666,13 +11666,13 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@ember/render-modifiers@3.0.0(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))':
+  '@ember/render-modifiers@3.0.0(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5))':
     dependencies:
       '@babel/core': 7.29.0
       '@embroider/macros': 1.20.2(@babel/core@7.29.0)
       ember-cli-babel: 8.3.1(@babel/core@7.29.0)
       ember-modifier-manager-polyfill: 1.2.0(@babel/core@7.29.0)
-      ember-source: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -12089,7 +12089,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@glimmer/component@2.0.0':
+  '@glimmer/component@2.1.1':
     dependencies:
       '@embroider/addon-shim': 1.10.2
       '@glimmer/env': 0.1.7
@@ -13799,13 +13799,13 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@zestia/ember-auto-focus@5.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.105.4)':
+  '@zestia/ember-auto-focus@5.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5))(webpack@5.105.4)':
     dependencies:
       ember-auto-import: 2.13.1(webpack@5.105.4)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
       ember-modifier: 4.3.0(@babel/core@7.29.0)
-      ember-source: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)
     transitivePeerDependencies:
       - '@babel/core'
       - '@glint/template'
@@ -15947,11 +15947,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-notifications@9.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
+  ember-cli-notifications@9.1.0(@babel/core@7.29.0)(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)):
     dependencies:
       '@embroider/addon-shim': 1.10.2
       decorator-transforms: 2.3.1(@babel/core@7.29.0)
-      ember-source: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -16318,9 +16318,9 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  ember-load-initializers@3.0.1(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
+  ember-load-initializers@3.0.1(ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)):
     dependencies:
-      ember-source: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
+      ember-source: 6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5)
 
   ember-modifier-manager-polyfill@1.2.0(@babel/core@7.29.0):
     dependencies:
@@ -16401,12 +16401,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5):
+  ember-source@6.12.0(@glimmer/component@2.1.1)(rsvp@4.8.5):
     dependencies:
       '@babel/core': 7.29.0
       '@ember/edition-utils': 1.2.0
       '@embroider/addon-shim': 1.10.2
-      '@glimmer/component': 2.0.0
+      '@glimmer/component': 2.1.1
       '@simple-dom/interface': 1.4.0
       backburner.js: 2.8.0
       broccoli-file-creator: 2.1.1
