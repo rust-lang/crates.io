@@ -38,9 +38,6 @@ importers:
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
-      ember-cookies:
-        specifier: ^1.3.0
-        version: 1.3.0(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
       highlight.js:
         specifier: 11.11.1
         version: 11.11.1
@@ -5156,12 +5153,6 @@ packages:
     peerDependenciesMeta:
       '@glint/template':
         optional: true
-
-  ember-cookies@1.3.0:
-    resolution: {integrity: sha512-nhVDm9lql4EVLpbjxyosyEITFvuNAmHr7cod8K2FmIyw2KcAFWSS0v88quIWc+GvcawBTz3KSMRXOJq/0InVpg==}
-    engines: {node: '>= 16.*'}
-    peerDependencies:
-      ember-source: '>=4.0'
 
   ember-data@5.8.1:
     resolution: {integrity: sha512-bxCNErbs5vr+cXg/A1gz3dfoJqGdfUZ1JkOQUn5FE2y6qRsQG3S8OShHb2QolKpbKUTY+UHqRhaspdL5NXJjKA==}
@@ -16181,13 +16172,6 @@ snapshots:
       decorator-transforms: 1.2.1(@babel/core@7.29.0)
     transitivePeerDependencies:
       - '@babel/core'
-      - supports-color
-
-  ember-cookies@1.3.0(ember-source@6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
-    dependencies:
-      '@embroider/addon-shim': 1.10.2
-      ember-source: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
-    transitivePeerDependencies:
       - supports-color
 
   ember-data@5.8.1(@babel/core@7.29.0)(@ember/test-helpers@5.4.1(@babel/core@7.29.0))(@ember/test-waiters@4.1.1(@babel/core@7.29.0))(ember-inflector@6.0.0(@babel/core@7.29.0))(qunit@2.25.0):

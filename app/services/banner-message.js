@@ -1,17 +1,13 @@
-import Service, { service } from '@ember/service';
+import Service from '@ember/service';
 
-// eslint-disable-next-line no-unused-vars
-import CookiesService from 'ember-cookies/services/cookies';
+import { getItem, setItem } from '../utils/local-storage';
 
-const BANNER_MESSAGE_COOKIE_NAME = 'dismissed-banner-messages';
+const BANNER_MESSAGE_STORAGE_KEY = 'dismissed-banner-messages';
 
 /**
- * Tracking for previously dismissed site banners using cookies.
+ * Tracking for previously dismissed site banners using local storage.
  */
 export default class BannerMessageService extends Service {
-  /** @type {CookiesService} */
-  @service cookies;
-
   /**
    * Mark the given message content as being dismissed.
    *
@@ -52,8 +48,8 @@ export default class BannerMessageService extends Service {
    * @returns {Set<string>}
    */
   #readDismissedSet() {
-    let raw = this.cookies.read(BANNER_MESSAGE_COOKIE_NAME);
-    return raw === undefined ? new Set() : new Set(raw.split(','));
+    let raw = getItem(BANNER_MESSAGE_STORAGE_KEY);
+    return raw ? new Set(raw.split(',')) : new Set();
   }
 
   /**
@@ -61,6 +57,6 @@ export default class BannerMessageService extends Service {
    * @returns {void}
    */
   #writeDismissedSet(set) {
-    this.cookies.write(BANNER_MESSAGE_COOKIE_NAME, [...set.values()].join(','));
+    setItem(BANNER_MESSAGE_STORAGE_KEY, [...set.values()].join(','));
   }
 }
