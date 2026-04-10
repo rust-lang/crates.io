@@ -161,15 +161,11 @@ describe('NotificationsState', () => {
 
   it('onDismiss fires when a notification is removed', () => {
     let state = new NotificationsState();
-    let dismissFired = false;
-    let notification = state.info('Message', {
-      onDismiss: local => {
-        expect(local).toBe(notification);
-        dismissFired = true;
-      },
-    });
+
+    let onDismiss = vi.fn();
+    let notification = state.info('Message', { onDismiss });
 
     state.removeNotification(notification);
-    expect(dismissFired).toBe(true);
+    expect(onDismiss).toHaveBeenCalledExactlyOnceWith(notification);
   });
 });
