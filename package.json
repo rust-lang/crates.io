@@ -160,7 +160,7 @@
     "micromark": "4.0.2",
     "micromark-extension-gfm": "3.0.0",
     "msw": "2.13.0",
-    "postcss": "8.5.8",
+    "postcss": "8.5.9",
     "postcss-loader": "8.2.1",
     "postcss-preset-env": "11.2.0",
     "prettier": "3.8.1",
