@@ -16,7 +16,7 @@ crates_io_validation = { path = "../crates_io_validation" }
 diesel = { version = "=2.3.7", features = ["serde_json", "chrono", "numeric"] }
 diesel-async = { version = "=0.8.0", features = ["postgres"] }
 diesel_full_text_search = "=2.3.0"
-rand = "=0.10.0"
+rand = "=0.10.1"
 secrecy = "=0.10.3"
 semver = { version = "=1.0.28", features = ["serde"] }
 serde = { version = "=1.0.228", features = ["derive"] }
