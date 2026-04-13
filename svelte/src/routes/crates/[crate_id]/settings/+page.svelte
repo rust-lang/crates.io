@@ -12,6 +12,7 @@
   import Tooltip from '$lib/components/Tooltip.svelte';
   import UserAvatar from '$lib/components/UserAvatar.svelte';
   import { getNotifications } from '$lib/notifications.svelte';
+  import { getSession } from '$lib/utils/session.svelte';
 
   type Owner = components['schemas']['Owner'];
   type GitHubConfig = components['schemas']['GitHubConfig'];
@@ -20,6 +21,7 @@
   let { data } = $props();
 
   let notifications = getNotifications();
+  let session = getSession();
   let client = createClient({ fetch });
 
   let addOwnerVisible = $state(false);
@@ -232,7 +234,7 @@
       <a {href}>
         {teamDisplayName(team)}
       </a>
-      <div class="email-column"></div>
+      <div class="email-column" data-test-email></div>
       <button
         type="button"
         class="button button--small"
@@ -254,7 +256,16 @@
       <a {href}>
         {user.name ?? user.login}
       </a>
-      <div class="email-column"></div>
+      <!--
+        TODO: Showing only the authenticated user's own email here is a bit
+        questionable. This matches the Ember.js app's behavior (an emergent
+        consequence of Ember Data's identity map) and is reproduced here for
+        parity during the migration. Revisit whether this column should exist
+        at all once the Svelte app is the primary frontend.
+      -->
+      <div class="email-column" data-test-email>
+        {session.currentUser?.id === user.id ? (session.currentUser?.email ?? '') : ''}
+      </div>
       <button
         type="button"
         class="button button--small"
