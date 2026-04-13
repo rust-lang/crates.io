@@ -4,7 +4,6 @@
   import { createClient } from '@crates-io/api-client';
 
   import Alert from '$lib/components/Alert.svelte';
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import WorkflowVerification from '$lib/components/WorkflowVerification.svelte';
@@ -159,8 +158,6 @@
 </script>
 
 <PageTitle title="Add Trusted Publisher" />
-
-<CrateHeader crate={data.crate} ownersPromise={data.ownersPromise} />
 
 <form class="form" onsubmit={handleSubmit}>
   <h2>Add a new Trusted Publisher</h2>

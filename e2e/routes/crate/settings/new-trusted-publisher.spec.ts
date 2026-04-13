@@ -37,6 +37,15 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
   });
 
+  test('does not render the crate header', async ({ msw, page }) => {
+    let { crate } = await prepare(msw);
+
+    await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+    await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+    await expect(page.locator('[data-test-heading]')).not.toBeVisible();
+  });
+
   test('cancel button', async ({ msw, page }) => {
     let { crate } = await prepare(msw);
 
