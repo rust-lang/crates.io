@@ -44,7 +44,7 @@
     </a>
 
     <div class="search-form">
-      <h1 class="hero-title">The Rust community's crate registry</h1>
+      <h1 class="hero-title">The Rust community&rsquo;s crate registry</h1>
 
       <SearchForm size={hero ? 'big' : undefined} autofocus={hero} />
     </div>
