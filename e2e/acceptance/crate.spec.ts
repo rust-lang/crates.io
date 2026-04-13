@@ -30,6 +30,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
     await expect(page.locator('[data-test-crate-stats-label]')).toHaveText('Stats Overview');
+    await expect(page.locator('[data-test-msrv]')).toContainText('v1.69.0');
 
     await percy.snapshot();
     await a11y.audit();
