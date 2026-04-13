@@ -10,7 +10,7 @@
   let pagination = $derived(calculatePagination(data.page, data.perPage, data.total));
 </script>
 
-<CrateHeader crate={data.crate} ownersPromise={data.ownersPromise} />
+<CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
 
 {#if data.total > 0}
   <div class="results-meta">

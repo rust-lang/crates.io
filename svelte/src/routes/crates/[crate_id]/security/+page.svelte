@@ -21,7 +21,7 @@
   }
 </script>
 
-<CrateHeader crate={data.crate} ownersPromise={data.ownersPromise} />
+<CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
 
 {#if data.advisories.length}
   <h2 class="heading">Advisories</h2>

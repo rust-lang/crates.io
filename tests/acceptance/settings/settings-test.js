@@ -1,7 +1,6 @@
 import { currentURL, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -44,7 +43,6 @@ module('Acceptance | Settings', function (hooks) {
     assert.dom('[data-test-owners] a[href="/users/thehydroimpulse"]').exists();
     assert.dom('[data-test-owners] a[href="/users/blabaere"]').exists();
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 

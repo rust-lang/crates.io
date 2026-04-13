@@ -19,11 +19,11 @@ tar = "=0.4.45"
 tempfile = "=3.27.0"
 toml = "=1.1.2"
 tracing = "=0.1.44"
-zip = { version = "=8.5.0", default-features = false, features = ["deflate"] }
+zip = { version = "=8.5.1", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 crates_io_test_db = { path = "../crates_io_test_db" }
 diesel = "=2.3.7"
 diesel-async = { version = "=0.8.0", features = ["postgres"] }
 insta = { version = "=1.47.2", features = ["glob"] }
-tokio = { version = "=1.51.0", features = ["macros", "rt"] }
+tokio = { version = "=1.51.1", features = ["macros", "rt"] }

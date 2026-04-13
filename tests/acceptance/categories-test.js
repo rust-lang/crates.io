@@ -1,7 +1,6 @@
 import { visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -28,7 +27,6 @@ module('Acceptance | categories', function (hooks) {
     assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('15 crates');
     assert.dom('[data-test-category="everything"] [data-test-crate-count]').hasText('1,234 crates');
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 
@@ -48,7 +46,6 @@ module('Acceptance | categories', function (hooks) {
 
     assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 

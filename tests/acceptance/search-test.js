@@ -4,7 +4,6 @@ import { module, test } from 'qunit';
 import { defer } from 'rsvp';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
 import { getPageTitle } from 'ember-page-title/test-support';
@@ -41,7 +40,6 @@ module('Acceptance | search', function (hooks) {
     assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
     assert.dom('[data-test-crate-row="0"] [data-test-updated-at]').exists();
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 

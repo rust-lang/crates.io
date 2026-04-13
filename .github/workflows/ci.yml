@@ -17,13 +17,13 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
-  CARGO_DENY_VERSION: 0.19.0
+  CARGO_DENY_VERSION: 0.19.1
   # renovate: datasource=github-releases depName=cargo-insta lookupName=mitsuhiko/insta versioning=semver
   CARGO_INSTA_VERSION: 1.47.2
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=crate depName=diesel-guard versioning=semver
-  DIESEL_GUARD_VERSION: 0.9.0
+  DIESEL_GUARD_VERSION: 0.10.0
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
   OXIPNG_VERSION: 10.1.0
   # renovate: datasource=npm depName=pnpm
@@ -31,7 +31,7 @@ env:
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
   TYPST_VERSION: 0.14.2
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.23.1
+  ZIZMOR_VERSION: 1.24.0
 
 jobs:
   filter-jobs:
@@ -63,22 +63,6 @@ jobs:
       e2e-test: ${{ steps.changed-files.outputs.e2e_test_any_modified }}
       svelte: ${{ steps.changed-files.outputs.svelte_any_modified }}
       zizmor: ${{ steps.changed-files.outputs.zizmor_any_modified }}
-
-  percy-nonce:
-    name: Frontend / Percy Nonce
-    runs-on: ubuntu-latest
-    needs: filter-jobs
-    if: needs.filter-jobs.outputs.frontend-test == 'true' || needs.filter-jobs.outputs.e2e-test == 'true'
-
-    # persist job results to other jobs in the workflow
-    outputs:
-      nonce: ${{ steps.percy-nonce.outputs.nonce }}
-
-    steps:
-      # persist step results to other steps in the job
-      - id: percy-nonce
-        # adding a timestamp makes the nonce more unique for re-runs
-        run: echo "nonce=${{ github.run_id }}-$(date +%s)" >> $GITHUB_OUTPUT
 
   backend-lint:
     name: Backend / Lint
@@ -233,18 +217,11 @@ jobs:
   frontend-test:
     name: Frontend / Test
     runs-on: ubuntu-24.04
-    needs: [ filter-jobs, percy-nonce ]
+    needs: filter-jobs
     if: needs.filter-jobs.outputs.frontend-test == 'true'
 
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
-
-      # Percy secrets are included here to enable Percy's GitHub integration
-      # on community-submitted PRs
-      PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
-      PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
-      PERCY_PARALLEL_TOTAL: 2
-      PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -262,11 +239,7 @@ jobs:
 
       - run: pnpm install
 
-      - if: github.repository == 'rust-lang/crates.io'
-        run: pnpm percy exec --parallel -- pnpm test
-
-      - if: github.repository != 'rust-lang/crates.io'
-        run: pnpm test
+      - run: pnpm test
 
   msw-test:
     name: Frontend / Test (@crates-io/msw)
@@ -319,7 +292,7 @@ jobs:
   e2e-test:
     name: Frontend / Test (playwright)
     runs-on: ubuntu-24.04
-    needs: [ filter-jobs, percy-nonce ]
+    needs: filter-jobs
     timeout-minutes: 60
     if: needs.filter-jobs.outputs.e2e-test == 'true'
 
@@ -329,8 +302,6 @@ jobs:
       # Percy secrets are included here to enable Percy's GitHub integration
       # on community-submitted PRs
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
-      PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
-      PERCY_PARALLEL_TOTAL: 2
       PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
@@ -352,9 +323,9 @@ jobs:
       - run: pnpm playwright install chromium
 
       - if: github.repository == 'rust-lang/crates.io'
-        run: pnpm percy exec --parallel -- pnpm e2e
+        run: pnpm percy exec -- pnpm e2e
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -367,7 +338,7 @@ jobs:
     needs: filter-jobs
     if: needs.filter-jobs.outputs.zizmor == 'true'
     permissions:
-      security-events: write
+      security-events: write  # needed by `codeql-action/upload-sarif` to upload zizmor results to GitHub code scanning
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -440,7 +411,7 @@ jobs:
 
       # Chromatic token is included here to enable visual regression testing
       # on community-submitted PRs
-      - uses: chromaui/action@8a2b82547aef5a3efc8ec3c7905f4ab09a76ed0b # v16.1.0
+      - uses: chromaui/action@688adae582d884d6b739d58b347e8f48829339a9 # v16.2.0
         with:
           workingDir: svelte
           projectToken: chpt_015c1709eb9b9fa

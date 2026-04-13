@@ -493,6 +493,12 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             }
         }
 
+        let lib_name = tarball_info.manifest.lib.as_ref().map(|lib| {
+            lib.name
+                .clone()
+                .unwrap_or_else(|| package.name.replace('-', "_"))
+        });
+
         // https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-name-field says that
         // the `name` field is required for `bin` targets, so we can ignore `None` values via
         // `filter_map()` here.
@@ -518,6 +524,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .maybe_links(package.links.as_deref())
             .maybe_rust_version(rust_version.as_deref())
             .has_lib(tarball_info.manifest.lib.is_some())
+            .maybe_lib_name(lib_name.as_deref())
             .bin_names(bin_names.as_slice())
             .maybe_edition(edition)
             .maybe_description(description.as_deref())

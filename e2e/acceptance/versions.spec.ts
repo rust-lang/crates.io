@@ -22,6 +22,8 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     let versions = await page.locator('[data-test-version]').evaluateAll(el => el.map(it => it.dataset.testVersion));
     expect(versions).toEqual(['0.2.1', '0.3.0', '0.2.0', '0.1.0']);
 
+    await expect(page.locator('[data-test-version="0.3.0"]')).toContainText('v1.69.0');
+
     await percy.snapshot();
 
     await page.click('[data-test-current-order]');

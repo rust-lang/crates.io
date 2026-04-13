@@ -58,6 +58,24 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-delete-button]')).toBeVisible();
   });
 
+  test('only the authenticated owner has their email shown in the owners list', async ({ msw, page }) => {
+    let user1 = await msw.db.user.create({ login: 'authenticated-owner' });
+    let user2 = await msw.db.user.create({ login: 'other-owner' });
+
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user: user1 });
+    await msw.db.crateOwnership.create({ crate, user: user2 });
+
+    await msw.authenticateAs(user1);
+
+    await page.goto('/crates/foo/settings');
+    await expect(page).toHaveURL('/crates/foo/settings');
+
+    await expect(page.locator(`[data-test-owner-user="${user1.login}"] [data-test-email]`)).toHaveText(user1.email);
+    await expect(page.locator(`[data-test-owner-user="${user2.login}"] [data-test-email]`)).toHaveText('');
+  });
+
   test.describe('Trusted Publishing', () => {
     test('mixed GitHub and GitLab configs', async ({ msw, page, percy }) => {
       const { crate } = await prepare(msw);

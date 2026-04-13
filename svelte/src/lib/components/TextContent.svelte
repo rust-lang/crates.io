@@ -206,11 +206,11 @@
       color: inherit;
       border-left: 0.25em solid var(--gray-border);
 
-      & > :first-child {
+      & > :global(:first-child) {
         margin-top: 0;
       }
 
-      & > :last-child {
+      & > :global(:last-child) {
         margin-bottom: 0;
       }
 

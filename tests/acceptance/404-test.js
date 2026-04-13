@@ -1,8 +1,6 @@
 import { currentURL, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
-
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | 404', function (hooks) {
@@ -15,7 +13,5 @@ module('Acceptance | 404', function (hooks) {
     assert.dom('[data-test-title]').hasText('Page not found');
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
-
-    await percySnapshot(assert);
   });
 });

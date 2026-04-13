@@ -1,7 +1,6 @@
 import { click, currentURL, fillIn, findAll } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -153,7 +152,6 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await fillIn('[data-test-name]', 'the new token');
     await click('[data-test-scope="publish-update"]');
-    await percySnapshot(assert);
 
     await click('[data-test-generate]');
 

@@ -62,7 +62,7 @@ import UserAvatar from 'crates-io/components/user-avatar';
         <LinkTo @route={{team.kind}} @model={{team.login}}>
           {{team.display_name}}
         </LinkTo>
-        <div class='email-column'>
+        <div class='email-column' data-test-email>
           {{team.email}}
         </div>
         <button
@@ -85,7 +85,7 @@ import UserAvatar from 'crates-io/components/user-avatar';
             {{user.login}}
           {{/if}}
         </LinkTo>
-        <div class='email-column'>
+        <div class='email-column' data-test-email>
           {{user.email}}
         </div>
         <button

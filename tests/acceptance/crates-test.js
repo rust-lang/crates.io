@@ -2,7 +2,6 @@ import { click, currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
 import { http, HttpResponse } from 'msw';
@@ -27,7 +26,6 @@ module('Acceptance | crates page', function (hooks) {
     assert.strictEqual(currentURL(), '/crates');
     assert.strictEqual(getPageTitle(), 'Crates - crates.io: Rust Package Registry');
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 

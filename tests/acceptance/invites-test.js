@@ -1,7 +1,6 @@
 import { click, currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -146,8 +145,6 @@ module('Acceptance | /me/pending-invites', function (hooks) {
       .hasText("Success! You've been added as an owner of crate nanomsg.");
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
-
-    await percySnapshot(assert);
 
     invites = crateOwnerInvitation.findMany(q => q.where({ crate: { id: nanomsg.id }, invitee: { id: user.id } }));
     assert.strictEqual(invites.length, 0);

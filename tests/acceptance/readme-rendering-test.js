@@ -1,7 +1,6 @@
 import { click } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -136,8 +135,6 @@ module('Acceptance | README rendering', function (hooks) {
     assert.dom('[data-test-readme] ul > li').exists({ count: 7 });
     assert.dom('[data-test-readme] pre > code.language-rust.hljs').exists({ count: 2 });
     assert.dom('[data-test-readme] pre > code.language-mermaid svg').exists();
-
-    await percySnapshot(assert);
   });
 
   test('it shows a fallback if no readme is available', async function (assert) {

@@ -30,6 +30,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
     await expect(page.locator('[data-test-crate-stats-label]')).toHaveText('Stats Overview');
+    await expect(page.locator('[data-test-msrv]')).toContainText('v1.69.0');
 
     await percy.snapshot();
     await a11y.audit();
@@ -124,6 +125,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-page-description]')).toHaveText(
       /13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
+    await expect(page.locator('[data-test-keyword="network"]')).toBeVisible();
   });
 
   test('navigating to the versions page with custom per_page', async ({ page, msw }) => {
@@ -148,6 +150,27 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(page).toHaveURL('/crates/nanomsg/reverse_dependencies');
     await expect(page.locator('a[href="/crates/unicorn-rpc"]')).toHaveText('unicorn-rpc');
+    await expect(page.locator('[data-test-keyword="network"]')).toBeVisible();
+  });
+
+  test('navigating to the dependencies page', async ({ page, msw }) => {
+    await loadFixtures(msw.db);
+
+    await page.goto('/crates/nanomsg');
+    await page.click('[data-test-deps-tab] a');
+
+    await expect(page).toHaveURL('/crates/nanomsg/0.6.1/dependencies');
+    await expect(page.locator('[data-test-keyword="network"]')).toBeVisible();
+  });
+
+  test('navigating to the security page', async ({ page, msw }) => {
+    await loadFixtures(msw.db);
+
+    await page.goto('/crates/nanomsg');
+    await page.click('[data-test-security-tab] a');
+
+    await expect(page).toHaveURL('/crates/nanomsg/security');
+    await expect(page.locator('[data-test-keyword="network"]')).toBeVisible();
   });
 
   test('navigating to a user page', async ({ page, msw }) => {
@@ -301,5 +324,12 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page.locator('[data-test-keyword]')).toBeVisible();
+  });
+
+  test('keywords are shown on a version-specific page', async ({ page, msw }) => {
+    await loadFixtures(msw.db);
+
+    await page.goto('/crates/nanomsg/0.6.1');
+    await expect(page.locator('[data-test-keyword="network"]')).toBeVisible();
   });
 });

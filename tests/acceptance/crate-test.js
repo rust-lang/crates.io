@@ -2,7 +2,6 @@ import { click, currentURL, fillIn, triggerEvent, waitFor } from '@ember/test-he
 import { module, skip, test } from 'qunit';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
-import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
 import { http, HttpResponse } from 'msw';
@@ -43,7 +42,6 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview');
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 
@@ -76,7 +74,6 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.0');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview for 0.6.0 (see all)');
 
-    await percySnapshot(assert);
     await a11yAudit(axeConfig);
   });
 

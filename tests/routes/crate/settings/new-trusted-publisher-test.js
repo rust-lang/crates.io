@@ -3,7 +3,6 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -173,8 +172,6 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       await visit(`/crates/${crate.name}/settings`);
       await click('[data-test-add-trusted-publisher-button]');
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
-
-      await percySnapshot(assert);
 
       // Check that the form is displayed correctly
       assert.dom('[data-test-publisher]').exists();

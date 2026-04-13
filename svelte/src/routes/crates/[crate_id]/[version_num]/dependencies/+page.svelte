@@ -14,6 +14,7 @@
   crate={data.crate}
   version={data.version}
   versionNum={data.version.num}
+  keywords={data.keywords}
   ownersPromise={data.ownersPromise}
 />
 

@@ -3,7 +3,6 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -89,8 +88,6 @@ module('Route | crate.settings', hooks => {
 
       await visit(`/crates/${crate.name}/settings`);
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
-
-      await percySnapshot(assert);
 
       // Check that both GitHub and GitLab configs are displayed
       assert.dom('[data-test-trusted-publishing]').exists();

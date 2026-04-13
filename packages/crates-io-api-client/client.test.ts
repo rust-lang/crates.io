@@ -25,9 +25,8 @@ test('GET /api/v1/site_metadata', async () => {
         "deployed_sha": "5048d31943118c6d67359bd207d307c854e82f45",
         "read_only": false,
       },
-      "response": HttpResponse {
+      "response": Response {
         "url": "https://crates.io/api/v1/site_metadata",
-        Symbol(bodyType): null,
       },
     }
   `);
@@ -83,9 +82,8 @@ test('GET /api/v1/crates/{name}', async () => {
         "keywords": null,
         "versions": null,
       },
-      "response": HttpResponse {
+      "response": Response {
         "url": "https://crates.io/api/v1/crates/serde?include=",
-        Symbol(bodyType): null,
       },
     }
   `);
@@ -106,9 +104,8 @@ test('GET /api/v1/crates/{name} error', async () => {
           },
         ],
       },
-      "response": HttpResponse {
+      "response": Response {
         "url": "https://crates.io/api/v1/crates/serde",
-        Symbol(bodyType): null,
       },
     }
   `);

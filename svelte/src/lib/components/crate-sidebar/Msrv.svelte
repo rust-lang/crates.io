@@ -1,5 +1,6 @@
 <script lang="ts">
   import Tooltip from '$lib/components/Tooltip.svelte';
+  import { normalizeMsrv } from '$lib/utils/msrv';
 
   interface Props {
     msrv: string;
@@ -7,10 +8,12 @@
   }
 
   let { msrv, edition }: Props = $props();
+
+  let displayMsrv = $derived(normalizeMsrv(msrv));
 </script>
 
 <span>
-  v{msrv}
+  v{displayMsrv}
 
   <Tooltip>
     "Minimum Supported Rust Version"

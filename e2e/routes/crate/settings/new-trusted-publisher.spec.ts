@@ -37,6 +37,15 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
   });
 
+  test('does not render the crate header', async ({ msw, page }) => {
+    let { crate } = await prepare(msw);
+
+    await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+    await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+    await expect(page.locator('[data-test-heading]')).not.toBeVisible();
+  });
+
   test('cancel button', async ({ msw, page }) => {
     let { crate } = await prepare(msw);
 
@@ -176,9 +185,18 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(page.locator('[data-test-add]')).toBeVisible();
       await expect(page.locator('[data-test-cancel]')).toBeVisible();
 
-      // Fill in the form
+      await expect(page.locator('[data-test-workflow-group] [data-test-note]')).toHaveText(
+        'The filename of the publishing workflow. This file should be present in the .github/workflows/ directory of the repository configured above. For example: release.yml or publish.yml.',
+      );
+
+      // Fill in the repository fields and confirm the note updates
       await page.fill('[data-test-namespace]', 'rust-lang');
       await page.fill('[data-test-project]', 'crates.io');
+
+      await expect(page.locator('[data-test-workflow-group] [data-test-note]')).toHaveText(
+        'The filename of the publishing workflow. This file should be present in the .github/workflows/ directory of the rust-lang/crates.io repository. For example: release.yml or publish.yml.',
+      );
+
       await page.fill('[data-test-workflow]', 'ci.yml');
       await page.fill('[data-test-environment]', 'release');
 
@@ -391,9 +409,18 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(page.locator('[data-test-add]')).toBeVisible();
       await expect(page.locator('[data-test-cancel]')).toBeVisible();
 
-      // Fill in the form
+      await expect(page.locator('[data-test-workflow-group] [data-test-note]')).toHaveText(
+        'The filepath to the GitLab CI configuration file, relative to the root of the repository configured above. For example: .gitlab-ci.yml or ci/publish.yml.',
+      );
+
+      // Fill in the repository fields and confirm the note updates
       await page.fill('[data-test-namespace]', 'rust-lang');
       await page.fill('[data-test-project]', 'crates.io');
+
+      await expect(page.locator('[data-test-workflow-group] [data-test-note]')).toHaveText(
+        'The filepath to the GitLab CI configuration file, relative to the root of the rust-lang/crates.io repository. For example: .gitlab-ci.yml or ci/publish.yml.',
+      );
+
       await page.fill('[data-test-workflow]', '.gitlab-ci.yml');
       await page.fill('[data-test-environment]', 'production');
 
