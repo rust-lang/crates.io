@@ -54,6 +54,62 @@ impl User {
         Ok(users.collect())
     }
 
+    /// Look up a user by their external OAuth identity.
+    ///
+    /// `provider` is the machine name of an OAuth provider (e.g., "github").
+    /// `account_id` is the provider-native identifier as a string; each
+    /// provider's storage table parses it into the column's native type
+    /// (GitHub uses BIGINT; Bitbucket will use TEXT).
+    ///
+    /// Returns `Ok(None)` if no user matches. Returns `Ok(None)` (not an
+    /// error) when the account_id fails to parse for a provider that
+    /// expects a specific shape — the semantic is "is this a known user",
+    /// not "is this input well-formed".
+    pub async fn find_by_oauth_identity(
+        conn: &mut AsyncPgConnection,
+        provider: &str,
+        account_id: &str,
+    ) -> QueryResult<Option<User>> {
+        match provider {
+            // Must match `crates_io::oauth::github_provider::PROVIDER_NAME`.
+            // Kept as a literal here becuase this crate can't depend on the
+            // main crate without creating a circular dependency.
+            "github" => {
+                let Ok(gh_id) = account_id.parse::<i64>() else {
+                    tracing::debug!(
+                        provider,
+                        account_id,
+                        "oauth identity lookup skipped: account_id not numeric",
+                    );
+                    return Ok(None);
+                };
+                users::table
+                    .inner_join(oauth_github::table.on(oauth_github::user_id.eq(users::id)))
+                    .filter(oauth_github::account_id.eq(gh_id))
+                    .select(User::as_select())
+                    .first(conn)
+                    .await
+                    .optional()
+            }
+            _ => Ok(None),
+        }
+    }
+
+    /// Fetches the encrypted OAuth token stored in `oauth_github` for this user.
+    ///
+    /// All token reads now go through this table rather than `users.gh_encrypted_token`
+    /// so that the read-path works correctly after the Tier 1 identity cutover.
+    pub async fn github_encrypted_token(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Vec<u8>> {
+        oauth_github::table
+            .filter(oauth_github::user_id.eq(self.id))
+            .select(oauth_github::encrypted_token)
+            .first(conn)
+            .await
+    }
+
     /// Queries the database for the verified emails
     /// belonging to a given user
     pub async fn verified_email(
@@ -91,12 +147,34 @@ pub struct NewUser<'a> {
 
 impl NewUser<'_> {
     /// Inserts the user into the database, or fails if the user already exists.
+    ///
+    /// Also inserts a corresponding `oauth_github` row so that the token
+    /// read-path (which now reads from `oauth_github.encrypted_token` instead
+    /// of `users.gh_encrypted_token`) works without a full OAuth login flow.
     pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<User> {
-        diesel::insert_into(users::table)
+        let user = diesel::insert_into(users::table)
             .values(self)
             .returning(User::as_returning())
             .get_result(&mut conn)
-            .await
+            .await?;
+
+        diesel::insert_into(oauth_github::table)
+            .values((
+                oauth_github::account_id.eq(user.gh_id as i64),
+                oauth_github::user_id.eq(user.id),
+                oauth_github::login.eq(&user.gh_login),
+                oauth_github::encrypted_token.eq(&user.gh_encrypted_token),
+            ))
+            .on_conflict(oauth_github::account_id)
+            // Update the token on conflict so the token read-path (which now
+            // reads from oauth_github.encrypted_token) always has a fresh value.
+            // do_nothing() would silently skip the update, leaving a stale token.
+            .do_update()
+            .set(oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)))
+            .execute(&mut conn)
+            .await?;
+
+        Ok(user)
     }
 
     /// Inserts the user into the database, or updates an existing one.
@@ -196,5 +274,77 @@ impl NewOauthGithub<'_> {
             ))
             .get_result(&mut conn)
             .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crates_io_test_db::TestDatabase;
+    use diesel_async::RunQueryDsl;
+
+    async fn setup() -> (TestDatabase, AsyncPgConnection) {
+        let db = TestDatabase::new();
+        let conn = db.async_connect().await;
+        (db, conn)
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn find_by_oauth_identity_returns_user_for_known_github_account() {
+        let (_db, mut conn) = setup().await;
+
+        let user_id = diesel::insert_into(users::table)
+            .values((
+                users::gh_id.eq(1001),
+                users::gh_login.eq("alice"),
+                users::gh_encrypted_token.eq(vec![0u8; 32]),
+            ))
+            .returning(users::id)
+            .get_result::<i32>(&mut conn)
+            .await
+            .unwrap();
+
+        diesel::insert_into(oauth_github::table)
+            .values((
+                oauth_github::account_id.eq(1001i64),
+                oauth_github::user_id.eq(user_id),
+                oauth_github::login.eq("alice"),
+                oauth_github::encrypted_token.eq(vec![0u8; 32]),
+            ))
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        let result = User::find_by_oauth_identity(&mut conn, "github", "1001")
+            .await
+            .unwrap();
+
+        assert!(result.is_some(), "expected Some(user), got None");
+        assert_eq!(result.unwrap().id, user_id);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn find_by_oauth_identity_returns_none_for_unknown_provider() {
+        let (_db, mut conn) = setup().await;
+
+        let result = User::find_by_oauth_identity(&mut conn, "bitbucket", "some-account")
+            .await
+            .unwrap();
+
+        assert!(result.is_none(), "expected None for unknown provider, got {result:?}");
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn find_by_oauth_identity_rejects_non_numeric_github_account_id() {
+        let (_db, mut conn) = setup().await;
+
+        let result = User::find_by_oauth_identity(&mut conn, "github", "not-a-number")
+            .await
+            .unwrap();
+
+        assert!(
+            result.is_none(),
+            "expected Ok(None) for non-numeric github account_id, got {result:?}"
+        );
     }
 }

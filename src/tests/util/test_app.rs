@@ -8,9 +8,11 @@ use crates_io::config::{
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::NewEmail;
 use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::oauth::provider::OAuthProvider;
+use crates_io::oauth::registry::ProviderRegistry;
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
-use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
+use crates_io::util::gh_token_encryption::OauthTokenEncryption;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
 use crates_io_docs_rs::MockDocsRsClient;
@@ -110,6 +112,7 @@ impl TestApp {
             docs_rs: None,
             oidc_key_stores: Default::default(),
             og_image_generator: None,
+            oauth_providers: Vec::new(),
         }
     }
 
@@ -261,6 +264,7 @@ pub struct TestAppBuilder {
     docs_rs: Option<MockDocsRsClient>,
     oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
     og_image_generator: Option<OgImageGenerator>,
+    oauth_providers: Vec<Arc<dyn OAuthProvider>>,
 }
 
 impl TestAppBuilder {
@@ -299,7 +303,7 @@ impl TestAppBuilder {
             (primary_proxy, replica_proxy)
         };
 
-        let (app, router) = build_app(self.config, self.github, self.oidc_key_stores);
+        let (app, router) = build_app(self.config, self.github, self.oidc_key_stores, self.oauth_providers);
 
         let runner = if self.build_job_runner {
             let index = self
@@ -414,6 +418,12 @@ impl TestAppBuilder {
         self
     }
 
+    /// Register an [`OAuthProvider`] with the test app's provider registry.
+    pub fn with_oauth_provider(mut self, provider: Arc<dyn OAuthProvider>) -> Self {
+        self.oauth_providers.push(provider);
+        self
+    }
+
     /// Add a new OIDC keystore to the application
     pub fn with_oidc_keystore(
         mut self,
@@ -492,7 +502,7 @@ fn simple_config() -> config::Server {
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
-        gh_token_encryption: GitHubTokenEncryption::for_testing(),
+        oauth_token_encryption: OauthTokenEncryption::for_testing(),
         max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_features: 10,
@@ -537,6 +547,7 @@ fn build_app(
     config: config::Server,
     github: Option<MockGitHubClient>,
     oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
+    extra_oauth_providers: Vec<Arc<dyn OAuthProvider>>,
 ) -> (Arc<App>, axum::Router) {
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
@@ -545,7 +556,10 @@ fn build_app(
     let github = github.unwrap_or_else(|| MOCK_GITHUB_DATA.as_mock_client());
     let github: Arc<dyn crates_io_github::GitHubClient> = Arc::new(github);
 
-    let oauth_providers = crates_io::oauth::registry::ProviderRegistry::new();
+    let mut oauth_providers = ProviderRegistry::new();
+    for provider in extra_oauth_providers {
+        oauth_providers.register(provider);
+    }
 
     let app = App::builder()
         .databases_from_config(&config.db)

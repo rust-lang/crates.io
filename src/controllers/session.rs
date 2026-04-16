@@ -3,10 +3,10 @@ use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewOauthGithub, NewUser, User};
+use crate::oauth::provider::{ProviderError, UserInfo};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
-use crate::util::errors::{AppResult, bad_request, server_error};
-use crate::util::oauth::ReqwestClient;
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, not_found, server_error};
 use crate::views::EncodableMe;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
@@ -17,10 +17,16 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use minijinja::context;
-use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
+use oauth2::{AuthorizationCode, CsrfToken};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
+
+/// Session key for the OAuth state payload (used during the OAuth dance).
+pub const SESSION_KEY_OAUTH_STATE: &str = "oauth_state";
+
+/// Session key for the logged-in user id.
+pub const SESSION_KEY_USER_ID: &str = "user_id";
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BeginResponse {
@@ -33,10 +39,29 @@ pub struct BeginResponse {
     pub state: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct BeginQuery {
+    #[serde(default = "default_provider")]
+    pub provider: String,
+}
+
+fn default_provider() -> String {
+    crate::oauth::github_provider::PROVIDER_NAME.to_string()
+}
+
+/// The JSON payload stored in the session under `"oauth_state"`.
+#[derive(Debug, Serialize, Deserialize)]
+struct OAuthStatePayload {
+    state: String,
+    provider: String,
+}
+
 /// Begin authentication flow.
 ///
-/// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
+/// This route will return an authorization URL for the OAuth flow including the crates.io
 /// `client_id` and a randomly generated `state` secret.
+///
+/// An optional `?provider=<name>` query param selects the OAuth provider (default: `"github"`).
 ///
 /// see <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>
 #[utoipa::path(
@@ -45,45 +70,62 @@ pub struct BeginResponse {
     tag = "session",
     responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
-pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
-    let (url, state) = app
-        .github_oauth
-        .authorize_url(oauth2::CsrfToken::new_random)
-        .add_scope(Scope::new("read:org".to_string()))
-        .url();
+pub async fn begin_session(
+    app: AppState,
+    Query(query): Query<BeginQuery>,
+    session: SessionExtension,
+) -> AppResult<Json<BeginResponse>> {
+    let provider = app
+        .oauth_providers
+        .get(&query.provider)
+        .ok_or_else(not_found)?;
 
-    let state = state.secret().to_string();
-    session.insert("github_oauth_state".to_string(), state.clone());
+    let (url, csrf) = provider.authorize_url();
+
+    let payload = OAuthStatePayload {
+        state: csrf.secret().to_string(),
+        provider: query.provider,
+    };
+    session.insert(
+        SESSION_KEY_OAUTH_STATE.to_string(),
+        serde_json::to_string(&payload).map_err(|e| {
+            error!("Failed to serialize OAuth state payload: {e}");
+            server_error("Internal server error")
+        })?,
+    );
 
     let url = url.to_string();
-    Json(BeginResponse { url, state })
+    Ok(Json(BeginResponse {
+        url,
+        state: payload.state,
+    }))
 }
 
 #[derive(Clone, Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
 pub struct AuthorizeQuery {
-    /// Temporary code received from the GitHub API.
+    /// Temporary code received from the OAuth provider.
     #[param(value_type = String, example = "901dd10e07c7e9fa1cd5")]
     code: AuthorizationCode,
-    /// State parameter received from the GitHub API.
+    /// State parameter received from the OAuth provider (CSRF token).
     #[param(value_type = String, example = "fYcUY3FMdUUz00FC7vLT7A")]
     state: CsrfToken,
 }
 
 /// Complete authentication flow.
 ///
-/// This route is called from the GitHub API OAuth flow after the user accepted or rejected
-/// the data access permissions. It will check the `state` parameter and then call the GitHub API
-/// to exchange the temporary `code` for an API token. The API token is returned together with
+/// This route is called from the OAuth provider after the user accepted or rejected
+/// the data access permissions. It will check the `state` parameter and then call the provider
+/// API to exchange the temporary `code` for an API token. The API token is returned together with
 /// the corresponding user information.
 ///
 /// see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
 ///
 /// ## Query Parameters
 ///
-/// - `code` – temporary code received from the GitHub API  **(Required)**
-/// - `state` – state parameter received from the GitHub API  **(Required)**
+/// - `code` – temporary code received from the OAuth provider  **(Required)**
+/// - `state` – state parameter received from the OAuth provider  **(Required)**
 #[utoipa::path(
     get,
     path = "/api/private/session/authorize",
@@ -97,49 +139,111 @@ pub async fn authorize_session(
     session: SessionExtension,
     req: Parts,
 ) -> AppResult<Json<EncodableMe>> {
-    // Make sure that the state we just got matches the session state that we
-    // should have issued earlier.
-    let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
-    if session_state.is_none_or(|state| query.state.secret() != state.secret()) {
+    // Read and parse the session state payload set during `begin_session`.
+    let raw_payload = session
+        .remove(SESSION_KEY_OAUTH_STATE)
+        .ok_or_else(|| bad_request("invalid state parameter"))?;
+
+    let payload: OAuthStatePayload =
+        serde_json::from_str(&raw_payload).map_err(|_| bad_request("invalid state parameter"))?;
+
+    // Validate CSRF: the `state` query param must match the stored CSRF token.
+    if query.state.secret() != &payload.state {
         return Err(bad_request("invalid state parameter"));
     }
 
-    // Fetch the access token from GitHub using the code we just got
-    let client = ReqwestClient(
-        reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()?,
-    );
+    let provider = app
+        .oauth_providers
+        .get(&payload.provider)
+        .ok_or_else(|| bad_request("unknown oauth provider in session"))?;
 
-    let token = app
-        .github_oauth
-        .exchange_code(query.code)
-        .request_async(&client)
+    // Exchange the authorization code for an access token.
+    let token = provider
+        .exchange_code(query.code.secret())
         .await
-        .map_err(|err| {
-            req.request_log().add("cause", err);
-            server_error("Error obtaining token")
-        })?;
+        .map_err(|err| map_provider_error(err, &req))?;
 
-    let token = token.access_token();
-
-    // Encrypt the GitHub access token
-    let encryption = &app.config.gh_token_encryption;
+    // Encrypt the access token before storing it.
+    let encryption = &app.config.oauth_token_encryption;
     let encrypted_token = encryption.encrypt(token.secret()).map_err(|error| {
-        error!("Failed to encrypt GitHub token: {error}");
+        error!("Failed to encrypt OAuth token: {error}");
         server_error("Internal server error")
     })?;
 
-    // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = app.github.current_user(token).await?;
+    // Fetch the user's profile from the provider.
+    let user_info = provider
+        .fetch_user_info(&token)
+        .await
+        .map_err(|err| map_provider_error(err, &req))?;
 
     let mut conn = app.db_write().await?;
-    let user = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
+    let user = save_identity_to_database(
+        &payload.provider,
+        &user_info,
+        &encrypted_token,
+        &app.emails,
+        &mut conn,
+    )
+    .await?;
 
-    // Log in by setting a cookie and the middleware authentication
-    session.insert("user_id".to_string(), user.id.to_string());
+    // Log in by setting a cookie and the middleware authentication.
+    session.insert(SESSION_KEY_USER_ID.to_string(), user.id.to_string());
 
     super::user::me::get_authenticated_user(app, req).await
+}
+
+/// Map a [`ProviderError`] to a [`BoxedAppError`], logging the error details.
+fn map_provider_error(err: ProviderError, req: &Parts) -> BoxedAppError {
+    req.request_log().add("provider_error", format!("{err:?}"));
+    match err {
+        ProviderError::InvalidCode => bad_request("invalid oauth code"),
+        ProviderError::Unauthorized => bad_request("oauth token was rejected"),
+        ProviderError::Malformed(_) | ProviderError::Transient { .. } => {
+            server_error("Error obtaining token")
+        }
+    }
+}
+
+/// Persist a provider-agnostic [`UserInfo`] to the database.
+///
+/// Currently only the `"github"` provider is handled; it adapts `UserInfo`
+/// back to the legacy `GitHubUser` shape so the existing `save_user_to_database`
+/// write path (which still dual-writes to `users.gh_*`) is reused unchanged.
+/// This adapter is removed in the follow-up PR that makes `gh_*` columns nullable.
+async fn save_identity_to_database(
+    provider_name: &str,
+    user_info: &UserInfo,
+    encrypted_token: &[u8],
+    emails: &Emails,
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<User> {
+    match provider_name {
+        crate::oauth::github_provider::PROVIDER_NAME => {
+            // UserInfo.account_id is String (provider-agnostic), but GitHubUser.id
+            // is i32 because crates_io_github predates this trait. GitHub IDs are
+            // well within i32 range today (< 200M vs i32::MAX ~2.1B). When
+            // crates_io_github widens id to i64 this parse becomes a no-op change.
+            let gh_id: i32 = user_info
+                .account_id
+                .parse()
+                .map_err(|_| diesel::result::Error::NotFound)?;
+            let gh_user = GitHubUser {
+                id: gh_id,
+                login: user_info.login.clone(),
+                name: user_info.name.clone(),
+                avatar_url: user_info.avatar_url.clone(),
+                email: user_info.email.clone(),
+            };
+            save_user_to_database(&gh_user, encrypted_token, emails, conn).await
+        }
+        other => {
+            // Tier 2 will add Bitbucket here. Unknown provider names indicate a
+            // bug in registry/session pairing — return NotFound so the session
+            // controller propagates a 404 rather than crashing the worker thread.
+            error!(provider = other, "save_identity_to_database: no handler for provider");
+            Err(diesel::result::Error::NotFound)
+        }
+    }
 }
 
 pub async fn save_user_to_database(
@@ -248,7 +352,7 @@ async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryRe
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn end_session(session: SessionExtension) -> Json<bool> {
-    session.remove("user_id");
+    session.remove(SESSION_KEY_USER_ID);
     Json(true)
 }
 

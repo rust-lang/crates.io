@@ -37,7 +37,7 @@ async fn http_error_with_unhealthy_database() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().with_chaos_proxy().empty().await;
 
     let response = anon.get::<()>("/api/v1/summary").await;
-    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.status(), @"503 Service Unavailable");
 
     app.primary_db_chaosproxy().break_networking()?;
 
@@ -89,7 +89,7 @@ async fn fallback_to_replica_returns_user_info() -> anyhow::Result<()> {
 
     // When the primary database is down, requests are forwarded to the replica database
     let response = owner.get::<()>(URL).await;
-    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.status(), @"503 Service Unavailable");
 
     // restore primary database connection
     app.primary_db_chaosproxy().restore_networking()?;

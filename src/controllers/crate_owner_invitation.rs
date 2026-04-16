@@ -53,7 +53,7 @@ pub async fn list_crate_owner_invitations_for_user(
 
     let PrivateListResponse {
         invitations, users, ..
-    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &conn).await?;
+    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &mut conn).await?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
     let crate_owner_invitations = invitations
@@ -115,7 +115,7 @@ pub async fn list_crate_owner_invitations(
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
-    let list = prepare_list(&app, &req, auth, filter, &conn).await?;
+    let list = prepare_list(&app, &req, auth, filter, &mut conn).await?;
     Ok(Json(list))
 }
 
@@ -145,7 +145,7 @@ async fn prepare_list(
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
-    mut conn: &AsyncPgConnection,
+    mut conn: &mut AsyncPgConnection,
 ) -> AppResult<PrivateListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
@@ -166,8 +166,8 @@ async fn prepare_list(
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(&mut conn).await?;
                 let owners = krate.owners(conn).await?;
-                let encryption = &state.config.gh_token_encryption;
-                if Rights::get(user, &*state.github, &owners, encryption).await? != Rights::Full {
+                let encryption = &state.config.oauth_token_encryption;
+                if Rights::get(user, &*state.github, &owners, encryption, &mut conn).await? != Rights::Full {
                     let detail = "only crate owners can query pending invitations for their crate";
                     return Err(forbidden(detail));
                 }

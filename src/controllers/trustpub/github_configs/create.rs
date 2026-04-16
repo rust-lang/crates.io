@@ -89,9 +89,16 @@ pub async fn create_trustpub_github_config(
 
     let owner = &json_config.repository_owner;
 
-    let encryption = &state.config.gh_token_encryption;
-    let gh_auth = &auth_user.gh_encrypted_token;
-    let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
+    let encryption = &state.config.oauth_token_encryption;
+    let encrypted_token = auth_user
+        .github_encrypted_token(&mut conn)
+        .await
+        .map_err(|err| {
+            let login = &auth_user.gh_login;
+            warn!("Failed to load GitHub token for user {login}: {err}");
+            server_error("Internal server error")
+        })?;
+    let gh_auth = encryption.decrypt(&encrypted_token).map_err(|err| {
         let login = &auth_user.gh_login;
         warn!("Failed to decrypt GitHub token for user {login}: {err}");
         server_error("Internal server error")

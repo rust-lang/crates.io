@@ -1464,11 +1464,11 @@ expression: response.json()
     },
     "/api/private/session/authorize": {
       "get": {
-        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the GitHub API  **(Required)**\n- `state` – state parameter received from the GitHub API  **(Required)**",
+        "description": "This route is called from the OAuth provider after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the provider\nAPI to exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the OAuth provider  **(Required)**\n- `state` – state parameter received from the OAuth provider  **(Required)**",
         "operationId": "authorize_session",
         "parameters": [
           {
-            "description": "Temporary code received from the GitHub API.",
+            "description": "Temporary code received from the OAuth provider.",
             "example": "901dd10e07c7e9fa1cd5",
             "in": "query",
             "name": "code",
@@ -1478,7 +1478,7 @@ expression: response.json()
             }
           },
           {
-            "description": "State parameter received from the GitHub API.",
+            "description": "State parameter received from the OAuth provider (CSRF token).",
             "example": "fYcUY3FMdUUz00FC7vLT7A",
             "in": "query",
             "name": "state",
@@ -1547,7 +1547,7 @@ expression: response.json()
     },
     "/api/private/session/begin": {
       "get": {
-        "description": "This route will return an authorization URL for the GitHub OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>",
+        "description": "This route will return an authorization URL for the OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nAn optional `?provider=<name>` query param selects the OAuth provider (default: `\"github\"`).\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>",
         "operationId": "begin_session",
         "responses": {
           "200": {

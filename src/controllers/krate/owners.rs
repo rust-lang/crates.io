@@ -8,8 +8,8 @@ use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom, server_error};
+use crate::util::gh_token_encryption::OauthTokenEncryption;
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
@@ -207,7 +207,7 @@ async fn modify_owners(
 
                 let owners = krate.owners(conn).await?;
 
-                match Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? {
+                match Rights::get(user, &*app.github, &owners, &app.config.oauth_token_encryption, conn).await? {
                     Rights::Full => {}
                     // Yes!
                     Rights::Publish => {
@@ -328,7 +328,7 @@ async fn add_owner(
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     if login.contains(':') {
-        let encryption = &app.config.gh_token_encryption;
+        let encryption = &app.config.oauth_token_encryption;
         add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
     } else {
         invite_user_owner(app, conn, req_user, krate, login).await
@@ -372,7 +372,7 @@ async fn add_team_owner(
     req_user: &User,
     krate: &Crate,
     login: &str,
-    encryption: &GitHubTokenEncryption,
+    encryption: &OauthTokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // github:rust-lang:owners
     let mut chunks = login.split(':');
@@ -425,7 +425,7 @@ pub async fn create_or_update_github_team(
     org_name: &str,
     team_name: &str,
     req_user: &User,
-    encryption: &GitHubTokenEncryption,
+    encryption: &OauthTokenEncryption,
 ) -> AppResult<Team> {
     // GET orgs/:org/teams
     // check that `team` is the `slug` in results, and grab its data
@@ -442,8 +442,16 @@ pub async fn create_or_update_github_team(
         )));
     }
 
+    let encrypted_token = req_user
+        .github_encrypted_token(conn)
+        .await
+        .map_err(|err| {
+            warn!("Failed to load GitHub token for user {}: {err}", req_user.gh_login);
+            server_error("Internal server error")
+        })?;
+
     let token = encryption
-        .decrypt(&req_user.gh_encrypted_token)
+        .decrypt(&encrypted_token)
         .map_err(|err| {
             custom(
                 StatusCode::INTERNAL_SERVER_ERROR,

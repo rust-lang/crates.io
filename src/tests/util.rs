@@ -66,21 +66,23 @@ pub use test_app::TestApp;
 /// The implementation matches roughly what is happening inside of our
 /// session middleware.
 pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String {
-    let cookie_name = "cargo_session";
-
-    // build session data map
     let mut map = HashMap::new();
-    map.insert("user_id".into(), user_id.to_string());
+    map.insert(crates_io::controllers::session::SESSION_KEY_USER_ID.into(), user_id.to_string());
+    encode_session_header_with_data(session_key, map)
+}
 
-    // encode the map into a cookie value string
-    let encoded = crates_io_session::encode(&map);
-
-    // put the cookie into a signed cookie jar
+/// Encode a `Cookie` header containing the given key/value pairs in the
+/// session.  Unlike [`encode_session_header`], this version accepts an
+/// arbitrary map so tests can seed any session key (e.g. `oauth_state`).
+pub fn encode_session_header_with_data(
+    session_key: &cookie::Key,
+    data: HashMap<String, String>,
+) -> String {
+    let cookie_name = "cargo_session";
+    let encoded = crates_io_session::encode(&data);
     let cookie = Cookie::build((cookie_name, encoded));
     let mut jar = cookie::CookieJar::new();
     jar.signed_mut(session_key).add(cookie);
-
-    // read the raw cookie from the cookie jar
     jar.get(cookie_name).unwrap().to_string()
 }
 

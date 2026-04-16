@@ -265,7 +265,9 @@ async fn authenticate_via_cookie(
         .get::<SessionExtension>()
         .expect("missing cookie session");
 
-    let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
+    let user_id_from_session = session
+        .get(crate::controllers::session::SESSION_KEY_USER_ID)
+        .and_then(|s| s.parse::<i32>().ok());
     let Some(id) = user_id_from_session else {
         return Ok(None);
     };

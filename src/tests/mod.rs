@@ -6,7 +6,7 @@ use crates_io::views::{
 };
 
 use crate::util::github::next_gh_id;
-use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
+use crates_io::util::gh_token_encryption::OauthTokenEncryption;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
@@ -94,7 +94,7 @@ pub struct OwnerResp {
 
 fn new_user(login: &str) -> NewUser<'_> {
     static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
-        GitHubTokenEncryption::for_testing()
+        OauthTokenEncryption::for_testing()
             .encrypt("some random token")
             .unwrap()
     });

@@ -37,10 +37,18 @@ impl GitHubProvider {
     }
 }
 
+/// The stable machine name for the GitHub provider.
+///
+/// Used as the discriminator in `?provider=<name>` query params,
+/// `oauth_github` table routing, and `ProviderRegistry` lookup.
+/// Defined here (the canonical impl) and re-used everywhere else
+/// to prevent silent mismatches
+pub const PROVIDER_NAME: &str = "github";
+
 #[async_trait]
 impl OAuthProvider for GitHubProvider {
     fn name(&self) -> &'static str {
-        "github"
+        PROVIDER_NAME
     }
 
     fn authorize_url(&self) -> (Url, CsrfToken) {
@@ -106,16 +114,18 @@ mod tests {
     use super::*;
     use crates_io_github::{GitHubError, GitHubUser, MockGitHubClient};
 
-    fn build_test_oauth_client() -> GithubBasicClient {
+    fn build_test_oauth_client_with_token_url(token_url: &str) -> GithubBasicClient {
         use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
         BasicClient::new(ClientId::new("test-id".to_string()))
             .set_client_secret(ClientSecret::new("test-secret".to_string()))
             .set_auth_uri(
                 AuthUrl::new("https://github.com/login/oauth/authorize".into()).unwrap(),
             )
-            .set_token_uri(
-                TokenUrl::new("https://github.com/login/oauth/access_token".into()).unwrap(),
-            )
+            .set_token_uri(TokenUrl::new(token_url.into()).unwrap())
+    }
+
+    fn build_test_oauth_client() -> GithubBasicClient {
+        build_test_oauth_client_with_token_url("https://github.com/login/oauth/access_token")
     }
 
     fn build_test_provider(mock: MockGitHubClient) -> GitHubProvider {
@@ -225,6 +235,23 @@ mod tests {
         assert!(
             matches!(err, ProviderError::Transient { .. }),
             "expected Transient, got: {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn exchange_code_returns_transient_on_network_error() {
+        // Point the token URL at a port that isn't listening so the HTTP
+        // request fails immediately with a connection error.
+        let provider = GitHubProvider::new(
+            build_test_oauth_client_with_token_url("http://127.0.0.1:1/token"),
+            Arc::new(MockGitHubClient::new()),
+            reqwest::Client::new(),
+        );
+
+        let err = provider.exchange_code("bogus-code").await.unwrap_err();
+        assert!(
+            matches!(err, ProviderError::Transient { .. }),
+            "expected Transient for network failure, got: {err:?}"
         );
     }
 }

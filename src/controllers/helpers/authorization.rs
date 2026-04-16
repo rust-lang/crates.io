@@ -1,7 +1,8 @@
 use crate::models::{Owner, User};
-use crate::util::errors::{BoxedAppError, custom};
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
+use crate::util::errors::{BoxedAppError, custom, internal};
+use crate::util::gh_token_encryption::OauthTokenEncryption;
 use crates_io_github::{GitHubClient, GitHubError};
+use diesel_async::AsyncPgConnection;
 use http::StatusCode;
 
 /// Access rights to the crate (publishing and ownership management)
@@ -26,10 +27,16 @@ impl Rights {
         user: &User,
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
-        encryption: &GitHubTokenEncryption,
+        encryption: &OauthTokenEncryption,
+        conn: &mut AsyncPgConnection,
     ) -> Result<Self, BoxedAppError> {
+        let encrypted_token = user
+            .github_encrypted_token(conn)
+            .await
+            .map_err(|_| internal("could not find GitHub token for user"))?;
+
         let token = encryption
-            .decrypt(&user.gh_encrypted_token)
+            .decrypt(&encrypted_token)
             .map_err(GitHubError::Other)?;
 
         let mut best = Self::None;

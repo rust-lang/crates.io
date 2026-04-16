@@ -466,7 +466,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             };
 
             let owners = krate.owners(conn).await?;
-            if Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? < Rights::Publish {
+            if Rights::get(user, &*app.github, &owners, &app.config.oauth_token_encryption, conn).await? < Rights::Publish {
                 return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
             }
 
