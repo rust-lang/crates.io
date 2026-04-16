@@ -310,8 +310,8 @@ importers:
         specifier: 8.2.1
         version: 8.2.1(postcss@8.5.9)(typescript@6.0.2)(webpack@5.106.0)
       postcss-preset-env:
-        specifier: 11.2.0
-        version: 11.2.0(postcss@8.5.9)
+        specifier: 11.2.1
+        version: 11.2.1(postcss@8.5.9)
       prettier:
         specifier: 3.8.2
         version: 3.8.2
@@ -8008,8 +8008,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@11.2.0:
-    resolution: {integrity: sha512-eNYpuj68cjGjvZMoSAbHilaCt3yIyzBL1cVuSGJfvJewsaBW/U6dI2bqCJl3iuZsL+yvBobcy4zJFA/3I68IHQ==}
+  postcss-preset-env@11.2.1:
+    resolution: {integrity: sha512-dqL7WR5wg9yP/+6pTHIsIeIpK6XVghJDE4/r4ZSdr5ExrbLiN5x78gly0Xs0MLGbHy2oT3WWNfbxowmnw9BurQ==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       postcss: ^8.4
@@ -19589,7 +19589,7 @@ snapshots:
       postcss: 8.5.9
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@11.2.0(postcss@8.5.9):
+  postcss-preset-env@11.2.1(postcss@8.5.9):
     dependencies:
       '@csstools/postcss-alpha-function': 2.0.4(postcss@8.5.9)
       '@csstools/postcss-cascade-layers': 6.0.0(postcss@8.5.9)
