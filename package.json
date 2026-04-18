@@ -167,7 +167,7 @@
     "prettier-plugin-ember-template-tag": "2.1.4",
     "qunit": "2.25.0",
     "qunit-console-grouper": "0.3.0",
-    "qunit-dom": "3.5.0",
+    "qunit-dom": "3.5.1",
     "tracked-built-ins": "4.1.2",
     "typescript": "6.0.2",
     "webpack": "5.106.0"
