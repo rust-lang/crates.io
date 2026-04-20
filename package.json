@@ -169,7 +169,7 @@
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.5.1",
     "tracked-built-ins": "4.1.2",
-    "typescript": "6.0.2",
+    "typescript": "6.0.3",
     "webpack": "5.106.2"
   },
   "resolutions": {
