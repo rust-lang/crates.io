@@ -5700,8 +5700,8 @@ packages:
     resolution: {integrity: sha512-sJslQKU2uM33qH5nqewAwVB2QgR6w1aMNsYUp3aN5rMRyXEwJGmZvaWzeJFNTOXWlHQyBFCWrdj3fV/fsTOX8w==}
     engines: {node: '>= 10.4.0'}
 
-  filesize@11.0.15:
-    resolution: {integrity: sha512-30TpbYxQxCpi4XdVjkwXYQ37CzZltV38+P7MYroQ+4NK/Dmx9mxixFNrolzcmEIBsjT/uowC9T7kiy2+C12r1A==}
+  filesize@11.0.16:
+    resolution: {integrity: sha512-XMcUu0Zxnh0L8rY5b5vrdKKs0H3l3osTp9vNEBulRmwLqYfuQe5SJCagpA0/sGMJx2KHbD+IWOyd6QsJQuYEkQ==}
     engines: {node: '>= 10.8.0'}
 
   fill-range@4.0.0:
@@ -15848,7 +15848,7 @@ snapshots:
       execa: 9.6.1
       exit: 0.1.2
       express: 5.2.1
-      filesize: 11.0.15
+      filesize: 11.0.16
       find-up: 8.0.0
       find-yarn-workspace-root: 2.0.0
       fs-extra: 11.3.4
@@ -16932,7 +16932,7 @@ snapshots:
 
   filesize@10.1.6: {}
 
-  filesize@11.0.15: {}
+  filesize@11.0.16: {}
 
   fill-range@4.0.0:
     dependencies:
