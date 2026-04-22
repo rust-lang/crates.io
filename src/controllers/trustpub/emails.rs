@@ -50,6 +50,7 @@ mod tests {
     use super::*;
     use chrono::Utc;
     use claims::assert_ok;
+    use crates_io_database::models::OAuthProviderId;
     use insta::assert_snapshot;
 
     fn test_user() -> User {
@@ -64,6 +65,7 @@ mod tests {
             account_lock_until: None,
             is_admin: false,
             publish_notifications: true,
+            primary_oauth_provider: OAuthProviderId::Github,
         }
     }
 

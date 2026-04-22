@@ -7,7 +7,7 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
+use crate::models::{Crate, CrateOwner, Email, OAuthProviderId, Owner, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 use crates_io_diesel_helpers::lower;
 
@@ -25,6 +25,7 @@ pub struct User {
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
     pub publish_notifications: bool,
+    pub primary_oauth_provider: OAuthProviderId,
 }
 
 impl User {
@@ -346,5 +347,39 @@ mod tests {
             result.is_none(),
             "expected Ok(None) for non-numeric github account_id, got {result:?}"
         );
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn primary_oauth_provider_defaults_to_github_and_round_trips() {
+        let (_db, mut conn) = setup().await;
+
+        let defaulted_id = diesel::insert_into(users::table)
+            .values((
+                users::gh_id.eq(2001),
+                users::gh_login.eq("defaulted"),
+                users::gh_encrypted_token.eq(vec![0u8; 32]),
+            ))
+            .returning(users::id)
+            .get_result::<i32>(&mut conn)
+            .await
+            .unwrap();
+
+        let defaulted = User::find(&mut conn, defaulted_id).await.unwrap();
+        assert_eq!(defaulted.primary_oauth_provider, OAuthProviderId::Github);
+
+        let explicit_id = diesel::insert_into(users::table)
+            .values((
+                users::gh_id.eq(2002),
+                users::gh_login.eq("explicit"),
+                users::gh_encrypted_token.eq(vec![0u8; 32]),
+                users::primary_oauth_provider.eq(OAuthProviderId::Github),
+            ))
+            .returning(users::id)
+            .get_result::<i32>(&mut conn)
+            .await
+            .unwrap();
+
+        let explicit = User::find(&mut conn, explicit_id).await.unwrap();
+        assert_eq!(explicit.primary_oauth_provider, OAuthProviderId::Github);
     }
 }
