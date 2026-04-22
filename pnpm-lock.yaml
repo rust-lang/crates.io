@@ -193,8 +193,8 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
       ember-eslint-parser:
-        specifier: 0.9.0
-        version: 0.9.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3)
+        specifier: 0.10.0
+        version: 0.10.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3)
       ember-event-helpers:
         specifier: 0.1.1
         version: 0.1.1
@@ -5112,20 +5112,20 @@ packages:
     resolution: {integrity: sha512-bBqOvfbf68uWD2Pspnbw/3hJRC7JgXGwLTWGd58q/4EH7mcaeDRXaG7+0Ru38YEm1ueNDMVfh+Pa7igi0/ZJDA==}
     engines: {node: 12.* || 14.* || >= 16}
 
-  ember-eslint-parser@0.5.13:
-    resolution: {integrity: sha512-b6ALDaxs9Bb4v0uagWud/5lECb78qpXHFv7M340dUHFW4Y0RuhlsfA4Rb+765X1+6KHp8G7TaAs0UgggWUqD3g==}
+  ember-eslint-parser@0.10.0:
+    resolution: {integrity: sha512-oq37TDYDBqR4fTGhJy/Yecw5VHlPJrSCd26KkwCKlhzAHMCzac+/HSln99COihKei2mMaaob17IrV3I9XL83YQ==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      '@babel/core': ^7.23.6
       '@typescript-eslint/parser': '*'
     peerDependenciesMeta:
       '@typescript-eslint/parser':
         optional: true
 
-  ember-eslint-parser@0.9.0:
-    resolution: {integrity: sha512-/Z/eoBmkeVdS+UjrocxKuLP4HG9K7XxZgpVvFjDBZ+o3gXYpbnvWkL+wYjaxzySXm3cuuCvnGW5NppIh9Vl/ig==}
+  ember-eslint-parser@0.5.13:
+    resolution: {integrity: sha512-b6ALDaxs9Bb4v0uagWud/5lECb78qpXHFv7M340dUHFW4Y0RuhlsfA4Rb+765X1+6KHp8G7TaAs0UgggWUqD3g==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
+      '@babel/core': ^7.23.6
       '@typescript-eslint/parser': '*'
     peerDependenciesMeta:
       '@typescript-eslint/parser':
@@ -12374,7 +12374,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.11(typescript@6.0.3)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -12391,7 +12394,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.11(typescript@6.0.3)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -12427,7 +12433,10 @@ snapshots:
       '@percy/cli-command': 1.31.11(typescript@6.0.3)
       yaml: 2.8.3
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -12435,7 +12444,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -15990,6 +16002,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  ember-eslint-parser@0.10.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3):
+    dependencies:
+      '@glimmer/syntax': 0.95.0
+      '@typescript-eslint/tsconfig-utils': 8.58.2(typescript@6.0.3)
+      content-tag: 4.1.1
+      ember-estree: 0.4.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+      eslint-scope: 9.1.2
+      html-tags: 5.1.0
+      mathml-tag-names: 4.0.0
+      svg-tags: 1.0.0
+    optionalDependencies:
+      '@typescript-eslint/parser': 8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+      - typescript
+
   ember-eslint-parser@0.5.13(@babel/core@7.29.0)(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3):
     dependencies:
       '@babel/core': 7.29.0
@@ -16005,23 +16034,6 @@ snapshots:
       '@typescript-eslint/parser': 8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)
     transitivePeerDependencies:
       - eslint
-      - typescript
-
-  ember-eslint-parser@0.9.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3):
-    dependencies:
-      '@glimmer/syntax': 0.95.0
-      '@typescript-eslint/tsconfig-utils': 8.58.2(typescript@6.0.3)
-      content-tag: 4.1.1
-      ember-estree: 0.4.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
-      eslint-scope: 9.1.2
-      html-tags: 5.1.0
-      mathml-tag-names: 4.0.0
-      svg-tags: 1.0.0
-    optionalDependencies:
-      '@typescript-eslint/parser': 8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)
-    transitivePeerDependencies:
-      - '@emnapi/core'
-      - '@emnapi/runtime'
       - typescript
 
   ember-estree@0.4.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2):
