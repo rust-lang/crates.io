@@ -5,6 +5,7 @@ use secrecy::SecretString;
 
 use crate::models::User;
 use crate::schema::emails;
+use crate::utils::token::GenericToken;
 
 #[derive(Debug, HasQuery, Identifiable, Associations)]
 #[diesel(belongs_to(User))]
@@ -13,8 +14,7 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
-    #[diesel(deserialize_as = String, serialize_as = String)]
-    pub token: SecretString,
+    pub token: GenericToken,
 }
 
 #[derive(Debug, Insertable, AsChangeset, Builder)]
@@ -24,6 +24,8 @@ pub struct NewEmail<'a> {
     pub email: &'a str,
     #[builder(default = false)]
     pub verified: bool,
+    #[builder(default = GenericToken::generate())]
+    pub token: GenericToken,
 }
 
 impl NewEmail<'_> {

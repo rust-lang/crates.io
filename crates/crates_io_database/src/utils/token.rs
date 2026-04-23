@@ -1,7 +1,7 @@
 use diesel::deserialize::FromSql;
 use diesel::pg::Pg;
 use diesel::serialize::ToSql;
-use diesel::sql_types::Bytea;
+use diesel::sql_types::{Bytea, Text};
 use diesel::{AsExpression, FromSqlRow};
 use rand::distr::{Alphanumeric, SampleString};
 use secrecy::{ExposeSecret, SecretSlice, SecretString};
@@ -21,6 +21,7 @@ const TOKEN_PREFIX: &str = "cio";
 #[error("invalid token format")]
 pub struct InvalidTokenError;
 
+/// A hashed crates.io API token, as stored in the crates.io database.
 #[derive(FromSqlRow, AsExpression)]
 #[diesel(sql_type = Bytea)]
 pub struct HashedToken(SecretSlice<u8>);
@@ -60,6 +61,7 @@ impl FromSql<Bytea, Pg> for HashedToken {
     }
 }
 
+/// A plain-text crates.io API token, prefixed with the crates.io token prefix.
 #[derive(Debug)]
 pub struct PlainToken(SecretString);
 
@@ -84,6 +86,42 @@ impl PlainToken {
 impl ExposeSecret<str> for PlainToken {
     fn expose_secret(&self) -> &str {
         self.0.expose_secret()
+    }
+}
+
+/// A generic token that does not need to be prefixed or hashed, such as an
+/// e-mail confirmation token.
+#[derive(Debug, FromSqlRow, AsExpression)]
+#[diesel(sql_type = Text)]
+pub struct GenericToken(SecretString);
+
+impl GenericToken {
+    pub fn generate() -> Self {
+        Self(generate_secure_alphanumeric_string(TOKEN_LENGTH).into())
+    }
+}
+
+impl ExposeSecret<str> for GenericToken {
+    fn expose_secret(&self) -> &str {
+        self.0.expose_secret()
+    }
+}
+
+impl FromSql<Text, Pg> for GenericToken {
+    fn from_sql(
+        bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        let value = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
+        Ok(Self(value.into()))
+    }
+}
+
+impl ToSql<Text, Pg> for GenericToken {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, Pg>,
+    ) -> diesel::serialize::Result {
+        <str as ToSql<Text, Pg>>::to_sql(self.0.expose_secret(), out)
     }
 }
 

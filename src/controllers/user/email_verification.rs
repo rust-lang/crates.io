@@ -7,7 +7,7 @@ use crate::util::errors::AppResult;
 use crate::util::errors::{BoxedAppError, bad_request};
 use axum::extract::Path;
 use crates_io_database::schema::emails;
-use diesel::dsl::sql;
+use crates_io_database::utils::token::GenericToken;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
@@ -73,7 +73,7 @@ pub async fn resend_email_verification(
     conn.transaction(|conn| {
         async move {
             let email: Email = diesel::update(Email::belonging_to(auth.user()))
-                .set(emails::token.eq(sql("DEFAULT")))
+                .set(emails::token.eq(GenericToken::generate()))
                 .returning(Email::as_returning())
                 .get_result(conn)
                 .await
