@@ -22,6 +22,32 @@ const config = {
     prerender: {
       origin: `https://${process.env.DOMAIN_NAME ?? 'crates.io'}`,
     },
+    csp: {
+      mode: 'hash',
+      directives: {
+        'default-src': ['self'],
+        'connect-src': [
+          'self',
+          // docs.rs build status check for crates
+          'https://docs.rs',
+          // Rust Playground top-100 crates list
+          'https://play.rust-lang.org',
+          // Trusted Publisher setup verifies the workflow file exists in the repo
+          'https://raw.githubusercontent.com',
+          // RustSec advisory lookup on the crate security tab
+          'https://rustsec.org',
+          // CDN that the `/api/v1/crates/{name}/{version}/readme` endpoint redirects to
+          'https://static.crates.io',
+          'https://static.staging.crates.io',
+        ],
+        'script-src': ['self', 'unsafe-eval'],
+        // Fira Sans is loaded from the Mozilla CDN via `@import` in `global.css`
+        'style-src': ['self', 'unsafe-inline', 'https://code.cdn.mozilla.net'],
+        'font-src': ['https://code.cdn.mozilla.net'],
+        'img-src': ['*'],
+        'object-src': ['none'],
+      },
+    },
   },
 };
 
