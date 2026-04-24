@@ -457,8 +457,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
       chromatic:
-        specifier: 16.3.0
-        version: 16.3.0
+        specifier: 16.5.0
+        version: 16.5.0
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -4018,8 +4018,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@16.3.0:
-    resolution: {integrity: sha512-PvXUpXP3l8p2NxLEYhMgo4kGNNBQgCgbslMu+O4Bb37ujiiDWk8QExX/Jk7JeHUewNgK2wg98rtw3gdfz3U+Kg==}
+  chromatic@16.5.0:
+    resolution: {integrity: sha512-mDP+5YAb5JdBWlYt59vfunl2rLNDqL5DA7nkLvCAgH24scJWGWzLISVELirNwgip0QU9olS408WgOhj7C1EUwA==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -12408,7 +12408,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.11(typescript@6.0.3)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-command@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -12425,7 +12428,10 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.11(typescript@6.0.3)
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-doctor@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -12461,7 +12467,10 @@ snapshots:
       '@percy/cli-command': 1.31.11(typescript@6.0.3)
       yaml: 2.8.3
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli-upload@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -12469,7 +12478,10 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
   '@percy/cli@1.31.11(typescript@6.0.3)':
     dependencies:
@@ -14752,7 +14764,9 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@16.3.0: {}
+  chromatic@16.5.0:
+    dependencies:
+      semver: 7.7.4
 
   chrome-trace-event@1.0.4: {}
 
