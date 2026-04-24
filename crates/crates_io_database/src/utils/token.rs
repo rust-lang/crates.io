@@ -91,7 +91,7 @@ impl ExposeSecret<str> for PlainToken {
 
 /// A generic token that does not need to be prefixed or hashed, such as an
 /// e-mail confirmation token.
-#[derive(Debug, FromSqlRow, AsExpression)]
+#[derive(Clone, Debug, FromSqlRow, AsExpression)]
 #[diesel(sql_type = Text)]
 pub struct GenericToken(SecretString);
 

@@ -2,6 +2,7 @@ use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
 use crate::schema::*;
+use crate::utils::token::GenericToken;
 use chrono::{DateTime, Utc};
 use crates_io_diesel_helpers::canon_crate_name;
 use diesel::associations::Identifiable;
@@ -11,7 +12,6 @@ use diesel::prelude::*;
 use diesel::sql_types::{Bool, Integer, Text};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use secrecy::SecretString;
 use serde::Serialize;
 use thiserror::Error;
 use tracing::instrument;
@@ -308,7 +308,7 @@ impl Crate {
 pub enum NewOwnerInvite {
     /// The invitee was a [`User`], and they must accept the invite through the
     /// UI or via the provided invite token.
-    User(User, SecretString),
+    User(User, GenericToken),
 
     /// The invitee was a [`Team`], and they were immediately added as an owner.
     Team(Team),

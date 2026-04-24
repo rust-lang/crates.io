@@ -2,15 +2,15 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use secrecy::SecretString;
 
 use crate::models::{CrateOwner, User};
 use crate::schema::{crate_owner_invitations, crates};
+use crate::utils::token::GenericToken;
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
     AlreadyExists,
-    InviteCreated { plaintext_token: SecretString },
+    InviteCreated { plaintext_token: GenericToken },
 }
 
 #[derive(Clone, Debug, Insertable)]
@@ -20,6 +20,7 @@ pub struct NewCrateOwnerInvitation {
     pub invited_by_user_id: i32,
     pub crate_id: i32,
     pub expires_at: DateTime<Utc>,
+    pub token: GenericToken,
 }
 
 impl NewCrateOwnerInvitation {
@@ -65,8 +66,7 @@ pub struct CrateOwnerInvitation {
     pub invited_by_user_id: i32,
     pub crate_id: i32,
     pub created_at: DateTime<Utc>,
-    #[diesel(deserialize_as = String)]
-    pub token: SecretString,
+    pub token: GenericToken,
     pub expires_at: DateTime<Utc>,
 }
 

@@ -15,6 +15,7 @@ use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
+use crates_io_database::utils::token::GenericToken;
 use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -354,6 +355,7 @@ async fn invite_user_owner(
         invited_by_user_id: req_user.id,
         crate_id: krate.id,
         expires_at,
+        token: GenericToken::generate(),
     };
 
     match invite.create(conn).await? {
