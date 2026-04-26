@@ -171,17 +171,12 @@
   }
 
   .keywords {
+    display: flex;
+    flex-wrap: wrap;
     list-style: none;
     margin: var(--space-xs) 0 0;
     padding: 0;
-
-    > * {
-      display: inline;
-
-      + * {
-        margin-left: var(--space-s);
-      }
-    }
+    gap: 0 var(--space-xs);
   }
 
   .hash {
