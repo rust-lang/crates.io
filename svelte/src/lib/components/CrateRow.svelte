@@ -22,6 +22,7 @@
 
   let showVersion = $derived(crate.default_version && !crate.yanked);
   let cargoTomlSnippet = $derived(`${crate.name} = "${crate.default_version}"`);
+  let updatedAt = $derived(new Date(crate.updated_at));
 </script>
 
 <div class="crate-row" data-test-crate-row {...restProps}>
@@ -77,9 +78,9 @@
           Updated:
           <Tooltip text="The last time the crate was updated" />
         </span>
-        <time datetime={formatISO(crate.updated_at)} data-test-updated-at>
-          {formatDistanceToNow(crate.updated_at, { addSuffix: true })}
-          <Tooltip text={crate.updated_at} />
+        <time datetime={formatISO(updatedAt)} data-test-updated-at>
+          {formatDistanceToNow(updatedAt, { addSuffix: true })}
+          <Tooltip text={updatedAt.toString()} />
         </time>
       </span>
     </div>
