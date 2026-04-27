@@ -97,7 +97,7 @@
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@mainmatter/ember-api-actions": "0.6.0",
     "@msw/playwright": "0.6.7",
-    "@percy/cli": "1.31.11",
+    "@percy/cli": "1.31.12",
     "@percy/playwright": "1.1.0",
     "@playwright/test": "1.59.1",
     "@sinonjs/fake-timers": "15.3.0",

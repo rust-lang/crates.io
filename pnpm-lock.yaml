@@ -115,8 +115,8 @@ importers:
         specifier: 0.6.7
         version: 0.6.7(msw@2.13.5(@types/node@24.12.2)(typescript@6.0.3))
       '@percy/cli':
-        specifier: 1.31.11
-        version: 1.31.11(typescript@6.0.3)
+        specifier: 1.31.12
+        version: 1.31.12(typescript@6.0.3)
       '@percy/playwright':
         specifier: 1.1.0
         version: 1.1.0(playwright-core@1.59.1)
@@ -2311,69 +2311,69 @@ packages:
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
 
-  '@percy/cli-app@1.31.11':
-    resolution: {integrity: sha512-V5w2hKAGENHCQxIC0PnjwMd2hHNTah16YYuCm908A6dvW5eLZEYSHpGdly5sOktUgwz7WZpnEy1G9qQ+Xc3UOw==}
+  '@percy/cli-app@1.31.12':
+    resolution: {integrity: sha512-oJVEDw7MPdn3k3OsYf0QWdIJinF2Rr7OuUccX0hZemxEQbVQYKEtlB7dA6ptrWHkhaRdGZwZ8cgpjM/eEBNkOQ==}
     engines: {node: '>=14'}
 
-  '@percy/cli-build@1.31.11':
-    resolution: {integrity: sha512-UB+FemxGPYMVdYbuFf8AzLdN7s6sRiPb0+wkleAWPX7t96Zj2vrsGicUif0SkQFyYBWd/8HL28gF/7NlAX8LSg==}
+  '@percy/cli-build@1.31.12':
+    resolution: {integrity: sha512-vQH5+TddKKfFqxxrsShqnmFFxEkrrfmM/mXR2k0OtJ5iDbMOyS8MpEPJQH1/ANKM0PWLXmVP8paMyamZi48MpA==}
     engines: {node: '>=14'}
 
-  '@percy/cli-command@1.31.11':
-    resolution: {integrity: sha512-0FbuxlQ36gdVQ9DOjVgwFn4Gj0e6nPVfl6IKjcnRzt/FxytBAx84ZaxT8U4sR7CdNySOacorEo+pG8Qw+suQsQ==}
-    engines: {node: '>=14'}
-    hasBin: true
-
-  '@percy/cli-config@1.31.11':
-    resolution: {integrity: sha512-kdQ7MDl+EtdOmw649J0RYdGCtEVHFZY5m51GZFO/mGDIkyQFiymeZrduqOrDcytz6hy7ttPYK+afgTYsBMmrqA==}
-    engines: {node: '>=14'}
-
-  '@percy/cli-doctor@1.31.11':
-    resolution: {integrity: sha512-TRBqf+NSkf3ph9rPxLb5hLOTlWEhe9dtx3JZK1zWCRR1d/0g5NeI2RQUfWFLFF4nWIv51ljo07eUN9B1//FLag==}
-    engines: {node: '>=14'}
-
-  '@percy/cli-exec@1.31.11':
-    resolution: {integrity: sha512-AGgDVceCe/RPno7GcbqM2gWs5rjxlJLDv0+88Bi2FdkLy4mnED/m8GijgyoPDuCK8u0KFzHMEdLJYdcMtvkuFg==}
-    engines: {node: '>=14'}
-
-  '@percy/cli-snapshot@1.31.11':
-    resolution: {integrity: sha512-iy7L41iFSBLqeWcadw/gBYbPs3mB+FMDt/9imFbP8YcPOLIAwf4ppAgHRxgNkUfk/8NrdfS2YQ9qWdzxmCca4w==}
-    engines: {node: '>=14'}
-
-  '@percy/cli-upload@1.31.11':
-    resolution: {integrity: sha512-Iq3d+GuB2Hx9P58eOv6AsG0NzYWnXDej1c00HenUEmDpnjB1xUkYpcu3JdhO+wCOeeKBWiwXl5gOG+jPgqEJfw==}
-    engines: {node: '>=14'}
-
-  '@percy/cli@1.31.11':
-    resolution: {integrity: sha512-BiOS8oky0d7j4I3wIPSR7+BjeDMk3Hk/a6UuNzReWuhqsqAPex0hEUM+OZ3AK4hboPj6k5z61ydhfzS0UmKZSw==}
+  '@percy/cli-command@1.31.12':
+    resolution: {integrity: sha512-J6gEemXcoy0rzNb0s+u1taP7mNQiZlm1AmbsMpL6bKSRQfS0KURul4gDy71jYUhDFJceNuk7s0IVpN7P3vbEcA==}
     engines: {node: '>=14'}
     hasBin: true
 
-  '@percy/client@1.31.11':
-    resolution: {integrity: sha512-punb/KazVLSGI547BxVcOFS/qxeeVNTn/k6gRStLRx2pmHrDqOHbQ+09y59+Z/sD4irvhZPjz90nvOTUeR6L3Q==}
+  '@percy/cli-config@1.31.12':
+    resolution: {integrity: sha512-MPI6cfgO+t3vr2yFkNTsYzi4fXue6fhT9Cas8tivszOTKUp1UNR2I428LIDXYj5/ktelc+dVhsRZjzK/J9MQDA==}
     engines: {node: '>=14'}
 
-  '@percy/config@1.31.11':
-    resolution: {integrity: sha512-ETMiyMH9Oq5DXjZzJakgA7wt5ttNc5eGJWVsdmWwZhPEbHqJ9cS8p+YtM1xXOQajNxndLtjPdg53fsEI5O/Khg==}
+  '@percy/cli-doctor@1.31.12':
+    resolution: {integrity: sha512-U9pGYNP9RUdva7RjIcMG4OEbVWplwCnCMoXUSA4a3zAGGEZEr4uT7WacCBHjHmhHATqpW/U4OcKENFTK8s6Raw==}
     engines: {node: '>=14'}
 
-  '@percy/core@1.31.11':
-    resolution: {integrity: sha512-3wIqC8zGocKXzTEWhauOy1xL8/adkUISgd7kix2zJvM6CPsiaxQWJdNszVKF26EKV7pvSuZWhnnAfnuS4a62+Q==}
+  '@percy/cli-exec@1.31.12':
+    resolution: {integrity: sha512-e2BIbEJsDiwjK8arHxwjy+DQJPLolqqz/wapeh+1Mwk3HnRa4a0Dg11MeO4kFjC/G4euEJslLwNoiFZH2rqpQQ==}
     engines: {node: '>=14'}
 
-  '@percy/dom@1.31.11':
-    resolution: {integrity: sha512-xd+2XN/NVMEoXLRfyoZqeio+MWcad7nwVHzBj99xTHWfppbJxUusV1mPmcXKuIlBgN6btBSXLsFST/YJBu804w==}
-
-  '@percy/env@1.31.11':
-    resolution: {integrity: sha512-t+LZAeeRYzy0FAY6jtBr3loX+Z2BbIiLUW5dufzt/f2oggxPim/bLw+KIplvpL2uUdpi1/hhTpei8ZiQFiIklw==}
+  '@percy/cli-snapshot@1.31.12':
+    resolution: {integrity: sha512-4+3NXUGxnxVQ4HhjhcnM+4tV0vKOIkYKTAZMTvw6tVG+DmAq4PpssRsAp0h2QdwtdFfadSTSXJ6A61flBrY8Lw==}
     engines: {node: '>=14'}
 
-  '@percy/logger@1.31.11':
-    resolution: {integrity: sha512-DX2HYqfwrbLOOSGuQf714ZqNSc51Ez4eQKPImdHg6dyMsdYMj9GBI1sIQupt43d5iOYpM/HIHNkjQnTEiku3mg==}
+  '@percy/cli-upload@1.31.12':
+    resolution: {integrity: sha512-vNbD/Vbiz1CVQI3TQqGA0bDZCPvhaIV3atnrpU5ft7rJMTrBcuS72oM7IEoWM1nKmzET2314nhO45NNDXPOlPA==}
     engines: {node: '>=14'}
 
-  '@percy/monitoring@1.31.11':
-    resolution: {integrity: sha512-tFAKbJNgPlA+OjlfHKQmUUD8UYIl+zpPXVQ8MqObtsTVOax9TZiJEiaRNv0upfnNBZEhmQkvSiU6Gezn9zPcJw==}
+  '@percy/cli@1.31.12':
+    resolution: {integrity: sha512-sLeAdd6GPZdPtUlop0WLzXT6sEmouZkAIZZB8QwdML8s3QekdHB/L9NxJc7wLPqlrfSXZTfRWyy9NIPupElsRQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+
+  '@percy/client@1.31.12':
+    resolution: {integrity: sha512-HPyE5uDJ6+gACMwb33Kyg7CnMf/DiUd5/4lV5eT//UUq3HAo8zzmevXaGyrJ2XzLFYttZv1G+bFH0PneQsvYMw==}
+    engines: {node: '>=14'}
+
+  '@percy/config@1.31.12':
+    resolution: {integrity: sha512-rt7N2b7wjwSDdy43vFiYBKEdTg+enKTddoAlsL4AF+g0k1lVBW/r6lVLS/WTUs8X3JsXCTeV3LbQ6OXOclkq0g==}
+    engines: {node: '>=14'}
+
+  '@percy/core@1.31.12':
+    resolution: {integrity: sha512-b0xZfcT/tA3T+UNDgE3RC4p1zhKEhlz6CUTZC7Up49gHRafO62rx94SK4EVzehqVTZhcf6ZYVj5QHhD1B82Jkw==}
+    engines: {node: '>=14'}
+
+  '@percy/dom@1.31.12':
+    resolution: {integrity: sha512-8qrtNbmKgXBxiaHWNu6JJUM5jFjLA9IxCy7Tc1vMcW5UFbKbvqHYvMtufsRAZT7O1TK/oxbrTmtEyhPbx4BjKQ==}
+
+  '@percy/env@1.31.12':
+    resolution: {integrity: sha512-m5yv7J2TxwrloYJ2etgIbJKOHTqhqRRAbJFC1MqQPtVMDmioXi1zPeuYlT3R65a0A57P/z7H5JII6ng+Mfz0Nw==}
+    engines: {node: '>=14'}
+
+  '@percy/logger@1.31.12':
+    resolution: {integrity: sha512-8pRXbhBLEKpcQMBAwuolf0YHozKEkyWQV9KcsEPbMvMOJubbaw3Ziv/Vtb+DRJT3LCreWwdC6ShP7hCAzh5HKg==}
+    engines: {node: '>=14'}
+
+  '@percy/monitoring@1.31.12':
+    resolution: {integrity: sha512-oVsa+0g203DcfFYObxwBxLrTr1lmerjhHVwmYNEck4Hw/7bxLXRbLekRoWRZI0sBQF296wVDIJ1RuLzf5vz65Q==}
     engines: {node: '>=14'}
 
   '@percy/playwright@1.1.0':
@@ -2382,12 +2382,12 @@ packages:
     peerDependencies:
       playwright-core: '>=1'
 
-  '@percy/sdk-utils@1.31.11':
-    resolution: {integrity: sha512-I4/Bx2RqSx/k00qVU0t/wcYudeyVRARQPdMnRZ/JvEZRZmXo0u+mHHpvZ5liHvnlpvWq6dv2WRA5MVy+GZHUhA==}
+  '@percy/sdk-utils@1.31.12':
+    resolution: {integrity: sha512-RDAyzT/YhnBtecC2zKI9Nmc3SU4uydGioTWP9M2soHs3aLJO0bCXNxBnXUa9lZoB8/c2XUzNIOwmn4t2zBugRA==}
     engines: {node: '>=14'}
 
-  '@percy/webdriver-utils@1.31.11':
-    resolution: {integrity: sha512-qz57iILE7ac+LroNQ/Hr49yRdVWwXjIWU+qO+yPl/CnEtD1TkPRk2OWrawx/OrL0qwNWqPlS8YddiJnaMtzy6A==}
+  '@percy/webdriver-utils@1.31.12':
+    resolution: {integrity: sha512-uWQsBKrafE98gFJFvZ2zZ9lzGPBuzkgYdprLfX/LleS/EZ3/HuXPvv9c6LqrWA5Dfn171pHxwQBLRbzoUIFDUw==}
     engines: {node: '>=14'}
 
   '@pkgjs/parseargs@0.11.0':
@@ -12357,48 +12357,54 @@ snapshots:
 
   '@oxc-project/types@0.127.0': {}
 
-  '@percy/cli-app@1.31.11(typescript@6.0.3)':
+  '@percy/cli-app@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
-      '@percy/cli-exec': 1.31.11(typescript@6.0.3)
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
+      '@percy/cli-exec': 1.31.12(typescript@6.0.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-build@1.31.11(typescript@6.0.3)':
+  '@percy/cli-build@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
-    transitivePeerDependencies:
-      - typescript
-
-  '@percy/cli-command@1.31.11(typescript@6.0.3)':
-    dependencies:
-      '@percy/config': 1.31.11(typescript@6.0.3)
-      '@percy/core': 1.31.11(typescript@6.0.3)
-      '@percy/logger': 1.31.11
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-config@1.31.11(typescript@6.0.3)':
+  '@percy/cli-command@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
+      '@percy/config': 1.31.12(typescript@6.0.3)
+      '@percy/core': 1.31.12(typescript@6.0.3)
+      '@percy/logger': 1.31.12
     transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - typescript
+      - utf-8-validate
 
-  '@percy/cli-doctor@1.31.11(typescript@6.0.3)':
+  '@percy/cli-config@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
-      '@percy/client': 1.31.11(typescript@6.0.3)
-      '@percy/config': 1.31.11(typescript@6.0.3)
-      '@percy/core': 1.31.11(typescript@6.0.3)
-      '@percy/env': 1.31.11
-      '@percy/logger': 1.31.11
-      '@percy/monitoring': 1.31.11(typescript@6.0.3)
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - typescript
+      - utf-8-validate
+
+  '@percy/cli-doctor@1.31.12(typescript@6.0.3)':
+    dependencies:
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
+      '@percy/client': 1.31.12(typescript@6.0.3)
+      '@percy/config': 1.31.12(typescript@6.0.3)
+      '@percy/core': 1.31.12(typescript@6.0.3)
+      '@percy/env': 1.31.12
+      '@percy/logger': 1.31.12
+      '@percy/monitoring': 1.31.12(typescript@6.0.3)
       minimatch: 9.0.9
       ws: 8.20.0
     transitivePeerDependencies:
@@ -12407,10 +12413,10 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-exec@1.31.11(typescript@6.0.3)':
+  '@percy/cli-exec@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
-      '@percy/logger': 1.31.11
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
+      '@percy/logger': 1.31.12
       cross-spawn: 7.0.6
       which: 2.0.2
     transitivePeerDependencies:
@@ -12419,67 +12425,73 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-snapshot@1.31.11(typescript@6.0.3)':
+  '@percy/cli-snapshot@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
       yaml: 2.8.3
-    transitivePeerDependencies:
-      - typescript
-
-  '@percy/cli-upload@1.31.11(typescript@6.0.3)':
-    dependencies:
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
-      fast-glob: 3.3.3
-      image-size: 1.2.1
-    transitivePeerDependencies:
-      - typescript
-
-  '@percy/cli@1.31.11(typescript@6.0.3)':
-    dependencies:
-      '@percy/cli-app': 1.31.11(typescript@6.0.3)
-      '@percy/cli-build': 1.31.11(typescript@6.0.3)
-      '@percy/cli-command': 1.31.11(typescript@6.0.3)
-      '@percy/cli-config': 1.31.11(typescript@6.0.3)
-      '@percy/cli-doctor': 1.31.11(typescript@6.0.3)
-      '@percy/cli-exec': 1.31.11(typescript@6.0.3)
-      '@percy/cli-snapshot': 1.31.11(typescript@6.0.3)
-      '@percy/cli-upload': 1.31.11(typescript@6.0.3)
-      '@percy/client': 1.31.11(typescript@6.0.3)
-      '@percy/logger': 1.31.11
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/client@1.31.11(typescript@6.0.3)':
+  '@percy/cli-upload@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/config': 1.31.11(typescript@6.0.3)
-      '@percy/env': 1.31.11
-      '@percy/logger': 1.31.11
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
+      fast-glob: 3.3.3
+      image-size: 1.2.1
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - typescript
+      - utf-8-validate
+
+  '@percy/cli@1.31.12(typescript@6.0.3)':
+    dependencies:
+      '@percy/cli-app': 1.31.12(typescript@6.0.3)
+      '@percy/cli-build': 1.31.12(typescript@6.0.3)
+      '@percy/cli-command': 1.31.12(typescript@6.0.3)
+      '@percy/cli-config': 1.31.12(typescript@6.0.3)
+      '@percy/cli-doctor': 1.31.12(typescript@6.0.3)
+      '@percy/cli-exec': 1.31.12(typescript@6.0.3)
+      '@percy/cli-snapshot': 1.31.12(typescript@6.0.3)
+      '@percy/cli-upload': 1.31.12(typescript@6.0.3)
+      '@percy/client': 1.31.12(typescript@6.0.3)
+      '@percy/logger': 1.31.12
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - typescript
+      - utf-8-validate
+
+  '@percy/client@1.31.12(typescript@6.0.3)':
+    dependencies:
+      '@percy/config': 1.31.12(typescript@6.0.3)
+      '@percy/env': 1.31.12
+      '@percy/logger': 1.31.12
       pac-proxy-agent: 7.2.0
       pako: 2.1.0
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@percy/config@1.31.11(typescript@6.0.3)':
+  '@percy/config@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/logger': 1.31.11
+      '@percy/logger': 1.31.12
       ajv: 8.20.0
       cosmiconfig: 8.3.6(typescript@6.0.3)
       yaml: 2.8.3
     transitivePeerDependencies:
       - typescript
 
-  '@percy/core@1.31.11(typescript@6.0.3)':
+  '@percy/core@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/client': 1.31.11(typescript@6.0.3)
-      '@percy/config': 1.31.11(typescript@6.0.3)
-      '@percy/dom': 1.31.11
-      '@percy/logger': 1.31.11
-      '@percy/monitoring': 1.31.11(typescript@6.0.3)
-      '@percy/webdriver-utils': 1.31.11(typescript@6.0.3)
+      '@percy/client': 1.31.12(typescript@6.0.3)
+      '@percy/config': 1.31.12(typescript@6.0.3)
+      '@percy/dom': 1.31.12
+      '@percy/logger': 1.31.12
+      '@percy/monitoring': 1.31.12(typescript@6.0.3)
+      '@percy/webdriver-utils': 1.31.12(typescript@6.0.3)
       content-disposition: 0.5.4
       cross-spawn: 7.0.6
       extract-zip: 2.0.1
@@ -12492,26 +12504,26 @@ snapshots:
       ws: 8.20.0
       yaml: 2.8.3
     optionalDependencies:
-      '@percy/cli-doctor': 1.31.11(typescript@6.0.3)
+      '@percy/cli-doctor': 1.31.12(typescript@6.0.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/dom@1.31.11': {}
+  '@percy/dom@1.31.12': {}
 
-  '@percy/env@1.31.11':
+  '@percy/env@1.31.12':
     dependencies:
-      '@percy/logger': 1.31.11
+      '@percy/logger': 1.31.12
 
-  '@percy/logger@1.31.11': {}
+  '@percy/logger@1.31.12': {}
 
-  '@percy/monitoring@1.31.11(typescript@6.0.3)':
+  '@percy/monitoring@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/config': 1.31.11(typescript@6.0.3)
-      '@percy/logger': 1.31.11
-      '@percy/sdk-utils': 1.31.11
+      '@percy/config': 1.31.12(typescript@6.0.3)
+      '@percy/logger': 1.31.12
+      '@percy/sdk-utils': 1.31.12
       systeminformation: 5.31.5
     transitivePeerDependencies:
       - supports-color
@@ -12521,16 +12533,16 @@ snapshots:
     dependencies:
       playwright-core: 1.59.1
 
-  '@percy/sdk-utils@1.31.11':
+  '@percy/sdk-utils@1.31.12':
     dependencies:
       pac-proxy-agent: 7.2.0
     transitivePeerDependencies:
       - supports-color
 
-  '@percy/webdriver-utils@1.31.11(typescript@6.0.3)':
+  '@percy/webdriver-utils@1.31.12(typescript@6.0.3)':
     dependencies:
-      '@percy/config': 1.31.11(typescript@6.0.3)
-      '@percy/sdk-utils': 1.31.11
+      '@percy/config': 1.31.12(typescript@6.0.3)
+      '@percy/sdk-utils': 1.31.12
     transitivePeerDependencies:
       - supports-color
       - typescript
