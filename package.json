@@ -145,7 +145,7 @@
     "ember-window-mock": "1.0.2",
     "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-ember": "13.1.0",
+    "eslint-plugin-ember": "13.1.1",
     "eslint-plugin-ember-concurrency": "0.5.1",
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-prettier": "5.5.5",
