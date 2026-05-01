@@ -1,10 +1,6 @@
 /target
 .cargo
 
-# compiled output
-/dist
-/tmp
-
 # dependencies
 node_modules/
 /bower_components
@@ -19,9 +15,9 @@ yarn.lock
 /coverage_*
 /local_uploads
 /libpeerconnection.log
+/tmp
 npm-debug.log
 yarn-error.log
-testem.log
 .env
 docker-compose.override.yml
 *~
@@ -35,4 +31,3 @@ src/schema.rs.orig
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-

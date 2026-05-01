@@ -16,11 +16,8 @@ allow-unauthenticated = [
 # Automatically label pull requests touching defined areas
 [autolabel."A-frontend 🐹"]
 trigger_files = [
-    "app/",
     "e2e/",
-    "tests/",
     "packages/",
-    "public/",
     "package.json",
     "pnpm-lock.yaml",
 ]

@@ -14,14 +14,9 @@
     ],
     packageRules: [
         {
-            matchDepNames: ["ember-cli", "ember-data", "ember-source"],
-            separateMinorPatch: true,
-        },
-        {
             matchDepNames: [
                 "@percy/cli",
                 "tj-actions/changed-files",
-                "webpack",
             ],
             extends: ["schedule:weekly"],
         },
