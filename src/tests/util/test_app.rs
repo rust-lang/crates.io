@@ -545,10 +545,13 @@ fn build_app(
     let github = github.unwrap_or_else(|| MOCK_GITHUB_DATA.as_mock_client());
     let github: Arc<dyn crates_io_github::GitHubClient> = Arc::new(github);
 
+    let oauth_providers = crates_io::oauth::registry::ProviderRegistry::new();
+
     let app = App::builder()
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
+        .oauth_providers(oauth_providers)
         .oidc_key_stores(oidc_key_stores)
         .emails(emails)
         .storage_from_config(&config.storage)

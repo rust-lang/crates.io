@@ -64,6 +64,11 @@ pub struct App {
     pub github_oauth:
         BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>,
 
+    /// Registry of OAuth providers (GitHub, etc.) used by the session controller.
+    ///
+    /// Populated at startup; the session controller resolves providers by name.
+    pub oauth_providers: crate::oauth::registry::ProviderRegistry,
+
     /// OIDC key stores for "Trusted Publishing"
     ///
     /// This is a map of OIDC key stores, where the key is the issuer URL and

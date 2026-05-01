@@ -34,12 +34,23 @@ fn main() -> anyhow::Result<()> {
     let client = Client::builder().user_agent(user_agent).build()?;
 
     let github: std::sync::Arc<dyn crates_io_github::GitHubClient> =
-        std::sync::Arc::new(RealGitHubClient::new(client));
+        std::sync::Arc::new(RealGitHubClient::new(client.clone()));
+
+    let github_oauth_for_provider = crates_io::app::build_github_oauth_client(&config);
+    let mut oauth_providers = crates_io::oauth::registry::ProviderRegistry::new();
+    oauth_providers.register(std::sync::Arc::new(
+        crates_io::oauth::github_provider::GitHubProvider::new(
+            github_oauth_for_provider,
+            github.clone(),
+            client.clone(),
+        ),
+    ));
 
     let app = App::builder()
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
+        .oauth_providers(oauth_providers)
         .trustpub_providers(&list("TRUSTPUB_PROVIDERS")?)
         .emails(emails)
         .storage_from_config(&config.storage)
