@@ -12,6 +12,10 @@ const config = {
       // https://svelte.dev/docs/kit/single-page-apps#Usage recommends to
       // avoid using `index.html` as a fallback page, so we use `200.html` instead.
       fallback: '200.html',
+      // Emit `.br` and `.gz` siblings for static assets at build time. The
+      // backend's `static_or_continue` middleware serves them via
+      // `ServeDir::precompressed_br().precompressed_gzip()`.
+      precompress: true,
     }),
     paths: {
       // We are serving the app from the `/svelte` subdirectory for now

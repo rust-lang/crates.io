@@ -5,7 +5,7 @@ import { constants, createBrotliCompress, createGzip } from 'node:zlib';
 
 import { globby } from 'globby';
 
-const DIRECTORIES = ['dist', 'svelte/build'];
+const DIRECTORIES = ['dist'];
 const PATTERNS = ['**/*.css', '**/*.html', '**/*.js', '**/*.map', '**/*.svg', '**/*.txt', '**/*.xml'];
 
 for (let dir of DIRECTORIES) {
