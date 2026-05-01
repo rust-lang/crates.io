@@ -47,6 +47,29 @@ services:
     depends_on:
       - backend
 
+  integration:
+    build:
+      context: .
+      dockerfile: Dockerfile.integration
+    env_file: .env
+    environment:
+      DEV_DOCKER: "true"
+      DATABASE_URL: postgres://postgres:password@postgres/cargo_registry_test
+      GIT_REPO_URL: file:///app/tmp/index-bare
+      WEB_ALLOWED_ORIGINS: "http://localhost:9888"
+      RUST_LOG: debug
+    depends_on:
+      postgres:
+        condition: service_started
+    ports:
+      - 127.0.0.1:9888:8888
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/api/v1/summary || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 120s
+
   frontend:
     build:
       context: .

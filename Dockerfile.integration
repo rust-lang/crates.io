@@ -1,0 +1,42 @@
+# Image for running the crates.io server in integration tests.
+# Debug build for fast compilation and full debug output.
+
+ARG RUST_VERSION=1.94.1
+
+FROM rust:${RUST_VERSION}
+
+RUN cargo install diesel_cli --version 2.3.7 --no-default-features --features postgres
+
+WORKDIR /app
+COPY . /app
+RUN cargo build --bin server
+
+RUN cp target/debug/server /usr/local/bin/crates-io-server
+
+EXPOSE 8888
+
+RUN cat > /diesel.toml << 'TOML'
+[print_schema]
+file = "/dev/null"
+TOML
+
+RUN cat > /entrypoint.sh << 'EOF'
+#!/bin/sh
+set -e
+
+# Use a minimal diesel config that skips schema regeneration --
+# the schema.rs is already baked into the binary at build time.
+export DIESEL_CONFIG_FILE=/diesel.toml
+
+until diesel migration run 2>&1; do
+  echo "waiting for postgres..." >&2
+  sleep 2
+done
+
+./script/init-local-index.sh 2>/dev/null || true
+
+exec crates-io-server
+EOF
+
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

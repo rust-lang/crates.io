@@ -10,6 +10,7 @@ use crates_io::util::gh_token_encryption::OauthTokenEncryption;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
+mod docker_integration;
 mod account_lock;
 mod authentication;
 mod blocked_routes;

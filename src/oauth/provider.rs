@@ -47,10 +47,9 @@ pub struct UserInfo {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait OAuthProvider: Send + Sync + 'static {
-    /// Stable machine name. Used as:
-    /// - the discriminator in `?provider=<name>` query params,
-    /// - the suffix in `oauth_<name>` storage table names,
-    /// - the key in [`super::registry::ProviderRegistry`].
+    /// Stable machine name for this provider.
+    /// Used in query params (`?provider=<name>`), as the suffix in storage
+    /// table names (`oauth_<name>`), and as the registry lookup key.
     fn name(&self) -> &'static str;
 
     /// Build the authorization URL and CSRF token for the OAuth "begin" step.

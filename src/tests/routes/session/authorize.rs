@@ -43,8 +43,8 @@ async fn authorize_with_malformed_session_state_returns_400() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid state parameter"}]}"#);
 }
 
-/// If the `state` query parameter does not match the CSRF token stored in the
-/// session, the request must be rejected with 400 Bad Request.
+/// If the `state` query parameter doesn't match the CSRF token stored in the
+/// session, the request should be rejected with 400 Bad Request.
 #[tokio::test(flavor = "multi_thread")]
 async fn authorize_with_wrong_csrf_state_returns_400() {
     let (app, anon) = TestApp::init().empty().await;
@@ -67,7 +67,7 @@ async fn authorize_with_wrong_csrf_state_returns_400() {
 }
 
 /// If the `oauth_state` session payload names an unknown provider, the
-/// authorize endpoint must reject the request with 400 Bad Request.
+/// authorize endpoint should reject the request with 400 Bad Request.
 #[tokio::test(flavor = "multi_thread")]
 async fn authorize_with_unknown_provider_in_session_returns_400() {
     // No providers registered in the empty registry.

@@ -204,12 +204,10 @@ fn map_provider_error(err: ProviderError, req: &Parts) -> BoxedAppError {
     }
 }
 
-/// Persist a provider-agnostic [`UserInfo`] to the database.
+/// Save a provider-agnostic [`UserInfo`] to the db.
 ///
-/// Currently only the `"github"` provider is handled; it adapts `UserInfo`
-/// back to the legacy `GitHubUser` shape so the existing `save_user_to_database`
-/// write path (which still dual-writes to `users.gh_*`) is reused unchanged.
-/// This adapter is removed in the follow-up PR that makes `gh_*` columns nullable.
+/// Right now only `"github"` is handled. Adapts back to the legacy
+/// `GitHubUser` shape so the existing write path keeps working.
 async fn save_identity_to_database(
     provider_name: &str,
     user_info: &UserInfo,
