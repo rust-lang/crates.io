@@ -29,6 +29,24 @@ type DeadpoolResult = Result<
     diesel_async::pooled_connection::deadpool::PoolError,
 >;
 
+/// Creates the GitHub OAuth2 BasicClient from server config.
+///
+/// Centralizes the GitHub OAuth configuration used by both `App.github_oauth`
+/// and `GitHubProvider` in the registry, avoiding duplication.
+pub fn build_github_oauth_client(
+    config: &config::Server,
+) -> BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet> {
+    use oauth2::{AuthUrl, TokenUrl};
+
+    let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".into()).unwrap();
+    let token_url = TokenUrl::new("https://github.com/login/oauth/access_token".into()).unwrap();
+
+    BasicClient::new(config.gh_client_id.clone())
+        .set_client_secret(config.gh_client_secret.clone())
+        .set_auth_uri(auth_url)
+        .set_token_uri(token_url)
+}
+
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
 #[derive(Builder)]
@@ -40,7 +58,7 @@ pub struct App {
     pub replica_database: Option<DeadpoolPool<AsyncPgConnection>>,
 
     /// GitHub API client
-    pub github: Box<dyn GitHubClient>,
+    pub github: Arc<dyn GitHubClient>,
 
     /// The GitHub OAuth2 configuration
     pub github_oauth:
@@ -82,18 +100,7 @@ impl<S: app_builder::State> AppBuilder<S> {
     where
         S::GithubOauth: app_builder::IsUnset,
     {
-        use oauth2::{AuthUrl, TokenUrl};
-
-        let auth_url = "https://github.com/login/oauth/authorize";
-        let auth_url = AuthUrl::new(auth_url.into()).unwrap();
-        let token_url = "https://github.com/login/oauth/access_token";
-        let token_url = TokenUrl::new(token_url.into()).unwrap();
-
-        let github_oauth = BasicClient::new(config.gh_client_id.clone())
-            .set_client_secret(config.gh_client_secret.clone())
-            .set_auth_uri(auth_url)
-            .set_token_uri(token_url);
-
+        let github_oauth = build_github_oauth_client(config);
         self.github_oauth(github_oauth)
     }
 

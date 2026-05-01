@@ -543,7 +543,7 @@ fn build_app(
     let emails = Emails::new_in_memory();
 
     let github = github.unwrap_or_else(|| MOCK_GITHUB_DATA.as_mock_client());
-    let github = Box::new(github);
+    let github: Arc<dyn crates_io_github::GitHubClient> = Arc::new(github);
 
     let app = App::builder()
         .databases_from_config(&config.db)

@@ -33,8 +33,8 @@ fn main() -> anyhow::Result<()> {
     let user_agent = crates_io_version::user_agent();
     let client = Client::builder().user_agent(user_agent).build()?;
 
-    let github = RealGitHubClient::new(client);
-    let github = Box::new(github);
+    let github: std::sync::Arc<dyn crates_io_github::GitHubClient> =
+        std::sync::Arc::new(RealGitHubClient::new(client));
 
     let app = App::builder()
         .databases_from_config(&config.db)

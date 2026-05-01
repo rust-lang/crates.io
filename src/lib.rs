@@ -30,6 +30,7 @@ pub mod index;
 mod licenses;
 pub mod metrics;
 pub mod middleware;
+pub mod oauth;
 pub mod openapi;
 pub mod rate_limiter;
 mod router;
