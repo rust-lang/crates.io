@@ -36,17 +36,6 @@ frontend_lint:
   # Include all markdown files for `prettier` checks
   - '**/*.md'
 
-frontend_test:
-  - .github/workflows/**
-  - app/**
-  - packages/crates-io-msw/**
-  - public/**
-  - tests/**
-  - ember-cli-build.js
-  - package.json
-  - pnpm-lock.yaml
-  - testem.js
-
 msw_test:
   - .github/workflows/**
   - packages/crates-io-msw/**
