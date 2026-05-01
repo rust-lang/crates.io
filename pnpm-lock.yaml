@@ -508,8 +508,8 @@ importers:
         specifier: 8.0.10
         version: 8.0.10(@types/node@24.12.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.2)(yaml@2.8.3)
       vite-bundle-analyzer:
-        specifier: 1.3.7
-        version: 1.3.7
+        specifier: 1.3.8
+        version: 1.3.8
       vitest:
         specifier: 4.1.5
         version: 4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(jsdom@25.0.1)(msw@2.13.6(@types/node@24.12.2)(typescript@6.0.3))(vite@8.0.10(@types/node@24.12.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.2)(yaml@2.8.3))
@@ -9376,8 +9376,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vite-bundle-analyzer@1.3.7:
-    resolution: {integrity: sha512-dYlW6iM0Gq7+uSEfXytDC+UjruUMgEKhXwQUbw4cJUgHA6FdEhpLgIrL5OZEyabrzVen0mZyfOSESyZ7nGyT8g==}
+  vite-bundle-analyzer@1.3.8:
+    resolution: {integrity: sha512-IIk7WPhoYs7pyo75jwI+dFt7yykgjK7NY+dqnJtiZnyqP2k6NgPb3TY80FLFjtgnfk/o+OjI18+anKyeviCbRA==}
     hasBin: true
 
   vite@7.3.1:
@@ -21206,7 +21206,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-bundle-analyzer@1.3.7: {}
+  vite-bundle-analyzer@1.3.8: {}
 
   vite@7.3.1(@types/node@24.12.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.2)(yaml@2.8.3):
     dependencies:
