@@ -10,14 +10,10 @@
   - `/src/tests/` - Backend integration tests with snapshot testing using `insta`
   - `/src/config/` - Configuration loading and validation
   - `/src/util/` - Shared utilities (errors, authentication, pagination)
-- `/app/` - Frontend Ember.js application
-  - `/app/components/` - Reusable UI components (80+ components with scoped CSS files)
-  - `/app/routes/` and `/app/controllers/` - Route handlers and data loading
-  - `/app/templates/` - Handlebars templates for pages
-  - `/app/models/` - Ember Data models (crate, version, user, keyword, etc.)
-  - `/app/adapters/`, `/app/serializers/` - Ember Data adapter layer
-  - `/app/services/` - Shared services (session, notifications, API client)
-- `/svelte/` - Frontend SvelteKit application (WIP)
+- `/svelte/` - Frontend SvelteKit application
+  - `/svelte/src/routes/` - File-based routes and page components
+  - `/svelte/src/lib/` - Shared components, stores, services, and utilities
+  - `/svelte/static/` - Static assets served at `/` (favicon, robots.txt, etc.)
 - `/crates/` - Workspace crates providing specialized functionality
   - `crates_io_api_types/` - API response serialization types
   - `crates_io_database/` - Database models and schema (Diesel ORM)
@@ -27,7 +23,6 @@
   - `crates_io_trustpub/` - Trusted Publishing implementation
   - `crates_io_markdown/`, `crates_io_linecount/` - Content processing
 - `/migrations/` - Database migrations (260+ historical migrations managed by Diesel)
-- `/tests/` - Frontend tests (acceptance, components, helpers, routes, unit tests)
 - `/e2e/` - Playwright tests for the frontend with accessibility checks
 - `/packages/` - MSW (Mock Service Worker) test utilities for API mocking
 - `/script/` - Development utilities
@@ -117,24 +112,31 @@ Test database setup: Set `TEST_DATABASE_URL` in `.env` to a separate database (e
 
 ## Frontend
 
+The frontend is a SvelteKit application living in `/svelte/`. Most frontend
+commands run from inside that directory or via `pnpm --filter
+crates.io-svelte <script>` from the repo root.
+
 ### Building and Running
 
-Install dependencies:
+Install dependencies (from the repo root):
 
 ```bash
 pnpm install
 pnpm playwright install chromium-headless-shell  # Install necessary Playwright browsers
 ```
 
-Development server options:
+Development server options (from `svelte/`):
 
 ```bash
-pnpm start:live      # Use production crates.io backend
-pnpm start:staging   # Use staging backend
-pnpm start:local     # Use local backend (requires backend setup)
+pnpm dev:live      # Use production crates.io backend
+pnpm dev:staging   # Use staging backend
+pnpm dev:local     # Use local backend (requires backend setup)
+pnpm dev:msw       # Use MSW handlers from /packages/crates-io-msw/ as the backend
 ```
 
-Build for production:
+The dev server listens on <http://localhost:5173>.
+
+Build for production (from `svelte/`):
 
 ```bash
 pnpm build
@@ -145,31 +147,30 @@ pnpm build
 Run tests:
 
 ```bash
-pnpm test                              # Run QUnit tests
-pnpm ember test --filter="<test_name>" # Run specific QUnit test
-pnpm e2e                               # Run Playwright tests
-pnpm e2e <test_file>                   # Run specific Playwright test
+pnpm --filter crates.io-svelte test        # Vitest unit/component tests
+pnpm --filter "@crates-io/msw" test        # MSW package tests
+pnpm e2e:svelte                            # Playwright end-to-end tests (from repo root)
+pnpm e2e:svelte <test_file>                # Run a specific Playwright spec
 ```
 
-Code quality:
+Code quality (from the repo root unless noted):
 
 ```bash
-pnpm lint:js         # JavaScript linting
-pnpm lint:hbs        # Template linting
-pnpm lint:deps       # Dependency linting
-pnpm prettier:check  # Check formatting
-pnpm prettier:write  # Fix formatting
+pnpm lint:js                            # ESLint over root, e2e/, packages/
+pnpm --filter crates.io-svelte lint     # Svelte/TypeScript ESLint + prettier check inside svelte/
+pnpm prettier:check                     # Check formatting (root files)
+pnpm prettier:write                     # Fix formatting (root files)
 ```
 
 ### Architecture and Conventions
 
-- Follow Ember Octane conventions: Glimmer components, tracked properties, GJS files.
-- Components use scoped CSS via `ember-scoped-css`; styles go in `<ComponentName>.css`.
-- Data fetching happens in routes via `model()` hooks; use Ember Data models for API communication.
-- Use services for shared state (session, notifications, progress tracking).
-- Accessibility is critical; use semantic HTML, ARIA attributes, and test with `ember-a11y-testing`.
+- Use Svelte 5 runes (`$state`, `$derived`, `$effect`) for reactivity; avoid the legacy `<script>` reactivity patterns.
+- Routes live under `/svelte/src/routes/` and follow SvelteKit's file-based conventions; data loading happens in `+page.ts` / `+page.server.ts` `load` functions.
+- Shared state goes in `/svelte/src/lib/` (stores, services); reusable UI in `/svelte/src/lib/components/`.
+- Components are styled with scoped `<style>` blocks in `.svelte` files.
+- Accessibility is critical; use semantic HTML, ARIA attributes, and verify with the e2e a11y fixtures.
 - MSW mocks for tests live in `/packages/crates-io-msw/`; define handlers for API endpoints.
-- Visual regression testing uses Percy; screenshots are captured automatically in CI.
+- Visual regression testing uses Percy (via Playwright) and Chromatic via Storybook
 - Follow existing component patterns for consistency; search for similar components before creating new ones.
 
 ## Commit Messages and Pull Requests
@@ -193,18 +194,22 @@ Examples:
 
 Keep first line under 72 characters. Be direct and technical; omit unnecessary articles. For complex changes, add a commit body explaining the reasoning.
 
-Pull requests run CI checks: backend tests, frontend tests, ESLint, Prettier, rustfmt, and clippy. Fix issues before merging. The `main` branch auto-deploys to staging; production deployments are manual promotions.
+Pull requests run CI checks: backend tests, Svelte and MSW unit tests, Playwright e2e tests, ESLint, Prettier, rustfmt, and clippy. Fix issues before merging. The `main` branch auto-deploys to staging; production deployments are manual promotions.
 
 ## Review Checklist
 
 Before submitting:
 
-- Run `cargo fmt --all` and `pnpm prettier:write` depending on the changed files for consistent formatting.
+- Run `cargo fmt --all` and the appropriate prettier command (`pnpm prettier:write` at the repo root, `pnpm --filter crates.io-svelte format` inside `svelte/`) for consistent formatting.
 - Run `cargo clippy` and fix warnings.
-- Run `cargo test` and `pnpm test` depending on the changed files; all tests must pass.
+- Run the relevant test suites for the changed files; all must pass:
+  - Backend: `cargo test`
+  - Svelte unit/component tests: `pnpm --filter crates.io-svelte test`
+  - MSW package tests: `pnpm --filter "@crates-io/msw" test`
+  - Playwright: `pnpm e2e:svelte`
 - Accept snapshot changes with `cargo insta accept` if expected.
 - Check that new backend functions/types have documentation comments.
-- Verify frontend changes work with `pnpm start:live` against production data.
+- Verify frontend changes work against production data with `pnpm dev:live` (from `svelte/`).
 - Ensure database migrations are reversible (test with `diesel migration redo`).
 - Confirm error messages are actionable and don't expose sensitive information.
 - Test accessibility with keyboard navigation and screen reader landmarks.

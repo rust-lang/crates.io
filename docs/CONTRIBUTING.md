@@ -129,34 +129,48 @@ into any trouble.
 
 ### Building and serving the frontend
 
-To install the npm packages that crates.io uses, run:
+To install the npm packages that crates.io uses, run this from the repo root:
 
 ```console
 pnpm install
 ```
 
-You'll need to run these commands any time the libraries or versions of these
-libraries that crates.io uses change. Usually you'll know they've changed
-because you'll run the next step and it will fail saying it can't find some
-libraries.
+You'll need to run this any time the libraries or versions of these libraries
+that crates.io uses change. Usually you'll know they've changed because you'll
+run the next step and it will fail saying it can't find some libraries.
 
-To build and serve the frontend assets, use the command `pnpm start`. There
-are variations on this command that change which backend your frontend tries to
-talk to:
+To build and serve the frontend assets, change into the `svelte/` directory
+and run one of the `pnpm dev:*` scripts. They differ in which backend the dev
+server proxies to:
 
-| Command                                   | Backend                                   | Use case                                                |
-| ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------- |
-| `pnpm start:live`                         | <https://crates.io>                       | Testing UI changes with the full live site's data       |
-| `pnpm start:staging`                      | <https://staging-crates-io.herokuapp.com> | Testing UI changes with a smaller set of realistic data |
-| `pnpm start:local`                        | Backend server running locally            | See the Working on the backend section for setup        |
-| `pnpm start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg    | If your use case is not covered here                    |
+| Command (from `svelte/`)                          | Backend                                   | Use case                                                |
+| ------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| `pnpm dev:live`                                   | <https://crates.io>                       | Testing UI changes with the full live site's data       |
+| `pnpm dev:staging`                                | <https://staging.crates.io>               | Testing UI changes with a smaller set of realistic data |
+| `pnpm dev:local`                                  | Backend server running locally            | See the "Working on the backend" section for setup      |
+| `pnpm dev:msw`                                    | MSW handlers from `/packages/crates-io-msw/` | Testing UI changes against a fully-mocked backend       |
+| `API_HOST=https://crates.io pnpm dev`             | Whatever is in `API_HOST`                 | If your use case is not covered here                    |
+
+The dev server listens on <http://localhost:5173>.
 
 ### Running the frontend tests
 
-You can run the frontend tests with:
+The Svelte app's Vitest unit and component tests:
 
 ```console
-pnpm test
+pnpm --filter crates.io-svelte test
+```
+
+The MSW package's tests:
+
+```console
+pnpm --filter "@crates-io/msw" test
+```
+
+Playwright tests (run from the repo root):
+
+```console
+pnpm e2e:svelte
 ```
 
 ## Working on the Backend
@@ -401,15 +415,15 @@ example:
 RUST_LOG=debug cargo run --bin background-worker
 ```
 Then start a frontend that uses this backend by running this command in another
-terminal session (the frontend picks up frontend changes using live reload
-without a restart needed, and you can leave the frontend running while you
-restart the server):
+terminal session (the dev server picks up frontend changes via Vite HMR
+without a restart needed, and you can leave it running while you restart the
+backend):
 
 ```console
-pnpm start:local
+cd svelte && pnpm dev:local
 ```
 
-And then you should be able to visit <http://localhost:4200>!
+And then you should be able to visit <http://localhost:5173>!
 
 #### Using Mailgun to Send Emails
 
@@ -433,7 +447,7 @@ https://crates.io/confirm/RiphVyFo31wuKQhpyTw7RF2LIf
 ```
 
 When verifying the email, you need to change the prefix to your frontend host.
-For example, change the above link to `http://localhost:4200/confirm/RiphVyFo31wuKQhpyTw7RF2LIf`.
+For example, change the above link to `http://localhost:5173/confirm/RiphVyFo31wuKQhpyTw7RF2LIf`.
 
 If you want to test sending real emails, you will have to either set the
 Mailgun environment variables in `.env` manually or run your app instance
@@ -483,7 +497,7 @@ cargo test
 
 ### Using your local crates.io with cargo
 
-Once you have a local instance of crates.io running at <http://localhost:4200> by
+Once you have a local instance of crates.io running at <http://localhost:5173> by
 following the instructions in the "Working on the Backend" section, you can go
 to another Rust project and tell cargo to use your local crates.io instead of
 production.
@@ -500,8 +514,8 @@ OAuth Applications](https://github.com/settings/developers) and click on the
 "Register a new application" button. Fill in the form as follows:
 
 - Application name: name your application whatever you'd like.
-- Homepage URL: `http://localhost:4200/`
-- Authorization callback URL: `http://localhost:4200/github-redirect.html`
+- Homepage URL: `http://localhost:5173/`
+- Authorization callback URL: `http://localhost:5173/github-redirect.html`
 
 Create the application, then take the Client ID ad Client Secret values and use
 them as the values of the `GH_CLIENT_ID` and `GH_CLIENT_SECRET` in your `.env`.
@@ -509,7 +523,7 @@ them as the values of the `GH_CLIENT_ID` and `GH_CLIENT_SECRET` in your `.env`.
 Then restart your backend, and you should be able to log in to your local
 crates.io with your GitHub account.
 
-Go to <http://localhost:4200/me> to get your API token and run the `cargo login`
+Go to <http://localhost:5173/me> to get your API token and run the `cargo login`
 command as directed.
 
 Now you should be able to go to the directory of a crate that has no
@@ -600,7 +614,7 @@ By default, the services will be exposed on their normal ports:
 
 - `5432` for Postgres
 - `8888` for the crates.io backend
-- `4200` for the crates.io frontend
+- `5173` for the crates.io frontend (the SvelteKit dev server)
 
 These can be changed with the `docker-compose.override.yml` file.
 
@@ -615,10 +629,11 @@ cargo publish --index http://localhost:8888/git/index --token $YOUR_TOKEN
 
 ### Changing code
 
-The `app/` directory is mounted directly into the frontend Docker container,
-which means that the Ember live-reload server will still just work. If
-anything outside of `app/` is changed, the base Docker image will have to be
-rebuilt:
+The `svelte/src/` and `svelte/static/` directories are mounted directly into
+the frontend Docker container, so Vite's HMR picks up changes without a
+restart. If anything outside of those (e.g. `svelte/package.json`,
+`svelte/svelte.config.js`, `svelte/vite.config.ts`) is changed, the base
+Docker image has to be rebuilt:
 
 ```console
 # Rebuild frontend Docker image
