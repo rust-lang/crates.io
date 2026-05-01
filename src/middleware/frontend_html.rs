@@ -1,4 +1,4 @@
-//! Serve the Ember.js frontend HTML
+//! Serve the frontend HTML.
 //!
 //! Paths intended for the inner `api_handler` are passed along to the remaining middleware layers
 //! as normal. Requests not intended for the backend will be served HTML to boot the Ember.js
@@ -84,7 +84,7 @@ fn init_html_cache(max_capacity: u64) -> TemplateCache {
         .build()
 }
 
-pub async fn serve_html(state: AppState, request: Request, next: Next) -> Response {
+pub async fn serve(state: AppState, request: Request, next: Next) -> Response {
     static TEMPLATE_ENV: LazyLock<TemplateEnvFut> =
         LazyLock::new(|| init_template_env().boxed().shared());
     static RENDERED_HTML_CACHE: OnceLock<TemplateCache> = OnceLock::new();
@@ -185,7 +185,7 @@ mod tests {
     use googletest::{assert_that, prelude::eq};
     use url::Url;
 
-    use crate::middleware::ember_html::{extract_crate_name, generate_og_image_url};
+    use crate::middleware::frontend_html::{extract_crate_name, generate_og_image_url};
 
     #[test]
     fn test_extract_crate_name() {

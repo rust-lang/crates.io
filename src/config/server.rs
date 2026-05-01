@@ -81,7 +81,7 @@ pub struct Server {
     pub og_image_base_url: Option<Url>,
 
     /// Maximum number of items that the HTML render
-    /// cache in `crate::middleware::ember_html::serve_html`
+    /// cache in `crate::middleware::frontend_html::serve`
     /// can hold. Defaults to 1024.
     pub html_render_cache_max_capacity: u64,
 

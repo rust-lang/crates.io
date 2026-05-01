@@ -28,7 +28,7 @@ async fn serve<P: AsRef<Path>>(
     request: Request,
     next: Next,
 ) -> Response {
-    // index.html is a Jinja template, which is to be rendered by `ember_html::serve_html`.
+    // index.html is a Jinja template, which is to be rendered by `frontend_html::serve`.
     if matches!(*request.method(), Method::GET | Method::HEAD)
         && !matches!(request.uri().path().as_bytes(), b"/" | b"/index.html")
         && strip_prefix.is_none_or(|prefix| request.uri().path().starts_with(prefix))

@@ -3,7 +3,7 @@ pub mod block_traffic;
 pub mod cargo_compat;
 mod common_headers;
 mod debug;
-mod ember_html;
+mod frontend_html;
 pub mod log_request;
 pub mod normalize_path;
 pub mod real_ip;
@@ -82,7 +82,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
             from_fn(static_or_continue::serve_svelte)
         }))
         .layer(conditional_layer(config.serve_html, || {
-            from_fn_with_state(state.clone(), ember_html::serve_html)
+            from_fn_with_state(state.clone(), frontend_html::serve)
         }))
         .layer(AddExtensionLayer::new(state.clone()));
 
