@@ -85,8 +85,6 @@ pub struct Server {
     /// can hold. Defaults to 1024.
     pub html_render_cache_max_capacity: u64,
 
-    pub content_security_policy: Option<HeaderValue>,
-
     /// The expected audience claim (`aud`) for the Trusted Publishing
     /// token exchange.
     pub trustpub_audience: String,
@@ -188,25 +186,6 @@ impl Server {
 
         let storage = StorageConfig::from_environment();
 
-        // `sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0=` refers to
-        // the `script` in `public/github-redirect.html`
-        // `sha256-qfh2Go0si80c5fCQM7vtMfMYVJPGGpVLgWpgpPssfvw=` refers to
-        // the `script` in `public/github-auth-loading.html`
-        let content_security_policy = format!(
-            "default-src 'self'; \
-            connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://raw.githubusercontent.com https://rustsec.org {cdn_domain}; \
-            script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE=' 'sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0=' 'sha256-qfh2Go0si80c5fCQM7vtMfMYVJPGGpVLgWpgpPssfvw='; \
-            style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; \
-            font-src https://code.cdn.mozilla.net; \
-            img-src *; \
-            object-src 'none'",
-            cdn_domain = storage
-                .cdn_prefix
-                .as_ref()
-                .map(|cdn_prefix| format!("https://{cdn_prefix}"))
-                .unwrap_or_default()
-        );
-
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
         let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
@@ -258,7 +237,6 @@ impl Server {
             serve_html: true,
             og_image_base_url: var_parsed("OG_IMAGE_BASE_URL")?,
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
-            content_security_policy: Some(content_security_policy.parse()?),
             trustpub_audience,
             disable_token_creation,
             banner_message,
