@@ -35,7 +35,7 @@ pub async fn add_common_headers(
         expires(&mut headers, ONE_DAY);
     }
 
-    if path.starts_with("/assets/") {
+    if path.starts_with("/assets/") || path.starts_with("/svelte/_app/immutable/") {
         expires(&mut headers, 10 * ONE_YEAR);
     }
 
