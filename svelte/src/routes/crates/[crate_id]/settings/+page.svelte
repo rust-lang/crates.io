@@ -188,7 +188,7 @@
 
 <PageTitle title="Manage Crate Settings" />
 
-<CrateHeader crate={data.crate} ownersPromise={data.ownersPromise} />
+<CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
 
 <div class="header">
   <h2>Owners</h2>

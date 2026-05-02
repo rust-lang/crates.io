@@ -285,6 +285,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.click('[data-test-settings-tab] a');
 
     await expect(page).toHaveURL('/crates/nanomsg/settings');
+    await expect(page.locator('[data-test-keyword="network"]')).toBeVisible();
   });
 
   test('keywords are shown when navigating from search', async ({ page, msw }) => {
