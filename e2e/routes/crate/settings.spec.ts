@@ -101,8 +101,6 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       await page.goto('/crates/foo/settings');
       await expect(page).toHaveURL('/crates/foo/settings');
 
-      await percy.snapshot();
-
       // Check that both GitHub and GitLab configs are displayed
       await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
       await expect(page.locator('[data-test-add-trusted-publisher-button]')).toBeVisible();
@@ -124,6 +122,8 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       await expect(details).toContainText('Environment: production');
 
       await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
+
+      await percy.snapshot();
     });
 
     test.describe('GitHub', () => {
