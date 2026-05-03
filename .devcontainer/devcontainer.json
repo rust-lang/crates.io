@@ -1,0 +1,35 @@
+{
+  "name": "crates.io",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "app",
+  "workspaceFolder": "/workspaces/crates.io",
+  // Use the non-root `vscode` user provided by the Microsoft base
+  // image (UID 1000, passwordless sudo). Avoids running as root and
+  // the file-ownership annoyances that come with bind mounts.
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    }
+  },
+  // Named volumes for state that should survive container rebuilds.
+  // The `${devcontainerId}` suffix scopes them per workspace path so
+  // different worktrees (or fresh clones) don't share volumes.
+  "mounts": [
+    "source=cratesio-target-${devcontainerId},target=/workspaces/crates.io/target,type=volume",
+    "source=cratesio-cargo-registry-${devcontainerId},target=/usr/local/cargo/registry,type=volume",
+    "source=cratesio-pnpm-store-${devcontainerId},target=/home/vscode/.local/share/pnpm/store,type=volume",
+    "source=cratesio-local-uploads-${devcontainerId},target=/workspaces/crates.io/local_uploads,type=volume"
+  ],
+  // Metadata for the VS Code / Codespaces port-forwarding UI. Actual
+  // host publishing is in `docker-compose.yml` so non-VS-Code clients
+  // (devcontainer CLI, Zed, JetBrains) reach the services too.
+  "forwardPorts": [8888, 5173, 6006],
+  "portsAttributes": {
+    "8888": { "label": "Backend API" },
+    "5173": { "label": "Svelte dev server" },
+    "6006": { "label": "Storybook" }
+  },
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "postStartCommand": "diesel migration run"
+}
