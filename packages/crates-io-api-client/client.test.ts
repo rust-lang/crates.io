@@ -18,16 +18,12 @@ test('GET /api/v1/site_metadata', async () => {
   let client = createClient({ baseUrl });
   let response = await client.GET('/api/v1/site_metadata');
 
-  expect(response).toMatchInlineSnapshot(`
+  expect(response.error).toBeUndefined();
+  expect(response.data).toMatchInlineSnapshot(`
     {
-      "data": {
-        "commit": "5048d31943118c6d67359bd207d307c854e82f45",
-        "deployed_sha": "5048d31943118c6d67359bd207d307c854e82f45",
-        "read_only": false,
-      },
-      "response": Response {
-        "url": "https://crates.io/api/v1/site_metadata",
-      },
+      "commit": "5048d31943118c6d67359bd207d307c854e82f45",
+      "deployed_sha": "5048d31943118c6d67359bd207d307c854e82f45",
+      "read_only": false,
     }
   `);
 });
@@ -44,47 +40,43 @@ test('GET /api/v1/crates/{name}', async () => {
     },
   });
 
+  expect(response.error).toBeUndefined();
   expect(response.data.crate.name).toBe('serde');
-  expect(response).toMatchInlineSnapshot(`
+  expect(response.data).toMatchInlineSnapshot(`
     {
-      "data": {
+      "categories": null,
+      "crate": {
+        "badges": [],
         "categories": null,
-        "crate": {
-          "badges": [],
-          "categories": null,
-          "created_at": "2010-06-16T21:30:45Z",
-          "default_version": "1.0.0",
-          "description": "This is the description for the crate called "serde"",
-          "documentation": null,
-          "downloads": 37035,
-          "homepage": null,
-          "id": "serde",
-          "keywords": null,
-          "links": {
-            "owner_team": "/api/v1/crates/serde/owner_team",
-            "owner_user": "/api/v1/crates/serde/owner_user",
-            "reverse_dependencies": "/api/v1/crates/serde/reverse_dependencies",
-            "version_downloads": "/api/v1/crates/serde/downloads",
-            "versions": "/api/v1/crates/serde/versions",
-          },
-          "max_stable_version": null,
-          "max_version": "0.0.0",
-          "name": "serde",
-          "newest_version": "0.0.0",
-          "num_versions": 1,
-          "recent_downloads": 321,
-          "repository": null,
-          "trustpub_only": false,
-          "updated_at": "2017-02-24T12:34:56Z",
-          "versions": null,
-          "yanked": false,
-        },
+        "created_at": "2010-06-16T21:30:45Z",
+        "default_version": "1.0.0",
+        "description": "This is the description for the crate called "serde"",
+        "documentation": null,
+        "downloads": 37035,
+        "homepage": null,
+        "id": "serde",
         "keywords": null,
+        "links": {
+          "owner_team": "/api/v1/crates/serde/owner_team",
+          "owner_user": "/api/v1/crates/serde/owner_user",
+          "reverse_dependencies": "/api/v1/crates/serde/reverse_dependencies",
+          "version_downloads": "/api/v1/crates/serde/downloads",
+          "versions": "/api/v1/crates/serde/versions",
+        },
+        "max_stable_version": null,
+        "max_version": "0.0.0",
+        "name": "serde",
+        "newest_version": "0.0.0",
+        "num_versions": 1,
+        "recent_downloads": 321,
+        "repository": null,
+        "trustpub_only": false,
+        "updated_at": "2017-02-24T12:34:56Z",
         "versions": null,
+        "yanked": false,
       },
-      "response": Response {
-        "url": "https://crates.io/api/v1/crates/serde?include=",
-      },
+      "keywords": null,
+      "versions": null,
     }
   `);
 });
@@ -95,18 +87,14 @@ test('GET /api/v1/crates/{name} error', async () => {
     params: { path: { name: 'serde' } },
   });
 
-  expect(response).toMatchInlineSnapshot(`
+  expect(response.data).toBeUndefined();
+  expect(response.error).toMatchInlineSnapshot(`
     {
-      "error": {
-        "errors": [
-          {
-            "detail": "Not Found",
-          },
-        ],
-      },
-      "response": Response {
-        "url": "https://crates.io/api/v1/crates/serde",
-      },
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
     }
   `);
 });
