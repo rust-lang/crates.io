@@ -6,7 +6,7 @@ const TEST_APP = process.env.TEST_APP ?? 'ember';
 test.describe('Acceptance | Banner Messages', { tag: '@acceptance' }, () => {
   test('banner message can be dismissed and that is remembered', async ({ page, msw }) => {
     msw.worker.use(
-      http.get('/api/v1/site_metadata', () => HttpResponse.json({ read_only: true, banner_message: 'test message' })),
+      http.get('/api/v1/site_metadata', () => HttpResponse.json({ read_only: false, banner_message: 'test message' })),
     );
     await page.goto('/');
 
@@ -37,7 +37,7 @@ test.describe('Acceptance | Banner Messages', { tag: '@acceptance' }, () => {
     // — appears.
     msw.worker.use(
       http.get('/api/v1/site_metadata', () =>
-        HttpResponse.json({ read_only: true, banner_message: 'second test message' }),
+        HttpResponse.json({ read_only: false, banner_message: 'second test message' }),
       ),
     );
     await page.reload();
