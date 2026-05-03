@@ -198,7 +198,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -228,7 +228,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -252,7 +252,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -276,7 +276,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -309,7 +309,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -369,7 +369,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -398,7 +398,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
         with:
           version: ${{ env.PNPM_VERSION }}
 
