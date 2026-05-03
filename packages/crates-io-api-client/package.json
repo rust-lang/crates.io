@@ -1,9 +1,7 @@
 {
   "name": "@crates-io/api-client",
   "version": "0.0.0",
-  "type": "module",
   "private": true,
-  "main": "index.ts",
   "homepage": "https://github.com/rust-lang/crates.io#readme",
   "bugs": {
     "url": "https://github.com/rust-lang/crates.io/issues"
@@ -13,6 +11,8 @@
     "url": "git+https://github.com/rust-lang/crates.io.git"
   },
   "license": "(MIT OR Apache-2.0)",
+  "type": "module",
+  "main": "index.ts",
   "scripts": {
     "regenerate": "vitest schema.test.ts --run --update",
     "test": "vitest"

@@ -12,12 +12,18 @@
   },
   "license": "(MIT OR Apache-2.0)",
   "author": "",
+  "exports": {
+    "./tests/*": "./tests/*",
+    "./*": "./app/*"
+  },
   "directories": {
     "doc": "docs",
     "test": "tests"
   },
   "scripts": {
     "build": "ember build --environment=production && node ./script/precompress-assets.mjs",
+    "e2e": "playwright test",
+    "e2e:svelte": "TEST_APP=svelte playwright test",
     "lint:deps": "ember dependency-lint",
     "lint:hbs": "ember-template-lint app",
     "lint:js": "eslint . --cache",
@@ -29,15 +35,19 @@
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
-    "test": "ember test",
-    "e2e": "playwright test",
-    "e2e:svelte": "TEST_APP=svelte playwright test"
+    "test": "ember test"
   },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 1 Firefox version",
+    "Firefox ESR",
+    "last 1 Safari version",
+    "last 1 iOS version",
+    "last 1 Edge version",
+    "last 1 UCAndroid version",
+    "last 1 years"
+  ],
   "prettier": {
-    "plugins": [
-      "@ianvs/prettier-plugin-sort-imports",
-      "prettier-plugin-ember-template-tag"
-    ],
     "arrowParens": "avoid",
     "importOrder": [
       "^(node:)?(assert|async_hooks|buffer|child_process|cluster|console|constants|crypto|dgram|dns|domain|events|fs|http|http2|https|inspector|module|net|os|path|perf_hooks|process|punycode|querystring|readline|repl|stream|string_decoder|timers|tls|trace_events|tty|url|util|v8|vm|zli)",
@@ -59,10 +69,24 @@
       "decorators",
       "typescript"
     ],
+    "plugins": [
+      "@ianvs/prettier-plugin-sort-imports",
+      "prettier-plugin-ember-template-tag"
+    ],
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
     "trailingComma": "all"
+  },
+  "resolutions": {
+    "@babel/runtime": "7.29.2",
+    "ember-auto-import": "2.13.1",
+    "ember-get-config": "2.1.1",
+    "ember-inflector": "6.0.0",
+    "ember-modifier": "4.3.0",
+    "ember-svg-jar>cheerio": "1.0.0-rc.12",
+    "rollup": "npm:@rollup/wasm-node",
+    "vite@7": "7.3.1"
   },
   "dependencies": {
     "@floating-ui/dom": "1.7.6",
@@ -172,15 +196,12 @@
     "typescript": "6.0.3",
     "webpack": "5.106.2"
   },
-  "resolutions": {
-    "@babel/runtime": "7.29.2",
-    "ember-auto-import": "2.13.1",
-    "ember-get-config": "2.1.1",
-    "ember-inflector": "6.0.0",
-    "ember-modifier": "4.3.0",
-    "ember-svg-jar>cheerio": "1.0.0-rc.12",
-    "rollup": "npm:@rollup/wasm-node",
-    "vite@7": "7.3.1"
+  "engines": {
+    "node": "^24",
+    "pnpm": "^10"
+  },
+  "volta": {
+    "node": "24.15.0"
   },
   "pnpm": {
     "peerDependencyRules": {
@@ -197,35 +218,14 @@
       "esbuild",
       "msw"
     ],
-    "ignoredBuiltDependencies": [
-      "core-js"
-    ],
     "patchedDependencies": {
       "ember-cli-notifications@9.1.0": "patches/ember-cli-notifications@9.1.0.patch"
-    }
-  },
-  "browserslist": [
-    "last 2 Chrome versions",
-    "last 1 Firefox version",
-    "Firefox ESR",
-    "last 1 Safari version",
-    "last 1 iOS version",
-    "last 1 Edge version",
-    "last 1 UCAndroid version",
-    "last 1 years"
-  ],
-  "engines": {
-    "node": "^24",
-    "pnpm": "^10"
+    },
+    "ignoredBuiltDependencies": [
+      "core-js"
+    ]
   },
   "ember": {
     "edition": "octane"
-  },
-  "volta": {
-    "node": "24.15.0"
-  },
-  "exports": {
-    "./tests/*": "./tests/*",
-    "./*": "./app/*"
   }
 }
