@@ -30,7 +30,7 @@ This service is maintained for you by the [crates.io team], with support from th
 
 We welcome contributions from the community! Whether you're fixing a bug, implementing a new feature, or improving documentation, your contributions help make [crates.io] better for everyone.
 
-[crates.io] is built with [Rust] for the backend services. More specifically, the [axum] web framework and [diesel] for database access, with a [custom-built background worker system](./crates/crates_io_worker). The frontend is an [Ember.js] application written in JavaScript.
+[crates.io] is built with [Rust] for the backend services. More specifically, the [axum] web framework and [diesel] for database access, with a [custom-built background worker system](./crates/crates_io_worker). The frontend is a [SvelteKit] application written in TypeScript.
 
 Please review our [contribution guidelines](./docs/CONTRIBUTING.md) before submitting your pull request. The same document also contains instructions on how to set up a local development environment, with additional structured documentation available in [AGENTS.md](./AGENTS.md).
 
@@ -70,4 +70,4 @@ Licensed under either of these:
 [GitHub Discussions]: https://github.com/rust-lang/crates.io/discussions
 [axum]: https://crates.io/crates/axum
 [diesel]: https://crates.io/crates/diesel
-[Ember.js]: https://emberjs.com/
+[SvelteKit]: https://svelte.dev/docs/kit/introduction
