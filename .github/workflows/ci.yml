@@ -310,7 +310,7 @@ jobs:
     needs: filter-jobs
     if: needs.filter-jobs.outputs.zizmor == 'true'
     permissions:
-      security-events: write  # needed by `codeql-action/upload-sarif` to upload zizmor results to GitHub code scanning
+      security-events: write # needed by `codeql-action/upload-sarif` to upload zizmor results to GitHub code scanning
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -327,7 +327,7 @@ jobs:
           category: zizmor
 
   svelte:
-    name: Svelte (experimental)
+    name: Frontend / Test
     runs-on: ubuntu-24.04
     needs: filter-jobs
     if: needs.filter-jobs.outputs.svelte == 'true'
