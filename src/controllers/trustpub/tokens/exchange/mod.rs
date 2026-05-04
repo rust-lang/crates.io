@@ -8,6 +8,7 @@ use crates_io_database::models::trustpub::{
 };
 use crates_io_database::schema::{trustpub_configs_github, trustpub_configs_gitlab};
 use crates_io_diesel_helpers::lower;
+use crates_io_trustpub::JWT_LEEWAY;
 use crates_io_trustpub::access_token::AccessToken;
 use crates_io_trustpub::github::{GITHUB_ISSUER_URL, GitHubClaims};
 use crates_io_trustpub::gitlab::{GITLAB_ISSUER_URL, GitLabClaims};
@@ -70,7 +71,11 @@ fn unsupported_issuer(issuer: &str) -> BoxedAppError {
 }
 
 async fn insert_jti(conn: &mut AsyncPgConnection, jti: &str, exp: DateTime<Utc>) -> AppResult<()> {
-    let used_jti = NewUsedJti::new(jti, exp);
+    // Keep the JTI record alive past the JWT's `exp` for the full validation
+    // leeway window. Otherwise the cleanup worker (`DeleteExpiredJtis`) can
+    // remove the row while `jsonwebtoken::decode` would still accept the same
+    // token, opening a replay window equal to the leeway value.
+    let used_jti = NewUsedJti::new(jti, exp + JWT_LEEWAY);
     match used_jti.insert(conn).await {
         Ok(_) => Ok(()), // JTI was successfully inserted, continue
         Err(DatabaseError(UniqueViolation, _)) => {
