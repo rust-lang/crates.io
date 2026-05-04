@@ -184,7 +184,7 @@
     "micromark": "4.0.2",
     "micromark-extension-gfm": "3.0.0",
     "msw": "2.14.2",
-    "postcss": "8.5.12",
+    "postcss": "8.5.13",
     "postcss-loader": "8.2.1",
     "postcss-preset-env": "11.2.1",
     "prettier": "3.8.3",
