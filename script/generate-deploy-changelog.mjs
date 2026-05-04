@@ -170,7 +170,7 @@ Generate only the deployment announcement, no additional explanation.`;
   try {
     return exec('claude', { input: prompt }).trim();
   } catch (error) {
-    throw new Error(`Failed to generate changelog with Claude CLI: ${error.message}`);
+    throw new Error(`Failed to generate changelog with Claude CLI: ${error.message}`, { cause: error });
   }
 }
 
