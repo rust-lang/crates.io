@@ -398,6 +398,12 @@ importers:
       mermaid:
         specifier: 11.14.0
         version: 11.14.0
+      micromark:
+        specifier: 4.0.2
+        version: 4.0.2
+      micromark-extension-gfm:
+        specifier: 3.0.0
+        version: 3.0.0
       pretty-bytes:
         specifier: 7.1.0
         version: 7.1.0
