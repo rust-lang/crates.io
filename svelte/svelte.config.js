@@ -1,11 +1,19 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
+import stripTestSelectors from './src/build/strip-test-selectors.js';
+
+const preprocess = [vitePreprocess()];
+
+if (process.env.NODE_ENV === 'production' && !process.env.PLAYWRIGHT && !process.env.VITEST) {
+  preprocess.unshift(stripTestSelectors());
+}
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   // Consult https://svelte.dev/docs/kit/integrations
   // for more information about preprocessors
-  preprocess: vitePreprocess(),
+  preprocess,
 
   kit: {
     adapter: adapter({
