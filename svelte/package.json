@@ -30,6 +30,8 @@
     "date-fns": "4.1.0",
     "highlight.js": "11.11.1",
     "mermaid": "11.14.0",
+    "micromark": "4.0.2",
+    "micromark-extension-gfm": "3.0.0",
     "pretty-bytes": "7.1.0",
     "semver": "7.7.4"
   },
