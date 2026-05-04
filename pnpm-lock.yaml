@@ -49,8 +49,8 @@ importers:
         specifier: 15.0.1
         version: 15.0.1
       ember-eslint-parser:
-        specifier: 0.11.1
-        version: 0.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript-eslint/parser@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3)
+        specifier: 0.11.3
+        version: 0.11.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript-eslint/parser@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3)
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -1484,12 +1484,6 @@ packages:
     resolution: {integrity: sha512-LwuHQI4pDOYVKvmH2dkaJo6YZCSgouVgnS/z7yBPKBMvgtBvyLqiLy9Z6b7+m/TRcX1NFYUqZetI5Y+aT4GEfg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript-eslint/tsconfig-utils@8.59.0':
-    resolution: {integrity: sha512-91Sbl3s4Kb3SybliIY6muFBmHVv+pYXfybC4Oolp3dvk8BvIE3wOPc+403CWIT7mJNkfQRGtdqghzs2+Z91Tqg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.1.0'
-
   '@typescript-eslint/tsconfig-utils@8.59.1':
     resolution: {integrity: sha512-/0nEyPbX7gRsk0Uwfe4ALwwgxuA66d/l2mhRDNlAvaj4U3juhUtJNq0DsY8M2AYwwb9rEq2hrC3IcIcEt++iJA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -2280,17 +2274,20 @@ packages:
   electron-to-chromium@1.5.344:
     resolution: {integrity: sha512-4MxfbmNDm+KPh066EZy+eUnkcDPcZ35wNmOWzFuh/ijvHsve6kbLTLURy88uCNK5FbpN+yk2nQY6BYh1GEt+wg==}
 
-  ember-eslint-parser@0.11.1:
-    resolution: {integrity: sha512-TE0ZGQiXkh5JdrQbcPYDsvOl5ukRIMbZ1KEg62hnZJ4wPKP8Tl011D75eiHWLDxMItoWO+DpzNd1bm7kld13Qg==}
+  ember-eslint-parser@0.11.3:
+    resolution: {integrity: sha512-tGLDVyemseglpXyt3MMnggWL2ROYglRGoL0lKVy+GySFcrD4YQbt5iyvrY9hcEnN62gmkFLIFRinIq5niqYKXg==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
+      '@babel/eslint-parser': ^7.28.6
       '@typescript-eslint/parser': '*'
     peerDependenciesMeta:
+      '@babel/eslint-parser':
+        optional: true
       '@typescript-eslint/parser':
         optional: true
 
-  ember-estree@0.6.2:
-    resolution: {integrity: sha512-CeKa6FZ95jp6de+vjhmv2XmOGBB2V95iiH7RqI2av1nU0m1XhFZEG8npoEciklQqPEzFO5OXS41b0mGvXBsJCA==}
+  ember-estree@0.6.3:
+    resolution: {integrity: sha512-76NgApjUCvGHd6eC5BueOSwDdXtyO/+zSrZuKaWdRm3EyIbtE9ysvCOsm1cft8zl6dxdqeJpNpTJ5a1ljVIFMg==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -5419,10 +5416,6 @@ snapshots:
       '@typescript-eslint/types': 8.59.1
       '@typescript-eslint/visitor-keys': 8.59.1
 
-  '@typescript-eslint/tsconfig-utils@8.59.0(typescript@6.0.3)':
-    dependencies:
-      typescript: 6.0.3
-
   '@typescript-eslint/tsconfig-utils@8.59.1(typescript@6.0.3)':
     dependencies:
       typescript: 6.0.3
@@ -6281,14 +6274,13 @@ snapshots:
 
   electron-to-chromium@1.5.344: {}
 
-  ember-eslint-parser@0.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript-eslint/parser@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3):
+  ember-eslint-parser@0.11.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript-eslint/parser@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(typescript@6.0.3):
     dependencies:
       '@glimmer/syntax': 0.95.0
-      '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@6.0.3)
+      '@typescript-eslint/tsconfig-utils': 8.59.1(typescript@6.0.3)
       content-tag: 4.1.1
-      ember-estree: 0.6.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      ember-estree: 0.6.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       eslint-scope: 9.1.2
-      espree: 10.4.0
       html-tags: 5.1.0
       mathml-tag-names: 4.0.0
       svg-tags: 1.0.0
@@ -6299,7 +6291,7 @@ snapshots:
       - '@emnapi/runtime'
       - typescript
 
-  ember-estree@0.6.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
+  ember-estree@0.6.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/syntax': 0.95.0
