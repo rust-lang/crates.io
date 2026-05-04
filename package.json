@@ -62,7 +62,7 @@
     "@percy/cli": "1.31.13",
     "@percy/playwright": "1.1.0",
     "@playwright/test": "1.59.1",
-    "@sinonjs/fake-timers": "15.3.0",
+    "@sinonjs/fake-timers": "15.3.2",
     "@types/node": "24.12.2",
     "@types/sinonjs__fake-timers": "15.0.1",
     "ember-eslint-parser": "0.11.1",
