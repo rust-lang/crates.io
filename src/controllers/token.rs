@@ -59,6 +59,7 @@ pub struct ListResponse {
     params(GetParams),
     security(("cookie" = [])),
     tag = "api_tokens",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_api_tokens(
@@ -113,6 +114,7 @@ pub struct CreateResponse {
     request_body = inline(NewApiTokenRequest),
     security(("cookie" = [])),
     tag = "api_tokens",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(CreateResponse))),
 )]
 pub async fn create_api_token(

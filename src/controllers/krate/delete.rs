@@ -52,6 +52,7 @@ impl DeleteQueryParams {
     params(CratePath, DeleteQueryParams),
     security(("cookie" = [])),
     tag = "crates",
+    extensions(("x-internal" = json!(true))),
     responses((status = 204, description = "Successful Response")),
 )]
 pub async fn delete_crate(
