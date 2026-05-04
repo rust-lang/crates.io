@@ -1,9 +1,13 @@
 use axum::Extension;
-use axum::Json;
+use axum::body::Bytes;
 use axum::extract::Query;
+use axum::response::IntoResponse;
+use axum_extra::TypedHeader;
+use axum_extra::headers::ContentType;
 use crates_io_session::COOKIE_NAME;
 use http::header;
 use serde::Deserialize;
+use std::sync::{Arc, OnceLock};
 use utoipa::openapi::OpenApi as OpenApiDoc;
 use utoipa::openapi::path::{Operation, PathItem};
 use utoipa::openapi::security::{ApiKey, ApiKeyValue, Http, HttpAuthScheme, SecurityScheme};
@@ -98,11 +102,24 @@ pub struct Params {
 }
 
 pub async fn handler(
-    Extension(mut doc): Extension<OpenApiDoc>,
+    Extension(doc): Extension<Arc<OpenApiDoc>>,
     Query(params): Query<Params>,
-) -> Json<OpenApiDoc> {
-    apply_visibility(&mut doc, params.internal.is_some());
-    Json(doc)
+) -> impl IntoResponse {
+    static PUBLIC_BYTES: OnceLock<Bytes> = OnceLock::new();
+    static FULL_BYTES: OnceLock<Bytes> = OnceLock::new();
+
+    let cache = match params.internal {
+        None => &PUBLIC_BYTES,
+        Some(_) => &FULL_BYTES,
+    };
+
+    let bytes = cache.get_or_init(|| {
+        let mut doc = (*doc).clone();
+        apply_visibility(&mut doc, params.internal.is_some());
+        Bytes::from(serde_json::to_vec(&doc).expect("OpenAPI serialization failed"))
+    });
+
+    (TypedHeader(ContentType::json()), bytes.clone())
 }
 
 /// Mutate `openapi` in place: drop operations marked `x-internal: true` when
