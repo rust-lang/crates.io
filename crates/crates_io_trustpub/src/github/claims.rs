@@ -54,6 +54,7 @@ impl GitHubClaims {
 
 fn validation(audience: &str) -> Validation {
     let mut validation = Validation::new(Algorithm::RS256);
+    validation.leeway = crate::JWT_LEEWAY.num_seconds() as u64;
     validation.required_spec_claims.insert("iss".into());
     validation.required_spec_claims.insert("exp".into());
     validation.required_spec_claims.insert("aud".into());

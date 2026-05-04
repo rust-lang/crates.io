@@ -1,8 +1,10 @@
 use crate::builders::CrateBuilder;
 use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
+use chrono::{DateTime, Utc};
 use claims::{assert_ok, assert_some_eq};
 use crates_io_database::models::trustpub::{GitLabConfig, NewGitLabConfig};
-use crates_io_database::schema::{trustpub_configs_gitlab, trustpub_tokens};
+use crates_io_database::schema::{trustpub_configs_gitlab, trustpub_tokens, trustpub_used_jtis};
+use crates_io_trustpub::JWT_LEEWAY;
 use crates_io_trustpub::access_token::AccessToken;
 use crates_io_trustpub::gitlab::GITLAB_ISSUER_URL;
 use crates_io_trustpub::gitlab::test_helpers::FullGitLabClaims;
@@ -294,6 +296,35 @@ async fn test_token_reuse() -> anyhow::Result<()> {
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"JWT has already been used"}]}"#);
+
+    Ok(())
+}
+
+/// The stored JTI's `expires_at` must outlive the JWT's `exp` by the same
+/// leeway window that JWT validation uses, so the cleanup worker cannot
+/// remove the row while the JWT signature is still being accepted.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_jti_expires_at_includes_leeway() -> anyhow::Result<()> {
+    let client = prepare().await?;
+
+    let claims = default_claims();
+    let exp = claims.exp;
+    let jti = claims.jti.clone();
+
+    let body = claims.as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let mut conn = client.app().db_conn().await;
+
+    let expires_at: DateTime<Utc> = trustpub_used_jtis::table
+        .filter(trustpub_used_jtis::jti.eq(&jti))
+        .select(trustpub_used_jtis::expires_at)
+        .first(&mut conn)
+        .await?;
+
+    let expected = DateTime::<Utc>::from_timestamp(exp, 0).unwrap() + JWT_LEEWAY;
+    assert_eq!(expires_at, expected);
 
     Ok(())
 }
