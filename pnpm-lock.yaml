@@ -208,8 +208,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
       chromatic:
-        specifier: 16.6.1
-        version: 16.6.1
+        specifier: 16.6.3
+        version: 16.6.3
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -1859,8 +1859,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@16.6.1:
-    resolution: {integrity: sha512-QlrPBFFrMtR9LlP1FcnIsmIiMSQ055K94i/cDNHd8opo405AHO2oMEPPSfi1cKC2GyB3bEpXPZ+MW5bCHMcrLA==}
+  chromatic@16.6.3:
+    resolution: {integrity: sha512-N9WCRuezqrxujRvgnAlE9XKxXcF6q2kowKH2Ba82FYkRc4xlY9g8r+ESEph9jLv500s43/9oDmB/kZ9r24BcgQ==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -5871,7 +5871,7 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@16.6.1:
+  chromatic@16.6.3:
     dependencies:
       semver: 7.7.4
 
