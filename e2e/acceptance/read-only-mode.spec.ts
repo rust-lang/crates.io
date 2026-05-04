@@ -1,7 +1,5 @@
-import { AppFixtures, expect, test } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
-
-const TEST_APP = process.env.TEST_APP ?? 'ember';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   test('notification is not shown for read-write mode', async ({ page }) => {
@@ -20,27 +18,18 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).toContainText('read-only mode');
   });
 
-  test('server errors are handled gracefully', async ({ page, msw, ember }) => {
+  test('server errors are handled gracefully', async ({ page, msw }) => {
     msw.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({}, { status: 500 })));
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
-
-    if (TEST_APP === 'ember') {
-      await checkSentryEventsNumber(ember, 0);
-    }
   });
 
-  test('client errors are reported on sentry', async ({ page, msw, ember }) => {
+  test('client errors are reported on sentry', async ({ page, msw }) => {
     msw.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({}, { status: 404 })));
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
-
-    if (TEST_APP === 'ember') {
-      await checkSentryEventsNumber(ember, 1);
-      await checkSentryEventsHasName(ember, ['AjaxError']);
-    }
   });
 
   test('banner message is shown when present', async ({ page, msw }) => {
@@ -60,15 +49,3 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).not.toContainText('read-only mode');
   });
 });
-
-async function checkSentryEventsNumber(ember: AppFixtures['ember'], expected: number) {
-  let len = await ember.evaluate(owner => owner.lookup('service:sentry').events.length);
-  expect(len).toBe(expected);
-}
-
-async function checkSentryEventsHasName(ember: AppFixtures['ember'], expected: string[]) {
-  let events = await ember.evaluate(owner =>
-    owner.lookup('service:sentry').events.map((e: { error: Error }) => e.error.name),
-  );
-  expect(events).toEqual(expected);
-}

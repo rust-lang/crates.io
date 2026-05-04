@@ -5,15 +5,11 @@ import { test as base } from '@playwright/test';
 import * as pwFakeTimers from '@sinonjs/fake-timers';
 
 import { A11yPage } from './fixtures/a11y';
-import { EmberPage, EmberPageOptions } from './fixtures/ember';
 import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
 import { PercyPage } from './fixtures/percy';
 
-const TEST_APP = process.env.TEST_APP ?? 'ember';
-
 export type AppOptions = {
   clockOptions: FakeTimersOptions;
-  emberOptions: EmberPageOptions;
 };
 export interface AppFixtures {
   clock: FakeTimers;
@@ -22,14 +18,12 @@ export interface AppFixtures {
     db: typeof db;
     authenticateAs: (user: any) => Promise<void>;
   };
-  ember: EmberPage;
   percy: PercyPage;
   a11y: A11yPage;
 }
 
 export const test = base.extend<AppOptions & AppFixtures>({
   clockOptions: [{ now: '2017-11-20T12:00:00', shouldAdvanceTime: true }, { option: true }],
-  emberOptions: [{ setTesting: true, mockSentry: true }, { option: true }],
   clock: [
     async ({ page, clockOptions }, use) => {
       let now = clockOptions.now;
@@ -72,14 +66,6 @@ export const test = base.extend<AppOptions & AppFixtures>({
       await worker.disable();
     },
     { auto: true, scope: 'test' },
-  ],
-  ember: [
-    async ({ page, emberOptions }, use) => {
-      let ember = new EmberPage(page);
-      await ember.setup(emberOptions);
-      await use(ember);
-    },
-    { auto: TEST_APP === 'ember', scope: 'test' },
   ],
   percy: async ({ page }, use, testInfo) => {
     let percy = new PercyPage(page, testInfo);

@@ -22,7 +22,6 @@
   },
   "scripts": {
     "build": "ember build --environment=production && node ./script/precompress-assets.mjs",
-    "e2e": "playwright test",
     "e2e:svelte": "TEST_APP=svelte playwright test",
     "lint:deps": "ember dependency-lint",
     "lint:hbs": "ember-template-lint app",
