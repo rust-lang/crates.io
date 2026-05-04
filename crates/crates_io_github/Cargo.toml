@@ -26,5 +26,5 @@ clap = { version = "=4.6.1", features = ["derive", "env", "unicode", "wrap_help"
 mockito = "=1.7.2"
 secrecy = "=0.10.3"
 serde_json = "=1.0.149"
-tokio = { version = "=1.52.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.52.2", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
