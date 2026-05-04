@@ -565,7 +565,6 @@ fn simple_config() -> config::Server {
         serve_html: false,
         og_image_base_url: None,
         html_render_cache_max_capacity: 1024,
-        content_security_policy: None,
         trustpub_audience: AUDIENCE.to_string(),
         disable_token_creation: None,
         banner_message: None,
