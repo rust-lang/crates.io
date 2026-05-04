@@ -30,7 +30,7 @@ pub async fn add_common_headers(request: Request, next: Next) -> impl IntoRespon
         expires(&mut headers, ONE_DAY);
     }
 
-    if path.starts_with("/assets/") || path.starts_with("/_app/immutable/") {
+    if path.starts_with("/_app/immutable/") {
         expires(&mut headers, 10 * ONE_YEAR);
     }
 
