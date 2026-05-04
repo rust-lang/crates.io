@@ -1,4 +1,4 @@
-import axeConfig from '@/tests/axe-config';
+import axeConfig from '@/e2e/axe-config';
 import { db, handlers } from '@crates-io/msw';
 import { defineNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { test as base } from '@playwright/test';

@@ -208,9 +208,7 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpm lint:hbs
       - run: pnpm lint:js
-      - run: pnpm lint:deps
       - run: pnpm prettier:check
 
   msw-test:
