@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
@@ -262,7 +261,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       let { crate } = await prepare(msw);
 
       // Mock the server to return an error
-      let deferred = defer();
+      let deferred = Promise.withResolvers<Response>();
       msw.worker.use(http.post('/api/v1/trusted_publishing/github_configs', () => deferred.promise));
 
       await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -489,7 +488,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       let { crate } = await prepare(msw);
 
       // Mock the server to return an error
-      let deferred = defer();
+      let deferred = Promise.withResolvers<Response>();
       msw.worker.use(http.post('/api/v1/trusted_publishing/gitlab_configs', () => deferred.promise));
 
       await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);

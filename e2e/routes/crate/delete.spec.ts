@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
@@ -64,7 +63,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
   test('loading state', async ({ page, msw }) => {
     await prepare(msw);
 
-    let deferred = defer();
+    let deferred = Promise.withResolvers<void>();
     msw.worker.use(http.delete('/api/v1/crates/:name', () => deferred.promise));
 
     await page.goto('/crates/foo/delete');

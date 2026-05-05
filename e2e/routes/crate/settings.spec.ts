@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
@@ -523,7 +522,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
           workflow_filename: 'ci.yml',
         });
 
-        let deferred = defer();
+        let deferred = Promise.withResolvers<Response>();
         msw.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
 
         await page.goto('/crates/foo/settings');

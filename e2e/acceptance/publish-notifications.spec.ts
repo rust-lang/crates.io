@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
@@ -56,7 +55,7 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
-    let deferred = defer();
+    let deferred = Promise.withResolvers<void>();
     msw.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));
 
     await page.goto('/settings/profile');
