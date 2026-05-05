@@ -27,7 +27,7 @@ async function loadKeywords(
   let response;
   try {
     response = await client.GET('/api/v1/keywords', { params: { query } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadKeywordsError(504);
   }

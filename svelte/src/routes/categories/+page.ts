@@ -27,7 +27,7 @@ async function loadCategories(
   let response;
   try {
     response = await client.GET('/api/v1/categories', { params: { query } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCategoriesError(504);
   }

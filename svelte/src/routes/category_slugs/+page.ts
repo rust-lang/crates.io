@@ -17,7 +17,7 @@ async function loadCategorySlugs(client: ReturnType<typeof createClient>) {
   let response;
   try {
     response = await client.GET('/api/v1/category_slugs');
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCategorySlugsError(504);
   }

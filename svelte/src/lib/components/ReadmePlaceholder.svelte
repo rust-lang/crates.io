@@ -9,12 +9,12 @@
   <!-- eslint-disable svelte/require-each-key -->
 
   <Placeholder width="30%" height="25px" {radius} opacity={0.6} style="margin: var(--space-s) 0 var(--space-m)" />
-  {#each { length: 5 } as _}
+  {#each { length: 5 }}
     <Placeholder {...text} {radius} />
   {/each}
 
   <Placeholder width="50%" height="20px" {radius} opacity={0.6} style="margin: var(--space-l) 0 var(--space-m)" />
-  {#each { length: 3 } as _}
+  {#each { length: 3 }}
     <Placeholder {...text} {radius} />
   {/each}
 </div>

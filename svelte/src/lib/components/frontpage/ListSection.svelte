@@ -21,7 +21,7 @@
   <h2><a {href}>{title}</a></h2>
   <svelte:element this={ordered ? 'ol' : 'ul'} class="list" aria-busy={!items}>
     {#if !items}
-      {#each { length: 10 } as _, i (i)}
+      {#each { length: 10 }, i (i)}
         <li><ListItemPlaceholder {withSubtitle} /></li>
       {/each}
     {:else}

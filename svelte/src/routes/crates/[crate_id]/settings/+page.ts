@@ -26,7 +26,7 @@ async function loadGitHubConfigs(client: ReturnType<typeof createClient>, crateN
     response = await client.GET('/api/v1/trusted_publishing/github_configs', {
       params: { query: { crate: crateName } },
     });
-  } catch (_error) {
+  } catch {
     loadError(504);
   }
 
@@ -44,7 +44,7 @@ async function loadGitLabConfigs(client: ReturnType<typeof createClient>, crateN
     response = await client.GET('/api/v1/trusted_publishing/gitlab_configs', {
       params: { query: { crate: crateName } },
     });
-  } catch (_error) {
+  } catch {
     loadError(504);
   }
 

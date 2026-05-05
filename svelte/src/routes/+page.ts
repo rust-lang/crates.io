@@ -33,7 +33,7 @@ async function loadSummary(client: ReturnType<typeof createClient>): Promise<Sum
   let response;
   try {
     response = await client.GET('/api/v1/summary');
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadSummaryError(504);
   }

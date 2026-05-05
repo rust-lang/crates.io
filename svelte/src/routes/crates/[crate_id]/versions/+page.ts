@@ -20,7 +20,7 @@ export async function load({ fetch, params, url, depends }) {
         query: { sort, per_page: perPage, include: 'release_tracks' },
       },
     });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadVersionsError(504);
   }
