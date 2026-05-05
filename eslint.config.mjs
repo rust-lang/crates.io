@@ -49,7 +49,6 @@ export default [
       },
 
       parser: ts.parser,
-      ecmaVersion: 2018,
       sourceType: 'module',
     },
 
@@ -107,7 +106,6 @@ export default [
         ...globals.node,
       },
 
-      ecmaVersion: 2018,
       sourceType: 'script',
     },
   },
