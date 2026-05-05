@@ -24,7 +24,7 @@ serde_json = "=1.0.149"
 sha2 = "=0.11.0"
 thiserror = "=2.0.18"
 tracing = "=0.1.44"
-utoipa = { version = "=5.4.0", features = ["chrono"] }
+utoipa = { version = "=5.5.0", features = ["chrono"] }
 
 [dev-dependencies]
 claims = "=0.8.0"

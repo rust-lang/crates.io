@@ -18,7 +18,7 @@ sentry-core = "=0.48.1"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 url = "=2.5.8"
-utoipa = { version = "=5.4.0", features = ["chrono"] }
+utoipa = { version = "=5.5.0", features = ["chrono"] }
 
 [dev-dependencies]
 claims = "=0.8.0"

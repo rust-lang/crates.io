@@ -151,7 +151,7 @@ tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.8"
-utoipa = { version = "=5.4.0", features = ["chrono"] }
+utoipa = { version = "=5.5.0", features = ["chrono"] }
 utoipa-axum = "=0.2.0"
 
 [dev-dependencies]
