@@ -18,9 +18,6 @@ importers:
       '@crates-io/msw':
         specifier: workspace:*
         version: link:packages/crates-io-msw
-      '@eslint/eslintrc':
-        specifier: 3.3.5
-        version: 3.3.5
       '@eslint/js':
         specifier: 10.0.1
         version: 10.0.1(eslint@10.3.0(jiti@2.6.1))
@@ -585,10 +582,6 @@ packages:
   '@eslint/core@1.2.1':
     resolution: {integrity: sha512-MwcE1P+AZ4C6DWlpin/OmOA54mmIZ/+xZuJiQd4SyB29oAJjN30UW9wkKNptW2ctp4cEsvhlLY/CsQ1uoHDloQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-
-  '@eslint/eslintrc@3.3.5':
-    resolution: {integrity: sha512-4IlJx0X0qftVsN5E+/vGujTRIFtwuLbNsVUe7TO6zYPDR1O6nFwvwhIKEKSrl6dZchmYBITazxKoUYOjdtjlRg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/js@10.0.1':
     resolution: {integrity: sha512-zeR9k5pd4gxjZ0abRoIaxdc7I3nDktoXZk2qOv9gCNWx3mVwEn32VRhyLaRsDiJjTs0xq/T8mfPtyuXu7GWBcA==}
@@ -2464,10 +2457,6 @@ packages:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
     deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
-  globals@14.0.0:
-    resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
-    engines: {node: '>=18'}
-
   globals@16.5.0:
     resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
     engines: {node: '>=18'}
@@ -3469,10 +3458,6 @@ packages:
     resolution: {integrity: sha512-SlyRoSkdh1dYP0PzclLE7r0M9sgbFKKMFXpFRUMNuKhQSbC6VQIGzq3E0qsfvGJaUFJPGv6Ws1NZ/haTAjfbMA==}
     engines: {node: '>=12'}
 
-  strip-json-comments@3.1.1:
-    resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
-    engines: {node: '>=8'}
-
   stylis@4.4.0:
     resolution: {integrity: sha512-5Z9ZpRzfuH6l/UAvCPAPUo3665Nk2wLaZU3x+TLHKVzIz33+sbJqbtrYoC3KD4/uVOr2Zp+L0LySezP9OHV9yA==}
 
@@ -4225,20 +4210,6 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
 
-  '@eslint/eslintrc@3.3.5':
-    dependencies:
-      ajv: 6.15.0
-      debug: 4.4.3(supports-color@10.2.2)
-      espree: 10.4.0
-      globals: 14.0.0
-      ignore: 5.3.2
-      import-fresh: 3.3.1
-      js-yaml: 4.1.1
-      minimatch: 3.1.5
-      strip-json-comments: 3.1.1
-    transitivePeerDependencies:
-      - supports-color
-
   '@eslint/js@10.0.1(eslint@10.3.0(jiti@2.6.1))':
     optionalDependencies:
       eslint: 10.3.0(jiti@2.6.1)
@@ -4425,19 +4396,13 @@ snapshots:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
       '@percy/cli-exec': 1.31.13(typescript@6.0.3)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-build@1.31.13(typescript@6.0.3)':
     dependencies:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-command@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -4454,10 +4419,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-doctor@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -4483,20 +4445,14 @@ snapshots:
       cross-spawn: 7.0.6
       which: 2.0.2
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-snapshot@1.31.13(typescript@6.0.3)':
     dependencies:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
       yaml: 2.8.3
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-upload@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -4504,10 +4460,7 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -6412,8 +6365,6 @@ snapshots:
       once: 1.4.0
       path-is-absolute: 1.0.1
 
-  globals@14.0.0: {}
-
   globals@16.5.0: {}
 
   globals@17.6.0: {}
@@ -7486,8 +7437,6 @@ snapshots:
       min-indent: 1.0.1
 
   strip-indent@4.1.1: {}
-
-  strip-json-comments@3.1.1: {}
 
   stylis@4.4.0: {}
 

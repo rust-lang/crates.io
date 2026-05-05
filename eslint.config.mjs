@@ -1,21 +1,9 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import preferLet from 'eslint-plugin-prefer-let';
-import prettier from 'eslint-plugin-prettier';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import ts from 'typescript-eslint';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-const compat = new FlatCompat({
-  baseDirectory: dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
 
 export default [
   eslintPluginUnicorn.configs.recommended,
@@ -35,12 +23,12 @@ export default [
       '!**/.*',
     ],
   },
-  ...compat.extends('eslint:recommended', 'plugin:prettier/recommended'),
+  js.configs.recommended,
+  prettierRecommended,
   ...ts.configs.recommended,
   {
     plugins: {
       'prefer-let': preferLet,
-      prettier,
     },
 
     languageOptions: {
@@ -49,7 +37,6 @@ export default [
       },
 
       parser: ts.parser,
-      ecmaVersion: 2018,
       sourceType: 'module',
     },
 
@@ -59,8 +46,6 @@ export default [
 
       'prefer-const': 'off',
       'prefer-let/prefer-let': 'error',
-
-      'prettier/prettier': 'error',
 
       // disabled because it seems unnecessary
       'unicorn/consistent-function-scoping': 'off',
@@ -107,7 +92,6 @@ export default [
         ...globals.node,
       },
 
-      ecmaVersion: 2018,
       sourceType: 'script',
     },
   },
