@@ -110,7 +110,10 @@
       <CalendarIcon />
       <span>
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
-        <Tooltip text={format(version.created_at, 'PPP')} />
+        <Tooltip>
+          Release date:
+          {format(version.created_at, 'PPP')}
+        </Tooltip>
       </span>
     </time>
 
@@ -151,7 +154,10 @@
     {#if version.crate_size}
       <div class="bytes">
         <WeightIcon />
-        {prettyBytes(version.crate_size, { binary: true })}
+        <span>
+          {prettyBytes(version.crate_size, { binary: true })}
+          <Tooltip text="Compressed package size" />
+        </span>
       </div>
     {/if}
 
@@ -317,7 +323,8 @@
   .date,
   .msrv,
   .edition,
-  .linecount {
+  .linecount,
+  .bytes {
     > span {
       cursor: help;
     }
