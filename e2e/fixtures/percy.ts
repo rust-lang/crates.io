@@ -1,4 +1,4 @@
-import { default as percySnapshot } from '@percy/playwright';
+import percySnapshot from '@percy/playwright';
 import { Page, TestInfo } from '@playwright/test';
 
 export class PercyPage {
