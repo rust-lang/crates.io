@@ -36,6 +36,7 @@ export default [
     ],
   },
   ...compat.extends('eslint:recommended', 'plugin:prettier/recommended'),
+  ...ts.configs.recommended,
   {
     plugins: {
       'prefer-let': preferLet,
