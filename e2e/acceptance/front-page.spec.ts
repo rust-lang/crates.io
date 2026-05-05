@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { loadFixtures } from '@crates-io/msw/fixtures';
 import { http, HttpResponse } from 'msw';
@@ -52,7 +51,7 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
 
     await msw.worker.resetHandlers();
 
-    let deferred = defer();
+    let deferred = Promise.withResolvers<void>();
     msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
 
     const button = page.locator('[data-test-try-again-button]');

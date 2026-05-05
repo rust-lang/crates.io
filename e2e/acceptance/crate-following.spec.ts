@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
@@ -25,7 +24,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
   test('authenticated users see a loading spinner and can follow/unfollow crates', async ({ page, msw }) => {
     await prepare(msw);
 
-    let followingDeferred = defer();
+    let followingDeferred = Promise.withResolvers<Response>();
     msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => followingDeferred.promise));
 
     await page.goto('/crates/nanomsg');
@@ -41,7 +40,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await expect(followButton).toBeEnabled();
     await expect(spinner).toHaveCount(0);
 
-    let followDeferred = defer();
+    let followDeferred = Promise.withResolvers<Response>();
     msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => followDeferred.promise));
     await followButton.click();
     await expect(followButton).toHaveText('Loading…');
@@ -53,7 +52,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await expect(followButton).toBeEnabled();
     await expect(spinner).toHaveCount(0);
 
-    let unfollowDeferred = defer();
+    let unfollowDeferred = Promise.withResolvers<Response>();
     msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => unfollowDeferred.promise));
     await followButton.click();
     await expect(followButton).toHaveText('Loading…');

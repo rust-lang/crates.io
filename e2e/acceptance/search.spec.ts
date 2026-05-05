@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { loadFixtures } from '@crates-io/msw/fixtures';
 import { http, HttpResponse } from 'msw';
@@ -140,7 +139,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-try-again-button]')).toBeEnabled();
 
     await msw.worker.resetHandlers();
-    let deferred = defer();
+    let deferred = Promise.withResolvers<void>();
     msw.worker.use(http.get('/api/v1/crates', () => deferred.promise));
 
     await page.click('[data-test-try-again-button]');
@@ -174,7 +173,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-try-again-button]')).toBeEnabled();
 
     await msw.worker.resetHandlers();
-    let deferred = defer();
+    let deferred = Promise.withResolvers<void>();
     msw.worker.use(http.get('/api/v1/crates', () => deferred.promise));
 
     await page.click('[data-test-try-again-button]');

@@ -1,4 +1,3 @@
-import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
@@ -250,7 +249,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
   test('loading and error state', async ({ page, msw }) => {
     await prepare(msw);
 
-    let deferred = defer();
+    let deferred = Promise.withResolvers<Response>();
     msw.worker.use(http.put('/api/v1/me/tokens', () => deferred.promise));
 
     await page.goto('/settings/tokens/new');
