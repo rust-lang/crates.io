@@ -79,7 +79,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-api-token]')).toHaveCount(3);
 
     await page.click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    expect(msw.db.apiToken.findMany().length, 'API token has been deleted from the backend database').toBe(2);
+    await expect.poll(() => msw.db.apiToken.findMany().length).toBe(2);
 
     await expect(page.locator('[data-test-api-token]')).toHaveCount(2);
     await expect(page.locator('[data-test-api-token="2"]')).toBeVisible();
@@ -134,8 +134,9 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
 
     await page.click('[data-test-generate]');
 
+    await expect.poll(() => msw.db.apiToken.findFirst(q => q.where({ name: 'the new token' }))).toBeTruthy();
+
     let token = msw.db.apiToken.findFirst(q => q.where({ name: 'the new token' }))?.token;
-    expect(token, 'API token has been created in the backend database').toBeTruthy();
 
     await expect(page.locator('[data-test-api-token="4"] [data-test-name]')).toHaveText('the new token');
     await expect(page.locator('[data-test-api-token="4"] [data-test-save-token-button]')).toHaveCount(0);
@@ -154,6 +155,8 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.fill('[data-test-name]', 'the new token');
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
+
+    await expect.poll(() => msw.db.apiToken.findFirst(q => q.where({ name: 'the new token' }))).toBeTruthy();
 
     let token = msw.db.apiToken.findFirst(q => q.where({ name: 'the new token' }))?.token;
     await expect(page.locator('[data-test-token]')).toHaveText(token);

@@ -115,15 +115,15 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await yankButton.click();
 
     // Verify backend state after yanking
-    version = msw.db.version.findFirst(q => q.where({ id: version.id }));
-    expect(version.yanked, 'The version should be yanked').toBe(true);
+    await expect.poll(() => msw.db.version.findFirst(q => q.where({ id: version.id }))).toMatchObject({ yanked: true });
 
     await expect(unyankButton).toBeVisible();
     await unyankButton.click();
 
     // Verify backend state after unyanking
-    version = msw.db.version.findFirst(q => q.where({ id: version.id }));
-    expect(version.yanked, 'The version should be unyanked').toBe(false);
+    await expect
+      .poll(() => msw.db.version.findFirst(q => q.where({ id: version.id })))
+      .toMatchObject({ yanked: false });
 
     await expect(yankButton).toBeVisible();
   });
