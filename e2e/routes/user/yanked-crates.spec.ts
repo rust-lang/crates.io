@@ -1,7 +1,7 @@
-import { expect, test } from '@/e2e/helper';
+import { expect, test, type AppFixtures } from '@/e2e/helper';
 
 test.describe('Route | user | yanked crates visibility', { tag: '@routes' }, () => {
-  async function prepare(msw: any) {
+  async function prepare(msw: AppFixtures['msw']) {
     let user1 = await msw.db.user.create({ login: 'alice', name: 'Alice' });
     let user2 = await msw.db.user.create({ login: 'bob', name: 'Bob' });
 
