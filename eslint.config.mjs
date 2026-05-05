@@ -2,10 +2,11 @@ import js from '@eslint/js';
 import preferLet from 'eslint-plugin-prefer-let';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 
-export default [
+export default defineConfig(
   eslintPluginUnicorn.configs.recommended,
   {
     ignores: [
@@ -95,4 +96,4 @@ export default [
       sourceType: 'script',
     },
   },
-];
+);
