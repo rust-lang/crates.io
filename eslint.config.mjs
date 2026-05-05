@@ -1,3 +1,6 @@
+import { fileURLToPath } from 'node:url';
+
+import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
 import preferLet from 'eslint-plugin-prefer-let';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
@@ -6,24 +9,15 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 
+const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
+
 export default defineConfig(
   eslintPluginUnicorn.configs.recommended,
-  {
-    ignores: [
-      '.git/**/*',
-      'crates/',
-      'playwright-report/',
-      'svelte/',
-      'target/',
-      'test-results/',
-      'tmp/',
-      // dependencies
-      'node_modules/',
-      // misc
-      'coverage/',
-      '!**/.*',
-    ],
-  },
+  includeIgnoreFile(gitignorePath),
+  // `crates/` (Rust workspace crates) and `svelte/` (SvelteKit app with its
+  // own ESLint config) are not in `.gitignore`, but the root ESLint config
+  // should not try to lint either of them.
+  { ignores: ['crates/', 'svelte/'] },
   js.configs.recommended,
   prettierRecommended,
   ...ts.configs.recommended,
