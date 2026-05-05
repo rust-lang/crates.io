@@ -30,7 +30,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   });
 
   test('listing crates', async ({ page, msw }) => {
-    const per_page = 50;
+    let per_page = 50;
     for (let i = 1; i <= per_page; i++) {
       let crate = await msw.db.crate.create({});
       await msw.db.version.create({ crate });
@@ -43,13 +43,13 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   });
 
   test('navigating to next page of crates', async ({ page, msw }) => {
-    const per_page = 50;
+    let per_page = 50;
     for (let i = 1; i <= per_page + 2; i++) {
       let crate = await msw.db.crate.create({});
       await msw.db.version.create({ crate });
     }
-    const page_start = per_page + 1;
-    const total = per_page + 2;
+    let page_start = per_page + 1;
+    let total = per_page + 2;
 
     await page.goto('/crates');
     await page.click('[data-test-pagination-next]');

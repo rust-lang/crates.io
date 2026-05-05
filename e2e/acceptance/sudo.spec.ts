@@ -78,12 +78,12 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     // Test that the expiry time is sensible. We'll allow a minute either way in
     // case of slow tests or slightly wonky clocks.
-    const disable = page.locator('[data-test-disable-admin-actions] > div');
-    const seen = await disable.evaluate(async disable => {
-      const untilAbout = Date.now() + 6 * 60 * 60 * 1000;
+    let disable = page.locator('[data-test-disable-admin-actions] > div');
+    let seen = await disable.evaluate(async disable => {
+      let untilAbout = Date.now() + 6 * 60 * 60 * 1000;
       let seen = 0;
-      for (const ts of [untilAbout - 60 * 1000, untilAbout, untilAbout + 60 * 1000]) {
-        const time = await globalThis.format(new Date(ts), 'HH:mm');
+      for (let ts of [untilAbout - 60 * 1000, untilAbout, untilAbout + 60 * 1000]) {
+        let time = await globalThis.format(new Date(ts), 'HH:mm');
         if (disable.textContent.includes(time)) {
           seen += 1;
         }
@@ -109,8 +109,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     await page.locator('[data-test-actions-toggle]').click();
 
-    const yankButton = page.locator('[data-test-version-yank-button="0.1.0"]');
-    const unyankButton = page.locator('[data-test-version-unyank-button="0.1.0"]');
+    let yankButton = page.locator('[data-test-version-yank-button="0.1.0"]');
+    let unyankButton = page.locator('[data-test-version-unyank-button="0.1.0"]');
 
     await yankButton.click();
 

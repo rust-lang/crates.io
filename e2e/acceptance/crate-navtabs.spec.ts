@@ -6,24 +6,24 @@ test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () =
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.1' });
 
-    const tabReadme = page.locator('[data-test-readme-tab] a');
-    const tabVersions = page.locator('[data-test-versions-tab] a');
-    const tabDeps = page.locator('[data-test-deps-tab] a');
-    const tabRevDeps = page.locator('[data-test-rev-deps-tab] a');
-    const tabSettings = page.locator('[data-test-settings-tab] a');
+    let tabReadme = page.locator('[data-test-readme-tab] a');
+    let tabVersions = page.locator('[data-test-versions-tab] a');
+    let tabDeps = page.locator('[data-test-deps-tab] a');
+    let tabRevDeps = page.locator('[data-test-rev-deps-tab] a');
+    let tabSettings = page.locator('[data-test-settings-tab] a');
 
     async function checkLinks(version: string = '') {
-      const readmeLink = version ? `/crates/nanomsg/${version}` : '/crates/nanomsg';
+      let readmeLink = version ? `/crates/nanomsg/${version}` : '/crates/nanomsg';
       await expect(tabReadme).toHaveAttribute('href', readmeLink);
       await expect(tabVersions).toHaveAttribute('href', '/crates/nanomsg/versions');
-      const depsLink = version ? `/crates/nanomsg/${version}/dependencies` : '/crates/nanomsg/dependencies';
+      let depsLink = version ? `/crates/nanomsg/${version}/dependencies` : '/crates/nanomsg/dependencies';
       await expect(tabDeps).toHaveAttribute('href', depsLink);
       await expect(tabRevDeps).toHaveAttribute('href', '/crates/nanomsg/reverse_dependencies');
     }
 
     async function checkTabActiveState(currentTab: Locator) {
       await expect(currentTab).toHaveAttribute('data-test-active');
-      const otherTabs = [tabReadme, tabVersions, tabDeps, tabRevDeps].filter(tab => tab !== currentTab);
+      let otherTabs = [tabReadme, tabVersions, tabDeps, tabRevDeps].filter(tab => tab !== currentTab);
       for (let tab of otherTabs) {
         await expect(tab).not.toHaveAttribute('data-test-active');
       }

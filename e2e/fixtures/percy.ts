@@ -13,7 +13,7 @@ export class PercyPage {
   // This implementation maintains the title format used by @percy/ember
   private title(): string {
     // Skip the filename
-    const paths = this.testInfo.titlePath.slice(1);
+    let paths = this.testInfo.titlePath.slice(1);
     // Add an "e2e" prefix to differentiate the snapshots from the QUnit tests.
     // This address the visual changes caused by the font not loading in QUnit tests (#9052).
     return ['e2e'].concat(paths).join(' | ');

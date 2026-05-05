@@ -8,7 +8,7 @@ test.describe('Acceptance | Logout', { tag: '@acceptance' }, () => {
     await page.goto('/crates');
     await expect(page).toHaveURL('/crates');
 
-    const menu = page.locator('[data-test-user-menu]');
+    let menu = page.locator('[data-test-user-menu]');
     await expect(menu.locator('[data-test-toggle]')).toHaveText('John Doe');
 
     await menu.locator('[data-test-toggle]').click();

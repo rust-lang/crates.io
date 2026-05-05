@@ -64,7 +64,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
       await page.goto('/');
 
-      const searchInput = page.locator('[data-test-search-input]');
+      let searchInput = page.locator('[data-test-search-input]');
       await searchInput.blur();
       await page.keyboard.press('a');
       await expect(searchInput).not.toBeFocused();

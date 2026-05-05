@@ -243,12 +243,12 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg/0.5.0');
-    const yankButton = page.locator('[data-test-version-yank-button="0.5.0"]');
+    let yankButton = page.locator('[data-test-version-yank-button="0.5.0"]');
     await yankButton.click();
     await expect(yankButton).toHaveText('Yanking...');
     await expect(yankButton).toBeDisabled();
 
-    const unyankButton = page.locator('[data-test-version-unyank-button="0.5.0"]');
+    let unyankButton = page.locator('[data-test-version-unyank-button="0.5.0"]');
     await unyankButton.click();
     await expect(unyankButton).toHaveText('Unyanking...');
     await expect(unyankButton).toBeDisabled();

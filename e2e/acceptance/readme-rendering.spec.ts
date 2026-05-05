@@ -123,7 +123,7 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
 
     await page.goto('/crates/serde');
-    const readme = page.locator('[data-test-readme]');
+    let readme = page.locator('[data-test-readme]');
     await expect(readme).toBeVisible();
     await expect(readme.locator('ul > li')).toHaveCount(7);
     await expect(readme.locator('pre > code.language-rust.hljs')).toHaveCount(2);
