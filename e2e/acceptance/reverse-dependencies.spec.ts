@@ -25,10 +25,10 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);
 
     await expect(page.locator('[data-test-row]')).toHaveCount(2);
-    const row0 = page.locator('[data-test-row="0"]');
+    let row0 = page.locator('[data-test-row="0"]');
     await expect(row0.locator('[data-test-crate-name]')).toHaveText(baz.name);
     await expect(row0.locator('[data-test-description]')).toHaveText(baz.description);
-    const row1 = page.locator('[data-test-row="1"]');
+    let row1 = page.locator('[data-test-row="1"]');
     await expect(row1.locator('[data-test-crate-name]')).toHaveText(bar.name);
     await expect(row1.locator('[data-test-description]')).toHaveText(bar.description);
   });
@@ -42,9 +42,9 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
       await msw.db.dependency.create({ crate: foo, version });
     }
 
-    const row = page.locator('[data-test-row]');
-    const currentRows = page.locator('[data-test-current-rows]');
-    const totalRows = page.locator('[data-test-total-rows]');
+    let row = page.locator('[data-test-row]');
+    let currentRows = page.locator('[data-test-current-rows]');
+    let totalRows = page.locator('[data-test-total-rows]');
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);

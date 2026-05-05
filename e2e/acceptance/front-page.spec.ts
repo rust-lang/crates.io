@@ -55,7 +55,7 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     let deferred = defer();
     msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
 
-    const button = page.locator('[data-test-try-again-button]');
+    let button = page.locator('[data-test-try-again-button]');
     await button.click();
     await expect(button.locator('[data-test-spinner]')).toBeVisible();
     await expect(page.locator('[data-test-lists]')).toHaveCount(0);

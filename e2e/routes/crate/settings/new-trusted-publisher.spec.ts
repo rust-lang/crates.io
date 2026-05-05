@@ -60,7 +60,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
   });
 
   test.describe('prefill', () => {
-    const testCases = [
+    let testCases = [
       {
         name: 'GitHub: simple https',
         url: 'https://github.com/rust-lang/crates.io',
@@ -140,7 +140,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       },
     ];
 
-    for (const { name, url, publisher, owner, repo } of testCases) {
+    for (let { name, url, publisher, owner, repo } of testCases) {
       test(name, async ({ msw, page }) => {
         let { crate } = await prepare(msw);
 

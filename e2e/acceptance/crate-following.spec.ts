@@ -30,8 +30,8 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/nanomsg');
 
-    const followButton = page.locator('[data-test-follow-button]');
-    const spinner = followButton.locator('[data-test-spinner]');
+    let followButton = page.locator('[data-test-follow-button]');
+    let spinner = followButton.locator('[data-test-spinner]');
     await expect(followButton).toHaveText('Loading…');
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
@@ -73,7 +73,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => error));
 
     await page.goto('/crates/nanomsg');
-    const followButton = page.locator('[data-test-follow-button]');
+    let followButton = page.locator('[data-test-follow-button]');
     await expect(followButton).toHaveText('Follow');
     await expect(followButton).toBeDisabled();
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(

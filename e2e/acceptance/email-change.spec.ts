@@ -8,7 +8,7 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
 
     await page.goto('/settings/profile');
     await expect(page).toHaveURL('/settings/profile');
-    const emailInput = page.locator('[data-test-email-input]');
+    let emailInput = page.locator('[data-test-email-input]');
     await expect(emailInput).toBeVisible();
     await expect(emailInput.locator('[data-test-no-email]')).toHaveCount(0);
     await expect(emailInput.locator('[data-test-email-address]')).toContainText('old@email.com');
@@ -49,7 +49,7 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
 
     await page.goto('/settings/profile');
     await expect(page).toHaveURL('/settings/profile');
-    const emailInput = page.locator('[data-test-email-input]');
+    let emailInput = page.locator('[data-test-email-input]');
     await expect(emailInput).toBeVisible();
     await expect(emailInput.locator('[data-test-no-email]')).toBeVisible();
     await expect(emailInput.locator('[data-test-email-address]')).toHaveText('');
@@ -85,7 +85,7 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
     await msw.authenticateAs(user);
 
     await page.goto('/settings/profile');
-    const emailInput = page.locator('[data-test-email-input]');
+    let emailInput = page.locator('[data-test-email-input]');
     await emailInput.locator('[data-test-edit-button]').click();
     await emailInput.locator('[data-test-input]').fill('new@email.com');
     await expect(emailInput.locator('[data-test-invalid-email-warning]')).toHaveCount(0);
@@ -110,7 +110,7 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
     msw.worker.use(http.put('/api/v1/users/:user_id', () => error));
 
     await page.goto('/settings/profile');
-    const emailInput = page.locator('[data-test-email-input]');
+    let emailInput = page.locator('[data-test-email-input]');
     await emailInput.locator('[data-test-edit-button]').click();
     await emailInput.locator('[data-test-input]').fill('new@email.com');
 
@@ -134,13 +134,13 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
 
       await page.goto('/settings/profile');
       await expect(page).toHaveURL('/settings/profile');
-      const emailInput = page.locator('[data-test-email-input]');
+      let emailInput = page.locator('[data-test-email-input]');
       await expect(emailInput).toBeVisible();
       await expect(emailInput.locator('[data-test-email-address]')).toContainText('john@doe.com');
       await expect(emailInput.locator('[data-test-verified]')).toHaveCount(0);
       await expect(emailInput.locator('[data-test-not-verified]')).toBeVisible();
       await expect(emailInput.locator('[data-test-verification-sent]')).toBeVisible();
-      const button = emailInput.locator('[data-test-resend-button]');
+      let button = emailInput.locator('[data-test-resend-button]');
       await expect(button).toBeEnabled();
       await expect(button).toHaveText('Resend');
 
@@ -158,13 +158,13 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
 
       await page.goto('/settings/profile');
       await expect(page).toHaveURL('/settings/profile');
-      const emailInput = page.locator('[data-test-email-input]');
+      let emailInput = page.locator('[data-test-email-input]');
       await expect(emailInput).toBeVisible();
       await expect(emailInput.locator('[data-test-email-address]')).toContainText('john@doe.com');
       await expect(emailInput.locator('[data-test-verified]')).toHaveCount(0);
       await expect(emailInput.locator('[data-test-not-verified]')).toBeVisible();
       await expect(emailInput.locator('[data-test-verification-sent]')).toBeVisible();
-      const button = emailInput.locator('[data-test-resend-button]');
+      let button = emailInput.locator('[data-test-resend-button]');
       await expect(button).toBeEnabled();
       await expect(button).toHaveText('Resend');
 

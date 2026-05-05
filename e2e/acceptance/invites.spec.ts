@@ -45,13 +45,13 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page).toHaveURL('/me/pending-invites');
     await expect(page.locator('[data-test-invite]')).toHaveCount(2);
 
-    const nanomsg = page.locator('[data-test-invite="nanomsg"]');
+    let nanomsg = page.locator('[data-test-invite="nanomsg"]');
     await expect(nanomsg).toBeVisible();
     await expect(nanomsg.locator('[data-test-date]')).toHaveText('11 months ago');
     await expect(nanomsg.locator('[data-test-accept-button]')).toBeVisible();
     await expect(nanomsg.locator('[data-test-decline-button]')).toBeVisible();
 
-    const emberRs = page.locator('[data-test-invite="ember-rs"]');
+    let emberRs = page.locator('[data-test-invite="ember-rs"]');
     await expect(emberRs).toBeVisible();
     await expect(emberRs.locator('[data-test-crate-link]')).toHaveText('ember-rs');
     await expect(emberRs.locator('[data-test-crate-link]')).toHaveAttribute('href', '/crates/ember-rs');
@@ -92,7 +92,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
 
-    const nanomsgL = page.locator('[data-test-invite="nanomsg"]');
+    let nanomsgL = page.locator('[data-test-invite="nanomsg"]');
     await nanomsgL.locator('[data-test-decline-button]').click();
     await expect(nanomsgL.and(page.locator('[data-test-declined-message]'))).toHaveText(
       'Declined. You have not been added as an owner of crate nanomsg.',

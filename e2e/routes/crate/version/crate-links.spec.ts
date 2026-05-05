@@ -12,9 +12,9 @@ test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
 
     await page.goto('/crates/foo');
 
-    const homepageLink = page.locator('[data-test-homepage-link] a');
-    const docsLink = page.locator('[data-test-docs-link] a');
-    const repositoryLink = page.locator('[data-test-repository-link] a');
+    let homepageLink = page.locator('[data-test-homepage-link] a');
+    let docsLink = page.locator('[data-test-docs-link] a');
+    let repositoryLink = page.locator('[data-test-repository-link] a');
 
     await expect(homepageLink).toHaveText('crates.io');
     await expect(homepageLink).toHaveAttribute('href', 'https://crates.io/');
@@ -50,7 +50,7 @@ test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-homepage-link]')).toHaveCount(0);
     await expect(page.locator('[data-test-docs-link]')).toHaveCount(0);
 
-    const repositoryLink = page.locator('[data-test-repository-link] a');
+    let repositoryLink = page.locator('[data-test-repository-link] a');
     await expect(repositoryLink).toHaveText('github.com/rust-lang/crates.io');
     await expect(repositoryLink).toHaveAttribute('href', 'https://github.com/rust-lang/crates.io');
   });
@@ -68,7 +68,7 @@ test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-homepage-link]')).toHaveCount(0);
     await expect(page.locator('[data-test-docs-link]')).toHaveCount(0);
 
-    const repositoryLink = page.locator('[data-test-repository-link] a');
+    let repositoryLink = page.locator('[data-test-repository-link] a');
     await expect(repositoryLink).toHaveText('github.com/rust-lang/crates.io');
     await expect(repositoryLink).toHaveAttribute('href', 'https://github.com/rust-lang/crates.io.git');
   });

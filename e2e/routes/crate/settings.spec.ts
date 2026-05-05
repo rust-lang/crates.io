@@ -78,7 +78,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
   test.describe('Trusted Publishing', () => {
     test('mixed GitHub and GitLab configs', async ({ msw, page, percy }) => {
-      const { crate } = await prepare(msw);
+      let { crate } = await prepare(msw);
 
       // Create GitHub config
       await msw.db.trustpubGithubConfig.create({
@@ -128,7 +128,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
     test.describe('GitHub', () => {
       test('happy path', async ({ msw, page, percy }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
 
         // Create two GitHub configs for the crate
         await msw.db.trustpubGithubConfig.create({
@@ -211,7 +211,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
     test.describe('GitLab', () => {
       test('happy path', async ({ msw, page, percy }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
 
         // Create two GitLab configs for the crate
         await msw.db.trustpubGitlabConfig.create({
@@ -306,7 +306,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('hidden when flag is true and configs exist', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -326,7 +326,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('shown when flag is true but no configs exist', async ({ msw, page, percy }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -344,7 +344,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('disappears when checkbox is unchecked', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -361,7 +361,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('appears when last config is removed', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -395,7 +395,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('visible when GitHub configs exist', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
 
         await msw.db.trustpubGithubConfig.create({
           crate,
@@ -411,7 +411,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('visible when GitLab configs exist', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
 
         await msw.db.trustpubGitlabConfig.create({
           crate,
@@ -427,7 +427,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('visible when flag is true but no configs', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -441,7 +441,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('stays visible after disabling when no configs exist', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -467,7 +467,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('enabling trustpub_only', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
 
         await msw.db.trustpubGithubConfig.create({
           crate,
@@ -488,7 +488,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('disabling trustpub_only', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
         await msw.db.crate.update(q => q.where({ id: crate.id }), {
           data(c) {
             c.trustpubOnly = true;
@@ -514,7 +514,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       test('loading and error state', async ({ msw, page }) => {
-        const { crate } = await prepare(msw);
+        let { crate } = await prepare(msw);
 
         await msw.db.trustpubGithubConfig.create({
           crate,

@@ -104,11 +104,11 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
 
     await page.goto('/');
 
-    const popupPromise = page.waitForEvent('popup');
+    let popupPromise = page.waitForEvent('popup');
 
     await page.click('[data-test-login-button]');
 
-    const popup = await popupPromise;
+    let popup = await popupPromise;
     await popup.close();
 
     await expect(page.locator('[data-test-notification-message]')).toHaveText(

@@ -48,7 +48,7 @@ export const test = base.extend<AppOptions & AppFixtures>({
   ],
   msw: [
     async ({ context, page }, use) => {
-      const worker = defineNetworkFixture({
+      let worker = defineNetworkFixture({
         context,
         handlers,
         // Without this, requests for `foo.json` cannot be intercepted, which causes some tests to fail.
@@ -56,7 +56,7 @@ export const test = base.extend<AppOptions & AppFixtures>({
       });
       await worker.enable();
 
-      const authenticateAs = async function (user) {
+      let authenticateAs = async function (user) {
         await db.mswSession.create({ user });
         await page.addInitScript("globalThis.localStorage.setItem('isLoggedIn', '1')");
       };

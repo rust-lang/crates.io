@@ -20,7 +20,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
 
     await expect(page.getByTestId('support-main-content').locator('section')).toHaveCount(1);
     await expect(page.getByTestId('inquire-list-section')).toBeVisible();
-    const inquireList = page.getByTestId('inquire-list');
+    let inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
     await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
       ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
@@ -36,7 +36,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
 
     await expect(page.getByTestId('support-main-content').locator('section')).toHaveCount(1);
     await expect(page.getByTestId('inquire-list-section')).toBeVisible();
-    const inquireList = page.getByTestId('inquire-list');
+    let inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
     await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
       ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
@@ -73,9 +73,9 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     });
 
     test('empty crate should shows errors', async ({ page }) => {
-      const crateInput = page.getByTestId('crate-input');
+      let crateInput = page.getByTestId('crate-input');
       await expect(crateInput).toHaveValue('');
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).toBeVisible();
@@ -86,19 +86,19 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     });
 
     test('other reason selected without given detail shows an error', async ({ page }) => {
-      const crateInput = page.getByTestId('crate-input');
+      let crateInput = page.getByTestId('crate-input');
       await crateInput.fill('nanomsg');
       await expect(crateInput).toHaveValue('nanomsg');
 
-      const spam = page.getByTestId('spam-checkbox');
+      let spam = page.getByTestId('spam-checkbox');
       await spam.check();
       await expect(spam).toBeChecked();
-      const other = page.getByTestId('other-checkbox');
+      let other = page.getByTestId('other-checkbox');
       await other.check();
       await expect(other).toBeChecked();
-      const detailInput = page.getByTestId('detail-input');
+      let detailInput = page.getByTestId('detail-input');
       await expect(detailInput).toHaveValue('');
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -109,18 +109,18 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     });
 
     test('valid form without detail', async ({ page }) => {
-      const crateInput = page.getByTestId('crate-input');
+      let crateInput = page.getByTestId('crate-input');
       await crateInput.fill('nanomsg');
       await expect(crateInput).toHaveValue('nanomsg');
 
-      const spam = page.getByTestId('spam-checkbox');
+      let spam = page.getByTestId('spam-checkbox');
       await spam.check();
       await expect(spam).toBeChecked();
-      const detailInput = page.getByTestId('detail-input');
+      let detailInput = page.getByTestId('detail-input');
       await expect(detailInput).toHaveValue('');
 
       await page.waitForFunction(() => globalThis.openKwargs === undefined);
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -150,22 +150,22 @@ Additional details:
     });
 
     test('valid form with required detail', async ({ page }) => {
-      const crateInput = page.getByTestId('crate-input');
+      let crateInput = page.getByTestId('crate-input');
       await crateInput.fill('nanomsg');
       await expect(crateInput).toHaveValue('nanomsg');
 
-      const spam = page.getByTestId('spam-checkbox');
+      let spam = page.getByTestId('spam-checkbox');
       await spam.check();
       await expect(spam).toBeChecked();
-      const other = page.getByTestId('other-checkbox');
+      let other = page.getByTestId('other-checkbox');
       await other.check();
       await expect(other).toBeChecked();
-      const detailInput = page.getByTestId('detail-input');
+      let detailInput = page.getByTestId('detail-input');
       await detailInput.fill('test detail');
       await expect(detailInput).toHaveValue('test detail');
 
       await page.waitForFunction(() => globalThis.openKwargs === undefined);
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -204,10 +204,10 @@ test detail
     });
 
     test('empty crate should shows errors', async ({ page }) => {
-      const crateInput = page.getByTestId('crate-input');
+      let crateInput = page.getByTestId('crate-input');
       await crateInput.fill('');
       await expect(crateInput).toHaveValue('');
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).toBeVisible();
@@ -218,15 +218,15 @@ test detail
     });
 
     test('other reason selected without given detail shows an error', async ({ page }) => {
-      const spam = page.getByTestId('spam-checkbox');
+      let spam = page.getByTestId('spam-checkbox');
       await spam.check();
       await expect(spam).toBeChecked();
-      const other = page.getByTestId('other-checkbox');
+      let other = page.getByTestId('other-checkbox');
       await other.check();
       await expect(other).toBeChecked();
-      const detailInput = page.getByTestId('detail-input');
+      let detailInput = page.getByTestId('detail-input');
       await expect(detailInput).toHaveValue('');
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -237,14 +237,14 @@ test detail
     });
 
     test('valid form without detail', async ({ page }) => {
-      const spam = page.getByTestId('spam-checkbox');
+      let spam = page.getByTestId('spam-checkbox');
       await spam.check();
       await expect(spam).toBeChecked();
-      const detailInput = page.getByTestId('detail-input');
+      let detailInput = page.getByTestId('detail-input');
       await expect(detailInput).toHaveValue('');
 
       await page.waitForFunction(() => globalThis.openKwargs === undefined);
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -274,18 +274,18 @@ Additional details:
     });
 
     test('valid form with required detail', async ({ page }) => {
-      const spam = page.getByTestId('spam-checkbox');
+      let spam = page.getByTestId('spam-checkbox');
       await spam.check();
       await expect(spam).toBeChecked();
-      const other = page.getByTestId('other-checkbox');
+      let other = page.getByTestId('other-checkbox');
       await other.check();
       await expect(other).toBeChecked();
-      const detailInput = page.getByTestId('detail-input');
+      let detailInput = page.getByTestId('detail-input');
       await detailInput.fill('test detail');
       await expect(detailInput).toHaveValue('test detail');
 
       await page.waitForFunction(() => globalThis.openKwargs === undefined);
-      const reportButton = page.getByTestId('report-button');
+      let reportButton = page.getByTestId('report-button');
       await reportButton.click();
 
       await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -320,18 +320,18 @@ test detail
     await page.getByTestId('link-crate-violation').click();
     await expect(page).toHaveURL('/support?inquire=crate-violation');
 
-    const crateInput = page.getByTestId('crate-input');
+    let crateInput = page.getByTestId('crate-input');
     await crateInput.fill('nanomsg');
     await expect(crateInput).toHaveValue('nanomsg');
-    const checkbox = page.getByTestId('malicious-code-checkbox');
+    let checkbox = page.getByTestId('malicious-code-checkbox');
     await checkbox.check();
     await expect(checkbox).toBeChecked();
-    const detailInput = page.getByTestId('detail-input');
+    let detailInput = page.getByTestId('detail-input');
     await detailInput.fill('test detail');
     await expect(detailInput).toHaveValue('test detail');
 
     await page.waitForFunction(() => globalThis.openKwargs === undefined);
-    const reportButton = page.getByTestId('report-button');
+    let reportButton = page.getByTestId('report-button');
     await reportButton.click();
 
     await expect(page.getByTestId('crate-invalid')).not.toBeVisible();
@@ -365,12 +365,12 @@ test detail
     await page.getByTestId('link-crate-violation').click();
     await expect(page).toHaveURL('/support?inquire=crate-violation');
 
-    const crateInput = page.getByTestId('crate-input');
+    let crateInput = page.getByTestId('crate-input');
     await crateInput.fill('nanomsg');
     await expect(crateInput).toHaveValue('nanomsg');
     await expect(page.getByTestId('vulnerability-report')).not.toBeVisible();
 
-    const checkbox = page.getByTestId('vulnerability-checkbox');
+    let checkbox = page.getByTestId('vulnerability-checkbox');
     await checkbox.check();
     await expect(checkbox).toBeChecked();
     await expect(page.getByTestId('vulnerability-report')).toBeVisible();
