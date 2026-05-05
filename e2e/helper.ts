@@ -16,7 +16,7 @@ export interface AppFixtures {
   msw: {
     worker: NetworkFixture;
     db: typeof db;
-    authenticateAs: (user: any) => Promise<void>;
+    authenticateAs: (user: Awaited<ReturnType<typeof db.user.create>>) => Promise<void>;
   };
   percy: PercyPage;
   a11y: A11yPage;

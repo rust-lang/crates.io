@@ -1,7 +1,7 @@
-import { expect, test } from '@/e2e/helper';
+import { expect, test, type AppFixtures } from '@/e2e/helper';
 
 test.describe('Bug #11772', { tag: '@bugs' }, () => {
-  async function prepare(msw: any) {
+  async function prepare(msw: AppFixtures['msw']) {
     // Create a crate that will appear in "New Crates" section
     let newCrate = await msw.db.crate.create({ name: 'test-crate' });
     await msw.db.version.create({ crate: newCrate, num: '1.2.3' });
