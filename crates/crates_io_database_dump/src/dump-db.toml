@@ -170,6 +170,7 @@ account_id = "private"
 encrypted_token = "private"
 login = "private"
 avatar = "private"
+last_sync = "private"
 [oauth_github.column_defaults]
 encrypted_token = "''"
 

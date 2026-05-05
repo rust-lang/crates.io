@@ -676,6 +676,8 @@ diesel::table! {
         avatar -> Nullable<Varchar>,
         /// Encrypted GitHub access token
         encrypted_token -> Bytea,
+        /// The last time we verified with GitHub what the GitHub username for this user was, and whether the account was valid
+        last_sync -> Timestamptz,
         /// GitHub username
         login -> Varchar,
         /// Crates.io user ID foreign key
