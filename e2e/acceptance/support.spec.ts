@@ -44,7 +44,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
   });
 
   test.describe('reporting a crate from support page', () => {
-    test.beforeEach(async ({ page, msw }) => {
+    test.beforeEach(async ({ page }) => {
       await page.goto('/support');
       await page.getByTestId('link-crate-violation').click();
       await expect(page).toHaveURL('/support?inquire=crate-violation');
@@ -196,7 +196,7 @@ test detail
   });
 
   test.describe('reporting a crate from crate page', () => {
-    test.beforeEach(async ({ page, msw }) => {
+    test.beforeEach(async ({ page }) => {
       await page.goto('/crates/nanomsg');
       await page.getByTestId('link-crate-report').click();
       await expect(page).toHaveURL('/support?crate=nanomsg&inquire=crate-violation');

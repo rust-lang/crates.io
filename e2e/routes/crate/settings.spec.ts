@@ -126,7 +126,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
     });
 
     test.describe('GitHub', () => {
-      test('happy path', async ({ msw, page, percy }) => {
+      test('happy path', async ({ msw, page }) => {
         let { crate } = await prepare(msw);
 
         // Create two GitHub configs for the crate
@@ -177,7 +177,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         );
       });
 
-      test('deletion failure', async ({ msw, page, percy }) => {
+      test('deletion failure', async ({ msw, page }) => {
         let { crate } = await prepare(msw);
 
         // Create a GitHub config for the crate
@@ -209,7 +209,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
     });
 
     test.describe('GitLab', () => {
-      test('happy path', async ({ msw, page, percy }) => {
+      test('happy path', async ({ msw, page }) => {
         let { crate } = await prepare(msw);
 
         // Create two GitLab configs for the crate
@@ -263,7 +263,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         );
       });
 
-      test('deletion failure', async ({ msw, page, percy }) => {
+      test('deletion failure', async ({ msw, page }) => {
         let { crate } = await prepare(msw);
 
         // Create a GitLab config for the crate

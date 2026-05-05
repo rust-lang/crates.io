@@ -34,7 +34,7 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     expect(versions).toEqual(['0.3.0', '0.2.1', '0.2.0', '0.1.0']);
   });
 
-  test('shows correct release tracks label after yanking/unyanking', async ({ page, msw, percy }) => {
+  test('shows correct release tracks label after yanking/unyanking', async ({ page, msw }) => {
     let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 

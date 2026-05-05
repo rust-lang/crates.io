@@ -3,9 +3,6 @@ import { loadFixtures } from '@crates-io/msw/fixtures';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
-  // should match the default set in the crates controller
-  const per_page = 50;
-
   test('visiting the crates page from the front page', async ({ page, msw, percy, a11y }) => {
     await loadFixtures(msw.db);
 
