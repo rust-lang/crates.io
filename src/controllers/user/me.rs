@@ -20,6 +20,7 @@ use serde::Serialize;
     path = "/api/v1/me",
     security(("cookie" = [])),
     tag = "users",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
 pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
@@ -88,6 +89,7 @@ pub struct UpdatesResponseMeta {
     path = "/api/v1/me/updates",
     security(("cookie" = [])),
     tag = "versions",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(UpdatesResponse))),
 )]
 pub async fn get_authenticated_user_updates(

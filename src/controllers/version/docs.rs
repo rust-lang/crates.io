@@ -20,6 +20,7 @@ use tracing::error;
         ("cookie" = []),
     ),
     tag = "versions",
+    extensions(("x-internal" = json!(true))),
     responses((status = 201, description = "Successful Response")),
 )]
 pub async fn rebuild_version_docs(

@@ -42,6 +42,7 @@ pub struct BeginResponse {
     get,
     path = "/api/private/session/begin",
     tag = "session",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
 pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
@@ -88,6 +89,7 @@ pub struct AuthorizeQuery {
     path = "/api/private/session/authorize",
     tag = "session",
     params(AuthorizeQuery),
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
 pub async fn authorize_session(
@@ -241,6 +243,7 @@ async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryRe
     path = "/api/private/session",
     security(("cookie" = [])),
     tag = "session",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn end_session(session: SessionExtension) -> Json<bool> {

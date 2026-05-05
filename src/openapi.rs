@@ -1,8 +1,20 @@
+use axum::Extension;
+use axum::body::Bytes;
+use axum::extract::Query;
+use axum::response::IntoResponse;
+use axum_extra::TypedHeader;
+use axum_extra::headers::ContentType;
 use crates_io_session::COOKIE_NAME;
 use http::header;
+use serde::Deserialize;
+use std::sync::{Arc, OnceLock};
+use utoipa::openapi::OpenApi as OpenApiDoc;
+use utoipa::openapi::path::{Operation, PathItem};
 use utoipa::openapi::security::{ApiKey, ApiKeyValue, Http, HttpAuthScheme, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_axum::router::OpenApiRouter;
+
+const X_INTERNAL: &str = "x-internal";
 
 const DESCRIPTION: &str = r#"
 __Experimental API documentation for the [crates.io](https://crates.io/)
@@ -81,4 +93,80 @@ impl Modify for SecurityAddon {
 
         components.add_security_scheme("trustpub_token", SecurityScheme::Http(trustpub_token));
     }
+}
+
+#[derive(Deserialize)]
+pub struct Params {
+    #[serde(default)]
+    internal: Option<String>,
+}
+
+pub async fn handler(
+    Extension(doc): Extension<Arc<OpenApiDoc>>,
+    Query(params): Query<Params>,
+) -> impl IntoResponse {
+    static PUBLIC_BYTES: OnceLock<Bytes> = OnceLock::new();
+    static FULL_BYTES: OnceLock<Bytes> = OnceLock::new();
+
+    let cache = match params.internal {
+        None => &PUBLIC_BYTES,
+        Some(_) => &FULL_BYTES,
+    };
+
+    let bytes = cache.get_or_init(|| {
+        let mut doc = (*doc).clone();
+        apply_visibility(&mut doc, params.internal.is_some());
+        Bytes::from(serde_json::to_vec(&doc).expect("OpenAPI serialization failed"))
+    });
+
+    (TypedHeader(ContentType::json()), bytes.clone())
+}
+
+/// Mutate `openapi` in place: drop operations marked `x-internal: true` when
+/// `include_internal` is false, and strip the marker from any remaining
+/// operations regardless.
+fn apply_visibility(openapi: &mut OpenApiDoc, include_internal: bool) {
+    openapi.paths.paths.retain(|_, item| {
+        prune_path_item(item, include_internal);
+        !path_item_is_empty(item)
+    });
+}
+
+fn prune_path_item(item: &mut PathItem, include_internal: bool) {
+    for slot in [
+        &mut item.get,
+        &mut item.put,
+        &mut item.post,
+        &mut item.delete,
+        &mut item.options,
+        &mut item.head,
+        &mut item.patch,
+        &mut item.trace,
+    ] {
+        let Some(op) = slot.as_mut() else { continue };
+        if !include_internal && is_internal(op) {
+            *slot = None;
+        } else if let Some(ext) = op.extensions.as_mut() {
+            ext.remove(X_INTERNAL);
+        }
+    }
+}
+
+fn is_internal(op: &Operation) -> bool {
+    op.extensions
+        .as_ref()
+        .and_then(|ext| ext.get(X_INTERNAL))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+fn path_item_is_empty(item: &PathItem) -> bool {
+    item.get.is_none()
+        && item.put.is_none()
+        && item.post.is_none()
+        && item.delete.is_none()
+        && item.options.is_none()
+        && item.head.is_none()
+        && item.patch.is_none()
+        && item.trace.is_none()
 }

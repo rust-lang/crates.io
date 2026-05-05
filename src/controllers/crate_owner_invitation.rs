@@ -40,6 +40,7 @@ pub struct LegacyListResponse {
     path = "/api/v1/me/crate_owner_invitations",
     security(("cookie" = [])),
     tag = "owners",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(LegacyListResponse))),
 )]
 pub async fn list_crate_owner_invitations_for_user(
@@ -104,6 +105,7 @@ pub struct ListQueryParams {
     params(ListQueryParams, PaginationQueryParams),
     security(("cookie" = [])),
     tag = "owners",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(PrivateListResponse))),
 )]
 pub async fn list_crate_owner_invitations(

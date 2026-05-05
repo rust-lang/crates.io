@@ -87,6 +87,7 @@ pub struct FollowingResponse {
     params(CratePath),
     security(("cookie" = [])),
     tag = "crates",
+    extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(FollowingResponse))),
 )]
 pub async fn get_following_crate(

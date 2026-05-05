@@ -1,13 +1,14 @@
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::{Json, Router};
+use axum::{Extension, Router};
 use http::{Method, StatusCode};
+use std::sync::Arc;
 use utoipa_axum::routes;
 
 use crate::Env;
 use crate::app::AppState;
 use crate::controllers::*;
-use crate::openapi::BaseOpenApi;
+use crate::openapi::{self, BaseOpenApi};
 use crate::util::errors::not_found;
 
 #[allow(deprecated)]
@@ -129,7 +130,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     }
 
     router
-        .route("/api/openapi.json", get(async || Json(openapi)))
+        .route(
+            "/api/openapi.json",
+            get(openapi::handler).layer(Extension(Arc::new(openapi))),
+        )
         .fallback(async |method: Method| match method {
             Method::HEAD => StatusCode::NOT_FOUND.into_response(),
             _ => not_found().into_response(),
