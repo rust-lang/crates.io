@@ -15,15 +15,17 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     await expect(page.locator('[data-test-notifications] input[type=checkbox]')).not.toBeChecked();
 
     await page.click('[data-test-notifications] button');
-    user = msw.db.user.findFirst(q => q.where({ id: user.id }));
-    expect(user.publishNotifications).toBe(false);
+    await expect
+      .poll(() => msw.db.user.findFirst(q => q.where({ id: user.id })))
+      .toMatchObject({ publishNotifications: false });
 
     await page.click('[data-test-notifications] input[type=checkbox]');
     await expect(page.locator('[data-test-notifications] input[type=checkbox]')).toBeChecked();
 
     await page.click('[data-test-notifications] button');
-    user = msw.db.user.findFirst(q => q.where({ id: user.id }));
-    expect(user.publishNotifications).toBe(true);
+    await expect
+      .poll(() => msw.db.user.findFirst(q => q.where({ id: user.id })))
+      .toMatchObject({ publishNotifications: true });
   });
 
   test('persists updated setting after navigation', async ({ page, msw }) => {
