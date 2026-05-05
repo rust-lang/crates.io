@@ -16,7 +16,7 @@ async function loadVersion(client: ReturnType<typeof createClient>, name: string
   let response;
   try {
     response = await client.GET('/api/v1/crates/{name}/{version}', { params: { path: { name, version } } });
-  } catch (_error) {
+  } catch {
     loadVersionError(name, version, 504);
   }
 

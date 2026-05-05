@@ -37,7 +37,7 @@ async function loadCrates(client: Client, query: { user_id?: number; following?:
   let response;
   try {
     response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch (_error) {
+  } catch {
     loadError(504);
   }
 
@@ -53,7 +53,7 @@ async function loadStats(client: Client, userId: number) {
   let response;
   try {
     response = await client.GET('/api/v1/users/{id}/stats', { params: { path: { id: userId } } });
-  } catch (_error) {
+  } catch {
     loadError(504);
   }
 
@@ -69,7 +69,7 @@ async function loadUpdates(client: Client) {
   let response;
   try {
     response = await client.GET('/api/v1/me/updates');
-  } catch (_error) {
+  } catch {
     loadError(504);
   }
 

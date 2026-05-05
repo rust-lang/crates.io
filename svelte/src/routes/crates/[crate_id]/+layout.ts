@@ -24,7 +24,7 @@ async function loadOwners(client: ReturnType<typeof createClient>, name: string)
     response = await client.GET('/api/v1/crates/{name}/owners', {
       params: { path: { name } },
     });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCrateError(name, 504);
   }
@@ -54,7 +54,7 @@ async function loadCrate(client: ReturnType<typeof createClient>, name: string) 
         query: { include: 'keywords,categories,downloads,default_version' },
       },
     });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCrateError(name, 504);
   }

@@ -53,7 +53,7 @@ async function loadUser(client: ReturnType<typeof createClient>, login: string) 
   let response;
   try {
     response = await client.GET('/api/v1/users/{user}', { params: { path: { user: login } } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadUserError(login, 504);
   }
@@ -74,7 +74,7 @@ async function loadCrates(
   let response;
   try {
     response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadUserError(login, 504);
   }

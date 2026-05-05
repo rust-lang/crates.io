@@ -47,7 +47,7 @@ async function loadReverseDependencies(client: ReturnType<typeof createClient>, 
     response = await client.GET('/api/v1/crates/{name}/reverse_dependencies', {
       params: { path: { name }, query: { page, per_page: PER_PAGE } },
     });
-  } catch (_error) {
+  } catch {
     loadError(name, 504);
   }
 

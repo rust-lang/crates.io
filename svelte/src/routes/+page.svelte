@@ -32,6 +32,7 @@
 {:then summary}
   <IntroBlurb {summary} />
   <CrateLists {summary} />
+  <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 {:catch _error}
   <IntroBlurb />
   <ErrorState isLoading={false} onRetry={retry} />

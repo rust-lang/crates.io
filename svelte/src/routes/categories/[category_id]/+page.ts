@@ -37,7 +37,7 @@ async function loadCategory(client: ReturnType<typeof createClient>, slug: strin
   let response;
   try {
     response = await client.GET('/api/v1/categories/{category}', { params: { path: { category: slug } } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCategoryError(slug, 504);
   }
@@ -58,7 +58,7 @@ async function loadCrates(
   let response;
   try {
     response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCategoryError(slug, 504);
   }

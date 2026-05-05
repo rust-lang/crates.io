@@ -36,7 +36,7 @@ async function loadTeam(client: ReturnType<typeof createClient>, login: string) 
   let response;
   try {
     response = await client.GET('/api/v1/teams/{team}', { params: { path: { team: login } } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadTeamError(login, 504);
   }
@@ -57,7 +57,7 @@ async function loadCrates(
   let response;
   try {
     response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadTeamError(login, 504);
   }

@@ -30,7 +30,7 @@ async function loadCrates(
   let response;
   try {
     response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch (_error) {
+  } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadCratesError(keyword, 504);
   }

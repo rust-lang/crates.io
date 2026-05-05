@@ -25,7 +25,7 @@ async function loadDependencies(client: ReturnType<typeof createClient>, name: s
     response = await client.GET('/api/v1/crates/{name}/{version}/dependencies', {
       params: { path: { name, version } },
     });
-  } catch (_error) {
+  } catch {
     loadDependenciesError(name, 504);
   }
 
