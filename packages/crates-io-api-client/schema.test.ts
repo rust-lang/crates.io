@@ -1,5 +1,5 @@
 import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
+import path from 'node:path';
 
 import openapiTS, { astToString } from 'openapi-typescript';
 import { expect, test } from 'vitest';

@@ -1,4 +1,4 @@
-import { default as percySnapshot } from '@percy/playwright';
+import percySnapshot from '@percy/playwright';
 import { Page, TestInfo } from '@playwright/test';
 
 export class PercyPage {
@@ -16,7 +16,7 @@ export class PercyPage {
     let paths = this.testInfo.titlePath.slice(1);
     // Add an "e2e" prefix to differentiate the snapshots from the QUnit tests.
     // This address the visual changes caused by the font not loading in QUnit tests (#9052).
-    return ['e2e'].concat(paths).join(' | ');
+    return ['e2e', ...paths].join(' | ');
   }
 
   async snapshot(options?: Parameters<typeof percySnapshot>[2]) {

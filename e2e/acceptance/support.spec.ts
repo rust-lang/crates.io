@@ -22,9 +22,10 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     await expect(page.getByTestId('inquire-list-section')).toBeVisible();
     let inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
-    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
-      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
-    );
+    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText([
+      'Report a crate that violates policies',
+      'For all other cases: help@crates.io',
+    ]);
 
     await percy.snapshot();
     await a11y.audit();
@@ -38,13 +39,14 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     await expect(page.getByTestId('inquire-list-section')).toBeVisible();
     let inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
-    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
-      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
-    );
+    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText([
+      'Report a crate that violates policies',
+      'For all other cases: help@crates.io',
+    ]);
   });
 
   test.describe('reporting a crate from support page', () => {
-    test.beforeEach(async ({ page, msw }) => {
+    test.beforeEach(async ({ page }) => {
       await page.goto('/support');
       await page.getByTestId('link-crate-violation').click();
       await expect(page).toHaveURL('/support?inquire=crate-violation');
@@ -196,7 +198,7 @@ test detail
   });
 
   test.describe('reporting a crate from crate page', () => {
-    test.beforeEach(async ({ page, msw }) => {
+    test.beforeEach(async ({ page }) => {
       await page.goto('/crates/nanomsg');
       await page.getByTestId('link-crate-report').click();
       await expect(page).toHaveURL('/support?crate=nanomsg&inquire=crate-violation');

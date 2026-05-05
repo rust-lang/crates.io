@@ -3,11 +3,11 @@ import { fileURLToPath } from 'node:url';
 
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
-import emberEslintParser from 'ember-eslint-parser';
 import preferLet from 'eslint-plugin-prefer-let';
 import prettier from 'eslint-plugin-prettier';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
+import ts from 'typescript-eslint';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -36,6 +36,7 @@ export default [
     ],
   },
   ...compat.extends('eslint:recommended', 'plugin:prettier/recommended'),
+  ...ts.configs.recommended,
   {
     plugins: {
       'prefer-let': preferLet,
@@ -47,7 +48,7 @@ export default [
         ...globals.browser,
       },
 
-      parser: emberEslintParser,
+      parser: ts.parser,
       ecmaVersion: 2018,
       sourceType: 'module',
     },

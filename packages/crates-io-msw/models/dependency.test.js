@@ -4,7 +4,7 @@ import { db } from '../index.js';
 
 test('throws if `crate` is not set', async ({ expect }) => {
   let version = await db.version.create({ crate: await db.crate.create({}) });
-  // @ts-expect-error
+  // @ts-expect-error: missing required field
   await expect(() => db.dependency.create({ version })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
@@ -12,7 +12,7 @@ test('throws if `crate` is not set', async ({ expect }) => {
 
 test('throws if `version` is not set', async ({ expect }) => {
   let crate = await db.crate.create({});
-  // @ts-expect-error
+  // @ts-expect-error: missing required field
   await expect(() => db.dependency.create({ crate })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
