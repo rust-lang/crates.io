@@ -27,15 +27,20 @@ export default defineConfig(
       'prefer-let': preferLet,
     },
 
-    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        // Defined at build time by Vite (see `vite.config.ts`) and declared
+        // ambiently in `src/app.d.ts`. ESLint's `no-undef` rule does not see
+        // ambient `.d.ts` declarations, so we have to spell it out here.
+        __TEST__: 'readonly',
+      },
+    },
 
     rules: {
       'prefer-const': 'off',
       'prefer-let/prefer-let': 'error',
-
-      // typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
-      // see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-      'no-undef': 'off',
     },
   },
   {
