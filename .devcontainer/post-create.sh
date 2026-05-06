@@ -26,7 +26,7 @@ SQL
 
 diesel migration run
 
-pnpm install
+pnpm install --config.confirmModulesPurge=false
 
 # `--with-deps` apt-installs the system libs Chromium needs. Without
 # it, re-running this script fails the host-deps validator even when
