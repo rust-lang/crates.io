@@ -74,6 +74,9 @@ export default defineConfig(
       'unicorn/prefer-string-replace-all': 'off',
       // disabled because switch statements in JS are quite error-prone
       'unicorn/prefer-switch': 'off',
+      // disabled because Svelte component `<script>` blocks instantiate
+      // synchronously, so top-level await is not appropriate there
+      'unicorn/prefer-top-level-await': 'off',
       // disabled because of false positives
       'unicorn/consistent-destructuring': 'off',
       // disabled because it does not play well with Svelte component naming conventions
