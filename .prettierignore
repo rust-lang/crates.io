@@ -1,6 +1,5 @@
 dist/
 packages/crates-io-api-client/schema.d.ts
-svelte/
 
 # Markdown is intentionally not formatted by prettier in this repo.
 **/*.md
