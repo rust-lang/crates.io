@@ -31,7 +31,8 @@
   ],
   "prettier": {
     "plugins": [
-      "@ianvs/prettier-plugin-sort-imports"
+      "@ianvs/prettier-plugin-sort-imports",
+      "prettier-plugin-svelte"
     ],
     "arrowParens": "avoid",
     "importOrder": [
@@ -55,7 +56,15 @@
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
-    "trailingComma": "all"
+    "trailingComma": "all",
+    "overrides": [
+      {
+        "files": "*.svelte",
+        "options": {
+          "parser": "svelte"
+        }
+      }
+    ]
   },
   "dependencies": {
     "date-fns": "4.1.0"
@@ -80,6 +89,7 @@
     "globals": "17.6.0",
     "msw": "2.14.2",
     "prettier": "3.8.3",
+    "prettier-plugin-svelte": "3.5.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.1"
   },

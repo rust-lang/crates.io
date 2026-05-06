@@ -69,6 +69,9 @@ importers:
       prettier:
         specifier: 3.8.3
         version: 3.8.3
+      prettier-plugin-svelte:
+        specifier: 3.5.1
+        version: 3.5.1(prettier@3.8.3)(svelte@5.55.5(@typescript-eslint/types@8.59.1))
       typescript:
         specifier: 6.0.3
         version: 6.0.3
