@@ -173,8 +173,6 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await page.click('[data-test-add-trusted-publisher-button]');
       await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
-      await percy.snapshot();
-
       // Check that the form is displayed correctly
       await expect(page.locator('[data-test-publisher]')).toBeVisible();
       await expect(page.locator('[data-test-namespace]')).toBeVisible();
@@ -187,6 +185,8 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(page.locator('[data-test-workflow-group] [data-test-note]')).toHaveText(
         'The filename of the publishing workflow. This file should be present in the .github/workflows/ directory of the repository configured above. For example: release.yml or publish.yml.',
       );
+
+      await percy.snapshot();
 
       // Fill in the repository fields and confirm the note updates
       await page.fill('[data-test-namespace]', 'rust-lang');
