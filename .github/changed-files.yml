@@ -33,9 +33,6 @@ frontend_lint:
   - pnpm-lock.yaml
   - '**/*.{css,gjs,hbs,mjs,js,ts}'
 
-  # Include all markdown files for `prettier` checks
-  - '**/*.md'
-
 msw_test:
   - .github/workflows/**
   - packages/crates-io-msw/**
