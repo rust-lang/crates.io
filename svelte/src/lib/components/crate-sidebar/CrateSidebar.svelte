@@ -195,7 +195,7 @@
         version={version.num}
         exactVersion={requestedVersion}
         hasLib={version.has_lib !== false}
-        binNames={version.bin_names?.filter((name): name is string => Boolean(name))}
+        binNames={version.bin_names?.filter(Boolean as unknown as (name: string | null) => name is string)}
       />
     </div>
   {/if}
