@@ -53,8 +53,7 @@ These files have to do with the frontend:
   - `svelte/build/` - Output of `pnpm build`; served under the root `/` url - (ignored in
     `.gitignore`)
 - `e2e/` - Playwright end-to-end tests run against the Svelte app
-- `eslint.config.mjs` - JavaScript/TypeScript coding style for the root, `e2e/`, and `packages/`;
-  the Svelte app has its own `svelte/eslint.config.js`
+- `eslint.config.mjs` - JavaScript/TypeScript coding style
 - `node_modules/` - npm dependencies - (ignored in `.gitignore`)
 - `packages/crates-io-msw/` - A mock backend used for testing
 - `package.json` - Root npm package; defines workspace-wide scripts and dev tooling

@@ -156,8 +156,7 @@ pnpm e2e:svelte <test_file>                # Run a specific Playwright spec
 Code quality (from the repo root unless noted):
 
 ```bash
-pnpm lint:js                            # ESLint over root, e2e/, packages/
-pnpm --filter crates.io-svelte lint     # ESLint over svelte/
+pnpm lint:js                            # Run ESLint
 pnpm prettier:check                     # Check formatting
 pnpm prettier:write                     # Fix formatting
 ```
