@@ -222,6 +222,9 @@ importers:
       eslint-plugin-svelte:
         specifier: 3.17.1
         version: 3.17.1(eslint@10.3.0(jiti@2.6.1))(svelte@5.55.5(@typescript-eslint/types@8.59.1))
+      eslint-plugin-unicorn:
+        specifier: 64.0.0
+        version: 64.0.0(eslint@10.3.0(jiti@2.6.1))
       globals:
         specifier: 17.6.0
         version: 17.6.0
