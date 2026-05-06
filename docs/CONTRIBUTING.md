@@ -107,7 +107,15 @@ The container's first start handles database creation, migrations, and
 dependency installation. See [`.devcontainer/README.md`](../.devcontainer/README.md)
 for details.
 
-The remaining sections describe how to set the same environment up
+Once the container is up, see:
+
+- [Building and serving the frontend](#building-and-serving-the-frontend)
+  for running the Svelte dev server (and choosing which backend it
+  proxies to).
+- [Starting the server and the frontend](#starting-the-server-and-the-frontend)
+  for running the local backend and background worker.
+
+The sections that follow also describe setting up the same environment
 manually if you prefer not to use containers.
 
 [Dev Containers]: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers

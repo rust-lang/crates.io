@@ -52,6 +52,14 @@ The `postCreateCommand` runs once after the container is built and:
 On every subsequent container start, `diesel migration run` is invoked to
 keep the development database schema current.
 
+## Running the dev servers
+
+The container only provisions tooling and dependencies; it does not
+start the backend or the Svelte dev server. See [Building and serving
+the frontend](../docs/CONTRIBUTING.md#building-and-serving-the-frontend)
+and [Starting the server and the frontend](../docs/CONTRIBUTING.md#starting-the-server-and-the-frontend)
+in `CONTRIBUTING.md` for the commands.
+
 ## Database
 
 The `cargo_registry` database is empty by default. To populate it with a
