@@ -70,7 +70,7 @@
 
     let tooltipContext = getTooltipContext();
     let container = document.getElementById(tooltipContext.containerId);
-    container?.appendChild(floatingElement);
+    container?.append(floatingElement);
 
     async function updatePosition() {
       if (!anchorElement) return;
