@@ -27,7 +27,7 @@
       });
 
       if (!result.response.ok) {
-        throw new Error();
+        throw new Error('Failed to update notification settings');
       }
 
       user.publish_notifications = publishNotifications;

@@ -70,7 +70,7 @@
       });
 
       if (result.error) {
-        throw new Error();
+        throw new Error('Failed to revoke API token');
       }
 
       revokedTokenIds.add(token.id);
