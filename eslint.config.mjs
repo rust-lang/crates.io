@@ -67,6 +67,9 @@ export default defineConfig(
       'unicorn/prefer-reflect-apply': 'off',
       // disabled because it seems unnecessary
       'unicorn/prefer-string-raw': 'off',
+      // disabled because `getElementById()` is faster than `querySelector("#id")`
+      // and expresses intent more clearly
+      'unicorn/prefer-query-selector': 'off',
       // disabled because of Sentry issues
       'unicorn/prefer-string-replace-all': 'off',
       // disabled because switch statements in JS are quite error-prone
