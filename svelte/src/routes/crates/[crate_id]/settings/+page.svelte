@@ -38,7 +38,7 @@
   let gitlabConfigs = $derived([...data.gitlabConfigs]);
   let hasConfigs = $derived(githubConfigs.length !== 0 || gitlabConfigs.length !== 0);
 
-  let trustpubOnlyOverride = $state<boolean | undefined>(undefined);
+  let trustpubOnlyOverride = $state<boolean | undefined>();
   let trustpubOnly = $derived(trustpubOnlyOverride ?? data.crate.trustpub_only);
   let trustpubOnlyLoading = $state(false);
 

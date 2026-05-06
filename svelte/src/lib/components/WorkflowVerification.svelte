@@ -11,7 +11,7 @@
   type Status = 'initial' | 'running' | Result;
   type Result = 'success' | 'not-found' | 'error';
 
-  let result = $state<Result | undefined>(undefined);
+  let result = $state<Result | undefined>();
   let isRunning = $state(false);
   let currentController: AbortController | undefined;
 

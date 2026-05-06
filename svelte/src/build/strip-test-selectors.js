@@ -29,7 +29,7 @@ export default function stripTestSelectors() {
         },
       });
 
-      if (removals.length === 0) return undefined;
+      if (removals.length === 0) return;
 
       let s = new MagicString(content);
       for (let { start, end } of removals) {
