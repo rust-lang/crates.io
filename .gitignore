@@ -1,33 +1,43 @@
-/target
-.cargo
-
-# dependencies
-node_modules/
-/bower_components
-package-lock.json
-yarn.lock
-
-# misc
-/.eslintcache
-/.sass-cache
-/connect.lock
-/coverage/*
-/coverage_*
+# crates.io
 /local_uploads
-/libpeerconnection.log
 /tmp
-npm-debug.log
-yarn-error.log
-.env
 docker-compose.override.yml
-*~
 src/schema.rs.orig
 
-# insta
-*.pending-snap
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
 
-# playwright
+# JS
+/coverage/*
+/coverage_*
+node_modules/
+.eslintcache
+
+# Svelte
+.output
+/svelte/.svelte-kit
+/svelte/build
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Storybook
+*storybook.log
+storybook-static
+
+# Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Rust
+/target
+.cargo
+
+# insta
+*.pending-snap
