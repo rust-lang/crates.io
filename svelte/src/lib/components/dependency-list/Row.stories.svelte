@@ -22,7 +22,7 @@
       optional: false,
       default_features: true,
       features: [],
-      downloads: 100000,
+      downloads: 100_000,
       ...overrides,
     };
   }

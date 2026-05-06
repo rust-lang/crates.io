@@ -52,7 +52,7 @@ function createVersion(num: string): Version {
     downloads: 500,
     yanked: false,
     license: 'MIT',
-    crate_size: 10000,
+    crate_size: 10_000,
     published_by: null,
     rust_version: null,
     edition: '2021',

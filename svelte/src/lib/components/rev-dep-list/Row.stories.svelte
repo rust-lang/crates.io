@@ -24,7 +24,7 @@
       optional: false,
       default_features: true,
       features: [],
-      downloads: 100000,
+      downloads: 100_000,
       dependentCrateName: 'actix-web',
       ...overrides,
     };
@@ -60,7 +60,7 @@
 
   <h1>High Download Count</h1>
   <Row
-    dependency={createDependency({ dependentCrateName: 'serde_json', downloads: 98765432 })}
+    dependency={createDependency({ dependentCrateName: 'serde_json', downloads: 98_765_432 })}
     descriptionPromise={resolved('A JSON serialization file format')}
   />
 </Story>

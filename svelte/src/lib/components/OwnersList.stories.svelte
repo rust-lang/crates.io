@@ -33,7 +33,7 @@
   };
 
   const RUST_TEAM = {
-    id: 5430905,
+    id: 5_430_905,
     kind: 'team',
     name: 'core',
     login: 'github:crates-io:core',
@@ -41,7 +41,7 @@
   };
 
   const ANOTHER_TEAM = {
-    id: 5430906,
+    id: 5_430_906,
     kind: 'team',
     name: 'admins',
     login: 'github:crates-io:admins',

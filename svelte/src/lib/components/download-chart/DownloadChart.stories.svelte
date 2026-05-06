@@ -17,7 +17,7 @@
   function generateData(now: Date): DownloadChartData {
     let versionCount = 5;
     let daysBack = 90;
-    let baseDownloads = 10000;
+    let baseDownloads = 10_000;
 
     let versions: Version[] = [];
     let versionDownloads: VersionDownload[] = [];
@@ -87,9 +87,9 @@
       checksum: 'abc123',
       created_at: createdAt,
       crate: 'example-crate',
-      crate_size: 50000,
+      crate_size: 50_000,
       dl_path: `/api/v1/crates/example-crate/${num}/download`,
-      downloads: 100000,
+      downloads: 100_000,
       features: {},
       license: 'MIT',
       linecounts: {},

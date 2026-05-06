@@ -15,7 +15,7 @@
       name,
       newest_version: version,
       max_version: version,
-      downloads: 1000000,
+      downloads: 1_000_000,
       created_at: '2020-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
       badges: [],
@@ -51,8 +51,8 @@
   }
 
   const mockSummary = {
-    num_downloads: 123456789,
-    num_crates: 150000,
+    num_downloads: 123_456_789,
+    num_crates: 150_000,
     new_crates: [
       createMockCrate('new-crate-1', '0.1.0'),
       createMockCrate('new-crate-2', '0.2.0'),

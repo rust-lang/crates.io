@@ -31,7 +31,7 @@
   };
 
   const RUST_TEAM = {
-    id: 5430905,
+    id: 5_430_905,
     kind: 'team',
     name: 'Rust Team',
     login: 'rust-lang',
