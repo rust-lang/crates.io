@@ -1,4 +1,6 @@
-import { expect, test, type AppFixtures } from '@/e2e/helper';
+import type { AppFixtures } from '@/e2e/helper';
+
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Route | user | yanked crates visibility', { tag: '@routes' }, () => {
   async function prepare(msw: AppFixtures['msw']) {

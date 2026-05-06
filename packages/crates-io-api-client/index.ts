@@ -1,6 +1,7 @@
-import createOpenAPIClient, { type ClientOptions } from 'openapi-fetch';
-
+import type { ClientOptions } from 'openapi-fetch';
 import type { paths } from './schema';
+
+import createOpenAPIClient from 'openapi-fetch';
 
 export type { components, operations, paths } from './schema';
 

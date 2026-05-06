@@ -1,4 +1,6 @@
-import { expect, test, type AppFixtures } from '@/e2e/helper';
+import type { AppFixtures } from '@/e2e/helper';
+
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Bug #11772', { tag: '@bugs' }, () => {
   async function prepare(msw: AppFixtures['msw']) {

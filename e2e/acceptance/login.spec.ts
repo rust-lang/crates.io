@@ -1,5 +1,6 @@
-import { expect, test } from '@/e2e/helper';
 import type { Page } from '@playwright/test';
+
+import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 const MOCK_CODE = '901dd10e07c7e9fa1cd5';
