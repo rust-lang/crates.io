@@ -173,12 +173,9 @@
 
       trustpubOnlyOverride = checked;
     } catch (error) {
-      let message: string;
-      if (error instanceof Error && error.message) {
-        message = error.message;
-      } else {
-        message = 'Failed to update trusted publishing setting';
-      }
+      let message =
+        error instanceof Error && error.message ? error.message : 'Failed to update trusted publishing setting';
+
       notifications.error(message);
     } finally {
       trustpubOnlyLoading = false;

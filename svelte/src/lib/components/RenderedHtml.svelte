@@ -43,11 +43,7 @@
 
           // If the source element `media` target is the `preference`,
           // override it to 'all' to show, or set it to 'none' to hide
-          if (source.dataset.media?.includes(colorPreference)) {
-            source.media = 'all';
-          } else {
-            source.media = 'none';
-          }
+          source.media = source.dataset.media?.includes(colorPreference) ? 'all' : 'none';
         }
       }
     };
