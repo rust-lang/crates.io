@@ -15,8 +15,8 @@
   "scripts": {
     "build": "echo 'no-op build script kept for the heroku-buildpack-crates-io build step'",
     "lint:js": "eslint . --cache",
-    "prettier:check": "prettier --check package.json '**/*.js' '**/*.mjs' '**/*.ts'",
-    "prettier:write": "prettier --write package.json '**/*.js' '**/*.mjs' '**/*.ts'",
+    "prettier:check": "prettier --check .",
+    "prettier:write": "prettier --write .",
     "e2e:svelte": "TEST_APP=svelte playwright test"
   },
   "browserslist": [
