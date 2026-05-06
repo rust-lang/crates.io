@@ -2,8 +2,8 @@ import { fileURLToPath } from 'node:url';
 
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
 import preferLet from 'eslint-plugin-prefer-let';
-import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -19,8 +19,8 @@ export default defineConfig(
   // should not try to lint either of them.
   { ignores: ['crates/', 'svelte/'] },
   js.configs.recommended,
-  prettierRecommended,
   ...ts.configs.recommended,
+  prettier,
   {
     plugins: {
       'prefer-let': preferLet,
