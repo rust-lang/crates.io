@@ -44,6 +44,9 @@ export default defineConfig(
 
       // disabled because it seems unnecessary
       'unicorn/consistent-function-scoping': 'off',
+      // disabled because TypeScript already catches arity mismatches that
+      // this rule is designed to flag (e.g. `arr.map(parseInt)`)
+      'unicorn/no-array-callback-reference': 'off',
       'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
       // disabled because `toReversed` is not "widely supported" yet
       'unicorn/no-array-reverse': 'off',
