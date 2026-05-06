@@ -157,9 +157,9 @@ Code quality (from the repo root unless noted):
 
 ```bash
 pnpm lint:js                            # ESLint over root, e2e/, packages/
-pnpm --filter crates.io-svelte lint     # Svelte/TypeScript ESLint + prettier check inside svelte/
-pnpm prettier:check                     # Check formatting (root files)
-pnpm prettier:write                     # Fix formatting (root files)
+pnpm --filter crates.io-svelte lint     # ESLint over svelte/
+pnpm prettier:check                     # Check formatting
+pnpm prettier:write                     # Fix formatting
 ```
 
 ### Architecture and Conventions
@@ -200,7 +200,7 @@ Pull requests run CI checks: backend tests, Svelte and MSW unit tests, Playwrigh
 
 Before submitting:
 
-- Run `cargo fmt --all` and the appropriate prettier command (`pnpm prettier:write` at the repo root, `pnpm --filter crates.io-svelte format` inside `svelte/`) for consistent formatting.
+- Run `cargo fmt --all` and `pnpm prettier:write` from the repo root for consistent formatting.
 - Run `cargo clippy` and fix warnings.
 - Run the relevant test suites for the changed files; all must pass:
   - Backend: `cargo test`

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["../*"],
+      "@/*": ["../*"]
     }
   }
 }

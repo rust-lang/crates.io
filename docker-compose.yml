@@ -3,12 +3,12 @@ x-backend: &backend
     context: .
     dockerfile: backend.Dockerfile
   environment:
-    DEV_DOCKER: "true"
+    DEV_DOCKER: 'true'
     DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
     SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
     GIT_REPO_URL: file:///app/tmp/index-bare
-    GH_CLIENT_ID: ""
-    GH_CLIENT_SECRET: ""
+    GH_CLIENT_ID: ''
+    GH_CLIENT_SECRET: ''
     WEB_ALLOWED_ORIGINS: http://localhost:8888,http://localhost:5173
   links:
     - postgres

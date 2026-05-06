@@ -1,3 +1,19 @@
 dist/
 packages/crates-io-api-client/schema.d.ts
-svelte/
+
+# Markdown is intentionally not formatted by prettier in this repo.
+**/*.md
+
+# Test fixtures keep their on-disk shape.
+**/fixtures/*.json
+
+# pnpm manages this file's formatting.
+pnpm-lock.yaml
+
+# Static assets are served as-is and include vendored files like
+# `mockServiceWorker.js` that we should not reformat.
+/svelte/static/
+
+# `src/app.html` contains an inline `window.onerror` bootstrap whose CSP
+# hash (pinned in `svelte.config.js`) is sensitive to whitespace.
+/svelte/src/app.html

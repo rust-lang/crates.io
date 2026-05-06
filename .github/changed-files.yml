@@ -31,10 +31,7 @@ frontend_lint:
   - .github/workflows/**
   - package.json
   - pnpm-lock.yaml
-  - '**/*.{css,gjs,hbs,mjs,js,ts}'
-
-  # Include all markdown files for `prettier` checks
-  - '**/*.md'
+  - '**/*.{css,html,json,mjs,js,ts,svelte,yml,yaml}'
 
 msw_test:
   - .github/workflows/**

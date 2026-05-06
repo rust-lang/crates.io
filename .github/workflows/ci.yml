@@ -70,8 +70,8 @@ jobs:
     if: needs.filter-jobs.outputs.backend-lint == 'true'
 
     env:
-      RUSTFLAGS: "-D warnings"
-      RUSTDOCFLAGS: "-D warnings"
+      RUSTFLAGS: '-D warnings'
+      RUSTDOCFLAGS: '-D warnings'
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -137,8 +137,8 @@ jobs:
     env:
       RUST_BACKTRACE: 1
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost/postgres
-      RUSTFLAGS: "-D warnings -Cinstrument-coverage"
-      MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
+      RUSTFLAGS: '-D warnings -Cinstrument-coverage'
+      MALLOC_CONF: 'background_thread:true,abort_conf:true,abort:true,junk:true'
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -272,7 +272,7 @@ jobs:
       # Percy secrets are included here to enable Percy's GitHub integration
       # on community-submitted PRs
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
-      PERCY_CLIENT_ERROR_LOGS: "false"
+      PERCY_CLIENT_ERROR_LOGS: 'false'
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
