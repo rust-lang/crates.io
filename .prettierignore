@@ -10,3 +10,11 @@ svelte/
 
 # pnpm manages this file's formatting.
 pnpm-lock.yaml
+
+# Static assets are served as-is and include vendored files like
+# `mockServiceWorker.js` that we should not reformat.
+/svelte/static/
+
+# `src/app.html` contains an inline `window.onerror` bootstrap whose CSP
+# hash (pinned in `svelte.config.js`) is sensitive to whitespace.
+/svelte/src/app.html
