@@ -31,7 +31,7 @@ frontend_lint:
   - .github/workflows/**
   - package.json
   - pnpm-lock.yaml
-  - '**/*.{css,gjs,hbs,mjs,js,ts}'
+  - '**/*.{css,mjs,js,ts}'
 
 msw_test:
   - .github/workflows/**
