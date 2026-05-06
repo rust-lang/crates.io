@@ -70,6 +70,8 @@ export default defineConfig(
       // disabled because `getElementById()` is faster than `querySelector("#id")`
       // and expresses intent more clearly
       'unicorn/prefer-query-selector': 'off',
+      // disabled because of false positives on non-array `push()` methods
+      'unicorn/prefer-single-call': 'off',
       // disabled because of Sentry issues
       'unicorn/prefer-string-replace-all': 'off',
       // disabled because switch statements in JS are quite error-prone
