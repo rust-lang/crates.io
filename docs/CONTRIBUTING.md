@@ -147,7 +147,7 @@ server proxies to:
 | ------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------- |
 | `pnpm dev:live`                                   | <https://crates.io>                       | Testing UI changes with the full live site's data       |
 | `pnpm dev:staging`                                | <https://staging.crates.io>               | Testing UI changes with a smaller set of realistic data |
-| `pnpm dev:local`                                  | Backend server running locally            | See the "Working on the backend" section for setup      |
+| `pnpm dev:local`                                  | Backend server running locally            | See ["Working on the Backend"](#working-on-the-backend) for setup |
 | `pnpm dev:msw`                                    | MSW handlers from `/packages/crates-io-msw/` | Testing UI changes against a fully-mocked backend       |
 | `API_HOST=https://crates.io pnpm dev`             | Whatever is in `API_HOST`                 | If your use case is not covered here                    |
 
