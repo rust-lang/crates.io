@@ -45,7 +45,7 @@ describe('OwnersList', () => {
     let ownerLinks = page.getByCSS('[data-test-owner-link]');
     expect(ownerLinks.elements()).toHaveLength(1);
 
-    let logins = ownerLinks.elements().map(el => el.getAttribute('data-test-owner-link'));
+    let logins = ownerLinks.elements().map(el => el.dataset.testOwnerLink);
     expect(logins).toEqual(['user-1']);
 
     let link = page.getByCSS('[data-test-owner-link="user-1"]');
@@ -65,7 +65,7 @@ describe('OwnersList', () => {
     let ownerLinks = page.getByCSS('[data-test-owner-link]');
     expect(ownerLinks.elements()).toHaveLength(1);
 
-    let logins = ownerLinks.elements().map(el => el.getAttribute('data-test-owner-link'));
+    let logins = ownerLinks.elements().map(el => el.dataset.testOwnerLink);
     expect(logins).toEqual(['anonymous']);
 
     let link = page.getByCSS('[data-test-owner-link="anonymous"]');
@@ -85,7 +85,7 @@ describe('OwnersList', () => {
     let logins = page
       .getByCSS('[data-test-owner-link]')
       .elements()
-      .map(el => el.getAttribute('data-test-owner-link'));
+      .map(el => el.dataset.testOwnerLink);
     expect(logins).toEqual(['user-1', 'user-2', 'user-3', 'user-4', 'user-5']);
   });
 
@@ -101,7 +101,7 @@ describe('OwnersList', () => {
     let logins = page
       .getByCSS('[data-test-owner-link]')
       .elements()
-      .map(el => el.getAttribute('data-test-owner-link'));
+      .map(el => el.dataset.testOwnerLink);
     expect(logins).toEqual(['user-1', 'user-2', 'user-3', 'user-4', 'user-5', 'user-6']);
   });
 
@@ -119,7 +119,7 @@ describe('OwnersList', () => {
     let logins = page
       .getByCSS('[data-test-owner-link]')
       .elements()
-      .map(el => el.getAttribute('data-test-owner-link'));
+      .map(el => el.dataset.testOwnerLink);
     expect(logins).toEqual(['github:crates-io:team-1', 'github:crates-io:team-2', 'user-1', 'user-2', 'user-3']);
 
     let teamLink = page.getByCSS('[data-test-owner-link="github:crates-io:team-1"]');
