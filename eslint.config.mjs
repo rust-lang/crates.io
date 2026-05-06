@@ -73,7 +73,8 @@ export default defineConfig(
       'unicorn/prefer-switch': 'off',
       // disabled because of false positives
       'unicorn/consistent-destructuring': 'off',
-      'unicorn/filename-case': ['error', { case: 'kebabCase', ignore: ['^-'] }],
+      // disabled because it does not play well with Svelte component naming conventions
+      'unicorn/filename-case': 'off',
     },
   },
 
