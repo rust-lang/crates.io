@@ -12,10 +12,11 @@ import ts from 'typescript-eslint';
 
 import svelteConfig from './svelte.config.js';
 
-const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
+const gitignorePath = fileURLToPath(new URL('../.gitignore', import.meta.url));
+const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
 export default defineConfig(
-  includeIgnoreFile(gitignorePath),
+  { ...includeIgnoreFile(gitignorePath), basePath: repoRoot },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...svelte.configs.recommended,
