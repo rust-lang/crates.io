@@ -40,8 +40,7 @@
       date.setDate(date.getDate() - day);
       let dateStr = date.toISOString().slice(0, 10);
 
-      for (let v = 0; v < versions.length; v++) {
-        let version = versions[v];
+      for (let [v, version] of versions.entries()) {
         let versionReleaseDay = Math.floor((daysBack / versionCount) * (versionCount - v - 1));
 
         // Only generate downloads after version release
