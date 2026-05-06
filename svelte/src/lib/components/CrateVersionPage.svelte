@@ -67,7 +67,7 @@
   let readmeWithMermaid = $derived(
     activeReadmePromise.then(async html => {
       if (html?.includes('language-mermaid')) {
-        await loadMermaid().catch(e => console.error(e));
+        await loadMermaid().catch(error => console.error(error));
       }
       return html;
     }),
