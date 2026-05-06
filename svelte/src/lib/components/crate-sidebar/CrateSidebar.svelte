@@ -237,7 +237,7 @@
     <OwnersList {owners} />
   </div>
 
-  {#if categories.length > 0}
+  {#if categories.length !== 0}
     <div>
       <h2 class="heading">Categories</h2>
       <ul class="categories">

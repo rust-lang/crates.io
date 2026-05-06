@@ -28,7 +28,7 @@
 </script>
 
 <div class="install-instructions">
-  {#if binNames && binNames.length > 0}
+  {#if binNames && binNames.length !== 0}
     {#if isClipboardSupported}
       <CopyButton copyText={cargoInstallCommand} title="Copy command to clipboard" class="copy-button">
         <span class="selectable">{cargoInstallCommand}</span>
@@ -59,7 +59,7 @@
     </p>
   {/if}
 
-  {#if hasLib && binNames && binNames.length > 0}
+  {#if hasLib && binNames && binNames.length !== 0}
     <h3>Install as library</h3>
   {/if}
 

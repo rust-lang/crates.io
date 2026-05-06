@@ -41,7 +41,7 @@
   });
 
   // Use SSR data for `next_page` until we've loaded more, then use our tracked value
-  let nextPage = $derived(extraVersions.length > 0 ? extraNextPage : data.nextPage);
+  let nextPage = $derived(extraVersions.length !== 0 ? extraNextPage : data.nextPage);
 
   let versions = $derived([...data.versions, ...extraVersions]);
   let releaseTrackHighest = $derived(new Set(Object.values(data.releaseTracks).map(it => it.highest)));

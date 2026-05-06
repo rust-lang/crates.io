@@ -215,7 +215,7 @@
       </time>
     </div>
 
-    {#if version.crate_size || version.license || featureList.length > 0}
+    {#if version.crate_size || version.license || featureList.length !== 0}
       <div class="metadata-row">
         {#if version.rust_version}
           <span class="msrv">
@@ -243,7 +243,7 @@
           </span>
         {/if}
 
-        {#if featureList.length > 0}
+        {#if featureList.length !== 0}
           <span class="num-features" data-test-feature-list>
             <CheckboxIcon />
             {featureList.length}

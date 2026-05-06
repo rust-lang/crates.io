@@ -19,7 +19,7 @@
 />
 
 <h2 class="heading">Dependencies</h2>
-{#if normal.length > 0}
+{#if normal.length !== 0}
   <ul class="list" data-test-dependencies>
     {#each normal as dependency (dependency.id)}
       <li><Row {dependency} descriptionPromise={descriptions.get(dependency.crate_id)} /></li>
@@ -31,7 +31,7 @@
   </div>
 {/if}
 
-{#if build.length > 0}
+{#if build.length !== 0}
   <h2 class="heading">Build-Dependencies</h2>
   <ul class="list" data-test-build-dependencies>
     {#each build as dependency (dependency.id)}
@@ -40,7 +40,7 @@
   </ul>
 {/if}
 
-{#if dev.length > 0}
+{#if dev.length !== 0}
   <h2 class="heading">Dev-Dependencies</h2>
   <ul class="list" data-test-dev-dependencies>
     {#each dev as dependency (dependency.id)}

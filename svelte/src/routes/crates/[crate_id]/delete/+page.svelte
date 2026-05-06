@@ -18,7 +18,7 @@
   let isDeleting = $state(false);
 
   let crateName = $derived(data.crate.name);
-  let canSubmit = $derived(isConfirmed && reason.length > 0 && !isDeleting);
+  let canSubmit = $derived(isConfirmed && reason.length !== 0 && !isDeleting);
 
   async function deleteCrate(event: SubmitEvent) {
     event.preventDefault();
