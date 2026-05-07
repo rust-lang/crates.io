@@ -18,8 +18,8 @@
     default_version: '1.0.215',
     yanked: false,
     description: 'A generic serialization/deserialization framework',
-    downloads: 234567890,
-    recent_downloads: 12345678,
+    downloads: 234_567_890,
+    recent_downloads: 12_345_678,
     updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     created_at: '2014-11-05T00:00:00Z',
     homepage: 'https://serde.rs',

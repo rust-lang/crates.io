@@ -159,7 +159,7 @@
       });
 
       if (result.error) {
-        throw new Error();
+        throw new Error('Failed to create API token');
       }
 
       let apiToken = result.data.api_token;

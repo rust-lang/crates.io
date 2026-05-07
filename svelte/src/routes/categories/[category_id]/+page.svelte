@@ -29,16 +29,21 @@
 
   let currentSortBy = $derived.by(() => {
     switch (data.sort) {
-      case 'alpha':
+      case 'alpha': {
         return 'Alphabetical';
-      case 'downloads':
+      }
+      case 'downloads': {
         return 'All-Time Downloads';
-      case 'recent-updates':
+      }
+      case 'recent-updates': {
         return 'Recent Updates';
-      case 'new':
+      }
+      case 'new': {
         return 'Newly Added';
-      default:
+      }
+      default: {
         return 'Recent Downloads';
+      }
     }
   });
 </script>

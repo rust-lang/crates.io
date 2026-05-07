@@ -78,11 +78,12 @@
       if (!result.response.ok) {
         let detail = (result.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
 
-        if (detail && !detail.startsWith('{')) {
-          throw new Error(`Error in resending message: ${detail}`);
-        } else {
-          throw new Error('Unknown error in resending message');
-        }
+        let msg =
+          detail && !detail.startsWith('{')
+            ? `Error in resending message: ${detail}`
+            : 'Unknown error in resending message';
+
+        throw new Error(msg);
       }
 
       disableResend = true;

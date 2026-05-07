@@ -36,9 +36,9 @@
 
   let githubConfigs = $derived([...data.githubConfigs]);
   let gitlabConfigs = $derived([...data.gitlabConfigs]);
-  let hasConfigs = $derived(githubConfigs.length > 0 || gitlabConfigs.length > 0);
+  let hasConfigs = $derived(githubConfigs.length !== 0 || gitlabConfigs.length !== 0);
 
-  let trustpubOnlyOverride = $state<boolean | undefined>(undefined);
+  let trustpubOnlyOverride = $state<boolean | undefined>();
   let trustpubOnly = $derived(trustpubOnlyOverride ?? data.crate.trustpub_only);
   let trustpubOnlyLoading = $state(false);
 
@@ -46,7 +46,7 @@
   // when unchecked within the same page visit.
   // svelte-ignore state_referenced_locally
   let trustpubOnlyCheckboxWasVisible =
-    data.githubConfigs.length > 0 || data.gitlabConfigs.length > 0 || data.crate.trustpub_only;
+    data.githubConfigs.length !== 0 || data.gitlabConfigs.length !== 0 || data.crate.trustpub_only;
   let showTrustpubOnlyCheckbox = $derived(hasConfigs || trustpubOnly || trustpubOnlyCheckboxWasVisible);
   let showTrustpubOnlyWarning = $derived(trustpubOnly && !hasConfigs);
 
@@ -173,12 +173,9 @@
 
       trustpubOnlyOverride = checked;
     } catch (error) {
-      let message: string;
-      if (error instanceof Error && error.message) {
-        message = error.message;
-      } else {
-        message = 'Failed to update trusted publishing setting';
-      }
+      let message =
+        error instanceof Error && error.message ? error.message : 'Failed to update trusted publishing setting';
+
       notifications.error(message);
     } finally {
       trustpubOnlyLoading = false;

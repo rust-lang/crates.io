@@ -70,7 +70,7 @@
       });
 
       if (result.error) {
-        throw new Error();
+        throw new Error('Failed to revoke API token');
       }
 
       revokedTokenIds.add(token.id);
@@ -117,7 +117,7 @@
     environment variable, but make sure that the token stays secret!
   </p>
 
-  {#if sortedTokens.length > 0}
+  {#if sortedTokens.length !== 0}
     <ul role="list" class="token-list">
       {#each sortedTokens as token (token.id)}
         <li class="row" class:expired={isExpired(token)} data-test-api-token={token.id}>

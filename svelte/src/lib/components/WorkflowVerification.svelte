@@ -11,11 +11,11 @@
   type Status = 'initial' | 'running' | Result;
   type Result = 'success' | 'not-found' | 'error';
 
-  let result = $state<Result | undefined>(undefined);
+  let result = $state<Result | undefined>();
   let isRunning = $state(false);
   let currentController: AbortController | undefined;
 
-  let status: Status = $derived(isRunning ? 'running' : result ? result : 'initial');
+  let status: Status = $derived(isRunning ? 'running' : (result ?? 'initial'));
 
   let isSuccess = $derived(result === 'success');
   let isWarning = $derived(result === 'not-found' || result === 'error');

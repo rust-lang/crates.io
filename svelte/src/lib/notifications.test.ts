@@ -131,7 +131,7 @@ describe('NotificationsState', () => {
     state.info('Existing');
 
     // @ts-expect-error testing invalid input
-    state.removeNotification(undefined);
+    state.removeNotification();
 
     expect(state.content).toHaveLength(1);
   });

@@ -16,8 +16,8 @@
   name="Loaded"
   args={{
     summary: {
-      num_downloads: 123456789,
-      num_crates: 150000,
+      num_downloads: 123_456_789,
+      num_crates: 150_000,
       new_crates: [],
       most_downloaded: [],
       most_recently_downloaded: [],

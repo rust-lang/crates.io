@@ -40,9 +40,9 @@ export function toChartData(data: DownloadChartData | null, now: Date): { datase
     dates[date.toISOString().slice(0, 10)] = { date, cnt: {} };
   }
 
-  data.versionDownloads.forEach(d => {
+  for (let d of data.versionDownloads) {
     let version = versionsById.get(d.version);
-    if (!version) return;
+    if (!version) continue;
 
     let version_num = version.num;
 
@@ -53,15 +53,15 @@ export function toChartData(data: DownloadChartData | null, now: Date): { datase
       let prev = dates[key].cnt[version_num] || 0;
       dates[key].cnt[version_num] = prev + d.downloads;
     }
-  });
+  }
 
-  extra.forEach(d => {
+  for (let d of extra) {
     let key = d.date;
     if (dates[key]) {
       let prev = dates[key].cnt['Other'] || 0;
       dates[key].cnt['Other'] = prev + d.downloads;
     }
-  });
+  }
 
   let versionsList = [...versions.keys()];
   try {

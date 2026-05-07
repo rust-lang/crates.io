@@ -15,7 +15,7 @@ function createVersion(overrides: Partial<Version> = {}): Version {
     num: '1.0.0',
     created_at: new Date().toISOString(),
     downloads: 1000,
-    crate_size: 10000,
+    crate_size: 10_000,
     license: 'MIT',
     rust_version: null,
     edition: null,

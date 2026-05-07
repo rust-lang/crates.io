@@ -94,16 +94,21 @@
 
   let currentSortBy = $derived.by(() => {
     switch (data.sort) {
-      case 'downloads':
+      case 'downloads': {
         return 'All-Time Downloads';
-      case 'recent-downloads':
+      }
+      case 'recent-downloads': {
         return 'Recent Downloads';
-      case 'recent-updates':
+      }
+      case 'recent-updates': {
         return 'Recent Updates';
-      case 'new':
+      }
+      case 'new': {
         return 'Newly Added';
-      default:
+      }
+      default: {
         return 'Relevance';
+      }
     }
   });
 

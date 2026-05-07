@@ -88,7 +88,7 @@
     </div>
   {/if}
 
-  {#if keywords.length > 0}
+  {#if keywords.length !== 0}
     <ul class="keywords">
       {#each keywords as keyword (keyword.id)}
         <li>
