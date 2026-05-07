@@ -58,6 +58,7 @@
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-storybook": "10.3.6",
     "eslint-plugin-svelte": "3.17.1",
+    "eslint-plugin-unicorn": "64.0.0",
     "globals": "17.6.0",
     "magic-string": "0.30.21",
     "msw": "2.14.2",

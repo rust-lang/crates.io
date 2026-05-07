@@ -1,6 +1,7 @@
 export async function init() {
   // Clear the bootstrap error handlers set in `app.html`; the app has loaded
   // successfully, so the load-failure fallback is no longer needed.
+  // eslint-disable-next-line unicorn/prefer-add-event-listener
   window.onerror = null;
   window.onunhandledrejection = null;
 
