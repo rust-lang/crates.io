@@ -111,7 +111,7 @@
 
 <div data-test-download-graph class="wrapper">
   {#await chartPromise}
-    <LoadingSpinner class="spinner" data-test-spinner />
+    <LoadingSpinner class="spinner" />
   {:then}
     <canvas bind:this={canvasRef}></canvas>
   {:catch}

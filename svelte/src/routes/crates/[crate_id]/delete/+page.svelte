@@ -113,7 +113,7 @@
       </button>
       {#if isDeleting}
         <div class="spinner-wrapper">
-          <LoadingSpinner class="spinner" data-test-spinner />
+          <LoadingSpinner class="spinner" />
         </div>
       {/if}
     </div>

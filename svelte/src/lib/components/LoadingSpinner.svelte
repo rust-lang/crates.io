@@ -8,7 +8,7 @@
   let { theme, class: className, ...restProps }: Props = $props();
 </script>
 
-<div class={['spinner', theme, className]} {...restProps}>
+<div class={['spinner', theme, className]} data-test-spinner {...restProps}>
   <span class="sr-only">Loading…</span>
 </div>
 

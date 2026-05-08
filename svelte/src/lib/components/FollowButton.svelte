@@ -83,7 +83,7 @@
   onclick={toggleFollow}
 >
   {#if isLoading}
-    <LoadingSpinner theme="light" data-test-spinner />
+    <LoadingSpinner theme="light" />
   {:else if following}
     Unfollow
   {:else}
