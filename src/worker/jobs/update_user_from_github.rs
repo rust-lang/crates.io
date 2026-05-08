@@ -10,10 +10,13 @@ use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::error;
+use tracing::{error, info};
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateUserFromGithub {
+    /// Dry run will fetch updates from GitHub and log what it would change, but does not actually
+    /// update the database.
+    dry_run: bool,
     /// Crates.io user ID
     user_id: i32,
     /// GitHub ID
@@ -34,18 +37,35 @@ impl BackgroundJob for UpdateUserFromGithub {
     /// their account has been deleted or renamed. Update the `users` and `oauth_github` tables,
     /// saving the current time in `last_sync` even if the user information hasn't changed.
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        info!(
+            dry_run = self.dry_run,
+            user_id = self.user_id,
+            github_id = self.account_id,
+            old_username = self.old_username,
+            "Starting UpdateUserFromGithub"
+        );
+
         let mut conn = ctx.deadpool.get().await?;
 
         let github_user = self.refresh_user(&ctx).await?;
 
-        self.apply_update(&github_user, &mut conn).await;
+        if self.dry_run {
+            info!(
+                user_id = self.user_id,
+                old_username = self.old_username,
+                new_username = github_user.login,
+                "Dry run UpdateUserFromGithub proposed update"
+            );
+        } else {
+            self.apply_update(&github_user, &mut conn).await;
+        }
 
         Ok(())
     }
 }
 
 impl UpdateUserFromGithub {
-    pub fn new(oauth_github: OauthGithub) -> Self {
+    pub fn new(dry_run: bool, oauth_github: OauthGithub) -> Self {
         let OauthGithub {
             user_id,
             account_id,
@@ -55,6 +75,7 @@ impl UpdateUserFromGithub {
         } = oauth_github;
 
         Self {
+            dry_run,
             user_id,
             account_id,
             encrypted_token,

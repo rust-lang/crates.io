@@ -21,6 +21,7 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 });
 
 struct UpdateTest {
+    dry_run: bool,
     existing_github_id: i64,
     existing_username: &'static str,
     github_response: Result<GitHubUser, GitHubError>,
@@ -31,6 +32,7 @@ struct UpdateTest {
 impl UpdateTest {
     async fn run(self) {
         let Self {
+            dry_run,
             existing_github_id,
             existing_username,
             github_response,
@@ -60,7 +62,7 @@ impl UpdateTest {
             .unwrap();
         let last_sync_before_update = oauth_github_before_update.last_sync;
 
-        let job = jobs::UpdateUserFromGithub::new(oauth_github_before_update);
+        let job = jobs::UpdateUserFromGithub::new(dry_run, oauth_github_before_update);
         job.enqueue(&conn).await.unwrap();
         let _ = app.try_run_pending_background_jobs().await;
 
@@ -102,6 +104,7 @@ fn github_user(id: i64, username: &str) -> GitHubUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn no_updates_needed() {
     UpdateTest {
+        dry_run: false,
         existing_github_id: GITHUB_ID,
         // What we have and what github has agree
         existing_username: EXISTING_LOGIN,
@@ -117,6 +120,7 @@ async fn no_updates_needed() {
 #[tokio::test(flavor = "multi_thread")]
 async fn yes_updates_needed() {
     UpdateTest {
+        dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
         github_response: Ok(github_user(GITHUB_ID, "my-new-username")),
@@ -130,6 +134,7 @@ async fn yes_updates_needed() {
 #[tokio::test(flavor = "multi_thread")]
 async fn negative_github_id() {
     UpdateTest {
+        dry_run: false,
         // The GitHub ID in our database is -1 because at some point we learned the GitHub user
         // was no longer valid
         existing_github_id: -1,
@@ -146,6 +151,7 @@ async fn negative_github_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn zero_github_id() {
     UpdateTest {
+        dry_run: false,
         // Check that we're also treating 0 as invalid
         existing_github_id: 0,
         existing_username: EXISTING_LOGIN,
@@ -161,6 +167,7 @@ async fn zero_github_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn negative_github_id_with_ghost_username() {
     UpdateTest {
+        dry_run: false,
         // The GitHub ID in our database is negative because at some point we learned the GitHub
         // user was no longer valid
         existing_github_id: -9000,
@@ -178,6 +185,7 @@ async fn negative_github_id_with_ghost_username() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_deleted() {
     UpdateTest {
+        dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
         // If GitHub returns 404, this user has deleted their account.
@@ -192,6 +200,7 @@ async fn github_deleted() {
 #[tokio::test(flavor = "multi_thread")]
 async fn still_deleted() {
     UpdateTest {
+        dry_run: false,
         existing_github_id: GITHUB_ID,
         // We marked this user as deleted previously
         existing_username: "ghost_1",
@@ -207,6 +216,7 @@ async fn still_deleted() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_unavailable() {
     UpdateTest {
+        dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
         // If GitHub returns some error we haven't accounted for, we can't know anything about
@@ -222,6 +232,7 @@ async fn github_unavailable() {
 #[tokio::test(flavor = "multi_thread")]
 async fn undeleted() {
     UpdateTest {
+        dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: "ghost_1",
         // Not sure how often this happens, but if we marked an account as ghost but we get a
@@ -229,6 +240,20 @@ async fn undeleted() {
         github_response: Ok(github_user(GITHUB_ID, "my-new-username")),
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn dry_run_mode_doesnt_update() {
+    UpdateTest {
+        dry_run: true,
+        existing_github_id: GITHUB_ID,
+        existing_username: EXISTING_LOGIN,
+        github_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        expected_username: EXISTING_LOGIN,
+        expected_last_sync_updated: false,
     }
     .run()
     .await;
