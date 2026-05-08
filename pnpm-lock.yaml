@@ -205,8 +205,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
       chromatic:
-        specifier: 16.6.3
-        version: 16.6.3
+        specifier: 16.7.0
+        version: 16.7.0
       magic-string:
         specifier: 0.30.21
         version: 0.30.21
@@ -1703,8 +1703,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@16.6.3:
-    resolution: {integrity: sha512-N9WCRuezqrxujRvgnAlE9XKxXcF6q2kowKH2Ba82FYkRc4xlY9g8r+ESEph9jLv500s43/9oDmB/kZ9r24BcgQ==}
+  chromatic@16.7.0:
+    resolution: {integrity: sha512-t6d3zFajnRYqK+pJg4v2qezDJ5EJxAsPypuV88xJ+u0z6Bec7MCV9j+nMKZXTua8e0wBt6FsjJ9Yqx+fyUngSA==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -4389,10 +4389,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-command@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -4409,10 +4406,7 @@ snapshots:
     dependencies:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-doctor@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -4448,10 +4442,7 @@ snapshots:
       '@percy/cli-command': 1.31.13(typescript@6.0.3)
       yaml: 2.8.3
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli-upload@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -4459,10 +4450,7 @@ snapshots:
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
-      - bufferutil
-      - supports-color
       - typescript
-      - utf-8-validate
 
   '@percy/cli@1.31.13(typescript@6.0.3)':
     dependencies:
@@ -5587,7 +5575,7 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@16.6.3:
+  chromatic@16.7.0:
     dependencies:
       semver: 7.7.4
 
