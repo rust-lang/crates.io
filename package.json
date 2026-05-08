@@ -58,24 +58,9 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.2"
   },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowAny": [
-        "eslint"
-      ]
-    },
-    "onlyBuiltDependencies": [
-      "@percy/core",
-      "esbuild",
-      "msw"
-    ],
-    "ignoredBuiltDependencies": [
-      "core-js"
-    ]
-  },
   "engines": {
     "node": "^24",
-    "pnpm": "^10"
+    "pnpm": "^11.0.0"
   },
   "volta": {
     "node": "24.15.0"
