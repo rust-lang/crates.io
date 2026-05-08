@@ -26,4 +26,4 @@ crates_io_test_db = { path = "../crates_io_test_db" }
 diesel = "=2.3.9"
 diesel-async = { version = "=0.9.0", features = ["postgres"] }
 insta = { version = "=1.47.2", features = ["glob"] }
-tokio = { version = "=1.52.2", features = ["macros", "rt"] }
+tokio = { version = "=1.52.3", features = ["macros", "rt"] }
