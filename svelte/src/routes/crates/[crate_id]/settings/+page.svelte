@@ -422,7 +422,7 @@
     <label class="trustpub-only-checkbox" data-test-trustpub-only-checkbox>
       <div class="checkbox">
         {#if trustpubOnlyLoading}
-          <LoadingSpinner data-test-spinner />
+          <LoadingSpinner />
         {:else}
           <input type="checkbox" checked={trustpubOnly} data-test-checkbox onchange={toggleTrustpubOnly} />
         {/if}

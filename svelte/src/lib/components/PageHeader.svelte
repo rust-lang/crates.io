@@ -24,7 +24,7 @@
         <small class="suffix">{suffix}</small>
       {/if}
       {#if showSpinner}
-        <LoadingSpinner style="margin-left: var(--space-2xs)" data-test-spinner />
+        <LoadingSpinner style="margin-left: var(--space-2xs)" />
       {/if}
     </h1>
   {/if}

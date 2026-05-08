@@ -48,7 +48,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(row1.locator('[data-test-expired-at]')).toHaveText('Expires in 29 days');
     await expect(row1.locator('[data-test-save-token-button]')).toHaveCount(0);
     await expect(row1.locator('[data-test-revoke-token-button]')).toBeVisible();
-    await expect(row1.locator('[data-test-saving-spinner]')).toHaveCount(0);
+    await expect(row1.locator('[data-test-spinner]')).toHaveCount(0);
     await expect(row1.locator('[data-test-error]')).toHaveCount(0);
     await expect(row1.locator('[data-test-token]')).toHaveCount(0);
 
@@ -58,7 +58,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(row2.locator('[data-test-expired-at]')).toHaveCount(0);
     await expect(row2.locator('[data-test-save-token-button]')).toHaveCount(0);
     await expect(row2.locator('[data-test-revoke-token-button]')).toBeVisible();
-    await expect(row2.locator('[data-test-saving-spinner]')).toHaveCount(0);
+    await expect(row2.locator('[data-test-spinner]')).toHaveCount(0);
     await expect(row2.locator('[data-test-error]')).toHaveCount(0);
     await expect(row2.locator('[data-test-token]')).toHaveCount(0);
 
@@ -68,7 +68,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(row3.locator('[data-test-expired-at]')).toHaveText('Expired about 18 hours ago');
     await expect(row3.locator('[data-test-save-token-button]')).toHaveCount(0);
     await expect(row3.locator('[data-test-revoke-token-button]')).toHaveCount(0);
-    await expect(row3.locator('[data-test-saving-spinner]')).toHaveCount(0);
+    await expect(row3.locator('[data-test-spinner]')).toHaveCount(0);
     await expect(row3.locator('[data-test-error]')).toHaveCount(0);
     await expect(row3.locator('[data-test-token]')).toHaveCount(0);
   });
@@ -141,7 +141,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-api-token="4"] [data-test-name]')).toHaveText('the new token');
     await expect(page.locator('[data-test-api-token="4"] [data-test-save-token-button]')).toHaveCount(0);
     await expect(page.locator('[data-test-api-token="4"] [data-test-revoke-token-button]')).toBeVisible();
-    await expect(page.locator('[data-test-api-token="4"] [data-test-saving-spinner]')).toHaveCount(0);
+    await expect(page.locator('[data-test-api-token="4"] [data-test-spinner]')).toHaveCount(0);
     await expect(page.locator('[data-test-api-token="4"] [data-test-error]')).toHaveCount(0);
     await expect(page.locator('[data-test-token]')).toHaveText(token);
   });

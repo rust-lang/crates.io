@@ -222,7 +222,7 @@
                 Revoke
               </button>
               {#if revokingTokenIds.has(token.id)}
-                <LoadingSpinner class="spinner" data-test-saving-spinner />
+                <LoadingSpinner class="spinner" />
               {/if}
             {/if}
           </div>

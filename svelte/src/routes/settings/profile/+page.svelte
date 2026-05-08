@@ -89,7 +89,7 @@
         Update preferences
       </button>
       {#if isUpdating}
-        <LoadingSpinner data-test-spinner />
+        <LoadingSpinner />
       {/if}
     </div>
   </div>

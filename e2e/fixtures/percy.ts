@@ -1,5 +1,5 @@
 import percySnapshot from '@percy/playwright';
-import { Page, TestInfo } from '@playwright/test';
+import { expect, Page, TestInfo } from '@playwright/test';
 
 export class PercyPage {
   constructor(
@@ -17,6 +17,11 @@ export class PercyPage {
   }
 
   async snapshot(options?: Parameters<typeof percySnapshot>[2]) {
+    // Wait for any in-flight loading state to settle before snapshotting,
+    // otherwise spinners can leak into the captured image and produce flaky
+    // visual diffs.
+    await expect(this.page.locator('[data-test-spinner]')).toHaveCount(0);
+
     await percySnapshot(this.page, this.title(), options);
   }
 }

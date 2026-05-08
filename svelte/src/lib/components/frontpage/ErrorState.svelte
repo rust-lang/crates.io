@@ -18,7 +18,7 @@
 <button type="button" disabled={isLoading} class="try-again-button button" onclick={onRetry} data-test-try-again-button>
   Try Again
   {#if isLoading}
-    <LoadingSpinner theme="light" class="spinner" data-test-spinner />
+    <LoadingSpinner theme="light" class="spinner" />
   {/if}
 </button>
 

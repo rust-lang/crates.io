@@ -409,7 +409,7 @@
       Add
 
       {#if isSaving}
-        <LoadingSpinner theme="light" class="spinner" data-test-spinner />
+        <LoadingSpinner theme="light" class="spinner" />
       {/if}
     </button>
 
