@@ -1,3 +1,16 @@
 packages:
   - 'packages/*'
   - 'svelte/'
+
+shellEmulator: true
+ignoreWorkspaceRootCheck: true
+
+peerDependencyRules:
+  allowAny:
+    - eslint
+
+allowBuilds:
+  '@percy/core': true
+  esbuild: true
+  msw: true
+  core-js: false
