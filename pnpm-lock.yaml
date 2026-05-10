@@ -205,8 +205,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
       chromatic:
-        specifier: 16.9.0
-        version: 16.9.0
+        specifier: 16.9.1
+        version: 16.9.1
       magic-string:
         specifier: 0.30.21
         version: 0.30.21
@@ -1583,8 +1583,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@16.9.0:
-    resolution: {integrity: sha512-KJ1qvHMMP3jYZksxA229dREL81TeS+XxerRgd83klJIgtuQdY8kYg5TClNaF+K9HAzHmF19VIDHF6d0XwsRqzQ==}
+  chromatic@16.9.1:
+    resolution: {integrity: sha512-+EkBJqLfeCfSqC3rz1H8GDwT9OoHRB/iX3qbjtW9wu3BeySnDjumD8E/BflEsHV7RoCzeKcp85zKGR/ZKcX7rw==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -5004,7 +5004,7 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@16.9.0:
+  chromatic@16.9.1:
     dependencies:
       semver: 7.7.4
 
