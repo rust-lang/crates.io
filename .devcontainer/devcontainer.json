@@ -9,7 +9,7 @@
   "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "24"
+      "version": "v24.15.0"
     }
   },
   // Named volumes for state that should survive container rebuilds.
