@@ -10,7 +10,6 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "chromatic": "chromatic",
     "dev": "vite dev",
-    "dev:docker": "API_HOST=http://backend:8888 vite dev --host 0.0.0.0",
     "dev:live": "vite dev",
     "dev:local": "API_HOST=http://127.0.0.1:8888 vite dev",
     "dev:msw": "VITE_MSW_ENABLED=true vite dev",

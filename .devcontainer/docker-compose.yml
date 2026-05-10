@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../:/workspaces/crates.io:cached
+    # The IDE attaches via `docker exec`; this keeps the container alive for it.
+    command: sleep infinity
+    environment:
+      DATABASE_URL: postgres://postgres@db/cargo_registry
+      TEST_DATABASE_URL: postgres://postgres@db/cargo_registry_test
+      DEV_DOCKER: 'true'
+    # Bound to host loopback only, never exposed to the LAN.
+    ports:
+      - '127.0.0.1:8888:8888'
+      - '127.0.0.1:5173:5173'
+      - '127.0.0.1:6006:6006'
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cargo_registry
+      # Trust auth is fine because Postgres is only reachable on the
+      # internal Docker network; no port is published to the host.
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d cargo_registry']
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  pgdata:

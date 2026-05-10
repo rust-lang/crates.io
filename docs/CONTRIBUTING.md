@@ -8,7 +8,6 @@
 - [Setting up a development environment](#setting-up-a-development-environment)
   - [Working on the Frontend](#working-on-the-frontend)
   - [Working on the Backend](#working-on-the-backend)
-  - [Running crates.io with Docker](#running-cratesio-with-docker)
 
 ## Attending the weekly team meetings
 
@@ -90,6 +89,38 @@ from your terminal:
 git clone https://github.com/rust-lang/crates.io.git
 cd crates.io/
 ```
+
+### Quick start with devcontainers
+
+The repository ships a [devcontainer](../.devcontainer/README.md) that
+provides a full-stack development environment (Rust toolchain, Node.js,
+pnpm, Postgres 16, `diesel_cli`, Playwright) with all dependencies
+pre-installed. This is the recommended path for new contributors.
+
+- In VS Code with the [Dev Containers] extension: select "Reopen in
+  Container".
+- On GitHub: open a [Codespace] for the repository.
+- From the command line: `devcontainer up` (requires the
+  [`devcontainer` CLI]).
+
+The container's first start handles database creation, migrations, and
+dependency installation. See [`.devcontainer/README.md`](../.devcontainer/README.md)
+for details.
+
+Once the container is up, see:
+
+- [Building and serving the frontend](#building-and-serving-the-frontend)
+  for running the Svelte dev server (and choosing which backend it
+  proxies to).
+- [Starting the server and the frontend](#starting-the-server-and-the-frontend)
+  for running the local backend and background worker.
+
+The sections that follow also describe setting up the same environment
+manually if you prefer not to use containers.
+
+[Dev Containers]: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
+[Codespace]: https://docs.github.com/en/codespaces
+[`devcontainer` CLI]: https://github.com/devcontainers/cli
 
 ## Working on the Frontend
 
@@ -579,93 +610,3 @@ this crate's `Cargo.toml`, and `cargo build` should display output like this:
    Compiling thiscrate v0.1.0 (file:///path/to/thiscrate)
     Finished dev [unoptimized + debuginfo] target(s) in 0.56 secs
 ```
-
-## Running crates.io with Docker
-
-There are Dockerfiles to build both the backend and the frontend,
-(`backend.Dockerfile` and `frontend.Dockerfile`) respectively, but it is most
-useful to just use docker-compose to bring up everything that's needed all in
-one go:
-
-```console
-docker compose up -d
-```
-
-The Compose file is filled out with a sane set of defaults that should Just
-Work™ out of the box without any modification. Individual settings can be
-overridden by creating a `docker-compose.override.yml` with the updated config.
-For example, in order to specify a set of GitHub OAuth Client credentials, a
-`docker-compose.override.yml` file might look like this:
-
-```yaml
-services:
-  backend:
-    environment:
-      GH_CLIENT_ID: blahblah_ID
-      GH_CLIENT_SECRET: blahblah_secret
-```
-
-These environment variables can also be defined in a local `.env` file, see `.env.sample`
-for various configuration options.
-
-### Accessing services
-
-By default, the services will be exposed on their normal ports:
-
-- `5432` for Postgres
-- `8888` for the crates.io backend
-- `5173` for the crates.io frontend (the SvelteKit dev server)
-
-These can be changed with the `docker-compose.override.yml` file.
-
-### Publishing crates
-
-Unlike a local setup, the Git index is not stored in the `./tmp` folder, so in
-order to publish to the Dockerized crates.io, run
-
-```console
-cargo publish --index http://localhost:8888/git/index --token $YOUR_TOKEN
-```
-
-### Changing code
-
-The `svelte/src/` and `svelte/static/` directories are mounted directly into
-the frontend Docker container, so Vite's HMR picks up changes without a
-restart. If anything outside of those (e.g. `svelte/package.json`,
-`svelte/svelte.config.js`, `svelte/vite.config.ts`) is changed, the base
-Docker image has to be rebuilt:
-
-```console
-# Rebuild frontend Docker image
-docker compose build frontend
-
-# Restart running frontend container (if it's already running)
-docker compose stop frontend
-docker compose rm frontend
-docker compose up -d
-```
-
-Similarly, the `src/` directory is mounted into the backend Docker container,
-so in order to recompile the backend, run:
-
-```console
-docker compose restart backend
-```
-
-If anything outside of `src/` is changed, the base Docker image will have to be
-rebuilt:
-
-```console
-# Rebuild backend Docker image
-docker compose build backend
-
-# Restart running backend container (if it's already running)
-docker compose stop backend
-docker compose rm backend
-docker compose up -d
-```
-
-### Volumes
-
-A number of names volumes are created, as can be seen in the `volumes` section
-of the `docker-compose.yml` file.

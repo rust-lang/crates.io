@@ -1,7 +1,6 @@
 # crates.io
 /local_uploads
 /tmp
-docker-compose.override.yml
 src/schema.rs.orig
 
 # Env

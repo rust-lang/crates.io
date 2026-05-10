@@ -48,6 +48,7 @@ export default defineConfig({
   plugins,
 
   server: {
+    ...(process.env.DEV_DOCKER && { host: true }),
     proxy,
   },
 
