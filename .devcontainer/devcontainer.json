@@ -8,7 +8,7 @@
   // the file-ownership annoyances that come with bind mounts.
   "remoteUser": "vscode",
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {
+    "ghcr.io/devcontainers/features/node:2": {
       "version": "v24.15.0"
     }
   },
