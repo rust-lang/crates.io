@@ -19,7 +19,7 @@ mockall = { version = "=0.14.0", optional = true }
 reqwest = { version = "=0.13.3", features = ["json"] }
 secrecy = { version = "=0.10.3", features = ["serde"] }
 serde = { version = "=1.0.228", features = ["derive"] }
-tokio = { version = "=1.52.2", features = ["sync"] }
+tokio = { version = "=1.52.3", features = ["sync"] }
 tracing = "=0.1.44"
 url = "=2.5.8"
 
@@ -28,4 +28,4 @@ claims = "=0.8.0"
 clap = { version = "=4.6.1", features = ["derive", "env"] }
 insta = "=1.47.2"
 mockito = "=1.7.2"
-tokio = { version = "=1.52.2", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.52.3", features = ["macros", "rt-multi-thread"] }
