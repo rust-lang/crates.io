@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/rust:1-bookworm
+FROM mcr.microsoft.com/devcontainers/rust:2-bookworm@sha256:9cf2686b6f111f9c1eef20b8103a5f15e96c5a94e2d4d8efeed7af4453872a93
 
 # Add the official PostgreSQL apt repo so we can install PostgreSQL 16
 # client + libpq. Debian bookworm only ships v15.
