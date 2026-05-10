@@ -50,7 +50,7 @@
     "@vitest/coverage-v8": "4.1.5",
     "chromatic": "16.9.0",
     "magic-string": "0.30.21",
-    "msw": "2.14.3",
+    "msw": "2.14.4",
     "playwright": "1.59.1",
     "storybook": "10.3.6",
     "svelte": "5.55.5",
