@@ -197,7 +197,17 @@ fn create_database_from_template(
     conn: &mut PgConnection,
 ) -> QueryResult<()> {
     debug!("Creating new test database from template…");
-    sql_query(format!("CREATE DATABASE {name} TEMPLATE {template_name}")).execute(conn)?;
+    // `STRATEGY = FILE_COPY` copies the template at the filesystem level
+    // instead of streaming each block through WAL (the default `WAL_LOG`).
+    // It forces a checkpoint before and after the copy, but writes far less
+    // WAL in total. Under the parallel `CREATE DATABASE` load a test suite
+    // generates this is a clear win, since `WAL_LOG` serializes heavily on
+    // WAL flushing across concurrent calls.
+    // See https://www.postgresql.org/docs/16/sql-createdatabase.html
+    sql_query(format!(
+        "CREATE DATABASE {name} TEMPLATE {template_name} STRATEGY = FILE_COPY"
+    ))
+    .execute(conn)?;
     Ok(())
 }
 
