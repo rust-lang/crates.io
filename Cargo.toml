@@ -169,7 +169,7 @@ claims = "=0.8.0"
 diesel = { version = "=2.3.9", features = ["r2d2"] }
 googletest = "=0.14.2"
 insta = { version = "=1.47.2", features = ["glob", "json", "redactions"] }
-jsonwebtoken = { version = "=10.3.0", features = ["aws_lc_rs"] }
+jsonwebtoken = { version = "=10.4.0", features = ["aws_lc_rs"] }
 quoted_printable = "=0.5.2"
 sentry = { version = "=0.48.1", features = ["test"] }
 tokio = "=1.52.3"
