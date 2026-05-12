@@ -1,4 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS ltree;
+CREATE EXTENSION IF NOT EXISTS ltree SCHEMA public;
 
 -- Create the new column which will represent our category tree.
 -- Fill it with values from `slug` column and then set to non-null
