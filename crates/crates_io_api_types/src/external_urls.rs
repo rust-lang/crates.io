@@ -8,6 +8,7 @@ const DOMAIN_BLOCKLIST: &[&str] = &[
     "ironframework.io",
     "nebulanet.cc",
     "esp-rs.org",
+    "ncollide.org",
 ];
 
 /// Return `None` if the documentation URL host matches a blocked host
