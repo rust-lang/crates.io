@@ -323,26 +323,6 @@ impl Repository {
         Ok(())
     }
 
-    /// Rewrite the `master` branch to a single parentless commit wrapping the
-    /// current HEAD tree.
-    ///
-    /// The tree is reused by OID, so no blobs are read and no files are
-    /// touched. This stays cheap regardless of index size.
-    #[instrument(skip_all)]
-    pub fn squash_to_single_commit(&self, msg: &str) -> anyhow::Result<()> {
-        let repo = &self.repository;
-        let tree = repo.find_commit(self.head_oid()?)?.tree()?;
-        let sig = repo.signature()?;
-
-        // `repo.commit(Some("HEAD"), ...)` would reject a parentless commit
-        // when HEAD is not itself parentless. Create the commit detached,
-        // then force-update `refs/heads/master` to point at it.
-        let commit = repo.commit(None, &sig, &sig, msg, &tree, &[])?;
-        repo.reference("refs/heads/master", commit, true, msg)?;
-
-        Ok(())
-    }
-
     /// Runs the specified `git` command in the working directory of the local
     /// crate index repository.
     ///
