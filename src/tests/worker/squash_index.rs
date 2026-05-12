@@ -116,12 +116,12 @@ fn expect_update_master(mock: &mut MockGitHubClient, new_sha: &'static str) {
         });
 }
 
-/// `SquashIndexViaApi` should drive the squash entirely via the GitHub REST
+/// `SquashIndex` should drive the squash entirely via the GitHub REST
 /// API: read master, read its tree, create a parentless commit on the same
 /// tree, create the snapshot ref, re-read master to guard against drift, and
 /// fast-forward master to the new commit.
 #[tokio::test(flavor = "multi_thread")]
-async fn squash_index_via_api() {
+async fn squash_index() {
     let mut github = MockGitHubClient::new();
     expect_get_master(&mut github, ORIGINAL_SHA);
     expect_get_commit(&mut github, ORIGINAL_SHA, TREE_SHA);
@@ -138,7 +138,7 @@ async fn squash_index_via_api() {
         .await;
 
     let conn = app.db_conn().await;
-    assert_ok!(jobs::SquashIndexViaApi.enqueue(&conn).await);
+    assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
     app.run_pending_background_jobs().await;
 }
 
@@ -147,7 +147,7 @@ async fn squash_index_via_api() {
 /// on the remote. The snapshot ref created earlier remains as a harmless
 /// pointer to the pre-squash HEAD.
 #[tokio::test(flavor = "multi_thread")]
-async fn squash_index_via_api_bails_on_master_drift() {
+async fn squash_index_bails_on_master_drift() {
     const DRIFTED_SHA: &str = "cccccccccccccccccccccccccccccccccccccccc";
 
     let mut github = MockGitHubClient::new();
@@ -168,7 +168,7 @@ async fn squash_index_via_api_bails_on_master_drift() {
         .await;
 
     let mut conn = app.db_conn().await;
-    assert_ok!(jobs::SquashIndexViaApi.enqueue(&conn).await);
+    assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
     let err = app.try_run_pending_background_jobs().await.unwrap_err();
     assert_eq!(err.to_string(), "1 jobs failed");
 

@@ -31,7 +31,7 @@ pub use self::dump_db::DumpDb;
 pub use self::expiry_notification::SendTokenExpiryNotifications;
 pub use self::generate_og_image::GenerateOgImage;
 pub use self::index::{
-    ArchiveIndexBranch, BulkSyncToGitIndex, NormalizeIndex, SquashIndexViaApi, SyncToGitIndex,
+    ArchiveIndexBranch, BulkSyncToGitIndex, NormalizeIndex, SquashIndex, SyncToGitIndex,
     SyncToSparseIndex,
 };
 pub use self::index_version_downloads_archive::IndexVersionDownloadsArchive;

@@ -40,14 +40,14 @@ async fn enqueue_archive_job(env: &Environment, branch: &str) -> anyhow::Result<
 /// reference, and we just hand it a tiny new commit object and move
 /// `master` to point at it.
 #[derive(Serialize, Deserialize)]
-pub struct SquashIndexViaApi;
+pub struct SquashIndex;
 
-impl BackgroundJob for SquashIndexViaApi {
-    const JOB_NAME: &'static str = "squash_index_via_api";
+impl BackgroundJob for SquashIndex {
+    const JOB_NAME: &'static str = "squash_index";
     const DEDUPLICATED: bool = true;
-    // Same queue as `SquashIndex`, `SyncToGitIndex`, etc. so index-writing
-    // jobs serialize against each other, even though this job does not
-    // touch the local bare repo.
+    // Same queue as `SyncToGitIndex`, etc. so index-writing jobs serialize
+    // against each other, even though this job does not touch the local
+    // bare repo.
     const QUEUE: &'static str = "repository";
 
     type Context = Arc<Environment>;

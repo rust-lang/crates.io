@@ -423,7 +423,7 @@ impl TestAppBuilder {
 
     /// Override the `index_location` URL used for the worker
     /// [`RepositoryConfig`]. Used by tests that exercise jobs which
-    /// parse the URL (e.g. [`crates_io::worker::jobs::SquashIndexViaApi`])
+    /// parse the URL (e.g. [`crates_io::worker::jobs::SquashIndex`])
     /// but do not touch the local bare repo.
     pub fn with_index_location(mut self, url: Url) -> Self {
         self.index_location = Some(url);
