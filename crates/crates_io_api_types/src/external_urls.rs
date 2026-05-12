@@ -9,6 +9,7 @@ const DOMAIN_BLOCKLIST: &[&str] = &[
     "nebulanet.cc",
     "esp-rs.org",
     "ncollide.org",
+    "trunkrs.dev",
 ];
 
 /// Returns `None` if the documentation URL host matches a blocked host.
