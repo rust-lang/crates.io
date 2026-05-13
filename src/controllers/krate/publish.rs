@@ -19,7 +19,6 @@ use diesel::dsl::{exists, now, select};
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use futures_util::TryFutureExt;
 use futures_util::TryStreamExt;
 use hex::ToHex;
 use http::StatusCode;
@@ -651,18 +650,9 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             git_index_job.enqueue(&*conn),
             sparse_index_job.enqueue(&*conn),
             publish_notifications_job.enqueue(&*conn),
-            crate_feed_job.enqueue(&*conn).or_else(async |error| {
-                error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
-                Ok::<_, EnqueueError>(None)
-            }),
-            updates_feed_job.enqueue(&*conn).or_else(async |error| {
-                error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
-                Ok::<_, EnqueueError>(None)
-            }),
-            analyze_crate_file_job.enqueue(&*conn).or_else(async |error| {
-                error!("Failed to enqueue `AnalyzeCrateFile` job: {error}");
-                Ok::<_, EnqueueError>(None)
-            }),
+            enqueue_or_log(&crate_feed_job, &*conn),
+            enqueue_or_log(&updates_feed_job, &*conn),
+            enqueue_or_log(&analyze_crate_file_job, &*conn),
         )?;
 
         // Enqueue OG image generation job if not handled by UpdateDefaultVersion
@@ -679,14 +669,8 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             let typosquat_job = CheckTyposquat::new(&krate.name);
 
             tokio::try_join!(
-                crates_feed_job.enqueue(&*conn).or_else(async |error| {
-                    error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
-                    Ok::<_, EnqueueError>(None)
-                }),
-                typosquat_job.enqueue(&*conn).or_else(async |error| {
-                    error!("Failed to enqueue `CheckTyposquat` job: {error}");
-                    Ok::<_, EnqueueError>(None)
-                }),
+                enqueue_or_log(&crates_feed_job, &*conn),
+                enqueue_or_log(&typosquat_job, &*conn),
             )?;
         }
 
@@ -713,6 +697,19 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             warnings,
         }))
     }).await
+}
+
+/// Enqueues a background job, logging any error instead of propagating it.
+///
+/// Used for jobs whose failure should not abort the publish flow.
+async fn enqueue_or_log<J: BackgroundJob>(
+    job: &J,
+    conn: &AsyncPgConnection,
+) -> Result<Option<i64>, EnqueueError> {
+    job.enqueue(conn).await.or_else(|error| {
+        error!("Failed to enqueue `{}` job: {error}", J::JOB_NAME);
+        Ok(None)
+    })
 }
 
 /// Counts the number of versions for `crate_id` that were published within
