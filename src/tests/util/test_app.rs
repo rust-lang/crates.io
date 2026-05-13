@@ -248,6 +248,13 @@ impl TestApp {
         &self.0.app
     }
 
+    /// Name of the per-test Postgres schema backing this `TestApp`. Pass this
+    /// to jobs or helpers that need to scope SQL operations to the test's
+    /// schema (e.g. `pg_dump --schema=<x>`).
+    pub fn db_schema(&self) -> &str {
+        self.0.test_database.schema()
+    }
+
     /// Obtain a reference to the axum Router
     pub fn router(&self) -> &axum::Router {
         &self.0.router

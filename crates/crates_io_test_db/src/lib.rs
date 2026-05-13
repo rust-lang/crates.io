@@ -1,12 +1,15 @@
 #![doc = include_str!("../README.md")]
 
-use crates_io_env_vars::required_var_parsed;
+use crates_io_env_vars::{required_var_parsed, var_parsed};
+use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sql_query;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::RngExt;
+use std::path::PathBuf;
+use std::process::Command;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::{debug, instrument};
@@ -14,17 +17,35 @@ use url::Url;
 
 const CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
 
-struct TemplateDatabase {
+/// Prefix for per-test schemas, followed by a 16-character random suffix.
+/// Used both when allocating new schemas and when sweeping up leftovers from
+/// crashed prior runs.
+const TEST_SCHEMA_PREFIX: &str = "test";
+
+/// Schema that holds the migrated structure all per-test schemas are cloned
+/// from. Created once per process.
+const TEMPLATE_SCHEMA: &str = "test_template";
+
+/// Management state shared by every `TestDatabase` in the process.
+///
+/// On first use we ensure the `test_template` schema exists, run all pending
+/// migrations into it, and capture the resulting DDL via `pg_dump`. Each
+/// subsequent `TestDatabase::new()` creates a fresh schema and replays that
+/// captured DDL with the template schema name rewritten to the test schema
+/// name, sidestepping the per-test migration-framework overhead.
+struct Management {
     base_url: Url,
     pool: Pool<ConnectionManager<PgConnection>>,
-    template_name: String,
-    prefix: String,
+    /// DDL captured from the template schema, with the template schema's
+    /// own qualified references intact (e.g. `test_template.crates`). Per-test
+    /// replay substitutes the template name for the test schema name.
+    template_ddl: String,
 }
 
-impl TemplateDatabase {
+impl Management {
     #[instrument]
     pub fn instance() -> &'static Self {
-        static INSTANCE: LazyLock<TemplateDatabase> = LazyLock::new(TemplateDatabase::new);
+        static INSTANCE: LazyLock<Management> = LazyLock::new(Management::new);
         &INSTANCE
     }
 
@@ -32,39 +53,42 @@ impl TemplateDatabase {
     fn new() -> Self {
         let base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
-        let prefix = base_url.path().strip_prefix('/');
-        let prefix = prefix.expect("failed to parse database name").to_string();
-
-        // Having only a single database management connection was causing
-        // contention, so this is using a connection pool to reduce unnecessary
-        // waiting times for the tests.
         let pool = Pool::builder()
             .connection_timeout(CONNECTION_TIMEOUT)
             .max_size(10)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(base_url.as_ref()));
 
-        // Get a connection from the pool, and create the template database
         let mut conn = pool.get().expect("failed to connect to the database");
 
-        let template_name = format!("{prefix}_template");
-        create_template_database(&template_name, &mut conn)
-            .expect("failed to create template database");
+        // Drop any leftover test schemas from previous runs that crashed
+        // without dropping their schema. This also drops any extensions
+        // that were installed inside those schemas, freeing their
+        // database-level registration so the migrations can re-install
+        // them in `public`.
+        cleanup_leftover_schemas(&mut conn).expect("failed to clean up leftover test schemas");
 
-        let mut template_url = base_url.clone();
-        template_url.set_path(&format!("/{template_name}"));
+        sql_query(format!("CREATE SCHEMA IF NOT EXISTS \"{TEMPLATE_SCHEMA}\""))
+            .execute(&mut conn)
+            .expect("failed to ensure template schema exists");
 
-        // Connect to the template database and run the migrations
+        // Apply any pending migrations to the template schema. Diesel skips
+        // already-applied migrations, so subsequent process starts only pay
+        // for newly-added migrations.
+        let template_url = url_with_search_path(&base_url, TEMPLATE_SCHEMA);
         let mut template_conn =
-            connect(template_url.as_ref()).expect("failed to connect to the template database");
+            connect(template_url.as_ref()).expect("failed to connect to template schema");
         run_migrations(&mut template_conn)
-            .expect("failed to run migrations on the template database");
+            .expect("failed to run migrations on the template schema");
+        drop(template_conn);
 
-        TemplateDatabase {
+        let template_ddl =
+            capture_template_ddl(&base_url).expect("failed to capture template schema DDL");
+
+        Management {
             base_url,
             pool,
-            template_name,
-            prefix,
+            template_ddl,
         }
     }
 
@@ -72,65 +96,78 @@ impl TemplateDatabase {
     fn get_connection(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
         self.pool.get().expect("Failed to get database connection")
     }
+
+    /// Generates a random schema name and builds the `TestDatabase` struct
+    /// around it. The schema itself is not created here; callers are
+    /// responsible for either issuing `CREATE SCHEMA` (see
+    /// [`TestDatabase::empty`]) or replaying DDL that contains a `CREATE
+    /// SCHEMA` statement (see [`TestDatabase::new`]).
+    fn allocate(&self) -> TestDatabase {
+        let schema = format!("{TEST_SCHEMA_PREFIX}_{}", generate_name().to_lowercase());
+        let url = url_with_search_path(&self.base_url, &schema);
+
+        TestDatabase { schema, url }
+    }
 }
 
 pub struct TestDatabase {
-    name: String,
+    schema: String,
+    /// Base URL for the test database with `options=--search_path=<schema>,public`
+    /// appended, so any pool or one-shot connection opened against this URL
+    /// is automatically scoped to the test's schema.
     url: Url,
-    pool: Option<Pool<ConnectionManager<PgConnection>>>,
 }
 
 impl TestDatabase {
-    /// Creates a new Postgres database based on a template with all of the
-    /// migrations already applied. Once the `TestDatabase` instance is dropped,
-    /// the database is automatically deleted.
+    /// Creates a new schema inside the test database, populated by replaying
+    /// the captured template DDL. The schema (and everything in it) is
+    /// dropped when this `TestDatabase` is dropped.
     #[allow(clippy::new_without_default)]
     #[instrument]
     pub fn new() -> TestDatabase {
-        Self::new_inner(|name, conn| {
-            let template = TemplateDatabase::instance();
-            create_database_from_template(name, &template.template_name, conn)
-        })
+        let management = Management::instance();
+        let test_db = management.allocate();
+
+        let ddl = management
+            .template_ddl
+            .replace(TEMPLATE_SCHEMA, &test_db.schema);
+
+        let mut conn = management.get_connection();
+        conn.batch_execute(&ddl)
+            .expect("failed to replay template DDL into test schema");
+
+        test_db
     }
 
-    /// Creates a new Postgres database. Once the `TestDatabase` instance is
-    /// dropped, the database is automatically deleted.
+    /// Creates a new schema inside the test database without populating it.
+    /// The schema is dropped when this `TestDatabase` is dropped.
     #[instrument]
     pub fn empty() -> TestDatabase {
-        Self::new_inner(create_database)
+        let management = Management::instance();
+        let test_db = management.allocate();
+
+        let mut conn = management.get_connection();
+        create_schema(&test_db.schema, &mut conn).expect("Failed to create test schema");
+
+        test_db
     }
 
-    fn new_inner(f: impl Fn(&str, &mut PgConnection) -> QueryResult<()>) -> TestDatabase {
-        let template = TemplateDatabase::instance();
-
-        let name = format!("{}_{}", template.prefix, generate_name().to_lowercase());
-
-        let mut conn = template.get_connection();
-        f(&name, &mut conn).expect("Failed to create test database");
-
-        let mut url = template.base_url.clone();
-        url.set_path(&format!("/{name}"));
-
-        let pool = Pool::builder()
-            .connection_timeout(CONNECTION_TIMEOUT)
-            .min_idle(Some(0))
-            .build_unchecked(ConnectionManager::new(url.as_ref()));
-
-        let pool = Some(pool);
-        TestDatabase { name, url, pool }
-    }
-
+    /// URL pointing at the test database, with the test schema baked in as a
+    /// connection option (`options=--search_path=<schema>,public`). Any pool
+    /// or one-shot connection opened against this URL is automatically scoped
+    /// to the test's schema.
     pub fn url(&self) -> &str {
         self.url.as_ref()
     }
 
+    /// Name of the schema this `TestDatabase` owns.
+    pub fn schema(&self) -> &str {
+        &self.schema
+    }
+
     #[instrument(skip(self))]
-    pub fn connect(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
-        self.pool
-            .as_ref()
-            .unwrap()
-            .get()
-            .expect("Failed to get database connection")
+    pub fn connect(&self) -> PgConnection {
+        PgConnection::establish(self.url()).expect("Failed to connect to database")
     }
 
     #[instrument(skip(self))]
@@ -144,14 +181,35 @@ impl TestDatabase {
 impl Drop for TestDatabase {
     #[instrument(skip(self))]
     fn drop(&mut self) {
-        // Essentially `drop(self.pool)` to make sure any connections to the
-        // test database have been disconnected before dropping the database
-        // itself.
-        self.pool = None;
-
-        let mut conn = TemplateDatabase::instance().get_connection();
-        drop_database(&self.name, &mut conn).expect("failed to drop test database");
+        let mut conn = Management::instance().get_connection();
+        drop_schema(&self.schema, &mut conn).expect("failed to drop test schema");
     }
+}
+
+/// Drops any schema whose name matches `test_<16-alphanumeric-chars>`. These
+/// are leftover test schemas from a prior run that crashed before its `Drop`
+/// impl could clean up. Each `DROP SCHEMA … CASCADE` also drops any extension
+/// that happened to be installed inside the leftover schema.
+#[instrument(skip(conn))]
+fn cleanup_leftover_schemas(conn: &mut PgConnection) -> QueryResult<()> {
+    let leftovers: Vec<Schema> = diesel::sql_query(
+        "SELECT schema_name FROM information_schema.schemata \
+         WHERE schema_name ~ '^test_[a-z0-9]{16}$'",
+    )
+    .load(conn)?;
+
+    for Schema { schema_name } in leftovers {
+        debug!(name = %schema_name, "Dropping leftover test schema");
+        sql_query(format!("DROP SCHEMA \"{schema_name}\" CASCADE")).execute(conn)?;
+    }
+
+    Ok(())
+}
+
+#[derive(diesel::QueryableByName)]
+struct Schema {
+    #[diesel(sql_type = diesel::sql_types::Text)]
+    schema_name: String,
 }
 
 #[instrument]
@@ -161,60 +219,18 @@ fn connect(database_url: &str) -> ConnectionResult<PgConnection> {
 }
 
 #[instrument(skip(conn))]
-fn create_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
-    debug!("Creating new database…");
-    sql_query(format!("CREATE DATABASE {name}")).execute(conn)?;
+fn create_schema(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    debug!("Creating new test schema…");
+    sql_query(format!("CREATE SCHEMA \"{name}\"")).execute(conn)?;
     Ok(())
 }
 
 #[instrument(skip(conn))]
-fn create_template_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
-    table! {
-        pg_database (datname) {
-            datname -> Text,
-        }
-    }
-
-    debug!("Checking if template database already exists…");
-    let count: i64 = pg_database::table
-        .count()
-        .filter(pg_database::datname.eq(name))
-        .get_result(conn)?;
-
-    if count == 0 {
-        create_database(name, conn)?;
-    } else {
-        debug!(%count, "Skipping template database creation");
-    }
-
-    Ok(())
-}
-
-#[instrument(skip(conn))]
-fn create_database_from_template(
-    name: &str,
-    template_name: &str,
-    conn: &mut PgConnection,
-) -> QueryResult<()> {
-    debug!("Creating new test database from template…");
-    // `STRATEGY = FILE_COPY` copies the template at the filesystem level
-    // instead of streaming each block through WAL (the default `WAL_LOG`).
-    // It forces a checkpoint before and after the copy, but writes far less
-    // WAL in total. Under the parallel `CREATE DATABASE` load a test suite
-    // generates this is a clear win, since `WAL_LOG` serializes heavily on
-    // WAL flushing across concurrent calls.
-    // See https://www.postgresql.org/docs/16/sql-createdatabase.html
-    sql_query(format!(
-        "CREATE DATABASE {name} TEMPLATE {template_name} STRATEGY = FILE_COPY"
-    ))
-    .execute(conn)?;
-    Ok(())
-}
-
-#[instrument(skip(conn))]
-fn drop_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
-    debug!("Dropping database…");
-    sql_query(format!("DROP DATABASE {name} WITH (FORCE)")).execute(conn)?;
+fn drop_schema(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    debug!("Dropping test schema…");
+    // `IF EXISTS` so that a `TestDatabase` whose `new()` panicked partway
+    // through the DDL replay (before `CREATE SCHEMA` ran) still drops cleanly.
+    sql_query(format!("DROP SCHEMA IF EXISTS \"{name}\" CASCADE")).execute(conn)?;
     Ok(())
 }
 
@@ -224,6 +240,76 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
     let migrations = FileBasedMigrations::find_migrations_directory()?;
     conn.run_pending_migrations(migrations)?;
     Ok(())
+}
+
+/// Shells out to `pg_dump --schema=<template>` and returns the captured DDL
+/// as SQL ready for `batch_execute`.
+///
+/// `pg_dump`'s plain-text output targets `psql`, not the backend. To make
+/// it backend-safe:
+///
+/// - `--inserts` avoids the `COPY … FROM stdin … \.` data framing that
+///   `batch_execute` can't run.
+/// - Lines starting with `\` (psql meta-commands like `\restrict`/
+///   `\unrestrict`, emitted by `pg_dump` 17+) are stripped.
+/// - A trailing `RESET ALL` clears any session state the preamble's
+///   `SET` / `set_config('search_path', …)` calls left behind so it
+///   doesn't leak to the next checkout of the pooled connection.
+#[instrument]
+fn capture_template_ddl(base_url: &Url) -> anyhow::Result<String> {
+    let pg_dump = match var_parsed::<PathBuf>("POSTGRES_BIN_DIR")? {
+        Some(dir) => dir.join("pg_dump"),
+        None => PathBuf::from("pg_dump"),
+    };
+    debug!(pg_dump = %pg_dump.display(), "Capturing template schema DDL via pg_dump…");
+    let output = Command::new(&pg_dump)
+        .arg("--no-owner")
+        .arg("--no-acl")
+        .arg("--inserts")
+        .arg(format!("--schema={TEMPLATE_SCHEMA}"))
+        .arg(base_url.as_ref())
+        .output()
+        .map_err(|err| anyhow::anyhow!("failed to run `pg_dump`: {err}"))?;
+
+    if !output.status.success() {
+        return Err(anyhow::anyhow!(
+            "pg_dump did not finish successfully (exit code: {}). stderr: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    let raw = String::from_utf8(output.stdout)
+        .map_err(|err| anyhow::anyhow!("pg_dump produced non-UTF-8 output: {err}"))?;
+
+    let mut ddl = String::with_capacity(raw.len());
+    for line in raw.lines() {
+        if line.starts_with('\\') {
+            continue;
+        }
+        ddl.push_str(line);
+        ddl.push('\n');
+    }
+
+    ddl.push_str("\nRESET ALL;\n");
+
+    Ok(ddl)
+}
+
+/// Returns a copy of `base_url` with `options=--search_path=<schema>,public`
+/// appended to its query string. Postgres honors this `options` parameter when
+/// the connection is established, so every connection through the resulting
+/// URL starts with the test schema active.
+///
+/// The `--name=value` form (rather than the more common `-c name=value`) keeps
+/// the value space-free, which lets `url`'s form-encoding `append_pair()` do
+/// the right thing — libpq does not accept `+` as a space in URL query
+/// strings.
+fn url_with_search_path(base_url: &Url, schema: &str) -> Url {
+    let mut url = base_url.clone();
+    url.query_pairs_mut()
+        .append_pair("options", &format!("--search_path={schema},public"));
+    url
 }
 
 fn generate_name() -> String {

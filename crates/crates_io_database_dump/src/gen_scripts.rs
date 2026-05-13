@@ -131,7 +131,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&mut conn, "public").await);
+        let db_columns =
+            HashSet::<Column>::from_iter(get_db_columns(&mut conn, test_db.schema()).await);
         let vis_columns = VisibilityConfig::get()
             .0
             .iter()

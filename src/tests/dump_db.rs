@@ -23,7 +23,7 @@ async fn test_dump_db_job() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
-    DumpDb::default().enqueue(&conn).await?;
+    DumpDb::for_schema(app.db_schema()).enqueue(&conn).await?;
 
     app.run_pending_background_jobs().await;
 

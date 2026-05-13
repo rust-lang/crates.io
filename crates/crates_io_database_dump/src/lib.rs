@@ -332,20 +332,33 @@ mod tests {
 
     #[test]
     fn dump_db_and_reimport_dump() {
-        let db_one = TestDatabase::new();
+        use diesel::RunQueryDsl;
+        use diesel::sql_query;
+
+        let test_db = TestDatabase::new();
 
         // TODO prefill database with some data
 
         let directory = DumpDirectory::create(postgres_bin_dir()).unwrap();
-        directory.populate(db_one.url(), None).unwrap();
+        directory
+            .populate(test_db.url(), Some(test_db.schema()))
+            .unwrap();
 
-        let db_two = TestDatabase::empty();
+        // Clear the schema so the dump's `CREATE SCHEMA` and `CREATE TABLE`
+        // statements (qualified with `test_db.schema()`) have a fresh target.
+        // The schema name in the URL's `search_path` resolves again as soon
+        // as the dump recreates it. `test_db`'s `Drop` cleans up the
+        // recreated schema at the end of the test.
+        let mut conn = test_db.connect();
+        sql_query(format!("DROP SCHEMA \"{}\" CASCADE", test_db.schema()))
+            .execute(&mut conn)
+            .unwrap();
 
         let schema_script = directory.path().join("schema.sql");
-        directory.run_psql(&schema_script, db_two.url()).unwrap();
+        directory.run_psql(&schema_script, test_db.url()).unwrap();
 
         let import_script = directory.path().join("import.sql");
-        directory.run_psql(&import_script, db_two.url()).unwrap();
+        directory.run_psql(&import_script, test_db.url()).unwrap();
 
         // TODO: Consistency checks on the re-imported data?
     }
@@ -355,7 +368,7 @@ mod tests {
         let db = TestDatabase::new();
 
         let directory = DumpDirectory::create(postgres_bin_dir()).unwrap();
-        directory.populate(db.url(), None).unwrap();
+        directory.populate(db.url(), Some(db.schema())).unwrap();
 
         insta::glob!(directory.path(), "{import,export}.sql", |path| {
             let content = fs::read_to_string(path).unwrap();
