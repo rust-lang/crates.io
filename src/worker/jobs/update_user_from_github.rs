@@ -151,12 +151,17 @@ impl UpdateUserFromGithub {
             .transaction(async |conn| {
                 // This will be removed when we no longer sync crates.io usernames with GitHub.
                 // (The transaction can be removed when this is removed as well)
-                diesel::update(users::table)
-                    .filter(users::id.eq(self.user_id))
-                    .set(users::gh_login.eq(&github_user.login))
-                    .execute(conn)
-                    .await?;
+                // It's only needed if there's a change in username.
+                if self.old_username != github_user.login {
+                    diesel::update(users::table)
+                        .filter(users::id.eq(self.user_id))
+                        .set(users::gh_login.eq(&github_user.login))
+                        .execute(conn)
+                        .await?;
+                }
 
+                // This update is needed even if there's no change in username to set the
+                // `last_sync` time to `now`.
                 diesel::update(oauth_github::table)
                     .filter(oauth_github::user_id.eq(self.user_id))
                     .set((
