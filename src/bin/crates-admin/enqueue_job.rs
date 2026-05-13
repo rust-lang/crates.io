@@ -96,7 +96,7 @@ pub async fn run(command: Command) -> Result<()> {
             jobs::DailyDbMaintenance.enqueue(&conn).await?;
         }
         Command::DumpDb => {
-            jobs::DumpDb.enqueue(&conn).await?;
+            jobs::DumpDb::default().enqueue(&conn).await?;
         }
         Command::GenerateOgImage { names } => {
             for name in names {
