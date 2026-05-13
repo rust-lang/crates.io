@@ -5,6 +5,7 @@ use serde::Serialize;
 use std::fs;
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use tracing::debug;
 use zip::write::SimpleFileOptions;
 
@@ -23,19 +24,36 @@ pub struct DumpDirectory {
     /// The temporary directory that contains the export directory.
     tempdir: tempfile::TempDir,
     pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// Optional directory containing the `pg_dump` and `psql` binaries to use.
+    /// When `None`, the binaries are resolved via `PATH`.
+    postgres_bin_dir: Option<PathBuf>,
 }
 
 impl DumpDirectory {
-    pub fn create() -> anyhow::Result<Self> {
+    pub fn create(postgres_bin_dir: Option<PathBuf>) -> anyhow::Result<Self> {
         debug!("Creating database dump folder…");
         let tempdir = tempfile::tempdir()?;
         let timestamp = chrono::Utc::now();
 
-        Ok(Self { tempdir, timestamp })
+        Ok(Self {
+            tempdir,
+            timestamp,
+            postgres_bin_dir,
+        })
     }
 
     pub fn path(&self) -> &Path {
         self.tempdir.path()
+    }
+
+    /// Resolve the path of a PostgreSQL client binary, honoring the configured
+    /// [`Self::postgres_bin_dir`] override. When no override is set the bare
+    /// name is returned, which `Command::new` will resolve via `PATH`.
+    fn pg_program(&self, name: &str) -> PathBuf {
+        match &self.postgres_bin_dir {
+            Some(dir) => dir.join(name),
+            None => PathBuf::from(name),
+        }
     }
 
     pub fn populate(&self, database_url: &str) -> anyhow::Result<()> {
@@ -88,16 +106,17 @@ impl DumpDirectory {
         let schema_sql =
             File::create(&path).with_context(|| format!("Failed to create {}", path.display()))?;
 
-        let status = std::process::Command::new("pg_dump")
+        let program = self.pg_program("pg_dump");
+        let status = Command::new(&program)
             .arg("--schema-only")
             .arg("--no-owner")
             .arg("--no-acl")
             .arg(database_url)
             .stdout(schema_sql)
             .spawn()
-            .context("Failed to run `pg_dump` command")?
+            .with_context(|| format!("Failed to run `{}` command", program.display()))?
             .wait()
-            .context("Failed to wait for `pg_dump` to exit")?;
+            .with_context(|| format!("Failed to wait for `{}` to exit", program.display()))?;
 
         if !status.success() {
             return Err(anyhow!(
@@ -119,37 +138,38 @@ impl DumpDirectory {
         debug!("Filling data folder…");
         fs::create_dir(self.path().join("data")).context("Failed to create `data` directory")?;
 
-        run_psql(&export_script, database_url)
+        self.run_psql(&export_script, database_url)
     }
-}
 
-pub fn run_psql(script: &Path, database_url: &str) -> anyhow::Result<()> {
-    debug!(?script, "Running psql script…");
-    let psql_script =
-        File::open(script).with_context(|| format!("Failed to open {}", script.display()))?;
+    pub fn run_psql(&self, script: &Path, database_url: &str) -> anyhow::Result<()> {
+        debug!(?script, "Running psql script…");
+        let psql_script =
+            File::open(script).with_context(|| format!("Failed to open {}", script.display()))?;
 
-    let psql = std::process::Command::new("psql")
-        .arg("--no-psqlrc")
-        .arg(database_url)
-        .current_dir(script.parent().unwrap())
-        .stdin(psql_script)
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .context("Failed to run psql command")?;
+        let program = self.pg_program("psql");
+        let psql = Command::new(&program)
+            .arg("--no-psqlrc")
+            .arg(database_url)
+            .current_dir(script.parent().unwrap())
+            .stdin(psql_script)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .with_context(|| format!("Failed to run `{}` command", program.display()))?;
 
-    let output = psql
-        .wait_with_output()
-        .context("Failed to wait for psql command to exit")?;
+        let output = psql.wait_with_output().with_context(|| {
+            format!("Failed to wait for `{}` command to exit", program.display())
+        })?;
 
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if stderr.contains("ERROR") {
-        return Err(anyhow!("Error while executing psql: {stderr}"));
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if stderr.contains("ERROR") {
+            return Err(anyhow!("Error while executing psql: {stderr}"));
+        }
+        if !output.status.success() {
+            return Err(anyhow!("psql did not finish successfully."));
+        }
+        Ok(())
     }
-    if !output.status.success() {
-        return Err(anyhow!("psql did not finish successfully."));
-    }
-    Ok(())
 }
 
 pub struct Archives {
@@ -235,11 +255,16 @@ pub fn create_archives(export_dir: &Path, tarball_prefix: &Path) -> anyhow::Resu
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crates_io_env_vars::var_parsed;
     use crates_io_test_db::TestDatabase;
     use flate2::read::GzDecoder;
     use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::BufReader;
     use tar::Archive;
+
+    fn postgres_bin_dir() -> Option<PathBuf> {
+        var_parsed("POSTGRES_BIN_DIR").unwrap()
+    }
 
     #[test]
     fn test_dump_tarball() {
@@ -297,16 +322,16 @@ mod tests {
 
         // TODO prefill database with some data
 
-        let directory = DumpDirectory::create().unwrap();
+        let directory = DumpDirectory::create(postgres_bin_dir()).unwrap();
         directory.populate(db_one.url()).unwrap();
 
         let db_two = TestDatabase::empty();
 
         let schema_script = directory.path().join("schema.sql");
-        run_psql(&schema_script, db_two.url()).unwrap();
+        directory.run_psql(&schema_script, db_two.url()).unwrap();
 
         let import_script = directory.path().join("import.sql");
-        run_psql(&import_script, db_two.url()).unwrap();
+        directory.run_psql(&import_script, db_two.url()).unwrap();
 
         // TODO: Consistency checks on the re-imported data?
     }
@@ -315,7 +340,7 @@ mod tests {
     fn test_sql_scripts() {
         let db = TestDatabase::new();
 
-        let directory = DumpDirectory::create().unwrap();
+        let directory = DumpDirectory::create(postgres_bin_dir()).unwrap();
         directory.populate(db.url()).unwrap();
 
         insta::glob!(directory.path(), "{import,export}.sql", |path| {

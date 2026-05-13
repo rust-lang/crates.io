@@ -1574,6 +1574,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "crates_io_env_vars",
  "crates_io_test_db",
  "crates_io_version",
  "diesel",
