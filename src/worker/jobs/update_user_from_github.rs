@@ -41,21 +41,20 @@ impl BackgroundJob for UpdateUserFromGithub {
             .await?;
 
         info!(
-            dry_run = self.dry_run,
-            user_id = oauth_github.user_id,
-            github_id = self.account_id,
-            old_username = oauth_github.login,
-            "Starting UpdateUserFromGithub"
+            "Starting UpdateUserFromGithub ({}): user_id {}, github_id {}, old username {}",
+            if self.dry_run { "DRY RUN" } else { "FOR REAL" },
+            oauth_github.user_id,
+            self.account_id,
+            oauth_github.login,
         );
 
         let github_user = self.refresh_user(&ctx, &oauth_github).await?;
 
         if self.dry_run {
             info!(
-                user_id = oauth_github.user_id,
-                old_username = oauth_github.login,
-                new_username = github_user.login,
-                "Dry run UpdateUserFromGithub proposed update"
+                "Dry run UpdateUserFromGithub proposed update for crates.io user {} \
+                from username `{}` to username `{}`",
+                oauth_github.user_id, oauth_github.login, github_user.login,
             );
         } else {
             self.apply_update(&oauth_github, &github_user, &mut conn)
