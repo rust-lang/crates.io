@@ -1,5 +1,4 @@
 use crate::util::TestApp;
-use chrono::Utc;
 use claims::assert_ok;
 use crates_io::schema::background_jobs;
 use crates_io::worker::jobs;
@@ -26,55 +25,6 @@ fn master_ref(sha: &str) -> GitRef {
         ref_name: MASTER_REF.into(),
         object: GitObject { sha: sha.into() },
     }
-}
-
-/// `SquashIndex` should collapse the upstream index into a single parentless
-/// commit on `master`, while preserving tree content and archiving the previous
-/// HEAD on a `snapshot-<date>` branch.
-#[tokio::test(flavor = "multi_thread")]
-async fn squash_index() {
-    let (app, _) = TestApp::full().empty().await;
-    let conn = app.db_conn().await;
-    let upstream = app.upstream_index();
-
-    // Seed a couple of entries so the squash has real content to collapse.
-    upstream.write_file("1/a", "a\n").unwrap();
-    upstream.write_file("se/rd/serde", "serde\n").unwrap();
-
-    // Capture upstream `master` state before the squash.
-    let (original_head, original_tree) = {
-        let repo = upstream.repository.lock().unwrap();
-        let head = repo.find_reference("refs/heads/master").unwrap();
-        let commit = head.peel_to_commit().unwrap();
-        (commit.id(), commit.tree().unwrap().id())
-    };
-
-    let now = Utc::now().format("%F");
-
-    assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
-    app.run_pending_background_jobs().await;
-
-    let repo = upstream.repository.lock().unwrap();
-
-    // `master` now points to a parentless commit with the squash message.
-    let master = repo.find_reference("refs/heads/master").unwrap();
-    let squashed = master.peel_to_commit().unwrap();
-    assert_eq!(squashed.parent_count(), 0);
-    assert!(
-        squashed
-            .message()
-            .unwrap()
-            .starts_with("Collapse index into one commit")
-    );
-
-    // Tree content is preserved — the squashed commit references the exact
-    // same tree as the pre-squash HEAD.
-    assert_eq!(squashed.tree().unwrap().id(), original_tree);
-
-    // The archive branch captures the previous HEAD.
-    let snapshot_ref = format!("refs/heads/snapshot-{now}");
-    let snapshot = repo.find_reference(&snapshot_ref).unwrap();
-    assert_eq!(snapshot.peel_to_commit().unwrap().id(), original_head);
 }
 
 /// Queue a one-shot `get_ref(refs/heads/master)` that returns `sha`.
@@ -166,12 +116,12 @@ fn expect_update_master(mock: &mut MockGitHubClient, new_sha: &'static str) {
         });
 }
 
-/// `SquashIndexViaApi` should drive the squash entirely via the GitHub REST
+/// `SquashIndex` should drive the squash entirely via the GitHub REST
 /// API: read master, read its tree, create a parentless commit on the same
 /// tree, create the snapshot ref, re-read master to guard against drift, and
 /// fast-forward master to the new commit.
 #[tokio::test(flavor = "multi_thread")]
-async fn squash_index_via_api() {
+async fn squash_index() {
     let mut github = MockGitHubClient::new();
     expect_get_master(&mut github, ORIGINAL_SHA);
     expect_get_commit(&mut github, ORIGINAL_SHA, TREE_SHA);
@@ -188,7 +138,7 @@ async fn squash_index_via_api() {
         .await;
 
     let conn = app.db_conn().await;
-    assert_ok!(jobs::SquashIndexViaApi.enqueue(&conn).await);
+    assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
     app.run_pending_background_jobs().await;
 }
 
@@ -197,7 +147,7 @@ async fn squash_index_via_api() {
 /// on the remote. The snapshot ref created earlier remains as a harmless
 /// pointer to the pre-squash HEAD.
 #[tokio::test(flavor = "multi_thread")]
-async fn squash_index_via_api_bails_on_master_drift() {
+async fn squash_index_bails_on_master_drift() {
     const DRIFTED_SHA: &str = "cccccccccccccccccccccccccccccccccccccccc";
 
     let mut github = MockGitHubClient::new();
@@ -218,7 +168,7 @@ async fn squash_index_via_api_bails_on_master_drift() {
         .await;
 
     let mut conn = app.db_conn().await;
-    assert_ok!(jobs::SquashIndexViaApi.enqueue(&conn).await);
+    assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
     let err = app.try_run_pending_background_jobs().await.unwrap_err();
     assert_eq!(err.to_string(), "1 jobs failed");
 

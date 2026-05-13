@@ -1,4 +1,3 @@
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crate::worker::jobs::ArchiveIndexBranch;
 use anyhow::{Context, anyhow};
@@ -9,80 +8,11 @@ use oauth2::AccessToken;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::process::Command;
 use std::sync::Arc;
 use std::time::Instant;
 use tracing::{info, instrument, warn};
 
 const MASTER_REF: &str = "refs/heads/master";
-
-#[derive(Serialize, Deserialize)]
-pub struct SquashIndex;
-
-impl BackgroundJob for SquashIndex {
-    const JOB_NAME: &'static str = "squash_index";
-    const DEDUPLICATED: bool = true;
-    const QUEUE: &'static str = "repository";
-
-    type Context = Arc<Environment>;
-
-    /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
-    #[instrument(skip_all)]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        info!("Squashing the index into a single commit");
-
-        let env_for_blocking = env.clone();
-        let snapshot_branch = spawn_blocking(move || {
-            let repo = env_for_blocking.lock_index()?;
-
-            let snapshot_branch = snapshot_branch_name();
-
-            let original_head = repo.head_oid()?;
-            info!("Read original HEAD: {original_head}");
-
-            let msg = squash_commit_message(original_head, &snapshot_branch);
-
-            let squash_start = Instant::now();
-            repo.squash_to_single_commit(&msg)?;
-            let new_head = repo.head_oid()?;
-            info!(
-                duration = squash_start.elapsed().as_nanos(),
-                "Squash commit created: {new_head}",
-            );
-
-            // Shell out to git because libgit2 does not currently support push leases
-
-            info!("Pushing squashed index to origin");
-            let push_start = Instant::now();
-            repo.run_command(Command::new("git").args([
-                "push",
-                // Both updates should succeed or fail together
-                "--atomic",
-                "origin",
-                // Overwrite master, but only if it server matches the expected value
-                &format!("--force-with-lease=refs/heads/master:{original_head}"),
-                // The new squashed commit is pushed to master
-                "HEAD:refs/heads/master",
-                // The previous value of HEAD is pushed to a snapshot branch
-                &format!("{original_head}:refs/heads/{snapshot_branch}"),
-            ]))?;
-            info!(
-                duration = push_start.elapsed().as_nanos(),
-                "Squashed index pushed to origin",
-            );
-
-            info!("The index has been successfully squashed.");
-            Ok::<_, anyhow::Error>(snapshot_branch)
-        })
-        .await??;
-
-        if let Err(error) = enqueue_archive_job(&env, &snapshot_branch).await {
-            warn!("Failed to enqueue `ArchiveIndexBranch` job for `{snapshot_branch}`: {error}");
-        }
-
-        Ok(())
-    }
-}
 
 async fn enqueue_archive_job(env: &Environment, branch: &str) -> anyhow::Result<()> {
     let conn = env.deadpool.get().await?;
@@ -110,14 +40,14 @@ async fn enqueue_archive_job(env: &Environment, branch: &str) -> anyhow::Result<
 /// reference, and we just hand it a tiny new commit object and move
 /// `master` to point at it.
 #[derive(Serialize, Deserialize)]
-pub struct SquashIndexViaApi;
+pub struct SquashIndex;
 
-impl BackgroundJob for SquashIndexViaApi {
-    const JOB_NAME: &'static str = "squash_index_via_api";
+impl BackgroundJob for SquashIndex {
+    const JOB_NAME: &'static str = "squash_index";
     const DEDUPLICATED: bool = true;
-    // Same queue as `SquashIndex`, `SyncToGitIndex`, etc. so index-writing
-    // jobs serialize against each other, even though this job does not
-    // touch the local bare repo.
+    // Same queue as `SyncToGitIndex`, etc. so index-writing jobs serialize
+    // against each other, even though this job does not touch the local
+    // bare repo.
     const QUEUE: &'static str = "repository";
 
     type Context = Arc<Environment>;

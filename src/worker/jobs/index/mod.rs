@@ -8,5 +8,5 @@ mod sync;
 
 pub use archive::ArchiveIndexBranch;
 pub use normalize::NormalizeIndex;
-pub use squash::{SquashIndex, SquashIndexViaApi};
+pub use squash::SquashIndex;
 pub use sync::{BulkSyncToGitIndex, SyncToGitIndex, SyncToSparseIndex};
