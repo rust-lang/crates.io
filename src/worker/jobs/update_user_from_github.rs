@@ -102,11 +102,37 @@ impl UpdateUserFromGithub {
                 // If the user is not found, the account has been deleted. Update to the ghost
                 // username.
                 Err(GitHubError::NotFound(_)) => Ok(self.ghost_user()),
-                // Does unauthorized/forbidden mean the user has been deleted?
-                // Or does it mean the user removed crates.io's authorization?
-                // Or that the token we have for the user is bad?
+                // Unauthorized/forbidden could mean:
+                //
+                // - the token we have for this user is out-of-date
+                // - the user has revoked crates.io's oauth access
+                //
+                // In those cases, try to request the user's info via an unauthenticated GitHub
+                // API request, unless they are a GitHub Enterprise Managed User as indicated by an
+                // underscore in their username because we have to be authorized by the managing
+                // enterprise to see any information on enterprise managed users.
                 Err(GitHubError::Unauthorized(_)) | Err(GitHubError::Forbidden(_)) => {
-                    Ok(self.ghost_user())
+                    // Enterprise managed users are the only ones that should contain underscores.
+                    if self.old_username.contains('_') {
+                        // We can't get updated info, so keep what we have.
+                        Ok(GitHubUser {
+                            login: self.old_username.clone(),
+                            id: self.account_id as i32,
+                            // The other fields are not used in `apply_update`.
+                            avatar_url: Default::default(),
+                            email: Default::default(),
+                            name: Default::default(),
+                        })
+                    } else {
+                        match github.get_user_by_id(self.account_id).await {
+                            Ok(github_user) => Ok(github_user),
+                            Err(GitHubError::NotFound(_)) => Ok(self.ghost_user()),
+                            // Not sure how we could get Unauthorized/Forbidden for an anonymous
+                            // API request. We could get rate limited though; if that's the case,
+                            // stop and try this user again later.
+                            Err(e) => Err(e.into()),
+                        }
+                    }
                 }
                 // If we get another sort of error, it may be transient; stop and try this user
                 // again later.

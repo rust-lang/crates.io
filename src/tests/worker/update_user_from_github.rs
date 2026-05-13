@@ -24,7 +24,8 @@ struct UpdateTest {
     dry_run: bool,
     existing_github_id: i64,
     existing_username: &'static str,
-    github_response: Result<GitHubUser, GitHubError>,
+    github_current_user_response: Result<GitHubUser, GitHubError>,
+    github_user_by_id_response: Result<GitHubUser, GitHubError>,
     expected_username: &'static str,
     expected_last_sync_updated: bool,
 }
@@ -35,7 +36,8 @@ impl UpdateTest {
             dry_run,
             existing_github_id,
             existing_username,
-            github_response,
+            github_current_user_response,
+            github_user_by_id_response,
             expected_username,
             expected_last_sync_updated,
         } = self;
@@ -43,7 +45,10 @@ impl UpdateTest {
         let mut github_mock = MockGitHubClient::new();
         github_mock
             .expect_current_user()
-            .return_once(|_| github_response);
+            .return_once(|_| github_current_user_response);
+        github_mock
+            .expect_get_user_by_id()
+            .return_once(|_| github_user_by_id_response);
 
         let (app, _) = TestApp::full().with_github(github_mock).empty().await;
         let emails = &app.as_inner().emails;
@@ -108,7 +113,9 @@ async fn no_updates_needed() {
         existing_github_id: GITHUB_ID,
         // What we have and what github has agree
         existing_username: EXISTING_LOGIN,
-        github_response: Ok(github_user(GITHUB_ID, EXISTING_LOGIN)),
+        github_current_user_response: Ok(github_user(GITHUB_ID, EXISTING_LOGIN)),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: EXISTING_LOGIN,
         // but still update last sync
         expected_last_sync_updated: true,
@@ -123,7 +130,9 @@ async fn yes_updates_needed() {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
-        github_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        github_current_user_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
     }
@@ -140,7 +149,11 @@ async fn negative_github_id() {
         existing_github_id: -1,
         existing_username: EXISTING_LOGIN,
         // We shouldn't even contact GitHub in this case, so error in case we do
-        github_response: Err(GitHubError::Other(anyhow::anyhow!("Shouldn't be called"))),
+        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
+            "current_user shouldn't be called"
+        ))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
     }
@@ -156,7 +169,11 @@ async fn zero_github_id() {
         existing_github_id: 0,
         existing_username: EXISTING_LOGIN,
         // We shouldn't even contact GitHub in this case, so error in case we do
-        github_response: Err(GitHubError::Other(anyhow::anyhow!("Shouldn't be called"))),
+        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
+            "current_user shouldn't be called"
+        ))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
     }
@@ -174,7 +191,11 @@ async fn negative_github_id_with_ghost_username() {
         // We've already set this username to ghost, but set it and update `last_sync` anyway
         existing_username: "ghost_1",
         // We shouldn't even contact GitHub in this case, so error in case we do
-        github_response: Err(GitHubError::Other(anyhow::anyhow!("Shouldn't be called"))),
+        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
+            "Shouldn't be called"
+        ))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
     }
@@ -189,7 +210,9 @@ async fn github_deleted() {
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
         // If GitHub returns 404, this user has deleted their account.
-        github_response: Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))),
+        github_current_user_response: Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
     }
@@ -205,8 +228,124 @@ async fn still_deleted() {
         // We marked this user as deleted previously
         existing_username: "ghost_1",
         // GitHub still returns 404, they're still deleted
-        github_response: Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))),
+        github_current_user_response: Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "ghost_1",
+        expected_last_sync_updated: true,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_unauthorized_fallback_success_no_update() {
+    UpdateTest {
+        dry_run: false,
+        existing_github_id: GITHUB_ID,
+        existing_username: EXISTING_LOGIN,
+        // This could mean the user's oauth token has been revoked or similar
+        github_current_user_response: Err(GitHubError::Unauthorized(anyhow::anyhow!(
+            "Not allowed"
+        ))),
+        // Falling back to anonymous get_user_by_id shows no rename needed
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, EXISTING_LOGIN)),
+        expected_username: EXISTING_LOGIN,
+        expected_last_sync_updated: true,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_unauthorized_enterprise_user() {
+    UpdateTest {
+        dry_run: false,
+        existing_github_id: GITHUB_ID,
+        existing_username: "asmith_microsoft",
+        // This could mean the user's oauth token has been revoked or similar
+        github_current_user_response: Err(GitHubError::Unauthorized(anyhow::anyhow!(
+            "Not allowed"
+        ))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
+        expected_username: "asmith_microsoft",
+        expected_last_sync_updated: true,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_unauthorized_fallback_success_yes_update() {
+    UpdateTest {
+        dry_run: false,
+        existing_github_id: GITHUB_ID,
+        existing_username: EXISTING_LOGIN,
+        // This could mean the user's oauth token has been revoked or similar
+        github_current_user_response: Err(GitHubError::Unauthorized(anyhow::anyhow!(
+            "Not allowed"
+        ))),
+        // Falling back to anonymous get_user_by_id shows yes rename needed
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "updated-username")),
+        expected_username: "updated-username",
+        expected_last_sync_updated: true,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_unauthorized_fallback_not_found_deleted() {
+    UpdateTest {
+        dry_run: false,
+        existing_github_id: GITHUB_ID,
+        existing_username: EXISTING_LOGIN,
+        // This could mean the user's oauth token has been revoked or similar
+        github_current_user_response: Err(GitHubError::Unauthorized(anyhow::anyhow!(
+            "Not allowed"
+        ))),
+        // Falling back to anonymous get_user_by_id shows the user has been deleted
+        github_user_by_id_response: Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))),
+        expected_username: "ghost_1",
+        expected_last_sync_updated: true,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_unauthorized_fallback_other_error_no_update() {
+    UpdateTest {
+        dry_run: false,
+        existing_github_id: GITHUB_ID,
+        existing_username: EXISTING_LOGIN,
+        // This could mean the user's oauth token has been revoked or similar
+        github_current_user_response: Err(GitHubError::Unauthorized(anyhow::anyhow!(
+            "Not allowed"
+        ))),
+        // Falling back to anonymous get_user_by_id fails too; try again later
+        github_user_by_id_response: Err(GitHubError::Other(anyhow::anyhow!(
+            "Over your rate limit"
+        ))),
+        expected_username: EXISTING_LOGIN,
+        expected_last_sync_updated: false,
+    }
+    .run()
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_forbidden_fallback_success_yes_update() {
+    UpdateTest {
+        dry_run: false,
+        existing_github_id: GITHUB_ID,
+        existing_username: EXISTING_LOGIN,
+        // This could mean the user's oauth token needs to be refreshed or similar
+        github_current_user_response: Err(GitHubError::Forbidden(anyhow::anyhow!("Not allowed"))),
+        // Falling back to anonymous get_user_by_id shows yes rename needed
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "updated-username")),
+        expected_username: "updated-username",
         expected_last_sync_updated: true,
     }
     .run()
@@ -221,7 +360,11 @@ async fn github_unavailable() {
         existing_username: EXISTING_LOGIN,
         // If GitHub returns some error we haven't accounted for, we can't know anything about
         // this user. Try again later.
-        github_response: Err(GitHubError::Other(anyhow::anyhow!("9% uptime is one nine"))),
+        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
+            "9% uptime is one nine"
+        ))),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
     }
@@ -237,7 +380,9 @@ async fn undeleted() {
         existing_username: "ghost_1",
         // Not sure how often this happens, but if we marked an account as ghost but we get a
         // valid user again, we should update their username
-        github_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        github_current_user_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
     }
@@ -251,7 +396,9 @@ async fn dry_run_mode_doesnt_update() {
         dry_run: true,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
-        github_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        github_current_user_response: Ok(github_user(GITHUB_ID, "my-new-username")),
+        // Shouldn't be called in this test
+        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
     }
