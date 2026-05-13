@@ -24,6 +24,8 @@ pub struct UpdateUserFromGithub {
 impl BackgroundJob for UpdateUserFromGithub {
     const JOB_NAME: &'static str = "update_user_from_github";
     const DEDUPLICATED: bool = true;
+    // These jobs aren't urgent and shouldn't page anyone if they take a long time.
+    const PRIORITY: i16 = -15;
 
     type Context = Arc<Environment>;
 
