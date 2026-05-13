@@ -144,69 +144,6 @@ async fn yes_updates_needed() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn negative_github_id() {
-    UpdateTest {
-        dry_run: false,
-        // The GitHub ID in our database is -1 because at some point we learned the GitHub user
-        // was no longer valid
-        existing_github_id: -1,
-        existing_username: EXISTING_LOGIN,
-        // We shouldn't even contact GitHub in this case, so error in case we do
-        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
-            "current_user shouldn't be called"
-        ))),
-        // Shouldn't be called in this test
-        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
-        expected_username: "ghost_1",
-        expected_last_sync_updated: true,
-    }
-    .run()
-    .await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn zero_github_id() {
-    UpdateTest {
-        dry_run: false,
-        // Check that we're also treating 0 as invalid
-        existing_github_id: 0,
-        existing_username: EXISTING_LOGIN,
-        // We shouldn't even contact GitHub in this case, so error in case we do
-        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
-            "current_user shouldn't be called"
-        ))),
-        // Shouldn't be called in this test
-        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
-        expected_username: "ghost_1",
-        expected_last_sync_updated: true,
-    }
-    .run()
-    .await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn negative_github_id_with_ghost_username() {
-    UpdateTest {
-        dry_run: false,
-        // The GitHub ID in our database is negative because at some point we learned the GitHub
-        // user was no longer valid
-        existing_github_id: -9000,
-        // We've already set this username to ghost, but set it and update `last_sync` anyway
-        existing_username: "ghost_1",
-        // We shouldn't even contact GitHub in this case, so error in case we do
-        github_current_user_response: Err(GitHubError::Other(anyhow::anyhow!(
-            "Shouldn't be called"
-        ))),
-        // Shouldn't be called in this test
-        github_user_by_id_response: Ok(github_user(GITHUB_ID, "wrong-user-info")),
-        expected_username: "ghost_1",
-        expected_last_sync_updated: true,
-    }
-    .run()
-    .await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn github_deleted() {
     UpdateTest {
         dry_run: false,

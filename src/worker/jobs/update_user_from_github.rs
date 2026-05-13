@@ -74,60 +74,52 @@ impl UpdateUserFromGithub {
         ctx: &Arc<Environment>,
         oauth_github: &OauthGithub,
     ) -> anyhow::Result<GitHubUser> {
-        // if the user's gh_id isn't positive, we don't even need to ask github about this,
-        // we know this user is invalid. Just make sure their username is the ghost username.
-        if self.account_id < 1 {
-            Ok(self.ghost_user(oauth_github.user_id))
-        } else {
-            let github = ctx.github.as_ref();
-            let token = ctx
-                .config
-                .gh_token_encryption
-                .decrypt(&oauth_github.encrypted_token)?;
+        let github = ctx.github.as_ref();
+        let token = ctx
+            .config
+            .gh_token_encryption
+            .decrypt(&oauth_github.encrypted_token)?;
 
-            match github.current_user(&token).await {
-                Ok(github_user) => Ok(github_user),
-                // If the user is not found, the account has been deleted. Update to the ghost
-                // username.
-                Err(GitHubError::NotFound(_)) => Ok(self.ghost_user(oauth_github.user_id)),
-                // Unauthorized/forbidden could mean:
-                //
-                // - the token we have for this user is out-of-date
-                // - the user has revoked crates.io's oauth access
-                //
-                // In those cases, try to request the user's info via an unauthenticated GitHub
-                // API request, unless they are a GitHub Enterprise Managed User as indicated by an
-                // underscore in their username because we have to be authorized by the managing
-                // enterprise to see any information on enterprise managed users.
-                Err(GitHubError::Unauthorized(_)) | Err(GitHubError::Forbidden(_)) => {
-                    // Enterprise managed users are the only ones that should contain underscores.
-                    if oauth_github.login.contains('_') {
-                        // We can't get updated info, so keep what we have.
-                        Ok(GitHubUser {
-                            login: oauth_github.login.clone(),
-                            id: self.account_id as i32,
-                            // The other fields are not used in `apply_update`.
-                            avatar_url: Default::default(),
-                            email: Default::default(),
-                            name: Default::default(),
-                        })
-                    } else {
-                        match github.get_user_by_id(self.account_id).await {
-                            Ok(github_user) => Ok(github_user),
-                            Err(GitHubError::NotFound(_)) => {
-                                Ok(self.ghost_user(oauth_github.user_id))
-                            }
-                            // Not sure how we could get Unauthorized/Forbidden for an anonymous
-                            // API request. We could get rate limited though; if that's the case,
-                            // stop and try this user again later.
-                            Err(e) => Err(e.into()),
-                        }
+        match github.current_user(&token).await {
+            Ok(github_user) => Ok(github_user),
+            // If the user is not found, the account has been deleted. Update to the ghost
+            // username.
+            Err(GitHubError::NotFound(_)) => Ok(self.ghost_user(oauth_github.user_id)),
+            // Unauthorized/forbidden could mean:
+            //
+            // - the token we have for this user is out-of-date
+            // - the user has revoked crates.io's oauth access
+            //
+            // In those cases, try to request the user's info via an unauthenticated GitHub
+            // API request, unless they are a GitHub Enterprise Managed User as indicated by an
+            // underscore in their username because we have to be authorized by the managing
+            // enterprise to see any information on enterprise managed users.
+            Err(GitHubError::Unauthorized(_)) | Err(GitHubError::Forbidden(_)) => {
+                // Enterprise managed users are the only ones that should contain underscores.
+                if oauth_github.login.contains('_') {
+                    // We can't get updated info, so keep what we have.
+                    Ok(GitHubUser {
+                        login: oauth_github.login.clone(),
+                        id: self.account_id as i32,
+                        // The other fields are not used in `apply_update`.
+                        avatar_url: Default::default(),
+                        email: Default::default(),
+                        name: Default::default(),
+                    })
+                } else {
+                    match github.get_user_by_id(self.account_id).await {
+                        Ok(github_user) => Ok(github_user),
+                        Err(GitHubError::NotFound(_)) => Ok(self.ghost_user(oauth_github.user_id)),
+                        // Not sure how we could get Unauthorized/Forbidden for an anonymous
+                        // API request. We could get rate limited though; if that's the case,
+                        // stop and try this user again later.
+                        Err(e) => Err(e.into()),
                     }
                 }
-                // If we get another sort of error, it may be transient; stop and try this user
-                // again later.
-                Err(e @ GitHubError::Other(_)) => Err(e.into()),
             }
+            // If we get another sort of error, it may be transient; stop and try this user
+            // again later.
+            Err(e @ GitHubError::Other(_)) => Err(e.into()),
         }
     }
 
