@@ -67,7 +67,10 @@ impl UpdateTest {
             .unwrap();
         let last_sync_before_update = oauth_github_before_update.last_sync;
 
-        let job = jobs::UpdateUserFromGithub::new(dry_run, oauth_github_before_update);
+        let job = jobs::UpdateUserFromGithub {
+            dry_run,
+            account_id: oauth_github_before_update.account_id,
+        };
         job.enqueue(&conn).await.unwrap();
         let _ = app.try_run_pending_background_jobs().await;
 

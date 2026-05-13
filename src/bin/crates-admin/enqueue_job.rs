@@ -194,7 +194,10 @@ pub async fn run(command: Command) -> Result<()> {
                 let github_id = oauth_github.account_id;
                 let old_username = oauth_github.login.clone();
 
-                let job = jobs::UpdateUserFromGithub::new(dry_run, oauth_github);
+                let job = jobs::UpdateUserFromGithub {
+                    dry_run,
+                    account_id: oauth_github.account_id,
+                };
 
                 // Don't stop the whole batch if one user update errors, but do log the error
                 if let Err(e) = job.enqueue(&conn).await {
