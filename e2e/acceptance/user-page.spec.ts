@@ -11,6 +11,7 @@ test.describe('Acceptance | user page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-username]')).toHaveText('thehydroimpulse');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

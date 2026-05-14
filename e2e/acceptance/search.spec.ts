@@ -27,6 +27,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-crate-row="0"] [data-test-updated-at]')).toBeVisible();
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

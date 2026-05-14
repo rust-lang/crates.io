@@ -7,6 +7,9 @@ packages/crates-io-api-client/schema.d.ts
 # Test fixtures keep their on-disk shape.
 **/fixtures/*.json
 
+# Playwright manages the format of these snapshot files.
+/e2e/**/*-snapshots/
+
 # pnpm manages this file's formatting.
 pnpm-lock.yaml
 

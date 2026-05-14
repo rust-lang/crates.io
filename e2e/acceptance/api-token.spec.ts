@@ -131,6 +131,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.fill('[data-test-name]', 'the new token');
     await page.click('[data-test-scope="publish-update"]');
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
 
     await page.click('[data-test-generate]');
 

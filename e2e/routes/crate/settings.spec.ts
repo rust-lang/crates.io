@@ -123,6 +123,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
 
       await percy.snapshot();
+      await expect(page).toMatchAriaSnapshot({ name: 'aria-trustpub-configs.yml' });
     });
 
     test.describe('GitHub', () => {
@@ -340,6 +341,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         );
 
         await percy.snapshot();
+        await expect(page).toMatchAriaSnapshot({ name: 'aria-trustpub-warning.yml' });
       });
 
       test('disappears when checkbox is unchecked', async ({ msw, page }) => {

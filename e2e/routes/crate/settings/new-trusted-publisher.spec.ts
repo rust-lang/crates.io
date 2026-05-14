@@ -187,6 +187,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       );
 
       await percy.snapshot();
+      await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
 
       // Fill in the repository fields and confirm the note updates
       await page.fill('[data-test-namespace]', 'rust-lang');

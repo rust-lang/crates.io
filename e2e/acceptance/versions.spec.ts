@@ -25,6 +25,7 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-version="0.3.0"]')).toContainText('v1.69.0');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
 
     await page.click('[data-test-current-order]');
     await page.click('[data-test-semver-sort] a');

@@ -13,6 +13,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     await expect(page).toHaveTitle('Crates - crates.io: Rust Package Registry');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

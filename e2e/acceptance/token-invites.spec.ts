@@ -47,5 +47,6 @@ test.describe('Acceptance | /accept-invite/:token', { tag: '@acceptance' }, () =
     );
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
 });

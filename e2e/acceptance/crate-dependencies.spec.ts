@@ -15,6 +15,7 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-dev-dependencies] li')).toHaveCount(1);
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

@@ -1,0 +1,170 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - heading "nanomsg" [level=1]
+  - text: This is the description for the crate called "nanomsg"
+  - navigation "nanomsg crate subpages":
+    - list:
+      - listitem:
+        - link "Readme":
+          - /url: /crates/nanomsg
+      - listitem:
+        - link "4 Versions":
+          - /url: /crates/nanomsg/versions
+      - listitem:
+        - link "Dependencies":
+          - /url: /crates/nanomsg/dependencies
+      - listitem:
+        - link "Dependents":
+          - /url: /crates/nanomsg/reverse_dependencies
+      - listitem:
+        - link "Security":
+          - /url: /crates/nanomsg/security
+  - strong: "4"
+  - text: of
+  - strong: "4"
+  - strong: nanomsg
+  - text: /versions since June 16th, \d+ Sort by/
+  - button "Date ▼":
+    - img
+    - text: ""
+  - list:
+    - listitem:
+      - text: "0.2"
+      - link "0.2.1":
+        - /url: /crates/nanomsg/0.2.1
+      - text: via
+      - link "GitHub":
+        - /url: https://github.com/octo-org/octo-repo/actions/runs/1234567890
+        - img
+        - text: ""
+      - time:
+        - img
+        - text: in about 2 years
+      - img
+      - text: /\d+ KiB/
+      - img
+      - link "MIT":
+        - /url: https://choosealicense.com/licenses/mit
+    - listitem:
+      - text: "0.3"
+      - link "0.3.0":
+        - /url: /crates/nanomsg/0.3.0
+      - time:
+        - img
+        - text: in about 1 year
+      - img
+      - text: /v1\.\d+\.\d+/
+      - img
+      - text: /\d+ KiB/
+      - img
+      - link "MIT":
+        - /url: https://choosealicense.com/licenses/mit
+      - text: OR
+      - link "Apache-2.0":
+        - /url: https://choosealicense.com/licenses/apache-2.0
+    - listitem:
+      - text: "0.2"
+      - link "0.2.0":
+        - /url: /crates/nanomsg/0.2.0
+      - time:
+        - img
+        - text: in about 1 month
+      - img
+      - text: /\d+ KiB/
+      - img
+      - link "Apache-2.0":
+        - /url: https://choosealicense.com/licenses/apache-2.0
+    - listitem:
+      - text: "0.1"
+      - link "0.1.0":
+        - /url: /crates/nanomsg/0.1.0
+      - time:
+        - img
+        - text: /\d+ months ago/
+      - img
+      - text: /\d+ KiB/
+      - img
+      - link "MIT":
+        - /url: https://choosealicense.com/licenses/mit
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""

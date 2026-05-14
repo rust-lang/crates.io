@@ -130,6 +130,7 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await expect(readme.locator('pre > code.language-mermaid svg.flowchart')).toBeVisible();
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
 
   test('it shows a fallback if no readme is available', async ({ page, msw }) => {

@@ -53,5 +53,6 @@ test.describe('Acceptance | Dashboard', { tag: '@acceptance' }, () => {
     await expect(page).toHaveURL('/dashboard');
     await expect(page.locator('[data-test-feed-list]')).toBeVisible();
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
 });

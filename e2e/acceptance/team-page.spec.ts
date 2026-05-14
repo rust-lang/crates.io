@@ -12,6 +12,7 @@ test.describe('Acceptance | team page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-team-name]')).toHaveText('thehydroimpulseteam');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

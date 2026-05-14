@@ -1,0 +1,383 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - heading "The Rust community’s crate registry" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - link "Install Cargo":
+    - /url: https://doc.rust-lang.org/cargo/getting-started/installation.html
+    - img
+    - text: ""
+  - link "Getting Started":
+    - /url: https://doc.rust-lang.org/cargo/guide/
+    - img
+    - text: ""
+  - text: /Instantly publish your crates and install them\. Use the API to interact and find out more information about available crates\. Become a contributor and enhance the site with your work\. \d+,\d+ Downloads \d+ Crates in stock/
+  - heading "New Crates" [level=2]:
+    - link "New Crates":
+      - /url: /crates?sort=new
+  - list:
+    - listitem:
+      - link "serde v1.0.0":
+        - /url: /crates/serde
+        - text: ""
+        - img
+    - listitem:
+      - link "rust-crypto v1.0.0":
+        - /url: /crates/rust-crypto
+        - text: ""
+        - img
+    - listitem:
+      - link "quickcheck v1.0.0":
+        - /url: /crates/quickcheck
+        - text: ""
+        - img
+    - listitem:
+      - link "postgres v1.0.0":
+        - /url: /crates/postgres
+        - text: ""
+        - img
+    - listitem:
+      - link "nom v1.0.0":
+        - /url: /crates/nom
+        - text: ""
+        - img
+    - listitem:
+      - link "libc v1.0.0":
+        - /url: /crates/libc
+        - text: ""
+        - img
+    - listitem:
+      - link "nanomsg-sys v1.0.0":
+        - /url: /crates/nanomsg-sys
+        - text: ""
+        - img
+    - listitem:
+      - link "mock-build-deps v1.0.0":
+        - /url: /crates/mock-build-deps
+        - text: ""
+        - img
+    - listitem:
+      - link "mock-dev-deps v1.0.0":
+        - /url: /crates/mock-dev-deps
+        - text: ""
+        - img
+    - listitem:
+      - link "nanomsg v0.6.1":
+        - /url: /crates/nanomsg
+        - text: ""
+        - img
+  - heading "Most Downloaded" [level=2]:
+    - link "Most Downloaded":
+      - /url: /crates?sort=downloads
+  - list:
+    - listitem:
+      - link "serde":
+        - /url: /crates/serde
+        - text: ""
+        - img
+    - listitem:
+      - link "rust-crypto":
+        - /url: /crates/rust-crypto
+        - text: ""
+        - img
+    - listitem:
+      - link "quickcheck":
+        - /url: /crates/quickcheck
+        - text: ""
+        - img
+    - listitem:
+      - link "postgres":
+        - /url: /crates/postgres
+        - text: ""
+        - img
+    - listitem:
+      - link "nom":
+        - /url: /crates/nom
+        - text: ""
+        - img
+    - listitem:
+      - link "libc":
+        - /url: /crates/libc
+        - text: ""
+        - img
+    - listitem:
+      - link "nanomsg-sys":
+        - /url: /crates/nanomsg-sys
+        - text: ""
+        - img
+    - listitem:
+      - link "mock-build-deps":
+        - /url: /crates/mock-build-deps
+        - text: ""
+        - img
+    - listitem:
+      - link "mock-dev-deps":
+        - /url: /crates/mock-dev-deps
+        - text: ""
+        - img
+    - listitem:
+      - link "nanomsg":
+        - /url: /crates/nanomsg
+        - text: ""
+        - img
+  - heading "Just Updated" [level=2]:
+    - link "Just Updated":
+      - /url: /crates?sort=recent-updates
+  - list:
+    - listitem:
+      - link "nanomsg v0.6.1":
+        - /url: /crates/nanomsg/0.6.1
+        - text: ""
+        - img
+    - listitem:
+      - link "nom v1.0.0":
+        - /url: /crates/nom/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "rust-htslib v1.0.0":
+        - /url: /crates/rust-htslib/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "postgres v1.0.0":
+        - /url: /crates/postgres/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "rusted_cypher v1.0.0":
+        - /url: /crates/rusted_cypher/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "rustless v1.0.0":
+        - /url: /crates/rustless/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "rust-crypto v1.0.0":
+        - /url: /crates/rust-crypto/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "Inflector v1.0.0":
+        - /url: /crates/Inflector/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "serde v1.0.0":
+        - /url: /crates/serde/1.0.0
+        - text: ""
+        - img
+    - listitem:
+      - link "quickcheck_macros v1.0.0":
+        - /url: /crates/quickcheck_macros/1.0.0
+        - text: ""
+        - img
+  - heading "Most Recent Downloads" [level=2]:
+    - link "Most Recent Downloads":
+      - /url: /crates?sort=recent-downloads
+  - list:
+    - listitem:
+      - link "rust-crypto":
+        - /url: /crates/rust-crypto
+        - text: ""
+        - img
+    - listitem:
+      - link "serde":
+        - /url: /crates/serde
+        - text: ""
+        - img
+    - listitem:
+      - link "nanomsg":
+        - /url: /crates/nanomsg
+        - text: ""
+        - img
+    - listitem:
+      - link "quickcheck_macros":
+        - /url: /crates/quickcheck_macros
+        - text: ""
+        - img
+    - listitem:
+      - link "rustless":
+        - /url: /crates/rustless
+        - text: ""
+        - img
+    - listitem:
+      - link "external_mixin":
+        - /url: /crates/external_mixin
+        - text: ""
+        - img
+    - listitem:
+      - link "quickcheck":
+        - /url: /crates/quickcheck
+        - text: ""
+        - img
+    - listitem:
+      - link "kinetic-rust":
+        - /url: /crates/kinetic-rust
+        - text: ""
+        - img
+    - listitem:
+      - link "rust_mixin":
+        - /url: /crates/rust_mixin
+        - text: ""
+        - img
+    - listitem:
+      - link "rust-htslib":
+        - /url: /crates/rust-htslib
+        - text: ""
+        - img
+  - heading "Popular Keywords" [level=2]:
+    - link "Popular Keywords":
+      - /url: /keywords
+  - list:
+    - listitem:
+      - link "network 1 crates":
+        - /url: /keywords/network
+        - text: ""
+        - img
+    - listitem:
+      - link "rust 1 crates":
+        - /url: /keywords/rust
+        - text: ""
+        - img
+    - listitem:
+      - link "plugin 3 crates":
+        - /url: /keywords/plugin
+        - text: ""
+        - img
+    - listitem:
+      - link "code-generation 3 crates":
+        - /url: /keywords/code-generation
+        - text: ""
+        - img
+    - listitem:
+      - link "python 1 crates":
+        - /url: /keywords/python
+        - text: ""
+        - img
+    - listitem:
+      - link "ruby 1 crates":
+        - /url: /keywords/ruby
+        - text: ""
+        - img
+    - listitem:
+      - link "shell 1 crates":
+        - /url: /keywords/shell
+        - text: ""
+        - img
+    - listitem:
+      - link "string 1 crates":
+        - /url: /keywords/string
+        - text: ""
+        - img
+    - listitem:
+      - link "case 1 crates":
+        - /url: /keywords/case
+        - text: ""
+        - img
+    - listitem:
+      - link "camel 1 crates":
+        - /url: /keywords/camel
+        - text: ""
+        - img
+  - heading "Popular Categories" [level=2]:
+    - link "Popular Categories":
+      - /url: /categories
+  - list:
+    - listitem:
+      - link "API bindings 0 crates":
+        - /url: /categories/api-bindings
+        - text: ""
+        - img
+    - listitem:
+      - link "Algorithms 0 crates":
+        - /url: /categories/algorithms
+        - text: ""
+        - img
+    - listitem:
+      - link "Asynchronous 0 crates":
+        - /url: /categories/asynchronous
+        - text: ""
+        - img
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""

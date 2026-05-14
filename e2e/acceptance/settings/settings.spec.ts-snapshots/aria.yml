@@ -1,0 +1,151 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "blabaere (blabaere) blabaere ▼":
+      - img "blabaere (blabaere)"
+      - text: ""
+- main:
+  - heading "nanomsg" [level=1]
+  - text: This is the description for the crate called "nanomsg"
+  - button "Follow"
+  - navigation "nanomsg crate subpages":
+    - list:
+      - listitem:
+        - link "Readme":
+          - /url: /crates/nanomsg
+      - listitem:
+        - link "1 Version":
+          - /url: /crates/nanomsg/versions
+      - listitem:
+        - link "Dependencies":
+          - /url: /crates/nanomsg/dependencies
+      - listitem:
+        - link "Dependents":
+          - /url: /crates/nanomsg/reverse_dependencies
+      - listitem:
+        - link "Security":
+          - /url: /crates/nanomsg/security
+      - listitem:
+        - link "Settings":
+          - /url: /crates/nanomsg/settings
+  - heading "Owners" [level=2]
+  - button "Add Owner"
+  - link "blabaere (github:org:blabaere)":
+    - /url: /teams/github:org:blabaere
+    - img "blabaere (github:org:blabaere)"
+  - link "org/blabaere":
+    - /url: /teams/github:org:blabaere
+  - button "Remove"
+  - link "thehydroimpulse (github:org:thehydroimpulse)":
+    - /url: /teams/github:org:thehydroimpulse
+    - img "thehydroimpulse (github:org:thehydroimpulse)"
+  - link "org/thehydroimpulse":
+    - /url: /teams/github:org:thehydroimpulse
+  - button "Remove"
+  - link "blabaere (blabaere)":
+    - /url: /users/blabaere
+    - img "blabaere (blabaere)"
+  - link "blabaere":
+    - /url: /users/blabaere
+  - text: blabaere@crates.io
+  - button "Remove"
+  - link "thehydroimpulse (thehydroimpulse)":
+    - /url: /users/thehydroimpulse
+    - img "thehydroimpulse (thehydroimpulse)"
+  - link "thehydroimpulse":
+    - /url: /users/thehydroimpulse
+  - button "Remove"
+  - heading "Trusted Publishing" [level=2]
+  - link "Learn more":
+    - /url: /docs/trusted-publishing
+  - link "Add":
+    - /url: /crates/nanomsg/settings/new-trusted-publisher
+  - table:
+    - rowgroup:
+      - row "Publisher Details Actions":
+        - columnheader "Publisher"
+        - columnheader "Details"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "No trusted publishers configured for this crate.":
+        - cell "No trusted publishers configured for this crate."
+  - heading "Danger Zone" [level=2]
+  - link "Delete this crate":
+    - /url: /crates/nanomsg/delete
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""

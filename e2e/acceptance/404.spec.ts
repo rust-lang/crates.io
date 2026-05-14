@@ -9,5 +9,6 @@ test.describe('Acceptance | 404', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
 });
