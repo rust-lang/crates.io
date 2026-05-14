@@ -618,6 +618,14 @@ description = """
 Crates for processing biological sequences, including alignment, assembly, and annotation.
 """
 
+[science.categories.quantum-computing]
+name = "Quantum Computing"
+description = """
+Crates for quantum computing, including circuit construction,
+simulation, quantum algorithms, intermediate representations, and
+interfaces to quantum hardware backends.
+"""
+
 [security]
 name = "Security"
 description = """
