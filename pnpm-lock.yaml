@@ -205,8 +205,8 @@ importers:
         specifier: 4.1.6
         version: 4.1.6(@vitest/browser@4.1.6)(vitest@4.1.6)
       chromatic:
-        specifier: 16.9.1
-        version: 16.9.1
+        specifier: 16.10.0
+        version: 16.10.0
       magic-string:
         specifier: 0.30.21
         version: 0.30.21
@@ -1579,8 +1579,8 @@ packages:
       '@chromatic-com/playwright':
         optional: true
 
-  chromatic@16.9.1:
-    resolution: {integrity: sha512-+EkBJqLfeCfSqC3rz1H8GDwT9OoHRB/iX3qbjtW9wu3BeySnDjumD8E/BflEsHV7RoCzeKcp85zKGR/ZKcX7rw==}
+  chromatic@16.10.0:
+    resolution: {integrity: sha512-nFsztmnu7rFiGafUJgXvLUNpqmRylz92eNvzBoJNTKKQj4EQUyxznwnfpf1dTs7hXtWD8JwcH92jADydaHA1sw==}
     hasBin: true
     peerDependencies:
       '@chromatic-com/cypress': ^0.*.* || ^1.0.0
@@ -4666,7 +4666,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.59.2
       debug: 4.4.3(supports-color@10.2.2)
       minimatch: 10.2.5
-      semver: 7.7.4
+      semver: 7.8.0
       tinyglobby: 0.2.16
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
@@ -4987,9 +4987,9 @@ snapshots:
 
   chromatic@13.3.5: {}
 
-  chromatic@16.9.1:
+  chromatic@16.10.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.0
 
   ci-info@4.4.0: {}
 
