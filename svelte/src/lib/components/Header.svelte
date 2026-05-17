@@ -53,7 +53,7 @@
       <ColorSchemeMenu class="color-scheme-menu" />
 
       <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
-      <span class="sep">|</span>
+      <span class="sep" aria-hidden="true">|</span>
 
       {#if currentUser}
         <Dropdown.Root data-test-user-menu>

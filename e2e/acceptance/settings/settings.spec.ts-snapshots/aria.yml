@@ -14,7 +14,6 @@
       - text: ""
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
     - button "blabaere (blabaere) blabaere":
       - img "blabaere (blabaere)"
       - text: ""

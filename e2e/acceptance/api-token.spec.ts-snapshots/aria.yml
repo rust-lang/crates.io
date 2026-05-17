@@ -14,7 +14,6 @@
       - text: ""
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
     - button "John Doe (johnnydee) John Doe":
       - img "John Doe (johnnydee)"
       - text: ""
