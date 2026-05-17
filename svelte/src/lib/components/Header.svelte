@@ -59,7 +59,8 @@
         <Dropdown.Root data-test-user-menu>
           <Dropdown.Trigger class="button-reset" data-test-toggle>
             {#if isSudoEnabled}
-              <div class="wizard-hat" data-test-wizard-hat>🧙</div>
+              <span class="sr-only">Admin mode active</span>
+              <div class="wizard-hat" aria-hidden="true" data-test-wizard-hat>🧙</div>
             {/if}
 
             <UserAvatar
