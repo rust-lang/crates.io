@@ -4,9 +4,7 @@
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
-    - button "Search":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
     - button "Change color scheme":
       - img

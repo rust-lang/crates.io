@@ -5,9 +5,7 @@
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
       - text: category:algorithms
-    - button "Search":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
     - button "Change color scheme":
       - img

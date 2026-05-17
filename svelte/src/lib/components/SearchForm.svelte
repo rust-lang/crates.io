@@ -95,7 +95,7 @@
 
   <button type="submit" class="submit-button button-reset">
     <span class="sr-only">Search</span>
-    <SearchIcon />
+    <SearchIcon aria-hidden="true" />
   </button>
 </form>
 
