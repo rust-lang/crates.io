@@ -40,7 +40,7 @@
   <div class="header-inner width-limit">
     <a href={resolve('/')} class="index-link">
       <img src={logo} role="none" alt="" class="logo" />
-      <h1>crates.io</h1>
+      crates.io
     </a>
 
     <div class="search-form">
@@ -244,11 +244,9 @@
     grid-area: logo;
     display: flex;
     align-items: center;
-
-    & h1 {
-      margin: 0;
-      font-size: var(--space-m);
-    }
+    font-family: var(--font-heading);
+    font-size: var(--space-m);
+    font-weight: bold;
   }
 
   .logo {
