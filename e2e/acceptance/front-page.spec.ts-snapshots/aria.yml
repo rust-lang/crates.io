@@ -5,7 +5,7 @@
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
-    - button "Submit":
+    - button "Search":
       - text: ""
       - img
   - navigation:

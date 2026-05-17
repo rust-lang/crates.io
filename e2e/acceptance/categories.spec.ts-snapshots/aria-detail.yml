@@ -5,7 +5,7 @@
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
       - text: category:algorithms
-    - button "Submit":
+    - button "Search":
       - text: ""
       - img
   - navigation:
