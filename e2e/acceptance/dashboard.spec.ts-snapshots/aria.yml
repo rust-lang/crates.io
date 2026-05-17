@@ -14,9 +14,7 @@
       - text: ""
     - link "Browse All Crates":
       - /url: /crates
-    - button "John Doe (johnnydee) John Doe":
-      - img "John Doe (johnnydee)"
-      - text: ""
+    - button "John Doe"
 - main:
   - heading "My Dashboard" [level=1]
   - img

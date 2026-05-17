@@ -14,9 +14,7 @@
       - text: ""
     - link "Browse All Crates":
       - /url: /crates
-    - button "User 3 (user-3) User 3":
-      - img "User 3 (user-3)"
-      - text: ""
+    - button "User 3"
 - main:
   - heading "Pending Owner Invites" [level=1]
   - paragraph:

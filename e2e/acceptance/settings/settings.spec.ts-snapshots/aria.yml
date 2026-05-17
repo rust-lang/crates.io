@@ -14,9 +14,7 @@
       - text: ""
     - link "Browse All Crates":
       - /url: /crates
-    - button "blabaere (blabaere) blabaere":
-      - img "blabaere (blabaere)"
-      - text: ""
+    - button "blabaere"
 - main:
   - heading "nanomsg" [level=1]
   - text: This is the description for the crate called "nanomsg"
