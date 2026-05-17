@@ -26,7 +26,7 @@
 >
   {@render children()}
   {#if !hideArrow}
-    <span class="arrow"></span>
+    <span class="arrow" aria-hidden="true"></span>
   {/if}
 </button>
 

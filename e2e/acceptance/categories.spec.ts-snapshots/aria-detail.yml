@@ -24,7 +24,7 @@
   - paragraph: This is the description for the category called "Algorithms"
   - heading "Crates" [level=2]
   - text: Displaying 0-0 of 0 total results Sort by
-  - button "Recent Downloads ▼":
+  - button "Recent Downloads":
     - img
     - text: ""
   - list

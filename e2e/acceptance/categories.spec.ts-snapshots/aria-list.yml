@@ -21,7 +21,7 @@
 - main:
   - heading "All Categories" [level=1]
   - text: Displaying 1-4 of 4 total results Sort by
-  - button "Alphabetical ▼":
+  - button "Alphabetical":
     - img
     - text: ""
   - link "API bindings":

@@ -21,7 +21,7 @@
 - main:
   - heading "All Crates for keyword 'network'" [level=1]
   - text: Displaying 0-0 of 0 total results Sort by
-  - button "Recent Downloads ▼":
+  - button "Recent Downloads":
     - img
     - text: ""
   - list

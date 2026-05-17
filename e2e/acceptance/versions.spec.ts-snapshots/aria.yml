@@ -43,7 +43,7 @@
   - strong: "4"
   - strong: nanomsg
   - text: /versions since June 16th, \d+ Sort by/
-  - button "Date ▼":
+  - button "Date":
     - img
     - text: ""
   - list:

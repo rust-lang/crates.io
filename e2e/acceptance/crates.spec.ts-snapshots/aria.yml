@@ -21,7 +21,7 @@
 - main:
   - heading "All Crates" [level=1]
   - text: /Displaying 1-\d+ of \d+ total results Sort by/
-  - button "Recent Downloads ▼":
+  - button "Recent Downloads":
     - img
     - text: ""
   - list:

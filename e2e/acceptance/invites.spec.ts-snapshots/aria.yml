@@ -15,7 +15,7 @@
     - link "Browse All Crates":
       - /url: /crates
     - text: "|"
-    - button "User 3 (user-3) User 3 ▼":
+    - button "User 3 (user-3) User 3":
       - img "User 3 (user-3)"
       - text: ""
 - main:

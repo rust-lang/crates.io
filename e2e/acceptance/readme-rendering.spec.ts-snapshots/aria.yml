@@ -174,7 +174,7 @@
   - text: 1 Versions published
   - heading /Downloads over the last \d+ days/ [level=4]
   - text: Display as
-  - button "Stacked ▼"
+  - button "Stacked"
 - contentinfo:
   - heading "Rust" [level=1]
   - list:

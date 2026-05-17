@@ -22,7 +22,7 @@
 - main:
   - heading "Search Results for 'rust'" [level=1]
   - text: Displaying 1-7 of 7 total results Sort by
-  - button "Relevance ▼":
+  - button "Relevance":
     - img
     - text: ""
   - list:
