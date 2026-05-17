@@ -27,9 +27,10 @@ impl BackgroundJob for DumpDb {
         let db_config = &env.config.db;
         let db_pool_config = db_config.replica.as_ref().unwrap_or(&db_config.primary);
         let database_url = db_pool_config.url.clone();
+        let postgres_bin_dir = env.config.postgres_bin_dir.clone();
 
         let archives = spawn_blocking(move || {
-            let directory = DumpDirectory::create()?;
+            let directory = DumpDirectory::create(postgres_bin_dir)?;
 
             info!("Exporting database…");
             directory.populate(database_url.expose_secret())?;

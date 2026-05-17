@@ -16,6 +16,7 @@ use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
 use std::net::IpAddr;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::warn;
@@ -106,6 +107,11 @@ pub struct Server {
     /// to. When set, the `ArchiveIndexBranch` background job pushes snapshot
     /// branches to this remote; when unset the job is a no-op.
     pub index_archive_url: Option<Url>,
+
+    /// Optional directory containing the `pg_dump` and `psql` binaries to use
+    /// for database dump generation. When unset, the binaries are resolved via
+    /// `PATH`.
+    pub postgres_bin_dir: Option<PathBuf>,
 }
 
 impl Server {
@@ -141,6 +147,8 @@ impl Server {
     ///   repository to mirror the crate index's snapshot branches to. Must be HTTPS because the
     ///   `ArchiveIndexBranch` job authenticates via a GitHub App installation token; SSH remotes
     ///   are not supported. If unset the job is a no-op.
+    /// - `POSTGRES_BIN_DIR`: Optional directory containing `pg_dump` and `psql` binaries to use
+    ///   for database dump generation. If unset, the binaries are looked up via `PATH`.
     ///
     /// # Panics
     ///
@@ -244,6 +252,7 @@ impl Server {
             sparse_index_fastly_enabled: var_parsed("SPARSE_INDEX_FASTLY_ENABLED")?
                 .unwrap_or(false),
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
+            postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
         })
     }
 }
