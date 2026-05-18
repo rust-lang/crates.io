@@ -40,15 +40,15 @@
   <h2 class="title" data-test-title>{title}</h2>
   <div class="content">
     {#if text.startsWith('docs.rs/')}
-      <DocsRsIcon class="icon" data-test-icon="docs-rs" />
+      <DocsRsIcon class="icon" data-test-icon="docs-rs" aria-hidden="true" />
     {:else if text.startsWith('github.com/')}
-      <GitHubIcon class="icon" data-test-icon="github" />
+      <GitHubIcon class="icon" data-test-icon="github" aria-hidden="true" />
     {:else if text.startsWith('gitlab.com/')}
-      <GitLabIcon class="icon" data-test-icon="gitlab" />
+      <GitLabIcon class="icon" data-test-icon="gitlab" aria-hidden="true" />
     {:else if text.startsWith('codeberg.org/')}
-      <CodebergIcon class="icon" data-test-icon="codeberg" />
+      <CodebergIcon class="icon" data-test-icon="codeberg" aria-hidden="true" />
     {:else}
-      <LinkIcon class="icon" data-test-icon="link" />
+      <LinkIcon class="icon" data-test-icon="link" aria-hidden="true" />
     {/if}
 
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
