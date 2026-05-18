@@ -42,9 +42,24 @@
     <div>
       <h2>Social</h2>
       <ul role="list">
-        <li><a href="https://github.com/rust-lang/crates.io/"><GitHub /> rust-lang/crates.io</a></li>
-        <li><a href="https://rust-lang.zulipchat.com/#streams/318791/t-crates-io"><Zulip /> #t-crates-io</a></li>
-        <li><a href="https://twitter.com/cratesiostatus"><Twitter /> @cratesiostatus</a></li>
+        <li>
+          <a href="https://github.com/rust-lang/crates.io/">
+            <GitHub aria-hidden="true" />
+            <span class="sr-only">GitHub: </span>rust-lang/crates.io
+          </a>
+        </li>
+        <li>
+          <a href="https://rust-lang.zulipchat.com/#streams/318791/t-crates-io">
+            <Zulip aria-hidden="true" />
+            <span class="sr-only">Zulip: </span>#t-crates-io
+          </a>
+        </li>
+        <li>
+          <a href="https://twitter.com/cratesiostatus">
+            <Twitter aria-hidden="true" />
+            <span class="sr-only">X: </span>@cratesiostatus
+          </a>
+        </li>
       </ul>
     </div>
   </div>

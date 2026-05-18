@@ -62,17 +62,11 @@
   - heading "Social" [level=2]
   - list:
     - listitem:
-      - link "rust-lang/crates.io":
+      - 'link "GitHub: rust-lang/crates.io"':
         - /url: https://github.com/rust-lang/crates.io/
-        - img
-        - text: ""
     - listitem:
-      - link "#t-crates-io":
+      - 'link "Zulip: #t-crates-io"':
         - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
-        - img
-        - text: ""
     - listitem:
-      - link "@cratesiostatus":
+      - 'link "X: @cratesiostatus"':
         - /url: https://twitter.com/cratesiostatus
-        - img
-        - text: ""
