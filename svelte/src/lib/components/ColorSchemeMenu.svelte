@@ -45,7 +45,7 @@
             type="button"
             onclick={() => colorScheme.setScheme(mode)}
           >
-            <Icon class="icon" />
+            <Icon class="icon" aria-hidden="true" />
             {mode}
           </button>
         </Dropdown.Item>
