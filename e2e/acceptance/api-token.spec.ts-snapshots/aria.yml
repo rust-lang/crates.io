@@ -34,8 +34,6 @@
   - text: /The token will expire on February \d+, \d+ Scopes/
   - link "Help":
     - /url: https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html
-    - text: ""
-    - img
   - list:
     - listitem:
       - checkbox "change-owners Invite new crate owners or remove existing ones"
@@ -55,8 +53,6 @@
   - text: Crates
   - link "Help":
     - /url: https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html
-    - text: ""
-    - img
   - list:
     - listitem:
       - strong: Unrestricted

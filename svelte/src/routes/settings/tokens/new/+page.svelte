@@ -256,7 +256,7 @@
           class="help-link"
         >
           <span class="sr-only">Help</span>
-          <CircleQuestionIcon />
+          <CircleQuestionIcon aria-hidden="true" />
         </a>
       </div>
 
@@ -294,7 +294,7 @@
           class="help-link"
         >
           <span class="sr-only">Help</span>
-          <CircleQuestionIcon />
+          <CircleQuestionIcon aria-hidden="true" />
         </a>
       </div>
 
