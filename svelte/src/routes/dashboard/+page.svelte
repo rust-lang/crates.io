@@ -53,7 +53,7 @@
     <h1>My Dashboard</h1>
     <div class="stats">
       <div class="downloads">
-        <DownloadIcon class="header-icon" />
+        <DownloadIcon class="header-icon" aria-hidden="true" />
         <span class="num">{numberFormat.format(data.totalDownloads)}</span>
         <span class="stats-label text--small">Total Downloads</span>
       </div>
@@ -65,7 +65,7 @@
   <div class="my-crate-lists">
     <div class="section-header">
       <h2>
-        <MyPackagesIcon />
+        <MyPackagesIcon aria-hidden="true" />
         My Crates
       </h2>
 
@@ -77,7 +77,7 @@
 
     <div class="section-header">
       <h2>
-        <FollowingIcon />
+        <FollowingIcon aria-hidden="true" />
         Following
       </h2>
 
@@ -90,7 +90,7 @@
 
   <div class="my-feed">
     <h2>
-      <LatestUpdatesIcon />
+      <LatestUpdatesIcon aria-hidden="true" />
       Latest Updates
     </h2>
 
