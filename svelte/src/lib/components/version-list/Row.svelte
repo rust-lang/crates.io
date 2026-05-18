@@ -128,7 +128,8 @@
   <div class="version">
     <div class="release-track" data-test-release-track>
       {#if version.yanked}
-        <TrashIcon />
+        <TrashIcon aria-hidden="true" />
+        <span class="sr-only">Yanked</span>
       {:else if !semver}
         ?
       {:else}
@@ -185,17 +186,17 @@
             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
             <a href={trustpubUrl} target="_blank" rel="nofollow noopener noreferrer">
               {#if trustpubProvider === 'github'}
-                <GitHubIcon />
+                <GitHubIcon aria-hidden="true" />
               {:else if trustpubProvider === 'gitlab'}
-                <GitLabIcon />
+                <GitLabIcon aria-hidden="true" />
               {/if}
               {trustpubPublisher}
             </a>
           {:else}
             {#if trustpubProvider === 'github'}
-              <GitHubIcon />
+              <GitHubIcon aria-hidden="true" />
             {:else if trustpubProvider === 'gitlab'}
-              <GitLabIcon />
+              <GitLabIcon aria-hidden="true" />
             {/if}
             {trustpubPublisher}
           {/if}
@@ -203,7 +204,7 @@
       {/if}
 
       <time datetime={formatISO(version.created_at)} class="date" class:new={isNew}>
-        <CalendarIcon />
+        <CalendarIcon aria-hidden="true" />
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
 
         <Tooltip>
@@ -219,33 +220,36 @@
       <div class="metadata-row">
         {#if version.rust_version}
           <span class="msrv">
-            <RustIcon />
+            <RustIcon aria-hidden="true" />
+            <span class="sr-only">Minimum Rust version:</span>
             <Msrv msrv={version.rust_version} edition={version.edition} />
           </span>
         {:else if version.edition}
           <span class="edition">
-            <RustIcon />
+            <RustIcon aria-hidden="true" />
             <Edition edition={version.edition} />
           </span>
         {/if}
 
         {#if version.crate_size}
           <span class="bytes">
-            <WeightIcon />
+            <WeightIcon aria-hidden="true" />
+            <span class="sr-only">Size:</span>
             {prettyBytes(version.crate_size, { binary: true })}
           </span>
         {/if}
 
         {#if version.license}
           <span class="license">
-            <LicenseIcon />
+            <LicenseIcon aria-hidden="true" />
+            <span class="sr-only">License:</span>
             <LicenseExpression license={version.license} />
           </span>
         {/if}
 
         {#if featureList.length !== 0}
           <span class="num-features" data-test-feature-list>
-            <CheckboxIcon />
+            <CheckboxIcon aria-hidden="true" />
             {featureList.length}
             {featureList.length === 1 ? 'Feature' : 'Features'}
 
@@ -254,11 +258,12 @@
                 {#each features.list as feature (feature.name)}
                   <li>
                     {#if feature.isDefault}
-                      <CheckboxIcon />
+                      <CheckboxIcon aria-hidden="true" />
                     {:else}
-                      <CheckboxEmptyIcon />
+                      <CheckboxEmptyIcon aria-hidden="true" />
                     {/if}
                     {feature.name}
+                    {#if feature.isDefault}<span class="sr-only">(default)</span>{/if}
                   </li>
                 {/each}
                 {#if features.more > 0}
@@ -279,7 +284,7 @@
   <PrivilegedAction userAuthorised={isOwner} class="actions">
     <Dropdown.Root class="dropdown" data-test-actions-menu>
       <Dropdown.Trigger hideArrow class="trigger" data-test-actions-toggle>
-        <EllipsisCircleIcon class="icon" />
+        <EllipsisCircleIcon class="icon" aria-hidden="true" />
         <span class="sr-only">Actions</span>
       </Dropdown.Trigger>
 
