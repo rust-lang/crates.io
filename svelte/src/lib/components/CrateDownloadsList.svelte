@@ -20,8 +20,9 @@
       <a href={resolve('/crates/[crate_id]', { crate_id: crate.id })} class="link">
         {crate.name}
         ({crate.max_version})
-        <DownloadArrowIcon class="download-icon" />
+        <DownloadArrowIcon class="download-icon" aria-hidden="true" />
         {numberFormat.format(crate.downloads)}
+        <span class="sr-only">downloads</span>
       </a>
     </li>
   {/each}
