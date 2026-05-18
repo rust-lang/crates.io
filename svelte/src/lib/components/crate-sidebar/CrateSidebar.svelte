@@ -107,7 +107,8 @@
     <h2 class="heading">Metadata</h2>
 
     <time datetime={formatISO(version.created_at)} class="date">
-      <CalendarIcon />
+      <CalendarIcon aria-hidden="true" />
+      <span class="sr-only">Release date:</span>
       <span>
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
         <Tooltip>
@@ -119,19 +120,21 @@
 
     {#if version.rust_version}
       <div class="msrv" data-test-msrv>
-        <RustIcon />
+        <RustIcon aria-hidden="true" />
+        <span class="sr-only">Minimum Rust version:</span>
         <Msrv msrv={version.rust_version} edition={version.edition ?? undefined} />
       </div>
     {:else if version.edition}
       <div class="edition" data-test-edition>
-        <RustIcon />
+        <RustIcon aria-hidden="true" />
         <Edition edition={version.edition} />
       </div>
     {/if}
 
     {#if version.license}
       <div class="license" data-test-license>
-        <LicenseIcon />
+        <LicenseIcon aria-hidden="true" />
+        <span class="sr-only">License:</span>
         <span>
           <LicenseExpression license={version.license} />
         </span>
@@ -140,7 +143,7 @@
 
     {#if version.linecounts?.total_code_lines}
       <div class="linecount" data-test-linecounts>
-        <CodeIcon />
+        <CodeIcon aria-hidden="true" />
         <span>
           {formatShortNum(Number(version.linecounts.total_code_lines))} SLoC
           <Tooltip>
@@ -153,7 +156,8 @@
 
     {#if version.crate_size}
       <div class="bytes">
-        <WeightIcon />
+        <WeightIcon aria-hidden="true" />
+        <span class="sr-only">Size:</span>
         <span>
           {prettyBytes(version.crate_size, { binary: true })}
           <Tooltip text="Compressed package size" />
@@ -162,7 +166,8 @@
     {/if}
 
     <div class="purl" data-test-purl>
-      <LinkIcon />
+      <LinkIcon aria-hidden="true" />
+      <span class="sr-only">Package URL:</span>
       <CopyButton copyText={purl} class="button-reset purl-copy-button">
         <span class="purl-text">{purl}</span>
         <Tooltip>
@@ -180,7 +185,7 @@
         class="purl-help-link"
         aria-label="Learn more"
       >
-        <CircleQuestionIcon />
+        <CircleQuestionIcon aria-hidden="true" />
         <Tooltip text="Learn more about Package URLs" />
       </a>
     </div>

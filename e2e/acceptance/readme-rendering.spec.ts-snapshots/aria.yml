@@ -131,21 +131,14 @@
             - /url: "#user-content-fnref-1"
   - region "Crate metadata":
     - heading "Metadata" [level=2]
-    - time:
-      - img
-      - text: over 7 years ago
-    - img
+    - time: "Release date: over 7 years ago"
+    - text: "License:"
     - link "MIT":
       - /url: https://choosealicense.com/licenses/mit
-    - img
-    - text: /\d+ SLoC/
-    - img
-    - text: /\d+ KiB/
-    - img
+    - text: "/\\d+ SLoC Size: \\d+ KiB Package URL:/"
     - button "pkg:cargo/serde@1.0.0?repository_url=https%3A%2F%2Flocalhost%3A4173%2F"
     - link "Learn more":
       - /url: https://github.com/package-url/purl-spec
-      - img
     - heading "Install" [level=2]
     - paragraph: "Run the following Cargo command in your project directory:"
     - button "cargo add serde"
