@@ -146,7 +146,7 @@ tokio-postgres = "=0.7.17"
 tokio-util = "=0.7.18"
 toml = "=1.1.2"
 tower = "=0.5.3"
-tower-http = { version = "=0.6.10", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
+tower-http = { version = "=0.6.11", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
