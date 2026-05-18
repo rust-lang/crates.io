@@ -32,8 +32,8 @@
 <div class={['color-scheme-menu', className]} {...restProps}>
   <Dropdown.Root class="dropdown">
     <Dropdown.Trigger hideArrow class="trigger">
-      <CurrentIcon class="icon" />
-      <span class="sr-only">Change color scheme</span>
+      <CurrentIcon class="icon" aria-hidden="true" />
+      <span class="sr-only">Change color scheme. Current: {colorScheme.scheme}</span>
     </Dropdown.Trigger>
 
     <Dropdown.Menu class="menu">

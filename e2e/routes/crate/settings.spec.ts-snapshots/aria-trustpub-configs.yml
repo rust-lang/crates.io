@@ -6,9 +6,7 @@
       - /placeholder: Type 'S' or '/' to search
     - button "Search"
   - navigation:
-    - button "Change color scheme":
-      - img
-      - text: ""
+    - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
     - button "User 1"
