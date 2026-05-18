@@ -132,7 +132,7 @@
           {#if isLoggingIn}
             <LoadingSpinner class="spinner" />
           {:else}
-            <LockIcon />
+            <LockIcon aria-hidden="true" />
           {/if}
           Log in with GitHub
         </button>

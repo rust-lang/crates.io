@@ -9,9 +9,7 @@
     - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - heading "All Crates for keyword 'network'" [level=1]
   - text: Displaying 0-0 of 0 total results Sort by

@@ -9,9 +9,7 @@
     - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - heading "Contact Us" [level=1]
   - heading "Choose one of the these categories to continue." [level=2]

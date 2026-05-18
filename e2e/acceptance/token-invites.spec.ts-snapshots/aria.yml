@@ -9,9 +9,7 @@
     - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - heading "You've been added as a crate owner!" [level=1]
   - paragraph:

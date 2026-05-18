@@ -10,9 +10,7 @@
     - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - link "Install Cargo":
     - /url: https://doc.rust-lang.org/cargo/getting-started/installation.html

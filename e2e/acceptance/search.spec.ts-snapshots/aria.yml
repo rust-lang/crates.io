@@ -10,9 +10,7 @@
     - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - heading "Search Results for 'rust'" [level=1]
   - text: Displaying 1-7 of 7 total results Sort by
