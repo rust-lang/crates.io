@@ -25,13 +25,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: A Kinetic protocol library written in Rust
-      - img
-      - text: "/All-Time: \\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/A Kinetic protocol library written in Rust All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
       - time: over 2 years ago
       - list:
         - listitem:
@@ -50,13 +44,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)"
-      - img
-      - text: "/All-Time: \\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/Yo dawg, use Rust to generate Rust, right in your Rust\\. \\(See `external_mixin` to use scripting languages\\.\\) All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
       - time: over 2 years ago
       - list:
         - listitem:
@@ -75,13 +63,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: A (mostly) pure-Rust implementation of various common cryptographic algorithms.
-      - img
-      - text: "/All-Time: \\d+,\\d+/"
-      - img
-      - text: "/Recent: \\d+,\\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/A \\(mostly\\) pure-Rust implementation of various common cryptographic algorithms\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+,\\d+ Updated:/"
       - time: about 2 years ago
       - list:
         - listitem:
@@ -97,13 +79,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files.
-      - img
-      - text: "/All-Time: \\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
       - time: about 2 years ago
       - list:
         - listitem:
@@ -116,13 +92,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: Rustless is a REST-like API micro-framework for Rust.
-      - img
-      - text: "/All-Time: \\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/Rustless is a REST-like API micro-framework for Rust\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
       - time: about 2 years ago
       - list:
         - listitem:
@@ -138,13 +108,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: Send cypher queries to a neo4j database
-      - img
-      - text: "/All-Time: \\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/Send cypher queries to a neo4j database All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
       - time: about 2 years ago
       - list:
         - listitem:
@@ -163,13 +127,7 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.
-      - img
-      - text: "/All-Time: \\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
+      - text: "/A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
       - time: about 2 years ago
       - list:
         - listitem:

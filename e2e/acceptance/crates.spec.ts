@@ -69,14 +69,18 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     await loadFixtures(msw.db);
 
     await page.goto('/crates');
-    await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText('All-Time: 21,573');
+    await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText(
+      /All-Time\s*Downloads:\s*21,573/,
+    );
   });
 
   test('recent downloads appears for each crate on crate list', async ({ page, msw }) => {
     await loadFixtures(msw.db);
 
     await page.goto('/crates');
-    await expect(page.locator('[data-test-crate-row="0"] [data-test-recent-downloads]')).toHaveText('Recent: 2,000');
+    await expect(page.locator('[data-test-crate-row="0"] [data-test-recent-downloads]')).toHaveText(
+      /Recent\s*Downloads:\s*2,000/,
+    );
   });
 
   test('shows error message screen', async ({ page, msw }) => {

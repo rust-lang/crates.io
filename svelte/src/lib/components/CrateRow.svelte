@@ -52,27 +52,27 @@
 
   <div class="stats">
     <div class="downloads" data-test-downloads>
-      <DownloadIcon class="download-icon" />
+      <DownloadIcon class="download-icon" aria-hidden="true" />
       <span>
         <span>
-          All-Time:
+          All-Time<span class="sr-only"> Downloads</span>:
           <Tooltip text="Total number of downloads" />
         </span>
         {crate.downloads.toLocaleString()}
       </span>
     </div>
     <div class="recent-downloads" data-test-recent-downloads>
-      <DownloadIcon class="download-icon" />
+      <DownloadIcon class="download-icon" aria-hidden="true" />
       <span>
         <span>
-          Recent:
+          Recent<span class="sr-only"> Downloads</span>:
           <Tooltip text="Downloads in the last 90 days" />
         </span>
         {(crate.recent_downloads ?? 0).toLocaleString()}
       </span>
     </div>
     <div class="updated-at">
-      <LatestUpdatesIcon height="32" width="32" />
+      <LatestUpdatesIcon height="32" width="32" aria-hidden="true" />
       <span>
         <span>
           Updated:

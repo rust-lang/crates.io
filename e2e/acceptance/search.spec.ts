@@ -23,7 +23,9 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-crate-row="0"] [data-test-description]')).toHaveText(
       'A Kinetic protocol library written in Rust',
     );
-    await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText('All-Time: 225');
+    await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText(
+      /All-Time\s*Downloads:\s*225/,
+    );
     await expect(page.locator('[data-test-crate-row="0"] [data-test-updated-at]')).toBeVisible();
 
     await percy.snapshot();
