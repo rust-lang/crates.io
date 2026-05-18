@@ -13,9 +13,7 @@
 - main:
   - heading "All Categories" [level=1]
   - text: Displaying 1-4 of 4 total results Sort by
-  - button "Alphabetical":
-    - img
-    - text: ""
+  - button "Alphabetical"
   - link "API bindings":
     - /url: /categories/api-bindings
   - text: 0 crates This is the description for the category called "API bindings"

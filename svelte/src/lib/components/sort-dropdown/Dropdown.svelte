@@ -16,7 +16,7 @@
 <div class={['sort-dropdown', className]} {...restProps}>
   <Dropdown.Root>
     <Dropdown.Trigger class="trigger" data-test-current-order>
-      <SortIcon class="icon" />
+      <SortIcon class="icon" aria-hidden="true" />
       {current}
     </Dropdown.Trigger>
 

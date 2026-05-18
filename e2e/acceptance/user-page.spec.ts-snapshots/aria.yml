@@ -17,9 +17,7 @@
     - /url: https://github.com/thehydroimpulse
     - img "GitHub profile"
   - text: Displaying 1-1 of 1 total results Sort by
-  - button "Alphabetical":
-    - img
-    - text: ""
+  - button "Alphabetical"
   - list:
     - listitem:
       - heading "nanomsg v0.6.1 Copy Cargo.toml snippet to clipboard" [level=2]:

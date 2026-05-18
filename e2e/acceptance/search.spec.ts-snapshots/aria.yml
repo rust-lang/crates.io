@@ -14,9 +14,7 @@
 - main:
   - heading "Search Results for 'rust'" [level=1]
   - text: Displaying 1-7 of 7 total results Sort by
-  - button "Relevance":
-    - img
-    - text: ""
+  - button "Relevance"
   - list:
     - listitem:
       - heading /kinetic-rust v0\.\d+\.\d+ Copy Cargo\.toml snippet to clipboard/ [level=2]:

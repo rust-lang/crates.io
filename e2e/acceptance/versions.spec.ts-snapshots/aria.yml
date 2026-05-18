@@ -35,9 +35,7 @@
   - strong: "4"
   - strong: nanomsg
   - text: /versions since June 16th, \d+ Sort by/
-  - button "Date":
-    - img
-    - text: ""
+  - button "Date"
   - list:
     - listitem:
       - text: Release track 0.2 (latest)
