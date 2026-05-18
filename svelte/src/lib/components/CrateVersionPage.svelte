@@ -128,7 +128,7 @@
 
     <div class="stat">
       <span class="num">
-        <DownloadIcon />
+        <DownloadIcon aria-hidden="true" />
         <span class="num__align">{numberFormat.format(downloadsContext.downloads)}</span>
       </span>
       <span class="text--small">Downloads all time</span>
@@ -136,7 +136,7 @@
 
     <div class="stat">
       <span class="num">
-        <CrateIcon />
+        <CrateIcon aria-hidden="true" />
         <span class="num__align">{crate.num_versions}</span>
       </span>
       <span class="text--small">Versions published</span>

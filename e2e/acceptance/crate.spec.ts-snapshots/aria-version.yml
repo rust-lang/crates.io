@@ -59,10 +59,7 @@
     - text: ""
     - link "(see all)":
       - /url: /crates/nanomsg
-  - img
-  - text: /\d+,\d+ Downloads all time/
-  - img
-  - text: 2 Versions published
+  - text: /\d+,\d+ Downloads all time 2 Versions published/
   - heading /Downloads over the last \d+ days/ [level=4]
   - text: Display as
   - button "Stacked"

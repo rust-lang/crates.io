@@ -152,10 +152,7 @@
     - link "Report crate":
       - /url: /support?crate=serde&inquire=crate-violation
   - heading "Stats Overview" [level=3]
-  - img
-  - text: /\d+,\d+ Downloads all time/
-  - img
-  - text: 1 Versions published
+  - text: /\d+,\d+ Downloads all time 1 Versions published/
   - heading /Downloads over the last \d+ days/ [level=4]
   - text: Display as
   - button "Stacked"
