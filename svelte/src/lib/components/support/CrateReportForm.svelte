@@ -130,7 +130,7 @@ ${detail}
   </fieldset>
 
   <fieldset class="form-group" data-test-id="fieldset-reasons">
-    <div class="form-group-name">Reasons</div>
+    <legend class="form-group-name">Reasons</legend>
     <ul role="list" class="reasons-list scopes-list" class:invalid={reasonsInvalid}>
       {#each REASONS as option (option.reason)}
         <li>

@@ -16,8 +16,7 @@
   - group:
     - text: Crate
     - textbox "Crate"
-  - group:
-    - text: Reasons
+  - group "Reasons":
     - list:
       - listitem:
         - checkbox "it contains spam"
