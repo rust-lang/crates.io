@@ -11,7 +11,7 @@
       - /url: /crates
     - button "User 1"
 - main:
-  - heading "Add a new Trusted Publisher" [level=2]
+  - heading "Add a new Trusted Publisher" [level=1]
   - text: Publisher
   - combobox "Publisher":
     - option "GitHub" [selected]

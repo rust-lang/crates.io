@@ -160,7 +160,7 @@
 <PageTitle title="Add Trusted Publisher" />
 
 <form class="form" onsubmit={handleSubmit}>
-  <h2>Add a new Trusted Publisher</h2>
+  <h1>Add a new Trusted Publisher</h1>
 
   <div class="form-group">
     <label for="publisher" class="form-group-name">Publisher</label>
@@ -427,6 +427,11 @@
   .form {
     max-width: 600px;
     margin: var(--space-m) auto;
+  }
+
+  h1 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
   }
 
   .form-group,
