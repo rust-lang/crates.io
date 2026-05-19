@@ -8,7 +8,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
     await page.goto('/');
     await page.fill('[data-test-search-input]', 'rust');
-    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
+    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Search' }).click();
 
     await expect(page).toHaveURL('/search?q=rust');
     await expect(page).toHaveTitle("Search Results for 'rust' - crates.io: Rust Package Registry");
@@ -120,7 +120,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
     await page.goto('/');
     await page.fill('[data-test-search-input]', 'rust');
-    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
+    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Search' }).click();
 
     await expect(page.locator('[data-test-search-sort] [data-test-current-order]')).toHaveText('Relevance');
   });
@@ -134,7 +134,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
 
     await page.goto('/');
     await page.fill('[data-test-search-input]', 'rust');
-    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
+    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Search' }).click();
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(0);
     await expect(page.locator('[data-test-error-message]')).toBeVisible();
     await expect(page.locator('[data-test-try-again-button]')).toBeEnabled();
@@ -168,7 +168,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.fill('[data-test-search-input]', 'ru');
-    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
+    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Search' }).click();
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(0);
     await expect(page.locator('[data-test-error-message]')).toBeVisible();
     await expect(page.locator('[data-test-try-again-button]')).toBeEnabled();

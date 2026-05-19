@@ -1,23 +1,15 @@
 - banner:
   - link "crates.io":
     - /url: /
-    - heading "crates.io" [level=1]
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
-    - button "Submit":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
-    - button "Change color scheme":
-      - img
-      - text: ""
+    - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - img "thehydroimpulseteam (github:org:thehydroimpulse)"
   - heading "org" [level=1]
@@ -26,7 +18,7 @@
     - img "GitHub profile"
   - heading "thehydroimpulseteam" [level=2]
   - text: Displaying 1-1 of 1 total results Sort by
-  - button "Alphabetical ▼":
+  - button "Alphabetical":
     - img
     - text: ""
   - list:

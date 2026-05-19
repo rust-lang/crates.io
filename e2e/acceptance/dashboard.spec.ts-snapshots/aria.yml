@@ -1,23 +1,15 @@
 - banner:
   - link "crates.io":
     - /url: /
-    - heading "crates.io" [level=1]
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
-    - button "Submit":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
-    - button "Change color scheme":
-      - img
-      - text: ""
+    - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
-    - button "John Doe (johnnydee) John Doe ▼":
-      - img "John Doe (johnnydee)"
-      - text: ""
+    - button "John Doe"
 - main:
   - heading "My Dashboard" [level=1]
   - img

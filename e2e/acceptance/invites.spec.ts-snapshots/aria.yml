@@ -1,23 +1,15 @@
 - banner:
   - link "crates.io":
     - /url: /
-    - heading "crates.io" [level=1]
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
-    - button "Submit":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
-    - button "Change color scheme":
-      - img
-      - text: ""
+    - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
-    - button "User 3 (user-3) User 3 ▼":
-      - img "User 3 (user-3)"
-      - text: ""
+    - button "User 3"
 - main:
   - heading "Pending Owner Invites" [level=1]
   - paragraph:

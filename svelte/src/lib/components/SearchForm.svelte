@@ -93,8 +93,8 @@
   />
 
   <button type="submit" class="submit-button button-reset">
-    <span class="sr-only">Submit</span>
-    <SearchIcon />
+    <span class="sr-only">Search</span>
+    <SearchIcon aria-hidden="true" />
   </button>
 </form>
 

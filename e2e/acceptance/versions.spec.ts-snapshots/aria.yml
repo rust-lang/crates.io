@@ -1,23 +1,15 @@
 - banner:
   - link "crates.io":
     - /url: /
-    - heading "crates.io" [level=1]
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
-    - button "Submit":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
-    - button "Change color scheme":
-      - img
-      - text: ""
+    - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - heading "nanomsg" [level=1]
   - text: This is the description for the crate called "nanomsg"
@@ -43,7 +35,7 @@
   - strong: "4"
   - strong: nanomsg
   - text: /versions since June 16th, \d+ Sort by/
-  - button "Date ▼":
+  - button "Date":
     - img
     - text: ""
   - list:

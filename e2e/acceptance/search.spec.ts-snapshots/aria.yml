@@ -1,28 +1,20 @@
 - banner:
   - link "crates.io":
     - /url: /
-    - heading "crates.io" [level=1]
   - search:
     - textbox "Search":
       - /placeholder: Type 'S' or '/' to search
       - text: rust
-    - button "Submit":
-      - text: ""
-      - img
+    - button "Search"
   - navigation:
-    - button "Change color scheme":
-      - img
-      - text: ""
+    - 'button "Change color scheme. Current: system"'
     - link "Browse All Crates":
       - /url: /crates
-    - text: "|"
-    - button "Log in with GitHub":
-      - img
-      - text: ""
+    - button "Log in with GitHub"
 - main:
   - heading "Search Results for 'rust'" [level=1]
   - text: Displaying 1-7 of 7 total results Sort by
-  - button "Relevance ▼":
+  - button "Relevance":
     - img
     - text: ""
   - list:

@@ -40,7 +40,7 @@
   <div class="header-inner width-limit">
     <a href={resolve('/')} class="index-link">
       <img src={logo} role="none" alt="" class="logo" />
-      <h1>crates.io</h1>
+      crates.io
     </a>
 
     <div class="search-form">
@@ -53,19 +53,21 @@
       <ColorSchemeMenu class="color-scheme-menu" />
 
       <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
-      <span class="sep">|</span>
+      <span class="sep" aria-hidden="true">|</span>
 
       {#if currentUser}
         <Dropdown.Root data-test-user-menu>
           <Dropdown.Trigger class="button-reset" data-test-toggle>
             {#if isSudoEnabled}
-              <div class="wizard-hat" data-test-wizard-hat>🧙</div>
+              <span class="sr-only">Admin mode active</span>
+              <div class="wizard-hat" aria-hidden="true" data-test-wizard-hat>🧙</div>
             {/if}
 
             <UserAvatar
               user={{ ...currentUser, kind: 'user' }}
               size="small"
               style="margin-right: var(--space-2xs); margin-top: calc((22px - 1em) * -0.5)"
+              aria-hidden="true"
               data-test-avatar
             />
 
@@ -130,7 +132,7 @@
           {#if isLoggingIn}
             <LoadingSpinner class="spinner" />
           {:else}
-            <LockIcon />
+            <LockIcon aria-hidden="true" />
           {/if}
           Log in with GitHub
         </button>
@@ -242,11 +244,9 @@
     grid-area: logo;
     display: flex;
     align-items: center;
-
-    & h1 {
-      margin: 0;
-      font-size: var(--space-m);
-    }
+    font-family: var(--font-heading);
+    font-size: var(--space-m);
+    font-weight: bold;
   }
 
   .logo {

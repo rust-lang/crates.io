@@ -321,7 +321,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-keyword]')).toBeVisible();
 
     await page.fill('[data-test-search-input]', 'nanomsg');
-    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
+    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Search' }).click();
     await expect(page).toHaveURL('/search?q=nanomsg');
     await page.getByRole('link', { name: 'nanomsg', exact: true }).click();
 
