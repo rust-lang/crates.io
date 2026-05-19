@@ -1,0 +1,259 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+      - text: rust
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - heading "Search Results for 'rust'" [level=1]
+  - text: Displaying 1-7 of 7 total results Sort by
+  - button "Relevance ▼":
+    - img
+    - text: ""
+  - list:
+    - listitem:
+      - heading /kinetic-rust v0\.\d+\.\d+ Copy Cargo\.toml snippet to clipboard/ [level=2]:
+        - link "kinetic-rust":
+          - /url: /crates/kinetic-rust
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A Kinetic protocol library written in Rust
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://icorderi.github.io/icorderi/kinetic-rust
+        - listitem:
+          - link "Documentation":
+            - /url: https://icorderi.github.io/kinetic-rust/doc/kinetic/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/icorderi/kinetic-rust/
+    - listitem:
+      - heading "rust_mixin v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rust_mixin":
+          - /url: /crates/rust_mixin
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: "Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)"
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/huonw/external_mixin
+        - listitem:
+          - link "Documentation":
+            - /url: https://github.com/huonw/external_mixin#rust_mixin
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/huonw/external_mixin
+    - listitem:
+      - heading "rust-crypto v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rust-crypto":
+          - /url: /crates/rust-crypto
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A (mostly) pure-Rust implementation of various common cryptographic algorithms.
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+,\\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/DaGenix/rust-crypto/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/DaGenix/rust-crypto/
+    - listitem:
+      - heading "rust-htslib v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rust-htslib":
+          - /url: /crates/rust-htslib
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/rust-bio/rust-htslib.git
+    - listitem:
+      - heading "rustless v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rustless":
+          - /url: /crates/rustless
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Rustless is a REST-like API micro-framework for Rust.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/rustless/rustless
+        - listitem:
+          - link "Repository":
+            - /url: https://crates.io/crates/rustless
+    - listitem:
+      - heading "rusted_cypher v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rusted_cypher":
+          - /url: /crates/rusted_cypher
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Send cypher queries to a neo4j database
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/livioribeiro/rusted-cypher
+        - listitem:
+          - link "Documentation":
+            - /url: http://livioribeiro.github.io/rusted_cypher/rusted_cypher/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/livioribeiro/rusted-cypher
+    - listitem:
+      - heading "rustful v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rustful":
+          - /url: /crates/rustful
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Documentation":
+            - /url: http://ogeon.github.io/docs/rustful/master/rustful/index.html
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/Ogeon/rustful
+  - navigation "Pagination navigation":
+    - img
+    - list:
+      - listitem:
+        - link "1":
+          - /url: "?q=rust&page=1"
+    - img
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""
+- text: "Search Results for 'rust' - crates.io: Rust Package Registry"

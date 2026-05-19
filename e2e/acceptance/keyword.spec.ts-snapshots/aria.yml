@@ -1,0 +1,97 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - heading "All Crates for keyword 'network'" [level=1]
+  - text: Displaying 0-0 of 0 total results Sort by
+  - button "Recent Downloads ▼":
+    - img
+    - text: ""
+  - list
+  - navigation "Pagination navigation":
+    - img
+    - list:
+      - listitem:
+        - link "1":
+          - /url: "?page=1"
+    - img
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""

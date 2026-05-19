@@ -28,6 +28,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     ]);
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria-list.yml' });
     await a11y.audit();
   });
 
@@ -61,6 +62,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
       await expect(page.getByTestId('report-button')).toHaveText('Report to help@crates.io');
 
       await percy.snapshot();
+      await expect(page).toMatchAriaSnapshot({ name: 'aria-form.yml' });
       await a11y.audit();
     });
 

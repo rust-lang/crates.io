@@ -1,0 +1,140 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "John Doe (johnnydee) John Doe ▼":
+      - img "John Doe (johnnydee)"
+      - text: ""
+- main:
+  - heading "Account Settings" [level=1]
+  - list:
+    - listitem:
+      - link "Profile":
+        - /url: /settings/profile
+    - listitem:
+      - link "API Tokens":
+        - /url: /settings/tokens
+  - heading "New API Token" [level=2]
+  - text: Name
+  - textbox "Name": the new token
+  - text: Expiration
+  - combobox "Expiration":
+    - option "No expiration"
+    - option "7 days"
+    - option /\d+ days/
+    - option /\d+ days/
+    - option /\d+ days/ [selected]
+    - option /\d+ days/
+    - option "Custom..."
+  - text: /The token will expire on February \d+, \d+ Scopes/
+  - link "Help":
+    - /url: https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html
+    - text: ""
+    - img
+  - list:
+    - listitem:
+      - checkbox "change-owners Invite new crate owners or remove existing ones"
+      - text: change-owners Invite new crate owners or remove existing ones
+    - listitem:
+      - checkbox "publish-new Publish new crates"
+      - text: publish-new Publish new crates
+    - listitem:
+      - checkbox "publish-update Publish new versions of existing crates" [checked]
+      - text: publish-update Publish new versions of existing crates
+    - listitem:
+      - checkbox "trusted-publishing Manage trusted publishing configurations"
+      - text: trusted-publishing Manage trusted publishing configurations
+    - listitem:
+      - checkbox "yank Yank and unyank crate versions"
+      - text: yank Yank and unyank crate versions
+  - text: Crates
+  - link "Help":
+    - /url: https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html
+    - text: ""
+    - img
+  - list:
+    - listitem:
+      - strong: Unrestricted
+      - text: – This token can be used for all of your crates.
+    - listitem:
+      - button "Add pattern"
+  - button "Generate Token"
+  - link "Cancel":
+    - /url: /settings/tokens
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""
+- text: "Settings - crates.io: Rust Package Registry"

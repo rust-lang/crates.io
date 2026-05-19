@@ -33,6 +33,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-msrv]')).toContainText('v1.69.0');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria-latest.yml' });
     await a11y.audit();
   });
 
@@ -66,6 +67,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-crate-stats-label]')).toHaveText('Stats Overview for 0.6.0 (see all)');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria-version.yml' });
     await a11y.audit();
   });
 

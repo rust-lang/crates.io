@@ -38,6 +38,7 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     );
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

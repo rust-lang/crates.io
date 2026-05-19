@@ -44,6 +44,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/crates/foo/delete');
     await expect(page.locator('[data-test-title]')).toHaveText('Delete the foo crate?');
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
 
     await page.fill('[data-test-reason]', "I don't need this crate anymore");
     await expect(page.locator('[data-test-delete-button]')).toBeDisabled();

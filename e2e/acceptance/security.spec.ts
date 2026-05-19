@@ -86,6 +86,7 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     await expect(advisory2.locator('[data-test-cvss]')).not.toBeVisible();
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
 
   test('show no advisory data when none exist', async ({ page, msw }) => {

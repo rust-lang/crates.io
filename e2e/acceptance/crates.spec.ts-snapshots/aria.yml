@@ -1,0 +1,593 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - heading "All Crates" [level=1]
+  - text: /Displaying 1-\d+ of \d+ total results Sort by/
+  - button "Recent Downloads ▼":
+    - img
+    - text: ""
+  - list:
+    - listitem:
+      - heading "rust-crypto v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rust-crypto":
+          - /url: /crates/rust-crypto
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A (mostly) pure-Rust implementation of various common cryptographic algorithms.
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+,\\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/DaGenix/rust-crypto/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/DaGenix/rust-crypto/
+    - listitem:
+      - heading "serde v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "serde":
+          - /url: /crates/serde
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A generic serialization/deserialization framework
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Documentation":
+            - /url: https://serde-rs.github.io/serde/serde/serde/index.html
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/serde-rs/serde
+    - listitem:
+      - heading "nanomsg v0.6.1 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "nanomsg":
+          - /url: /crates/nanomsg
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A high-level, Rust idiomatic wrapper around nanomsg.
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: /\d+ months ago/
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/thehydroimpulse/nanomsg.rs
+        - listitem:
+          - link "Documentation":
+            - /url: https://github.com/thehydroimpulse/nanomsg.rs
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/thehydroimpulse/nanomsg.rs
+    - listitem:
+      - heading "quickcheck_macros v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "quickcheck_macros":
+          - /url: /crates/quickcheck_macros
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A macro attribute for quickcheck.
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/BurntSushi/quickcheck
+        - listitem:
+          - link "Documentation":
+            - /url: http://burntsushi.net/rustdoc/quickcheck/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/BurntSushi/quickcheck
+    - listitem:
+      - heading "rustless v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rustless":
+          - /url: /crates/rustless
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Rustless is a REST-like API micro-framework for Rust.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/rustless/rustless
+        - listitem:
+          - link "Repository":
+            - /url: https://crates.io/crates/rustless
+    - listitem:
+      - heading "external_mixin v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "external_mixin":
+          - /url: /crates/external_mixin
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: "Use your favourite interpreted language to generate your Rust, right in your Rust. Supports Python, Ruby and shell (`sh`) out of the box, with an extensible macro to support any others. (See `rust_mix …"
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/huonw/external_mixin
+        - listitem:
+          - link "Documentation":
+            - /url: https://github.com/huonw/external_mixin#external_mixin
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/huonw/external_mixin
+    - listitem:
+      - heading "quickcheck v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "quickcheck":
+          - /url: /crates/quickcheck
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Automatic property based testing with shrinking.
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/BurntSushi/quickcheck
+        - listitem:
+          - link "Documentation":
+            - /url: http://burntsushi.net/rustdoc/quickcheck/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/BurntSushi/quickcheck
+    - listitem:
+      - heading /kinetic-rust v0\.\d+\.\d+ Copy Cargo\.toml snippet to clipboard/ [level=2]:
+        - link "kinetic-rust":
+          - /url: /crates/kinetic-rust
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A Kinetic protocol library written in Rust
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://icorderi.github.io/icorderi/kinetic-rust
+        - listitem:
+          - link "Documentation":
+            - /url: https://icorderi.github.io/kinetic-rust/doc/kinetic/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/icorderi/kinetic-rust/
+    - listitem:
+      - heading "rust_mixin v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rust_mixin":
+          - /url: /crates/rust_mixin
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: "Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)"
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/huonw/external_mixin
+        - listitem:
+          - link "Documentation":
+            - /url: https://github.com/huonw/external_mixin#rust_mixin
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/huonw/external_mixin
+    - listitem:
+      - heading "rust-htslib v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rust-htslib":
+          - /url: /crates/rust-htslib
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/rust-bio/rust-htslib.git
+    - listitem:
+      - heading "rustful v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rustful":
+          - /url: /crates/rustful
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Documentation":
+            - /url: http://ogeon.github.io/docs/rustful/master/rustful/index.html
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/Ogeon/rustful
+    - listitem:
+      - heading "nom v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "nom":
+          - /url: /crates/nom
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A byte-oriented, zero-copy, parser combinators library
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: almost 2 years ago
+      - list:
+        - listitem:
+          - link "Documentation":
+            - /url: http://rust.unhandledexpression.com/nom/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/Geal/nom
+    - listitem:
+      - heading "libc v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "libc":
+          - /url: /crates/libc
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: This is the description for the crate called "libc"
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+    - listitem:
+      - heading "nanomsg-sys v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "nanomsg-sys":
+          - /url: /crates/nanomsg-sys
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: This is the description for the crate called "nanomsg-sys"
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+    - listitem:
+      - heading "mock-build-deps v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "mock-build-deps":
+          - /url: /crates/mock-build-deps
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: This is the description for the crate called "mock-build-deps"
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+    - listitem:
+      - heading "mock-dev-deps v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "mock-dev-deps":
+          - /url: /crates/mock-dev-deps
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: This is the description for the crate called "mock-dev-deps"
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+    - listitem:
+      - heading "rusted_cypher v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rusted_cypher":
+          - /url: /crates/rusted_cypher
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Send cypher queries to a neo4j database
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/livioribeiro/rusted-cypher
+        - listitem:
+          - link "Documentation":
+            - /url: http://livioribeiro.github.io/rusted_cypher/rusted_cypher/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/livioribeiro/rusted-cypher
+    - listitem:
+      - heading "zlib v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "zlib":
+          - /url: /crates/zlib
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: An (incomplete) port of zlib to Rust. The decompressor works, but the compressor has not yet been ported.
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: almost 3 years ago
+    - listitem:
+      - heading "rs-es v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "rs-es":
+          - /url: /crates/rs-es
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Client for the ElasticSearch REST API
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Documentation":
+            - /url: http://benashford.github.io/rs-es/rs_es/index.html
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/benashford/rs-es
+    - listitem:
+      - heading "postgres v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "postgres":
+          - /url: /crates/postgres
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: A native PostgreSQL driver
+      - img
+      - text: "/All-Time: \\d+,\\d+/"
+      - img
+      - text: "/Recent: \\d+/"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Documentation":
+            - /url: https://sfackler.github.io/rust-postgres/doc/v0.10.1/postgres
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/sfackler/rust-postgres
+    - listitem:
+      - heading "Inflector v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "Inflector":
+          - /url: /crates/Inflector
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Adds String based inflections for Rust. Snake, kebab, camel, sentence, class, title, upper, and lower cases as well as ordinalize, deordinalize, demodulize, and foreign key are supported as both trait …
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "Recent: 1"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/whatisinternet/inflector
+        - listitem:
+          - link "Documentation":
+            - /url: http://whatisinternet.github.io/inflector/doc/inflector/
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/whatisinternet/inflector
+    - listitem:
+      - heading "external_mixin_umbrella v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "external_mixin_umbrella":
+          - /url: /crates/external_mixin_umbrella
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: "Backing library for `rust_mixin` and `external_mixin` to keep them DRY."
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "Recent: 0"
+      - img
+      - text: "Updated:"
+      - time: over 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/huonw/external_mixin
+        - listitem:
+          - link "Documentation":
+            - /url: https://github.com/huonw/external_mixin#external_mixin_base
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/huonw/external_mixin
+    - listitem:
+      - heading "unicorn-rpc v0.2.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+        - link "unicorn-rpc":
+          - /url: /crates/unicorn-rpc
+        - text: ""
+        - button "Copy Cargo.toml snippet to clipboard":
+          - img "Copy Cargo.toml snippet to clipboard"
+      - text: Lexical analysers generator for Rust, written in Rust (crate dedicated to rumblebars, divergences written by Nicolas Cherel)
+      - img
+      - text: "/All-Time: \\d+/"
+      - img
+      - text: "Recent: 0"
+      - img
+      - text: "Updated:"
+      - time: about 2 years ago
+      - list:
+        - listitem:
+          - link "Homepage":
+            - /url: https://github.com/nicolas-cherel/rustlex
+        - listitem:
+          - link "Repository":
+            - /url: https://github.com/nicolas-cherel/rustlex
+  - navigation "Pagination navigation":
+    - img
+    - list:
+      - listitem:
+        - link "1":
+          - /url: "?page=1"
+    - img
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""
+- text: "Crates - crates.io: Rust Package Registry"

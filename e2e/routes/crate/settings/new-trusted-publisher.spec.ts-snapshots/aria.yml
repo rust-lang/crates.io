@@ -1,0 +1,113 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "User 1 (user-1) User 1 ▼":
+      - img "User 1 (user-1)"
+      - text: ""
+- main:
+  - heading "Add a new Trusted Publisher" [level=2]
+  - text: Publisher
+  - combobox "Publisher":
+    - option "GitHub" [selected]
+    - option "GitLab"
+  - text: Select the CI/CD platform where your publishing workflow is configured. Repository owner
+  - textbox "Repository owner"
+  - text: The GitHub organization name or GitHub username that owns the repository. Repository name
+  - textbox "Repository name"
+  - text: The name of the GitHub repository that contains the publishing workflow. Workflow filename
+  - textbox "Workflow filename"
+  - text: The filename of the publishing workflow. This file should be present in the
+  - code: .github/workflows/
+  - text: "directory of the repository configured above. For example:"
+  - code: release.yml
+  - text: or
+  - code: publish.yml
+  - text: . The workflow filename will be verified once all necessary fields are filled. Environment name (optional)
+  - textbox "Environment name (optional)"
+  - text: The name of the
+  - link "GitHub Actions environment":
+    - /url: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment
+  - text: that the above workflow uses for publishing. This should be configured in the repository settings. A dedicated publishing environment is not required, but is
+  - strong: strongly recommended
+  - text: ", especially if your repository has maintainers with commit access who should not have crates.io publishing access."
+  - button "Add"
+  - link "Cancel":
+    - /url: /crates/foo/settings
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""
+- text: "Add Trusted Publisher - foo - crates.io: Rust Package Registry"

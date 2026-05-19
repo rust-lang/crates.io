@@ -29,6 +29,7 @@ test.describe('Acceptance | Settings', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-owners] a[href="/users/blabaere"]').first()).toBeVisible();
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
   });
 

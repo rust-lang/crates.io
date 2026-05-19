@@ -19,6 +19,7 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-category="everything"] [data-test-crate-count]')).toHaveText('1,234 crates');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria-list.yml' });
     await a11y.audit();
   });
 
@@ -29,6 +30,7 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-category-sort] [data-test-current-order]')).toHaveText('Recent Downloads');
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria-detail.yml' });
     await a11y.audit();
   });
 

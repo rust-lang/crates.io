@@ -155,6 +155,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-invite="nanomsg"] [data-test-inviter-link]')).toHaveCount(0);
 
     await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
 
     invites = msw.db.crateOwnerInvitation.findMany(q =>
       q.where(inv => inv.crate.id === nanomsg.id && inv.invitee.id === user.id),

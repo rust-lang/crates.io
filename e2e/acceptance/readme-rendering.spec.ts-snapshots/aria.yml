@@ -1,0 +1,240 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - heading "serde v1.0.0" [level=1]
+  - text: This is the description for the crate called "serde"
+  - navigation "serde crate subpages":
+    - list:
+      - listitem:
+        - link "Readme":
+          - /url: /crates/serde
+      - listitem:
+        - link "1 Version":
+          - /url: /crates/serde/versions
+      - listitem:
+        - link "Dependencies":
+          - /url: /crates/serde/dependencies
+      - listitem:
+        - link "Dependents":
+          - /url: /crates/serde/reverse_dependencies
+      - listitem:
+        - link "Security":
+          - /url: /crates/serde/security
+  - article "Readme":
+    - paragraph: Note
+    - paragraph: Useful information that users should know, even when skimming content.
+    - paragraph: Tip
+    - paragraph: Helpful advice for doing things better or more easily.
+    - paragraph: Important
+    - paragraph: Key information users need to know to achieve their goal.
+    - paragraph: Warning
+    - paragraph: Urgent info that needs immediate user attention to avoid problems.
+    - paragraph: Caution
+    - paragraph: Advises about risks or negative outcomes of certain actions.
+    - paragraph: Note
+    - paragraph: Important
+    - paragraph: Caution
+    - paragraph: Rick roll
+    - paragraph: Never gonna give you up
+    - paragraph:
+      - strong:
+        - text: Serde is a framework for
+        - emphasis: ser
+        - text: ializing and
+        - emphasis: de
+        - text: serializing Rust data structures efficiently and generically.
+    - separator
+    - paragraph: "You may be looking for:"
+    - list:
+      - listitem:
+        - link "An overview of Serde":
+          - /url: https://serde.rs/
+      - listitem:
+        - link "Data formats supported by Serde":
+          - /url: https://serde.rs/#data-formats
+      - listitem:
+        - 'link "Setting up #[derive(Serialize, Deserialize)]"':
+          - /url: https://serde.rs/derive.html
+          - text: ""
+          - code: "#[derive(Serialize, Deserialize)]"
+      - listitem:
+        - link "Examples":
+          - /url: https://serde.rs/examples.html
+      - listitem:
+        - link "API documentation":
+          - /url: https://docs.serde.rs/serde/
+      - listitem:
+        - link "Release notes":
+          - /url: https://github.com/serde-rs/serde/releases
+    - heading "Serde in action" [level=2]:
+      - link:
+        - /url: "#serde-in-action"
+      - text: ""
+    - code: "use serde::{Serialize, Deserialize}; #[derive(Serialize, Deserialize, Debug)] struct Point { x: i32, y: i32, } fn main() { let point = Point { x: 1, y: 2 }; // Convert the Point to a JSON string. let serialized = serde_json::to_string(&point).unwrap(); // Prints serialized = {\"x\":1,\"y\":2} println!(\"serialized = {}\", serialized); // Convert the JSON string back to a Point. let deserialized: Point = serde_json::from_str(&serialized).unwrap(); // Prints deserialized = Point { x: 1, y: 2 } println!(\"deserialized = {:?}\", deserialized); }"
+    - heading "Getting help" [level=2]:
+      - link:
+        - /url: "#getting-help"
+      - text: ""
+    - paragraph:
+      - text: Serde is one of the most widely used Rust libraries so any place that Rustaceans congregate will be able to help you out. For chat, consider trying the
+      - link "#general":
+        - /url: https://discord.com/channels/273534239310479360/274215136414400513
+      - text: or
+      - link "#beginners":
+        - /url: https://discord.com/channels/273534239310479360/273541522815713281
+      - text: channels of the unofficial community Discord, the
+      - link "#rust-usage":
+        - /url: https://discord.com/channels/442252698964721669/443150878111694848
+      - text: channel of the official Rust Project Discord, or the
+      - link "#general":
+        - /url: https://rust-lang.zulipchat.com/#narrow/stream/122651-general
+      - text: stream in Zulip. For asynchronous, consider the
+      - link "[rust] tag on StackOverflow":
+        - /url: https://stackoverflow.com/questions/tagged/rust
+      - text: ", the"
+      - link "/r/rust":
+        - /url: https://www.reddit.com/r/rust
+      - text: subreddit which has a pinned weekly easy questions post, or the Rust
+      - link "Discourse forum":
+        - /url: https://users.rust-lang.org
+      - text: . It's acceptable to file a support issue in this repo but they tend not to get as many eyes as any of the above and may get closed without a response after some time.
+    - paragraph:
+      - text: Hello World!
+      - superscript:
+        - link "1":
+          - /url: "#user-content-fn-1"
+    - code:
+      - document:
+        - paragraph: A
+        - paragraph: B
+        - paragraph: C
+        - paragraph: D
+    - list:
+      - listitem:
+        - paragraph: Delegate to a method with a different name
+        - code: "struct Stack { inner: Vec<u32> } impl Stack { delegate! { to self.inner { #[call(push)] pub fn add(&mut self, value: u32); } } }"
+    - list:
+      - listitem:
+        - paragraph:
+          - text: Hello Ferris, actually!
+          - link "↩":
+            - /url: "#user-content-fnref-1"
+  - region "Crate metadata":
+    - heading "Metadata" [level=2]
+    - time:
+      - img
+      - text: over 7 years ago
+    - img
+    - link "MIT":
+      - /url: https://choosealicense.com/licenses/mit
+    - img
+    - text: /\d+ SLoC/
+    - img
+    - text: /\d+ KiB/
+    - img
+    - button "pkg:cargo/serde@1.0.0?repository_url=https%3A%2F%2Flocalhost%3A4173%2F"
+    - link "Learn more":
+      - /url: https://github.com/package-url/purl-spec
+      - img
+    - heading "Install" [level=2]
+    - paragraph: "Run the following Cargo command in your project directory:"
+    - button "cargo add serde"
+    - paragraph: "Or add the following line to your Cargo.toml:"
+    - button "serde = \"1.0.0\""
+    - heading "Browse source" [level=2]
+    - img
+    - link "docs.rs/crate/serde/1.0.0/source":
+      - /url: https://docs.rs/crate/serde/1.0.0/source/
+    - heading "Owners" [level=2]
+    - list
+    - link "Report crate":
+      - /url: /support?crate=serde&inquire=crate-violation
+  - heading "Stats Overview" [level=3]
+  - img
+  - text: /\d+,\d+ Downloads all time/
+  - img
+  - text: 1 Versions published
+  - heading /Downloads over the last \d+ days/ [level=4]
+  - text: Display as
+  - button "Stacked ▼"
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""

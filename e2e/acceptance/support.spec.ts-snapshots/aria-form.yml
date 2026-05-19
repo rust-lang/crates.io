@@ -1,0 +1,117 @@
+- banner:
+  - link "crates.io":
+    - /url: /
+    - heading "crates.io" [level=1]
+  - search:
+    - textbox "Search":
+      - /placeholder: Type 'S' or '/' to search
+    - button "Submit":
+      - text: ""
+      - img
+  - navigation:
+    - button "Change color scheme":
+      - img
+      - text: ""
+    - link "Browse All Crates":
+      - /url: /crates
+    - text: "|"
+    - button "Log in with GitHub":
+      - img
+      - text: ""
+- main:
+  - heading "Contact Us" [level=1]
+  - heading "Report A Crate" [level=2]
+  - group:
+    - text: Crate
+    - textbox "Crate"
+  - group:
+    - text: Reasons
+    - list:
+      - listitem:
+        - checkbox "it contains spam"
+        - text: it contains spam
+      - listitem:
+        - checkbox "it is name-squatting (reserving a crate name without content)"
+        - text: it is name-squatting (reserving a crate name without content)
+      - listitem:
+        - checkbox "it is abusive or otherwise harmful"
+        - text: it is abusive or otherwise harmful
+      - listitem:
+        - checkbox "it contains malicious code"
+        - text: it contains malicious code
+      - listitem:
+        - checkbox "it contains a vulnerability"
+        - text: it contains a vulnerability
+      - listitem:
+        - checkbox "it is violating the usage policy in some other way (please specify below)"
+        - text: it is violating the usage policy in some other way (please specify below)
+  - group:
+    - text: Detail
+    - textbox "Detail"
+  - button "Report to help@crates.io":
+    - text: ""
+    - strong: help@crates.io
+- contentinfo:
+  - heading "Rust" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang.org":
+        - /url: https://www.rust-lang.org/
+    - listitem:
+      - link "Rust Foundation":
+        - /url: https://foundation.rust-lang.org/
+    - listitem:
+      - link "The crates.io team":
+        - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
+  - heading "Get Help" [level=1]
+  - list:
+    - listitem:
+      - link "The Cargo Book":
+        - /url: https://doc.rust-lang.org/cargo/
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "System Status":
+        - /url: https://status.crates.io/
+    - listitem:
+      - link "Report a bug":
+        - /url: https://github.com/rust-lang/crates.io/issues/new/choose
+  - heading "Policies" [level=1]
+  - list:
+    - listitem:
+      - link "Usage Policy":
+        - /url: /policies
+    - listitem:
+      - link "Security":
+        - /url: /policies/security
+    - listitem:
+      - link "Privacy Policy":
+        - /url: https://foundation.rust-lang.org/policies/privacy-policy/
+    - listitem:
+      - link "Code of Conduct":
+        - /url: https://www.rust-lang.org/policies/code-of-conduct
+    - listitem:
+      - link "Data Access":
+        - /url: /data-access
+    - listitem:
+      - link "Rate Limits":
+        - /url: /docs/rate-limits
+  - heading "Social" [level=1]
+  - list:
+    - listitem:
+      - link "rust-lang/crates.io":
+        - /url: https://github.com/rust-lang/crates.io/
+        - img
+        - text: ""
+    - listitem:
+      - link "#t-crates-io":
+        - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
+        - img
+        - text: ""
+    - listitem:
+      - link "@cratesiostatus":
+        - /url: https://twitter.com/cratesiostatus
+        - img
+        - text: ""
+- text: "crates.io: Rust Package Registry"
