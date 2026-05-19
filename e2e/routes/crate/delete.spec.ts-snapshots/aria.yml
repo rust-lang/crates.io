@@ -15,13 +15,13 @@
   - paragraph: Are you sure you want to delete the crate "foo"?
   - strong: "Important:"
   - text: This action will permanently delete the crate and its associated versions. Deleting a crate cannot be reversed!
-  - heading "Potential Impact:" [level=3]
+  - heading "Potential Impact:" [level=2]
   - list:
     - listitem: Users will no longer be able to download this crate.
     - listitem: Any dependencies or projects relying on this crate will be broken.
     - listitem: Deleted crates cannot be restored.
     - listitem: /Publishing a crate with the same name will be blocked for \d+ hours\./
-  - heading "Requirements:" [level=3]
+  - heading "Requirements:" [level=2]
   - paragraph: A crate can only be deleted if it is not depended upon by any other crate on crates.io.
   - paragraph: "Additionally, a crate can only be deleted if either:"
   - list:
@@ -34,7 +34,7 @@
           - text: the crate only has a single owner,
           - emphasis: and
         - listitem: /the crate has been downloaded less than \d+ times for each month it has been published\./
-  - heading "Reason:" [level=3]
+  - heading "Reason:" [level=2]
   - paragraph: "Please tell us why you are deleting this crate:"
   - textbox "Please tell us why you are deleting this crate:"
   - checkbox "I understand that deleting this crate is permanent and cannot be undone."

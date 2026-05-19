@@ -65,7 +65,7 @@
     </Alert>
 
     <div class="impact">
-      <h3>Potential Impact:</h3>
+      <h2>Potential Impact:</h2>
       <ul>
         <li>Users will no longer be able to download this crate.</li>
         <li>Any dependencies or projects relying on this crate will be broken.</li>
@@ -75,7 +75,7 @@
     </div>
 
     <div class="requirements">
-      <h3>Requirements:</h3>
+      <h2>Requirements:</h2>
       <p>A crate can only be deleted if it is not depended upon by any other crate on crates.io.</p>
       <p>Additionally, a crate can only be deleted if either:</p>
       <ol class="first">
@@ -93,7 +93,7 @@
     </div>
 
     <div class="reason">
-      <h3>Reason:</h3>
+      <h2>Reason:</h2>
       <label>
         <p>Please tell us why you are deleting this crate:</p>
         <input type="text" bind:value={reason} required class="reason-input base-input" data-test-reason />
@@ -135,6 +135,11 @@
 
   .title {
     margin-top: 0;
+  }
+
+  h2 {
+    font-size: 1.17em;
+    margin: 1em 0;
   }
 
   .impact,
