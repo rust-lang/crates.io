@@ -220,10 +220,10 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
-    await expect(page.locator('[data-test-license]')).toHaveText('Apache-2.0');
+    await expect(page.locator('[data-test-license]')).toHaveText(/License:\s*Apache-2\.0/);
 
     await page.goto('/crates/nanomsg/0.5.0');
-    await expect(page.locator('[data-test-license]')).toHaveText('MIT OR Apache-2.0');
+    await expect(page.locator('[data-test-license]')).toHaveText(/License:\s*MIT OR Apache-2\.0/);
   });
 
   test('sidebar shows correct information', async ({ page, msw }) => {

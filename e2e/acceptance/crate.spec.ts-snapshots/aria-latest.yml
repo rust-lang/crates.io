@@ -35,30 +35,20 @@
   - text: file
   - region "Crate metadata":
     - heading "Metadata" [level=2]
-    - time:
-      - img
-      - text: over 7 years ago
-    - img
-    - text: /v1\.\d+\.\d+/
-    - img
+    - time: "Release date: over 7 years ago"
+    - text: "/Minimum Rust version: v1\\.\\d+\\.\\d+ License:/"
     - link "Apache-2.0":
       - /url: https://choosealicense.com/licenses/apache-2.0
-    - img
-    - text: /\d+,\d+ SLoC/
-    - img
-    - text: /\d+ KiB/
-    - img
+    - text: "/\\d+,\\d+ SLoC Size: \\d+ KiB Package URL:/"
     - button "pkg:cargo/nanomsg@0.6.1?repository_url=https%3A%2F%2Flocalhost%3A4173%2F"
     - link "Learn more":
       - /url: https://github.com/package-url/purl-spec
-      - img
     - heading "Install" [level=2]
     - paragraph: "Run the following Cargo command in your project directory:"
     - button "cargo add nanomsg"
     - paragraph: "Or add the following line to your Cargo.toml:"
     - button "nanomsg = \"0.6.1\""
     - heading "Browse source" [level=2]
-    - img
     - link "docs.rs/crate/nanomsg/0.6.1/source":
       - /url: https://docs.rs/crate/nanomsg/0.6.1/source/
     - heading "Owners" [level=2]
@@ -66,10 +56,7 @@
     - link "Report crate":
       - /url: /support?crate=nanomsg&inquire=crate-violation
   - heading "Stats Overview" [level=3]
-  - img
-  - text: /\d+,\d+ Downloads all time/
-  - img
-  - text: 2 Versions published
+  - text: /\d+,\d+ Downloads all time 2 Versions published/
   - heading /Downloads over the last \d+ days/ [level=4]
   - text: Display as
   - button "Stacked"
