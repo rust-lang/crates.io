@@ -17,9 +17,8 @@
     - link "nanomsg":
       - /url: /crates/nanomsg
     - text: .
-  - heading "ember-rs" [level=3]:
-    - link "ember-rs":
-      - /url: /crates/ember-rs
+  - link "ember-rs":
+    - /url: /crates/ember-rs
   - text: "Invited by:"
   - link "wycats":
     - /url: /users/wycats
