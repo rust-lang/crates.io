@@ -131,9 +131,17 @@
         <TrashIcon aria-hidden="true" />
         <span class="sr-only">Yanked</span>
       {:else if !semver}
-        ?
+        <span aria-hidden="true">?</span>
+        <span class="sr-only">Unable to parse version</span>
       {:else}
-        {releaseTrack}
+        <span aria-hidden="true">{releaseTrack}</span>
+        <span class="sr-only">
+          Release track {releaseTrack}
+          {#if isPrerelease || isHighestOfReleaseTrack}
+            ({#if isPrerelease}prerelease{/if}{#if isPrerelease && isHighestOfReleaseTrack},
+            {/if}{#if isHighestOfReleaseTrack}latest{/if})
+          {/if}
+        </span>
       {/if}
 
       <Tooltip side="right">

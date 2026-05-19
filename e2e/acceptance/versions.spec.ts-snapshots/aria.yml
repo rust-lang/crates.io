@@ -40,7 +40,7 @@
     - text: ""
   - list:
     - listitem:
-      - text: "0.2"
+      - text: Release track 0.2 (latest)
       - link "0.2.1":
         - /url: /crates/nanomsg/0.2.1
       - list "Version metadata":
@@ -55,7 +55,7 @@
           - link "MIT":
             - /url: https://choosealicense.com/licenses/mit
     - listitem:
-      - text: "0.3"
+      - text: Release track 0.3 (latest)
       - link "0.3.0":
         - /url: /crates/nanomsg/0.3.0
       - list "Version metadata":
@@ -70,7 +70,7 @@
           - link "Apache-2.0":
             - /url: https://choosealicense.com/licenses/apache-2.0
     - listitem:
-      - text: "0.2"
+      - text: Release track 0.2
       - link "0.2.0":
         - /url: /crates/nanomsg/0.2.0
       - list "Version metadata":
@@ -81,7 +81,7 @@
           - link "Apache-2.0":
             - /url: https://choosealicense.com/licenses/apache-2.0
     - listitem:
-      - text: "0.1"
+      - text: Release track 0.1 (latest)
       - link "0.1.0":
         - /url: /crates/nanomsg/0.1.0
       - list "Version metadata":
