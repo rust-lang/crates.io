@@ -169,10 +169,10 @@
     </a>
   </div>
 
-  <div class="metadata">
-    <div class="metadata-row">
+  <div class="metadata" role="list" aria-label="Version metadata">
+    <div class="metadata-row" role="presentation">
       {#if publishedBy}
-        <span class="publisher">
+        <span class="publisher" role="listitem">
           by
           <a href={resolve('/users/[user_id]', { user_id: publishedBy.login })}>
             <UserAvatar user={publishedBy} class="avatar" />
@@ -180,7 +180,7 @@
           </a>
         </span>
       {:else if trustpubPublisher}
-        <span class="publisher trustpub">
+        <span class="publisher trustpub" role="listitem">
           via
           {#if trustpubUrl}
             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -203,7 +203,7 @@
         </span>
       {/if}
 
-      <time datetime={formatISO(version.created_at)} class="date" class:new={isNew}>
+      <time datetime={formatISO(version.created_at)} class="date" class:new={isNew} role="listitem">
         <CalendarIcon aria-hidden="true" />
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
 
@@ -217,22 +217,22 @@
     </div>
 
     {#if version.crate_size || version.license || featureList.length !== 0}
-      <div class="metadata-row">
+      <div class="metadata-row" role="presentation">
         {#if version.rust_version}
-          <span class="msrv">
+          <span class="msrv" role="listitem">
             <RustIcon aria-hidden="true" />
             <span class="sr-only">Minimum Rust version:</span>
             <Msrv msrv={version.rust_version} edition={version.edition} />
           </span>
         {:else if version.edition}
-          <span class="edition">
+          <span class="edition" role="listitem">
             <RustIcon aria-hidden="true" />
             <Edition edition={version.edition} />
           </span>
         {/if}
 
         {#if version.crate_size}
-          <span class="bytes">
+          <span class="bytes" role="listitem">
             <WeightIcon aria-hidden="true" />
             <span class="sr-only">Size:</span>
             {prettyBytes(version.crate_size, { binary: true })}
@@ -240,7 +240,7 @@
         {/if}
 
         {#if version.license}
-          <span class="license">
+          <span class="license" role="listitem">
             <LicenseIcon aria-hidden="true" />
             <span class="sr-only">License:</span>
             <LicenseExpression license={version.license} />
@@ -248,7 +248,7 @@
         {/if}
 
         {#if featureList.length !== 0}
-          <span class="num-features" data-test-feature-list>
+          <span class="num-features" role="listitem" data-test-feature-list>
             <CheckboxIcon aria-hidden="true" />
             {featureList.length}
             {featureList.length === 1 ? 'Feature' : 'Features'}

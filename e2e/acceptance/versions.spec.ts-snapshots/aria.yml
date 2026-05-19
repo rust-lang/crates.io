@@ -43,40 +43,54 @@
       - text: "0.2"
       - link "0.2.1":
         - /url: /crates/nanomsg/0.2.1
-      - text: via
-      - link "GitHub":
-        - /url: https://github.com/octo-org/octo-repo/actions/runs/1234567890
-      - time: in about 2 years
-      - text: "/Size: \\d+ KiB License:/"
-      - link "MIT":
-        - /url: https://choosealicense.com/licenses/mit
+      - list "Version metadata":
+        - listitem:
+          - text: via
+          - link "GitHub":
+            - /url: https://github.com/octo-org/octo-repo/actions/runs/1234567890
+        - listitem: in about 2 years
+        - listitem: "/Size: \\d+ KiB/"
+        - listitem:
+          - text: "License:"
+          - link "MIT":
+            - /url: https://choosealicense.com/licenses/mit
     - listitem:
       - text: "0.3"
       - link "0.3.0":
         - /url: /crates/nanomsg/0.3.0
-      - time: in about 1 year
-      - text: "/Minimum Rust version: v1\\.\\d+\\.\\d+ Size: \\d+ KiB License:/"
-      - link "MIT":
-        - /url: https://choosealicense.com/licenses/mit
-      - text: OR
-      - link "Apache-2.0":
-        - /url: https://choosealicense.com/licenses/apache-2.0
+      - list "Version metadata":
+        - listitem: in about 1 year
+        - listitem: "/Minimum Rust version: v1\\.\\d+\\.\\d+/"
+        - listitem: "/Size: \\d+ KiB/"
+        - listitem:
+          - text: "License:"
+          - link "MIT":
+            - /url: https://choosealicense.com/licenses/mit
+          - text: OR
+          - link "Apache-2.0":
+            - /url: https://choosealicense.com/licenses/apache-2.0
     - listitem:
       - text: "0.2"
       - link "0.2.0":
         - /url: /crates/nanomsg/0.2.0
-      - time: in about 1 month
-      - text: "/Size: \\d+ KiB License:/"
-      - link "Apache-2.0":
-        - /url: https://choosealicense.com/licenses/apache-2.0
+      - list "Version metadata":
+        - listitem: in about 1 month
+        - listitem: "/Size: \\d+ KiB/"
+        - listitem:
+          - text: "License:"
+          - link "Apache-2.0":
+            - /url: https://choosealicense.com/licenses/apache-2.0
     - listitem:
       - text: "0.1"
       - link "0.1.0":
         - /url: /crates/nanomsg/0.1.0
-      - time: /\d+ months ago/
-      - text: "/Size: \\d+ KiB License:/"
-      - link "MIT":
-        - /url: https://choosealicense.com/licenses/mit
+      - list "Version metadata":
+        - listitem: /\d+ months ago/
+        - listitem: "/Size: \\d+ KiB/"
+        - listitem:
+          - text: "License:"
+          - link "MIT":
+            - /url: https://choosealicense.com/licenses/mit
 - contentinfo:
   - heading "Rust" [level=2]
   - list:
