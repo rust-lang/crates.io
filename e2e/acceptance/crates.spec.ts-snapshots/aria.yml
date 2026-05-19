@@ -24,8 +24,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A \\(mostly\\) pure-Rust implementation of various common cryptographic algorithms\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+,\\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A (mostly) pure-Rust implementation of various common cryptographic algorithms.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+,\\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -40,8 +45,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A generic serialization\\/deserialization framework All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A generic serialization/deserialization framework
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Documentation":
@@ -56,8 +66,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A high-level, Rust idiomatic wrapper around nanomsg\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: /\d+ months ago/
+      - text: A high-level, Rust idiomatic wrapper around nanomsg.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: /\d+ months ago/
       - list:
         - listitem:
           - link "Homepage":
@@ -75,8 +90,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A macro attribute for quickcheck\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A macro attribute for quickcheck.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -94,8 +114,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Rustless is a REST-like API micro-framework for Rust\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: Rustless is a REST-like API micro-framework for Rust.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -110,8 +135,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Use your favourite interpreted language to generate your Rust, right in your Rust\\. Supports Python, Ruby and shell \\(`sh`\\) out of the box, with an extensible macro to support any others\\. \\(See `rust_mix … All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: "Use your favourite interpreted language to generate your Rust, right in your Rust. Supports Python, Ruby and shell (`sh`) out of the box, with an extensible macro to support any others. (See `rust_mix …"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -129,8 +159,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Automatic property based testing with shrinking\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: Automatic property based testing with shrinking.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -148,8 +183,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A Kinetic protocol library written in Rust All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: A Kinetic protocol library written in Rust
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -167,8 +207,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Yo dawg, use Rust to generate Rust, right in your Rust\\. \\(See `external_mixin` to use scripting languages\\.\\) All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: "Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -186,8 +231,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Repository":
@@ -199,8 +249,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Documentation":
@@ -215,8 +270,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A byte-oriented, zero-copy, parser combinators library All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: almost 2 years ago
+      - text: A byte-oriented, zero-copy, parser combinators library
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: almost 2 years ago
       - list:
         - listitem:
           - link "Documentation":
@@ -231,8 +291,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/This is the description for the crate called \"libc\" All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: This is the description for the crate called "libc"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
     - listitem:
       - heading "nanomsg-sys v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
         - link "nanomsg-sys":
@@ -240,8 +305,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/This is the description for the crate called \"nanomsg-sys\" All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: This is the description for the crate called "nanomsg-sys"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
     - listitem:
       - heading "mock-build-deps v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
         - link "mock-build-deps":
@@ -249,8 +319,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/This is the description for the crate called \"mock-build-deps\" All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: This is the description for the crate called "mock-build-deps"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
     - listitem:
       - heading "mock-dev-deps v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
         - link "mock-dev-deps":
@@ -258,8 +333,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/This is the description for the crate called \"mock-dev-deps\" All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: This is the description for the crate called "mock-dev-deps"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
     - listitem:
       - heading "rusted_cypher v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
         - link "rusted_cypher":
@@ -267,8 +347,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Send cypher queries to a neo4j database All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: Send cypher queries to a neo4j database
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -286,8 +371,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/An \\(incomplete\\) port of zlib to Rust\\. The decompressor works, but the compressor has not yet been ported\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: almost 3 years ago
+      - text: An (incomplete) port of zlib to Rust. The decompressor works, but the compressor has not yet been ported.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: almost 3 years ago
     - listitem:
       - heading "rs-es v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
         - link "rs-es":
@@ -295,8 +385,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Client for the ElasticSearch REST API All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: Client for the ElasticSearch REST API
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Documentation":
@@ -311,8 +406,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A native PostgreSQL driver All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A native PostgreSQL driver
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Documentation":
@@ -327,8 +427,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Adds String based inflections for Rust\\. Snake, kebab, camel, sentence, class, title, upper, and lower cases as well as ordinalize, deordinalize, demodulize, and foreign key are supported as both trait … All-Time Downloads : \\d+ Recent Downloads : 1 Updated:/"
-      - time: about 2 years ago
+      - text: Adds String based inflections for Rust. Snake, kebab, camel, sentence, class, title, upper, and lower cases as well as ordinalize, deordinalize, demodulize, and foreign key are supported as both trait …
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "Recent Downloads : 1"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -346,8 +451,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Backing library for `rust_mixin` and `external_mixin` to keep them DRY\\. All-Time Downloads : \\d+ Recent Downloads : 0 Updated:/"
-      - time: over 2 years ago
+      - text: "Backing library for `rust_mixin` and `external_mixin` to keep them DRY."
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "Recent Downloads : 0"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -365,8 +475,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Lexical analysers generator for Rust, written in Rust \\(crate dedicated to rumblebars, divergences written by Nicolas Cherel\\) All-Time Downloads : \\d+ Recent Downloads : 0 Updated:/"
-      - time: about 2 years ago
+      - text: Lexical analysers generator for Rust, written in Rust (crate dedicated to rumblebars, divergences written by Nicolas Cherel)
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "Recent Downloads : 0"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":

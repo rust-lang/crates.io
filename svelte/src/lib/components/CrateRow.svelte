@@ -50,8 +50,8 @@
     {/if}
   </div>
 
-  <div class="stats">
-    <div class="downloads" data-test-downloads>
+  <ul class="stats" role="list" aria-label="Statistics">
+    <li class="downloads" data-test-downloads>
       <DownloadIcon class="download-icon" aria-hidden="true" />
       <span>
         <span>
@@ -60,8 +60,8 @@
         </span>
         {crate.downloads.toLocaleString()}
       </span>
-    </div>
-    <div class="recent-downloads" data-test-recent-downloads>
+    </li>
+    <li class="recent-downloads" data-test-recent-downloads>
       <DownloadIcon class="download-icon" aria-hidden="true" />
       <span>
         <span>
@@ -70,8 +70,8 @@
         </span>
         {(crate.recent_downloads ?? 0).toLocaleString()}
       </span>
-    </div>
-    <div class="updated-at">
+    </li>
+    <li class="updated-at">
       <LatestUpdatesIcon height="32" width="32" aria-hidden="true" />
       <span>
         <span>
@@ -83,8 +83,8 @@
           <Tooltip text={updatedAt.toString()} />
         </time>
       </span>
-    </div>
-  </div>
+    </li>
+  </ul>
 
   {#if crate.homepage || crate.documentation || crate.repository}
     <ul class="quick-links">
@@ -185,6 +185,9 @@
   .stats {
     width: 30%;
     color: var(--main-color-light);
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
     > :global(* + *) {
       margin-top: var(--space-xs);

@@ -25,8 +25,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A Kinetic protocol library written in Rust All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: A Kinetic protocol library written in Rust
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -44,8 +49,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Yo dawg, use Rust to generate Rust, right in your Rust\\. \\(See `external_mixin` to use scripting languages\\.\\) All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: over 2 years ago
+      - text: "Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)"
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: over 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -63,8 +73,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A \\(mostly\\) pure-Rust implementation of various common cryptographic algorithms\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+,\\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A (mostly) pure-Rust implementation of various common cryptographic algorithms.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+,\\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -79,8 +94,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Repository":
@@ -92,8 +112,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Rustless is a REST-like API micro-framework for Rust\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: Rustless is a REST-like API micro-framework for Rust.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -108,8 +133,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/Send cypher queries to a neo4j database All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: Send cypher queries to a neo4j database
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Homepage":
@@ -127,8 +157,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive\\. All-Time Downloads : \\d+ Recent Downloads : \\d+ Updated:/"
-      - time: about 2 years ago
+      - text: A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: about 2 years ago
       - list:
         - listitem:
           - link "Documentation":

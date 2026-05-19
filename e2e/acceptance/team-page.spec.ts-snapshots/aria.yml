@@ -29,8 +29,13 @@
         - text: ""
         - button "Copy Cargo.toml snippet to clipboard":
           - img "Copy Cargo.toml snippet to clipboard"
-      - text: "/A high-level, Rust idiomatic wrapper around nanomsg\\. All-Time Downloads : \\d+,\\d+ Recent Downloads : \\d+ Updated:/"
-      - time: /\d+ months ago/
+      - text: A high-level, Rust idiomatic wrapper around nanomsg.
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: /\d+ months ago/
       - list:
         - listitem:
           - link "Homepage":
