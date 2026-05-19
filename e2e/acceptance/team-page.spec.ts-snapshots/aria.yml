@@ -27,16 +27,14 @@
         - link "nanomsg":
           - /url: /crates/nanomsg
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: A high-level, Rust idiomatic wrapper around nanomsg.
-      - img
-      - text: "/All-Time: \\d+,\\d+/"
-      - img
-      - text: "/Recent: \\d+/"
-      - img
-      - text: "Updated:"
-      - time: /\d+ months ago/
+      - list "Statistics":
+        - listitem: "/All-Time Downloads : \\d+,\\d+/"
+        - listitem: "/Recent Downloads : \\d+/"
+        - listitem:
+          - text: "Updated:"
+          - time: /\d+ months ago/
       - list:
         - listitem:
           - link "Homepage":

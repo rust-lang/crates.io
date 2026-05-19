@@ -39,7 +39,7 @@
           class="copy-button button-reset"
           data-test-copy-toml-button
         >
-          <CopyIcon aria-label="Copy Cargo.toml snippet to clipboard" />
+          <CopyIcon aria-hidden="true" />
         </CopyButton>
       {/if}
     </div>
@@ -50,29 +50,29 @@
     {/if}
   </div>
 
-  <div class="stats">
-    <div class="downloads" data-test-downloads>
-      <DownloadIcon class="download-icon" />
+  <ul class="stats" role="list" aria-label="Statistics">
+    <li class="downloads" data-test-downloads>
+      <DownloadIcon class="download-icon" aria-hidden="true" />
       <span>
         <span>
-          All-Time:
+          All-Time<span class="sr-only"> Downloads</span>:
           <Tooltip text="Total number of downloads" />
         </span>
         {crate.downloads.toLocaleString()}
       </span>
-    </div>
-    <div class="recent-downloads" data-test-recent-downloads>
-      <DownloadIcon class="download-icon" />
+    </li>
+    <li class="recent-downloads" data-test-recent-downloads>
+      <DownloadIcon class="download-icon" aria-hidden="true" />
       <span>
         <span>
-          Recent:
+          Recent<span class="sr-only"> Downloads</span>:
           <Tooltip text="Downloads in the last 90 days" />
         </span>
         {(crate.recent_downloads ?? 0).toLocaleString()}
       </span>
-    </div>
-    <div class="updated-at">
-      <LatestUpdatesIcon height="32" width="32" />
+    </li>
+    <li class="updated-at">
+      <LatestUpdatesIcon height="32" width="32" aria-hidden="true" />
       <span>
         <span>
           Updated:
@@ -83,8 +83,8 @@
           <Tooltip text={updatedAt.toString()} />
         </time>
       </span>
-    </div>
-  </div>
+    </li>
+  </ul>
 
   {#if crate.homepage || crate.documentation || crate.repository}
     <ul class="quick-links">
@@ -185,6 +185,9 @@
   .stats {
     width: 30%;
     color: var(--main-color-light);
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
     > :global(* + *) {
       margin-top: var(--space-xs);
