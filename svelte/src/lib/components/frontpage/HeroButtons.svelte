@@ -9,12 +9,12 @@
     class="hero-button button"
     data-test-install-cargo-link
   >
-    <DownloadArrowIcon class="icon" />
+    <DownloadArrowIcon class="icon" aria-hidden="true" />
     Install Cargo
   </a>
 
   <a href="https://doc.rust-lang.org/cargo/guide/" class="hero-button button">
-    <FlagIcon class="icon" />
+    <FlagIcon class="icon" aria-hidden="true" />
     Getting Started
   </a>
 </div>

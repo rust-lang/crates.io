@@ -18,7 +18,7 @@
     <div class="title">{title}</div>
     {#if subtitle}<div class="subtitle">{subtitle}</div>{/if}
   </div>
-  <ChevronRightIcon class="right" />
+  <ChevronRightIcon class="right" aria-hidden="true" />
 </a>
 
 <style>
