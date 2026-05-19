@@ -173,6 +173,7 @@
       onfocusout={() => (focused = false)}
       data-test-release-track-link
     >
+      <span class="sr-only">Version</span>
       {version.num}
     </a>
   </div>
