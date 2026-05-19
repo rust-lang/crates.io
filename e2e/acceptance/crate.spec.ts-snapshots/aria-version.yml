@@ -75,7 +75,7 @@
   - text: Display as
   - button "Stacked"
 - contentinfo:
-  - heading "Rust" [level=1]
+  - heading "Rust" [level=2]
   - list:
     - listitem:
       - link "rust-lang.org":
@@ -86,7 +86,7 @@
     - listitem:
       - link "The crates.io team":
         - /url: https://www.rust-lang.org/governance/teams/dev-tools#team-crates-io
-  - heading "Get Help" [level=1]
+  - heading "Get Help" [level=2]
   - list:
     - listitem:
       - link "The Cargo Book":
@@ -100,7 +100,7 @@
     - listitem:
       - link "Report a bug":
         - /url: https://github.com/rust-lang/crates.io/issues/new/choose
-  - heading "Policies" [level=1]
+  - heading "Policies" [level=2]
   - list:
     - listitem:
       - link "Usage Policy":
@@ -120,20 +120,14 @@
     - listitem:
       - link "Rate Limits":
         - /url: /docs/rate-limits
-  - heading "Social" [level=1]
+  - heading "Social" [level=2]
   - list:
     - listitem:
-      - link "rust-lang/crates.io":
+      - 'link "GitHub: rust-lang/crates.io"':
         - /url: https://github.com/rust-lang/crates.io/
-        - img
-        - text: ""
     - listitem:
-      - link "#t-crates-io":
+      - 'link "Zulip: #t-crates-io"':
         - /url: https://rust-lang.zulipchat.com/#streams/318791/t-crates-io
-        - img
-        - text: ""
     - listitem:
-      - link "@cratesiostatus":
+      - 'link "X: @cratesiostatus"':
         - /url: https://twitter.com/cratesiostatus
-        - img
-        - text: ""

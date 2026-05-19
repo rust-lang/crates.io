@@ -9,7 +9,7 @@
 <footer class="footer">
   <div class="content width-limit">
     <div>
-      <h1>Rust</h1>
+      <h2>Rust</h2>
       <ul role="list">
         <li><a href="https://www.rust-lang.org/">rust-lang.org</a></li>
         <li><a href="https://foundation.rust-lang.org/">Rust Foundation</a></li>
@@ -18,7 +18,7 @@
     </div>
 
     <div>
-      <h1>Get Help</h1>
+      <h2>Get Help</h2>
       <ul role="list">
         <li><a href="https://doc.rust-lang.org/cargo/">The Cargo Book</a></li>
         <li><a href={resolve('/support')} data-test-support-link>Support</a></li>
@@ -28,7 +28,7 @@
     </div>
 
     <div>
-      <h1>Policies</h1>
+      <h2>Policies</h2>
       <ul role="list">
         <li><a href={resolve('/policies')}>Usage Policy</a></li>
         <li><a href={resolve('/policies/security')}>Security</a></li>
@@ -40,11 +40,26 @@
     </div>
 
     <div>
-      <h1>Social</h1>
+      <h2>Social</h2>
       <ul role="list">
-        <li><a href="https://github.com/rust-lang/crates.io/"><GitHub /> rust-lang/crates.io</a></li>
-        <li><a href="https://rust-lang.zulipchat.com/#streams/318791/t-crates-io"><Zulip /> #t-crates-io</a></li>
-        <li><a href="https://twitter.com/cratesiostatus"><Twitter /> @cratesiostatus</a></li>
+        <li>
+          <a href="https://github.com/rust-lang/crates.io/">
+            <GitHub aria-hidden="true" />
+            <span class="sr-only">GitHub: </span>rust-lang/crates.io
+          </a>
+        </li>
+        <li>
+          <a href="https://rust-lang.zulipchat.com/#streams/318791/t-crates-io">
+            <Zulip aria-hidden="true" />
+            <span class="sr-only">Zulip: </span>#t-crates-io
+          </a>
+        </li>
+        <li>
+          <a href="https://twitter.com/cratesiostatus">
+            <Twitter aria-hidden="true" />
+            <span class="sr-only">X: </span>@cratesiostatus
+          </a>
+        </li>
       </ul>
     </div>
   </div>
@@ -82,7 +97,7 @@
       grid-template-columns: repeat(4, 1fr);
     }
 
-    & h1 {
+    & h2 {
       margin: 0 0 var(--space-s);
       font-size: 20px;
       font-weight: 500;
