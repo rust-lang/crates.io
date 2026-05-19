@@ -107,8 +107,8 @@ importers:
   packages/crates-io-msw:
     dependencies:
       '@msw/data':
-        specifier: 1.1.5
-        version: 1.1.5
+        specifier: 1.1.6
+        version: 1.1.6
       msw:
         specifier: 2.14.6
         version: 2.14.6(@types/node@24.12.4)(typescript@6.0.3)
@@ -652,8 +652,8 @@ packages:
   '@mermaid-js/parser@1.1.1':
     resolution: {integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==}
 
-  '@msw/data@1.1.5':
-    resolution: {integrity: sha512-aqezecY8vvueOSMz8v19ZWpoM0Ei2VuuWt/MZuZ8NBvO2oJvZi5y8PGP6PVutuONu7ms0Or/Am4Rs6Ks9sfg7w==}
+  '@msw/data@1.1.6':
+    resolution: {integrity: sha512-Kp0JhuaQBgMR4C6sXdoDYUNeaF/JhhzLToumYiV9flciOwSzZe7FSnlMNcL9Yj1tm1R/3f8mktDR4M6y1xVS8Q==}
 
   '@msw/playwright@0.6.7':
     resolution: {integrity: sha512-q7m2JtnN1Iz25xauqx5lkD+tbbDM3oXZBg67aXr4EbxK7IZKTh6c71bbTCnDi/F2SuHq/jPUfS8NJXPcdroARA==}
@@ -4030,7 +4030,7 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@msw/data@1.1.5':
+  '@msw/data@1.1.6':
     dependencies:
       '@standard-schema/spec': 1.1.0
       es-toolkit: 1.46.1
