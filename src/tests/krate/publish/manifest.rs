@@ -1,7 +1,18 @@
 use crate::builders::PublishBuilder;
 use crate::util::insta::{any_id_redaction, id_redaction};
 use crate::util::{RequestHelper, TestApp};
+use crates_io::schema::versions;
+use diesel::QueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::{assert_json_snapshot, assert_snapshot};
+
+async fn lib_name_in_db(conn: &mut AsyncPgConnection) -> Option<String> {
+    versions::table
+        .select(versions::lib_name)
+        .first(conn)
+        .await
+        .unwrap()
+}
 
 #[tokio::test(flavor = "multi_thread")]
 async fn boolean_readme() {
@@ -170,7 +181,7 @@ async fn invalid_rust_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_lib_and_bin_crate() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
+    let (app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .add_file("foo-1.0.0/src/lib.rs", "pub fn foo() {}")
@@ -194,4 +205,60 @@ async fn test_lib_and_bin_crate() {
         ".version.audit_actions[].time" => "[datetime]",
         ".version.audit_actions[].user.id" => id_redaction(token.as_model().user_id),
     });
+
+    let mut conn = app.db_conn().await;
+    assert_eq!(lib_name_in_db(&mut conn).await.as_deref(), Some("foo"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_lib_name_hyphenated_crate() {
+    let (app, _anon, _cookie, token) = TestApp::full().with_token().await;
+
+    let publish_builder = PublishBuilder::new("foo-bar", "1.0.0")
+        .add_file("foo-bar-1.0.0/src/lib.rs", "pub fn foo() {}");
+
+    let response = token.publish_crate(publish_builder).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let mut conn = app.db_conn().await;
+    assert_eq!(lib_name_in_db(&mut conn).await.as_deref(), Some("foo_bar"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_lib_name_custom() {
+    let (app, _anon, _cookie, token) = TestApp::full().with_token().await;
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .custom_manifest(
+            r#"[package]
+name = "foo"
+version = "1.0.0"
+description = "description"
+license = "MIT"
+
+[lib]
+name = "my_lib"
+"#,
+        )
+        .add_file("foo-1.0.0/src/lib.rs", "pub fn foo() {}");
+
+    let response = token.publish_crate(publish_builder).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let mut conn = app.db_conn().await;
+    assert_eq!(lib_name_in_db(&mut conn).await.as_deref(), Some("my_lib"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_lib_name_bin_only() {
+    let (app, _anon, _cookie, token) = TestApp::full().with_token().await;
+
+    let publish_builder =
+        PublishBuilder::new("foo", "1.0.0").add_file("foo-1.0.0/src/main.rs", "fn main() {}");
+
+    let response = token.publish_crate(publish_builder).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let mut conn = app.db_conn().await;
+    assert_eq!(lib_name_in_db(&mut conn).await, None);
 }
