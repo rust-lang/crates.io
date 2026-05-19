@@ -128,11 +128,20 @@
   <div class="version">
     <div class="release-track" data-test-release-track>
       {#if version.yanked}
-        <TrashIcon />
+        <TrashIcon aria-hidden="true" />
+        <span class="sr-only">Yanked</span>
       {:else if !semver}
-        ?
+        <span aria-hidden="true">?</span>
+        <span class="sr-only">Unable to parse version</span>
       {:else}
-        {releaseTrack}
+        <span aria-hidden="true">{releaseTrack}</span>
+        <span class="sr-only">
+          Release track {releaseTrack}
+          {#if isPrerelease || isHighestOfReleaseTrack}
+            ({#if isPrerelease}prerelease{/if}{#if isPrerelease && isHighestOfReleaseTrack},
+            {/if}{#if isHighestOfReleaseTrack}latest{/if})
+          {/if}
+        </span>
       {/if}
 
       <Tooltip side="right">
@@ -164,46 +173,47 @@
       onfocusout={() => (focused = false)}
       data-test-release-track-link
     >
+      <span class="sr-only">Version</span>
       {version.num}
     </a>
   </div>
 
-  <div class="metadata">
-    <div class="metadata-row">
+  <div class="metadata" role="list" aria-label="Version metadata">
+    <div class="metadata-row" role="presentation">
       {#if publishedBy}
-        <span class="publisher">
+        <span class="publisher" role="listitem">
           by
           <a href={resolve('/users/[user_id]', { user_id: publishedBy.login })}>
-            <UserAvatar user={publishedBy} class="avatar" />
+            <UserAvatar user={publishedBy} class="avatar" aria-hidden="true" />
             {publishedBy.name ?? publishedBy.login}
           </a>
         </span>
       {:else if trustpubPublisher}
-        <span class="publisher trustpub">
+        <span class="publisher trustpub" role="listitem">
           via
           {#if trustpubUrl}
             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
             <a href={trustpubUrl} target="_blank" rel="nofollow noopener noreferrer">
               {#if trustpubProvider === 'github'}
-                <GitHubIcon />
+                <GitHubIcon aria-hidden="true" />
               {:else if trustpubProvider === 'gitlab'}
-                <GitLabIcon />
+                <GitLabIcon aria-hidden="true" />
               {/if}
               {trustpubPublisher}
             </a>
           {:else}
             {#if trustpubProvider === 'github'}
-              <GitHubIcon />
+              <GitHubIcon aria-hidden="true" />
             {:else if trustpubProvider === 'gitlab'}
-              <GitLabIcon />
+              <GitLabIcon aria-hidden="true" />
             {/if}
             {trustpubPublisher}
           {/if}
         </span>
       {/if}
 
-      <time datetime={formatISO(version.created_at)} class="date" class:new={isNew}>
-        <CalendarIcon />
+      <time datetime={formatISO(version.created_at)} class="date" class:new={isNew} role="listitem">
+        <CalendarIcon aria-hidden="true" />
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
 
         <Tooltip>
@@ -216,36 +226,39 @@
     </div>
 
     {#if version.crate_size || version.license || featureList.length !== 0}
-      <div class="metadata-row">
+      <div class="metadata-row" role="presentation">
         {#if version.rust_version}
-          <span class="msrv">
-            <RustIcon />
+          <span class="msrv" role="listitem">
+            <RustIcon aria-hidden="true" />
+            <span class="sr-only">Minimum Rust version:</span>
             <Msrv msrv={version.rust_version} edition={version.edition} />
           </span>
         {:else if version.edition}
-          <span class="edition">
-            <RustIcon />
+          <span class="edition" role="listitem">
+            <RustIcon aria-hidden="true" />
             <Edition edition={version.edition} />
           </span>
         {/if}
 
         {#if version.crate_size}
-          <span class="bytes">
-            <WeightIcon />
+          <span class="bytes" role="listitem">
+            <WeightIcon aria-hidden="true" />
+            <span class="sr-only">Size:</span>
             {prettyBytes(version.crate_size, { binary: true })}
           </span>
         {/if}
 
         {#if version.license}
-          <span class="license">
-            <LicenseIcon />
+          <span class="license" role="listitem">
+            <LicenseIcon aria-hidden="true" />
+            <span class="sr-only">License:</span>
             <LicenseExpression license={version.license} />
           </span>
         {/if}
 
         {#if featureList.length !== 0}
-          <span class="num-features" data-test-feature-list>
-            <CheckboxIcon />
+          <span class="num-features" role="listitem" data-test-feature-list>
+            <CheckboxIcon aria-hidden="true" />
             {featureList.length}
             {featureList.length === 1 ? 'Feature' : 'Features'}
 
@@ -254,11 +267,12 @@
                 {#each features.list as feature (feature.name)}
                   <li>
                     {#if feature.isDefault}
-                      <CheckboxIcon />
+                      <CheckboxIcon aria-hidden="true" />
                     {:else}
-                      <CheckboxEmptyIcon />
+                      <CheckboxEmptyIcon aria-hidden="true" />
                     {/if}
                     {feature.name}
+                    {#if feature.isDefault}<span class="sr-only">(default)</span>{/if}
                   </li>
                 {/each}
                 {#if features.more > 0}
@@ -279,7 +293,7 @@
   <PrivilegedAction userAuthorised={isOwner} class="actions">
     <Dropdown.Root class="dropdown" data-test-actions-menu>
       <Dropdown.Trigger hideArrow class="trigger" data-test-actions-toggle>
-        <EllipsisCircleIcon class="icon" />
+        <EllipsisCircleIcon class="icon" aria-hidden="true" />
         <span class="sr-only">Actions</span>
       </Dropdown.Trigger>
 
