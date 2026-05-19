@@ -184,7 +184,7 @@
         <span class="publisher" role="listitem">
           by
           <a href={resolve('/users/[user_id]', { user_id: publishedBy.login })}>
-            <UserAvatar user={publishedBy} class="avatar" />
+            <UserAvatar user={publishedBy} class="avatar" aria-hidden="true" />
             {publishedBy.name ?? publishedBy.login}
           </a>
         </span>
