@@ -13,9 +13,8 @@
 - main:
   - heading "Contact Us" [level=1]
   - heading "Report A Crate" [level=2]
-  - group:
-    - text: Crate
-    - textbox "Crate"
+  - text: Crate
+  - textbox "Crate"
   - group "Reasons":
     - list:
       - listitem:
@@ -36,9 +35,8 @@
       - listitem:
         - checkbox "it is violating the usage policy in some other way (please specify below)"
         - text: it is violating the usage policy in some other way (please specify below)
-  - group:
-    - text: Detail
-    - textbox "Detail"
+  - text: Detail
+  - textbox "Detail"
   - button "Report to help@crates.io":
     - text: ""
     - strong: help@crates.io
