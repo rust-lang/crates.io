@@ -39,7 +39,7 @@
           class="copy-button button-reset"
           data-test-copy-toml-button
         >
-          <CopyIcon aria-label="Copy Cargo.toml snippet to clipboard" />
+          <CopyIcon aria-hidden="true" />
         </CopyButton>
       {/if}
     </div>

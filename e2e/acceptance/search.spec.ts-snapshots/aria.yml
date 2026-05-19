@@ -23,8 +23,7 @@
         - link "kinetic-rust":
           - /url: /crates/kinetic-rust
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: A Kinetic protocol library written in Rust
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+/"
@@ -47,8 +46,7 @@
         - link "rust_mixin":
           - /url: /crates/rust_mixin
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: "Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)"
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+/"
@@ -71,8 +69,7 @@
         - link "rust-crypto":
           - /url: /crates/rust-crypto
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: A (mostly) pure-Rust implementation of various common cryptographic algorithms.
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+,\\d+/"
@@ -92,8 +89,7 @@
         - link "rust-htslib":
           - /url: /crates/rust-htslib
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files.
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+/"
@@ -110,8 +106,7 @@
         - link "rustless":
           - /url: /crates/rustless
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: Rustless is a REST-like API micro-framework for Rust.
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+/"
@@ -131,8 +126,7 @@
         - link "rusted_cypher":
           - /url: /crates/rusted_cypher
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: Send cypher queries to a neo4j database
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+/"
@@ -155,8 +149,7 @@
         - link "rustful":
           - /url: /crates/rustful
         - text: ""
-        - button "Copy Cargo.toml snippet to clipboard":
-          - img "Copy Cargo.toml snippet to clipboard"
+        - button "Copy Cargo.toml snippet to clipboard"
       - text: A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.
       - list "Statistics":
         - listitem: "/All-Time Downloads : \\d+/"
