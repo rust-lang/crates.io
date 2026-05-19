@@ -71,7 +71,6 @@
     inputmode="search"
     class="input-lg"
     name="q"
-    id="cargo-desktop-search"
     placeholder="Type 'S' or '/' to search"
     autocorrect="off"
     bind:value={searchFormContext.value}
