@@ -24,12 +24,12 @@
 <nav class="pagination" aria-label="Pagination navigation">
   {#if pagination.currentPage === 1}
     <span class="prev disabled" data-test-pagination-prev>
-      <LeftPagIcon />
+      <LeftPagIcon aria-hidden="true" />
     </span>
   {:else}
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params -->
     <a href={buildPageUrl(pagination.prevPage)} class="prev" rel="prev" title="previous page" data-test-pagination-prev>
-      <LeftPagIcon />
+      <LeftPagIcon aria-hidden="true" />
     </a>
   {/if}
 
@@ -51,7 +51,7 @@
 
   {#if pagination.currentPage === pagination.availablePages}
     <span class="next disabled" data-test-pagination-next>
-      <RightPagIcon />
+      <RightPagIcon aria-hidden="true" />
       {#if pagination.maxPages && pagination.currentPage === pagination.maxPages}
         <Tooltip>
           For performance reasons, no more pages are available. For bulk data access, please visit
@@ -62,7 +62,7 @@
   {:else}
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params -->
     <a href={buildPageUrl(pagination.nextPage)} class="next" rel="next" title="next page" data-test-pagination-next>
-      <RightPagIcon />
+      <RightPagIcon aria-hidden="true" />
     </a>
   {/if}
 </nav>

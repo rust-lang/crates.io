@@ -14,9 +14,7 @@
 - main:
   - heading "Search Results for 'rust'" [level=1]
   - text: Displaying 1-7 of 7 total results Sort by
-  - button "Relevance":
-    - img
-    - text: ""
+  - button "Relevance"
   - list:
     - listitem:
       - heading /kinetic-rust v0\.\d+\.\d+ Copy Cargo\.toml snippet to clipboard/ [level=2]:
@@ -165,12 +163,10 @@
           - link "Repository":
             - /url: https://github.com/Ogeon/rustful
   - navigation "Pagination navigation":
-    - img
     - list:
       - listitem:
         - link "1":
           - /url: "?q=rust&page=1"
-    - img
 - contentinfo:
   - heading "Rust" [level=2]
   - list:

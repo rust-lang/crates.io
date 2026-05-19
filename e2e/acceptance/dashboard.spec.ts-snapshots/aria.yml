@@ -12,37 +12,21 @@
     - button "John Doe"
 - main:
   - heading "My Dashboard" [level=1]
-  - img
   - text: /\d+,\d+ Total Downloads/
-  - heading "My Crates" [level=2]:
-    - img
-    - text: ""
+  - heading "My Crates" [level=2]
   - list:
     - listitem:
-      - link /nanomsg \(0\.1\.0\) \d+,\d+/:
+      - link /nanomsg \(0\.1\.0\) \d+,\d+ downloads/:
         - /url: /crates/nanomsg
-        - text: ""
-        - img
-        - text: ""
-  - heading "Following" [level=2]:
-    - img
-    - text: ""
+  - heading "Following" [level=2]
   - list:
     - listitem:
-      - link /rand \(1\.1\.0\) \d+,\d+/:
+      - link /rand \(1\.1\.0\) \d+,\d+ downloads/:
         - /url: /crates/rand
-        - text: ""
-        - img
-        - text: ""
     - listitem:
-      - link /nanomsg \(0\.1\.0\) \d+,\d+/:
+      - link /nanomsg \(0\.1\.0\) \d+,\d+ downloads/:
         - /url: /crates/nanomsg
-        - text: ""
-        - img
-        - text: ""
-  - heading "Latest Updates" [level=2]:
-    - img
-    - text: ""
+  - heading "Latest Updates" [level=2]
   - list:
     - listitem:
       - link "nanomsg 0.1.0":

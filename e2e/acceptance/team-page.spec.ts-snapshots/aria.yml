@@ -18,9 +18,7 @@
     - img "GitHub profile"
   - heading "thehydroimpulseteam" [level=2]
   - text: Displaying 1-1 of 1 total results Sort by
-  - button "Alphabetical":
-    - img
-    - text: ""
+  - button "Alphabetical"
   - list:
     - listitem:
       - heading "nanomsg v0.6.1 Copy Cargo.toml snippet to clipboard" [level=2]:
@@ -46,12 +44,10 @@
           - link "Repository":
             - /url: https://github.com/thehydroimpulse/nanomsg.rs
   - navigation "Pagination navigation":
-    - img
     - list:
       - listitem:
         - link "1":
           - /url: "?page=1"
-    - img
 - contentinfo:
   - heading "Rust" [level=2]
   - list:
