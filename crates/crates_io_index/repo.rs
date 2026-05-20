@@ -194,13 +194,13 @@ impl Repository {
         let mut names = Vec::new();
         tree.walk(git2::TreeWalkMode::PreOrder, |root, entry| {
             // Skip the top-level `.github` folder (GitHub Actions workflows, etc.).
-            if root.is_empty() && entry.name() == Some(".github") {
+            if root.is_empty() && entry.name() == Ok(".github") {
                 return git2::TreeWalkResult::Skip;
             }
 
             if !root.is_empty()
                 && entry.kind() == Some(git2::ObjectType::Blob)
-                && let Some(name) = entry.name()
+                && let Ok(name) = entry.name()
             {
                 names.push(name.to_string());
             }
