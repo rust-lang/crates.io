@@ -65,11 +65,9 @@
 {:else}
   <div class="row" data-test-invite={invite.crate_name}>
     <div class="crate-column">
-      <h3>
-        <a href={resolve('/crates/[crate_id]', { crate_id: invite.crate_name })} data-test-crate-link>
-          {invite.crate_name}
-        </a>
-      </h3>
+      <a class="crate-link" href={resolve('/crates/[crate_id]', { crate_id: invite.crate_name })} data-test-crate-link>
+        {invite.crate_name}
+      </a>
     </div>
     <div>
       Invited by:
@@ -113,9 +111,11 @@
 
   .crate-column {
     width: 200px;
+  }
 
-    h3 {
-      margin: 0;
-    }
+  .crate-link {
+    font-family: var(--font-heading);
+    font-size: 1.17em;
+    font-weight: bold;
   }
 </style>

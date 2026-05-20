@@ -12,20 +12,22 @@
     - button "User 3"
 - main:
   - heading "Pending Owner Invites" [level=1]
-  - paragraph:
-    - text: Success! You've been added as an owner of crate
-    - link "nanomsg":
-      - /url: /crates/nanomsg
-    - text: .
-  - heading "ember-rs" [level=3]:
-    - link "ember-rs":
-      - /url: /crates/ember-rs
-  - text: "Invited by:"
-  - link "wycats":
-    - /url: /users/wycats
-  - text: in about 3 years
-  - button "Accept"
-  - button "Decline"
+  - list:
+    - listitem:
+      - paragraph:
+        - text: Success! You've been added as an owner of crate
+        - link "nanomsg":
+          - /url: /crates/nanomsg
+        - text: .
+    - listitem:
+      - link "ember-rs":
+        - /url: /crates/ember-rs
+      - text: "Invited by:"
+      - link "wycats":
+        - /url: /users/wycats
+      - text: in about 3 years
+      - button "Accept"
+      - button "Decline"
 - contentinfo:
   - heading "Rust" [level=2]
   - list:

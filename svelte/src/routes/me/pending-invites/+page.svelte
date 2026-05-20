@@ -11,11 +11,17 @@
 <PageHeader title="Pending Owner Invites" />
 
 <div class="list">
-  {#each data.invites as invite (invite.crate_id)}
-    <PendingOwnerInviteRow {invite} />
+  {#if data.invites.length !== 0}
+    <ul>
+      {#each data.invites as invite (invite.crate_id)}
+        <li>
+          <PendingOwnerInviteRow {invite} />
+        </li>
+      {/each}
+    </ul>
   {:else}
     <p data-test-empty-state>You don't seem to have any pending invitations.</p>
-  {/each}
+  {/if}
 </div>
 
 <style>
@@ -24,13 +30,23 @@
     border-radius: var(--space-3xs);
     box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
     margin-bottom: var(--space-s);
+  }
 
-    > :global(*) {
-      padding: var(--space-s);
-    }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
 
-    > :global(* + *) {
+  li {
+    padding: var(--space-s);
+
+    & + & {
       border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
     }
+  }
+
+  p {
+    padding: var(--space-s);
   }
 </style>
