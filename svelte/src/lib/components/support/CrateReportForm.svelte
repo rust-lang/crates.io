@@ -109,7 +109,7 @@ ${detail}
 <form {...restProps} class="report-form" data-testid="crate-report-form" onsubmit={handleSubmit}>
   <h2>Report A Crate</h2>
 
-  <fieldset class="form-group" data-test-id="fieldset-crate">
+  <div class="form-group" data-test-id="fieldset-crate">
     <label for="{id}-crate" class="form-group-name">Crate</label>
     <!-- svelte-ignore a11y_autofocus -->
     <input
@@ -127,10 +127,10 @@ ${detail}
     {#if crateInvalid}
       <div class="form-group-error" data-test-id="crate-invalid">Please specify a crate.</div>
     {/if}
-  </fieldset>
+  </div>
 
   <fieldset class="form-group" data-test-id="fieldset-reasons">
-    <div class="form-group-name">Reasons</div>
+    <legend class="form-group-name">Reasons</legend>
     <ul role="list" class="reasons-list scopes-list" class:invalid={reasonsInvalid}>
       {#each REASONS as option (option.reason)}
         <li>
@@ -171,7 +171,7 @@ ${detail}
     </div>
   {/if}
 
-  <fieldset class="form-group" data-test-id="fieldset-detail">
+  <div class="form-group" data-test-id="fieldset-detail">
     <label for="{id}-detail" class="form-group-name">Detail</label>
     <textarea
       id="{id}-detail"
@@ -187,7 +187,7 @@ ${detail}
     {#if detailInvalid}
       <div class="form-group-error" data-test-id="detail-invalid">Please provide some detail.</div>
     {/if}
-  </fieldset>
+  </div>
 
   <div class="buttons">
     <button type="submit" class="report-button button button--small" data-test-id="report-button">
