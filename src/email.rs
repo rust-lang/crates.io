@@ -232,18 +232,46 @@ impl Emails {
 
     pub async fn send(&self, recipient: &str, email: EmailMessage) -> Result<(), EmailError> {
         let message_id = self.generate_message_id();
+        let template_name = email.template_name;
+
+        // Log only the domain portion of the recipient. The full address is PII and the
+        // Message-ID is enough to correlate a Datadog log entry with the corresponding
+        // delivery record in Mailgun, which already retains the full recipient. The
+        // domain on its own is still useful for spotting patterns like "all deliveries
+        // to a particular provider are failing".
+        let recipient_domain = recipient
+            .rsplit_once('@')
+            .map(|(_, d)| d)
+            .unwrap_or("<unknown>");
+
         let message = self.build_message(
-            message_id,
+            message_id.clone(),
             recipient,
             email.subject,
             email.body_text,
             email.body_html,
         )?;
 
-        self.backend
-            .send(message)
-            .await
-            .map_err(EmailError::TransportError)
+        match self.backend.send(message).await {
+            Ok(()) => {
+                tracing::info!(
+                    email.message_id = %message_id,
+                    email.template = template_name,
+                    email.recipient_domain = recipient_domain,
+                    "Sent {template_name} email to *@{recipient_domain}",
+                );
+                Ok(())
+            }
+            Err(err) => {
+                tracing::warn!(
+                    email.message_id = %message_id,
+                    email.template = template_name,
+                    email.recipient_domain = recipient_domain,
+                    "Failed to send {template_name} email to *@{recipient_domain}: {err}",
+                );
+                Err(EmailError::TransportError(err))
+            }
+        }
     }
 }
 
