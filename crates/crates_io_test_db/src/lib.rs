@@ -8,6 +8,7 @@ use diesel::sql_query;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::RngExt;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::LazyLock;
@@ -82,8 +83,11 @@ impl Management {
             .expect("failed to run migrations on the template schema");
         drop(template_conn);
 
-        let template_ddl =
-            capture_template_ddl(&base_url).expect("failed to capture template schema DDL");
+        let mut ddl_buf = Vec::new();
+        capture_template_ddl(&base_url, &mut ddl_buf)
+            .expect("failed to capture template schema DDL");
+
+        let template_ddl = String::from_utf8(ddl_buf).expect("pg_dump produced non-UTF-8 output");
 
         Management {
             base_url,
@@ -242,8 +246,8 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
     Ok(())
 }
 
-/// Shells out to `pg_dump --schema=<template>` and returns the captured DDL
-/// as SQL ready for `batch_execute`.
+/// Shells out to `pg_dump --schema=<template>` and writes the captured DDL
+/// as SQL ready for `batch_execute` into `out`.
 ///
 /// `pg_dump`'s plain-text output targets `psql`, not the backend. To make
 /// it backend-safe:
@@ -255,8 +259,8 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
 /// - A trailing `RESET ALL` clears any session state the preamble's
 ///   `SET` / `set_config('search_path', …)` calls left behind so it
 ///   doesn't leak to the next checkout of the pooled connection.
-#[instrument]
-fn capture_template_ddl(base_url: &Url) -> anyhow::Result<String> {
+#[instrument(skip(out))]
+fn capture_template_ddl(base_url: &Url, out: &mut impl Write) -> anyhow::Result<()> {
     let pg_dump = match var_parsed::<PathBuf>("POSTGRES_BIN_DIR")? {
         Some(dir) => dir.join("pg_dump"),
         None => PathBuf::from("pg_dump"),
@@ -279,21 +283,19 @@ fn capture_template_ddl(base_url: &Url) -> anyhow::Result<String> {
         ));
     }
 
-    let raw = String::from_utf8(output.stdout)
+    let raw = std::str::from_utf8(&output.stdout)
         .map_err(|err| anyhow::anyhow!("pg_dump produced non-UTF-8 output: {err}"))?;
 
-    let mut ddl = String::with_capacity(raw.len());
     for line in raw.lines() {
         if line.starts_with('\\') {
             continue;
         }
-        ddl.push_str(line);
-        ddl.push('\n');
+        writeln!(out, "{line}")?;
     }
 
-    ddl.push_str("\nRESET ALL;\n");
+    writeln!(out, "\nRESET ALL;")?;
 
-    Ok(ddl)
+    Ok(())
 }
 
 /// Returns a copy of `base_url` with `options=--search_path=<schema>,public`
