@@ -348,8 +348,7 @@ mod tests {
         let (_, version) = crate_and_version(&mut conn, user.id).await;
 
         // Wrap the test body in a transaction so `now` resolves to the same
-        // value across every query inside it. Committing at the end is fine:
-        // the test schema is dropped when the test finishes.
+        // value across every query inside it.
         conn.transaction(async |conn| {
             update(versions::table)
                 .set(versions::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
