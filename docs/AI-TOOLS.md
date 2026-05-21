@@ -30,7 +30,6 @@ mind for the quality of your contribution:
   tests may be ensuring specific API behaviors are maintained.
 
 Pay close attention to AI generated recommendations for testing changes.
-Provide input about Python's testing principles when guiding an AI model.
 Always review the output before opening a pull request or issue,
 including proposed PR or issue titles and descriptions.
 
