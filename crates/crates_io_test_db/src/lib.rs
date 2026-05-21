@@ -56,7 +56,16 @@ impl Management {
     fn new() -> Self {
         let base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
-        let ddl_path = prepare_template_db(&base_url).expect("failed to prepare template DB");
+        // Under `cargo nextest`, the setup binary in this crate prepares the
+        // template schema once and publishes the DDL path via this env var.
+        // Plain `cargo test` leaves it unset and each process prepares its
+        // own.
+        let ddl_path: PathBuf = var_parsed("CRATES_IO_TEST_DB_DDL_PATH")
+            .expect("invalid CRATES_IO_TEST_DB_DDL_PATH")
+            .unwrap_or_else(|| {
+                prepare_template_db(&base_url).expect("failed to prepare template DB")
+            });
+
         let template_ddl = fs::read_to_string(&ddl_path).expect("failed to read template DDL file");
 
         let pool = Pool::builder()
