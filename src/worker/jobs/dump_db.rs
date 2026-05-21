@@ -9,8 +9,25 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::{info, warn};
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct DumpDb;
+#[derive(Clone, Default, Serialize, Deserialize)]
+pub struct DumpDb {
+    /// Optional Postgres schema to restrict the dump to. `None` (the
+    /// production default) dumps every schema in the database. The test
+    /// harness sets this to the per-test schema so `pg_dump` doesn't race
+    /// with concurrent test schemas.
+    #[serde(default)]
+    schema: Option<String>,
+}
+
+impl DumpDb {
+    /// Convenience constructor that scopes the dump to a single Postgres
+    /// schema.
+    pub fn for_schema(schema: impl Into<String>) -> Self {
+        Self {
+            schema: Some(schema.into()),
+        }
+    }
+}
 
 impl BackgroundJob for DumpDb {
     const JOB_NAME: &'static str = "dump_db";
@@ -28,12 +45,13 @@ impl BackgroundJob for DumpDb {
         let db_pool_config = db_config.replica.as_ref().unwrap_or(&db_config.primary);
         let database_url = db_pool_config.url.clone();
         let postgres_bin_dir = env.config.postgres_bin_dir.clone();
+        let schema = self.schema.clone();
 
         let archives = spawn_blocking(move || {
             let directory = DumpDirectory::create(postgres_bin_dir)?;
 
             info!("Exporting database…");
-            directory.populate(database_url.expose_secret())?;
+            directory.populate(database_url.expose_secret(), schema.as_deref())?;
 
             let export_dir = directory.path();
             info!(path = ?export_dir, "Creating tarball…");

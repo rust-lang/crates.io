@@ -131,7 +131,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&mut conn).await);
+        let db_columns =
+            HashSet::<Column>::from_iter(get_db_columns(&mut conn, test_db.schema()).await);
         let vis_columns = VisibilityConfig::get()
             .0
             .iter()
@@ -187,11 +188,11 @@ mod tests {
         column_name: String,
     }
 
-    async fn get_db_columns(conn: &mut AsyncPgConnection) -> Vec<Column> {
+    async fn get_db_columns(conn: &mut AsyncPgConnection, schema: &str) -> Vec<Column> {
         use information_schema::columns;
         columns::table
             .select((columns::table_name, columns::column_name))
-            .filter(columns::table_schema.eq("public"))
+            .filter(columns::table_schema.eq(schema))
             .order_by((columns::table_name, columns::ordinal_position))
             .load(conn)
             .await

@@ -56,14 +56,20 @@ impl DumpDirectory {
         }
     }
 
-    pub fn populate(&self, database_url: &str) -> anyhow::Result<()> {
+    /// Generate the full export directory (README, metadata, `schema.sql`,
+    /// `export.sql`/`import.sql`, and CSV data files) from the database at
+    /// `database_url`. When `schema` is `Some`, the dump is restricted to that
+    /// Postgres schema; when `None`, every schema in the database is dumped.
+    /// Production callers pass `None`; the test harness passes the test schema
+    /// so its `pg_dump` doesn't race with concurrent test schemas.
+    pub fn populate(&self, database_url: &str, schema: Option<&str>) -> anyhow::Result<()> {
         self.add_readme()
             .context("Failed to write README.md file")?;
 
         self.add_metadata()
             .context("Failed to write metadata.json file")?;
 
-        self.dump_schema(database_url)
+        self.dump_schema(database_url, schema)
             .context("Failed to generate schema.sql file")?;
 
         self.dump_db(database_url)
@@ -100,17 +106,25 @@ impl DumpDirectory {
         Ok(())
     }
 
-    pub fn dump_schema(&self, database_url: &str) -> anyhow::Result<()> {
+    pub fn dump_schema(&self, database_url: &str, schema: Option<&str>) -> anyhow::Result<()> {
         let path = self.path().join("schema.sql");
         debug!(?path, "Writing schema.sql file…");
         let schema_sql =
             File::create(&path).with_context(|| format!("Failed to create {}", path.display()))?;
 
         let program = self.pg_program("pg_dump");
-        let status = Command::new(&program)
+
+        let mut command = Command::new(&program);
+        command
             .arg("--schema-only")
             .arg("--no-owner")
-            .arg("--no-acl")
+            .arg("--no-acl");
+
+        if let Some(schema) = schema {
+            command.arg(format!("--schema={schema}"));
+        }
+
+        let status = command
             .arg(database_url)
             .stdout(schema_sql)
             .spawn()
@@ -318,20 +332,33 @@ mod tests {
 
     #[test]
     fn dump_db_and_reimport_dump() {
-        let db_one = TestDatabase::new();
+        use diesel::RunQueryDsl;
+        use diesel::sql_query;
+
+        let test_db = TestDatabase::new();
 
         // TODO prefill database with some data
 
         let directory = DumpDirectory::create(postgres_bin_dir()).unwrap();
-        directory.populate(db_one.url()).unwrap();
+        directory
+            .populate(test_db.url(), Some(test_db.schema()))
+            .unwrap();
 
-        let db_two = TestDatabase::empty();
+        // Clear the schema so the dump's `CREATE SCHEMA` and `CREATE TABLE`
+        // statements (qualified with `test_db.schema()`) have a fresh target.
+        // The schema name in the URL's `search_path` resolves again as soon
+        // as the dump recreates it. `test_db`'s `Drop` cleans up the
+        // recreated schema at the end of the test.
+        let mut conn = test_db.connect();
+        sql_query(format!("DROP SCHEMA \"{}\" CASCADE", test_db.schema()))
+            .execute(&mut conn)
+            .unwrap();
 
         let schema_script = directory.path().join("schema.sql");
-        directory.run_psql(&schema_script, db_two.url()).unwrap();
+        directory.run_psql(&schema_script, test_db.url()).unwrap();
 
         let import_script = directory.path().join("import.sql");
-        directory.run_psql(&import_script, db_two.url()).unwrap();
+        directory.run_psql(&import_script, test_db.url()).unwrap();
 
         // TODO: Consistency checks on the re-imported data?
     }
@@ -341,7 +368,7 @@ mod tests {
         let db = TestDatabase::new();
 
         let directory = DumpDirectory::create(postgres_bin_dir()).unwrap();
-        directory.populate(db.url()).unwrap();
+        directory.populate(db.url(), Some(db.schema())).unwrap();
 
         insta::glob!(directory.path(), "{import,export}.sql", |path| {
             let content = fs::read_to_string(path).unwrap();

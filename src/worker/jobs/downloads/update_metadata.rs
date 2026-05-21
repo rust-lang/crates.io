@@ -347,43 +347,43 @@ mod tests {
         let user = user(&mut conn).await;
         let (_, version) = crate_and_version(&mut conn, user.id).await;
 
-        // This test is using a transaction to ensure `now` is the same for all
-        // queries within this test.
-        conn.begin_test_transaction().await.unwrap();
+        // Wrap the test body in a transaction so `now` resolves to the same
+        // value across every query inside it.
+        conn.transaction(async |conn| {
+            update(versions::table)
+                .set(versions::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
+                .execute(conn)
+                .await?;
+            update(crates::table)
+                .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
+                .execute(conn)
+                .await?;
+            insert_into(version_downloads::table)
+                .values((
+                    version_downloads::version_id.eq(version.id),
+                    version_downloads::downloads.eq(2),
+                    version_downloads::counted.eq(2),
+                    version_downloads::date.eq(date(now - 2.days())),
+                    version_downloads::processed.eq(false),
+                ))
+                .execute(conn)
+                .await?;
 
-        update(versions::table)
-            .set(versions::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
-            .execute(&mut conn)
-            .await
-            .unwrap();
-        update(crates::table)
-            .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
-            .execute(&mut conn)
-            .await
-            .unwrap();
-        insert_into(version_downloads::table)
-            .values((
-                version_downloads::version_id.eq(version.id),
-                version_downloads::downloads.eq(2),
-                version_downloads::counted.eq(2),
-                version_downloads::date.eq(date(now - 2.days())),
-                version_downloads::processed.eq(false),
-            ))
-            .execute(&mut conn)
-            .await
-            .unwrap();
+            super::update(conn).await?;
 
-        super::update(&mut conn).await.unwrap();
-
-        let versions_changed = versions::table
-            .select(versions::updated_at.ne(now.into_sql::<Timestamptz>() - 2.days()))
-            .get_result(&mut conn)
-            .await;
-        let crates_changed = crates::table
-            .select(crates::updated_at.ne(now.into_sql::<Timestamptz>() - 2.days()))
-            .get_result(&mut conn)
-            .await;
-        assert_eq!(versions_changed, Ok(false));
-        assert_eq!(crates_changed, Ok(false));
+            let versions_changed: bool = versions::table
+                .select(versions::updated_at.ne(now.into_sql::<Timestamptz>() - 2.days()))
+                .get_result(conn)
+                .await?;
+            let crates_changed: bool = crates::table
+                .select(crates::updated_at.ne(now.into_sql::<Timestamptz>() - 2.days()))
+                .get_result(conn)
+                .await?;
+            assert!(!versions_changed);
+            assert!(!crates_changed);
+            Ok::<_, diesel::result::Error>(())
+        })
+        .await
+        .unwrap();
     }
 }
