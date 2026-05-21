@@ -54,13 +54,7 @@ impl Management {
     fn new() -> Self {
         let base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
-        let pool = Pool::builder()
-            .connection_timeout(CONNECTION_TIMEOUT)
-            .max_size(10)
-            .min_idle(Some(0))
-            .build_unchecked(ConnectionManager::new(base_url.as_ref()));
-
-        let mut conn = pool.get().expect("failed to connect to the database");
+        let mut conn = connect(base_url.as_ref()).expect("failed to connect to the database");
 
         // Drop any leftover test schemas from previous runs that crashed
         // without dropping their schema. This also drops any extensions
@@ -76,18 +70,23 @@ impl Management {
         // Apply any pending migrations to the template schema. Diesel skips
         // already-applied migrations, so subsequent process starts only pay
         // for newly-added migrations.
-        let template_url = url_with_search_path(&base_url, TEMPLATE_SCHEMA);
-        let mut template_conn =
-            connect(template_url.as_ref()).expect("failed to connect to template schema");
-        run_migrations(&mut template_conn)
-            .expect("failed to run migrations on the template schema");
-        drop(template_conn);
+        sql_query(format!("SET search_path TO \"{TEMPLATE_SCHEMA}\", public"))
+            .execute(&mut conn)
+            .expect("failed to set search_path on template connection");
+        run_migrations(&mut conn).expect("failed to run migrations on the template schema");
+        drop(conn);
 
         let mut ddl_buf = Vec::new();
         capture_template_ddl(&base_url, &mut ddl_buf)
             .expect("failed to capture template schema DDL");
 
         let template_ddl = String::from_utf8(ddl_buf).expect("pg_dump produced non-UTF-8 output");
+
+        let pool = Pool::builder()
+            .connection_timeout(CONNECTION_TIMEOUT)
+            .max_size(10)
+            .min_idle(Some(0))
+            .build_unchecked(ConnectionManager::new(base_url.as_ref()));
 
         Management {
             base_url,
