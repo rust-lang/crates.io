@@ -107,7 +107,7 @@ diesel_migrations = { version = "=2.3.2", features = ["postgres"] }
 dotenvy = "=0.15.7"
 flate2 = "=1.1.9"
 futures-util = "=0.3.32"
-git2 = "=0.20.4"
+git2 = "=0.21.0"
 hex = "=0.4.3"
 http = "=1.4.0"
 hyper = { version = "=1.9.0", features = ["client", "http1"] }
