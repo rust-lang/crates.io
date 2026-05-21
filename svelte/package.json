@@ -23,6 +23,8 @@
   "dependencies": {
     "@crates-io/api-client": "workspace:*",
     "@floating-ui/dom": "1.7.6",
+    "@fontsource/fira-mono": "5.2.7",
+    "@fontsource/fira-sans": "5.2.7",
     "chart.js": "4.5.1",
     "date-fns": "4.1.0",
     "highlight.js": "11.11.1",
