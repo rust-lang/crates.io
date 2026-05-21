@@ -30,7 +30,7 @@
     "last 1 years"
   ],
   "dependencies": {
-    "date-fns": "4.1.0"
+    "date-fns": "4.2.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.3",
