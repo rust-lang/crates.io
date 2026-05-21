@@ -12,6 +12,7 @@ CREATE FUNCTION to_semver_no_prerelease(text) RETURNS semver_triple IMMUTABLE AS
   )::semver_triple
   WHERE strpos($1, '-') = 0
   $$ LANGUAGE SQL
+  SET search_path FROM CURRENT
 ;
 
 CREATE INDEX versions_to_semver_no_prerelease_idx ON versions (crate_id, to_semver_no_prerelease(num) DESC NULLS LAST) WHERE NOT yanked;
