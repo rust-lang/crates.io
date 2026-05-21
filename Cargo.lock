@@ -1865,6 +1865,7 @@ dependencies = [
  "diesel-async",
  "diesel_migrations",
  "rand 0.10.1",
+ "tempfile",
  "tracing",
  "url",
 ]

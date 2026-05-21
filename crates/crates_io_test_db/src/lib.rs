@@ -8,11 +8,13 @@ use diesel::sql_query;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::RngExt;
+use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::LazyLock;
 use std::time::Duration;
+use tempfile::NamedTempFile;
 use tracing::{debug, instrument};
 use url::Url;
 
@@ -54,33 +56,8 @@ impl Management {
     fn new() -> Self {
         let base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
-        let mut conn = connect(base_url.as_ref()).expect("failed to connect to the database");
-
-        // Drop any leftover test schemas from previous runs that crashed
-        // without dropping their schema. This also drops any extensions
-        // that were installed inside those schemas, freeing their
-        // database-level registration so the migrations can re-install
-        // them in `public`.
-        cleanup_leftover_schemas(&mut conn).expect("failed to clean up leftover test schemas");
-
-        sql_query(format!("CREATE SCHEMA IF NOT EXISTS \"{TEMPLATE_SCHEMA}\""))
-            .execute(&mut conn)
-            .expect("failed to ensure template schema exists");
-
-        // Apply any pending migrations to the template schema. Diesel skips
-        // already-applied migrations, so subsequent process starts only pay
-        // for newly-added migrations.
-        sql_query(format!("SET search_path TO \"{TEMPLATE_SCHEMA}\", public"))
-            .execute(&mut conn)
-            .expect("failed to set search_path on template connection");
-        run_migrations(&mut conn).expect("failed to run migrations on the template schema");
-        drop(conn);
-
-        let mut ddl_buf = Vec::new();
-        capture_template_ddl(&base_url, &mut ddl_buf)
-            .expect("failed to capture template schema DDL");
-
-        let template_ddl = String::from_utf8(ddl_buf).expect("pg_dump produced non-UTF-8 output");
+        let ddl_path = prepare_template_db(&base_url).expect("failed to prepare template DB");
+        let template_ddl = fs::read_to_string(&ddl_path).expect("failed to read template DDL file");
 
         let pool = Pool::builder()
             .connection_timeout(CONNECTION_TIMEOUT)
@@ -187,6 +164,44 @@ impl Drop for TestDatabase {
         let mut conn = Management::instance().get_connection();
         drop_schema(&self.schema, &mut conn).expect("failed to drop test schema");
     }
+}
+
+/// Prepares the `test_template` schema and writes its DDL to a persistent
+/// temporary file.
+///
+/// This sweeps any leftover per-test schemas from a prior crashed run,
+/// ensures `test_template` exists with all pending migrations applied, and
+/// dumps the schema via `pg_dump` into a file ready for
+/// `conn.batch_execute()`. The returned path points at a file kept past
+/// the function's lifetime via [`NamedTempFile::keep`]. Callers are
+/// responsible for reading it.
+#[instrument]
+pub fn prepare_template_db(base_url: &Url) -> anyhow::Result<PathBuf> {
+    let mut conn = connect(base_url.as_ref())?;
+
+    // Drop any leftover test schemas from previous runs that crashed
+    // without dropping their schema. This also drops any extensions
+    // that were installed inside those schemas, freeing their
+    // database-level registration so the migrations can re-install
+    // them in `public`.
+    cleanup_leftover_schemas(&mut conn)?;
+
+    sql_query(format!("CREATE SCHEMA IF NOT EXISTS \"{TEMPLATE_SCHEMA}\"")).execute(&mut conn)?;
+
+    // Apply any pending migrations to the template schema. Diesel skips
+    // already-applied migrations, so subsequent process starts only pay
+    // for newly-added migrations.
+    sql_query(format!("SET search_path TO \"{TEMPLATE_SCHEMA}\", public")).execute(&mut conn)?;
+
+    run_migrations(&mut conn).map_err(anyhow::Error::msg)?;
+
+    drop(conn);
+
+    let mut tempfile = NamedTempFile::new()?;
+    capture_template_ddl(base_url, &mut tempfile)?;
+    let (_, path) = tempfile.keep()?;
+
+    Ok(path)
 }
 
 /// Drops any schema whose name matches `test_<16-alphanumeric-chars>`. These

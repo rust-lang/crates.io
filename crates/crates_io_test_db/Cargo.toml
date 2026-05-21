@@ -14,5 +14,6 @@ diesel = { version = "=2.3.9", features = ["postgres", "r2d2"] }
 diesel-async = { version = "=0.9.0", features = ["postgres"] }
 diesel_migrations = { version = "=2.3.2", features = ["postgres"] }
 rand = "=0.10.1"
+tempfile = "=3.27.0"
 tracing = "=0.1.44"
 url = "=2.5.8"
