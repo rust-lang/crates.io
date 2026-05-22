@@ -15,7 +15,6 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use utoipa::IntoParams;
 
-use crate::controllers::krate::load_crate;
 use crate::models::{Crate, Version};
 use crate::schema::{crates, versions};
 use crate::util::errors::{AppResult, crate_not_found, version_not_found};
@@ -34,13 +33,7 @@ pub struct CrateVersionPath {
 
 impl CrateVersionPath {
     pub async fn load_version(&self, mut conn: &AsyncPgConnection) -> AppResult<Version> {
-        let (_, version) = crates::table
-            .left_join(
-                versions::table.on(crates::id
-                    .eq(versions::crate_id)
-                    .and(versions::num.eq(&self.version))),
-            )
-            .filter(canon_crate_name(crates::name).eq(&self.name))
+        let (_, version) = Self::base_query(&self.name, &self.version)
             .select((crates::id, Option::<Version>::as_select()))
             .first::<(i32, _)>(&mut conn)
             .await
@@ -52,24 +45,28 @@ impl CrateVersionPath {
 
     pub async fn load_version_and_crate(
         &self,
-        conn: &AsyncPgConnection,
+        mut conn: &AsyncPgConnection,
     ) -> AppResult<(Version, Crate)> {
-        version_and_crate(conn, &self.name, &self.version).await
+        let (krate, version) = Self::base_query(&self.name, &self.version)
+            .select(<(Crate, Option<Version>)>::as_select())
+            .first(&mut conn)
+            .await
+            .optional()?
+            .ok_or_else(|| crate_not_found(&self.name))?;
+        let version = version.ok_or_else(|| version_not_found(&self.name, &self.version))?;
+        Ok((version, krate))
     }
-}
 
-async fn version_and_crate(
-    conn: &AsyncPgConnection,
-    crate_name: &str,
-    semver: &str,
-) -> AppResult<(Version, Crate)> {
-    let krate = load_crate(conn, crate_name).await?;
-    let version = krate
-        .find_version(conn, semver)
-        .await?
-        .ok_or_else(|| version_not_found(crate_name, semver))?;
-
-    Ok((version, krate))
+    #[diesel::dsl::auto_type(no_type_alias)]
+    fn base_query<'a>(crate_name: &'a str, semver: &'a str) -> _ {
+        crates::table
+            .left_join(
+                versions::table.on(crates::id
+                    .eq(versions::crate_id)
+                    .and(versions::num.eq(semver))),
+            )
+            .filter(canon_crate_name(crates::name).eq(canon_crate_name(crate_name)))
+    }
 }
 
 fn deserialize_version<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
