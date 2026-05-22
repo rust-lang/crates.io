@@ -33,28 +33,26 @@ pub struct CrateVersionPath {
 
 impl CrateVersionPath {
     pub async fn load_version(&self, mut conn: &AsyncPgConnection) -> AppResult<Version> {
-        let (_, version) = Self::base_query(&self.name, &self.version)
+        let row = Self::base_query(&self.name, &self.version)
             .select((crates::id, Option::<Version>::as_select()))
             .first::<(i32, _)>(&mut conn)
             .await
-            .optional()?
-            .ok_or_else(|| crate_not_found(&self.name))?;
-        let version = version.ok_or_else(|| version_not_found(&self.name, &self.version))?;
-        Ok(version)
+            .optional()?;
+
+        self.gather(row).map(|r| r.0)
     }
 
     pub async fn load_version_and_crate(
         &self,
         mut conn: &AsyncPgConnection,
     ) -> AppResult<(Version, Crate)> {
-        let (krate, version) = Self::base_query(&self.name, &self.version)
+        let row = Self::base_query(&self.name, &self.version)
             .select(<(Crate, Option<Version>)>::as_select())
             .first(&mut conn)
             .await
-            .optional()?
-            .ok_or_else(|| crate_not_found(&self.name))?;
-        let version = version.ok_or_else(|| version_not_found(&self.name, &self.version))?;
-        Ok((version, krate))
+            .optional()?;
+
+        self.gather(row)
     }
 
     #[diesel::dsl::auto_type(no_type_alias)]
@@ -66,6 +64,12 @@ impl CrateVersionPath {
                     .and(versions::num.eq(semver))),
             )
             .filter(canon_crate_name(crates::name).eq(canon_crate_name(crate_name)))
+    }
+
+    fn gather<C, V>(&self, row: Option<(C, Option<V>)>) -> AppResult<(V, C)> {
+        let (krate_or_id, version) = row.ok_or_else(|| crate_not_found(&self.name))?;
+        let version = version.ok_or_else(|| version_not_found(&self.name, &self.version))?;
+        Ok((version, krate_or_id))
     }
 }
 
