@@ -238,11 +238,14 @@ impl Emails {
         // Message-ID is enough to correlate a Datadog log entry with the corresponding
         // delivery record in Mailgun, which already retains the full recipient. The
         // domain on its own is still useful for spotting patterns like "all deliveries
-        // to a particular provider are failing".
+        // to a particular provider are failing". The human-readable message string
+        // additionally masks the local part and the first domain label so a screenshot
+        // of a log line does not expose the recipient.
         let recipient_domain = recipient
             .rsplit_once('@')
             .map(|(_, d)| d)
             .unwrap_or("<unknown>");
+        let masked_recipient = mask_email(recipient);
 
         let message = self.build_message(
             message_id.clone(),
@@ -258,7 +261,7 @@ impl Emails {
                     email.message_id = %message_id,
                     email.template = template_name,
                     email.recipient_domain = recipient_domain,
-                    "Sent {template_name} email to *@{recipient_domain}",
+                    "Sent {template_name} email to {masked_recipient}",
                 );
                 Ok(())
             }
@@ -267,12 +270,40 @@ impl Emails {
                     email.message_id = %message_id,
                     email.template = template_name,
                     email.recipient_domain = recipient_domain,
-                    "Failed to send {template_name} email to *@{recipient_domain}: {err}",
+                    "Failed to send {template_name} email to {masked_recipient}: {err}",
                 );
                 Err(EmailError::TransportError(err))
             }
         }
     }
+}
+
+/// Returns a partially-redacted version of `recipient` for use in
+/// human-readable log messages, e.g. `user@example.com` becomes
+/// `u***@e***.com` and `first.last@mail.example.com` becomes
+/// `f***@m***.com`. The first character of the local part is preserved,
+/// and the domain is reduced to its first label (masked) plus its last
+/// label (kept as-is) so middle labels of subdomains and vanity domains
+/// stay out of the message string.
+fn mask_email(recipient: &str) -> String {
+    let Some((local, domain)) = recipient.rsplit_once('@') else {
+        return "***".to_string();
+    };
+
+    fn mask_label(label: &str) -> String {
+        match label.chars().next() {
+            Some(c) => format!("{c}***"),
+            None => "***".to_string(),
+        }
+    }
+
+    let masked_local = mask_label(local);
+    let masked_domain = match (domain.split_once('.'), domain.rsplit_once('.')) {
+        (Some((first, _)), Some((_, last))) => format!("{}.{last}", mask_label(first)),
+        _ => mask_label(domain),
+    };
+
+    format!("{masked_local}@{masked_domain}")
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -413,6 +444,18 @@ mod tests {
         }
         </script>
         "#);
+    }
+
+    #[test]
+    fn test_mask_email() {
+        assert_eq!(mask_email("user@example.com"), "u***@e***.com");
+        assert_eq!(mask_email("first.last@mail.example.com"), "f***@m***.com");
+        assert_eq!(mask_email("user@a.b.example.co.uk"), "u***@a***.uk");
+        assert_eq!(mask_email("a@b.co"), "a***@b***.co");
+        assert_eq!(mask_email("user@localhost"), "u***@l***");
+        assert_eq!(mask_email("@example.com"), "***@e***.com");
+        assert_eq!(mask_email("user@"), "u***@***");
+        assert_eq!(mask_email("not-an-email"), "***");
     }
 
     #[tokio::test]
