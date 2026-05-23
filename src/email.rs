@@ -12,6 +12,7 @@ use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
 use minijinja::Environment;
 use rand::distr::{Alphanumeric, SampleString};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::sync::LazyLock;
 
 static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
@@ -234,17 +235,17 @@ impl Emails {
         let message_id = self.generate_message_id();
         let template_name = email.template_name;
 
-        // Log only the domain portion of the recipient. The full address is PII and the
-        // Message-ID is enough to correlate a Datadog log entry with the corresponding
-        // delivery record in Mailgun, which already retains the full recipient. The
-        // domain on its own is still useful for spotting patterns like "all deliveries
-        // to a particular provider are failing". The human-readable message string
-        // additionally masks the local part and the first domain label so a screenshot
-        // of a log line does not expose the recipient.
-        let recipient_domain = recipient
+        // The full recipient is PII and the Message-ID is enough to correlate a Datadog
+        // log entry with the corresponding delivery record in Mailgun, which already
+        // retains the full recipient. To still allow facets like "all deliveries to a
+        // particular provider are failing", we log a SHA-256 hash of the domain: common
+        // providers (gmail.com, etc.) hash to a stable value while vanity domains stay
+        // non-trivial to reverse. The human-readable message string additionally masks
+        // the local part and the first domain label so a screenshot of a log line does
+        // not expose the recipient.
+        let recipient_domain_hash = recipient
             .rsplit_once('@')
-            .map(|(_, d)| d)
-            .unwrap_or("<unknown>");
+            .map(|(_, domain)| hex::encode(Sha256::digest(domain.as_bytes())));
         let masked_recipient = mask_email(recipient);
 
         let message = self.build_message(
@@ -260,7 +261,7 @@ impl Emails {
                 tracing::info!(
                     email.message_id = %message_id,
                     email.template = template_name,
-                    email.recipient_domain = recipient_domain,
+                    email.recipient_domain_hash = recipient_domain_hash,
                     "Sent {template_name} email to {masked_recipient}",
                 );
                 Ok(())
@@ -269,7 +270,7 @@ impl Emails {
                 tracing::warn!(
                     email.message_id = %message_id,
                     email.template = template_name,
-                    email.recipient_domain = recipient_domain,
+                    email.recipient_domain_hash = recipient_domain_hash,
                     "Failed to send {template_name} email to {masked_recipient}: {err}",
                 );
                 Err(EmailError::TransportError(err))
