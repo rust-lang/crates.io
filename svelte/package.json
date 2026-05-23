@@ -55,7 +55,7 @@
     "msw": "2.14.6",
     "playwright": "1.60.0",
     "storybook": "10.4.0",
-    "svelte": "5.55.7",
+    "svelte": "5.55.8",
     "svelte-check": "4.4.8",
     "typescript": "6.0.3",
     "vite": "8.0.13",
