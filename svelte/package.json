@@ -50,7 +50,7 @@
     "@types/semver": "7.7.1",
     "@vitest/browser-playwright": "4.1.7",
     "@vitest/coverage-v8": "4.1.7",
-    "chromatic": "16.10.1",
+    "chromatic": "17.0.0",
     "magic-string": "0.30.21",
     "msw": "2.14.6",
     "playwright": "1.60.0",
