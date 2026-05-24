@@ -19,7 +19,9 @@ Documentation about the codebase appears in these locations:
 The backend of crates.io is written in Rust. Most of that code lives in the _src_ directory. It
 serves a JSON API over HTTP, and the HTTP server interface is provided by the [axum][] crate and
 related crates. More information about backend development is in
-[`docs/CONTRIBUTING.md`](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md).
+[`docs/CONTRIBUTING.md`](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md),
+and the conventions new API endpoints should follow are documented in
+[`docs/API-DESIGN.md`](https://github.com/rust-lang/crates.io/blob/master/docs/API-DESIGN.md).
 
 [axum]: https://crates.io/crates/axum
 

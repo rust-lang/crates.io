@@ -109,6 +109,7 @@ Test database setup: Set `TEST_DATABASE_URL` in `.env` to a separate database (e
 - Structured logging uses `tracing`; add spans for request context.
 - Authentication happens via session cookies (web users) or API tokens (cargo CLI, third-party clients).
 - OpenAPI spec: Auto-generated from backend code; update by running `cargo test --package crates_io --lib openapi` and accepting the snapshot changes.
+- New API endpoints should follow the conventions in [`docs/API-DESIGN.md`](docs/API-DESIGN.md) (URL shape, request/response envelopes, errors, pagination, auth, OpenAPI annotations).
 
 ## Frontend
 
@@ -217,6 +218,7 @@ Before submitting:
 
 - `/docs/CONTRIBUTING.md` - Setup instructions, detailed workflows, Docker setup, GitHub OAuth configuration
 - `/docs/ARCHITECTURE.md` - System architecture and design decisions
+- `/docs/API-DESIGN.md` - JSON API conventions for new endpoints
 - `/docs/PR-REVIEW.md` - Guidelines for reviewing pull requests
 - `/script/import-database-dump.sh` - Import production database dump for testing
 - `/.github/workflows/ci.yml` - CI pipeline definition and tool versions
