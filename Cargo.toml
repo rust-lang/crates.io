@@ -128,7 +128,7 @@ postgres-native-tls = "=0.5.3"
 prometheus = { version = "=0.14.0", default-features = false }
 rand = "=0.10.1"
 regex = "=1.12.3"
-reqwest = { version = "=0.13.3", features = ["gzip", "json", "stream"] }
+reqwest = { version = "=0.13.4", features = ["gzip", "json", "stream"] }
 rss = { version = "=2.0.13", default-features = false, features = ["atom"] }
 secrecy = "=0.10.3"
 semver = { version = "=1.0.28", features = ["serde"] }
