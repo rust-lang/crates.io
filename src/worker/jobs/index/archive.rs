@@ -1,6 +1,7 @@
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
+use crates_io_github::parse_github_slug;
 use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
@@ -49,8 +50,9 @@ impl BackgroundJob for ArchiveIndexBranch {
             return Err(error);
         };
 
+        let clone_url = clone_url(&env.repository_config.index_location)?;
         info!(
-            "Cloning snapshot branch ({branch}) from the index repository",
+            "Cloning snapshot branch ({branch}) from the index repository ({clone_url})",
             branch = self.branch
         );
 
@@ -70,7 +72,7 @@ impl BackgroundJob for ArchiveIndexBranch {
                 "--single-branch",
                 "--branch",
                 &self.branch,
-                env.repository_config.index_location.as_str(),
+                clone_url.as_str(),
             ])
             // `tempdir.path()` is `&Path`, so it can't share the `&str` array above.
             .arg(tempdir.path())
@@ -152,6 +154,26 @@ fn build_credentialed_url(base: &Url, token: &str) -> Result<Url, ()> {
     Ok(url)
 }
 
+/// Pick the URL to use for the read-only clone of the index.
+///
+/// `GIT_REPO_URL` is configured as an SSH URL in production so the index
+/// workers that push can authenticate with the deploy key. github.com
+/// rejects unauthenticated SSH even for public repositories, and this job
+/// only needs to read, so rewrite github URLs to HTTPS. Non-github URLs
+/// (e.g. `file://` in tests) are returned unchanged.
+fn clone_url(configured: &Url) -> anyhow::Result<Url> {
+    if configured.host_str() != Some("github.com") {
+        return Ok(configured.clone());
+    }
+
+    let (owner, repo) =
+        parse_github_slug(configured).context("Failed to parse index URL as `owner/repo`")?;
+
+    format!("https://github.com/{owner}/{repo}.git")
+        .parse()
+        .context("Failed to build HTTPS clone URL")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -169,5 +191,36 @@ mod tests {
     fn build_credentialed_url_file_rejected() {
         let url: Url = "file:///tmp/archive".parse().unwrap();
         assert_err!(build_credentialed_url(&url, "tok"));
+    }
+
+    #[test]
+    fn clone_url_rewrites_github_ssh_to_https() {
+        let configured: Url = "ssh://git@github.com/rust-lang/crates.io-index.git"
+            .parse()
+            .unwrap();
+        let rewritten = clone_url(&configured).unwrap();
+        assert_snapshot!(rewritten, @"https://github.com/rust-lang/crates.io-index.git");
+    }
+
+    #[test]
+    fn clone_url_normalizes_github_https() {
+        let configured: Url = "https://github.com/rust-lang/crates.io-index"
+            .parse()
+            .unwrap();
+        let rewritten = clone_url(&configured).unwrap();
+        assert_snapshot!(rewritten, @"https://github.com/rust-lang/crates.io-index.git");
+    }
+
+    #[test]
+    fn clone_url_preserves_non_github() {
+        let configured: Url = "file:///tmp/upstream".parse().unwrap();
+        let rewritten = clone_url(&configured).unwrap();
+        assert_snapshot!(rewritten, @"file:///tmp/upstream");
+    }
+
+    #[test]
+    fn clone_url_rejects_malformed_github() {
+        let configured: Url = "https://github.com/rust-lang".parse().unwrap();
+        assert_err!(clone_url(&configured));
     }
 }
