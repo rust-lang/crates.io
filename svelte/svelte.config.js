@@ -60,7 +60,10 @@ const config = {
           'sha256-5Cz6+Mc7r7EqumpZ/iP8Bxa/U8yPvwbiANROmonMceg=',
         ],
         'style-src': ['self', 'unsafe-inline'],
-        'img-src': ['*'],
+        // `data:` is needed for UnoCSS `preset-icons`, which emits icons as
+        // `mask-image: url(data:image/svg+xml,...)`. `*` does not cover the
+        // `data:` scheme per the CSP spec.
+        'img-src': ['*', 'data:'],
         'object-src': ['none'],
       },
     },

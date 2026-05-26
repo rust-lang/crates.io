@@ -2,6 +2,7 @@ import type { Preview } from '@storybook/sveltekit';
 
 import { themes } from 'storybook/theming';
 
+import 'virtual:uno.css';
 import '../src/lib/css/global.css';
 
 import ColorSchemeDecorator from '../src/lib/storybook/ColorSchemeDecorator.svelte';
