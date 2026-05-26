@@ -190,23 +190,16 @@ pub async fn run(command: Command) -> Result<()> {
                 .await?;
 
             for oauth_github in oldest_oauth_github_records {
-                let user_id = oauth_github.user_id;
-                let github_id = oauth_github.account_id;
-                let old_username = oauth_github.login.clone();
-
                 let job = jobs::UpdateUserFromGithub {
                     dry_run,
                     account_id: oauth_github.account_id,
                 };
 
-                // Don't stop the whole batch if one user update errors, but do log the error
+                // Don't stop the whole batch if one enqueue errors, but do log the error
                 if let Err(e) = job.enqueue(&conn).await {
                     error!(
-                        error = %e,
-                        user_id,
-                        github_id,
-                        old_username,
-                        "Error running UpdateUserFromGithub"
+                        "Error enqueueing UpdateUserFromGithub for user_id {}, github_id {}, old username `{}`: {e}",
+                        oauth_github.user_id, oauth_github.account_id, oauth_github.login,
                     );
                 }
             }
