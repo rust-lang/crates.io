@@ -136,7 +136,7 @@ jobs:
 
     env:
       RUST_BACKTRACE: 1
-      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/postgres
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
       RUSTFLAGS: '-D warnings -Cinstrument-coverage'
       MALLOC_CONF: 'background_thread:true,abort_conf:true,abort:true,junk:true'
 
@@ -178,6 +178,7 @@ jobs:
 
       - run: sudo systemctl start postgresql.service
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+      - run: sudo -u postgres createdb --lc-collate=C --lc-ctype=C -T template0 cargo_registry_test
 
       - run: cargo fetch --locked
       - run: cargo build --tests --workspace

@@ -317,7 +317,7 @@ Another option is to use a standalone Docker container for Postgres:
 
 ```sh
 # example using postgres 16
-docker run -e POSTGRES_PASSWORD=password -p 5432:5432 postgres:16
+docker run -e POSTGRES_PASSWORD=password -e POSTGRES_INITDB_ARGS='--lc-collate=C --lc-ctype=C' -p 5432:5432 postgres:16
 # database URL will be
 # DATABASE_URL=postgres://postgres:password@localhost:5432/cargo_registry
 ```
@@ -398,8 +398,13 @@ named `cargo_registry`.
 Create a new database by running:
 
 ```console
-createdb cargo_registry
+createdb --lc-collate=C --lc-ctype=C -T template0 cargo_registry
 ```
+
+The `C` collation is required because the `semver_ord` function stores
+prerelease identifiers as JSONB strings and relies on byte-wise comparison
+to match the SemVer spec's ASCII sort order. The same applies to
+`cargo_registry_test` below.
 
 Then run the migrations:
 
@@ -515,7 +520,7 @@ Example: `postgres://postgres@localhost/cargo_registry_test`.
 Create the test database by running:
 
 ```console
-createdb cargo_registry_test
+createdb --lc-collate=C --lc-ctype=C -T template0 cargo_registry_test
 ```
 
 The test harness will ensure that migrations are run.

@@ -94,7 +94,7 @@ cargo fmt --all --check                                # Formatting
 cargo clippy --all-targets --all-features --workspace  # Linting
 ```
 
-Test database setup: Set `TEST_DATABASE_URL` in `.env` to a separate database (e.g., `postgres://postgres@localhost/cargo_registry_test`). The test harness creates isolated databases and runs migrations automatically. Create the base test database once with `createdb cargo_registry_test`.
+Test database setup: Set `TEST_DATABASE_URL` in `.env` to a separate database (e.g., `postgres://postgres@localhost/cargo_registry_test`). The test harness creates isolated databases and runs migrations automatically. Create the base test database once with `createdb --lc-collate=C --lc-ctype=C -T template0 cargo_registry_test`. The `C` collation is required by the `semver_ord()` function.
 
 ### Architecture and Conventions
 
