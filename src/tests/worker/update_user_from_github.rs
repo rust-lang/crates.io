@@ -70,16 +70,16 @@ impl UpdateTest {
             .first::<OauthGithub>(&mut conn)
             .await
             .unwrap();
-        assert_eq!(expected_username, oauth_github_after_update.login);
+        assert_eq!(oauth_github_after_update.login, expected_username);
         if expected_last_sync_updated {
-            assert_ne!(last_sync_before_update, oauth_github_after_update.last_sync);
+            assert_ne!(oauth_github_after_update.last_sync, last_sync_before_update);
         } else {
-            assert_eq!(last_sync_before_update, oauth_github_after_update.last_sync);
+            assert_eq!(oauth_github_after_update.last_sync, last_sync_before_update);
         }
 
         // For now, we want to update the `User` record too
         let user_after_update = User::find(&conn, u.id).await.unwrap();
-        assert_eq!(expected_username, user_after_update.gh_login);
+        assert_eq!(user_after_update.gh_login, expected_username);
 
         // Drain the failed job so the `TestAppInner::drop` empty-queue
         // post-condition is satisfied.
