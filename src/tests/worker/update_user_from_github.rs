@@ -23,8 +23,7 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 
 struct UpdateTest {
     dry_run: bool,
-    existing_github_id: i64,
-    existing_username: &'static str,
+    existing_gh_user: GitHubUser,
     github_mock: MockGitHubClient,
     expected_username: &'static str,
     expected_last_sync_updated: bool,
@@ -34,8 +33,7 @@ impl UpdateTest {
     async fn run(self) -> anyhow::Result<()> {
         let Self {
             dry_run,
-            existing_github_id,
-            existing_username,
+            existing_gh_user,
             github_mock,
             expected_username,
             expected_last_sync_updated,
@@ -45,9 +43,8 @@ impl UpdateTest {
         let emails = &app.as_inner().emails;
         let mut conn = app.db_conn().await;
 
-        let original_gh_user = github_user(existing_github_id, existing_username);
         let u =
-            session::save_user_to_database(&original_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
+            session::save_user_to_database(&existing_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
                 .await
                 .unwrap();
 
@@ -112,8 +109,7 @@ async fn no_updates_needed() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: EXISTING_LOGIN,
         // but still update last sync
@@ -134,8 +130,7 @@ async fn yes_updates_needed() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
@@ -156,8 +151,7 @@ async fn github_deleted() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
@@ -178,9 +172,8 @@ async fn still_deleted() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
         // We marked this user as deleted previously
-        existing_username: "ghost_1",
+        existing_gh_user: github_user(GITHUB_ID, "ghost_1"),
         github_mock,
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
@@ -205,8 +198,7 @@ async fn github_unauthorized_fallback_success_no_update() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: true,
@@ -227,8 +219,7 @@ async fn github_unauthorized_enterprise_user() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: "asmith_microsoft",
+        existing_gh_user: github_user(GITHUB_ID, "asmith_microsoft"),
         github_mock,
         expected_username: "asmith_microsoft",
         expected_last_sync_updated: true,
@@ -253,8 +244,7 @@ async fn github_unauthorized_fallback_success_yes_update() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: "updated-username",
         expected_last_sync_updated: true,
@@ -279,8 +269,7 @@ async fn github_unauthorized_fallback_not_found_deleted() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
@@ -305,8 +294,7 @@ async fn github_unauthorized_fallback_other_error_no_update() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
@@ -331,8 +319,7 @@ async fn github_forbidden_fallback_success_yes_update() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: "updated-username",
         expected_last_sync_updated: true,
@@ -354,8 +341,7 @@ async fn github_unavailable() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
@@ -377,8 +363,7 @@ async fn undeleted() {
 
     let result = UpdateTest {
         dry_run: false,
-        existing_github_id: GITHUB_ID,
-        existing_username: "ghost_1",
+        existing_gh_user: github_user(GITHUB_ID, "ghost_1"),
         github_mock,
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
@@ -398,8 +383,7 @@ async fn dry_run_mode_doesnt_update() {
 
     let result = UpdateTest {
         dry_run: true,
-        existing_github_id: GITHUB_ID,
-        existing_username: EXISTING_LOGIN,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
