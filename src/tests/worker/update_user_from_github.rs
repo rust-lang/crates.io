@@ -1,4 +1,5 @@
 use crate::util::TestApp;
+use claims::{assert_err, assert_ok};
 use crates_io::{
     controllers::session,
     models::{OauthGithub, User},
@@ -30,7 +31,7 @@ struct UpdateTest {
 }
 
 impl UpdateTest {
-    async fn run(self) {
+    async fn run(self) -> anyhow::Result<()> {
         let Self {
             dry_run,
             existing_github_id,
@@ -62,7 +63,7 @@ impl UpdateTest {
             account_id: oauth_github_before_update.account_id,
         };
         job.enqueue(&conn).await.unwrap();
-        let _ = app.try_run_pending_background_jobs().await;
+        let job_result = app.try_run_pending_background_jobs().await;
 
         let oauth_github_after_update = oauth_github::table
             .filter(oauth_github::user_id.eq(u.id))
@@ -86,6 +87,8 @@ impl UpdateTest {
             .execute(&mut conn)
             .await
             .unwrap();
+
+        job_result
     }
 }
 
@@ -107,7 +110,7 @@ async fn no_updates_needed() {
         .expect_current_user()
         .return_once(|_| Ok(github_user(GITHUB_ID, EXISTING_LOGIN)));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -118,6 +121,8 @@ async fn no_updates_needed() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -127,7 +132,7 @@ async fn yes_updates_needed() {
         .expect_current_user()
         .return_once(|_| Ok(github_user(GITHUB_ID, "my-new-username")));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -137,6 +142,8 @@ async fn yes_updates_needed() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -147,7 +154,7 @@ async fn github_deleted() {
         .expect_current_user()
         .return_once(|_| Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -157,6 +164,8 @@ async fn github_deleted() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -167,7 +176,7 @@ async fn still_deleted() {
         .expect_current_user()
         .return_once(|_| Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         // We marked this user as deleted previously
@@ -178,6 +187,8 @@ async fn still_deleted() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -192,7 +203,7 @@ async fn github_unauthorized_fallback_success_no_update() {
         .expect_get_user_by_id()
         .return_once(|_| Ok(github_user(GITHUB_ID, EXISTING_LOGIN)));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -202,6 +213,8 @@ async fn github_unauthorized_fallback_success_no_update() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -212,7 +225,7 @@ async fn github_unauthorized_enterprise_user() {
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Unauthorized(anyhow::anyhow!("Not allowed"))));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: "asmith_microsoft",
@@ -222,6 +235,8 @@ async fn github_unauthorized_enterprise_user() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -236,7 +251,7 @@ async fn github_unauthorized_fallback_success_yes_update() {
         .expect_get_user_by_id()
         .return_once(|_| Ok(github_user(GITHUB_ID, "updated-username")));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -246,6 +261,8 @@ async fn github_unauthorized_fallback_success_yes_update() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -260,7 +277,7 @@ async fn github_unauthorized_fallback_not_found_deleted() {
         .expect_get_user_by_id()
         .return_once(|_| Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -270,6 +287,8 @@ async fn github_unauthorized_fallback_not_found_deleted() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -284,7 +303,7 @@ async fn github_unauthorized_fallback_other_error_no_update() {
         .expect_get_user_by_id()
         .return_once(|_| Err(GitHubError::Other(anyhow::anyhow!("Over your rate limit"))));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -294,6 +313,8 @@ async fn github_unauthorized_fallback_other_error_no_update() {
     }
     .run()
     .await;
+
+    assert_err!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -308,7 +329,7 @@ async fn github_forbidden_fallback_success_yes_update() {
         .expect_get_user_by_id()
         .return_once(|_| Ok(github_user(GITHUB_ID, "updated-username")));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -318,6 +339,8 @@ async fn github_forbidden_fallback_success_yes_update() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -329,7 +352,7 @@ async fn github_unavailable() {
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Other(anyhow::anyhow!("9% uptime is one nine"))));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -339,6 +362,8 @@ async fn github_unavailable() {
     }
     .run()
     .await;
+
+    assert_err!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -350,7 +375,7 @@ async fn undeleted() {
         .expect_current_user()
         .return_once(|_| Ok(github_user(GITHUB_ID, "my-new-username")));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: false,
         existing_github_id: GITHUB_ID,
         existing_username: "ghost_1",
@@ -360,6 +385,8 @@ async fn undeleted() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -369,7 +396,7 @@ async fn dry_run_mode_doesnt_update() {
         .expect_current_user()
         .return_once(|_| Ok(github_user(GITHUB_ID, "my-new-username")));
 
-    UpdateTest {
+    let result = UpdateTest {
         dry_run: true,
         existing_github_id: GITHUB_ID,
         existing_username: EXISTING_LOGIN,
@@ -379,4 +406,6 @@ async fn dry_run_mode_doesnt_update() {
     }
     .run()
     .await;
+
+    assert_ok!(result);
 }
