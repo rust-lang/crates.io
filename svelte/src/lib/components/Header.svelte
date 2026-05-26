@@ -3,10 +3,10 @@
   import { format } from 'date-fns/format';
 
   import logo from '$lib/assets/cargo.png';
-  import LockIcon from '$lib/assets/lock.svg?component';
   import { getSession } from '$lib/utils/session.svelte';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import * as Dropdown from './dropdown';
+  import Icon from './Icon.svelte';
   import LoadingSpinner from './LoadingSpinner.svelte';
   import SearchForm from './SearchForm.svelte';
   import UserAvatar from './UserAvatar.svelte';
@@ -132,7 +132,7 @@
           {#if isLoggingIn}
             <LoadingSpinner class="spinner" />
           {:else}
-            <LockIcon aria-hidden="true" />
+            <Icon class="i-mdi:lock" />
           {/if}
           Log in with GitHub
         </button>
@@ -334,8 +334,9 @@
     }
   }
 
-  .login-button :global(svg) {
-    width: 1em;
+  .login-button :global(.icon) {
+    width: 1.25em;
+    height: 1.25em;
     margin-right: var(--space-2xs);
     opacity: 0.5;
   }
