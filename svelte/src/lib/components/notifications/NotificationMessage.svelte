@@ -1,12 +1,8 @@
 <script lang="ts">
   import type { Notification } from '$lib/notifications.svelte';
 
+  import Icon from '$lib/components/Icon.svelte';
   import { getNotifications } from '$lib/notifications.svelte';
-  import IconClose from './icon-close.svg?component';
-  import IconError from './icon-error.svg?component';
-  import IconInfo from './icon-info.svg?component';
-  import IconSuccess from './icon-success.svg?component';
-  import IconWarning from './icon-warning.svg?component';
 
   interface Props {
     notification: Notification;
@@ -47,13 +43,13 @@
 >
   <div class="notification__icon">
     {#if notification.type === 'info'}
-      <IconInfo aria-hidden="true" width="16" height="16" />
+      <Icon class="i-mdi:information-slab-circle" />
     {:else if notification.type === 'success'}
-      <IconSuccess aria-hidden="true" width="16" height="16" />
+      <Icon class="i-mdi:check-bold" />
     {:else if notification.type === 'warning'}
-      <IconWarning aria-hidden="true" width="16" height="16" />
+      <Icon class="i-mdi:alert" />
     {:else if notification.type === 'error'}
-      <IconError aria-hidden="true" width="16" height="16" />
+      <Icon class="i-mdi:alert-box" />
     {/if}
   </div>
 
@@ -67,7 +63,7 @@
   </div>
 
   <button type="button" class="notification__close" onclick={handleClose} aria-label="Dismiss notification">
-    <IconClose aria-hidden="true" width="16" height="16" />
+    <Icon class="i-mdi:close-thick" />
   </button>
 
   {#if notification.autoClear && !notification.dismiss}
