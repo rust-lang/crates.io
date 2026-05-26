@@ -9,3 +9,4 @@ mod squash_index;
 mod sync_admins;
 mod trustpub;
 mod update_default_version;
+mod update_user_from_github;

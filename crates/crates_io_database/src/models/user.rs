@@ -142,6 +142,9 @@ pub struct OauthGithub {
     pub avatar: Option<String>,
     /// In the process of being migrated from `users.gh_encrypted_token`.
     pub encrypted_token: Vec<u8>,
+    /// The last time we verified with GitHub what the GitHub username for this user was, and
+    /// whether the account was valid
+    pub last_sync: DateTime<Utc>,
     /// In the process of being migrated from `users.gh_login`.
     pub login: String,
     /// Foreign key to the `users` table.
@@ -193,6 +196,7 @@ impl NewOauthGithub<'_> {
                 oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
                 oauth_github::login.eq(excluded(oauth_github::login)),
                 oauth_github::avatar.eq(excluded(oauth_github::avatar)),
+                oauth_github::last_sync.eq(Utc::now()),
             ))
             .get_result(&mut conn)
             .await

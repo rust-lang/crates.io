@@ -43,6 +43,7 @@ impl RunnerExt for Runner<Arc<Environment>> {
             .register_job_type::<jobs::SyncToSparseIndex>()
             .register_job_type::<jobs::UpdateDownloads>()
             .register_job_type::<jobs::UpdateDefaultVersion>()
+            .register_job_type::<jobs::UpdateUserFromGithub>()
             .register_job_type::<jobs::SendTokenExpiryNotifications>()
             .register_job_type::<jobs::SendPublishNotificationsJob>()
             .register_job_type::<jobs::rss::SyncCrateFeed>()

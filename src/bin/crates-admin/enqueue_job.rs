@@ -1,7 +1,8 @@
 use anyhow::Result;
 use chrono::NaiveDate;
 use crates_io::db;
-use crates_io::schema::{background_jobs, crates};
+use crates_io::models::OauthGithub;
+use crates_io::schema::{background_jobs, crates, oauth_github};
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
@@ -56,6 +57,14 @@ pub enum Command {
     SyncUpdatesFeed,
     TrustpubCleanup,
     UpdateDownloads,
+    /// Sync the oldest batch of users with GitHub
+    UpdateUserBatch {
+        #[arg(long = "dry-run")]
+        dry_run: bool,
+
+        #[arg(long = "batch-size", default_value = "100")]
+        batch_size: usize,
+    },
 }
 
 pub async fn run(command: Command) -> Result<()> {
@@ -167,6 +176,32 @@ pub async fn run(command: Command) -> Result<()> {
                 );
             } else {
                 jobs::UpdateDownloads.enqueue(&conn).await?;
+            }
+        }
+
+        Command::UpdateUserBatch {
+            dry_run,
+            batch_size,
+        } => {
+            let oldest_oauth_github_records = oauth_github::table
+                .order(oauth_github::last_sync.asc())
+                .limit(batch_size as i64)
+                .load::<OauthGithub>(&mut conn)
+                .await?;
+
+            for oauth_github in oldest_oauth_github_records {
+                let job = jobs::UpdateUserFromGithub {
+                    dry_run,
+                    account_id: oauth_github.account_id,
+                };
+
+                // Don't stop the whole batch if one enqueue errors, but do log the error
+                if let Err(e) = job.enqueue(&conn).await {
+                    error!(
+                        "Error enqueueing UpdateUserFromGithub for user_id {}, github_id {}, old username `{}`: {e}",
+                        oauth_github.user_id, oauth_github.account_id, oauth_github.login,
+                    );
+                }
             }
         }
     };
