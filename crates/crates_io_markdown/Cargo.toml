@@ -9,9 +9,6 @@ edition = "2024"
 [lints]
 workspace = true
 
-[lib]
-path = "lib.rs"
-
 [dependencies]
 ammonia = "=4.1.2"
 comrak = { version = "=0.52.0", default-features = false, features = ["bon"] }
