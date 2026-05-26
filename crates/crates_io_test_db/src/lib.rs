@@ -8,10 +8,13 @@ use diesel::sql_query;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::RngExt;
+use std::fs;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::LazyLock;
 use std::time::Duration;
+use tempfile::NamedTempFile;
 use tracing::{debug, instrument};
 use url::Url;
 
@@ -53,37 +56,23 @@ impl Management {
     fn new() -> Self {
         let base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
+        // Under `cargo nextest`, the setup binary in this crate prepares the
+        // template schema once and publishes the DDL path via this env var.
+        // Plain `cargo test` leaves it unset and each process prepares its
+        // own.
+        let ddl_path: PathBuf = var_parsed("CRATES_IO_TEST_DB_DDL_PATH")
+            .expect("invalid CRATES_IO_TEST_DB_DDL_PATH")
+            .unwrap_or_else(|| {
+                prepare_template_db(&base_url).expect("failed to prepare template DB")
+            });
+
+        let template_ddl = fs::read_to_string(&ddl_path).expect("failed to read template DDL file");
+
         let pool = Pool::builder()
             .connection_timeout(CONNECTION_TIMEOUT)
             .max_size(10)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(base_url.as_ref()));
-
-        let mut conn = pool.get().expect("failed to connect to the database");
-
-        // Drop any leftover test schemas from previous runs that crashed
-        // without dropping their schema. This also drops any extensions
-        // that were installed inside those schemas, freeing their
-        // database-level registration so the migrations can re-install
-        // them in `public`.
-        cleanup_leftover_schemas(&mut conn).expect("failed to clean up leftover test schemas");
-
-        sql_query(format!("CREATE SCHEMA IF NOT EXISTS \"{TEMPLATE_SCHEMA}\""))
-            .execute(&mut conn)
-            .expect("failed to ensure template schema exists");
-
-        // Apply any pending migrations to the template schema. Diesel skips
-        // already-applied migrations, so subsequent process starts only pay
-        // for newly-added migrations.
-        let template_url = url_with_search_path(&base_url, TEMPLATE_SCHEMA);
-        let mut template_conn =
-            connect(template_url.as_ref()).expect("failed to connect to template schema");
-        run_migrations(&mut template_conn)
-            .expect("failed to run migrations on the template schema");
-        drop(template_conn);
-
-        let template_ddl =
-            capture_template_ddl(&base_url).expect("failed to capture template schema DDL");
 
         Management {
             base_url,
@@ -186,6 +175,44 @@ impl Drop for TestDatabase {
     }
 }
 
+/// Prepares the `test_template` schema and writes its DDL to a persistent
+/// temporary file.
+///
+/// This sweeps any leftover per-test schemas from a prior crashed run,
+/// ensures `test_template` exists with all pending migrations applied, and
+/// dumps the schema via `pg_dump` into a file ready for
+/// `conn.batch_execute()`. The returned path points at a file kept past
+/// the function's lifetime via [`NamedTempFile::keep`]. Callers are
+/// responsible for reading it.
+#[instrument]
+pub fn prepare_template_db(base_url: &Url) -> anyhow::Result<PathBuf> {
+    let mut conn = connect(base_url.as_ref())?;
+
+    // Drop any leftover test schemas from previous runs that crashed
+    // without dropping their schema. This also drops any extensions
+    // that were installed inside those schemas, freeing their
+    // database-level registration so the migrations can re-install
+    // them in `public`.
+    cleanup_leftover_schemas(&mut conn)?;
+
+    sql_query(format!("CREATE SCHEMA IF NOT EXISTS \"{TEMPLATE_SCHEMA}\"")).execute(&mut conn)?;
+
+    // Apply any pending migrations to the template schema. Diesel skips
+    // already-applied migrations, so subsequent process starts only pay
+    // for newly-added migrations.
+    sql_query(format!("SET search_path TO \"{TEMPLATE_SCHEMA}\", public")).execute(&mut conn)?;
+
+    run_migrations(&mut conn).map_err(anyhow::Error::msg)?;
+
+    drop(conn);
+
+    let mut tempfile = NamedTempFile::new()?;
+    capture_template_ddl(base_url, &mut tempfile)?;
+    let (_, path) = tempfile.keep()?;
+
+    Ok(path)
+}
+
 /// Drops any schema whose name matches `test_<16-alphanumeric-chars>`. These
 /// are leftover test schemas from a prior run that crashed before its `Drop`
 /// impl could clean up. Each `DROP SCHEMA … CASCADE` also drops any extension
@@ -242,8 +269,8 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
     Ok(())
 }
 
-/// Shells out to `pg_dump --schema=<template>` and returns the captured DDL
-/// as SQL ready for `batch_execute`.
+/// Shells out to `pg_dump --schema=<template>` and writes the captured DDL
+/// as SQL ready for `batch_execute` into `out`.
 ///
 /// `pg_dump`'s plain-text output targets `psql`, not the backend. To make
 /// it backend-safe:
@@ -255,8 +282,8 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
 /// - A trailing `RESET ALL` clears any session state the preamble's
 ///   `SET` / `set_config('search_path', …)` calls left behind so it
 ///   doesn't leak to the next checkout of the pooled connection.
-#[instrument]
-fn capture_template_ddl(base_url: &Url) -> anyhow::Result<String> {
+#[instrument(skip(out))]
+fn capture_template_ddl(base_url: &Url, out: &mut impl Write) -> anyhow::Result<()> {
     let pg_dump = match var_parsed::<PathBuf>("POSTGRES_BIN_DIR")? {
         Some(dir) => dir.join("pg_dump"),
         None => PathBuf::from("pg_dump"),
@@ -279,21 +306,19 @@ fn capture_template_ddl(base_url: &Url) -> anyhow::Result<String> {
         ));
     }
 
-    let raw = String::from_utf8(output.stdout)
+    let raw = std::str::from_utf8(&output.stdout)
         .map_err(|err| anyhow::anyhow!("pg_dump produced non-UTF-8 output: {err}"))?;
 
-    let mut ddl = String::with_capacity(raw.len());
     for line in raw.lines() {
         if line.starts_with('\\') {
             continue;
         }
-        ddl.push_str(line);
-        ddl.push('\n');
+        writeln!(out, "{line}")?;
     }
 
-    ddl.push_str("\nRESET ALL;\n");
+    writeln!(out, "\nRESET ALL;")?;
 
-    Ok(ddl)
+    Ok(())
 }
 
 /// Returns a copy of `base_url` with `options=--search_path=<schema>,public`

@@ -96,3 +96,17 @@ The crate will automatically create:
 3. **Automatic Cleanup**: Each test database is automatically dropped when the `TestDatabase` instance is dropped
 
 This approach significantly reduces test setup time by avoiding migration runs for each individual test.
+
+### `cargo nextest` integration
+
+This crate ships a `nextest_setup` binary and a workspace
+`.config/nextest.toml` that registers it as a nextest setup script
+filtered to `rdeps(crates_io_test_db)`. The script calls
+`prepare_template_db()` once before any test binary starts and writes
+the resulting DDL file path into the file at `$NEXTEST_ENV` as
+`CRATES_IO_TEST_DB_DDL_PATH=<path>`.
+
+Each test process then checks for `CRATES_IO_TEST_DB_DDL_PATH`. When
+the env var is present, the file at that path is read instead of
+re-running migrations and `pg_dump`. When the env var is unset (as
+under plain `cargo test`), each process prepares its own template.

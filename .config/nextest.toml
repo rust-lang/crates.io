@@ -1,0 +1,8 @@
+experimental = ["setup-scripts"]
+
+[scripts.setup.crates-io-template-db]
+command = 'cargo run --quiet --package crates_io_test_db --bin nextest_setup'
+
+[[profile.default.scripts]]
+filter = 'rdeps(crates_io_test_db)'
+setup = 'crates-io-template-db'
