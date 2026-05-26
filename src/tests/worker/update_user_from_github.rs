@@ -78,12 +78,15 @@ impl UpdateTest {
         let user_after_update = User::find(&conn, u.id).await.unwrap();
         assert_eq!(user_after_update.gh_login, expected_username);
 
-        // Drain the failed job so the `TestAppInner::drop` empty-queue
-        // post-condition is satisfied.
-        diesel::delete(background_jobs::table)
-            .execute(&mut conn)
-            .await
-            .unwrap();
+        if job_result.is_err() {
+            // The worker leaves failed rows in `background_jobs` so they can
+            // be retried; clean it up so `TestAppInner::drop`'s empty-queue
+            // post-condition is satisfied.
+            diesel::delete(background_jobs::table)
+                .execute(&mut conn)
+                .await
+                .unwrap();
+        }
 
         job_result
     }
