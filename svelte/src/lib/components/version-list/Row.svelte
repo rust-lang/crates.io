@@ -7,19 +7,10 @@
   import prettyBytes from 'pretty-bytes';
   import semverParse from 'semver/functions/parse';
 
-  import CalendarIcon from '$lib/assets/calendar.svg?component';
-  import CheckboxEmptyIcon from '$lib/assets/checkbox-empty.svg?component';
-  import CheckboxIcon from '$lib/assets/checkbox.svg?component';
-  import EllipsisCircleIcon from '$lib/assets/ellipsis-circle.svg?component';
-  import GitHubIcon from '$lib/assets/github.svg?component';
-  import GitLabIcon from '$lib/assets/gitlab.svg?component';
-  import LicenseIcon from '$lib/assets/license.svg?component';
-  import RustIcon from '$lib/assets/rust.svg?component';
-  import TrashIcon from '$lib/assets/trash.svg?component';
-  import WeightIcon from '$lib/assets/weight.svg?component';
   import Edition from '$lib/components/crate-sidebar/Edition.svelte';
   import Msrv from '$lib/components/crate-sidebar/Msrv.svelte';
   import * as Dropdown from '$lib/components/dropdown';
+  import Icon from '$lib/components/Icon.svelte';
   import LicenseExpression from '$lib/components/LicenseExpression.svelte';
   import PrivilegedAction from '$lib/components/PrivilegedAction.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
@@ -128,7 +119,7 @@
   <div class="version">
     <div class="release-track" data-test-release-track>
       {#if version.yanked}
-        <TrashIcon aria-hidden="true" />
+        <Icon class="i-mdi:trash-can-outline" />
         <span class="sr-only">Yanked</span>
       {:else if !semver}
         <span aria-hidden="true">?</span>
@@ -195,17 +186,17 @@
             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
             <a href={trustpubUrl} target="_blank" rel="nofollow noopener noreferrer">
               {#if trustpubProvider === 'github'}
-                <GitHubIcon aria-hidden="true" />
+                <Icon class="i-simple-icons:github" />
               {:else if trustpubProvider === 'gitlab'}
-                <GitLabIcon aria-hidden="true" />
+                <Icon class="i-simple-icons:gitlab" />
               {/if}
               {trustpubPublisher}
             </a>
           {:else}
             {#if trustpubProvider === 'github'}
-              <GitHubIcon aria-hidden="true" />
+              <Icon class="i-simple-icons:github" />
             {:else if trustpubProvider === 'gitlab'}
-              <GitLabIcon aria-hidden="true" />
+              <Icon class="i-simple-icons:gitlab" />
             {/if}
             {trustpubPublisher}
           {/if}
@@ -213,7 +204,7 @@
       {/if}
 
       <time datetime={formatISO(version.created_at)} class="date" class:new={isNew} role="listitem">
-        <CalendarIcon aria-hidden="true" />
+        <Icon class="i-mdi:calendar-month" />
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
 
         <Tooltip>
@@ -229,20 +220,20 @@
       <div class="metadata-row" role="presentation">
         {#if version.rust_version}
           <span class="msrv" role="listitem">
-            <RustIcon aria-hidden="true" />
+            <Icon class="i-simple-icons:rust" />
             <span class="sr-only">Minimum Rust version:</span>
             <Msrv msrv={version.rust_version} edition={version.edition} />
           </span>
         {:else if version.edition}
           <span class="edition" role="listitem">
-            <RustIcon aria-hidden="true" />
+            <Icon class="i-simple-icons:rust" />
             <Edition edition={version.edition} />
           </span>
         {/if}
 
         {#if version.crate_size}
           <span class="bytes" role="listitem">
-            <WeightIcon aria-hidden="true" />
+            <Icon class="i-mdi:weight" />
             <span class="sr-only">Size:</span>
             {prettyBytes(version.crate_size, { binary: true })}
           </span>
@@ -250,7 +241,7 @@
 
         {#if version.license}
           <span class="license" role="listitem">
-            <LicenseIcon aria-hidden="true" />
+            <Icon class="i-mdi:scale-balance" />
             <span class="sr-only">License:</span>
             <LicenseExpression license={version.license} />
           </span>
@@ -258,7 +249,7 @@
 
         {#if featureList.length !== 0}
           <span class="num-features" role="listitem" data-test-feature-list>
-            <CheckboxIcon aria-hidden="true" />
+            <Icon class="i-mdi:checkbox-outline" />
             {featureList.length}
             {featureList.length === 1 ? 'Feature' : 'Features'}
 
@@ -267,9 +258,9 @@
                 {#each features.list as feature (feature.name)}
                   <li>
                     {#if feature.isDefault}
-                      <CheckboxIcon aria-hidden="true" />
+                      <Icon class="i-mdi:checkbox-outline" />
                     {:else}
-                      <CheckboxEmptyIcon aria-hidden="true" />
+                      <Icon class="i-mdi:checkbox-blank-outline" />
                     {/if}
                     {feature.name}
                     {#if feature.isDefault}<span class="sr-only">(default)</span>{/if}
@@ -293,7 +284,7 @@
   <PrivilegedAction userAuthorised={isOwner} class="actions">
     <Dropdown.Root class="dropdown" data-test-actions-menu>
       <Dropdown.Trigger hideArrow class="trigger" data-test-actions-toggle>
-        <EllipsisCircleIcon class="icon" aria-hidden="true" />
+        <Icon class="i-heroicons:ellipsis-horizontal-circle" />
         <span class="sr-only">Actions</span>
       </Dropdown.Trigger>
 
@@ -375,11 +366,6 @@
       line-height: 1rem;
     }
 
-    :global(.icon) {
-      width: 2em;
-      height: auto;
-    }
-
     :global(.trigger) {
       background: none;
       border: none;
@@ -453,9 +439,9 @@
     border-radius: 50%;
     transition: all var(--transition-fast);
 
-    & > :global(svg) {
-      height: 1em;
-      width: auto;
+    & > :global(.icon) {
+      height: 1.5em;
+      width: 1.5em;
     }
 
     .row:hover &,
@@ -530,11 +516,12 @@
       }
     }
 
-    :global(svg) {
-      height: 1em;
-      width: auto;
+    :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
       margin-right: var(--space-4xs);
-      margin-bottom: -0.1em;
+      margin-top: -0.125em;
+      vertical-align: middle;
     }
 
     > * + * {
@@ -581,11 +568,10 @@
     text-transform: initial;
   }
 
-  .msrv,
-  .edition {
-    :global(svg) {
-      margin-bottom: -0.15em;
-    }
+  .trustpub :global(.icon) {
+    margin-left: 0.2em;
+    width: 1em;
+    height: 1em;
   }
 
   .bytes {
@@ -598,11 +584,12 @@
     margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
 
-    :global(svg) {
-      height: 1em;
-      width: auto;
-      margin-right: var(--space-4xs);
-      margin-bottom: -0.1em;
+    :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
+      margin-right: 0.1em;
+      margin-bottom: 0.2em;
+      vertical-align: middle;
     }
   }
 
