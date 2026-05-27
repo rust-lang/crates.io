@@ -52,6 +52,7 @@
     "@types/node": "24.12.4",
     "@types/semver": "7.7.1",
     "@unocss/preset-icons": "^66.7.0",
+    "@unocss/transformer-directives": "^66.7.0",
     "@unocss/vite": "^66.7.0",
     "@vitest/browser-playwright": "4.1.7",
     "@vitest/coverage-v8": "4.1.7",
