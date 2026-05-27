@@ -1,7 +1,5 @@
 /* eslint-disable prefer-let/prefer-let */
 
-import '@poppanator/sveltekit-svg/dist/svg.d.ts';
-
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
@@ -21,3 +19,6 @@ declare global {
 
   const __TEST__: boolean;
 }
+
+// eslint-disable-next-line unicorn/require-module-specifiers -- needed so `declare global` works
+export {};
