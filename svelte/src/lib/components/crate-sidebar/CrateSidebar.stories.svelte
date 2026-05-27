@@ -65,7 +65,7 @@
     checksum: 'e8dfc9d19bdbf6d17e22319da49161d5d0108e4188e8b680aef6299eed22df60',
     crate_size: 123_456,
     features: {},
-    linecounts: {},
+    linecounts: { total_code_lines: '8421' },
     audit_actions: [],
     links: {
       authors: '/api/v1/crates/serde/1.0.215/authors',
@@ -182,7 +182,7 @@
   name="Minimal"
   args={{
     crate: { ...baseCrate, homepage: null, repository: null },
-    version: { ...baseVersion, rust_version: null, edition: null, license: null, crate_size: 0 },
+    version: { ...baseVersion, rust_version: null, edition: null, license: null, crate_size: 0, linecounts: {} },
     categories: [],
     owners: baseOwners,
     playgroundCratesPromise,
