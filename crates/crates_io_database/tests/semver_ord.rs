@@ -1,3 +1,4 @@
+use claims::assert_matches;
 use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
 use diesel::sql_types::{Nullable, Text};
@@ -75,7 +76,8 @@ async fn test_spec_order() {
                     '1.0.0-beta.2',
                     '1.0.0-alpha.1',
                     '1.0.0-alpha.beta',
-                    '1.0.0-beta.11'
+                    '1.0.0-beta.11',
+                    '1.0.0-B'
                 ]) as num
             )
             select num
@@ -92,6 +94,7 @@ async fn test_spec_order() {
 
     insta::assert_debug_snapshot!(check("asc").await, @r"
     [
+        1.0.0-B,
         1.0.0-alpha,
         1.0.0-alpha.1,
         1.0.0-alpha.beta,
@@ -113,6 +116,42 @@ async fn test_spec_order() {
         1.0.0-alpha.beta,
         1.0.0-alpha.1,
         1.0.0-alpha,
+        1.0.0-B,
     ]
     ");
+}
+
+/// `semver_ord` stores prerelease identifiers as JSONB strings and relies on
+/// byte-wise comparison to match the SemVer spec's ASCII sort order. PostgreSQL
+/// compares JSONB strings using the database's default collation, so this only
+/// works when the database was created with `C` (or `POSIX`) collation.
+///
+/// This test catches a mis-configured test database early with an actionable
+/// error, rather than letting `test_spec_order` fail with a confusing snapshot
+/// diff.
+#[tokio::test]
+async fn test_database_collation_is_c() {
+    let test_db = TestDatabase::new();
+    let mut conn = test_db.async_connect().await;
+
+    #[derive(QueryableByName)]
+    struct Row {
+        #[diesel(sql_type = Text)]
+        datcollate: String,
+    }
+
+    let query = "select datcollate from pg_database where datname = current_database()";
+    let row = diesel::sql_query(query)
+        .get_result::<Row>(&mut conn)
+        .await
+        .unwrap();
+
+    assert_matches!(
+        row.datcollate.as_str(),
+        "C" | "POSIX",
+        "test database collation is `{}`, but `semver_ord` requires `C` (or `POSIX`). \
+         Recreate the test database with:\n    \
+         dropdb cargo_registry_test && createdb --lc-collate=C --lc-ctype=C -T template0 cargo_registry_test",
+        row.datcollate,
+    );
 }
