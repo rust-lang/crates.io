@@ -9,9 +9,6 @@ edition = "2024"
 [lints]
 workspace = true
 
-[lib]
-path = "lib.rs"
-
 [features]
 testing = []
 

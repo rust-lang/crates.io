@@ -1,4 +1,4 @@
-#![doc = include_str!("README.md")]
+#![doc = include_str!("../README.md")]
 
 use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
 use comrak::nodes::{AstNode, NodeValue};
