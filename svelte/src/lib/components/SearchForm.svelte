@@ -2,7 +2,7 @@
   import { afterNavigate, goto } from '$app/navigation';
   import { resolve } from '$app/paths';
 
-  import SearchIcon from '$lib/assets/search.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
   import { getSearchFormContext } from '$lib/search-form.svelte';
 
   interface Props {
@@ -94,16 +94,16 @@
 
   <button type="submit" class="submit-button button-reset">
     <span class="sr-only">Search</span>
-    <SearchIcon aria-hidden="true" />
+    <Icon class="i-mdi:magnify" />
   </button>
 </form>
 
 <style>
   .form {
     --border-radius: 5000px;
-    --submit-icon-size: 1em;
-    --submit-button-padding-left: var(--space-2xs);
-    --submit-button-padding-right: var(--space-xs);
+    --submit-icon-size: 1.5em;
+    --submit-button-padding-left: var(--space-3xs);
+    --submit-button-padding-right: var(--space-2xs);
     --submit-button-width: calc(
       var(--submit-button-padding-left) + var(--submit-icon-size) + var(--submit-button-padding-right)
     );
@@ -117,8 +117,8 @@
     &.size-big {
       --input-padding: 8px;
       --input-padding-left: 16px;
-      --submit-button-padding-left: 12px;
-      --submit-button-padding-right: 16px;
+      --submit-button-padding-left: 10px;
+      --submit-button-padding-right: 13px;
 
       font-size: var(--space-s);
     }
@@ -162,7 +162,7 @@
   .submit-button {
     position: absolute;
     /* see https://github.com/rust-lang/crates.io/issues/8677 🤷 */
-    right: -0.5px;
+    right: -1px;
     top: 0;
     bottom: 0;
     display: inline-grid;
@@ -180,7 +180,7 @@
     }
   }
 
-  .submit-button :global(svg) {
+  .submit-button :global(.icon) {
     width: var(--submit-icon-size);
     height: var(--submit-icon-size);
   }
