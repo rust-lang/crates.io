@@ -1,6 +1,6 @@
 <script lang="ts">
-  import GitHubIcon from '$lib/assets/github.svg?component';
   import CrateList from '$lib/components/CrateList.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
@@ -38,7 +38,7 @@
       <h1 data-test-org-name>{orgName}</h1>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a href={data.team.url} title={data.team.login} class="github-link" data-test-github-link>
-        <GitHubIcon aria-label="GitHub profile" />
+        <Icon class="i-simple-icons:github" label="GitHub profile" />
       </a>
     </div>
     <h2 data-test-team-name>{data.team.name}</h2>
@@ -93,7 +93,7 @@
       color: var(--main-color);
     }
 
-    :global(svg) {
+    :global(.icon) {
       width: 32px;
       height: 32px;
     }
