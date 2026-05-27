@@ -4,7 +4,7 @@
 
   import { resolve } from '$app/paths';
 
-  import DownloadArrowIcon from '$lib/assets/download-arrow.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
   import Placeholder from '$lib/components/Placeholder.svelte';
 
   type Dependency = components['schemas']['Dependency'] & {
@@ -41,7 +41,7 @@
       </span>
     </div>
     <div class="downloads">
-      <DownloadArrowIcon class="download-icon" />
+      <Icon class="i-mdi:download download-icon" />
       {numberFormat.format(dependency.downloads)}
     </div>
   </div>
@@ -144,11 +144,8 @@
     }
   }
 
-  .downloads :global(svg.download-icon) {
-    width: auto;
-    height: 16px;
-    flex-shrink: 0;
-    margin-right: 7px;
+  .downloads :global(.download-icon) {
+    margin: 0 0.3em 0 -0.2em;
   }
 
   .description {
