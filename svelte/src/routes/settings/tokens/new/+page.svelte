@@ -3,8 +3,7 @@
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
-  import CircleQuestionIcon from '$lib/assets/circle-question.svg?component';
-  import TrashIcon from '$lib/assets/trash.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
@@ -256,7 +255,7 @@
           class="help-link"
         >
           <span class="sr-only">Help</span>
-          <CircleQuestionIcon aria-hidden="true" />
+          <Icon class="i-mdi:help-circle-outline" />
         </a>
       </div>
 
@@ -294,7 +293,7 @@
           class="help-link"
         >
           <span class="sr-only">Help</span>
-          <CircleQuestionIcon aria-hidden="true" />
+          <Icon class="i-mdi:help-circle-outline" />
         </a>
       </div>
 
@@ -325,7 +324,7 @@
 
             <button type="button" data-test-remove onclick={() => removeCrateScope(index)}>
               <span class="sr-only">Remove pattern</span>
-              <TrashIcon />
+              <Icon class="i-mdi:trash-can-outline" />
             </button>
           </li>
         {:else}
@@ -380,9 +379,10 @@
       color: light-dark(var(--grey700), var(--grey600));
     }
 
-    :global(svg) {
-      width: 1em;
-      height: 1em;
+    :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
+      margin: -0.125em;
     }
   }
 
@@ -520,9 +520,9 @@
         color: light-dark(var(--grey900), white);
       }
 
-      :global(svg) {
-        height: 1.1em;
-        width: 1.1em;
+      :global(.icon) {
+        height: 1.5em;
+        width: 1.5em;
       }
     }
 
