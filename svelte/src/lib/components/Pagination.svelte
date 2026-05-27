@@ -4,8 +4,7 @@
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  import LeftPagIcon from '$lib/assets/left-pag.svg?component';
-  import RightPagIcon from '$lib/assets/right-pag.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
 
   interface Props {
@@ -24,12 +23,12 @@
 <nav class="pagination" aria-label="Pagination navigation">
   {#if pagination.currentPage === 1}
     <span class="prev disabled" data-test-pagination-prev>
-      <LeftPagIcon aria-hidden="true" />
+      <Icon class="i-mdi:arrow-left-bold" />
     </span>
   {:else}
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params -->
     <a href={buildPageUrl(pagination.prevPage)} class="prev" rel="prev" title="previous page" data-test-pagination-prev>
-      <LeftPagIcon aria-hidden="true" />
+      <Icon class="i-mdi:arrow-left-bold" />
     </a>
   {/if}
 
@@ -51,7 +50,7 @@
 
   {#if pagination.currentPage === pagination.availablePages}
     <span class="next disabled" data-test-pagination-next>
-      <RightPagIcon aria-hidden="true" />
+      <Icon class="i-mdi:arrow-right-bold" />
       {#if pagination.maxPages && pagination.currentPage === pagination.maxPages}
         <Tooltip>
           For performance reasons, no more pages are available. For bulk data access, please visit
@@ -62,7 +61,7 @@
   {:else}
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params -->
     <a href={buildPageUrl(pagination.nextPage)} class="next" rel="next" title="next page" data-test-pagination-next>
-      <RightPagIcon aria-hidden="true" />
+      <Icon class="i-mdi:arrow-right-bold" />
     </a>
   {/if}
 </nav>
@@ -108,30 +107,23 @@
   }
 
   .pagination :global(img),
-  .pagination :global(svg) {
+  .pagination :global(.icon) {
     vertical-align: middle;
+  }
+
+  .prev,
+  .next {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 2em;
     height: 2em;
-  }
+    border-radius: 50%;
 
-  .prev :global(circle),
-  .next :global(circle) {
-    fill: none;
-  }
-
-  .prev :global(path),
-  .next :global(path) {
-    fill: currentColor;
-  }
-
-  .prev:hover:not(.disabled) :global(circle),
-  .next:hover:not(.disabled) :global(circle) {
-    fill: var(--main-bg-dark);
-  }
-
-  .next:hover,
-  .prev:hover {
-    background: none;
+    :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
+    }
   }
 
   .next.disabled,
