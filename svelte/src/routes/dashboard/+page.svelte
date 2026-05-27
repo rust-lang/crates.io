@@ -4,11 +4,8 @@
   import { resolve } from '$app/paths';
   import { formatDistanceToNow } from 'date-fns';
 
-  import DownloadIcon from '$lib/assets/download.svg?component';
-  import FollowingIcon from '$lib/assets/following.svg?component';
-  import LatestUpdatesIcon from '$lib/assets/latest-updates.svg?component';
-  import MyPackagesIcon from '$lib/assets/my-packages.svg?component';
   import CrateDownloadsList from '$lib/components/CrateDownloadsList.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
@@ -53,7 +50,7 @@
     <h1>My Dashboard</h1>
     <div class="stats">
       <div class="downloads">
-        <DownloadIcon class="header-icon" aria-hidden="true" />
+        <Icon class="i-mdi:download header-icon" />
         <span class="num">{numberFormat.format(data.totalDownloads)}</span>
         <span class="stats-label text--small">Total Downloads</span>
       </div>
@@ -65,7 +62,7 @@
   <div class="my-crate-lists">
     <div class="section-header">
       <h2>
-        <MyPackagesIcon aria-hidden="true" />
+        <Icon class="i-mdi:package-variant-closed" />
         My Crates
       </h2>
 
@@ -77,7 +74,7 @@
 
     <div class="section-header">
       <h2>
-        <FollowingIcon aria-hidden="true" />
+        <Icon class="i-mdi:plus-circle-outline" />
         Following
       </h2>
 
@@ -90,7 +87,7 @@
 
   <div class="my-feed">
     <h2>
-      <LatestUpdatesIcon aria-hidden="true" />
+      <Icon class="i-mdi:autorenew" />
       Latest Updates
     </h2>
 
@@ -130,11 +127,11 @@
     display: flex;
     align-items: center;
 
-    :global(svg.header-icon) {
-      flex-shrink: 0;
+    :global(.header-icon) {
       margin-right: var(--space-2xs);
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
+      color: #b13b89;
     }
   }
 
@@ -169,6 +166,14 @@
 
       > :global(*) {
         flex-shrink: 0;
+      }
+
+      :global(.icon) {
+        width: 1.25em;
+        height: 1.25em;
+        margin-top: -0.125em;
+        margin-bottom: -0.125em;
+        color: #b13b89;
       }
     }
 
