@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { operations } from '@crates-io/api-client';
 
-  import BoxIcon from '$lib/assets/box.svg?component';
-  import FileArchiveIcon from '$lib/assets/file-archive.svg?component';
   import StatsValue from './StatsValue.svelte';
 
   type Summary = operations['get_summary']['responses']['200']['content']['application/json'];
@@ -26,13 +24,13 @@
     <StatsValue
       value={summary ? numberFormat.format(summary.num_downloads) : '---,---,---'}
       label="Downloads"
-      icon={FileArchiveIcon}
+      iconClass="i-mdi:cloud-download"
       data-test-total-downloads
     />
     <StatsValue
       value={summary ? numberFormat.format(summary.num_crates) : '---,---'}
       label="Crates in stock"
-      icon={BoxIcon}
+      iconClass="i-mdi:package-variant-closed"
       data-test-total-crates
     />
   </div>
