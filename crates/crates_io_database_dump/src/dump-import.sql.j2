@@ -19,6 +19,9 @@ BEGIN;
     -- Enable this trigger so that `crates.textsearchable_index_col` can be excluded from the export
     ALTER TABLE "crates" ENABLE TRIGGER "trigger_crates_tsvector_update";
 
+    -- Enable this trigger so that `versions.semver_ord_v2` can be excluded from the export
+    ALTER TABLE "versions" ENABLE TRIGGER "trigger_set_semver_ord_v2";
+
     -- Import the CSV data.
 {% for table in tables %}
     \copy "{{table.name}}" ({{table.columns}}) FROM 'data/{{table.name}}.csv' WITH CSV HEADER

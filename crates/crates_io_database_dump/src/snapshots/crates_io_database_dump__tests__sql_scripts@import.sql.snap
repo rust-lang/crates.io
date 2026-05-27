@@ -1,6 +1,5 @@
 ---
 source: crates/crates_io_database_dump/src/lib.rs
-assertion_line: 323
 expression: content
 ---
 BEGIN;
@@ -48,6 +47,9 @@ BEGIN;
 
     -- Enable this trigger so that `crates.textsearchable_index_col` can be excluded from the export
     ALTER TABLE "crates" ENABLE TRIGGER "trigger_crates_tsvector_update";
+
+    -- Enable this trigger so that `versions.semver_ord_v2` can be excluded from the export
+    ALTER TABLE "versions" ENABLE TRIGGER "trigger_set_semver_ord_v2";
 
     -- Import the CSV data.
 
