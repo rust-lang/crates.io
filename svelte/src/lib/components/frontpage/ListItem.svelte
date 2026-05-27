@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import ChevronRightIcon from '$lib/assets/chevron-right.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLAnchorElement> {
     title: string;
@@ -18,7 +18,7 @@
     <div class="title">{title}</div>
     {#if subtitle}<div class="subtitle">{subtitle}</div>{/if}
   </div>
-  <ChevronRightIcon class="right" aria-hidden="true" />
+  <Icon class="i-mdi:chevron-right right" />
 </a>
 
 <style>
@@ -80,10 +80,9 @@
   }
 
   .box :global(.right) {
-    flex-shrink: 0;
-    height: var(--space-s);
-    width: auto;
-    margin-left: var(--space-xs);
+    height: var(--space-m);
+    width: var(--space-m);
+    margin-right: calc(-0.8 * var(--space-2xs));
     color: light-dark(rgb(118, 131, 138), #cccac2);
   }
 </style>
