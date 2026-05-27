@@ -29,6 +29,10 @@ async fn test_bytea_output() {
     insta::assert_snapshot!(check("0.0.0").await, @"01300130013003");
     insta::assert_snapshot!(check("1.0.0-alpha.1").await, @"01310130013002616c70686101013100");
 
+    // Build metadata is discarded; these match `1.0.0` and `1.2.3-alpha.1` respectively.
+    insta::assert_snapshot!(check("1.0.0+build.1").await, @"01310130013003");
+    insta::assert_snapshot!(check("1.2.3-alpha.1+exp.sha.5114f85").await, @"01310132013302616c70686101013100");
+
     // see https://crates.io/crates/cursed-trying-to-break-cargo/1.0.0-0.HDTV-BluRay.1020p.YTSUB.L33TRip.mkv – thanks @Gankra!
     insta::assert_snapshot!(check("1.0.0-0.HDTV-BluRay.1020p.YTSUB.L33TRip.mkv").await, @"01310130013001013002484454562d426c75526179023130323070025954535542024c333354526970026d6b7600");
 
