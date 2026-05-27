@@ -20,11 +20,7 @@
 <script lang="ts">
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import CodebergIcon from '$lib/assets/codeberg.svg?component';
-  import DocsRsIcon from '$lib/assets/docs-rs.svg?component';
-  import GitHubIcon from '$lib/assets/github.svg?component';
-  import GitLabIcon from '$lib/assets/gitlab.svg?component';
-  import LinkIcon from '$lib/assets/link.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     title: string;
@@ -40,15 +36,15 @@
   <h2 class="title" data-test-title>{title}</h2>
   <div class="content">
     {#if text.startsWith('docs.rs/')}
-      <DocsRsIcon class="icon" data-test-icon="docs-rs" aria-hidden="true" />
+      <Icon class="i-simple-icons:docsdotrs" data-test-icon="docs-rs" />
     {:else if text.startsWith('github.com/')}
-      <GitHubIcon class="icon" data-test-icon="github" aria-hidden="true" />
+      <Icon class="i-simple-icons:github" data-test-icon="github" />
     {:else if text.startsWith('gitlab.com/')}
-      <GitLabIcon class="icon" data-test-icon="gitlab" aria-hidden="true" />
+      <Icon class="i-simple-icons:gitlab" data-test-icon="gitlab" />
     {:else if text.startsWith('codeberg.org/')}
-      <CodebergIcon class="icon" data-test-icon="codeberg" aria-hidden="true" />
+      <Icon class="i-simple-icons:codeberg" data-test-icon="codeberg" />
     {:else}
-      <LinkIcon class="icon" data-test-icon="link" aria-hidden="true" />
+      <Icon class="i-mdi:link-variant" data-test-icon="link" />
     {/if}
 
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -68,9 +64,6 @@
   }
 
   .content :global(.icon) {
-    flex-shrink: 0;
-    height: 1em;
-    width: auto;
     margin-right: var(--space-2xs);
   }
 
