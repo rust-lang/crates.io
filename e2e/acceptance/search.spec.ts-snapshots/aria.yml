@@ -17,7 +17,7 @@
   - button "Relevance"
   - list:
     - listitem:
-      - heading /kinetic-rust v0\.\d+\.\d+ Copy Cargo\.toml snippet to clipboard/ [level=2]:
+      - heading /kinetic-rust v0\.\d+\.\d+/ [level=2]:
         - link "kinetic-rust":
           - /url: /crates/kinetic-rust
         - text: ""
@@ -40,7 +40,7 @@
           - link "Repository":
             - /url: https://github.com/icorderi/kinetic-rust/
     - listitem:
-      - heading "rust_mixin v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rust_mixin v1.0.0" [level=2]:
         - link "rust_mixin":
           - /url: /crates/rust_mixin
         - text: ""
@@ -63,7 +63,7 @@
           - link "Repository":
             - /url: https://github.com/huonw/external_mixin
     - listitem:
-      - heading "rust-crypto v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rust-crypto v1.0.0" [level=2]:
         - link "rust-crypto":
           - /url: /crates/rust-crypto
         - text: ""
@@ -83,7 +83,7 @@
           - link "Repository":
             - /url: https://github.com/DaGenix/rust-crypto/
     - listitem:
-      - heading "rust-htslib v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rust-htslib v1.0.0" [level=2]:
         - link "rust-htslib":
           - /url: /crates/rust-htslib
         - text: ""
@@ -100,7 +100,7 @@
           - link "Repository":
             - /url: https://github.com/rust-bio/rust-htslib.git
     - listitem:
-      - heading "rustless v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rustless v1.0.0" [level=2]:
         - link "rustless":
           - /url: /crates/rustless
         - text: ""
@@ -120,7 +120,7 @@
           - link "Repository":
             - /url: https://crates.io/crates/rustless
     - listitem:
-      - heading "rusted_cypher v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rusted_cypher v1.0.0" [level=2]:
         - link "rusted_cypher":
           - /url: /crates/rusted_cypher
         - text: ""
@@ -143,7 +143,7 @@
           - link "Repository":
             - /url: https://github.com/livioribeiro/rusted-cypher
     - listitem:
-      - heading "rustful v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rustful v1.0.0" [level=2]:
         - link "rustful":
           - /url: /crates/rustful
         - text: ""
