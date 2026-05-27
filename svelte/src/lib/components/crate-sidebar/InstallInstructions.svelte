@@ -1,8 +1,8 @@
 <script lang="ts">
   import { browser } from '$app/environment';
 
-  import CopyIcon from '$lib/assets/copy.svg?component';
   import CopyButton from '$lib/components/CopyButton.svelte';
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props {
     crate: string;
@@ -32,7 +32,7 @@
     {#if isClipboardSupported}
       <CopyButton copyText={cargoInstallCommand} title="Copy command to clipboard" class="copy-button">
         <span class="selectable">{cargoInstallCommand}</span>
-        <CopyIcon aria-hidden="true" class="copy-icon" />
+        <Icon class="i-mdi:content-copy copy-icon" />
       </CopyButton>
     {:else}
       <code class="copy-fallback">{cargoInstallCommand}</code>
@@ -69,7 +69,7 @@
     {#if isClipboardSupported}
       <CopyButton copyText={cargoAddCommand} title="Copy command to clipboard" class="copy-button">
         <span class="selectable">{cargoAddCommand}</span>
-        <CopyIcon aria-hidden="true" class="copy-icon" />
+        <Icon class="i-mdi:content-copy copy-icon" />
       </CopyButton>
     {:else}
       <code class="copy-fallback">{cargoAddCommand}</code>
@@ -80,7 +80,7 @@
     {#if isClipboardSupported}
       <CopyButton copyText={tomlSnippet} title="Copy Cargo.toml snippet to clipboard" class="copy-button">
         <span class="selectable">{tomlSnippet}</span>
-        <CopyIcon aria-hidden="true" class="copy-icon" />
+        <Icon class="i-mdi:content-copy copy-icon" />
       </CopyButton>
     {:else}
       <code class="copy-fallback">{tomlSnippet}</code>
@@ -130,10 +130,8 @@
   }
 
   .install-instructions :global(.copy-button .copy-icon) {
-    flex-shrink: 0;
-    height: 1.1em;
-    width: auto;
-    margin-top: -3px;
+    width: 1.25em;
+    height: 1.25em;
     margin-left: var(--space-2xs);
     opacity: 0;
     transition: opacity var(--transition-fast);
