@@ -15,7 +15,7 @@ use crate::views::release_tracks::ReleaseTracks;
 use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
-use crates_io_diesel_helpers::semver_ord;
+use crates_io_diesel_helpers::semver_ord_v2;
 use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -173,10 +173,11 @@ async fn list(
             }
             Some(SeekPayload::Semver(Semver { num, id })) => {
                 query = query.filter(
-                    versions::semver_ord
-                        .eq(semver_ord(num.clone()))
+                    versions::semver_ord_v2
+                        .nullable()
+                        .eq(semver_ord_v2(num.clone()))
                         .and(versions::id.lt(id))
-                        .or(versions::semver_ord.lt(semver_ord(num))),
+                        .or(versions::semver_ord_v2.nullable().lt(semver_ord_v2(num))),
                 )
             }
             None => {}
@@ -188,7 +189,7 @@ async fn list(
     if seek == Seek::Date {
         query = query.order((versions::created_at.desc(), versions::id.desc()));
     } else {
-        query = query.order((versions::semver_ord.desc(), versions::id.desc()));
+        query = query.order((versions::semver_ord_v2.desc(), versions::id.desc()));
     }
 
     let data: Vec<(Version, Option<User>)> = query.load(&mut conn).await?;
@@ -205,7 +206,7 @@ async fn list(
                 .filter(versions::crate_id.eq(crate_id))
                 .filter(not(versions::yanked))
                 .select(versions::num)
-                .order(versions::semver_ord.desc())
+                .order(versions::semver_ord_v2.desc())
                 .load_stream::<String>(&mut conn)
                 .await?
                 .try_for_each(|num| {

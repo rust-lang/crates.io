@@ -15,3 +15,4 @@ define_sql_function!(fn greatest<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn least<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn split_part(string: Text, delimiter: Text, n: Integer) -> Text);
 define_sql_function!(fn semver_ord(num: Text) -> Nullable<Jsonb>);
+define_sql_function!(fn semver_ord_v2(num: Text) -> Nullable<Bytea>);

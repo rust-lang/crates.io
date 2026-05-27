@@ -1,7 +1,8 @@
 use crate::schema::{default_versions, versions};
 use crates_io_diesel_helpers::SemverVersion;
-use diesel::dsl::jsonb_typeof;
+use diesel::dsl::sql;
 use diesel::prelude::*;
+use diesel::sql_types::Bool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use tracing::{debug, instrument, warn};
 
@@ -126,10 +127,13 @@ async fn calculate_default_version(
         .order((
             // 1. Non-yanked first
             versions::yanked,
-            // 2. Non-prerelease first
-            jsonb_typeof(versions::semver_ord.retrieve_as_object(3)).eq("array"),
+            // 2. Non-prerelease first. The post-patch byte of `semver_ord_v2`
+            // is 0x03 for releases and 0x00 for prereleases.
+            sql::<Bool>(
+                "get_byte(versions.semver_ord_v2, octet_length(versions.semver_ord_v2) - 1) <> 3",
+            ),
             // 3. Higher semver first
-            versions::semver_ord.desc(),
+            versions::semver_ord_v2.desc(),
             // 4. Higher ID first as tie-breaker
             versions::id.desc(),
         ))
@@ -295,6 +299,7 @@ mod tests {
 
         create_version(crate_id, "1.1.0", &*conn).await;
         create_version(crate_id, "1.0.1", &*conn).await;
+        create_version(crate_id, "2.0.0-beta.1", &*conn).await;
         assert_eq!(get_default_version(crate_id, &*conn).await, "1.0.0");
 
         update_default_version(crate_id, &*conn).await.unwrap();

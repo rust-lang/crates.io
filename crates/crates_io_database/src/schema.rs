@@ -1207,6 +1207,8 @@ diesel::table! {
         rust_version -> Nullable<Varchar>,
         /// JSONB representation of the version number for sorting purposes.
         semver_ord -> Nullable<Jsonb>,
+        /// Order-preserving bytea representation of the version number for sorting purposes.
+        semver_ord_v2 -> Bytea,
         /// JSONB data containing JWT claims from the trusted publisher (e.g., GitHub Actions context like repository, run_id, sha)
         trustpub_data -> Nullable<Jsonb>,
         /// The `updated_at` column of the `versions` table.
