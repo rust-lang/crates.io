@@ -3,8 +3,7 @@
 
   import { resolve } from '$app/paths';
 
-  import CheckboxEmptyIcon from '$lib/assets/checkbox-empty.svg?component';
-  import CheckboxIcon from '$lib/assets/checkbox.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
   import Placeholder from '$lib/components/Placeholder.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
 
@@ -68,15 +67,15 @@
             <ul class="feature-list">
               <li>
                 {#if dependency.default_features}
-                  <CheckboxIcon />
+                  <Icon class="i-mdi:checkbox-outline" />
                 {:else}
-                  <CheckboxEmptyIcon />
+                  <Icon class="i-mdi:checkbox-blank-outline" />
                 {/if}
                 default features
               </li>
               {#each dependency.features as feature (feature)}
                 <li>
-                  <CheckboxIcon />
+                  <Icon class="i-mdi:checkbox-outline" />
                   {feature}
                 </li>
               {/each}
@@ -216,11 +215,12 @@
     margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
 
-    :global(svg) {
-      height: 1em;
-      width: auto;
-      margin-right: 2px;
-      margin-bottom: -0.1em;
+    :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
+      margin-right: 0.1em;
+      margin-bottom: 0.2em;
+      vertical-align: middle;
     }
   }
 
