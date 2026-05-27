@@ -1,6 +1,5 @@
 <script lang="ts">
-  import DownloadArrowIcon from '$lib/assets/download-arrow.svg?component';
-  import FlagIcon from '$lib/assets/flag.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
 </script>
 
 <div class="hero-buttons">
@@ -9,12 +8,12 @@
     class="hero-button button"
     data-test-install-cargo-link
   >
-    <DownloadArrowIcon class="icon" aria-hidden="true" />
+    <Icon class="i-mdi:download" />
     Install Cargo
   </a>
 
   <a href="https://doc.rust-lang.org/cargo/guide/" class="hero-button button">
-    <FlagIcon class="icon" aria-hidden="true" />
+    <Icon class="i-mdi:flag-variant" />
     Getting Started
   </a>
 </div>
@@ -32,5 +31,9 @@
 
   .hero-button :global(.icon) {
     color: #c4890e;
+    width: 1.5em;
+    height: 1.5em;
+    margin: -0.25em;
+    margin-right: var(--space-3xs);
   }
 </style>
