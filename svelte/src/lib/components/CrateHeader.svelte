@@ -3,8 +3,8 @@
 
   import { resolve } from '$app/paths';
 
-  import TrashIcon from '$lib/assets/trash.svg?component';
   import FollowButton from '$lib/components/FollowButton.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { getSession } from '$lib/utils/session.svelte';
@@ -71,7 +71,7 @@
 
       {#if version.yanked}
         <span class="yanked-badge" data-test-yanked>
-          <TrashIcon /> Yanked
+          <Icon class="i-mdi:trash-can-outline" /> Yanked
 
           <Tooltip>
             This crate has been yanked, but it is still available for download for other crates that may be depending on
@@ -161,10 +161,9 @@
     white-space: nowrap;
     cursor: default;
 
-    :global(svg) {
-      width: 1em;
-      height: 1em;
-      flex-shrink: 0;
+    :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
     }
   }
 
