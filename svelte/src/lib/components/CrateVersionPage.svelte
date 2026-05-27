@@ -6,13 +6,12 @@
 
   import { resolve } from '$app/paths';
 
-  import CrateIcon from '$lib/assets/crate.svg?component';
-  import DownloadIcon from '$lib/assets/download.svg?component';
   import { loadMermaid } from '$lib/attachments/mermaid';
   import CrateSidebar from '$lib/components/crate-sidebar/CrateSidebar.svelte';
   import CrateHeader from '$lib/components/CrateHeader.svelte';
   import DownloadChart from '$lib/components/download-chart/DownloadChart.svelte';
   import * as Dropdown from '$lib/components/dropdown';
+  import Icon from '$lib/components/Icon.svelte';
   import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
   import { loadReadme } from '$lib/utils/readme';
@@ -128,7 +127,7 @@
 
     <div class="stat">
       <span class="num">
-        <DownloadIcon aria-hidden="true" />
+        <span class="stat-icon"><Icon class="i-mdi:download" /></span>
         <span class="num__align">{numberFormat.format(downloadsContext.downloads)}</span>
       </span>
       <span class="text--small">Downloads all time</span>
@@ -136,7 +135,7 @@
 
     <div class="stat">
       <span class="num">
-        <CrateIcon aria-hidden="true" />
+        <span class="stat-icon"><Icon class="i-mdi:cube-outline" /></span>
         <span class="num__align">{crate.num_versions}</span>
       </span>
       <span class="text--small">Versions published</span>
@@ -236,12 +235,24 @@
     .num {
       font-size: 160%;
       font-weight: bold;
-      margin-bottom: var(--space-3xs);
-    }
+      margin-bottom: var(--space-xs);
 
-    .num__align {
-      position: relative;
-      bottom: 0.4rem;
+      .stat-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.25em;
+        height: 1.25em;
+        margin-right: var(--space-3xs);
+        background-color: white;
+        border-radius: 50%;
+
+        :global(.icon) {
+          width: 0.7em;
+          height: 0.7em;
+          color: #b13b89;
+        }
+      }
     }
   }
 
