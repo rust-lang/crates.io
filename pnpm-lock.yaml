@@ -116,8 +116,8 @@ importers:
         specifier: 7.8.1
         version: 7.8.1
       valibot:
-        specifier: 1.4.0
-        version: 1.4.0(typescript@6.0.3)
+        specifier: 1.4.1
+        version: 1.4.1(typescript@6.0.3)
     devDependencies:
       vite:
         specifier: 8.0.14
@@ -3541,8 +3541,8 @@ packages:
     resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
-  valibot@1.4.0:
-    resolution: {integrity: sha512-iC/x7fVcSyOwlm/VSt7RlHnzNGLGvR9GnxdifUeWoCJo0q4ZZvrVkIHC6faTlkxG47I2Y4UrFquPuVHCrOnrLg==}
+  valibot@1.4.1:
+    resolution: {integrity: sha512-klCmFTz2jeDluy9RwX+F884TCiogtdBJ/YaxSx1EOBYXa3NXNWj8kR1jjN8rzluwojJVWWaHJ4r1U5LfICnM3g==}
     peerDependencies:
       typescript: '>=5'
     peerDependenciesMeta:
@@ -7117,7 +7117,7 @@ snapshots:
 
   uuid@14.0.0: {}
 
-  valibot@1.4.0(typescript@6.0.3):
+  valibot@1.4.1(typescript@6.0.3):
     optionalDependencies:
       typescript: 6.0.3
 
