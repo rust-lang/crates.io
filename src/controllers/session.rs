@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewOauthGithub, NewUser, User};
+use crate::models::{NewEmail, NewOauthGithub, NewUser};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
@@ -162,10 +162,7 @@ pub async fn save_user_to_database(
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
-            find_user_by_gh_id(conn, user.id)
-                .await?
-                .map(|u| u.id)
-                .ok_or(error)
+            find_user_by_gh_id(conn, user.id).await?.ok_or(error)
         }
         Err(error) => Err(error),
     }
@@ -232,9 +229,10 @@ async fn create_or_update_user(
     .await
 }
 
-async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
-    User::query()
+async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<i32>> {
+    users::table
         .filter(users::gh_id.eq(gh_id))
+        .select(users::id)
         .first(&mut conn)
         .await
         .optional()
