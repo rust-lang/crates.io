@@ -13,7 +13,7 @@ use crate::views::{EncodableVersion, EncodableVersionDownload};
 use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
-use crates_io_database::schema::users;
+use crates_io_database::schema::{oauth_github, users};
 use crates_io_diesel_helpers::to_char;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -171,7 +171,7 @@ async fn load_versions_and_publishers(
         return Ok(vec![]);
     }
     FullVersion::belonging_to(versions)
-        .left_outer_join(users::table)
+        .left_outer_join(users::table.left_join(oauth_github::table))
         .select(VersionsAndPublishers::as_select())
         .load(&mut conn)
         .await
@@ -186,7 +186,7 @@ async fn load_actions(
         return Ok(vec![]);
     }
     VersionOwnerAction::belonging_to(versions)
-        .inner_join(users::table)
+        .inner_join(users::table.left_join(oauth_github::table))
         .select((VersionOwnerAction::as_select(), User::as_select()))
         .order(version_owner_actions::id)
         .load(&mut conn)

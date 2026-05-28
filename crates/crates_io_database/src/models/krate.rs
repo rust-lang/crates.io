@@ -210,7 +210,7 @@ impl Crate {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .order((crate_owners::owner_id, crate_owners::owner_kind))
-            .inner_join(users::table)
+            .inner_join(users::table.left_join(oauth_github::table))
             .select(User::as_select())
             .load(&mut conn)
             .await?

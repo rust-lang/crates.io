@@ -6,7 +6,7 @@ use crate::controllers::helpers::pagination::{
 };
 use crate::controllers::krate::CratePath;
 use crate::models::{User, Version, VersionOwnerAction};
-use crate::schema::{users, versions};
+use crate::schema::{oauth_github, users, versions};
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::util::string_excl_null::StringExclNull;
@@ -144,7 +144,7 @@ async fn list(
     let make_base_query = || {
         let mut query = versions::table
             .filter(versions::crate_id.eq(crate_id))
-            .left_outer_join(users::table)
+            .left_outer_join(users::table.left_join(oauth_github::table))
             .select(<(Version, Option<User>)>::as_select())
             .into_boxed();
 

@@ -5,7 +5,7 @@ use crate::models::{CrateName, User, Version, VersionOwnerAction};
 use crate::util::errors::AppResult;
 use crate::views::{EncodableDependency, EncodableVersion};
 use axum::Json;
-use crates_io_database::schema::{crates, users, versions};
+use crates_io_database::schema::{crates, oauth_github, users, versions};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
@@ -62,7 +62,7 @@ pub async fn list_reverse_dependencies(
     let versions_and_publishers: Vec<(Version, CrateName, Option<User>)> = versions::table
         .filter(versions::id.eq_any(version_ids))
         .inner_join(crates::table)
-        .left_outer_join(users::table)
+        .left_outer_join(users::table.left_join(oauth_github::table))
         .select(<(Version, CrateName, Option<User>)>::as_select())
         .load(&mut conn)
         .await?;
