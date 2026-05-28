@@ -192,10 +192,10 @@ mod tests {
         let user_b = faker::user(&mut conn, "b").await?;
 
         // Set up three crates with various ownership schemes.
-        let _top_a = faker::crate_and_version(&mut conn, "a", "Hello", &user_a, 2).await?;
+        let _top_a = faker::crate_and_version(&mut conn, "a", "Hello", user_a.id, 2).await?;
         let top_b =
-            faker::crate_and_version(&mut conn, "b", "Yes, this is dog", &user_b, 1).await?;
-        let not_top_c = faker::crate_and_version(&mut conn, "c", "Unpopular", &user_a, 0).await?;
+            faker::crate_and_version(&mut conn, "b", "Yes, this is dog", user_b.id, 1).await?;
+        let not_top_c = faker::crate_and_version(&mut conn, "c", "Unpopular", user_a.id, 0).await?;
 
         // Let's set up a team that owns both b and c, but not a.
         let not_the_a_team = faker::team(&mut conn, "org", "team").await?;

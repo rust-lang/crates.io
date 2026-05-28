@@ -13,10 +13,10 @@ pub mod faker {
         conn: &mut AsyncPgConnection,
         name: &str,
         description: &str,
-        user: &User,
+        user_id: i32,
         downloads: i32,
     ) -> anyhow::Result<Crate> {
-        CrateBuilder::new(name, user.id)
+        CrateBuilder::new(name, user_id)
             .description(description)
             .downloads(downloads)
             .version("1.0.0")
