@@ -43,13 +43,13 @@ impl UpdateTest {
         let emails = &app.as_inner().emails;
         let mut conn = app.db_conn().await;
 
-        let u =
+        let user_id =
             session::save_user_to_database(&existing_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
                 .await
                 .unwrap();
 
         let oauth_github_before_update = oauth_github::table
-            .filter(oauth_github::user_id.eq(u.id))
+            .filter(oauth_github::user_id.eq(user_id))
             .first::<OauthGithub>(&mut conn)
             .await
             .unwrap();
@@ -63,7 +63,7 @@ impl UpdateTest {
         let job_result = app.try_run_pending_background_jobs().await;
 
         let oauth_github_after_update = oauth_github::table
-            .filter(oauth_github::user_id.eq(u.id))
+            .filter(oauth_github::user_id.eq(user_id))
             .first::<OauthGithub>(&mut conn)
             .await
             .unwrap();
@@ -75,7 +75,7 @@ impl UpdateTest {
         }
 
         // For now, we want to update the `User` record too
-        let user_after_update = User::find(&conn, u.id).await.unwrap();
+        let user_after_update = User::find(&conn, user_id).await.unwrap();
         assert_eq!(user_after_update.gh_login, expected_username);
 
         if job_result.is_err() {
