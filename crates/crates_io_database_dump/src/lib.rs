@@ -292,7 +292,7 @@ mod tests {
         fs::create_dir(p.join("data")).unwrap();
         fs::write(p.join("data").join("crates.csv"), "").unwrap();
         fs::write(p.join("data").join("crate_owners.csv"), "").unwrap();
-        fs::write(p.join("data").join("users_v2.csv"), "").unwrap();
+        fs::write(p.join("data").join("users.csv"), "").unwrap();
 
         let archives = create_archives(p, &PathBuf::from("0000-00-00")).unwrap();
         let gz = GzDecoder::new(File::open(archives.tar.path()).unwrap());
@@ -309,7 +309,7 @@ mod tests {
             "0000-00-00/README.md",
             "0000-00-00/data",
             "0000-00-00/data/crates.csv",
-            "0000-00-00/data/users_v2.csv",
+            "0000-00-00/data/users.csv",
             "0000-00-00/data/crate_owners.csv",
         ]
         "#);
@@ -324,7 +324,7 @@ mod tests {
             "README.md",
             "data/",
             "data/crates.csv",
-            "data/users_v2.csv",
+            "data/users.csv",
             "data/crate_owners.csv",
         ]
         "#);
