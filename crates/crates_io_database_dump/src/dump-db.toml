@@ -68,7 +68,7 @@ token = "private"
 expires_at = "private"
 
 [crate_owners]
-dependencies = ["crates", "users"]
+dependencies = ["crates", "users_v2"]
 filter = "NOT deleted"
 [crate_owners.columns]
 crate_id = "public"
@@ -115,7 +115,7 @@ version_id = "public"
 num_versions = "public"
 
 [deleted_crates]
-dependencies = ["users"]
+dependencies = ["users_v2"]
 [deleted_crates.columns]
 id = "public"
 name = "public"
@@ -243,16 +243,16 @@ jti = "private"
 used_at = "private"
 expires_at = "private"
 
-[users]
+[users_v2]
 filter = """
 id in (
     SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0
     UNION
     SELECT published_by as user_id FROM versions
 )"""
-[users.columns]
+[users_v2.columns]
 id = "public"
-gh_login = "public"
+login = "public"
 name = "public"
 gh_avatar = "public"
 gh_id = "public"
@@ -261,7 +261,7 @@ account_lock_until = "private"
 is_admin = "private"
 publish_notifications = "private"
 gh_encrypted_token = "private"
-[users.column_defaults]
+[users_v2.column_defaults]
 gh_encrypted_token = "''"
 
 [version_downloads]
@@ -282,7 +282,7 @@ action = "private"
 time = "private"
 
 [versions]
-dependencies = ["crates", "users"]
+dependencies = ["crates", "users_v2"]
 [versions.columns]
 id = "public"
 crate_id = "public"
