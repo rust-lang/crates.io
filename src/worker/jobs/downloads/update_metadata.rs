@@ -122,7 +122,6 @@ mod tests {
             .insert(conn)
             .await
             .unwrap()
-            .id
     }
 
     async fn crate_and_version(conn: &mut AsyncPgConnection, user_id: i32) -> (Crate, Version) {

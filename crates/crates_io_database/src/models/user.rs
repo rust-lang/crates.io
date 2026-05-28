@@ -91,10 +91,10 @@ pub struct NewUser<'a> {
 
 impl NewUser<'_> {
     /// Inserts the user into the database, or fails if the user already exists.
-    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<User> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<i32> {
         diesel::insert_into(users::table)
             .values(self)
-            .returning(User::as_returning())
+            .returning(users::id)
             .get_result(&mut conn)
             .await
     }

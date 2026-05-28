@@ -711,7 +711,6 @@ mod tests {
             .build()
             .insert(conn)
             .await
-            .map(|user| user.id)
     }
 
     async fn new_user_bucket(

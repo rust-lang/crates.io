@@ -45,7 +45,7 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
 
     let mut conn = app.db_conn().await;
 
-    let other_user = NewUser::builder()
+    let other_user_id = NewUser::builder()
         .gh_id(111)
         .gh_login("other_user")
         .gh_encrypted_token(&[])
@@ -53,7 +53,7 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
         .insert(&conn)
         .await?;
 
-    CrateBuilder::new("krate", other_user.id)
+    CrateBuilder::new("krate", other_user_id)
         .version(VersionBuilder::new("0.1.0"))
         .build(&mut conn)
         .await?;

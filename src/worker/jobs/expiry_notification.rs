@@ -154,7 +154,7 @@ mod tests {
         let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
-        let user = NewUser::builder()
+        let user_id = NewUser::builder()
             .gh_id(0)
             .gh_login("a")
             .gh_encrypted_token(&[])
@@ -163,7 +163,7 @@ mod tests {
             .await?;
 
         NewEmail::builder()
-            .user_id(user.id)
+            .user_id(user_id)
             .email("testuser@test.com")
             .build()
             .insert(&conn)
@@ -173,7 +173,7 @@ mod tests {
 
         let token: ApiToken = diesel::insert_into(api_tokens::table)
             .values((
-                api_tokens::user_id.eq(user.id),
+                api_tokens::user_id.eq(user_id),
                 api_tokens::name.eq("test_token"),
                 api_tokens::token.eq(token.hashed()),
                 api_tokens::expired_at.eq(now.into_sql::<Timestamptz>().nullable()
@@ -189,7 +189,7 @@ mod tests {
             let token = PlainToken::generate();
             diesel::insert_into(api_tokens::table)
                 .values((
-                    api_tokens::user_id.eq(user.id),
+                    api_tokens::user_id.eq(user_id),
                     api_tokens::name.eq(format!("test_token{i}")),
                     api_tokens::token.eq(token.hashed()),
                     api_tokens::expired_at
@@ -233,7 +233,7 @@ mod tests {
         let token = PlainToken::generate();
         diesel::insert_into(api_tokens::table)
             .values((
-                api_tokens::user_id.eq(user.id),
+                api_tokens::user_id.eq(user_id),
                 api_tokens::name.eq("expired_token"),
                 api_tokens::token.eq(token.hashed()),
                 api_tokens::expired_at.eq(now.into_sql::<Timestamptz>().nullable() - 1.day()),

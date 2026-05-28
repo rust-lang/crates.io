@@ -45,6 +45,5 @@ pub mod faker {
             .build()
             .insert(conn)
             .await
-            .map(|user| user.id)
     }
 }
