@@ -23,6 +23,6 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let token = HashedToken::parse(&opts.api_token)?;
     let token = ApiToken::find_by_api_token(&mut conn, &token).await?;
     let user = User::find(&conn, token.user_id).await?;
-    println!("The token belongs to user {}", user.gh_login);
+    println!("The token belongs to user {}", user.login);
     Ok(())
 }

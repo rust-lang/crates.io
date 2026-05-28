@@ -252,7 +252,7 @@ id in (
 )"""
 [users.columns]
 id = "public"
-gh_login = "public"
+login = "public"
 name = "public"
 gh_avatar = "public"
 gh_id = "public"

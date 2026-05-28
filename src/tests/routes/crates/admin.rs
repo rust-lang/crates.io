@@ -62,7 +62,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
         .await;
 
     // Include fully yanked (all versions were yanked) crates
-    let username = &user.gh_login;
+    let username = &user.login;
     let response = admin.admin_list::<()>(username).await;
 
     assert_json_snapshot!(response.json(), {

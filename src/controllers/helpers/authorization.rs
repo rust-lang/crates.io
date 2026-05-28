@@ -46,7 +46,7 @@ impl Rights {
                     // the answer. If this is not the case, then we could accidentally leak
                     // private membership information here.
                     let is_team_member = match gh_client
-                        .team_membership(team.org_id, team.github_id, &user.gh_login, &token)
+                        .team_membership(team.org_id, team.github_id, &user.login, &token)
                         .await
                     {
                         Ok(membership) => membership.is_some_and(|m| m.is_active()),

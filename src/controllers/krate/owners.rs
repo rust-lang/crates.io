@@ -242,7 +242,7 @@ async fn modify_owners(
                         Ok(NewOwnerInvite::User(invitee, token)) => {
                             msgs.push(format!(
                                 "user {} has been invited to be an owner of crate {}",
-                                invitee.gh_login, krate.name,
+                                invitee.login, krate.name,
                             ));
 
                             if let Some(recipient) =
@@ -251,7 +251,7 @@ async fn modify_owners(
                                 let email = EmailMessage::from_template(
                                     "owner_invite",
                                     context! {
-                                        inviter => user.gh_login,
+                                        inviter => user.login,
                                         domain => app.emails.domain,
                                         crate_name => krate.name,
                                         token => token.expose_secret()
@@ -277,7 +277,7 @@ async fn modify_owners(
                         // This user has a pending invite.
                         Err(OwnerAddError::AlreadyInvited(user)) => msgs.push(format!(
                             "user {} already has a pending invitation to be an owner of crate {}",
-                            user.gh_login, krate.name
+                            user.login, krate.name
                         )),
 
                         // An opaque error occurred.
@@ -457,15 +457,15 @@ pub async fn create_or_update_github_team(
         })?;
 
     let org_id = team.organization.id;
-    let gh_login = &req_user.gh_login;
+    let user_login = &req_user.login;
 
     let is_team_member = gh_client
-        .team_membership(org_id, team.id, gh_login, &token)
+        .team_membership(org_id, team.id, user_login, &token)
         .await?
         .is_some_and(|m| m.is_active());
 
     let can_add_team =
-        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &token).await?;
+        is_team_member || is_gh_org_owner(gh_client, org_id, user_login, &token).await?;
 
     if !can_add_team {
         return Err(custom(
@@ -491,10 +491,10 @@ pub async fn create_or_update_github_team(
 async fn is_gh_org_owner(
     gh_client: &dyn GitHubClient,
     org_id: i32,
-    gh_login: &str,
+    login: &str,
     token: &AccessToken,
 ) -> Result<bool, GitHubError> {
-    let membership = gh_client.org_membership(org_id, gh_login, token).await?;
+    let membership = gh_client.org_membership(org_id, login, token).await?;
     Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 

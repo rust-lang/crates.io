@@ -104,7 +104,7 @@ impl Owner {
 
     pub fn login(&self) -> &str {
         match self {
-            Owner::User(user) => &user.gh_login,
+            Owner::User(user) => &user.login,
             Owner::Team(team) => &team.login,
         }
     }

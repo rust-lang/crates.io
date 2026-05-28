@@ -195,7 +195,7 @@ async fn fetch_user_owners(
         .filter(crate_owners::crate_id.eq(crate_id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .filter(crate_owners::deleted.eq(false))
-        .select((users::gh_login, users::gh_avatar))
+        .select((users::login, users::gh_avatar))
         .load(&mut conn)
         .await
 }

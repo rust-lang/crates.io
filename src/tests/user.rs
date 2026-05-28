@@ -33,7 +33,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
 
     let encryption = GitHubTokenEncryption::for_testing();
 
-    // Reuse gh_id but use new gh_login and gh_access_token
+    // Reuse gh_id but use new login and gh_access_token
     let gh_user = GitHubUser {
         id: gh_id,
         login: "bar".to_string(),
@@ -49,7 +49,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let api_token = assert_ok!(ApiToken::find_by_api_token(&mut conn, &hashed_token).await);
     let user = assert_ok!(User::find(&conn, api_token.user_id).await);
 
-    assert_eq!(user.gh_login, "bar");
+    assert_eq!(user.login, "bar");
     let decrypted_token = encryption.decrypt(&user.gh_encrypted_token)?;
     assert_eq!(decrypted_token.secret(), "bar_token");
 
@@ -302,7 +302,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     let oauth_github = &oauth_github_records[0];
     assert_eq!(oauth_github.user_id, u.id);
     assert_eq!(oauth_github.account_id, gh_id as i64);
-    assert_eq!(oauth_github.login, u.gh_login);
+    assert_eq!(oauth_github.login, u.login);
     assert!(oauth_github.avatar.is_none());
     let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
     assert_eq!(decrypted_token.secret(), "some random token");
@@ -347,7 +347,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
     let u = User::find(&conn, uid).await?;
 
-    assert_eq!(u.gh_login, "arbitrary_username");
+    assert_eq!(u.login, "arbitrary_username");
     assert_eq!(u.gh_id, new_gh_id);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
@@ -359,7 +359,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
 
     assert_eq!(additional_user_oauth_github.user_id, u.id);
     assert_eq!(additional_user_oauth_github.account_id, new_gh_id as i64);
-    assert_eq!(additional_user_oauth_github.login, u.gh_login);
+    assert_eq!(additional_user_oauth_github.login, u.login);
     assert!(additional_user_oauth_github.avatar.is_none());
     let decrypted_token = encryption.decrypt(&additional_user_oauth_github.encrypted_token)?;
     assert_eq!(decrypted_token.secret(), "a different random token");
