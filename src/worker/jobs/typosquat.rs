@@ -134,7 +134,7 @@ mod tests {
 
         // Set up a user and a popular crate to match against.
         let user = faker::user(&mut conn, "a").await?;
-        faker::crate_and_version(&mut conn, "my-crate", "It's awesome", user.id, 100).await?;
+        faker::crate_and_version(&mut conn, "my-crate", "It's awesome", user, 100).await?;
 
         // Prime the cache so it only includes the crate we just created.
         let mut async_conn = test_db.async_connect().await;
@@ -147,7 +147,7 @@ mod tests {
             &mut async_conn,
             "innocent-crate",
             "I'm just a simple, innocent crate",
-            other_user.id,
+            other_user,
             0,
         )
         .await?;
@@ -155,7 +155,7 @@ mod tests {
             &mut async_conn,
             "mycrate",
             "I'm even more innocent, obviously",
-            other_user.id,
+            other_user,
             0,
         )
         .await?;
