@@ -71,7 +71,7 @@ pub async fn create_trustpub_github_config(
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .inner_join(users::table)
         .inner_join(emails::table.on(users::id.eq(emails::user_id)))
-        .select((users::id, users::gh_login, emails::email, emails::verified))
+        .select((users::id, users::login, emails::email, emails::verified))
         .load::<(i32, String, String, bool)>(&mut conn)
         .await?;
 
@@ -92,7 +92,7 @@ pub async fn create_trustpub_github_config(
     let encryption = &state.config.gh_token_encryption;
     let gh_auth = &auth_user.gh_encrypted_token;
     let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
-        let login = &auth_user.gh_login;
+        let login = &auth_user.login;
         warn!("Failed to decrypt GitHub token for user {login}: {err}");
         server_error("Internal server error")
     })?;

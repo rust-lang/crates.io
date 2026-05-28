@@ -190,7 +190,7 @@ fn owners_subquery() -> SqlLiteral<Array<Text>> {
                 CASE WHEN crate_owners.owner_kind = 1 THEN
                     teams.login
                 ELSE
-                    users.gh_login
+                    users.login
                 END
             FROM crate_owners
             LEFT JOIN teams ON teams.id = crate_owners.owner_id

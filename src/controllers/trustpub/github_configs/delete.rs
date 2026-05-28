@@ -56,7 +56,7 @@ pub async fn delete_trustpub_github_config(
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .inner_join(users::table)
         .inner_join(emails::table.on(users::id.eq(emails::user_id)))
-        .select((users::id, users::gh_login, emails::email, emails::verified))
+        .select((users::id, users::login, emails::email, emails::verified))
         .load::<(i32, String, String, bool)>(&mut conn)
         .await?;
 

@@ -156,7 +156,7 @@ impl TestApp {
             id,
             name: new_user.name.map(str::to_string),
             gh_id: new_user.gh_id,
-            gh_login: new_user.gh_login.to_string(),
+            login: new_user.login.to_string(),
             gh_avatar: new_user.gh_avatar.map(str::to_string),
             gh_encrypted_token: new_user.gh_encrypted_token.to_vec(),
             account_lock_reason: None,

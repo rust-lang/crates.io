@@ -47,8 +47,8 @@ impl BackgroundJob for SyncAdmins {
         struct UserData {
             #[diesel(select_expression = users::id)]
             id: i32,
-            #[diesel(select_expression = users::gh_login)]
-            gh_login: String,
+            #[diesel(select_expression = users::login)]
+            login: String,
             #[diesel(select_expression = users::is_admin)]
             is_admin: bool,
             #[diesel(select_expression = oauth_github::account_id.nullable())]
@@ -81,7 +81,7 @@ impl BackgroundJob for SyncAdmins {
                 .map(|u| {
                     format!(
                         "{} (github_id: {})",
-                        u.gh_login,
+                        u.login,
                         u.account_id
                             .map(|id| id.to_string())
                             .unwrap_or("None".into())
@@ -178,19 +178,19 @@ impl BackgroundJob for SyncAdmins {
         for database_admin in database_user_data.iter().filter(|u| u.is_admin) {
             let UserData {
                 account_id,
-                gh_login,
+                login,
                 email,
                 ..
             } = database_admin;
             if let Some(email_address) = email {
                 if let Err(error) = send_email(&ctx, email_address, &context).await {
                     warn!(
-                        "Failed to send email to admin {gh_login} \
+                        "Failed to send email to admin {login} \
                         ({email_address}, github_id: {account_id:?}): {error:?}"
                     );
                 }
             } else {
-                warn!("No email address found for admin {gh_login} (github_id: {account_id:?})",);
+                warn!("No email address found for admin {login} (github_id: {account_id:?})",);
             }
         }
 

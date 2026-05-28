@@ -18,7 +18,7 @@ async fn test_cargo_invite_owners() {
         .await;
 
     let json = owner
-        .add_named_owner("guacamole", &new_user.as_model().gh_login)
+        .add_named_owner("guacamole", &new_user.as_model().login)
         .await
         .good();
 
@@ -46,7 +46,7 @@ async fn owner_change_via_cookie() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = cookie.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
@@ -63,7 +63,7 @@ async fn owner_change_via_token() {
         .expect_build(&mut conn)
         .await;
 
-    let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = token.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
@@ -83,7 +83,7 @@ async fn owner_change_via_change_owner_token() {
         .expect_build(&mut conn)
         .await;
 
-    let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = token.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
@@ -104,7 +104,7 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
         .expect_build(&mut conn)
         .await;
 
-    let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = token.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
@@ -125,7 +125,7 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
         .expect_build(&mut conn)
         .await;
 
-    let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = token.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
@@ -145,7 +145,7 @@ async fn owner_change_via_publish_token() {
         .expect_build(&mut conn)
         .await;
 
-    let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = token.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
@@ -162,7 +162,7 @@ async fn owner_change_without_auth() {
         .expect_build(&mut conn)
         .await;
 
-    let response = anon.add_named_owner(&krate.name, &user2.gh_login).await;
+    let response = anon.add_named_owner(&krate.name, &user2.login).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }

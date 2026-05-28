@@ -48,10 +48,7 @@ async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
     let krate = CrateBuilder::new("foo_my_packages", user_model.id)
         .expect_build(&mut conn)
         .await;
-    krate
-        .owner_remove(&conn, &user_model.gh_login)
-        .await
-        .unwrap();
+    krate.owner_remove(&conn, &user_model.login).await.unwrap();
 
     let json = user.show_me().await;
     assert_eq!(json.owned_crates.len(), 0);

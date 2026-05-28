@@ -78,7 +78,7 @@ pub async fn list(
 
     let (user, verified, user_email) = users::table
         .left_join(emails::table)
-        .filter(users::gh_login.eq(username))
+        .filter(users::login.eq(username))
         .select((
             User::as_select(),
             emails::verified.nullable(),

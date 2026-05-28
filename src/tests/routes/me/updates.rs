@@ -81,7 +81,7 @@ async fn following() {
         .unwrap();
     assert_eq!(
         bar_version.published_by.as_ref().unwrap().login,
-        user_model.gh_login
+        user_model.login
     );
 
     let r: R = user

@@ -17,7 +17,7 @@ pub struct User {
     pub id: i32,
     pub name: Option<String>,
     pub gh_id: i32,
-    pub gh_login: String,
+    pub login: String,
     pub gh_avatar: Option<String>,
     #[serde(skip)]
     pub gh_encrypted_token: Vec<u8>,
@@ -34,7 +34,7 @@ impl User {
 
     pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
         User::query()
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
+            .filter(lower(users::login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
             .order(users::gh_id.desc())
             .first(&mut conn)
@@ -83,7 +83,7 @@ impl User {
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
-    pub gh_login: &'a str,
+    pub login: &'a str,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_encrypted_token: &'a [u8],
@@ -114,7 +114,7 @@ impl NewUser<'_> {
             .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
             .do_update()
             .set((
-                users::gh_login.eq(excluded(users::gh_login)),
+                users::login.eq(excluded(users::login)),
                 users::name.eq(excluded(users::name)),
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
@@ -145,7 +145,7 @@ pub struct OauthGithub {
     /// The last time we verified with GitHub what the GitHub username for this user was, and
     /// whether the account was valid
     pub last_sync: DateTime<Utc>,
-    /// In the process of being migrated from `users.gh_login`.
+    /// In the process of being migrated from `users.login`.
     pub login: String,
     /// Foreign key to the `users` table.
     pub user_id: i32,
@@ -164,7 +164,7 @@ pub struct NewOauthGithub<'a> {
     pub account_id: i64,           // corresponds to users.gh_id
     pub avatar: Option<&'a str>,   // corresponds to users.gh_avatar
     pub encrypted_token: &'a [u8], // corresponds to users.gh_encrypted_token
-    pub login: &'a str,            // corresponds to users.gh_login
+    pub login: &'a str,            // corresponds to users.login
     pub user_id: i32,
 }
 

@@ -91,7 +91,7 @@ async fn create_user(
     let user_id = diesel::insert_into(users::table)
         .values((
             users::name.eq(name),
-            users::gh_login.eq(name),
+            users::login.eq(name),
             users::gh_id.eq(account_id as i32),
             users::gh_encrypted_token.eq(&[]),
             users::is_admin.eq(is_admin),
@@ -134,7 +134,7 @@ async fn delete_oauth_github_from_user(
 
 async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<String>> {
     users::table
-        .select(users::gh_login)
+        .select(users::login)
         .filter(users::is_admin.eq(true))
         .order(users::id.asc())
         .get_results(conn)

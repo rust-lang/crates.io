@@ -9,10 +9,10 @@
 {% block content %}
 <p>Hello {{ recipient }}!</p>
 
-{% if recipient == auth_user.gh_login -%}
+{% if recipient == auth_user.login -%}
 <p>You added a new "Trusted Publishing" configuration for {{ ci_provider }} to your crate "<strong>{{ krate.name }}</strong>". Trusted publishers act as trusted users and can publish new versions of the crate automatically.</p>
 {%- else -%}
-<p>crates.io user {{ auth_user.gh_login }} added a new "Trusted Publishing" configuration for {{ ci_provider }} to a crate that you manage ("<strong>{{ krate.name }}</strong>"). Trusted publishers act as trusted users and can publish new versions of the crate automatically.</p>
+<p>crates.io user {{ auth_user.login }} added a new "Trusted Publishing" configuration for {{ ci_provider }} to a crate that you manage ("<strong>{{ krate.name }}</strong>"). Trusted publishers act as trusted users and can publish new versions of the crate automatically.</p>
 {%- endif %}
 
 {% if saved_config.type == "GitHub" -%}

@@ -557,14 +557,14 @@ impl From<Owner> for EncodableOwner {
             Owner::User(User {
                 id,
                 name,
-                gh_login,
+                login,
                 gh_avatar,
                 ..
             }) => {
-                let url = format!("https://github.com/{gh_login}");
+                let url = format!("https://github.com/{login}");
                 Self {
                     id,
-                    login: gh_login,
+                    login,
                     avatar: gh_avatar,
                     url: Some(url),
                     name,
@@ -731,13 +731,13 @@ impl EncodablePrivateUser {
         let User {
             id,
             name,
-            gh_login,
+            login,
             gh_avatar,
             is_admin,
             publish_notifications,
             ..
         } = user;
-        let url = format!("https://github.com/{gh_login}");
+        let url = format!("https://github.com/{login}");
 
         EncodablePrivateUser {
             id,
@@ -745,7 +745,7 @@ impl EncodablePrivateUser {
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
-            login: gh_login,
+            login,
             name,
             url: Some(url),
             is_admin,
@@ -784,15 +784,15 @@ impl From<User> for EncodablePublicUser {
         let User {
             id,
             name,
-            gh_login,
+            login,
             gh_avatar,
             ..
         } = user;
-        let url = format!("https://github.com/{gh_login}");
+        let url = format!("https://github.com/{login}");
         EncodablePublicUser {
             id,
             avatar: gh_avatar,
-            login: gh_login,
+            login,
             name,
             url,
         }

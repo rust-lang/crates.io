@@ -55,7 +55,7 @@ mod tests {
     fn test_user() -> User {
         User {
             id: 1,
-            gh_login: "octocat".into(),
+            login: "octocat".into(),
             name: Some("The Octocat".into()),
             gh_id: 123,
             gh_avatar: None,

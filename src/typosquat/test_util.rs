@@ -40,7 +40,7 @@ pub mod faker {
     pub async fn user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<i32> {
         NewUser::builder()
             .gh_id(next_gh_id())
-            .gh_login(login)
+            .login(login)
             .gh_encrypted_token(&[])
             .build()
             .insert(conn)

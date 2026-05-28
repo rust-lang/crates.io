@@ -156,7 +156,7 @@ mod tests {
         let user_id = diesel::insert_into(users::table)
             .values((
                 users::name.eq("user1"),
-                users::gh_login.eq("user1"),
+                users::login.eq("user1"),
                 users::gh_id.eq(42),
                 users::gh_encrypted_token.eq(&[]),
             ))
@@ -204,7 +204,7 @@ mod tests {
         let user_id = diesel::insert_into(users::table)
             .values((
                 users::name.eq("user1"),
-                users::gh_login.eq("user1"),
+                users::login.eq("user1"),
                 users::gh_id.eq(42),
                 users::gh_encrypted_token.eq(&[]),
             ))
