@@ -100,7 +100,7 @@ impl NewUser<'_> {
     }
 
     /// Inserts the user into the database, or updates an existing one.
-    pub async fn insert_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<User> {
+    pub async fn insert_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<i32> {
         diesel::insert_into(users::table)
             .values(self)
             // We need the `WHERE gh_id > 0` condition here because `gh_id` set
@@ -119,7 +119,7 @@ impl NewUser<'_> {
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
-            .returning(User::as_returning())
+            .returning(users::id)
             .get_result(&mut conn)
             .await
     }

@@ -179,7 +179,7 @@ async fn create_or_update_user(
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
     conn.transaction(async |conn| {
-        let user_id = new_user.insert_or_update(conn).await?.id;
+        let user_id = new_user.insert_or_update(conn).await?;
 
         // To assist in eventually someday allowing OAuth with more than GitHub, also
         // write the GitHub info to the `oauth_github` table. Nothing currently reads
