@@ -286,7 +286,7 @@ async fn check_ownership_two_crates() -> anyhow::Result<()> {
     let krate_owned_by_team = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&team, &krate_owned_by_team, user, &mut conn).await?;
+    add_team_to_crate(&team, &krate_owned_by_team, user.id, &mut conn).await?;
 
     let user2 = app.db_new_user("user_bar").await;
     let user2 = user2.as_model();
@@ -325,7 +325,7 @@ async fn check_ownership_one_crate() -> anyhow::Result<()> {
     let krate = CrateBuilder::new("best_crate", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&team, &krate, user, &mut conn).await?;
+    add_team_to_crate(&team, &krate, user.id, &mut conn).await?;
 
     let json: TeamResponse = anon
         .get("/api/v1/crates/best_crate/owner_team")
@@ -359,7 +359,7 @@ async fn add_existing_team() {
     let krate = CrateBuilder::new("best_crate", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&t, &krate, user, &mut conn)
+    add_team_to_crate(&t, &krate, user.id, &mut conn)
         .await
         .unwrap();
 
