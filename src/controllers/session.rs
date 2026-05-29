@@ -151,7 +151,7 @@ pub async fn save_user_to_database(
 ) -> QueryResult<i32> {
     let new_user = NewUser::builder()
         .gh_id(user.id)
-        .gh_login(&user.login)
+        .login(&user.login)
         .maybe_name(user.name.as_deref())
         .maybe_gh_avatar(user.avatar_url.as_deref())
         .gh_encrypted_token(encrypted_token)
@@ -188,7 +188,7 @@ async fn create_or_update_user(
             .user_id(user_id)
             .account_id(new_user.gh_id as i64)
             .encrypted_token(new_user.gh_encrypted_token)
-            .login(new_user.gh_login)
+            .login(new_user.login)
             .maybe_avatar(new_user.gh_avatar)
             .build();
         if let Err(e) = new_oauth_github.insert_or_update(conn).await {
@@ -206,7 +206,7 @@ async fn create_or_update_user(
                 let email = EmailMessage::from_template(
                     "user_confirm",
                     context! {
-                        user_name => new_user.gh_login,
+                        user_name => new_user.login,
                         domain => emails.domain,
                         token => token.expose_secret()
                     },

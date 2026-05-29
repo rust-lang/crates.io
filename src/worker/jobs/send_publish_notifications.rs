@@ -58,7 +58,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
             .filter(users::publish_notifications.eq(true))
             .inner_join(emails::table.on(users::id.eq(emails::user_id)))
             .filter(emails::verified.eq(true))
-            .select((users::gh_login, emails::email))
+            .select((users::login, emails::email))
             .load::<(String, String)>(&mut conn)
             .await?;
 
@@ -181,7 +181,7 @@ struct PublishDetails {
     version: String,
     #[diesel(select_expression = versions::columns::created_at)]
     publish_time: DateTime<Utc>,
-    #[diesel(select_expression = users::columns::gh_login.nullable())]
+    #[diesel(select_expression = users::columns::login.nullable())]
     publisher: Option<String>,
     #[diesel(select_expression = versions::columns::trustpub_data.nullable())]
     trustpub_data: Option<TrustpubData>,

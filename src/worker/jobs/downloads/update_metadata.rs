@@ -116,7 +116,7 @@ mod tests {
     async fn user(conn: &mut AsyncPgConnection) -> i32 {
         NewUser::builder()
             .gh_id(2)
-            .gh_login("login")
+            .login("login")
             .gh_encrypted_token(&[])
             .build()
             .insert(conn)

@@ -119,7 +119,6 @@ impl VisibilityConfig {
 mod tests {
     use super::*;
     use crates_io_test_db::TestDatabase;
-    use diesel::prelude::*;
     use diesel_async::{AsyncPgConnection, RunQueryDsl};
     use std::collections::HashSet;
     use std::iter::FromIterator;
@@ -169,33 +168,27 @@ mod tests {
         );
     }
 
-    mod information_schema {
-        use diesel::table;
-
-        table! {
-            information_schema.columns (table_schema, table_name, column_name) {
-                table_schema -> Text,
-                table_name -> Text,
-                column_name -> Text,
-                ordinal_position -> Integer,
-            }
-        }
-    }
-
-    #[derive(Debug, Eq, Hash, PartialEq, Queryable)]
+    #[derive(Debug, Eq, Hash, PartialEq, diesel::QueryableByName)]
     struct Column {
+        #[diesel(sql_type = diesel::sql_types::Text)]
         table_name: String,
+        #[diesel(sql_type = diesel::sql_types::Text)]
         column_name: String,
     }
 
     async fn get_db_columns(conn: &mut AsyncPgConnection, schema: &str) -> Vec<Column> {
-        use information_schema::columns;
-        columns::table
-            .select((columns::table_name, columns::column_name))
-            .filter(columns::table_schema.eq(schema))
-            .order_by((columns::table_name, columns::ordinal_position))
-            .load(conn)
-            .await
-            .unwrap()
+        diesel::sql_query(
+            "SELECT c.table_name, c.column_name \
+             FROM information_schema.columns c \
+             JOIN information_schema.tables t \
+               ON t.table_schema = c.table_schema \
+              AND t.table_name = c.table_name \
+             WHERE c.table_schema = $1 AND t.table_type = 'BASE TABLE' \
+             ORDER BY c.table_name, c.ordinal_position",
+        )
+        .bind::<diesel::sql_types::Text, _>(schema)
+        .load(conn)
+        .await
+        .unwrap()
     }
 }

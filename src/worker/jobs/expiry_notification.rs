@@ -89,7 +89,7 @@ async fn handle_expiring_token(
         let email = EmailMessage::from_template(
             "expiry_notification",
             context! {
-                name => user.gh_login,
+                name => user.login,
                 token_id => token.id,
                 token_name => token.name,
                 expiry_date => token.expired_at.unwrap().to_rfc3339_opts(SecondsFormat::Secs, true)
@@ -156,7 +156,7 @@ mod tests {
         // Set up a user and a token that is about to expire.
         let user_id = NewUser::builder()
             .gh_id(0)
-            .gh_login("a")
+            .login("a")
             .gh_encrypted_token(&[])
             .build()
             .insert(&conn)

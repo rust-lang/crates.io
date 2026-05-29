@@ -38,21 +38,21 @@ async fn show_latest_user_case_insensitively() {
     // Please do not delete or modify the setup of this test in order to get it to pass.
     // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
     // available for anyone to take. We need to support having multiple user accounts
-    // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
+    // with the same login in crates.io. `gh_id` is stable across renames, so that field
     // should be used for uniquely identifying GitHub accounts whenever possible. For the
     // crates.io/user/{username} pages, the best we can do is show the last crates.io account
     // created with that username.
 
     let user1 = NewUser::builder()
         .gh_id(1)
-        .gh_login("foobar")
+        .login("foobar")
         .name("I was first then deleted my github account")
         .gh_encrypted_token(&[])
         .build();
 
     let user2 = NewUser::builder()
         .gh_id(2)
-        .gh_login("FOOBAR")
+        .login("FOOBAR")
         .name("I was second, I took the foobar username on github")
         .gh_encrypted_token(&[])
         .build();
@@ -80,7 +80,7 @@ async fn user_without_github_account() {
         // The gh_id column will eventually be removed; there are currently records in production
         // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
         .gh_id(-1)
-        .gh_login("foobar")
+        .login("foobar")
         .name("I deleted my github account")
         .gh_encrypted_token(&[])
         .build();

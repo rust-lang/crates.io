@@ -179,7 +179,7 @@ async fn create_and_add_owner(
 async fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
-    let username = &user.as_model().gh_login;
+    let username = &user.as_model().login;
 
     let krate = CrateBuilder::new("owners_selfremove", user.as_model().id)
         .expect_build(&mut conn)
@@ -214,7 +214,7 @@ async fn owners_can_remove_self() {
 async fn modify_multiple_owners() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
-    let username = &user.as_model().gh_login;
+    let username = &user.as_model().login;
 
     let krate = CrateBuilder::new("owners_multiple", user.as_model().id)
         .expect_build(&mut conn)
@@ -382,7 +382,7 @@ async fn deleted_ownership_isnt_in_owner_user() {
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&conn, &user.gh_login).await.unwrap();
+    krate.owner_remove(&conn, &user.login).await.unwrap();
 
     let json: UserResponse = anon
         .get("/api/v1/crates/foo_my_packages/owner_user")
@@ -451,7 +451,7 @@ async fn invitations_list_v1() {
             crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
                 crate_id: krate.id,
                 crate_name: krate.name,
-                invited_by_username: owner.gh_login.clone(),
+                invited_by_username: owner.login.clone(),
                 invitee_id: user.as_model().id,
                 inviter_id: owner.id,
                 // This value changes with each test run so we can't use a fixed value here
@@ -497,7 +497,7 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
             crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
                 crate_id: krate2.id,
                 crate_name: krate2.name,
-                invited_by_username: owner.gh_login.clone(),
+                invited_by_username: owner.login.clone(),
                 invitee_id: user.as_model().id,
                 inviter_id: owner.id,
                 // This value changes with each test run so we can't use a fixed value here
@@ -812,12 +812,12 @@ async fn inactive_users_dont_get_invitations() {
     let owner = owner.as_model();
 
     // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
-    let invited_gh_login = "user_bar";
+    let invited_login = "user_bar";
     let krate_name = "inactive_test";
 
     NewUser::builder()
         .gh_id(-1)
-        .gh_login(invited_gh_login)
+        .login(invited_login)
         .gh_encrypted_token(&[])
         .build()
         .insert(&conn)
@@ -828,7 +828,7 @@ async fn inactive_users_dont_get_invitations() {
         .expect_build(&mut conn)
         .await;
 
-    let invited_user = app.db_new_user(invited_gh_login).await;
+    let invited_user = app.db_new_user(invited_login).await;
 
     owner_token
         .add_named_owner(krate_name, "user_bar")
@@ -846,13 +846,13 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
     let owner = owner.as_model();
 
     // An inactive user with a lower gh_id and an active user with a higher gh_id both exist
-    let invited_gh_login = "user_bar";
+    let invited_login = "user_bar";
     let krate_name = "newer_user_test";
 
     // This user will get a lower gh_id, given how crate::tests::new_user works
-    app.db_new_user(invited_gh_login).await;
+    app.db_new_user(invited_login).await;
 
-    let invited_user = app.db_new_user(invited_gh_login).await;
+    let invited_user = app.db_new_user(invited_login).await;
 
     CrateBuilder::new(krate_name, owner.id)
         .expect_build(&mut conn)

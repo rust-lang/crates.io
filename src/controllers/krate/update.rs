@@ -94,7 +94,7 @@ async fn update_inner(
         .filter(crate_owners::crate_id.eq(krate.id))
         .filter(crate_owners::deleted.eq(false))
         .filter(crate_owners::owner_kind.eq(crate::models::OwnerKind::User))
-        .select((users::id, users::gh_login, emails::email, emails::verified))
+        .select((users::id, users::login, emails::email, emails::verified))
         .load::<(i32, String, String, bool)>(conn)
         .await?;
 
@@ -121,17 +121,17 @@ async fn update_inner(
             krate.name = %krate.name,
             network.client.ip = %**real_ip,
             usr.id = user.id,
-            usr.name = %user.gh_login,
+            usr.name = %user.login,
             "User {} set trustpub_only={trustpub_only} for crate {}",
-            user.gh_login,
+            user.login,
             krate.name
         );
 
         // Send email notifications to all crate owners
-        for (_, gh_login, email_address, email_verified) in &user_owners {
+        for (_, login, email_address, email_verified) in &user_owners {
             if *email_verified {
                 let email = TrustpubOnlyChangedEmail {
-                    recipient: gh_login,
+                    recipient: login,
                     auth_user: user,
                     krate,
                     trustpub_only,

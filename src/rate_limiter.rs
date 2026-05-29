@@ -701,12 +701,12 @@ mod tests {
         Ok(())
     }
 
-    async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
+    async fn new_user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
 
         NewUser::builder()
             .gh_id(0)
-            .gh_login(gh_login)
+            .login(login)
             .gh_encrypted_token(&[])
             .build()
             .insert(conn)

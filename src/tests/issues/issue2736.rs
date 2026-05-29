@@ -37,7 +37,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     let foo2 = app.db_new_user("foo").await;
 
     let github_ids = users::table
-        .filter(users::gh_login.eq("foo"))
+        .filter(users::login.eq("foo"))
         .select(users::gh_id)
         .load::<i32>(&mut conn)
         .await?;

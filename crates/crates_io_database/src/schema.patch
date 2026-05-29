@@ -40,7 +40,7 @@
          /// The `id` column of the `dependencies` table.
          ///
          /// Its SQL type is `Int4`.
-@@ -802,6 +796,24 @@
+@@ -798,6 +792,24 @@
  }
  
  diesel::table! {
