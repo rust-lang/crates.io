@@ -1,5 +1,5 @@
 use crate::util::{RequestHelper, TestApp};
-use crates_io::models::{NewCategory, NewTeam, NewUser};
+use crates_io::models::{NewCategory, NewTeam, NewUser, OauthGithubUpdate};
 use crates_io::views::{
     EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
     GoodCrate,
@@ -93,17 +93,25 @@ pub struct OwnerResp {
     msg: String,
 }
 
-fn new_user(login: &str) -> NewUser<'_> {
-    static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
-        GitHubTokenEncryption::for_testing()
-            .encrypt("some random token")
-            .unwrap()
-    });
+static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
+    GitHubTokenEncryption::for_testing()
+        .encrypt("some random token")
+        .unwrap()
+});
 
+fn new_user(login: &str) -> NewUser<'_> {
     NewUser::builder()
         .gh_id(next_gh_id())
         .gh_login(login)
         .gh_encrypted_token(&ENCRYPTED_TOKEN)
+        .build()
+}
+
+fn new_oauth_github(login: &str) -> OauthGithubUpdate<'_> {
+    OauthGithubUpdate::builder()
+        .account_id(next_gh_id() as i64)
+        .encrypted_token(&ENCRYPTED_TOKEN)
+        .login(login)
         .build()
 }
 

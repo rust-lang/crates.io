@@ -28,7 +28,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let (app, _, user, token) = TestApp::init().with_token().await;
     let emails = &app.as_inner().emails;
     let mut conn = app.db_conn().await;
-    let gh_id = user.as_model().gh_id;
+    let gh_id = user.as_model().gh_id.unwrap() as i32;
     let token = token.plaintext();
 
     let encryption = GitHubTokenEncryption::for_testing();
@@ -47,10 +47,20 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token));
     let api_token = assert_ok!(ApiToken::find_by_api_token(&mut conn, &hashed_token).await);
-    let user = assert_ok!(User::find(&conn, api_token.user_id).await);
 
+    let user = assert_ok!(User::find(&conn, api_token.user_id).await);
+    // For now, the user's `gh_login` should be kept in sync; when we stop updating usernames
+    // from GitHub this test should be changed to assert that the user record remains `foo`
     assert_eq!(user.gh_login, "bar");
-    let decrypted_token = encryption.decrypt(&user.gh_encrypted_token)?;
+    // The associated `oauth_github` record's username should be updated to `bar`
+    let oauth_github_login: String = oauth_github::table
+        .filter(oauth_github::user_id.eq(api_token.user_id))
+        .select(oauth_github::login)
+        .first(&mut conn)
+        .await?;
+    assert_eq!(oauth_github_login, "bar");
+
+    let decrypted_token = encryption.decrypt(&user.gh_encrypted_token.unwrap())?;
     assert_eq!(decrypted_token.secret(), "bar_token");
 
     Ok(())
@@ -143,7 +153,7 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let gh_user = GitHubUser {
         // Use the same github ID to link to the existing account
-        id: model.gh_id,
+        id: model.gh_id.unwrap() as i32,
         login: "arbitrary_username".to_string(),
         name: None,
         email: Some(new_github_email.to_string()),
@@ -348,7 +358,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
 
     assert_eq!(u.gh_login, "arbitrary_username");
-    assert_eq!(u.gh_id, new_gh_id);
+    assert_eq!(u.gh_id.unwrap() as i32, new_gh_id);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     assert_eq!(oauth_github_records.len(), 2);

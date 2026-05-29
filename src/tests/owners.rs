@@ -811,7 +811,8 @@ async fn inactive_users_dont_get_invitations() {
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
+    // An inactive user without an `oauth_github` record and an active user with an `oauth_github`
+    // record both exist
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 

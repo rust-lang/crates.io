@@ -191,11 +191,11 @@ async fn fetch_user_owners(
     mut conn: &AsyncPgConnection,
 ) -> QueryResult<Vec<(String, Option<String>)>> {
     crate_owners::table
-        .inner_join(users::table.on(crate_owners::owner_id.eq(users::id)))
+        .inner_join(oauth_github::table.on(crate_owners::owner_id.eq(oauth_github::user_id)))
         .filter(crate_owners::crate_id.eq(crate_id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .filter(crate_owners::deleted.eq(false))
-        .select((users::gh_login, users::gh_avatar))
+        .select((oauth_github::login, oauth_github::avatar))
         .load(&mut conn)
         .await
 }
