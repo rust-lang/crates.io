@@ -45,28 +45,25 @@ impl UpdateTest {
 
         let user_id =
             session::save_user_to_database(&existing_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
-                .await
-                .unwrap();
+                .await?;
 
         let oauth_github_before_update = oauth_github::table
             .filter(oauth_github::user_id.eq(user_id))
             .first::<OauthGithub>(&mut conn)
-            .await
-            .unwrap();
+            .await?;
         let last_sync_before_update = oauth_github_before_update.last_sync;
 
         let job = jobs::UpdateUserFromGithub {
             dry_run,
             account_id: oauth_github_before_update.account_id,
         };
-        job.enqueue(&conn).await.unwrap();
+        job.enqueue(&conn).await?;
         let job_result = app.try_run_pending_background_jobs().await;
 
         let oauth_github_after_update = oauth_github::table
             .filter(oauth_github::user_id.eq(user_id))
             .first::<OauthGithub>(&mut conn)
-            .await
-            .unwrap();
+            .await?;
         assert_eq!(oauth_github_after_update.login, expected_username);
         if expected_last_sync_updated {
             assert_ne!(oauth_github_after_update.last_sync, last_sync_before_update);
@@ -75,7 +72,7 @@ impl UpdateTest {
         }
 
         // For now, we want to update the `User` record too
-        let user_after_update = User::find(&conn, user_id).await.unwrap();
+        let user_after_update = User::find(&conn, user_id).await?;
         assert_eq!(user_after_update.gh_login, expected_username);
 
         if job_result.is_err() {
@@ -84,8 +81,7 @@ impl UpdateTest {
             // post-condition is satisfied.
             diesel::delete(background_jobs::table)
                 .execute(&mut conn)
-                .await
-                .unwrap();
+                .await?;
         }
 
         job_result
