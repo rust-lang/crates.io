@@ -44,7 +44,7 @@ async fn publish_with_org_restrictions() {
         .create_or_update(&conn)
         .await
         .unwrap();
-    add_team_to_crate(&team, &krate, owner_model, &mut conn)
+    add_team_to_crate(&team, &krate, owner_model.id, &mut conn)
         .await
         .unwrap();
 

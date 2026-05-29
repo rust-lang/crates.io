@@ -107,13 +107,13 @@ async fn batch_update(batch_size: i64, conn: &mut AsyncPgConnection) -> QueryRes
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
+    use crate::models::{Crate, NewCrate, NewUser, NewVersion, Version};
     use crate::schema::{crate_downloads, crates, versions};
     use crates_io_test_db::TestDatabase;
     use diesel::sql_types::Timestamptz;
     use diesel_async::AsyncConnection;
 
-    async fn user(conn: &mut AsyncPgConnection) -> User {
+    async fn user(conn: &mut AsyncPgConnection) -> i32 {
         NewUser::builder()
             .gh_id(2)
             .gh_login("login")
@@ -150,8 +150,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user = user(&mut conn).await;
-        let (krate, version) = crate_and_version(&mut conn, user.id).await;
+        let user_id = user(&mut conn).await;
+        let (krate, version) = crate_and_version(&mut conn, user_id).await;
         insert_into(version_downloads::table)
             .values(version_downloads::version_id.eq(version.id))
             .execute(&mut conn)
@@ -200,8 +200,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user = user(&mut conn).await;
-        let (_, version) = crate_and_version(&mut conn, user.id).await;
+        let user_id = user(&mut conn).await;
+        let (_, version) = crate_and_version(&mut conn, user_id).await;
         insert_into(version_downloads::table)
             .values((
                 version_downloads::version_id.eq(version.id),
@@ -228,8 +228,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user = user(&mut conn).await;
-        let (_, version) = crate_and_version(&mut conn, user.id).await;
+        let user_id = user(&mut conn).await;
+        let (_, version) = crate_and_version(&mut conn, user_id).await;
         insert_into(version_downloads::table)
             .values((
                 version_downloads::version_id.eq(version.id),
@@ -258,8 +258,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user = user(&mut conn).await;
-        let (krate, version) = crate_and_version(&mut conn, user.id).await;
+        let user_id = user(&mut conn).await;
+        let (krate, version) = crate_and_version(&mut conn, user_id).await;
         update(versions::table)
             .set(versions::updated_at.eq(now.into_sql::<Timestamptz>() - 2.hours()))
             .execute(&mut conn)
@@ -344,8 +344,8 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user = user(&mut conn).await;
-        let (_, version) = crate_and_version(&mut conn, user.id).await;
+        let user_id = user(&mut conn).await;
+        let (_, version) = crate_and_version(&mut conn, user_id).await;
 
         // Wrap the test body in a transaction so `now` resolves to the same
         // value across every query inside it.

@@ -23,7 +23,7 @@ async fn index() -> anyhow::Result<()> {
         assert_eq!(json.meta.total, 0);
     }
 
-    let user_id = new_user("foo").insert(&conn).await?.id;
+    let user_id = new_user("foo").insert(&conn).await?;
 
     let krate = CrateBuilder::new("fooindex", user_id)
         .expect_build(&mut conn)

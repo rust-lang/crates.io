@@ -6,8 +6,8 @@ use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
-use crates_io::models::NewEmail;
 use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
 use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
@@ -141,15 +141,29 @@ impl TestApp {
 
         let email = format!("{username}@example.com");
 
-        let user = crate::new_user(username).insert(&conn).await.unwrap();
+        let new_user = crate::new_user(username);
+        let id = new_user.insert(&conn).await.unwrap();
 
         let new_email = NewEmail::builder()
-            .user_id(user.id)
+            .user_id(id)
             .email(&email)
             .verified(true)
             .build();
 
         new_email.insert(&conn).await.unwrap();
+
+        let user = User {
+            id,
+            name: new_user.name.map(str::to_string),
+            gh_id: new_user.gh_id,
+            gh_login: new_user.gh_login.to_string(),
+            gh_avatar: new_user.gh_avatar.map(str::to_string),
+            gh_encrypted_token: new_user.gh_encrypted_token.to_vec(),
+            account_lock_reason: None,
+            account_lock_until: None,
+            is_admin: false,
+            publish_notifications: true,
+        };
 
         MockCookieUser {
             app: self.clone(),

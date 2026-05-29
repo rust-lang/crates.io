@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewOauthGithub, NewUser, User};
+use crate::models::{NewEmail, NewOauthGithub, NewUser};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
@@ -135,10 +135,10 @@ pub async fn authorize_session(
     let ghuser = app.github.current_user(token).await?;
 
     let mut conn = app.db_write().await?;
-    let user = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
+    let user_id = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
 
     // Log in by setting a cookie and the middleware authentication
-    session.insert("user_id".to_string(), user.id.to_string());
+    session.insert("user_id".to_string(), user_id.to_string());
 
     super::user::me::get_authenticated_user(app, req).await
 }
@@ -148,7 +148,7 @@ pub async fn save_user_to_database(
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
-) -> QueryResult<User> {
+) -> QueryResult<i32> {
     let new_user = NewUser::builder()
         .gh_id(user.id)
         .gh_login(&user.login)
@@ -158,7 +158,7 @@ pub async fn save_user_to_database(
         .build();
 
     match create_or_update_user(&new_user, user.email.as_deref(), emails, conn).await {
-        Ok(user) => Ok(user),
+        Ok(id) => Ok(id),
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
@@ -177,19 +177,19 @@ async fn create_or_update_user(
     email: Option<&str>,
     emails: &Emails,
     conn: &mut AsyncPgConnection,
-) -> QueryResult<User> {
+) -> QueryResult<i32> {
     conn.transaction(async |conn| {
-        let user = new_user.insert_or_update(conn).await?;
+        let user_id = new_user.insert_or_update(conn).await?;
 
         // To assist in eventually someday allowing OAuth with more than GitHub, also
         // write the GitHub info to the `oauth_github` table. Nothing currently reads
         // from this table. Only log errors but don't fail login if this writing fails.
         let new_oauth_github = NewOauthGithub::builder()
-            .user_id(user.id)
-            .account_id(user.gh_id as i64)
+            .user_id(user_id)
+            .account_id(new_user.gh_id as i64)
             .encrypted_token(new_user.gh_encrypted_token)
-            .login(&user.gh_login)
-            .maybe_avatar(user.gh_avatar.as_deref())
+            .login(new_user.gh_login)
+            .maybe_avatar(new_user.gh_avatar)
             .build();
         if let Err(e) = new_oauth_github.insert_or_update(conn).await {
             error!("Error inserting or updating oauth_github record: {e}");
@@ -198,7 +198,7 @@ async fn create_or_update_user(
         // To send the user an account verification email
         if let Some(user_email) = email {
             let new_email = NewEmail::builder()
-                .user_id(user.id)
+                .user_id(user_id)
                 .email(user_email)
                 .build();
 
@@ -206,7 +206,7 @@ async fn create_or_update_user(
                 let email = EmailMessage::from_template(
                     "user_confirm",
                     context! {
-                        user_name => user.gh_login,
+                        user_name => new_user.gh_login,
                         domain => emails.domain,
                         token => token.expose_secret()
                     },
@@ -224,14 +224,15 @@ async fn create_or_update_user(
             }
         }
 
-        Ok(user)
+        Ok(user_id)
     })
     .await
 }
 
-async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
-    User::query()
+async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<i32>> {
+    users::table
         .filter(users::gh_id.eq(gh_id))
+        .select(users::id)
         .first(&mut conn)
         .await
         .optional()

@@ -84,7 +84,8 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let u = User::find(&conn, user_id).await?;
 
     let user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -107,7 +108,8 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let u = User::find(&conn, user_id).await?;
 
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -148,7 +150,8 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, &[], &emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(&gh_user, &[], &emails, &mut conn).await?;
+    let u = User::find(&conn, user_id).await?;
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
@@ -204,7 +207,8 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let u = User::find(&conn, user_id).await?;
 
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
@@ -249,7 +253,8 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let u = User::find(&conn, user_id).await?;
 
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
@@ -289,7 +294,8 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
         avatar_url: None,
     };
     let encrypted_token = encryption.encrypt("some random token")?;
-    let u = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let u = User::find(&conn, uid).await?;
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     assert_eq!(oauth_github_records.len(), 1);
@@ -311,7 +317,8 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
         avatar_url: Some("http://example.com/icon.png".into()),
     };
     let encrypted_token = encryption.encrypt("a different token")?;
-    let u = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let u = User::find(&conn, uid).await?;
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     // There still should only be one `oauth_github` record that got updated, not a new insertion
@@ -337,7 +344,8 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
         avatar_url: None,
     };
     let encrypted_token = encryption.encrypt("a different random token")?;
-    let u = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let u = User::find(&conn, uid).await?;
 
     assert_eq!(u.gh_login, "arbitrary_username");
     assert_eq!(u.gh_id, new_gh_id);

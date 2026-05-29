@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 
-use crate::models::{Crate, NewTeam, NewUser, Team, User};
+use crate::models::{Crate, NewTeam, NewUser, Team};
 use crates_io_test_utils::github::next_gh_id;
 
 pub mod faker {
@@ -13,10 +13,10 @@ pub mod faker {
         conn: &mut AsyncPgConnection,
         name: &str,
         description: &str,
-        user: &User,
+        user_id: i32,
         downloads: i32,
     ) -> anyhow::Result<Crate> {
-        CrateBuilder::new(name, user.id)
+        CrateBuilder::new(name, user_id)
             .description(description)
             .downloads(downloads)
             .version("1.0.0")
@@ -37,7 +37,7 @@ pub mod faker {
         Ok(team.create_or_update(conn).await?)
     }
 
-    pub async fn user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
+    pub async fn user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<i32> {
         NewUser::builder()
             .gh_id(next_gh_id())
             .gh_login(login)
