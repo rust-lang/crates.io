@@ -1,9 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
 
-  import GitHub from '$lib/assets/github.svg?component';
-  import Twitter from '$lib/assets/twitter.svg?component';
-  import Zulip from '$lib/assets/zulip.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
 </script>
 
 <footer class="footer">
@@ -44,19 +42,19 @@
       <ul role="list">
         <li>
           <a href="https://github.com/rust-lang/crates.io/">
-            <GitHub aria-hidden="true" />
+            <Icon class="i-simple-icons:github" />
             <span class="sr-only">GitHub: </span>rust-lang/crates.io
           </a>
         </li>
         <li>
           <a href="https://rust-lang.zulipchat.com/#streams/318791/t-crates-io">
-            <Zulip aria-hidden="true" />
+            <Icon class="i-simple-icons:zulip" />
             <span class="sr-only">Zulip: </span>#t-crates-io
           </a>
         </li>
         <li>
           <a href="https://twitter.com/cratesiostatus">
-            <Twitter aria-hidden="true" />
+            <Icon class="i-simple-icons:x" />
             <span class="sr-only">X: </span>@cratesiostatus
           </a>
         </li>
@@ -136,17 +134,14 @@
         /* apply color fade only on mouse-out */
         transition: var(--transition-instant);
 
-        & :global(svg) {
+        & :global(.icon) {
           filter: drop-shadow(1px 1px 1px var(--footer-link-hover-shadow-color));
         }
       }
     }
 
-    & :global(svg) {
-      height: 1.25em;
-      width: 1.25em;
-      margin: -0.125em var(--space-xs) -0.125em 0;
-      flex-shrink: 0;
+    & :global(.icon) {
+      margin: 0 var(--space-2xs) 0 0;
     }
   }
 </style>

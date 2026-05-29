@@ -8,14 +8,8 @@
   import prettyBytes from 'pretty-bytes';
   import { MediaQuery } from 'svelte/reactivity';
 
-  import CalendarIcon from '$lib/assets/calendar.svg?component';
-  import CircleQuestionIcon from '$lib/assets/circle-question.svg?component';
-  import CodeIcon from '$lib/assets/code.svg?component';
-  import LicenseIcon from '$lib/assets/license.svg?component';
-  import LinkIcon from '$lib/assets/link.svg?component';
-  import RustIcon from '$lib/assets/rust.svg?component';
-  import WeightIcon from '$lib/assets/weight.svg?component';
   import CopyButton from '$lib/components/CopyButton.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import LicenseExpression from '$lib/components/LicenseExpression.svelte';
   import OwnersList from '$lib/components/OwnersList.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
@@ -107,7 +101,7 @@
     <h2 class="heading">Metadata</h2>
 
     <time datetime={formatISO(version.created_at)} class="date">
-      <CalendarIcon aria-hidden="true" />
+      <Icon class="i-mdi:calendar-month" />
       <span class="sr-only">Release date:</span>
       <span>
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
@@ -120,20 +114,20 @@
 
     {#if version.rust_version}
       <div class="msrv" data-test-msrv>
-        <RustIcon aria-hidden="true" />
+        <Icon class="i-simple-icons:rust" />
         <span class="sr-only">Minimum Rust version:</span>
         <Msrv msrv={version.rust_version} edition={version.edition ?? undefined} />
       </div>
     {:else if version.edition}
       <div class="edition" data-test-edition>
-        <RustIcon aria-hidden="true" />
+        <Icon class="i-simple-icons:rust" />
         <Edition edition={version.edition} />
       </div>
     {/if}
 
     {#if version.license}
       <div class="license" data-test-license>
-        <LicenseIcon aria-hidden="true" />
+        <Icon class="i-mdi:scale-balance" />
         <span class="sr-only">License:</span>
         <span>
           <LicenseExpression license={version.license} />
@@ -143,7 +137,7 @@
 
     {#if version.linecounts?.total_code_lines}
       <div class="linecount" data-test-linecounts>
-        <CodeIcon aria-hidden="true" />
+        <Icon class="i-mdi:code-tags" />
         <span>
           {formatShortNum(Number(version.linecounts.total_code_lines))} SLoC
           <Tooltip>
@@ -156,7 +150,7 @@
 
     {#if version.crate_size}
       <div class="bytes">
-        <WeightIcon aria-hidden="true" />
+        <Icon class="i-mdi:weight" />
         <span class="sr-only">Size:</span>
         <span>
           {prettyBytes(version.crate_size, { binary: true })}
@@ -166,7 +160,7 @@
     {/if}
 
     <div class="purl" data-test-purl>
-      <LinkIcon aria-hidden="true" />
+      <Icon class="i-mdi:link-variant" />
       <span class="sr-only">Package URL:</span>
       <CopyButton copyText={purl} class="button-reset purl-copy-button">
         <span class="purl-text">{purl}</span>
@@ -185,7 +179,7 @@
         class="purl-help-link"
         aria-label="Learn more"
       >
-        <CircleQuestionIcon aria-hidden="true" />
+        <Icon class="i-mdi:help-circle-outline" />
         <Tooltip text="Learn more about Package URLs" />
       </a>
     </div>
@@ -317,11 +311,8 @@
     display: flex;
     align-items: center;
 
-    :global(svg) {
-      flex-shrink: 0;
+    :global(.icon) {
       margin-right: var(--space-2xs);
-      height: 1em;
-      width: auto;
     }
   }
 
@@ -395,7 +386,7 @@
       border-radius: var(--space-3xs);
     }
 
-    :global(svg) {
+    :global(.icon) {
       margin: 0;
     }
   }

@@ -20,7 +20,7 @@
   - button "Alphabetical"
   - list:
     - listitem:
-      - heading "nanomsg v0.6.1 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "nanomsg v0.6.1" [level=2]:
         - link "nanomsg":
           - /url: /crates/nanomsg
         - text: ""

@@ -23,6 +23,12 @@
   }
 
   .wrapper {
+    --icon-note: icon('i-octicon:info-16');
+    --icon-tip: icon('i-octicon:light-bulb-16');
+    --icon-important: icon('i-octicon:report-16');
+    --icon-warning: icon('i-octicon:alert-16');
+    --icon-caution: icon('i-octicon:stop-16');
+
     line-height: 1.5;
     overflow-wrap: break-word;
 
@@ -236,7 +242,7 @@
           color: var(--fg-color-note);
 
           &:before {
-            mask: url('$lib/assets/alert-note.svg');
+            mask: var(--icon-note);
             background-color: var(--fg-color-note);
           }
         }
@@ -249,7 +255,7 @@
           color: var(--fg-color-tip);
 
           &:before {
-            mask: url('$lib/assets/alert-tip.svg');
+            mask: var(--icon-tip);
             background-color: var(--fg-color-tip);
           }
         }
@@ -262,7 +268,7 @@
           color: var(--fg-color-important);
 
           &:before {
-            mask: url('$lib/assets/alert-important.svg');
+            mask: var(--icon-important);
             background-color: var(--fg-color-important);
           }
         }
@@ -275,7 +281,7 @@
           color: var(--fg-color-warning);
 
           &:before {
-            mask: url('$lib/assets/alert-warning.svg');
+            mask: var(--icon-warning);
             background-color: var(--fg-color-warning);
           }
         }
@@ -288,7 +294,7 @@
           color: var(--fg-color-caution);
 
           &:before {
-            mask: url('$lib/assets/alert-caution.svg');
+            mask: var(--icon-caution);
             background-color: var(--fg-color-caution);
           }
         }

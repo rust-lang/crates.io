@@ -5,10 +5,8 @@
   import { resolve } from '$app/paths';
   import { formatDistanceToNow, formatISO } from 'date-fns';
 
-  import CopyIcon from '$lib/assets/copy.svg?component';
-  import DownloadIcon from '$lib/assets/download.svg?component';
-  import LatestUpdatesIcon from '$lib/assets/latest-updates.svg?component';
   import CopyButton from '$lib/components/CopyButton.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { truncateText } from '$lib/utils/truncate-text';
 
@@ -39,7 +37,7 @@
           class="copy-button button-reset"
           data-test-copy-toml-button
         >
-          <CopyIcon aria-hidden="true" />
+          <Icon class="i-mdi:content-copy" />
         </CopyButton>
       {/if}
     </div>
@@ -52,7 +50,7 @@
 
   <ul class="stats" role="list" aria-label="Statistics">
     <li class="downloads" data-test-downloads>
-      <DownloadIcon class="download-icon" aria-hidden="true" />
+      <Icon class="i-mdi:download download-icon" />
       <span>
         <span>
           All-Time<span class="sr-only"> Downloads</span>:
@@ -62,7 +60,7 @@
       </span>
     </li>
     <li class="recent-downloads" data-test-recent-downloads>
-      <DownloadIcon class="download-icon" aria-hidden="true" />
+      <Icon class="i-mdi:download download-icon" />
       <span>
         <span>
           Recent<span class="sr-only"> Downloads</span>:
@@ -72,7 +70,7 @@
       </span>
     </li>
     <li class="updated-at">
-      <LatestUpdatesIcon height="32" width="32" aria-hidden="true" />
+      <Icon class="i-mdi:autorenew" />
       <span>
         <span>
           Updated:
@@ -131,6 +129,8 @@
   }
 
   .crate-row :global(.copy-button) {
+    display: inline-flex;
+    align-items: center;
     color: var(--main-color);
     cursor: pointer;
 
@@ -139,12 +139,6 @@
     @media (pointer: fine) {
       opacity: 0;
       transition: var(--transition-medium);
-    }
-
-    :global(svg) {
-      vertical-align: top;
-      height: 1rem;
-      width: 1rem;
     }
   }
 
@@ -194,22 +188,8 @@
     }
   }
 
-  .stats :global(svg) {
-    height: 1em;
-    width: 1em;
-    margin-right: var(--space-xs);
-    flex-shrink: 0;
-  }
-
-  .stats :global(svg.download-icon) {
-    height: calc(1em + 20px);
-    width: calc(1em + 20px);
-    margin: -10px;
-    margin-right: calc(var(--space-xs) - 10px);
-  }
-
-  .stats :global(svg.download-icon circle) {
-    fill: none;
+  .stats :global(.icon) {
+    margin-right: var(--space-2xs);
   }
 
   .downloads {

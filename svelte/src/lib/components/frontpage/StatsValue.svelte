@@ -1,20 +1,21 @@
 <script lang="ts">
-  import type { Component } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
+
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     value: string;
     label: string;
-    icon: Component;
+    iconClass: string;
   }
 
-  let { value, label, icon: Icon, class: className, ...restProps }: Props = $props();
+  let { value, label, iconClass, class: className, ...restProps }: Props = $props();
 </script>
 
 <div class={['stats-value', className]} {...restProps}>
   <span class="value" data-test-value>{value}</span>
   <span class="label">{label}</span>
-  <Icon role="img" aria-hidden="true" class="icon" />
+  <Icon class={iconClass} />
 </div>
 
 <style>
@@ -43,10 +44,10 @@
   .stats-value > :global(.icon) {
     grid-column: 2;
     grid-row: 1 / 3;
-    width: var(--space-l-xl);
-    height: var(--space-l-xl);
+    width: var(--space-xl-2xl);
+    height: var(--space-xl-2xl);
     margin-left: var(--space-s);
-    margin-top: var(--space-3xs);
+    margin-top: calc(-1 * var(--space-4xs-3xs));
     color: light-dark(#545454, #adc0cd);
   }
 </style>

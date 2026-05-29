@@ -3,7 +3,7 @@
 
   import { resolve } from '$app/paths';
 
-  import DownloadArrowIcon from '$lib/assets/download-arrow.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props {
     crates: components['schemas']['Crate'][];
@@ -20,7 +20,7 @@
       <a href={resolve('/crates/[crate_id]', { crate_id: crate.id })} class="link">
         {crate.name}
         ({crate.max_version})
-        <DownloadArrowIcon class="download-icon" aria-hidden="true" />
+        <Icon class="i-mdi:download download-icon" />
         {numberFormat.format(crate.downloads)}
         <span class="sr-only">downloads</span>
       </a>
@@ -48,9 +48,12 @@
     align-items: center;
   }
 
-  .link :global(svg.download-icon) {
+  .link :global(.download-icon) {
     color: #b13b89;
+    margin: -0.125em;
     margin-left: auto;
     margin-right: var(--space-3xs);
+    width: 1.25em;
+    height: 1.25em;
   }
 </style>

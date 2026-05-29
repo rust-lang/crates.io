@@ -440,23 +440,26 @@
   }
 
   .publisher-select {
+    --dropdown-icon-light: icon('i-mdi:menu-down', 'black');
+    --dropdown-icon-dark: icon('i-mdi:menu-down', 'white');
+
     max-width: 600px;
     width: 100%;
     padding-right: var(--space-m);
-    background-image: url('$lib/assets/dropdown-black.svg');
+    background-image: var(--dropdown-icon-light);
     background-repeat: no-repeat;
-    background-position: calc(100% - var(--space-2xs)) center;
-    background-size: 10px;
+    background-position: calc(100% - var(--space-3xs)) center;
+    background-size: 20px;
     appearance: none;
 
     :global([data-color-scheme='system']) & {
       @media (prefers-color-scheme: dark) {
-        background-image: url('$lib/assets/dropdown-white.svg');
+        background-image: var(--dropdown-icon-dark);
       }
     }
 
     :global([data-color-scheme='dark']) & {
-      background-image: url('$lib/assets/dropdown-white.svg');
+      background-image: var(--dropdown-icon-dark);
     }
   }
 

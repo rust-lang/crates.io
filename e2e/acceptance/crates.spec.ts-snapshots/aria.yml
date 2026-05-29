@@ -16,7 +16,7 @@
   - button "Recent Downloads"
   - list:
     - listitem:
-      - heading "rust-crypto v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rust-crypto v1.0.0" [level=2]:
         - link "rust-crypto":
           - /url: /crates/rust-crypto
         - text: ""
@@ -36,7 +36,7 @@
           - link "Repository":
             - /url: https://github.com/DaGenix/rust-crypto/
     - listitem:
-      - heading "serde v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "serde v1.0.0" [level=2]:
         - link "serde":
           - /url: /crates/serde
         - text: ""
@@ -56,7 +56,7 @@
           - link "Repository":
             - /url: https://github.com/serde-rs/serde
     - listitem:
-      - heading "nanomsg v0.6.1 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "nanomsg v0.6.1" [level=2]:
         - link "nanomsg":
           - /url: /crates/nanomsg
         - text: ""
@@ -79,7 +79,7 @@
           - link "Repository":
             - /url: https://github.com/thehydroimpulse/nanomsg.rs
     - listitem:
-      - heading "quickcheck_macros v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "quickcheck_macros v1.0.0" [level=2]:
         - link "quickcheck_macros":
           - /url: /crates/quickcheck_macros
         - text: ""
@@ -102,7 +102,7 @@
           - link "Repository":
             - /url: https://github.com/BurntSushi/quickcheck
     - listitem:
-      - heading "rustless v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rustless v1.0.0" [level=2]:
         - link "rustless":
           - /url: /crates/rustless
         - text: ""
@@ -122,7 +122,7 @@
           - link "Repository":
             - /url: https://crates.io/crates/rustless
     - listitem:
-      - heading "external_mixin v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "external_mixin v1.0.0" [level=2]:
         - link "external_mixin":
           - /url: /crates/external_mixin
         - text: ""
@@ -145,7 +145,7 @@
           - link "Repository":
             - /url: https://github.com/huonw/external_mixin
     - listitem:
-      - heading "quickcheck v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "quickcheck v1.0.0" [level=2]:
         - link "quickcheck":
           - /url: /crates/quickcheck
         - text: ""
@@ -168,7 +168,7 @@
           - link "Repository":
             - /url: https://github.com/BurntSushi/quickcheck
     - listitem:
-      - heading /kinetic-rust v0\.\d+\.\d+ Copy Cargo\.toml snippet to clipboard/ [level=2]:
+      - heading /kinetic-rust v0\.\d+\.\d+/ [level=2]:
         - link "kinetic-rust":
           - /url: /crates/kinetic-rust
         - text: ""
@@ -191,7 +191,7 @@
           - link "Repository":
             - /url: https://github.com/icorderi/kinetic-rust/
     - listitem:
-      - heading "rust_mixin v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rust_mixin v1.0.0" [level=2]:
         - link "rust_mixin":
           - /url: /crates/rust_mixin
         - text: ""
@@ -214,7 +214,7 @@
           - link "Repository":
             - /url: https://github.com/huonw/external_mixin
     - listitem:
-      - heading "rust-htslib v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rust-htslib v1.0.0" [level=2]:
         - link "rust-htslib":
           - /url: /crates/rust-htslib
         - text: ""
@@ -231,7 +231,7 @@
           - link "Repository":
             - /url: https://github.com/rust-bio/rust-htslib.git
     - listitem:
-      - heading "rustful v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rustful v1.0.0" [level=2]:
         - link "rustful":
           - /url: /crates/rustful
         - text: ""
@@ -251,7 +251,7 @@
           - link "Repository":
             - /url: https://github.com/Ogeon/rustful
     - listitem:
-      - heading "nom v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "nom v1.0.0" [level=2]:
         - link "nom":
           - /url: /crates/nom
         - text: ""
@@ -271,7 +271,7 @@
           - link "Repository":
             - /url: https://github.com/Geal/nom
     - listitem:
-      - heading "libc v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "libc v1.0.0" [level=2]:
         - link "libc":
           - /url: /crates/libc
         - text: ""
@@ -284,7 +284,7 @@
           - text: "Updated:"
           - time: over 2 years ago
     - listitem:
-      - heading "nanomsg-sys v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "nanomsg-sys v1.0.0" [level=2]:
         - link "nanomsg-sys":
           - /url: /crates/nanomsg-sys
         - text: ""
@@ -297,7 +297,7 @@
           - text: "Updated:"
           - time: over 2 years ago
     - listitem:
-      - heading "mock-build-deps v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "mock-build-deps v1.0.0" [level=2]:
         - link "mock-build-deps":
           - /url: /crates/mock-build-deps
         - text: ""
@@ -310,7 +310,7 @@
           - text: "Updated:"
           - time: over 2 years ago
     - listitem:
-      - heading "mock-dev-deps v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "mock-dev-deps v1.0.0" [level=2]:
         - link "mock-dev-deps":
           - /url: /crates/mock-dev-deps
         - text: ""
@@ -323,7 +323,7 @@
           - text: "Updated:"
           - time: over 2 years ago
     - listitem:
-      - heading "rusted_cypher v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rusted_cypher v1.0.0" [level=2]:
         - link "rusted_cypher":
           - /url: /crates/rusted_cypher
         - text: ""
@@ -346,7 +346,7 @@
           - link "Repository":
             - /url: https://github.com/livioribeiro/rusted-cypher
     - listitem:
-      - heading "zlib v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "zlib v1.0.0" [level=2]:
         - link "zlib":
           - /url: /crates/zlib
         - text: ""
@@ -359,7 +359,7 @@
           - text: "Updated:"
           - time: almost 3 years ago
     - listitem:
-      - heading "rs-es v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "rs-es v1.0.0" [level=2]:
         - link "rs-es":
           - /url: /crates/rs-es
         - text: ""
@@ -379,7 +379,7 @@
           - link "Repository":
             - /url: https://github.com/benashford/rs-es
     - listitem:
-      - heading "postgres v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "postgres v1.0.0" [level=2]:
         - link "postgres":
           - /url: /crates/postgres
         - text: ""
@@ -399,7 +399,7 @@
           - link "Repository":
             - /url: https://github.com/sfackler/rust-postgres
     - listitem:
-      - heading "Inflector v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "Inflector v1.0.0" [level=2]:
         - link "Inflector":
           - /url: /crates/Inflector
         - text: ""
@@ -422,7 +422,7 @@
           - link "Repository":
             - /url: https://github.com/whatisinternet/inflector
     - listitem:
-      - heading "external_mixin_umbrella v1.0.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "external_mixin_umbrella v1.0.0" [level=2]:
         - link "external_mixin_umbrella":
           - /url: /crates/external_mixin_umbrella
         - text: ""
@@ -445,7 +445,7 @@
           - link "Repository":
             - /url: https://github.com/huonw/external_mixin
     - listitem:
-      - heading "unicorn-rpc v0.2.0 Copy Cargo.toml snippet to clipboard" [level=2]:
+      - heading "unicorn-rpc v0.2.0" [level=2]:
         - link "unicorn-rpc":
           - /url: /crates/unicorn-rpc
         - text: ""

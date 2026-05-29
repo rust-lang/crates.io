@@ -1,7 +1,7 @@
-import type { LogType, ProxyOptions } from 'vite';
+import type { LogType, PluginOption, ProxyOptions } from 'vite';
 
-import svg from '@poppanator/sveltekit-svg';
 import { sveltekit } from '@sveltejs/kit/vite';
+import UnoCSS from '@unocss/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { createLogger } from 'vite';
 import { analyzer } from 'vite-bundle-analyzer';
@@ -12,7 +12,7 @@ const API_HOST = process.env.API_HOST ?? 'https://crates.io';
 
 const proxyLogger = createLogger('info', { prefix: '[proxy]' });
 
-const plugins = [sveltekit(), svg()];
+const plugins: PluginOption[] = [UnoCSS(), sveltekit()];
 if (process.env.BUNDLE_ANALYSIS) {
   plugins.push(analyzer({ analyzerMode: 'static' }));
 }

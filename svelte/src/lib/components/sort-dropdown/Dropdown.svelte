@@ -2,8 +2,8 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import SortIcon from '$lib/assets/sort.svg?component';
   import * as Dropdown from '$lib/components/dropdown';
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     current: string;
@@ -16,7 +16,7 @@
 <div class={['sort-dropdown', className]} {...restProps}>
   <Dropdown.Root>
     <Dropdown.Trigger class="trigger" data-test-current-order>
-      <SortIcon class="icon" aria-hidden="true" />
+      <Icon class="i-mdi:format-list-bulleted" />
       {current}
     </Dropdown.Trigger>
 
@@ -39,6 +39,8 @@
     }
 
     & :global(.icon) {
+      width: 1.25em;
+      height: 1.25em;
       color: #1a9c5d;
       margin-right: var(--space-2xs);
     }

@@ -2,12 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import AlertCautionIcon from '$lib/assets/alert-caution.svg?component';
-  import AlertImportantIcon from '$lib/assets/alert-important.svg?component';
-  import AlertNoteIcon from '$lib/assets/alert-note.svg?component';
-  import AlertTipIcon from '$lib/assets/alert-tip.svg?component';
-  import AlertWarningIcon from '$lib/assets/alert-warning.svg?component';
-  import CheckCircleIcon from '$lib/assets/check-circle.svg?component';
+  import Icon from '$lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     variant: 'note' | 'success' | 'tip' | 'important' | 'warning' | 'caution';
@@ -21,17 +16,17 @@
 <div data-test-alert class={['alert', className]} data-variant={variant} {...others}>
   {#if !hideIcon}
     {#if variant === 'note'}
-      <AlertNoteIcon />
+      <Icon class="i-octicon:info-16" />
     {:else if variant === 'success'}
-      <CheckCircleIcon />
+      <Icon class="i-octicon:check-circle-16" />
     {:else if variant === 'tip'}
-      <AlertTipIcon />
+      <Icon class="i-octicon:light-bulb-16" />
     {:else if variant === 'important'}
-      <AlertImportantIcon />
+      <Icon class="i-octicon:report-16" />
     {:else if variant === 'warning'}
-      <AlertWarningIcon />
+      <Icon class="i-octicon:alert-16" />
     {:else if variant === 'caution'}
-      <AlertCautionIcon />
+      <Icon class="i-octicon:stop-16" />
     {/if}
   {/if}
   <div class="alert-content">
@@ -48,10 +43,7 @@
     border-radius: var(--space-3xs);
   }
 
-  .alert :global(svg) {
-    flex-shrink: 0;
-    width: 1em;
-    height: 1em;
+  .alert :global(.icon) {
     margin-right: var(--space-xs);
   }
 
@@ -60,7 +52,7 @@
     border-color: hsl(213, 93%, 62%);
   }
 
-  .alert[data-variant='note'] :global(svg) {
+  .alert[data-variant='note'] :global(.icon) {
     color: hsl(213, 93%, 62%);
   }
 
@@ -70,8 +62,8 @@
     border-color: hsl(128, 49%, 49%);
   }
 
-  .alert[data-variant='tip'] :global(svg),
-  .alert[data-variant='success'] :global(svg) {
+  .alert[data-variant='tip'] :global(.icon),
+  .alert[data-variant='success'] :global(.icon) {
     color: hsl(128, 49%, 49%);
   }
 
@@ -80,7 +72,7 @@
     border-color: hsl(262, 90%, 73%);
   }
 
-  .alert[data-variant='important'] :global(svg) {
+  .alert[data-variant='important'] :global(.icon) {
     color: hsl(262, 90%, 73%);
   }
 
@@ -89,7 +81,7 @@
     border-color: var(--yellow500);
   }
 
-  .alert[data-variant='warning'] :global(svg) {
+  .alert[data-variant='warning'] :global(.icon) {
     color: var(--yellow500);
   }
 
@@ -98,7 +90,7 @@
     border-color: hsl(3, 93%, 63%);
   }
 
-  .alert[data-variant='caution'] :global(svg) {
+  .alert[data-variant='caution'] :global(.icon) {
     color: hsl(3, 93%, 63%);
   }
 

@@ -8,8 +8,8 @@
   import { formatDistanceToNow } from 'date-fns';
   import { SvelteSet } from 'svelte/reactivity';
 
-  import CopyIcon from '$lib/assets/copy.svg?component';
   import CopyButton from '$lib/components/CopyButton.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
@@ -194,7 +194,7 @@
                 {#if isClipboardSupported}
                   <CopyButton copyText={pendingToken.token} class="copy-button button-reset">
                     <span class="sr-only">Copy</span>
-                    <CopyIcon aria-hidden="true" class="copy-button-icon" />
+                    <Icon class="i-mdi:content-copy copy-button-icon" />
                   </CopyButton>
                 {/if}
               </div>
@@ -348,7 +348,7 @@
   }
 
   .token-display :global(.copy-button-icon) {
-    width: auto;
+    width: 1.3em;
     height: 1.3em;
   }
 

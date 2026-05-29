@@ -16,6 +16,7 @@
   import { setTooltipContext } from '$lib/tooltip.svelte';
   import { SessionState, setSession } from '$lib/utils/session.svelte';
 
+  import 'virtual:uno.css';
   import '$lib/css/global.css';
 
   let { children, data } = $props();
