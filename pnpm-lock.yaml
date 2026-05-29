@@ -172,16 +172,16 @@ importers:
         specifier: workspace:*
         version: link:../packages/crates-io-msw
       '@iconify-json/heroicons':
-        specifier: ^1.2.3
+        specifier: 1.2.3
         version: 1.2.3
       '@iconify-json/mdi':
-        specifier: ^1.2.3
+        specifier: 1.2.3
         version: 1.2.3
       '@iconify-json/octicon':
-        specifier: ^1.2.25
+        specifier: 1.2.25
         version: 1.2.25
       '@iconify-json/simple-icons':
-        specifier: ^1.2.83
+        specifier: 1.2.83
         version: 1.2.83
       '@storybook/addon-a11y':
         specifier: 10.4.1
@@ -214,13 +214,13 @@ importers:
         specifier: 7.7.1
         version: 7.7.1
       '@unocss/preset-icons':
-        specifier: ^66.7.0
+        specifier: 66.7.0
         version: 66.7.0
       '@unocss/transformer-directives':
-        specifier: ^66.7.0
+        specifier: 66.7.0
         version: 66.7.0
       '@unocss/vite':
-        specifier: ^66.7.0
+        specifier: 66.7.0
         version: 66.7.0(vite@8.0.14(@types/node@24.12.4)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
       '@vitest/browser-playwright':
         specifier: 4.1.7
