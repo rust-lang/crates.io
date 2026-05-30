@@ -4,6 +4,7 @@
   import { createClient } from '@crates-io/api-client';
 
   import favicon from '$lib/assets/cargo.png?w=48&format=png&quality=80&imagetools';
+  import appleTouchIcon from '$lib/assets/cargo.png?w=180&format=png&quality=80&imagetools';
   import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
@@ -109,6 +110,7 @@
 
 <svelte:head>
   <title>{pageTitle.title}</title>
+  <link rel="apple-touch-icon" href={appleTouchIcon} />
 </svelte:head>
 
 {#if !__TEST__}
