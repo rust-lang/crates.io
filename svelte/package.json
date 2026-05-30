@@ -61,6 +61,7 @@
     "magic-string": "0.30.21",
     "msw": "2.14.6",
     "playwright": "1.60.0",
+    "sharp": "0.34.5",
     "storybook": "10.4.1",
     "svelte": "5.55.9",
     "svelte-check": "4.4.8",
