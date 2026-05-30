@@ -37,6 +37,30 @@
     login: 'rust-lang',
     avatar: 'https://avatars.githubusercontent.com/u/5430905?v=4',
   };
+
+  const NO_AVATAR_USER = {
+    id: 3,
+    kind: 'user',
+    name: 'Jane Doe',
+    login: 'janedoe',
+    avatar: null,
+  };
+
+  const NO_AVATAR_ANON = {
+    id: 4,
+    kind: 'user',
+    name: null,
+    login: 'anon123',
+    avatar: null,
+  };
+
+  const NO_AVATAR_TEAM = {
+    id: 5,
+    kind: 'team',
+    name: 'Rust Team',
+    login: 'rust-lang',
+    avatar: null,
+  };
 </script>
 
 <!-- This is using a single Story with multiple examples to reduce the amount of snapshots generated for visual regression testing -->
@@ -55,6 +79,22 @@
 
   <h1>Team</h1>
   <UserAvatar user={RUST_TEAM} size="medium" />
+
+  <h1>No Avatar</h1>
+  <UserAvatar user={NO_AVATAR_USER} size="medium" />
+
+  <h1>No Avatar, Null Name</h1>
+  <UserAvatar user={NO_AVATAR_ANON} size="medium" />
+
+  <h1>No Avatar, Team</h1>
+  <UserAvatar user={NO_AVATAR_TEAM} size="medium" />
+
+  <h1>No Avatar, All Sizes</h1>
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <UserAvatar user={NO_AVATAR_USER} size="small" />
+    <UserAvatar user={NO_AVATAR_USER} size="medium-small" />
+    <UserAvatar user={NO_AVATAR_USER} size="medium" />
+  </div>
 
   <h1>All Sizes</h1>
   <div style="display: flex; align-items: center; gap: 16px;">
