@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { navigating, page } from '$app/state';
   import { createClient } from '@crates-io/api-client';
 
+  import favicon from '$lib/assets/cargo.png?w=48&format=png&quality=80&imagetools';
+  import appleTouchIcon from '$lib/assets/cargo.png?w=180&format=png&quality=80&imagetools';
   import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
@@ -29,6 +32,16 @@
 
   $effect(() => {
     document.documentElement.dataset.colorScheme = colorScheme.resolvedScheme;
+  });
+
+  // Swap the `favicon.ico` for the higher resolution PNG logo
+  // generated at build-time.
+  onMount(() => {
+    let link = document.getElementById('favicon');
+    if (link instanceof HTMLLinkElement) {
+      link.type = 'image/png';
+      link.href = favicon;
+    }
   });
 
   let pageTitle = new PageTitleState();
@@ -97,6 +110,7 @@
 
 <svelte:head>
   <title>{pageTitle.title}</title>
+  <link rel="apple-touch-icon" href={appleTouchIcon} />
 </svelte:head>
 
 {#if !__TEST__}

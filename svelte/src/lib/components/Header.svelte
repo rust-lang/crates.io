@@ -2,7 +2,6 @@
   import { resolve } from '$app/paths';
   import { format } from 'date-fns/format';
 
-  import logo from '$lib/assets/cargo.png';
   import { getSession } from '$lib/utils/session.svelte';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import * as Dropdown from './dropdown';
@@ -39,7 +38,7 @@
 <header class="header" class:hero>
   <div class="header-inner width-limit">
     <a href={resolve('/')} class="index-link">
-      <img src={logo} role="none" alt="" class="logo" />
+      <enhanced:img src="$lib/assets/cargo.png?w=38;76;114" role="none" alt="" class="logo" sizes="38px" />
       crates.io
     </a>
 
@@ -247,6 +246,12 @@
     font-family: var(--font-heading);
     font-size: var(--space-m);
     font-weight: bold;
+  }
+
+  /* `enhanced:img` wraps the logo in a `<picture>`. This collapses it so the
+     `<img>` stays the direct flex child and remains vertically centered. */
+  .index-link > :global(picture) {
+    display: contents;
   }
 
   .logo {
