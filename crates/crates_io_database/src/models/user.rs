@@ -25,7 +25,6 @@ pub struct User {
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
     pub publish_notifications: bool,
-    #[serde(skip)]
     pub username: Option<String>,
 }
 
