@@ -1,5 +1,7 @@
 import type { LogType, PluginOption, ProxyOptions } from 'vite';
 
+import { fileURLToPath } from 'node:url';
+
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import { sveltekit } from '@sveltejs/kit/vite';
 import UnoCSS from '@unocss/vite';
@@ -8,12 +10,16 @@ import { createLogger } from 'vite';
 import { analyzer } from 'vite-bundle-analyzer';
 import { defineConfig } from 'vitest/config';
 
+import faviconIco from './src/build/favicon-ico.js';
+
 const __TEST__ = Boolean(process.env.PLAYWRIGHT || process.env.VITEST);
 const API_HOST = process.env.API_HOST ?? 'https://crates.io';
 
 const proxyLogger = createLogger('info', { prefix: '[proxy]' });
 
-const plugins: PluginOption[] = [UnoCSS(), enhancedImages(), sveltekit()];
+const faviconSource = fileURLToPath(new URL('src/lib/assets/cargo.png', import.meta.url));
+
+const plugins: PluginOption[] = [UnoCSS(), enhancedImages(), faviconIco({ source: faviconSource }), sveltekit()];
 if (process.env.BUNDLE_ANALYSIS) {
   plugins.push(analyzer({ analyzerMode: 'static' }));
 }
