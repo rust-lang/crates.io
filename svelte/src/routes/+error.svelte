@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
 
-  import Ferris from '$lib/assets/cuddlyferris.svg?url';
+  import Ferris from '$lib/assets/cuddlyferris.svg';
   import { getSession } from '$lib/utils/session.svelte';
 
   let session = getSession();
