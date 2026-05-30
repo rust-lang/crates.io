@@ -163,6 +163,7 @@ impl TestApp {
             account_lock_until: None,
             is_admin: false,
             publish_notifications: true,
+            username: None,
         };
 
         MockCookieUser {
