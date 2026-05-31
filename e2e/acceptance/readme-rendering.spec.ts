@@ -95,12 +95,12 @@ graph TD;
 <ul>
   <li>
     <p>Delegate to a method with a different name</p>
-    <pre><code class="language-rust hljs" data-highlighted="yes"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Stack</span> { inner: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">u32</span>&gt; }
-<span class="hljs-keyword">impl</span> <span class="hljs-title class_">Stack</span> {
+    <pre><code class="language-rust">struct Stack { inner: Vec&lt;u32&gt; }
+impl Stack {
     delegate! {
-        to <span class="hljs-keyword">self</span>.inner {
-            <span class="hljs-meta">#[call(push)]</span>
-            <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, value: <span class="hljs-type">u32</span>);
+        to self.inner {
+            #[call(push)]
+            pub fn add(&amp;mut self, value: u32);
         }
     }
 }
@@ -126,7 +126,7 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     let readme = page.locator('[data-test-readme]');
     await expect(readme).toBeVisible();
     await expect(readme.locator('ul > li')).toHaveCount(7);
-    await expect(readme.locator('pre > code.language-rust.hljs')).toHaveCount(2);
+    await expect(readme.locator('pre > code.language-rust:has(span.line)')).toHaveCount(2);
     await expect(readme.locator('pre > code.language-mermaid svg.flowchart')).toBeVisible();
 
     await percy.snapshot();
