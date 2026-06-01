@@ -51,9 +51,6 @@
     <nav class="nav">
       <ColorSchemeMenu class="color-scheme-menu" />
 
-      <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
-      <span class="sep" aria-hidden="true">|</span>
-
       {#if currentUser}
         <Dropdown.Root data-test-user-menu>
           <Dropdown.Trigger class="button-reset" data-test-toggle>
@@ -144,7 +141,6 @@
       <Dropdown.Root>
         <Dropdown.Trigger class="button-reset">Menu</Dropdown.Trigger>
         <Dropdown.Menu class="current-user-links">
-          <Dropdown.Item><a href={resolve('/crates')}>Browse All Crates</a></Dropdown.Item>
           {#if currentUser}
             <Dropdown.Item>
               <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
@@ -286,11 +282,6 @@
     .hero & {
       display: block;
     }
-  }
-
-  .sep {
-    margin: 0 var(--space-2xs);
-    opacity: 0.5;
   }
 
   .nav {

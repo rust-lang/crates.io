@@ -7,8 +7,6 @@
     - button "Search"
   - navigation:
     - 'button "Change color scheme. Current: system"'
-    - link "Browse All Crates":
-      - /url: /crates
     - button "Log in with GitHub"
 - main:
   - heading "All Crates" [level=1]
@@ -526,4 +524,3 @@
     - listitem:
       - 'link "X: @cratesiostatus"':
         - /url: https://twitter.com/cratesiostatus
-- text: "Crates - crates.io: Rust Package Registry"

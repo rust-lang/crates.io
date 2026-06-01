@@ -13,7 +13,6 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await expect(page).toHaveTitle('crates.io: Rust Package Registry');
 
     await expect(page.locator('[data-test-install-cargo-link]')).toBeVisible();
-    await expect(page.locator('[data-test-all-crates-link]')).toBeVisible();
     await expect(page.locator('[data-test-login-button]')).toBeVisible();
 
     await expect(page.locator('[data-test-total-downloads] [data-test-value]')).toHaveText('143,345');

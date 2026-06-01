@@ -7,8 +7,6 @@
     - button "Search"
   - navigation:
     - 'button "Change color scheme. Current: system"'
-    - link "Browse All Crates":
-      - /url: /crates
     - button "User 1"
 - main:
   - heading "Delete the foo crate?" [level=1]
