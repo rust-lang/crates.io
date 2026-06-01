@@ -65,7 +65,7 @@
             <UserAvatar
               user={{ ...currentUser, kind: 'user' }}
               size="small"
-              style="margin-right: var(--space-2xs); margin-top: calc((22px - 1em) * -0.5)"
+              style="margin-right: var(--space-2xs);"
               aria-hidden="true"
               data-test-avatar
             />

@@ -29,7 +29,7 @@
 </script>
 
 <div class={['color-scheme-menu', className]} {...restProps}>
-  <Dropdown.Root class="dropdown">
+  <Dropdown.Root>
     <Dropdown.Trigger hideArrow class="trigger">
       <Icon class={currentIconClass} />
       <span class="sr-only">Change color scheme. Current: {colorScheme.scheme}</span>
@@ -55,9 +55,8 @@
 
 <style>
   .color-scheme-menu {
-    & :global(.dropdown) {
-      line-height: 1rem;
-    }
+    display: flex;
+    align-items: center;
 
     & :global(.icon) {
       width: 1.4em;

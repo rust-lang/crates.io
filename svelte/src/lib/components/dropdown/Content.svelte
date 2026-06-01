@@ -22,6 +22,7 @@
 <style>
   .dropdown {
     position: absolute;
+    top: 100%;
     width: 100%;
     z-index: 10;
   }
