@@ -29,7 +29,7 @@
 </script>
 
 <div class={['color-scheme-menu', className]} {...restProps}>
-  <Dropdown.Root class="dropdown">
+  <Dropdown.Root>
     <Dropdown.Trigger hideArrow class="trigger">
       <Icon class={currentIconClass} />
       <span class="sr-only">Change color scheme. Current: {colorScheme.scheme}</span>
