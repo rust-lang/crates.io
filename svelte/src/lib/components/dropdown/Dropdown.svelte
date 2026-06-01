@@ -45,7 +45,8 @@
 
 <style>
   .container {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     position: relative;
   }
 </style>
