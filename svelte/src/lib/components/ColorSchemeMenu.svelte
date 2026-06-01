@@ -55,9 +55,8 @@
 
 <style>
   .color-scheme-menu {
-    & :global(.dropdown) {
-      line-height: 1rem;
-    }
+    display: flex;
+    align-items: center;
 
     & :global(.icon) {
       width: 1.4em;
