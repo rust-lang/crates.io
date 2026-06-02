@@ -29,7 +29,7 @@ describe('formatShortNum()', () => {
     });
   });
 
-  describe('formats numbers with M suffix (above 1500000)', () => {
+  describe('formats numbers with M suffix (1500000 to 1500000000)', () => {
     it.each([
       [1_500_000, '1.5M'],
       [2_000_000, '2.0M'],
@@ -38,6 +38,17 @@ describe('formatShortNum()', () => {
       [50_000_000, '50M'],
       [100_000_000, '100M'],
       [1_000_000_000, '1,000M'],
+    ])('%d → %s', (input, expected) => {
+      expect(formatShortNum(input)).toBe(expected);
+    });
+  });
+
+  describe('formats numbers with B suffix (above 1500000000)', () => {
+    it.each([
+      [1_500_000_000, '1.5B'],
+      [2_000_000_000, '2.0B'],
+      [10_000_000_000, '10B'],
+      [1_000_000_000_000, '1,000B'],
     ])('%d → %s', (input, expected) => {
       expect(formatShortNum(input)).toBe(expected);
     });
