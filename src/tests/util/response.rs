@@ -3,6 +3,7 @@ use bytes::Bytes;
 use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
 use googletest::prelude::*;
 use serde_json::Value;
+use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::str::from_utf8;
 
@@ -74,6 +75,28 @@ impl<T> Response<T> {
     #[track_caller]
     pub fn assert_no_cache_control(&self) -> &Self {
         assert_none!(self.response.headers().get(header::CACHE_CONTROL));
+        self
+    }
+
+    /// Assert that the `Vary` header lists exactly the given values, ignoring
+    /// order, case, and how the values are spread across multiple header lines.
+    #[track_caller]
+    pub fn assert_vary(&self, expected: &[&str]) -> &Self {
+        let actual = self
+            .response
+            .headers()
+            .get_all(header::VARY)
+            .iter()
+            .flat_map(|value| assert_ok!(value.to_str()).split(','))
+            .map(|token| token.trim().to_ascii_lowercase())
+            .collect::<HashSet<_>>();
+
+        let expected = expected
+            .iter()
+            .map(|token| token.to_ascii_lowercase())
+            .collect::<HashSet<_>>();
+
+        assert_eq!(actual, expected);
         self
     }
 

@@ -7,6 +7,7 @@
 
 use crate::builders::CrateBuilder;
 use crate::util::{MockRequestExt, RequestHelper, TestApp};
+use http::{StatusCode, header};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn me_is_not_cached() {
@@ -131,6 +132,44 @@ async fn search_without_following_is_cacheable() {
     let (_, anon) = TestApp::init().empty().await;
     let response = anon.get::<()>("/api/v1/crates").await;
     response.assert_no_cache_control();
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn download_varies_on_accept() {
+    let (_, anon) = TestApp::init().empty().await;
+
+    // The default `Accept` header redirects (302) to the crate file.
+    let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").await;
+    assert_eq!(response.status(), StatusCode::FOUND);
+    response.assert_redirect_ends_with("/crates/foo/foo-1.0.0.crate");
+    response.assert_vary(&["accept"]);
+
+    // `Accept: application/json` returns a 200 with the URL as JSON, which the
+    // common-headers middleware still overrides with the global `Vary` value.
+    let mut request = anon.get_request("/api/v1/crates/foo/1.0.0/download");
+    request.header(header::ACCEPT, "application/json");
+    let response = anon.run::<()>(request).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(response.json().get("url").is_some());
+    response.assert_vary(&["accept", "accept-encoding", "cookie"]);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn readme_varies_on_accept() {
+    let (_, anon) = TestApp::init().empty().await;
+
+    // The default `Accept` header redirects (302) to the rendered readme.
+    let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/readme").await;
+    assert_eq!(response.status(), StatusCode::FOUND);
+    response.assert_redirect_ends_with("/readmes/foo/foo-1.0.0.html");
+    response.assert_vary(&["accept"]);
+
+    let mut request = anon.get_request("/api/v1/crates/foo/1.0.0/readme");
+    request.header(header::ACCEPT, "application/json");
+    let response = anon.run::<()>(request).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(response.json().get("url").is_some());
+    response.assert_vary(&["accept", "accept-encoding", "cookie"]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
