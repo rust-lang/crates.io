@@ -36,6 +36,7 @@
     align-items: center;
     color: inherit;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .arrow {
