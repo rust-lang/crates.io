@@ -28,6 +28,16 @@
 />
 
 <Story
+  name="With Downloads"
+  args={{
+    href: '#',
+    title: 'serde',
+    subtitle: 'A generic serialization/deserialization framework',
+    downloads: 8_200_000,
+  }}
+/>
+
+<Story
   name="Long Content"
   args={{
     href: '#',
