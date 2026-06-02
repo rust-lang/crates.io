@@ -1,6 +1,6 @@
 use crate::util::matchers::is_success;
 use bytes::Bytes;
-use claims::{assert_ok, assert_some, assert_some_eq};
+use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
 use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;
@@ -58,6 +58,30 @@ impl<T> Response<T> {
         let location = assert_some!(headers.get(header::LOCATION));
         let location = assert_ok!(location.to_str());
         assert_that!(location, ends_with(target));
+        self
+    }
+
+    /// Assert that the response carries the given `Cache-Control` header value.
+    #[track_caller]
+    pub fn assert_cache_control(&self, expected: &str) -> &Self {
+        let value = assert_some!(self.response.headers().get(header::CACHE_CONTROL));
+        assert_eq!(assert_ok!(value.to_str()), expected);
+        self
+    }
+
+    /// Assert that no `Cache-Control` header is present, i.e. the response may be
+    /// freely cached by shared caches.
+    #[track_caller]
+    pub fn assert_no_cache_control(&self) -> &Self {
+        assert_none!(self.response.headers().get(header::CACHE_CONTROL));
+        self
+    }
+
+    /// Assert that the response carries the given `Vary` header value.
+    #[track_caller]
+    pub fn assert_vary(&self, expected: &str) -> &Self {
+        let value = assert_some!(self.response.headers().get(header::VARY));
+        assert_eq!(assert_ok!(value.to_str()), expected);
         self
     }
 

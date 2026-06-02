@@ -7,7 +7,10 @@ use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 use crate::util::errors::{AppResult, crate_not_found};
+use crate::util::no_store;
 use axum::Json;
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
@@ -94,7 +97,7 @@ pub async fn get_following_crate(
     app: AppState,
     path: CratePath,
     req: Parts,
-) -> AppResult<Json<FollowingResponse>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<FollowingResponse>)> {
     use diesel::dsl::exists;
 
     let mut conn = app.db_read_prefer_primary().await?;
@@ -108,5 +111,5 @@ pub async fn get_following_crate(
         .get_result(&mut conn)
         .await?;
 
-    Ok(Json(FollowingResponse { following }))
+    Ok((no_store(), Json(FollowingResponse { following })))
 }

@@ -3,7 +3,9 @@
 use crate::auth::AuthCheck;
 use axum::Json;
 use axum::extract::FromRequestParts;
+use axum_extra::TypedHeader;
 use axum_extra::extract::Query;
+use axum_extra::headers::CacheControl;
 use derive_more::Deref;
 use diesel::alias;
 use diesel::dsl::{InnerJoinQuerySource, LeftJoinQuerySource, exists};
@@ -26,6 +28,7 @@ use crate::views::EncodableCrate;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
 use crate::util::RequestUtils;
+use crate::util::no_store;
 use crate::util::string_excl_null::StringExclNull;
 use crates_io_diesel_helpers::{array_agg, canon_crate_name, lower};
 
@@ -74,7 +77,7 @@ pub async fn list_crates(
     app: AppState,
     params: ListQueryParams,
     req: Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<(Option<TypedHeader<CacheControl>>, Json<ListResponse>)> {
     // Notes:
     // The different use cases this function covers is handled through passing
     // in parameters in the GET request.
@@ -96,6 +99,11 @@ pub async fn list_crates(
     use seek::*;
 
     let filter_params = FilterParams::from(params, &req, &mut conn).await?;
+
+    // When the results are filtered by the followed crates of the authenticated
+    // user, the response depends on the user's identity and must not be cached.
+    let cache_control = filter_params.auth_user_id.map(|_| no_store());
+
     let sort = filter_params.sort.as_deref();
 
     let selection = (
@@ -262,14 +270,17 @@ pub async fn list_crates(
         })
         .collect::<Vec<_>>();
 
-    Ok(Json(ListResponse {
-        crates,
-        meta: ListMeta {
-            total,
-            next_page,
-            prev_page,
-        },
-    }))
+    Ok((
+        cache_control,
+        Json(ListResponse {
+            crates,
+            meta: ListMeta {
+                total,
+                next_page,
+                prev_page,
+            },
+        }),
+    ))
 }
 
 #[derive(Debug, Deserialize, FromRequestParts, IntoParams)]

@@ -9,10 +9,13 @@ use crate::auth::AuthCheck;
 use crate::middleware::real_ip::RealIp;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::util::errors::{AppResult, bad_request, custom};
+use crate::util::no_store;
 use crate::util::token::PlainToken;
 use axum::Json;
 use axum::extract::{Path, Query};
 use axum::response::{IntoResponse, Response};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::{DateTime, Utc};
@@ -66,7 +69,7 @@ pub async fn list_api_tokens(
     app: AppState,
     Query(params): Query<GetParams>,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<(TypedHeader<CacheControl>, ErasedJson)> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -83,7 +86,7 @@ pub async fn list_api_tokens(
         .load(&mut conn)
         .await?;
 
-    Ok(json!({ "api_tokens": tokens }))
+    Ok((no_store(), json!({ "api_tokens": tokens })))
 }
 
 /// Properties for a new API token.
@@ -251,7 +254,7 @@ pub async fn find_api_token(
     app: AppState,
     Path(id): Path<i32>,
     req: Parts,
-) -> AppResult<Json<GetResponse>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<GetResponse>)> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -261,7 +264,7 @@ pub async fn find_api_token(
         .first(&mut conn)
         .await?;
 
-    Ok(Json(GetResponse { api_token }))
+    Ok((no_store(), Json(GetResponse { api_token })))
 }
 
 /// Revoke API token.

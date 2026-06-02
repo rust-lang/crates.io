@@ -1,5 +1,7 @@
 use crate::controllers::util::RequestPartsExt;
 use axum::response::{IntoResponse, Response};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use http::header::AsHeaderName;
 use http::{HeaderMap, StatusCode, header};
 use indexmap::IndexMap;
@@ -24,6 +26,15 @@ impl HeaderMapExt for HeaderMap {
 
 pub fn redirect(url: String) -> Response {
     (StatusCode::FOUND, [(header::LOCATION, url)]).into_response()
+}
+
+/// Build a `Cache-Control: no-store` header that prevents any cache (shared CDN
+/// cache or browser cache) from storing a per-user response.
+///
+/// Used on responses that depend on the authenticated identity, which can come
+/// from a session cookie or an API token.
+pub fn no_store() -> TypedHeader<CacheControl> {
+    TypedHeader(CacheControl::new().with_no_store())
 }
 
 pub trait RequestUtils {
