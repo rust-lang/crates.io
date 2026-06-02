@@ -17,6 +17,7 @@ use chrono::{Duration, NaiveDate, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+use http::{HeaderValue, header};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
@@ -46,11 +47,18 @@ pub async fn download_version(
 ) -> AppResult<Response> {
     let wants_json = req.wants_json();
     let redirect_url = app.storage.crate_location(&path.name, &path.version);
-    if wants_json {
-        Ok(json!({ "url": redirect_url }).into_response())
+    let response = if wants_json {
+        json!({ "url": redirect_url }).into_response()
     } else {
-        Ok(redirect(redirect_url))
-    }
+        redirect(redirect_url)
+    };
+
+    // The response body depends on the `Accept` request header.
+    Ok((
+        [(header::VARY, HeaderValue::from_static("accept"))],
+        response,
+    )
+        .into_response())
 }
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]

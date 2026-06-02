@@ -77,6 +77,14 @@ impl<T> Response<T> {
         self
     }
 
+    /// Assert that the response carries the given `Vary` header value.
+    #[track_caller]
+    pub fn assert_vary(&self, expected: &str) -> &Self {
+        let value = assert_some!(self.response.headers().get(header::VARY));
+        assert_eq!(assert_ok!(value.to_str()), expected);
+        self
+    }
+
     /// Assert that the status code is 429 and that the body matches a rate limit.
     #[track_caller]
     pub fn assert_rate_limited(self, action: LimitedAction) {

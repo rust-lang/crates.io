@@ -4,6 +4,7 @@ use crate::util::{RequestUtils, redirect};
 use axum::Json;
 use axum::response::{IntoResponse, Response};
 use http::request::Parts;
+use http::{HeaderValue, header};
 use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
@@ -26,9 +27,16 @@ pub struct UrlResponse {
 )]
 pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
     let url = app.storage.readme_location(&path.name, &path.version);
-    if req.wants_json() {
+    let response = if req.wants_json() {
         Json(UrlResponse { url }).into_response()
     } else {
         redirect(url)
-    }
+    };
+
+    // The response body depends on the `Accept` request header.
+    (
+        [(header::VARY, HeaderValue::from_static("accept"))],
+        response,
+    )
+        .into_response()
 }
