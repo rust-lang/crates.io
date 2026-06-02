@@ -1,6 +1,7 @@
 # Contributing to crates.io
 
 - [Attending the weekly team meetings](#attending-the-weekly-team-meetings)
+- [Using AI tools](#using-ai-tools)
 - [Finding an issue to work on](#finding-an-issue-to-work-on)
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Reviewing Pull Requests](#reviewing-pull-requests)
@@ -16,6 +17,11 @@ on Zoom or [Zulip] (`#t-crates-io`) for our weekly team meeting, and we invite
 everyone who wants to contribute to crates.io to participate.
 
 [Zulip]: https://rust-lang.zulipchat.com/#narrow/stream/318791-t-crates-io/
+
+## Using AI tools
+
+If you use AI tools to help draft issues, PRs, or comments, please
+review [`docs/AI-TOOLS.md`](AI-TOOLS.md) for our guidelines.
 
 ## Finding an issue to work on
 
