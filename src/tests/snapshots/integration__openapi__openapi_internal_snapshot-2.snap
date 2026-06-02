@@ -1632,41 +1632,6 @@ expression: response.json()
       }
     },
     "/api/private/session/begin": {
-      "get": {
-        "deprecated": true,
-        "description": "`GET` variant retained for clients that have not migrated to the `POST`\nendpoint yet. New clients should use the `POST` endpoint instead.",
-        "operationId": "begin_session_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "state": {
-                      "example": "b84a63c4ea3fcb4ac84",
-                      "type": "string"
-                    },
-                    "url": {
-                      "example": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "url",
-                    "state"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Begin authentication flow.",
-        "tags": [
-          "session"
-        ]
-      },
       "post": {
         "description": "This route will return an authorization URL for the GitHub OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>",
         "operationId": "begin_session",

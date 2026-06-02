@@ -77,13 +77,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Begin authentication flow.
-         * @deprecated
-         * @description `GET` variant retained for clients that have not migrated to the `POST`
-         *     endpoint yet. New clients should use the `POST` endpoint instead.
-         */
-        get: operations["begin_session_get"];
+        get?: never;
         put?: never;
         /**
          * Begin authentication flow.
@@ -2005,31 +1999,6 @@ export interface operations {
                         }[];
                         /** @description The authenticated user. */
                         user: components["schemas"]["AuthenticatedUser"];
-                    };
-                };
-            };
-        };
-    };
-    begin_session_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example b84a63c4ea3fcb4ac84 */
-                        state: string;
-                        /** @example https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg */
-                        url: string;
                     };
                 };
             };

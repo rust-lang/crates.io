@@ -49,29 +49,6 @@ pub struct BeginResponse {
     responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
 pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
-    begin(&app, &session)
-}
-
-/// Begin authentication flow.
-///
-/// `GET` variant retained for clients that have not migrated to the `POST`
-/// endpoint yet. New clients should use the `POST` endpoint instead.
-#[utoipa::path(
-    get,
-    path = "/api/private/session/begin",
-    tag = "session",
-    extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
-)]
-#[deprecated = "Use the `POST` endpoint instead"]
-pub async fn begin_session_get(
-    app: AppState,
-    session: SessionExtension,
-) -> (TypedHeader<CacheControl>, Json<BeginResponse>) {
-    (no_store(), begin(&app, &session))
-}
-
-fn begin(app: &AppState, session: &SessionExtension) -> Json<BeginResponse> {
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)

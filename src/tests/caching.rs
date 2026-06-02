@@ -91,13 +91,6 @@ async fn search_with_following_is_not_cached() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn session_begin_is_not_cached() {
-    let (_, anon) = TestApp::init().empty().await;
-    let response = anon.get::<()>("/api/private/session/begin").await;
-    response.assert_cache_control("no-store");
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn admin_list_is_not_cached() {
     use crates_io::schema::users;
     use diesel::prelude::*;
