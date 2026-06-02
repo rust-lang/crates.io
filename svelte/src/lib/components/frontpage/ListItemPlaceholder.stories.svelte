@@ -13,3 +13,7 @@
 <Story name="Default" />
 
 <Story name="With Subtitle" args={{ withSubtitle: true }} />
+
+<Story name="With Trailing" args={{ withTrailing: true }} />
+
+<Story name="With Subtitle And Trailing" args={{ withSubtitle: true, withTrailing: true }} />
