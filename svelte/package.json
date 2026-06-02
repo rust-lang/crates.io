@@ -28,7 +28,7 @@
     "@shikijs/langs": "4.1.0",
     "@shikijs/themes": "4.1.0",
     "chart.js": "4.5.1",
-    "date-fns": "4.3.0",
+    "date-fns": "4.4.0",
     "mermaid": "11.15.0",
     "micromark": "4.0.2",
     "micromark-extension-gfm": "3.0.0",
