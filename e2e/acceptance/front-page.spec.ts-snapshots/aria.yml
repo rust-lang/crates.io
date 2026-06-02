@@ -20,35 +20,45 @@
       - /url: /crates?sort=new
   - list:
     - listitem:
-      - link "serde v1.0.0":
+      - link "serde":
         - /url: /crates/serde
+        - text: serde v1.0.0
     - listitem:
-      - link "rust-crypto v1.0.0":
+      - link "rust-crypto":
         - /url: /crates/rust-crypto
+        - text: rust-crypto v1.0.0
     - listitem:
-      - link "quickcheck v1.0.0":
+      - link "quickcheck":
         - /url: /crates/quickcheck
+        - text: quickcheck v1.0.0
     - listitem:
-      - link "postgres v1.0.0":
+      - link "postgres":
         - /url: /crates/postgres
+        - text: postgres v1.0.0
     - listitem:
-      - link "nom v1.0.0":
+      - link "nom":
         - /url: /crates/nom
+        - text: nom v1.0.0
     - listitem:
-      - link "libc v1.0.0":
+      - link "libc":
         - /url: /crates/libc
+        - text: libc v1.0.0
     - listitem:
-      - link "nanomsg-sys v1.0.0":
+      - link "nanomsg-sys":
         - /url: /crates/nanomsg-sys
+        - text: nanomsg-sys v1.0.0
     - listitem:
-      - link "mock-build-deps v1.0.0":
+      - link "mock-build-deps":
         - /url: /crates/mock-build-deps
+        - text: mock-build-deps v1.0.0
     - listitem:
-      - link "mock-dev-deps v1.0.0":
+      - link "mock-dev-deps":
         - /url: /crates/mock-dev-deps
+        - text: mock-dev-deps v1.0.0
     - listitem:
-      - link "nanomsg v0.6.1":
+      - link "nanomsg":
         - /url: /crates/nanomsg
+        - text: nanomsg v0.6.1
   - heading "Most Downloaded" [level=2]:
     - link "Most Downloaded":
       - /url: /crates?sort=downloads
@@ -88,35 +98,45 @@
       - /url: /crates?sort=recent-updates
   - list:
     - listitem:
-      - link "nanomsg v0.6.1":
+      - link "nanomsg":
         - /url: /crates/nanomsg/0.6.1
+        - text: nanomsg v0.6.1
     - listitem:
-      - link "nom v1.0.0":
+      - link "nom":
         - /url: /crates/nom/1.0.0
+        - text: nom v1.0.0
     - listitem:
-      - link "rust-htslib v1.0.0":
+      - link "rust-htslib":
         - /url: /crates/rust-htslib/1.0.0
+        - text: rust-htslib v1.0.0
     - listitem:
-      - link "postgres v1.0.0":
+      - link "postgres":
         - /url: /crates/postgres/1.0.0
+        - text: postgres v1.0.0
     - listitem:
-      - link "rusted_cypher v1.0.0":
+      - link "rusted_cypher":
         - /url: /crates/rusted_cypher/1.0.0
+        - text: rusted_cypher v1.0.0
     - listitem:
-      - link "rustless v1.0.0":
+      - link "rustless":
         - /url: /crates/rustless/1.0.0
+        - text: rustless v1.0.0
     - listitem:
-      - link "rust-crypto v1.0.0":
+      - link "rust-crypto":
         - /url: /crates/rust-crypto/1.0.0
+        - text: rust-crypto v1.0.0
     - listitem:
-      - link "Inflector v1.0.0":
+      - link "Inflector":
         - /url: /crates/Inflector/1.0.0
+        - text: Inflector v1.0.0
     - listitem:
-      - link "serde v1.0.0":
+      - link "serde":
         - /url: /crates/serde/1.0.0
+        - text: serde v1.0.0
     - listitem:
-      - link "quickcheck_macros v1.0.0":
+      - link "quickcheck_macros":
         - /url: /crates/quickcheck_macros/1.0.0
+        - text: quickcheck_macros v1.0.0
   - heading "Most Recent Downloads" [level=2]:
     - link "Most Recent Downloads":
       - /url: /crates?sort=recent-downloads
@@ -156,48 +176,61 @@
       - /url: /keywords
   - list:
     - listitem:
-      - link "network 1 crates":
+      - link "network":
         - /url: /keywords/network
+        - text: network 1 crates
     - listitem:
-      - link "rust 1 crates":
+      - link "rust":
         - /url: /keywords/rust
+        - text: rust 1 crates
     - listitem:
-      - link "plugin 3 crates":
+      - link "plugin":
         - /url: /keywords/plugin
+        - text: plugin 3 crates
     - listitem:
-      - link "code-generation 3 crates":
+      - link "code-generation":
         - /url: /keywords/code-generation
+        - text: code-generation 3 crates
     - listitem:
-      - link "python 1 crates":
+      - link "python":
         - /url: /keywords/python
+        - text: python 1 crates
     - listitem:
-      - link "ruby 1 crates":
+      - link "ruby":
         - /url: /keywords/ruby
+        - text: ruby 1 crates
     - listitem:
-      - link "shell 1 crates":
+      - link "shell":
         - /url: /keywords/shell
+        - text: shell 1 crates
     - listitem:
-      - link "string 1 crates":
+      - link "string":
         - /url: /keywords/string
+        - text: string 1 crates
     - listitem:
-      - link "case 1 crates":
+      - link "case":
         - /url: /keywords/case
+        - text: case 1 crates
     - listitem:
-      - link "camel 1 crates":
+      - link "camel":
         - /url: /keywords/camel
+        - text: camel 1 crates
   - heading "Popular Categories" [level=2]:
     - link "Popular Categories":
       - /url: /categories
   - list:
     - listitem:
-      - link "API bindings 0 crates":
+      - link "API bindings":
         - /url: /categories/api-bindings
+        - text: API bindings 0 crates
     - listitem:
-      - link "Algorithms 0 crates":
+      - link "Algorithms":
         - /url: /categories/algorithms
+        - text: Algorithms 0 crates
     - listitem:
-      - link "Asynchronous 0 crates":
+      - link "Asynchronous":
         - /url: /categories/asynchronous
+        - text: Asynchronous 0 crates
 - contentinfo:
   - heading "Rust" [level=2]
   - list:
