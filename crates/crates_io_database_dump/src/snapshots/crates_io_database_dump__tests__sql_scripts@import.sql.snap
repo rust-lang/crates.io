@@ -60,7 +60,7 @@ BEGIN;
     \copy "metadata" ("total_downloads") FROM 'data/metadata.csv' WITH CSV HEADER
     \copy "reserved_crate_names" ("name") FROM 'data/reserved_crate_names.csv' WITH CSV HEADER
     \copy "teams" ("avatar", "github_id", "id", "login", "name", "org_id") FROM 'data/teams.csv' WITH CSV HEADER
-    \copy "users" ("gh_avatar", "gh_id", "gh_login", "id", "name") FROM 'data/users.csv' WITH CSV HEADER
+    \copy "users" ("gh_avatar", "gh_id", "gh_login", "id", "name", "username") FROM 'data/users.csv' WITH CSV HEADER
     \copy "crates_categories" ("category_id", "crate_id") FROM 'data/crates_categories.csv' WITH CSV HEADER
     \copy "crates_keywords" ("crate_id", "keyword_id") FROM 'data/crates_keywords.csv' WITH CSV HEADER
     \copy "crate_owners" ("crate_id", "created_at", "created_by", "owner_id", "owner_kind") FROM 'data/crate_owners.csv' WITH CSV HEADER
