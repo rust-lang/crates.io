@@ -194,8 +194,8 @@ export class SessionState {
     popup.close();
 
     let { code, state } = result;
-    let { data, error } = await this.#client.GET('/api/private/session/authorize', {
-      params: { query: { code, state } },
+    let { data, error } = await this.#client.POST('/api/private/session/authorize', {
+      body: { code, state },
     });
 
     if (!data) {
