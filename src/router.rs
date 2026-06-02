@@ -87,7 +87,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(user::email_verification::resend_email_verification))
         .routes(routes!(site_metadata::get_site_metadata))
         // Session management
-        .routes(routes!(session::begin_session))
+        .routes(routes!(session::begin_session, session::begin_session_get))
         .routes(routes!(session::authorize_session))
         .routes(routes!(session::end_session))
         // OIDC / Trusted Publishing
