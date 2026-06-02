@@ -13,3 +13,10 @@ async fn auth_gives_a_token() {
     let json: AuthResponse = anon.get("/api/private/session/begin").await.good();
     assert!(json.url.contains(&json.state));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn post_gives_a_token() {
+    let (_, anon) = TestApp::init().empty().await;
+    let json: AuthResponse = anon.post("/api/private/session/begin", "").await.good();
+    assert!(json.url.contains(&json.state));
+}

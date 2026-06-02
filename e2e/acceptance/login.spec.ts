@@ -35,11 +35,11 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     let user = await msw.db.user.create({ name: 'John Doe' });
 
     msw.worker.use(
-      http.get('/api/private/session/authorize', async ({ request }) => {
-        let url = new URL(request.url);
-        expect([...url.searchParams.keys()]).toEqual(['code', 'state']);
-        expect(url.searchParams.get('code')).toBe(MOCK_CODE);
-        expect(url.searchParams.get('state')).toBe(MOCK_STATE);
+      http.post('/api/private/session/authorize', async ({ request }) => {
+        let body = await request.json();
+        expect(Object.keys(body)).toEqual(['code', 'state']);
+        expect(body.code).toBe(MOCK_CODE);
+        expect(body.state).toBe(MOCK_STATE);
 
         await msw.db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
@@ -55,7 +55,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await setupGitHubOAuthRoutes(page);
 
     msw.worker.use(
-      http.get('/api/private/session/authorize', () =>
+      http.post('/api/private/session/authorize', () =>
         HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),
       ),
     );
@@ -71,11 +71,11 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     let user = await msw.db.user.create({ name: 'John Doe' });
 
     msw.worker.use(
-      http.get('/api/private/session/authorize', async ({ request }) => {
-        let url = new URL(request.url);
-        expect([...url.searchParams.keys()]).toEqual(['code', 'state']);
-        expect(url.searchParams.get('code')).toBe(MOCK_CODE);
-        expect(url.searchParams.get('state')).toBe(MOCK_STATE);
+      http.post('/api/private/session/authorize', async ({ request }) => {
+        let body = await request.json();
+        expect(Object.keys(body)).toEqual(['code', 'state']);
+        expect(body.code).toBe(MOCK_CODE);
+        expect(body.state).toBe(MOCK_STATE);
 
         await msw.db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
