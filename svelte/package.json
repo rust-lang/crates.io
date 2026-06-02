@@ -25,14 +25,16 @@
     "@floating-ui/dom": "1.7.6",
     "@fontsource/fira-mono": "5.2.7",
     "@fontsource/fira-sans": "5.2.7",
+    "@shikijs/langs": "4.1.0",
+    "@shikijs/themes": "4.1.0",
     "chart.js": "4.5.1",
     "date-fns": "4.3.0",
-    "highlight.js": "11.11.1",
     "mermaid": "11.15.0",
     "micromark": "4.0.2",
     "micromark-extension-gfm": "3.0.0",
     "pretty-bytes": "7.1.0",
-    "semver": "7.8.1"
+    "semver": "7.8.1",
+    "shiki": "4.1.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "5.2.1",
