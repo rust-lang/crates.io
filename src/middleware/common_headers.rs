@@ -43,7 +43,6 @@ pub async fn add_common_headers(request: Request, next: Next) -> impl IntoRespon
         headers.insert(header::X_CONTENT_TYPE_OPTIONS, v("nosniff"));
         headers.insert(header::X_FRAME_OPTIONS, v("SAMEORIGIN"));
         headers.insert(header::X_XSS_PROTECTION, v("0"));
-        headers.insert(header::VARY, v("Accept, Accept-Encoding, Cookie"));
     }
 
     (headers, response)
