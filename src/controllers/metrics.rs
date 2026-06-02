@@ -1,13 +1,20 @@
 use crate::app::AppState;
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{AppResult, custom, forbidden, not_found};
+use crate::util::no_store;
 use axum::extract::Path;
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use http::request::Parts;
 use http::{StatusCode, header};
 use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/{kind}` endpoint.
-pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> AppResult<String> {
+pub async fn prometheus(
+    app: AppState,
+    Path(kind): Path<String>,
+    req: Parts,
+) -> AppResult<(TypedHeader<CacheControl>, String)> {
     if let Some(expected_token) = &app.config.metrics_authorization_token {
         let provided_token = req
             .headers
@@ -34,5 +41,5 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
         _ => return Err(not_found()),
     };
 
-    Ok(TextEncoder::new().encode_to_string(&metrics)?)
+    Ok((no_store(), TextEncoder::new().encode_to_string(&metrics)?))
 }

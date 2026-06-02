@@ -14,6 +14,7 @@ mod account_lock;
 mod authentication;
 mod blocked_routes;
 pub use crates_io_test_utils::builders;
+mod caching;
 mod categories;
 mod cors;
 mod dump_db;
