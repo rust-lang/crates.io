@@ -36,7 +36,7 @@
 </script>
 
 <header class="header" class:hero>
-  <div class="header-inner width-limit">
+  <div class="header-inner">
     <a href={resolve('/')} class="index-link">
       <enhanced:img src="$lib/assets/cargo.png?w=38;76;114" role="none" alt="" class="logo" sizes="38px" />
       crates.io
@@ -193,8 +193,10 @@
     display: grid;
     grid-template:
       'logo search nav' auto /
-      auto 1fr auto;
+      1fr minmax(0, 600px) 1fr;
     align-items: center;
+    column-gap: var(--space-m);
+    width: 100%;
     padding: var(--space-xs) var(--space-m);
     color: white;
 
@@ -210,7 +212,7 @@
     @media only screen and (max-width: 900px) {
       grid-template:
         'logo search menu' auto /
-        auto 1fr auto;
+        1fr minmax(0, 600px) 1fr;
     }
 
     @media only screen and (max-width: 820px) {
@@ -258,16 +260,17 @@
 
   .search-form {
     grid-area: search;
-    margin: 0 var(--space-m);
+    width: 100%;
+    max-width: 600px;
+    /* cap the width and center within the full-width header */
+    margin: 0 auto;
 
     @media only screen and (max-width: 820px) {
-      margin: var(--space-s) 0;
+      margin: var(--space-s) auto;
     }
 
     .hero & {
-      justify-self: center;
       padding: var(--space-l) 0 var(--space-l-xl);
-      margin: 0;
     }
   }
 
@@ -313,6 +316,7 @@
   .login-button {
     display: inline-flex;
     align-items: center;
+    white-space: nowrap;
     /* negative margin for larger click target */
     margin: calc(var(--space-2xs) * -1);
     padding: var(--space-2xs);
