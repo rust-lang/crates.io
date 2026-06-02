@@ -15,20 +15,34 @@
   }
 
   let { title, subtitle, href, version, downloads, class: className, ...restProps }: Props = $props();
+
+  // The accessible name is restricted to the crate name via `aria-labelledby`
+  // so the screen reader links list stays scannable; the subtitle and trailing
+  // value are exposed as a supplementary `aria-describedby` description that is
+  // announced after the name instead of being concatenated into it.
+  const uid = $props.id();
+  const titleId = `${uid}-title`;
+  const subtitleId = `${uid}-subtitle`;
+  const trailingId = `${uid}-trailing`;
+
+  let hasTrailing = $derived(Boolean(version) || downloads != null);
+  let describedBy = $derived(
+    [subtitle ? subtitleId : null, hasTrailing ? trailingId : null].filter(Boolean).join(' ') || undefined,
+  );
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a {href} class={['box', className]} {...restProps}>
+<a {href} class={['box', className]} aria-labelledby={titleId} aria-describedby={describedBy} {...restProps}>
   <div class="left">
-    <div class="title">{title}</div>
-    {#if subtitle}<div class="subtitle">{subtitle}</div>{/if}
+    <div class="title" id={titleId} data-test-title>{title}</div>
+    {#if subtitle}<div class="subtitle" id={subtitleId} data-test-subtitle>{subtitle}</div>{/if}
   </div>
   {#if version}
-    <div class="version">
+    <div class="version" id={trailingId}>
       <span class="sr-only">version </span><span data-test-version>{version}</span>
     </div>
   {:else if downloads != null}
-    <div class="downloads" data-test-downloads>
+    <div class="downloads" id={trailingId} data-test-downloads>
       <Icon class="i-mdi:download download-icon" />
       {formatShortNum(downloads)}
       <span class="sr-only">downloads</span>
