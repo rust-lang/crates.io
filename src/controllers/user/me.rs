@@ -9,7 +9,7 @@ use crate::util::errors::AppResult;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 use axum::Json;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use http::request::Parts;
 use serde::Serialize;
@@ -30,6 +30,14 @@ pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json
         .await?
         .user_id();
 
+    authenticated_user(&mut conn, user_id).await
+}
+
+/// Load the profile of the user with the given id.
+pub async fn authenticated_user(
+    conn: &mut AsyncPgConnection,
+    user_id: i32,
+) -> AppResult<Json<EncodableMe>> {
     let ((user, verified, email, verification_sent), owned_crates) = tokio::try_join!(
         users::table
             .find(user_id)
