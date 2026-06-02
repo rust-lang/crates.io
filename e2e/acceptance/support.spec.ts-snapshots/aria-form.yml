@@ -7,8 +7,6 @@
     - button "Search"
   - navigation:
     - 'button "Change color scheme. Current: system"'
-    - link "Browse All Crates":
-      - /url: /crates
     - button "Log in with GitHub"
 - main:
   - heading "Contact Us" [level=1]
@@ -16,6 +14,7 @@
   - text: Crate
   - textbox "Crate"
   - group "Reasons":
+    - text: ""
     - list:
       - listitem:
         - checkbox "it contains spam"

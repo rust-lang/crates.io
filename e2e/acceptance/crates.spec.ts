@@ -3,11 +3,10 @@ import { loadFixtures } from '@crates-io/msw/fixtures';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
-  test('visiting the crates page from the front page', async ({ page, msw, percy, a11y }) => {
+  test('visiting the crates page', async ({ page, msw, percy, a11y }) => {
     await loadFixtures(msw.db);
 
-    await page.goto('/');
-    await page.click('[data-test-all-crates-link]');
+    await page.goto('/crates');
 
     await expect(page).toHaveURL('/crates');
     await expect(page).toHaveTitle('Crates - crates.io: Rust Package Registry');
@@ -15,16 +14,6 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
-  });
-
-  test('visiting the crates page directly', async ({ page, msw }) => {
-    await loadFixtures(msw.db);
-
-    await page.goto('/crates');
-    await page.click('[data-test-all-crates-link]');
-
-    await expect(page).toHaveURL('/crates');
-    await expect(page).toHaveTitle('Crates - crates.io: Rust Package Registry');
   });
 
   test('listing crates', async ({ page, msw }) => {

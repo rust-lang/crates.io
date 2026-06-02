@@ -8,8 +8,6 @@
     - button "Search"
   - navigation:
     - 'button "Change color scheme. Current: system"'
-    - link "Browse All Crates":
-      - /url: /crates
     - button "Log in with GitHub"
 - main:
   - heading "Algorithms" [level=1]

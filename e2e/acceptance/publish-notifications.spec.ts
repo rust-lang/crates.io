@@ -41,8 +41,8 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     await expect(page.locator('[data-test-notifications] input[type=checkbox]')).not.toBeChecked();
 
     // Navigate away and back via client-side links
-    await page.click('[data-test-all-crates-link]');
-    await expect(page).toHaveURL('/crates');
+    await page.locator('header').getByRole('link', { name: 'crates.io' }).click();
+    await expect(page).toHaveURL('/');
     await page.click('[data-test-user-menu] [data-test-toggle]');
     await page.click('[data-test-user-menu] [data-test-settings]');
     await expect(page).toHaveURL('/settings/profile');

@@ -7,8 +7,6 @@
     - button "Search"
   - navigation:
     - 'button "Change color scheme. Current: system"'
-    - link "Browse All Crates":
-      - /url: /crates
     - button "User 3"
 - main:
   - heading "Pending Owner Invites" [level=1]
