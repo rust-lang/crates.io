@@ -9,11 +9,21 @@
     href: string;
     items: T[] | undefined;
     withSubtitle?: boolean;
+    withTrailing?: boolean;
     ordered?: boolean;
     item: Snippet<[item: T, index: number]>;
   }
 
-  let { title, href, items, withSubtitle = false, ordered = true, item, ...restProps }: Props = $props();
+  let {
+    title,
+    href,
+    items,
+    withSubtitle = false,
+    withTrailing = false,
+    ordered = true,
+    item,
+    ...restProps
+  }: Props = $props();
 </script>
 
 <section {...restProps}>
@@ -22,7 +32,7 @@
   <svelte:element this={ordered ? 'ol' : 'ul'} class="list" aria-busy={!items}>
     {#if !items}
       {#each { length: 10 }, i (i)}
-        <li><ListItemPlaceholder {withSubtitle} /></li>
+        <li><ListItemPlaceholder {withSubtitle} {withTrailing} /></li>
       {/each}
     {:else}
       {#each items as it, index (it.id)}

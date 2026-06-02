@@ -17,8 +17,7 @@ test.describe('Bug #11772', { tag: '@bugs' }, () => {
     await expect(page).toHaveURL('/');
 
     // Verify initial correct version displays
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link]')).toContainText('test-crate v1.2.3');
-    await expect(page.locator('[data-test-just-updated] [data-test-crate-link]')).toContainText('test-crate v1.2.3');
+    await expectVersion(page, '1.2.3');
 
     // Click on a crate to navigate to its details page
     await page.click('[data-test-new-crates] [data-test-crate-link]');
@@ -29,8 +28,7 @@ test.describe('Bug #11772', { tag: '@bugs' }, () => {
     await page.goto('/'); // Re-visit to simulate the back navigation
 
     // Versions should still be displayed correctly, not v0.0.0
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link]')).toContainText('test-crate v1.2.3');
-    await expect(page.locator('[data-test-just-updated] [data-test-crate-link]')).toContainText('test-crate v1.2.3');
+    await expectVersion(page, '1.2.3');
   });
 
   test('crates with actual v0.0.0 versions should display correctly', async ({ page, msw }) => {
@@ -42,8 +40,8 @@ test.describe('Bug #11772', { tag: '@bugs' }, () => {
     await page.goto('/');
     await expect(page).toHaveURL('/');
 
-    // Should correctly display v0.0.0 for crates that actually have that version
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link]')).toContainText('test-zero-crate v0.0.0');
+    // Should correctly display 0.0.0 for crates that actually have that version
+    await expectVersion(page, '0.0.0', 'test-zero-crate');
 
     // Click on the crate to navigate to its details page
     await page.click('[data-test-new-crates] [data-test-crate-link]');
@@ -53,7 +51,15 @@ test.describe('Bug #11772', { tag: '@bugs' }, () => {
 
     await page.goto('/'); // Re-visit to simulate the back navigation
 
-    // Should still display v0.0.0 correctly (this is the intended behavior)
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link]')).toContainText('test-zero-crate v0.0.0');
+    // Should still display 0.0.0 correctly (this is the intended behavior)
+    await expectVersion(page, '0.0.0', 'test-zero-crate');
   });
 });
+
+async function expectVersion(page: AppFixtures['page'], version: string, name = 'test-crate') {
+  for (let section of ['new-crates', 'just-updated']) {
+    let link = page.locator(`[data-test-${section}] [data-test-crate-link]`);
+    await expect(link.locator('[data-test-title]')).toHaveText(name);
+    await expect(link.locator('[data-test-version]')).toHaveText(version);
+  }
+}
