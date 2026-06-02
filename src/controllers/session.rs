@@ -6,10 +6,13 @@ use crate::models::{NewEmail, NewOauthGithub, NewUser};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
+use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use crates_io_github::GitHubUser;
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
@@ -45,7 +48,10 @@ pub struct BeginResponse {
     extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
-pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
+pub async fn begin_session(
+    app: AppState,
+    session: SessionExtension,
+) -> (TypedHeader<CacheControl>, Json<BeginResponse>) {
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
@@ -56,7 +62,7 @@ pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<Beg
     session.insert("github_oauth_state".to_string(), state.clone());
 
     let url = url.to_string();
-    Json(BeginResponse { url, state })
+    (no_store(), Json(BeginResponse { url, state }))
 }
 
 #[derive(Clone, Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -97,7 +103,7 @@ pub async fn authorize_session(
     app: AppState,
     session: SessionExtension,
     req: Parts,
-) -> AppResult<Json<EncodableMe>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<EncodableMe>)> {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     let session_state = session.remove("github_oauth_state").map(CsrfToken::new);

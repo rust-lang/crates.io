@@ -7,8 +7,11 @@ use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::github_configs::json::{self, ListResponse, ListResponseMeta};
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, bad_request, forbidden};
+use crate::util::no_store;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::GitHubConfig;
@@ -45,8 +48,8 @@ pub async fn list_trustpub_github_configs(
     state: AppState,
     params: ListQueryParams,
     parts: Parts,
-) -> AppResult<Json<ListResponse>> {
-    match (&params.krate, params.user_id) {
+) -> AppResult<(TypedHeader<CacheControl>, Json<ListResponse>)> {
+    let configs = match (&params.krate, params.user_id) {
         (Some(krate), None) => list_by_crate(state, krate, parts).await,
         (None, Some(user_id)) => list_by_user(state, user_id, parts).await,
         (Some(_), Some(_)) => Err(bad_request(
@@ -55,7 +58,9 @@ pub async fn list_trustpub_github_configs(
         (None, None) => Err(bad_request(
             "Must specify either `crate` or `user_id` query parameter",
         )),
-    }
+    }?;
+
+    Ok((no_store(), configs))
 }
 
 async fn list_by_crate(
