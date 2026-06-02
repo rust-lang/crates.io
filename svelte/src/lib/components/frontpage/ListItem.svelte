@@ -7,9 +7,11 @@
     title: string;
     subtitle?: string;
     href: string;
+    /** Version number shown on the trailing edge. */
+    version?: string;
   }
 
-  let { title, subtitle, href, class: className, ...restProps }: Props = $props();
+  let { title, subtitle, href, version, class: className, ...restProps }: Props = $props();
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -18,7 +20,13 @@
     <div class="title">{title}</div>
     {#if subtitle}<div class="subtitle">{subtitle}</div>{/if}
   </div>
-  <Icon class="i-mdi:chevron-right right" />
+  {#if version}
+    <div class="version">
+      <span class="sr-only">version </span><span data-test-version>{version}</span>
+    </div>
+  {:else}
+    <Icon class="i-mdi:chevron-right right" />
+  {/if}
 </a>
 
 <style>
@@ -84,5 +92,16 @@
     width: var(--space-m);
     margin-right: calc(-0.8 * var(--space-2xs));
     color: light-dark(rgb(118, 131, 138), #cccac2);
+  }
+
+  .version {
+    flex-shrink: 0;
+    margin-left: var(--space-2xs);
+    font-size: 13px;
+    color: light-dark(rgb(118, 131, 138), #cccac2);
+    max-width: 5em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
