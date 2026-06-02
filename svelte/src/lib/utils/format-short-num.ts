@@ -1,8 +1,8 @@
 const THRESHOLD = 1500;
-const UNITS = ['', 'K', 'M'];
+const UNITS = ['', 'K', 'M', 'B'];
 
 /**
- * Formats a number in a compact form with K/M suffix.
+ * Formats a number in a compact form with K/M/B suffix.
  *
  * This matches the implementation in https://github.com/rust-lang/crates_io_og_image/blob/v0.2.1/src/formatting.rs
  * to ensure that we render roughly the same values in our user interface and the generated OpenGraph images.
