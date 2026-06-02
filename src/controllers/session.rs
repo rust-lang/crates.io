@@ -91,6 +91,16 @@ pub struct AuthorizeQuery {
     state: CsrfToken,
 }
 
+#[derive(Clone, Debug, Deserialize, utoipa::ToSchema)]
+pub struct AuthorizeBody {
+    /// Temporary code received from the GitHub API.
+    #[schema(value_type = String, example = "901dd10e07c7e9fa1cd5")]
+    code: AuthorizationCode,
+    /// State parameter received from the GitHub API.
+    #[schema(value_type = String, example = "fYcUY3FMdUUz00FC7vLT7A")]
+    state: CsrfToken,
+}
+
 /// Complete authentication flow.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
@@ -99,11 +109,27 @@ pub struct AuthorizeQuery {
 /// the corresponding user information.
 ///
 /// see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
+#[utoipa::path(
+    post,
+    path = "/api/private/session/authorize",
+    tag = "session",
+    request_body = inline(AuthorizeBody),
+    extensions(("x-internal" = json!(true))),
+    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
+)]
+pub async fn authorize_session(
+    app: AppState,
+    session: SessionExtension,
+    req: Parts,
+    Json(body): Json<AuthorizeBody>,
+) -> AppResult<Json<EncodableMe>> {
+    authorize(body.code, body.state, app, session, req).await
+}
+
+/// Complete authentication flow.
 ///
-/// ## Query Parameters
-///
-/// - `code` – temporary code received from the GitHub API  **(Required)**
-/// - `state` – state parameter received from the GitHub API  **(Required)**
+/// `GET` variant retained for clients that have not migrated to the `POST`
+/// endpoint yet. New clients should use the `POST` endpoint instead.
 #[utoipa::path(
     get,
     path = "/api/private/session/authorize",
@@ -112,8 +138,19 @@ pub struct AuthorizeQuery {
     extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
-pub async fn authorize_session(
+#[deprecated = "Use the `POST` endpoint instead"]
+pub async fn authorize_session_get(
     query: AuthorizeQuery,
+    app: AppState,
+    session: SessionExtension,
+    req: Parts,
+) -> AppResult<Json<EncodableMe>> {
+    authorize(query.code, query.state, app, session, req).await
+}
+
+async fn authorize(
+    code: AuthorizationCode,
+    state: CsrfToken,
     app: AppState,
     session: SessionExtension,
     req: Parts,
@@ -121,7 +158,7 @@ pub async fn authorize_session(
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
-    if session_state.is_none_or(|state| query.state.secret() != state.secret()) {
+    if session_state.is_none_or(|session_state| state.secret() != session_state.secret()) {
         return Err(bad_request("invalid state parameter"));
     }
 
@@ -134,7 +171,7 @@ pub async fn authorize_session(
 
     let token = app
         .github_oauth
-        .exchange_code(query.code)
+        .exchange_code(code)
         .request_async(&client)
         .await
         .map_err(|err| {
