@@ -2,6 +2,7 @@
   import type { HTMLAttributes } from 'svelte/elements';
 
   import Icon from '$lib/components/Icon.svelte';
+  import { formatShortNum } from '$lib/utils/format-short-num';
 
   interface Props extends HTMLAttributes<HTMLAnchorElement> {
     title: string;
@@ -9,9 +10,11 @@
     href: string;
     /** Version number shown on the trailing edge. */
     version?: string;
+    /** Download count shown on the trailing edge in compact form. */
+    downloads?: number;
   }
 
-  let { title, subtitle, href, version, class: className, ...restProps }: Props = $props();
+  let { title, subtitle, href, version, downloads, class: className, ...restProps }: Props = $props();
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -23,6 +26,12 @@
   {#if version}
     <div class="version">
       <span class="sr-only">version </span><span data-test-version>{version}</span>
+    </div>
+  {:else if downloads != null}
+    <div class="downloads" data-test-downloads>
+      <Icon class="i-mdi:download download-icon" />
+      {formatShortNum(downloads)}
+      <span class="sr-only">downloads</span>
     </div>
   {:else}
     <Icon class="i-mdi:chevron-right right" />
@@ -94,14 +103,30 @@
     color: light-dark(rgb(118, 131, 138), #cccac2);
   }
 
-  .version {
+  .version,
+  .downloads {
     flex-shrink: 0;
     margin-left: var(--space-2xs);
     font-size: 13px;
     color: light-dark(rgb(118, 131, 138), #cccac2);
+  }
+
+  .version {
     max-width: 5em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .downloads {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4xs);
+    white-space: nowrap;
+  }
+
+  .downloads :global(.download-icon) {
+    width: 1.1em;
+    height: 1.1em;
   }
 </style>
