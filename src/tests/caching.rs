@@ -144,14 +144,13 @@ async fn download_varies_on_accept() {
     response.assert_redirect_ends_with("/crates/foo/foo-1.0.0.crate");
     response.assert_vary(&["accept"]);
 
-    // `Accept: application/json` returns a 200 with the URL as JSON, which the
-    // common-headers middleware still overrides with the global `Vary` value.
+    // `Accept: application/json` returns a 200 with the URL as JSON.
     let mut request = anon.get_request("/api/v1/crates/foo/1.0.0/download");
     request.header(header::ACCEPT, "application/json");
     let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert!(response.json().get("url").is_some());
-    response.assert_vary(&["accept", "accept-encoding", "cookie"]);
+    response.assert_vary(&["accept", "accept-encoding"]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -169,7 +168,7 @@ async fn readme_varies_on_accept() {
     let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert!(response.json().get("url").is_some());
-    response.assert_vary(&["accept", "accept-encoding", "cookie"]);
+    response.assert_vary(&["accept", "accept-encoding"]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -177,6 +176,9 @@ async fn public_endpoint_is_cacheable() {
     let (_, anon) = TestApp::init().empty().await;
     let response = anon.get::<()>("/api/v1/categories").await;
     response.assert_no_cache_control();
+    // The only `Vary` value is `Accept-Encoding`, added by the compression
+    // middleware.
+    response.assert_vary(&["accept-encoding"]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
