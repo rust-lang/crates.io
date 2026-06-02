@@ -6,10 +6,13 @@ use crate::models::{NewEmail, NewOauthGithub, NewUser};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
+use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use crates_io_github::GitHubUser;
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
@@ -61,8 +64,11 @@ pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<Beg
     responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
 #[deprecated = "Use the `POST` endpoint instead"]
-pub async fn begin_session_get(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
-    begin(&app, &session)
+pub async fn begin_session_get(
+    app: AppState,
+    session: SessionExtension,
+) -> (TypedHeader<CacheControl>, Json<BeginResponse>) {
+    (no_store(), begin(&app, &session))
 }
 
 fn begin(app: &AppState, session: &SessionExtension) -> Json<BeginResponse> {
@@ -144,8 +150,11 @@ pub async fn authorize_session_get(
     app: AppState,
     session: SessionExtension,
     req: Parts,
-) -> AppResult<Json<EncodableMe>> {
-    authorize(query.code, query.state, app, session, req).await
+) -> AppResult<(TypedHeader<CacheControl>, Json<EncodableMe>)> {
+    Ok((
+        no_store(),
+        authorize(query.code, query.state, app, session, req).await?,
+    ))
 }
 
 async fn authorize(
@@ -197,7 +206,7 @@ async fn authorize(
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user_id.to_string());
 
-    super::user::me::get_authenticated_user(app, req).await
+    super::user::me::authenticated_user(&mut conn, user_id).await
 }
 
 pub async fn save_user_to_database(

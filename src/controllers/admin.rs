@@ -4,8 +4,11 @@ use crate::{
     models::{OwnerKind, User},
     schema::*,
     util::errors::{AppResult, custom},
+    util::no_store,
 };
 use axum::{Json, extract::Path};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use chrono::{DateTime, Utc};
 use diesel::{dsl::count_star, prelude::*};
 use diesel_async::RunQueryDsl;
@@ -63,7 +66,7 @@ pub async fn list(
     state: AppState,
     Path(username): Path<String>,
     req: Parts,
-) -> AppResult<Json<AdminListResponse>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<AdminListResponse>)> {
     let mut conn = state.db_read().await?;
 
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
@@ -127,11 +130,14 @@ pub async fn list(
             }
         })
         .collect();
-    Ok(Json(AdminListResponse {
-        user_email,
-        user_email_verified: verified.unwrap_or_default(),
-        crates,
-    }))
+    Ok((
+        no_store(),
+        Json(AdminListResponse {
+            user_email,
+            user_email_verified: verified.unwrap_or_default(),
+            crates,
+        }),
+    ))
 }
 
 #[derive(Debug, Serialize)]

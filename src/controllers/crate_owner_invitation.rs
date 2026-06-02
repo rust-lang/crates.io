@@ -8,12 +8,15 @@ use crate::models::{Crate, CrateOwnerInvitation, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
+use crate::util::no_store;
 use crate::views::{
     EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
     InvitationResponse,
 };
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use chrono::Utc;
 use diesel::pg::Pg;
 use diesel::prelude::*;
@@ -46,7 +49,7 @@ pub struct LegacyListResponse {
 pub async fn list_crate_owner_invitations_for_user(
     app: AppState,
     req: Parts,
-) -> AppResult<Json<LegacyListResponse>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<LegacyListResponse>)> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -77,10 +80,13 @@ pub async fn list_crate_owner_invitations_for_user(
         })
         .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    Ok(Json(LegacyListResponse {
-        crate_owner_invitations,
-        users,
-    }))
+    Ok((
+        no_store(),
+        Json(LegacyListResponse {
+            crate_owner_invitations,
+            users,
+        }),
+    ))
 }
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -112,13 +118,13 @@ pub async fn list_crate_owner_invitations(
     app: AppState,
     params: ListQueryParams,
     req: Parts,
-) -> AppResult<Json<PrivateListResponse>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
     let list = prepare_list(&app, &req, auth, filter, &conn).await?;
-    Ok(Json(list))
+    Ok((no_store(), Json(list)))
 }
 
 enum ListFilter {

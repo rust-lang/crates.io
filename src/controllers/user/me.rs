@@ -6,10 +6,13 @@ use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::util::errors::AppResult;
+use crate::util::no_store;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 use axum::Json;
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use http::request::Parts;
 use serde::Serialize;
@@ -23,13 +26,24 @@ use serde::Serialize;
     extensions(("x-internal" = json!(true))),
     responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
-pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
+pub async fn get_authenticated_user(
+    app: AppState,
+    req: Parts,
+) -> AppResult<(TypedHeader<CacheControl>, Json<EncodableMe>)> {
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
         .check(&req, &mut conn)
         .await?
         .user_id();
 
+    Ok((no_store(), authenticated_user(&mut conn, user_id).await?))
+}
+
+/// Load the profile of the user with the given id.
+pub async fn authenticated_user(
+    conn: &mut AsyncPgConnection,
+    user_id: i32,
+) -> AppResult<Json<EncodableMe>> {
     let ((user, verified, email, verification_sent), owned_crates) = tokio::try_join!(
         users::table
             .find(user_id)
@@ -95,7 +109,7 @@ pub struct UpdatesResponseMeta {
 pub async fn get_authenticated_user_updates(
     app: AppState,
     req: Parts,
-) -> AppResult<Json<UpdatesResponse>> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<UpdatesResponse>)> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -127,8 +141,11 @@ pub async fn get_authenticated_user_updates(
         })
         .collect::<Vec<_>>();
 
-    Ok(Json(UpdatesResponse {
-        versions,
-        meta: UpdatesResponseMeta { more },
-    }))
+    Ok((
+        no_store(),
+        Json(UpdatesResponse {
+            versions,
+            meta: UpdatesResponseMeta { more },
+        }),
+    ))
 }
