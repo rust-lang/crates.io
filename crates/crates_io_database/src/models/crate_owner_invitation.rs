@@ -4,7 +4,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
 use crate::models::{CrateOwner, User};
-use crate::schema::{crate_owner_invitations, crates};
+use crate::schema::{crate_owner_invitations, crates, users};
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
@@ -103,7 +103,10 @@ impl CrateOwnerInvitation {
         }
 
         // Get the user and check if they have a verified email
-        let user = User::query().find(self.invited_user_id).first(conn).await?;
+        let user = User::query()
+            .filter(users::id.eq(self.invited_user_id))
+            .first(conn)
+            .await?;
 
         let verified_email = user.verified_email(conn).await?;
         if verified_email.is_none() {
