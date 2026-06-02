@@ -9,10 +9,11 @@
     tags: ['autodocs'],
   });
 
-  function createMockCrate(name: string, version: string) {
+  function createMockCrate(name: string, version: string, description = `${name} is a useful Rust crate`) {
     return {
       id: name,
       name,
+      description,
       newest_version: version,
       max_version: version,
       downloads: 1_000_000,

@@ -26,12 +26,14 @@
     href={`${resolve('/crates')}?sort=new`}
     items={summary?.new_crates}
     withSubtitle
+    withTrailing
     data-test-new-crates
   >
     {#snippet item(crate: Crate, index: number)}
       <ListItem
         title={crate.name}
-        subtitle={`v${crate.newest_version}`}
+        subtitle={crate.description ?? undefined}
+        version={crate.newest_version}
         href={resolve('/crates/[crate_id]', { crate_id: crate.id })}
         data-test-crate-link={index}
       />
@@ -42,11 +44,15 @@
     title="Most Downloaded"
     href={`${resolve('/crates')}?sort=downloads`}
     items={summary?.most_downloaded}
+    withSubtitle
+    withTrailing
     data-test-most-downloaded
   >
     {#snippet item(crate: Crate, index: number)}
       <ListItem
         title={crate.name}
+        subtitle={crate.description ?? undefined}
+        downloads={crate.downloads}
         href={resolve('/crates/[crate_id]', { crate_id: crate.id })}
         data-test-crate-link={index}
       />
@@ -58,12 +64,14 @@
     href={`${resolve('/crates')}?sort=recent-updates`}
     items={summary?.just_updated}
     withSubtitle
+    withTrailing
     data-test-just-updated
   >
     {#snippet item(crate: Crate, index: number)}
       <ListItem
         title={crate.name}
-        subtitle={`v${crate.newest_version}`}
+        subtitle={crate.description ?? undefined}
+        version={crate.newest_version}
         href={resolve('/crates/[crate_id]/[version_num]', {
           crate_id: crate.id,
           version_num: crate.newest_version,
@@ -77,11 +85,15 @@
     title="Most Recent Downloads"
     href={`${resolve('/crates')}?sort=recent-downloads`}
     items={summary?.most_recently_downloaded}
+    withSubtitle
+    withTrailing
     data-test-most-recently-downloaded
   >
     {#snippet item(crate: Crate, index: number)}
       <ListItem
         title={crate.name}
+        subtitle={crate.description ?? undefined}
+        downloads={crate.recent_downloads ?? undefined}
         href={resolve('/crates/[crate_id]', { crate_id: crate.id })}
         data-test-crate-link={index}
       />

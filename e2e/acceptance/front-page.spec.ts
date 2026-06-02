@@ -18,23 +18,23 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-total-downloads] [data-test-value]')).toHaveText('143,345');
     await expect(page.locator('[data-test-total-crates] [data-test-value]')).toHaveText('23');
 
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link="0"]')).toHaveText('serde v1.0.0');
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link="0"]')).toHaveAttribute(
-      'href',
-      '/crates/serde',
+    let newCrate = page.locator('[data-test-new-crates] [data-test-crate-link="0"]');
+    await expect(newCrate.locator('[data-test-title]')).toHaveText('serde');
+    await expect(newCrate.locator('[data-test-subtitle]')).toHaveText(
+      'A generic serialization/deserialization framework',
     );
+    await expect(newCrate.locator('[data-test-version]')).toHaveText('1.0.0');
+    await expect(newCrate).toHaveAttribute('href', '/crates/serde');
 
-    await expect(page.locator('[data-test-most-downloaded] [data-test-crate-link="0"]')).toHaveText('serde');
-    await expect(page.locator('[data-test-most-downloaded] [data-test-crate-link="0"]')).toHaveAttribute(
-      'href',
-      '/crates/serde',
-    );
+    let mostDownloaded = page.locator('[data-test-most-downloaded] [data-test-crate-link="0"]');
+    await expect(mostDownloaded.locator('[data-test-title]')).toHaveText('serde');
+    await expect(mostDownloaded.locator('[data-test-downloads]')).toContainText('51K');
+    await expect(mostDownloaded).toHaveAttribute('href', '/crates/serde');
 
-    await expect(page.locator('[data-test-just-updated] [data-test-crate-link="0"]')).toHaveText('nanomsg v0.6.1');
-    await expect(page.locator('[data-test-just-updated] [data-test-crate-link="0"]')).toHaveAttribute(
-      'href',
-      '/crates/nanomsg/0.6.1',
-    );
+    let justUpdated = page.locator('[data-test-just-updated] [data-test-crate-link="0"]');
+    await expect(justUpdated.locator('[data-test-title]')).toHaveText('nanomsg');
+    await expect(justUpdated.locator('[data-test-version]')).toHaveText('0.6.1');
+    await expect(justUpdated).toHaveAttribute('href', '/crates/nanomsg/0.6.1');
 
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
