@@ -53,4 +53,15 @@ describe('formatShortNum()', () => {
       expect(formatShortNum(input)).toBe(expected);
     });
   });
+
+  describe('honours a custom threshold', () => {
+    it.each([
+      [999, '999'],
+      [1000, '1.0K'],
+      [999_499, '999K'],
+      [999_500, '1.0M'],
+    ])('%d → %s', (input, expected) => {
+      expect(formatShortNum(input, { threshold: 999.5 })).toBe(expected);
+    });
+  });
 });
