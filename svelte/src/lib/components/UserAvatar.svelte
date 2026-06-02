@@ -2,6 +2,8 @@
   import type { components } from '@crates-io/api-client';
   import type { HTMLImgAttributes } from 'svelte/elements';
 
+  import avatarPlaceholder from '$lib/assets/avatar-placeholder.svg';
+
   type Size = 'small' | 'medium-small' | 'medium';
   type Owner = components['schemas']['Owner'];
 
@@ -30,7 +32,7 @@
     }
   });
 
-  let src = $derived(user.avatar ? `${user.avatar}&s=${sizeValue * 2}` : undefined);
+  let src = $derived(user.avatar ? `${user.avatar}&s=${sizeValue * 2}` : avatarPlaceholder);
 </script>
 
 <img {src} width={sizeValue} height={sizeValue} {alt} {title} decoding="async" {...rest} />

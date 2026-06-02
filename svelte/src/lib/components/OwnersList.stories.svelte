@@ -71,6 +71,30 @@
     login: 'user6',
     avatar: 'https://avatars.githubusercontent.com/u/6?v=4',
   };
+
+  const NO_AVATAR_USER = {
+    id: 7,
+    kind: 'user',
+    name: 'Avatarless Andy',
+    login: 'avatarless',
+    avatar: null,
+  };
+
+  const NO_AVATAR_ANON = {
+    id: 8,
+    kind: 'user',
+    name: null,
+    login: 'noname',
+    avatar: null,
+  };
+
+  const NO_AVATAR_TEAM = {
+    id: 9,
+    kind: 'team',
+    name: 'maintainers',
+    login: 'github:crates-io:maintainers',
+    avatar: null,
+  };
 </script>
 
 <!-- This is using a single Story with multiple examples to reduce the amount of snapshots generated for visual regression testing -->
@@ -92,6 +116,12 @@
 
   <h1>Teams Only</h1>
   <OwnersList owners={[RUST_TEAM, ANOTHER_TEAM]} />
+
+  <h1>Without Avatars (Detailed)</h1>
+  <OwnersList owners={[NO_AVATAR_USER, NO_AVATAR_ANON, NO_AVATAR_TEAM]} />
+
+  <h1>Without Avatars (Compact)</h1>
+  <OwnersList owners={[NO_AVATAR_USER, NO_AVATAR_ANON, NO_AVATAR_TEAM, JANE_DOE, JOHN_SMITH, USER_4]} />
 </Story>
 
 <style>
