@@ -38,7 +38,7 @@ pub struct Environment {
     pub deadpool: Pool<AsyncPgConnection>,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
-    pub github_app: Option<Arc<dyn GitHubApp>>,
+    pub index_sync_github_app: Option<Arc<dyn GitHubApp>>,
     pub github: Arc<dyn GitHubClient>,
     pub docs_rs: Option<Box<dyn DocsRsClient>>,
     pub og_image_generator: Option<OgImageGenerator>,

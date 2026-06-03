@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
 
     let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client));
-    let github_app = build_github_app(config.index_archive_url.as_ref())?;
+    let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
 
     let deadpool = create_database_pool(&config.db.primary);
 
@@ -110,7 +110,7 @@ fn main() -> anyhow::Result<()> {
         .emails(emails)
         .maybe_docs_rs(docs_rs)
         .team_repo(Box::new(team_repo))
-        .maybe_github_app(github_app)
+        .maybe_index_sync_github_app(index_sync_github_app)
         .github(github)
         .og_image_generator(OgImageGenerator::from_environment()?)
         .build();
@@ -150,7 +150,9 @@ fn main() -> anyhow::Result<()> {
 /// When the archive URL *is* set, both `GH_INDEX_SYNC_APP_CLIENT_ID`
 /// and `GH_INDEX_SYNC_APP_PRIVATE_KEY` must also be present, and the
 /// archive URL must include an `<org>` path segment.
-fn build_github_app(archive_url: Option<&Url>) -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
+fn build_index_sync_github_app(
+    archive_url: Option<&Url>,
+) -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
     let Some(archive_url) = archive_url else {
         return Ok(None);
     };

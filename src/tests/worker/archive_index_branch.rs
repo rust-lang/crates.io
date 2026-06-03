@@ -57,17 +57,17 @@ async fn archive_index_branch_without_url_configured() {
     app.run_pending_background_jobs().await;
 }
 
-/// With an archive URL configured but no GitHub App wired into the
+/// With an archive URL configured but no index sync GitHub App wired into the
 /// environment, the job should fail loudly rather than push without
 /// authentication.
 #[tokio::test(flavor = "multi_thread")]
-async fn archive_index_branch_without_github_app() {
+async fn archive_index_branch_without_index_sync_github_app() {
     let archive = UpstreamIndex::new().unwrap();
     let archive_url = archive.url();
 
     let (app, _) = TestApp::full()
         .with_config(|c| c.index_archive_url = Some(archive_url))
-        .with_github_app(None)
+        .with_index_sync_github_app(None)
         .empty()
         .await;
 
