@@ -272,6 +272,35 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     Ok(())
 }
 
+// To assist in the transition from `users.gh_login` to `users.username`, also write the
+// `GitHubUser`'s `login` to `users.username`.
+#[tokio::test(flavor = "multi_thread")]
+async fn also_write_to_users_username() -> anyhow::Result<()> {
+    let (app, _) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let encryption = GitHubTokenEncryption::for_testing();
+    let gh_id = next_gh_id();
+    let email = "potahto@example.com";
+    let emails = &app.as_inner().emails;
+
+    // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a user record
+    // directly into the database and we want to test the OAuth flow here.
+    let gh_user = GitHubUser {
+        id: gh_id,
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: Some(email.to_string()),
+        avatar_url: None,
+    };
+    let encrypted_token = encryption.encrypt("some random token")?;
+    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let u = User::find(&conn, uid).await?;
+
+    assert_eq!(u.username, Some("arbitrary_username".to_string()));
+
+    Ok(())
+}
+
 // To assist in eventually someday allowing OAuth with more than GitHub, verify that we're starting
 // to also write the GitHub info to the `oauth_github` table. Nothing currently reads from this
 // table other than this test.
