@@ -39,6 +39,7 @@ pub struct Environment {
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
     pub index_sync_github_app: Option<Arc<dyn GitHubApp>>,
+    pub sync_github_app: Option<Arc<dyn GitHubApp>>,
     pub github: Arc<dyn GitHubClient>,
     pub docs_rs: Option<Box<dyn DocsRsClient>>,
     pub og_image_generator: Option<OgImageGenerator>,

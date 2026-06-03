@@ -3,11 +3,14 @@ use crate::{
     schema::{oauth_github, users},
     worker::Environment,
 };
+use anyhow::anyhow;
 use chrono::Utc;
 use crates_io_github::{GitHubError, GitHubUser};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use oauth2::AccessToken;
+use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -91,10 +94,10 @@ impl UpdateUserFromGithub {
             // - the token we have for this user is out-of-date
             // - the user has revoked crates.io's oauth access
             //
-            // In those cases, try to request the user's info via an unauthenticated GitHub
-            // API request, unless they are a GitHub Enterprise Managed User as indicated by an
-            // underscore in their username because we have to be authorized by the managing
-            // enterprise to see any information on enterprise managed users.
+            // In those cases, try to request the user's info via a GitHub API request
+            // authenticated with our sync GitHub app's token, unless they are a GitHub Enterprise
+            // indicated by an underscore in their username because we have to be authorized by the
+            // managing enterprise to see any information on enterprise managed users.
             Err(GitHubError::Unauthorized(_)) | Err(GitHubError::Forbidden(_)) => {
                 // Enterprise managed users are the only ones that should contain underscores.
                 if oauth_github.login.contains('_') {
@@ -108,12 +111,24 @@ impl UpdateUserFromGithub {
                         name: Default::default(),
                     })
                 } else {
-                    match github.get_user_by_id(self.account_id).await {
+                    let Some(sync_github_app) = ctx.sync_github_app.as_ref() else {
+                        let error =
+                            anyhow!("sync github app not configured, can't make user API request");
+                        return Err(error);
+                    };
+
+                    let token = AccessToken::new(
+                        sync_github_app
+                            .installation_token()
+                            .await?
+                            .expose_secret()
+                            .into(),
+                    );
+
+                    match github.get_user_by_id(self.account_id, &token).await {
                         Ok(github_user) => Ok(github_user),
                         Err(GitHubError::NotFound(_)) => Ok(self.ghost_user(oauth_github.user_id)),
-                        // Not sure how we could get Unauthorized/Forbidden for an anonymous
-                        // API request. We could get rate limited though; if that's the case,
-                        // stop and try this user again later.
+                        // For any other error, stop and try this user again later.
                         Err(e) => Err(e.into()),
                     }
                 }

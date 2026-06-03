@@ -107,6 +107,11 @@ impl TestApp {
             .expect_installation_token()
             .returning(|| Ok(secrecy::SecretString::from("test-token")));
 
+        let mut sync_github_app = MockGitHubApp::new();
+        sync_github_app
+            .expect_installation_token()
+            .returning(|| Ok(secrecy::SecretString::from("test-token")));
+
         TestAppBuilder {
             config: simple_config(),
             index: None,
@@ -115,6 +120,7 @@ impl TestApp {
             use_chaos_proxy: false,
             team_repo: MockTeamRepo::new(),
             index_sync_github_app: Some(index_sync_github_app),
+            sync_github_app: Some(sync_github_app),
             github: None,
             docs_rs: None,
             oidc_key_stores: Default::default(),
@@ -297,6 +303,7 @@ pub struct TestAppBuilder {
     use_chaos_proxy: bool,
     team_repo: MockTeamRepo,
     index_sync_github_app: Option<MockGitHubApp>,
+    sync_github_app: Option<MockGitHubApp>,
     github: Option<MockGitHubClient>,
     docs_rs: Option<MockDocsRsClient>,
     oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
@@ -367,6 +374,7 @@ impl TestAppBuilder {
                 .maybe_docs_rs(self.docs_rs.map(|cl| Box::new(cl) as _))
                 .team_repo(Box::new(self.team_repo))
                 .maybe_index_sync_github_app(self.index_sync_github_app.map(|a| Arc::new(a) as _))
+                .maybe_sync_github_app(self.sync_github_app.map(|a| Arc::new(a) as _))
                 .github(github)
                 .maybe_og_image_generator(self.og_image_generator)
                 .build();
@@ -492,6 +500,11 @@ impl TestAppBuilder {
         index_sync_github_app: Option<MockGitHubApp>,
     ) -> Self {
         self.index_sync_github_app = index_sync_github_app;
+        self
+    }
+
+    pub fn with_sync_github_app(mut self, sync_github_app: Option<MockGitHubApp>) -> Self {
+        self.sync_github_app = sync_github_app;
         self
     }
 

@@ -96,6 +96,7 @@ fn main() -> anyhow::Result<()> {
 
     let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client));
     let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
+    let sync_github_app = build_sync_github_app()?;
 
     let deadpool = create_database_pool(&config.db.primary);
 
@@ -111,6 +112,7 @@ fn main() -> anyhow::Result<()> {
         .maybe_docs_rs(docs_rs)
         .team_repo(Box::new(team_repo))
         .maybe_index_sync_github_app(index_sync_github_app)
+        .maybe_sync_github_app(sync_github_app)
         .github(github)
         .og_image_generator(OgImageGenerator::from_environment()?)
         .build();
@@ -167,5 +169,17 @@ fn build_index_sync_github_app(
     let pem = required_var("GH_INDEX_SYNC_APP_PRIVATE_KEY")?;
 
     let client = GitHubAppClient::new(&client_id, &pem, org)?;
+    Ok(Some(Arc::new(client)))
+}
+
+/// Builds the GitHub App client used to authenticate requests to
+/// the users API. `GH_SYNC_APP_ORG ,`GH_SYNC_APP_CLIENT_ID` and `GH_SYNC_APP_PRIVATE_KEY` must
+/// all be present.
+fn build_sync_github_app() -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
+    let client_id = required_var("GH_SYNC_APP_CLIENT_ID")?;
+    let pem = required_var("GH_SYNC_APP_PRIVATE_KEY")?;
+    let org = required_var("GH_SYNC_APP_ORG")?;
+
+    let client = GitHubAppClient::new(&client_id, &pem, &org)?;
     Ok(Some(Arc::new(client)))
 }
