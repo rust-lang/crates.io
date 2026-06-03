@@ -175,13 +175,10 @@
     border-bottom-right-radius: var(--border-radius);
     cursor: pointer;
 
+    --icon-size: var(--submit-icon-size);
+
     &:hover {
       background-color: var(--yellow700);
     }
-  }
-
-  .submit-button :global(.icon) {
-    width: var(--submit-icon-size);
-    height: var(--submit-icon-size);
   }
 </style>
