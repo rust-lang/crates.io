@@ -62,6 +62,19 @@ impl BackgroundJob for UpdateUserFromGithub {
                 oauth_github.user_id, oauth_github.login, github_user.login,
             );
         } else {
+            if oauth_github.login == github_user.login {
+                info!(
+                    "UpdateUserFromGithub for crates.io user {} \
+                    no change from username `{}`",
+                    oauth_github.user_id, oauth_github.login,
+                );
+            } else {
+                info!(
+                    "UpdateUserFromGithub update for crates.io user {} \
+                    from username `{}` to username `{}`",
+                    oauth_github.user_id, oauth_github.login, github_user.login,
+                );
+            }
             self.apply_update(&oauth_github, &github_user, &mut conn)
                 .await;
         }
