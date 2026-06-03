@@ -374,14 +374,13 @@
     color: light-dark(var(--grey600), var(--grey700));
     padding: var(--space-3xs);
     margin: calc(-1 * var(--space-3xs));
+    --icon-size: 1.25em;
 
     &:hover {
       color: light-dark(var(--grey700), var(--grey600));
     }
 
     :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
       margin: -0.125em;
     }
   }
@@ -517,15 +516,11 @@
       flex-shrink: 0;
       display: flex;
       align-items: center;
+      --icon-size: 1.5em;
 
       &:hover {
         background: light-dark(var(--grey200), #333333);
         color: light-dark(var(--grey900), white);
-      }
-
-      :global(.icon) {
-        height: 1.5em;
-        width: 1.5em;
       }
     }
 
