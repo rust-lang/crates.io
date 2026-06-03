@@ -214,10 +214,9 @@
     padding: 0;
     margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
+    --icon-size: 1.25em;
 
     :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
       margin-right: 0.1em;
       margin-bottom: 0.2em;
       vertical-align: middle;
