@@ -378,6 +378,11 @@
         color: var(--grey900);
         background-color: white;
       }
+
+      :global(.icon) {
+        width: 2em;
+        height: 2em;
+      }
     }
 
     :global(.menu) {
