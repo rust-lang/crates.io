@@ -106,6 +106,7 @@ Test database setup: Set `TEST_DATABASE_URL` in `.env` to a separate database (e
 - Use snapshot testing with `insta` for API responses.
 - Never ignore deprecation warnings; fix them immediately or use `#[expect(deprecated)]`.
 - Rate limiting configuration lives in `/src/rate_limiter.rs`; new endpoints should use appropriate limiters.
+- CDN and caching behavior is configured in the [rust-lang/simpleinfra](https://github.com/rust-lang/simpleinfra) repository, not here. The backend only sets `Cache-Control`/`Vary` headers and whether the CDNs honor them depends on the Fastly/CloudFront config in that repo. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the CDN overview.
 - Structured logging uses `tracing`; add spans for request context.
 - Authentication happens via session cookies (web users) or API tokens (cargo CLI, third-party clients).
 - OpenAPI spec: Auto-generated from backend code; update by running `cargo test --package crates_io --lib openapi` and accepting the snapshot changes.
