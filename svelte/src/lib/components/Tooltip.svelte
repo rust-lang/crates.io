@@ -8,6 +8,11 @@
 
   interface BaseProps {
     side?: 'top' | 'bottom' | 'left' | 'right';
+    /**
+     * Milliseconds to wait after the pointer enters the anchor before showing
+     * the tooltip. Defaults to `0`, which shows it immediately.
+     */
+    delay?: number;
   }
 
   interface TextProps extends BaseProps {
@@ -22,10 +27,11 @@
 
   type Props = TextProps | ChildrenProps;
 
-  let { text, children, side = 'top' }: Props = $props();
+  let { text, children, side = 'top', delay = 0 }: Props = $props();
 
   let anchorElement = $state<HTMLElement | null>(null);
   let visible = $state(false);
+  let showTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
   let hideTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 
   function show() {
@@ -33,10 +39,21 @@
       clearTimeout(hideTimeout);
       hideTimeout = null;
     }
-    visible = true;
+
+    if (visible || showTimeout) return;
+
+    showTimeout = setTimeout(() => {
+      showTimeout = null;
+      visible = true;
+    }, delay);
   }
 
   function hide() {
+    if (showTimeout) {
+      clearTimeout(showTimeout);
+      showTimeout = null;
+    }
+
     hideTimeout = setTimeout(() => {
       visible = false;
     }, 100);
