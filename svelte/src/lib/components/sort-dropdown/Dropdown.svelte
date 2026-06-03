@@ -29,6 +29,7 @@
 <style>
   .sort-dropdown {
     display: inline-block;
+    --icon-size: 1.25em;
 
     & :global(.trigger) {
       background-color: var(--main-bg-dark);
@@ -39,8 +40,6 @@
     }
 
     & :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
       color: #1a9c5d;
       margin-right: var(--space-2xs);
     }
