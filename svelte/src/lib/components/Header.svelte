@@ -321,6 +321,7 @@
     margin: calc(var(--space-2xs) * -1);
     padding: var(--space-2xs);
     cursor: pointer;
+    --icon-size: 1.25em;
 
     &:disabled {
       cursor: wait;
@@ -335,8 +336,6 @@
   }
 
   .login-button :global(.icon) {
-    width: 1.25em;
-    height: 1.25em;
     margin-right: var(--space-2xs);
     opacity: 0.5;
   }
