@@ -26,4 +26,27 @@ describe('Tooltip', () => {
       await expect.element(page.getByCSS('.tooltip')).toBeVisible();
     });
   });
+
+  describe('onlyWhenTruncated', () => {
+    it('shows the tooltip when the anchor content is truncated', async () => {
+      render(TooltipTestWrapper, {
+        text: 'A very long string that does not fit into the narrow anchor element',
+        width: '50px',
+        onlyWhenTruncated: true,
+      });
+
+      await userEvent.hover(page.getByCSS('[data-test-anchor]'));
+
+      await expect.element(page.getByCSS('.tooltip')).toBeVisible();
+    });
+
+    it('does not show the tooltip when the anchor content fits', async () => {
+      render(TooltipTestWrapper, { text: 'short', width: '500px', onlyWhenTruncated: true });
+
+      await userEvent.hover(page.getByCSS('[data-test-anchor]'));
+      await tick();
+
+      expect(document.querySelector('.tooltip')).toBeNull();
+    });
+  });
 });
