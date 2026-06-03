@@ -57,11 +57,7 @@
   .color-scheme-menu {
     display: flex;
     align-items: center;
-
-    & :global(.icon) {
-      width: 1.4em;
-      height: 1.4em;
-    }
+    --icon-size: 1.4em;
 
     & :global(.trigger) {
       background: none;
