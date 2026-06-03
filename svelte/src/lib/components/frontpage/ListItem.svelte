@@ -2,6 +2,7 @@
   import type { HTMLAttributes } from 'svelte/elements';
 
   import Icon from '$lib/components/Icon.svelte';
+  import Tooltip from '$lib/components/Tooltip.svelte';
   import { formatShortNum } from '$lib/utils/format-short-num';
 
   interface Props extends HTMLAttributes<HTMLAnchorElement> {
@@ -35,7 +36,12 @@
 <a {href} class={['box', className]} aria-labelledby={titleId} aria-describedby={describedBy} {...restProps}>
   <div class="left">
     <div class="title" id={titleId} data-test-title>{title}</div>
-    {#if subtitle}<div class="subtitle" id={subtitleId} data-test-subtitle>{subtitle}</div>{/if}
+    {#if subtitle}
+      <div class="subtitle" id={subtitleId} data-test-subtitle>
+        {subtitle}
+        <Tooltip text={subtitle} onlyWhenTruncated delay={350} side="bottom" />
+      </div>
+    {/if}
   </div>
   {#if version}
     <div class="version" id={trailingId}>
