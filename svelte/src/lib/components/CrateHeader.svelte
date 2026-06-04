@@ -89,7 +89,7 @@
   {/if}
 
   {#if keywords.length !== 0}
-    <ul class="keywords">
+    <ul class="keywords" aria-label="Keywords">
       {#each keywords as keyword (keyword.id)}
         <li>
           <a href={resolve('/keywords/[keyword_id]', { keyword_id: keyword.id })} data-test-keyword={keyword.id}>
