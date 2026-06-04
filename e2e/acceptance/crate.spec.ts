@@ -306,7 +306,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.goto('/crates/nanomsg');
     await expect(page.locator('[data-test-keyword]')).toBeVisible();
 
-    await page.getByRole('link', { name: '#network', exact: true }).click();
+    await page.getByRole('link', { name: 'network', exact: true }).click();
     await expect(page).toHaveURL('/keywords/network');
     await page.getByRole('link', { name: 'nanomsg', exact: true }).click();
 

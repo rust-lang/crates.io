@@ -11,9 +11,9 @@
 - main:
   - heading "nanomsg v0.6.1" [level=1]
   - text: A high-level, Rust idiomatic wrapper around nanomsg.
-  - list:
+  - list "Keywords":
     - listitem:
-      - link "#network":
+      - link "network":
         - /url: /keywords/network
   - navigation "nanomsg crate subpages":
     - list:
