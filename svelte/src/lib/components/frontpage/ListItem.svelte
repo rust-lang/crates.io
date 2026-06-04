@@ -57,6 +57,7 @@
   {#if version}
     <div class="version" id={trailingId}>
       <span class="sr-only">version </span><span data-test-version>{version}</span>
+      <Tooltip text={version} onlyWhenTruncated delay={350} side="bottom" />
     </div>
   {:else if downloads != null}
     <div class="downloads" id={trailingId} data-test-downloads>
