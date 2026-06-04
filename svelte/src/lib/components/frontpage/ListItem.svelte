@@ -27,9 +27,20 @@
   const trailingId = `${uid}-trailing`;
 
   let hasTrailing = $derived(Boolean(version) || downloads != null);
-  let describedBy = $derived(
-    [subtitle ? subtitleId : null, hasTrailing ? trailingId : null].filter(Boolean).join(' ') || undefined,
-  );
+  let describedBy = $derived.by(() => {
+    let describedByIds = [];
+
+    if (subtitle) {
+      describedByIds.push(subtitleId);
+    }
+    if (hasTrailing) {
+      describedByIds.push(trailingId);
+    }
+
+    if (describedByIds.length !== 0) {
+      return describedByIds.join(' ');
+    }
+  });
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
