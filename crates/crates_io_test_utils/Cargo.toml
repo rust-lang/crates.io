@@ -14,7 +14,7 @@ workspace = true
 anyhow = "=1.0.102"
 bytes = "=1.11.1"
 cargo-manifest = "=0.19.1"
-chrono = "=0.4.44"
+chrono = "=0.4.45"
 crates_io_api_types = { path = "../crates_io_api_types" }
 crates_io_database = { path = "../crates_io_database" }
 crates_io_tarball = { path = "../crates_io_tarball", features = ["builder"] }

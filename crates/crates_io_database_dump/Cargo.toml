@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.102"
-chrono = { version = "=0.4.44", default-features = false, features = ["clock", "serde"] }
+chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
 crates_io_version = { path = "../crates_io_version" }
 flate2 = "=1.1.9"
 minijinja = "=2.20.0"
