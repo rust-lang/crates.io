@@ -18,11 +18,11 @@
   type="button"
   disabled={disabled || status === 'loading'}
   data-test-follow-button
-  class="follow-button button button--tan"
+  class="follow-button button-reset"
   {onclick}
 >
   {#if status === 'loading'}
-    <LoadingSpinner theme="light" />
+    <LoadingSpinner theme="light" style="--spinner-size: 0.8em" label={null} /> Loading
   {:else if status === 'following'}
     <Icon class="i-mdi:bell" /> Unfollow
   {:else}
@@ -32,9 +32,30 @@
 
 <style>
   .follow-button {
-    height: 48px;
-    width: 150px;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    gap: var(--space-2xs);
+    gap: var(--space-3xs);
+    border: 1px solid var(--gray-border);
+    border-radius: 99999px;
+    font-size: var(--space-xs);
+    font-weight: 500;
+    padding: var(--space-3xs) var(--space-xs);
+    cursor: pointer;
+
+    transition:
+      border-color var(--transition-fast),
+      background var(--transition-fast);
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled),
+    &:focus:not(:disabled) {
+      border-color: var(--yellow500);
+      background: light-dark(#fffdf5, #1b1b18);
+    }
   }
 </style>

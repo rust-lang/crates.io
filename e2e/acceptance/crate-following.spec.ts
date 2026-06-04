@@ -31,7 +31,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
 
     let followButton = page.locator('[data-test-follow-button]');
     let spinner = followButton.locator('[data-test-spinner]');
-    await expect(followButton).toHaveText('Loading…');
+    await expect(followButton).toHaveText('Loading');
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
 
@@ -43,7 +43,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     let followDeferred = Promise.withResolvers<Response>();
     msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => followDeferred.promise));
     await followButton.click();
-    await expect(followButton).toHaveText('Loading…');
+    await expect(followButton).toHaveText('Loading');
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
 
@@ -55,7 +55,7 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     let unfollowDeferred = Promise.withResolvers<Response>();
     msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => unfollowDeferred.promise));
     await followButton.click();
-    await expect(followButton).toHaveText('Loading…');
+    await expect(followButton).toHaveText('Loading');
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
 

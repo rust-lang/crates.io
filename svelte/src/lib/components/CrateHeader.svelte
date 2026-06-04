@@ -222,7 +222,7 @@
     }
 
     .follow-button {
-      margin: -10px -10px 0 var(--space-s);
+      margin: 0 calc(var(--space-s) - var(--space-m)) 0 var(--space-s);
       grid-column: 2;
       grid-row: 1;
     }
