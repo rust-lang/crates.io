@@ -246,12 +246,8 @@
         margin-right: var(--space-3xs);
         background-color: white;
         border-radius: 50%;
-
-        :global(.icon) {
-          width: 0.7em;
-          height: 0.7em;
-          color: #b13b89;
-        }
+        color: #b13b89;
+        --icon-size: 0.7em;
       }
     }
   }

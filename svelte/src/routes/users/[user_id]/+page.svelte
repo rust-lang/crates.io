@@ -61,14 +61,11 @@
   }
 
   .github-link {
+    --icon-size: 32px;
+
     &,
     &:hover {
       color: var(--main-color);
-    }
-
-    :global(.icon) {
-      width: 32px;
-      height: 32px;
     }
   }
 

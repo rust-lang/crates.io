@@ -1,3 +1,13 @@
+<!--
+  @component
+  Renders a UnoCSS icon as an inline `<span>`.
+
+  The icon is a `1em` box, so it scales with the surrounding `font-size`
+  by default. Prefer sizing it that way. When the icon needs a size that
+  differs from its text context, set the `--icon-size` custom property
+  (e.g. `--icon-size: 1.25em`) on a parent instead of overriding `.icon`
+  via `:global`.
+-->
 <script lang="ts">
   import type { HTMLAttributes } from 'svelte/elements';
 
@@ -34,6 +44,7 @@
 <style>
   .icon {
     display: inline-block;
+    font-size: var(--icon-size, 1em);
     flex-shrink: 0;
   }
 </style>

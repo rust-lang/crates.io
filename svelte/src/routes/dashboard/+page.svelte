@@ -163,14 +163,13 @@
       gap: var(--space-3xs);
       font-size: 1.05em;
       margin: 0;
+      --icon-size: 1.25em;
 
       > :global(*) {
         flex-shrink: 0;
       }
 
       :global(.icon) {
-        width: 1.25em;
-        height: 1.25em;
         margin-top: -0.125em;
         margin-bottom: -0.125em;
         color: #b13b89;

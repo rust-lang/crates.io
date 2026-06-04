@@ -160,11 +160,7 @@
     gap: var(--space-3xs);
     white-space: nowrap;
     cursor: default;
-
-    :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
-    }
+    --icon-size: 1.25em;
   }
 
   .description {

@@ -24,6 +24,7 @@
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     justify-items: end;
+    --icon-size: var(--space-xl-2xl);
   }
 
   .value {
@@ -44,8 +45,6 @@
   .stats-value > :global(.icon) {
     grid-column: 2;
     grid-row: 1 / 3;
-    width: var(--space-xl-2xl);
-    height: var(--space-xl-2xl);
     margin-left: var(--space-s);
     margin-top: calc(-1 * var(--space-4xs-3xs));
     color: light-dark(#545454, #adc0cd);

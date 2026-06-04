@@ -29,10 +29,12 @@
     padding-bottom: var(--space-l);
   }
 
+  .hero-button {
+    --icon-size: 1.5em;
+  }
+
   .hero-button :global(.icon) {
     color: #c4890e;
-    width: 1.5em;
-    height: 1.5em;
     margin: -0.25em;
     margin-right: var(--space-3xs);
   }

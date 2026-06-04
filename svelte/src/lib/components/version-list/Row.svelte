@@ -443,11 +443,7 @@
     border: 1px solid light-dark(white, #808080);
     border-radius: 50%;
     transition: all var(--transition-fast);
-
-    & > :global(.icon) {
-      height: 1.5em;
-      width: 1.5em;
-    }
+    --icon-size: 1.5em;
 
     .row:hover &,
     .row.focused & {
@@ -506,6 +502,7 @@
     text-transform: uppercase;
     letter-spacing: 0.7px;
     font-size: 13px;
+    --icon-size: 1.25em;
 
     :global(a) {
       position: relative;
@@ -522,8 +519,6 @@
     }
 
     :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
       margin-right: var(--space-4xs);
       margin-top: -0.125em;
       vertical-align: middle;
@@ -573,10 +568,12 @@
     text-transform: initial;
   }
 
+  .trustpub {
+    --icon-size: 1em;
+  }
+
   .trustpub :global(.icon) {
     margin-left: 0.2em;
-    width: 1em;
-    height: 1em;
   }
 
   .bytes {
@@ -588,10 +585,9 @@
     padding: 0;
     margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
+    --icon-size: 1.25em;
 
     :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
       margin-right: 0.1em;
       margin-bottom: 0.2em;
       vertical-align: middle;

@@ -119,11 +119,7 @@
     width: 2em;
     height: 2em;
     border-radius: 50%;
-
-    :global(.icon) {
-      width: 1.25em;
-      height: 1.25em;
-    }
+    --icon-size: 1.25em;
   }
 
   .next.disabled,
