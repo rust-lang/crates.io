@@ -176,7 +176,10 @@ fn build_index_sync_github_app(
 /// the users API. `GH_SYNC_APP_ORG`,`GH_SYNC_APP_CLIENT_ID`, and `GH_SYNC_APP_PRIVATE_KEY` must
 /// all be present.
 fn build_sync_github_app() -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
-    let client_id = required_var("GH_SYNC_APP_CLIENT_ID")?;
+    let Some(client_id) = var("GH_SYNC_APP_CLIENT_ID")? else {
+        return Ok(None);
+    };
+
     let pem = required_var("GH_SYNC_APP_PRIVATE_KEY")?;
     let org = required_var("GH_SYNC_APP_ORG")?;
 
