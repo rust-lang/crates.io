@@ -4,7 +4,6 @@
   import { resolve } from '$app/paths';
 
   import CrateFollowButton from '$lib/components/CrateFollowButton.svelte';
-  import Icon from '$lib/components/Icon.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { getSession } from '$lib/utils/session.svelte';
@@ -74,7 +73,7 @@
 
     {#if version?.yanked}
       <span class="yanked-badge" data-test-yanked>
-        <Icon class="i-mdi:trash-can-outline" /> Yanked
+        Yanked
 
         <Tooltip>
           This crate has been yanked, but it is still available for download for other crates that may be depending on
@@ -139,15 +138,8 @@
     box-shadow: var(--shadow);
   }
 
-  .title-row {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-  }
-
   .heading {
-    display: flex;
+    display: inline-flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: var(--space-xs);
@@ -161,18 +153,23 @@
   }
 
   .yanked-badge {
-    background: #d30000;
+    display: inline-block;
+    margin-left: var(--space-2xs);
+    margin-top: var(--space-2xs);
+    /* Suppress the text-derived baseline so the synthesized baseline is the
+       pill's bottom edge, letting it sit on the title's baseline. */
+    overflow: hidden;
+
+    background: light-dark(oklch(0.9 0.02 24), oklch(0.25 0.03 24));
     border-radius: 99999px;
-    padding: var(--space-3xs) var(--space-s);
-    font-size: var(--space-s);
-    color: white;
-    align-self: center;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3xs);
+    padding: var(--space-4xs) var(--space-2xs);
+    font-size: calc(0.9 * var(--space-xs));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: light-dark(oklch(0.5 0.15 24), oklch(0.8 0.07 24));
     white-space: nowrap;
     cursor: default;
-    --icon-size: 1.25em;
   }
 
   .description {
