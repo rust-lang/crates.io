@@ -85,7 +85,7 @@ impl User {
 pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,
-    pub username: Option<&'a str>,
+    pub username: &'a str,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_encrypted_token: &'a [u8],
