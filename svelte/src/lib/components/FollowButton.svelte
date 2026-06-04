@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/Icon.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
   interface Props {
@@ -23,9 +24,9 @@
   {#if status === 'loading'}
     <LoadingSpinner theme="light" />
   {:else if status === 'following'}
-    Unfollow
+    <Icon class="i-mdi:bell" /> Unfollow
   {:else}
-    Follow
+    <Icon class="i-mdi:bell-outline" /> Follow
   {/if}
 </button>
 
@@ -34,5 +35,6 @@
     height: 48px;
     width: 150px;
     justify-content: center;
+    gap: var(--space-2xs);
   }
 </style>
