@@ -8,7 +8,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
 use crate::models::{Crate, TrustpubData, User};
-use crate::schema::{readme_renderings, versions};
+use crate::schema::{readme_renderings, users, versions};
 
 #[derive(Clone, Identifiable, Associations, Debug, HasQuery)]
 #[diesel(belongs_to(Crate), belongs_to(crate::models::download::Version, foreign_key=id))]
@@ -60,7 +60,11 @@ impl Version {
     /// Not for use when you have a group of versions you need the publishers for.
     pub async fn published_by(&self, mut conn: &AsyncPgConnection) -> QueryResult<Option<User>> {
         match self.published_by {
-            Some(pb) => User::query().find(pb).first(&mut conn).await.optional(),
+            Some(pb) => User::query()
+                .filter(users::id.eq(pb))
+                .first(&mut conn)
+                .await
+                .optional(),
             None => Ok(None),
         }
     }

@@ -62,7 +62,7 @@ impl VersionOwnerAction {
 
         version_owner_actions::table
             .filter(version_id.eq(version.id))
-            .inner_join(users::table)
+            .inner_join(users::table.left_join(oauth_github::table))
             .select((VersionOwnerAction::as_select(), User::as_select()))
             .order(version_owner_actions::dsl::id)
             .load(&mut conn)
@@ -74,7 +74,7 @@ impl VersionOwnerAction {
         versions: &[&Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
         Ok(Self::belonging_to(versions)
-            .inner_join(users::table)
+            .inner_join(users::table.left_join(oauth_github::table))
             .select((VersionOwnerAction::as_select(), User::as_select()))
             .order(version_owner_actions::dsl::id)
             .load(&mut conn)

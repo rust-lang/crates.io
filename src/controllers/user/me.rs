@@ -4,7 +4,7 @@ use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
-use crate::schema::{crate_owners, crates, emails, follows, users, versions};
+use crate::schema::{crate_owners, crates, emails, follows, oauth_github, users, versions};
 use crate::util::errors::AppResult;
 use crate::util::no_store;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
@@ -48,6 +48,7 @@ pub async fn authenticated_user(
         users::table
             .find(user_id)
             .left_join(emails::table)
+            .left_join(oauth_github::table)
             .select((
                 User::as_select(),
                 emails::verified.nullable(),
@@ -118,7 +119,7 @@ pub async fn get_authenticated_user_updates(
     let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
     let query = versions::table
         .inner_join(crates::table)
-        .left_outer_join(users::table)
+        .left_outer_join(users::table.left_join(oauth_github::table))
         .filter(crates::id.eq_any(followed_crates))
         .order(versions::created_at.desc())
         .select(<(Version, CrateName, Option<User>)>::as_select())

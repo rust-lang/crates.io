@@ -13,11 +13,16 @@ use crates_io_diesel_helpers::lower;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, HasQuery, Identifiable, Serialize)]
+#[diesel(
+    table_name = users,
+    base_query = users::table.left_join(oauth_github::table),
+)]
 pub struct User {
     pub id: i32,
     pub name: Option<String>,
     pub gh_id: i32,
     pub gh_login: String,
+    #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[serde(skip)]
     pub gh_encrypted_token: Vec<u8>,
@@ -29,7 +34,10 @@ pub struct User {
 
 impl User {
     pub async fn find(mut conn: &AsyncPgConnection, id: i32) -> QueryResult<User> {
-        User::query().find(id).first(&mut conn).await
+        User::query()
+            .filter(users::id.eq(id))
+            .first(&mut conn)
+            .await
     }
 
     pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
@@ -43,7 +51,7 @@ impl User {
 
     pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
-            .inner_join(users::table)
+            .inner_join(users::table.left_join(oauth_github::table))
             .select(User::as_select())
             .filter(crate_owners::crate_id.eq(krate.id))
             .load(&mut conn)

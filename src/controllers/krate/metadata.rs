@@ -307,7 +307,7 @@ async fn _load_versions_and_publishers(
     version_num: Option<&str>,
 ) -> AppResult<Option<Vec<VersionsAndPublishers>>> {
     let mut query = Version::belonging_to(krate)
-        .left_outer_join(users::table)
+        .left_outer_join(users::table.left_join(oauth_github::table))
         .select(<(Version, Option<User>)>::as_select())
         .order_by(versions::id.desc())
         .into_boxed();

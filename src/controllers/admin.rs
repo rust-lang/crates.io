@@ -81,6 +81,7 @@ pub async fn list(
 
     let (user, verified, user_email) = users::table
         .left_join(emails::table)
+        .left_join(oauth_github::table)
         .filter(users::gh_login.eq(username))
         .select((
             User::as_select(),
