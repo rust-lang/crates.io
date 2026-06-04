@@ -64,23 +64,25 @@
 </script>
 
 <div class="header" data-test-heading>
-  <h1 class="heading">
-    <span data-test-crate-name>{crate.name}</span>
-    {#if version}
-      <small data-test-crate-version>v{version.num}</small>
-
-      {#if version.yanked}
-        <span class="yanked-badge" data-test-yanked>
-          <Icon class="i-mdi:trash-can-outline" /> Yanked
-
-          <Tooltip>
-            This crate has been yanked, but it is still available for download for other crates that may be depending on
-            it.
-          </Tooltip>
-        </span>
+  <div class="title-row">
+    <h1 class="heading">
+      <span data-test-crate-name>{crate.name}</span>
+      {#if version}
+        <small data-test-crate-version>v{version.num}</small>
       {/if}
+    </h1>
+
+    {#if version?.yanked}
+      <span class="yanked-badge" data-test-yanked>
+        <Icon class="i-mdi:trash-can-outline" /> Yanked
+
+        <Tooltip>
+          This crate has been yanked, but it is still available for download for other crates that may be depending on
+          it.
+        </Tooltip>
+      </span>
     {/if}
-  </h1>
+  </div>
 
   {#if crate.description}
     <div class="description">
@@ -135,6 +137,13 @@
     margin-bottom: var(--space-s);
     border-radius: 5px;
     box-shadow: var(--shadow);
+  }
+
+  .title-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
   }
 
   .heading {
