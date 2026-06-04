@@ -12,8 +12,10 @@
   import DownloadChart from '$lib/components/download-chart/DownloadChart.svelte';
   import * as Dropdown from '$lib/components/dropdown';
   import Icon from '$lib/components/Icon.svelte';
+  import NativeReplacementBanner from '$lib/components/NativeReplacementBanner.svelte';
   import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
+  import { nativeReplacements } from '$lib/data/native-replacements';
   import { loadReadme } from '$lib/utils/readme';
 
   type Crate = components['schemas']['Crate'];
@@ -58,6 +60,8 @@
 
   let downloadsContext = $derived(requestedVersion ? version : crate);
 
+  let nativeReplacement = $derived(nativeReplacements[crate.name]);
+
   let retryReadmePromise = $state<typeof readmePromise | null>(null);
   let activeReadmePromise = $derived(retryReadmePromise ?? readmePromise);
 
@@ -78,6 +82,12 @@
 </script>
 
 <CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} {ownersPromise} />
+
+{#if nativeReplacement}
+  <div class="native-replacement">
+    <NativeReplacementBanner replacement={nativeReplacement} />
+  </div>
+{/if}
 
 <div class="crate-info">
   <div class="docs" data-test-docs>
@@ -173,6 +183,10 @@
 </div>
 
 <style>
+  .native-replacement {
+    margin-bottom: var(--space-m);
+  }
+
   .crate-info {
     @media only screen and (min-width: 890px) {
       display: grid;
