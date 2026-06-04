@@ -55,7 +55,11 @@ impl BackgroundJob for UpdateUserFromGithub {
 
         let github_user = self.refresh_user(&ctx, &oauth_github).await?;
 
-        let prefix = self.dry_run.then_some("[DRY RUN] ").unwrap_or_default();
+        let prefix = if self.dry_run {
+            "[DRY RUN] "
+        } else {
+            Default::default()
+        };
         if oauth_github.login == github_user.login {
             info!(
                 "{}UpdateUserFromGithub for crates.io user {} \
