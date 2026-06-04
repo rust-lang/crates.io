@@ -128,10 +128,13 @@
 
 <style>
   .header {
+    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+
     padding: var(--space-s) var(--space-m);
-    background-color: var(--main-bg-dark);
+    background-color: light-dark(white, #141413);
     margin-bottom: var(--space-s);
     border-radius: 5px;
+    box-shadow: var(--shadow);
   }
 
   .heading {
