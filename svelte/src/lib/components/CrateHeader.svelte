@@ -3,7 +3,7 @@
 
   import { resolve } from '$app/paths';
 
-  import FollowButton from '$lib/components/FollowButton.svelte';
+  import CrateFollowButton from '$lib/components/CrateFollowButton.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
   import Tooltip from '$lib/components/Tooltip.svelte';
@@ -105,7 +105,7 @@
 
   {#if session.currentUser}
     <div class="follow-button">
-      <FollowButton crateName={crate.name} />
+      <CrateFollowButton crateName={crate.name} />
     </div>
   {/if}
 </div>
