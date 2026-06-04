@@ -136,26 +136,26 @@ pub async fn authorize_session(
 }
 
 pub async fn save_user_to_database(
-    user: &GitHubUser,
+    gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
     let new_user = NewUser::builder()
-        .gh_id(user.id)
-        .gh_login(&user.login)
-        .username(&user.login)
-        .maybe_name(user.name.as_deref())
-        .maybe_gh_avatar(user.avatar_url.as_deref())
+        .gh_id(gh_user.id)
+        .gh_login(&gh_user.login)
+        .username(&gh_user.login)
+        .maybe_name(gh_user.name.as_deref())
+        .maybe_gh_avatar(gh_user.avatar_url.as_deref())
         .gh_encrypted_token(encrypted_token)
         .build();
 
-    match create_or_update_user(&new_user, user.email.as_deref(), emails, conn).await {
+    match create_or_update_user(&new_user, gh_user.email.as_deref(), emails, conn).await {
         Ok(id) => Ok(id),
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
-            find_user_by_gh_id(conn, user.id).await?.ok_or(error)
+            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
         }
         Err(error) => Err(error),
     }
