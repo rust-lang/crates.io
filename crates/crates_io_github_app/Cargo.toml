@@ -13,7 +13,7 @@ mock = ["dep:mockall"]
 [dependencies]
 anyhow = "=1.0.102"
 async-trait = "=0.1.89"
-chrono = { version = "=0.4.44", features = ["serde"] }
+chrono = { version = "=0.4.45", features = ["serde"] }
 jsonwebtoken = { version = "=10.4.0", features = ["aws_lc_rs"] }
 mockall = { version = "=0.14.0", optional = true }
 reqwest = { version = "=0.13.4", features = ["json"] }
