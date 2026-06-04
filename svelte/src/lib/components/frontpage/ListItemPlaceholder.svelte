@@ -6,9 +6,10 @@
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     withSubtitle?: boolean;
+    withTrailing?: boolean;
   }
 
-  let { withSubtitle = false, class: className, ...restProps }: Props = $props();
+  let { withSubtitle = false, withTrailing = false, class: className, ...restProps }: Props = $props();
 </script>
 
 <div class={['link', className]} {...restProps}>
@@ -25,7 +26,11 @@
       />
     {/if}
   </div>
-  <Icon class="i-mdi:chevron-right right" />
+  {#if withTrailing}
+    <Placeholder width="40px" height="13px" radius="6.5px" opacity={0.2} />
+  {:else}
+    <Icon class="i-mdi:chevron-right right" />
+  {/if}
 </div>
 
 <style>

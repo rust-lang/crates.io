@@ -139,7 +139,8 @@
       <div class="linecount" data-test-linecounts>
         <Icon class="i-mdi:code-tags" />
         <span>
-          {formatShortNum(Number(version.linecounts.total_code_lines))} SLoC
+          <!-- Use the OpenGraph image `threshold` so the sidebar matches the generated image -->
+          {formatShortNum(Number(version.linecounts.total_code_lines), { threshold: 1500 })} SLoC
           <Tooltip>
             Source Lines of Code<br />
             <small>(excluding comments, integration tests and example code)</small>

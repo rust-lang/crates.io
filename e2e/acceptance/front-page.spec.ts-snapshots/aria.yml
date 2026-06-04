@@ -20,35 +20,45 @@
       - /url: /crates?sort=new
   - list:
     - listitem:
-      - link "serde v1.0.0":
+      - link "serde":
         - /url: /crates/serde
+        - text: serde A generic serialization/deserialization framework version 1.0.0
     - listitem:
-      - link "rust-crypto v1.0.0":
+      - link "rust-crypto":
         - /url: /crates/rust-crypto
+        - text: rust-crypto A (mostly) pure-Rust implementation of various common cryptographic algorithms. version 1.0.0
     - listitem:
-      - link "quickcheck v1.0.0":
+      - link "quickcheck":
         - /url: /crates/quickcheck
+        - text: quickcheck Automatic property based testing with shrinking. version 1.0.0
     - listitem:
-      - link "postgres v1.0.0":
+      - link "postgres":
         - /url: /crates/postgres
+        - text: postgres A native PostgreSQL driver version 1.0.0
     - listitem:
-      - link "nom v1.0.0":
+      - link "nom":
         - /url: /crates/nom
+        - text: nom A byte-oriented, zero-copy, parser combinators library version 1.0.0
     - listitem:
-      - link "libc v1.0.0":
+      - link "libc":
         - /url: /crates/libc
+        - text: libc This is the description for the crate called "libc" version 1.0.0
     - listitem:
-      - link "nanomsg-sys v1.0.0":
+      - link "nanomsg-sys":
         - /url: /crates/nanomsg-sys
+        - text: nanomsg-sys This is the description for the crate called "nanomsg-sys" version 1.0.0
     - listitem:
-      - link "mock-build-deps v1.0.0":
+      - link "mock-build-deps":
         - /url: /crates/mock-build-deps
+        - text: mock-build-deps This is the description for the crate called "mock-build-deps" version 1.0.0
     - listitem:
-      - link "mock-dev-deps v1.0.0":
+      - link "mock-dev-deps":
         - /url: /crates/mock-dev-deps
+        - text: mock-dev-deps This is the description for the crate called "mock-dev-deps" version 1.0.0
     - listitem:
-      - link "nanomsg v0.6.1":
+      - link "nanomsg":
         - /url: /crates/nanomsg
+        - text: nanomsg A high-level, Rust idiomatic wrapper around nanomsg. version 0.6.1
   - heading "Most Downloaded" [level=2]:
     - link "Most Downloaded":
       - /url: /crates?sort=downloads
@@ -56,67 +66,87 @@
     - listitem:
       - link "serde":
         - /url: /crates/serde
+        - text: /serde A generic serialization\/deserialization framework [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "rust-crypto":
         - /url: /crates/rust-crypto
+        - text: /rust-crypto A \(mostly\) pure-Rust implementation of various common cryptographic algorithms\. [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "quickcheck":
         - /url: /crates/quickcheck
+        - text: /quickcheck Automatic property based testing with shrinking\. [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "postgres":
         - /url: /crates/postgres
+        - text: /postgres A native PostgreSQL driver [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "nom":
         - /url: /crates/nom
+        - text: /nom A byte-oriented, zero-copy, parser combinators library [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "libc":
         - /url: /crates/libc
+        - text: /libc This is the description for the crate called "libc" [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "nanomsg-sys":
         - /url: /crates/nanomsg-sys
+        - text: /nanomsg-sys This is the description for the crate called "nanomsg-sys" [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "mock-build-deps":
         - /url: /crates/mock-build-deps
+        - text: /mock-build-deps This is the description for the crate called "mock-build-deps" [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "mock-dev-deps":
         - /url: /crates/mock-dev-deps
+        - text: /mock-dev-deps This is the description for the crate called "mock-dev-deps" [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "nanomsg":
         - /url: /crates/nanomsg
+        - text: /nanomsg A high-level, Rust idiomatic wrapper around nanomsg\. [\d,.]+[bkmBKM]+ downloads/
   - heading "Just Updated" [level=2]:
     - link "Just Updated":
       - /url: /crates?sort=recent-updates
   - list:
     - listitem:
-      - link "nanomsg v0.6.1":
+      - link "nanomsg":
         - /url: /crates/nanomsg/0.6.1
+        - text: nanomsg A high-level, Rust idiomatic wrapper around nanomsg. version 0.6.1
     - listitem:
-      - link "nom v1.0.0":
+      - link "nom":
         - /url: /crates/nom/1.0.0
+        - text: nom A byte-oriented, zero-copy, parser combinators library version 1.0.0
     - listitem:
-      - link "rust-htslib v1.0.0":
+      - link "rust-htslib":
         - /url: /crates/rust-htslib/1.0.0
+        - text: rust-htslib This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files. version 1.0.0
     - listitem:
-      - link "postgres v1.0.0":
+      - link "postgres":
         - /url: /crates/postgres/1.0.0
+        - text: postgres A native PostgreSQL driver version 1.0.0
     - listitem:
-      - link "rusted_cypher v1.0.0":
+      - link "rusted_cypher":
         - /url: /crates/rusted_cypher/1.0.0
+        - text: rusted_cypher Send cypher queries to a neo4j database version 1.0.0
     - listitem:
-      - link "rustless v1.0.0":
+      - link "rustless":
         - /url: /crates/rustless/1.0.0
+        - text: rustless Rustless is a REST-like API micro-framework for Rust. version 1.0.0
     - listitem:
-      - link "rust-crypto v1.0.0":
+      - link "rust-crypto":
         - /url: /crates/rust-crypto/1.0.0
+        - text: rust-crypto A (mostly) pure-Rust implementation of various common cryptographic algorithms. version 1.0.0
     - listitem:
-      - link "Inflector v1.0.0":
+      - link "Inflector":
         - /url: /crates/Inflector/1.0.0
+        - text: Inflector Adds String based inflections for Rust. Snake, kebab, camel, sentence, class, title, upper, and lower cases as well as ordinalize, deordinalize, demodulize, and foreign key are supported as both traits and pure functions acting on String types. version 1.0.0
     - listitem:
-      - link "serde v1.0.0":
+      - link "serde":
         - /url: /crates/serde/1.0.0
+        - text: serde A generic serialization/deserialization framework version 1.0.0
     - listitem:
-      - link "quickcheck_macros v1.0.0":
+      - link "quickcheck_macros":
         - /url: /crates/quickcheck_macros/1.0.0
+        - text: quickcheck_macros A macro attribute for quickcheck. version 1.0.0
   - heading "Most Recent Downloads" [level=2]:
     - link "Most Recent Downloads":
       - /url: /crates?sort=recent-downloads
@@ -124,80 +154,103 @@
     - listitem:
       - link "rust-crypto":
         - /url: /crates/rust-crypto
+        - text: /rust-crypto A \(mostly\) pure-Rust implementation of various common cryptographic algorithms\. [\d,.]+[bkmBKM]+ downloads/
     - listitem:
       - link "serde":
         - /url: /crates/serde
+        - text: /serde A generic serialization\/deserialization framework \d+ downloads/
     - listitem:
       - link "nanomsg":
         - /url: /crates/nanomsg
+        - text: /nanomsg A high-level, Rust idiomatic wrapper around nanomsg\. \d+ downloads/
     - listitem:
       - link "quickcheck_macros":
         - /url: /crates/quickcheck_macros
+        - text: /quickcheck_macros A macro attribute for quickcheck\. \d+ downloads/
     - listitem:
       - link "rustless":
         - /url: /crates/rustless
+        - text: /rustless Rustless is a REST-like API micro-framework for Rust\. \d+ downloads/
     - listitem:
       - link "external_mixin":
         - /url: /crates/external_mixin
+        - text: "/external_mixin Use your favourite interpreted language to generate your Rust, right in your Rust\\. Supports Python, Ruby and shell \\(`sh`\\) out of the box, with an extensible macro to support any others\\. \\(See `rust_mixin` to be able to use your all-time favourite language to generate your Rust\\.\\) \\d+ downloads/"
     - listitem:
       - link "quickcheck":
         - /url: /crates/quickcheck
+        - text: /quickcheck Automatic property based testing with shrinking\. \d+ downloads/
     - listitem:
       - link "kinetic-rust":
         - /url: /crates/kinetic-rust
+        - text: /kinetic-rust A Kinetic protocol library written in Rust \d+ downloads/
     - listitem:
       - link "rust_mixin":
         - /url: /crates/rust_mixin
+        - text: "/rust_mixin Yo dawg, use Rust to generate Rust, right in your Rust\\. \\(See `external_mixin` to use scripting languages\\.\\) \\d+ downloads/"
     - listitem:
       - link "rust-htslib":
         - /url: /crates/rust-htslib
+        - text: /rust-htslib This library provides HTSlib bindings and a high level Rust API for reading and writing BAM files\. \d+ downloads/
   - heading "Popular Keywords" [level=2]:
     - link "Popular Keywords":
       - /url: /keywords
   - list:
     - listitem:
-      - link "network 1 crates":
+      - link "network":
         - /url: /keywords/network
+        - text: network 1 crates
     - listitem:
-      - link "rust 1 crates":
+      - link "rust":
         - /url: /keywords/rust
+        - text: rust 1 crates
     - listitem:
-      - link "plugin 3 crates":
+      - link "plugin":
         - /url: /keywords/plugin
+        - text: plugin 3 crates
     - listitem:
-      - link "code-generation 3 crates":
+      - link "code-generation":
         - /url: /keywords/code-generation
+        - text: code-generation 3 crates
     - listitem:
-      - link "python 1 crates":
+      - link "python":
         - /url: /keywords/python
+        - text: python 1 crates
     - listitem:
-      - link "ruby 1 crates":
+      - link "ruby":
         - /url: /keywords/ruby
+        - text: ruby 1 crates
     - listitem:
-      - link "shell 1 crates":
+      - link "shell":
         - /url: /keywords/shell
+        - text: shell 1 crates
     - listitem:
-      - link "string 1 crates":
+      - link "string":
         - /url: /keywords/string
+        - text: string 1 crates
     - listitem:
-      - link "case 1 crates":
+      - link "case":
         - /url: /keywords/case
+        - text: case 1 crates
     - listitem:
-      - link "camel 1 crates":
+      - link "camel":
         - /url: /keywords/camel
+        - text: camel 1 crates
   - heading "Popular Categories" [level=2]:
     - link "Popular Categories":
       - /url: /categories
   - list:
     - listitem:
-      - link "API bindings 0 crates":
+      - link "API bindings":
         - /url: /categories/api-bindings
+        - text: API bindings 0 crates
     - listitem:
-      - link "Algorithms 0 crates":
+      - link "Algorithms":
         - /url: /categories/algorithms
+        - text: Algorithms 0 crates
     - listitem:
-      - link "Asynchronous 0 crates":
+      - link "Asynchronous":
         - /url: /categories/asynchronous
+        - text: Asynchronous 0 crates
 - contentinfo:
   - heading "Rust" [level=2]
   - list:

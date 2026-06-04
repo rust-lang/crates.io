@@ -31,7 +31,7 @@ test.describe('Route | category', { tag: '@routes' }, () => {
     await expect(searchInput).toHaveValue('');
 
     // favor navigation via link click over page.goto
-    await page.getByRole('link', { name: 'foo 0 crates' }).click();
+    await page.getByRole('link', { name: 'foo', exact: true }).click();
     await page.waitForURL('/categories/foo');
     await expect(searchInput).toHaveValue('category:foo ');
 

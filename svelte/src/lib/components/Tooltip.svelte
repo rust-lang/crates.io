@@ -8,6 +8,17 @@
 
   interface BaseProps {
     side?: 'top' | 'bottom' | 'left' | 'right';
+    /**
+     * Milliseconds to wait after the pointer enters the anchor before showing
+     * the tooltip. Defaults to `0`, which shows it immediately.
+     */
+    delay?: number;
+    /**
+     * Only show the tooltip when the anchor element's content is horizontally
+     * truncated (e.g. clipped by `text-overflow: ellipsis`). Useful to avoid a
+     * redundant tooltip that merely repeats fully visible text.
+     */
+    onlyWhenTruncated?: boolean;
   }
 
   interface TextProps extends BaseProps {
@@ -22,21 +33,40 @@
 
   type Props = TextProps | ChildrenProps;
 
-  let { text, children, side = 'top' }: Props = $props();
+  let { text, children, side = 'top', delay = 0, onlyWhenTruncated = false }: Props = $props();
 
   let anchorElement = $state<HTMLElement | null>(null);
   let visible = $state(false);
+  let showTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
   let hideTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 
   function show() {
+    // Sub-pixel rounding can leave `scrollWidth` 1px above `clientWidth`
+    // without any visible clipping, so require more than that before treating
+    // the content as truncated.
+    if (onlyWhenTruncated && anchorElement && anchorElement.scrollWidth - anchorElement.clientWidth <= 1) {
+      return;
+    }
+
     if (hideTimeout) {
       clearTimeout(hideTimeout);
       hideTimeout = null;
     }
-    visible = true;
+
+    if (visible || showTimeout) return;
+
+    showTimeout = setTimeout(() => {
+      showTimeout = null;
+      visible = true;
+    }, delay);
   }
 
   function hide() {
+    if (showTimeout) {
+      clearTimeout(showTimeout);
+      showTimeout = null;
+    }
+
     hideTimeout = setTimeout(() => {
       visible = false;
     }, 100);
