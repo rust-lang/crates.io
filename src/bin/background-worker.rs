@@ -173,7 +173,7 @@ fn build_index_sync_github_app(
 }
 
 /// Builds the GitHub App client used to authenticate requests to
-/// the users API. `GH_SYNC_APP_ORG ,`GH_SYNC_APP_CLIENT_ID` and `GH_SYNC_APP_PRIVATE_KEY` must
+/// the users API. `GH_SYNC_APP_ORG`,`GH_SYNC_APP_CLIENT_ID`, and `GH_SYNC_APP_PRIVATE_KEY` must
 /// all be present.
 fn build_sync_github_app() -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
     let client_id = required_var("GH_SYNC_APP_CLIENT_ID")?;

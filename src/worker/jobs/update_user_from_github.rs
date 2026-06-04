@@ -109,8 +109,9 @@ impl UpdateUserFromGithub {
             //
             // In those cases, try to request the user's info via a GitHub API request
             // authenticated with our sync GitHub app's token, unless they are a GitHub Enterprise
-            // indicated by an underscore in their username because we have to be authorized by the
-            // managing enterprise to see any information on enterprise managed users.
+            // Managed User as indicated by an underscore in their username because we have to be
+            // authorized by the managing enterprise to see any information on enterprise managed
+            // users.
             Err(GitHubError::Unauthorized(_)) | Err(GitHubError::Forbidden(_)) => {
                 // Enterprise managed users are the only ones that should contain underscores.
                 if oauth_github.login.contains('_') {
