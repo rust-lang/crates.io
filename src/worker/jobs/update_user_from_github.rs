@@ -55,26 +55,22 @@ impl BackgroundJob for UpdateUserFromGithub {
 
         let github_user = self.refresh_user(&ctx, &oauth_github).await?;
 
-        if self.dry_run {
+        let prefix = self.dry_run.then_some("[DRY RUN] ").unwrap_or_default();
+        if oauth_github.login == github_user.login {
             info!(
-                "Dry run UpdateUserFromGithub proposed update for crates.io user {} \
-                from username `{}` to username `{}`",
-                oauth_github.user_id, oauth_github.login, github_user.login,
+                "{}UpdateUserFromGithub for crates.io user {} \
+                no change from username `{}`",
+                prefix, oauth_github.user_id, oauth_github.login,
             );
         } else {
-            if oauth_github.login == github_user.login {
-                info!(
-                    "UpdateUserFromGithub for crates.io user {} \
-                    no change from username `{}`",
-                    oauth_github.user_id, oauth_github.login,
-                );
-            } else {
-                info!(
-                    "UpdateUserFromGithub update for crates.io user {} \
-                    from username `{}` to username `{}`",
-                    oauth_github.user_id, oauth_github.login, github_user.login,
-                );
-            }
+            info!(
+                "{}UpdateUserFromGithub update for crates.io user {} \
+                from username `{}` to username `{}`",
+                prefix, oauth_github.user_id, oauth_github.login, github_user.login,
+            );
+        }
+
+        if !self.dry_run {
             self.apply_update(&oauth_github, &github_user, &mut conn)
                 .await;
         }
