@@ -13,7 +13,7 @@
   - text: A high-level, Rust idiomatic wrapper around nanomsg.
   - list:
     - listitem:
-      - link "#network":
+      - link "network":
         - /url: /keywords/network
   - navigation "nanomsg crate subpages":
     - list:

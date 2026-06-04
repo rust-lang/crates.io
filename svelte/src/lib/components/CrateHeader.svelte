@@ -96,7 +96,7 @@
             <!-- TODO: Replace with `flex-wrap` after the Svelte migration. The leading whitespace
                  inside the <a> mirrors the Ember rendering and is what allows the list to wrap. -->
             <!-- eslint-disable-next-line svelte/no-useless-mustaches -->
-            {' '}<span class="hash">#</span>{keyword.id}
+            {' '}<span class="hash" aria-hidden="true">#</span>{keyword.id}
           </a>
         </li>
       {/each}
