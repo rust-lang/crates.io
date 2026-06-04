@@ -45,8 +45,9 @@ impl BackgroundJob for ArchiveIndexBranch {
             return Ok(());
         };
 
-        let Some(github_app) = env.github_app.as_ref() else {
-            let error = anyhow!("`index_archive_url` is set but GitHub App is not configured");
+        let Some(index_sync_github_app) = env.index_sync_github_app.as_ref() else {
+            let error =
+                anyhow!("`index_archive_url` is set but index sync GitHub App is not configured");
             return Err(error);
         };
 
@@ -93,7 +94,7 @@ impl BackgroundJob for ArchiveIndexBranch {
             branch = self.branch,
         );
 
-        let token = github_app.installation_token().await?;
+        let token = index_sync_github_app.installation_token().await?;
         let push_url = match build_credentialed_url(archive_url, token.expose_secret()) {
             Ok(url) => url,
             Err(()) => {

@@ -95,7 +95,8 @@ fn main() -> anyhow::Result<()> {
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
 
     let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client));
-    let github_app = build_github_app(config.index_archive_url.as_ref())?;
+    let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
+    let sync_github_app = build_sync_github_app()?;
 
     let deadpool = create_database_pool(&config.db.primary);
 
@@ -110,7 +111,8 @@ fn main() -> anyhow::Result<()> {
         .emails(emails)
         .maybe_docs_rs(docs_rs)
         .team_repo(Box::new(team_repo))
-        .maybe_github_app(github_app)
+        .maybe_index_sync_github_app(index_sync_github_app)
+        .maybe_sync_github_app(sync_github_app)
         .github(github)
         .og_image_generator(OgImageGenerator::from_environment()?)
         .build();
@@ -150,7 +152,9 @@ fn main() -> anyhow::Result<()> {
 /// When the archive URL *is* set, both `GH_INDEX_SYNC_APP_CLIENT_ID`
 /// and `GH_INDEX_SYNC_APP_PRIVATE_KEY` must also be present, and the
 /// archive URL must include an `<org>` path segment.
-fn build_github_app(archive_url: Option<&Url>) -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
+fn build_index_sync_github_app(
+    archive_url: Option<&Url>,
+) -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
     let Some(archive_url) = archive_url else {
         return Ok(None);
     };
@@ -165,5 +169,20 @@ fn build_github_app(archive_url: Option<&Url>) -> anyhow::Result<Option<Arc<dyn 
     let pem = required_var("GH_INDEX_SYNC_APP_PRIVATE_KEY")?;
 
     let client = GitHubAppClient::new(&client_id, &pem, org)?;
+    Ok(Some(Arc::new(client)))
+}
+
+/// Builds the GitHub App client used to authenticate requests to
+/// the users API. `GH_SYNC_APP_ORG`,`GH_SYNC_APP_CLIENT_ID`, and `GH_SYNC_APP_PRIVATE_KEY` must
+/// all be present.
+fn build_sync_github_app() -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
+    let Some(client_id) = var("GH_SYNC_APP_CLIENT_ID")? else {
+        return Ok(None);
+    };
+
+    let pem = required_var("GH_SYNC_APP_PRIVATE_KEY")?;
+    let org = required_var("GH_SYNC_APP_ORG")?;
+
+    let client = GitHubAppClient::new(&client_id, &pem, &org)?;
     Ok(Some(Arc::new(client)))
 }

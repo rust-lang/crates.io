@@ -27,6 +27,7 @@ struct UpdateTest {
     github_mock: MockGitHubClient,
     expected_username: &'static str,
     expected_last_sync_updated: bool,
+    sync_github_app_configured: bool,
 }
 
 impl UpdateTest {
@@ -37,9 +38,16 @@ impl UpdateTest {
             github_mock,
             expected_username,
             expected_last_sync_updated,
+            sync_github_app_configured,
         } = self;
 
-        let (app, _) = TestApp::full().with_github(github_mock).empty().await;
+        let mut test_app = TestApp::full().with_github(github_mock);
+
+        if !sync_github_app_configured {
+            test_app = test_app.with_sync_github_app(None);
+        }
+
+        let (app, _) = test_app.empty().await;
         let emails = &app.as_inner().emails;
         let mut conn = app.db_conn().await;
 
@@ -113,6 +121,7 @@ async fn no_updates_needed() {
         expected_username: EXISTING_LOGIN,
         // but still update last sync
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -133,6 +142,7 @@ async fn yes_updates_needed() {
         github_mock,
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -154,6 +164,7 @@ async fn github_deleted() {
         github_mock,
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -176,6 +187,7 @@ async fn still_deleted() {
         github_mock,
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -190,10 +202,10 @@ async fn github_unauthorized_fallback_success_no_update() {
     github_mock
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Unauthorized(anyhow::anyhow!("Not allowed"))));
-    // Falling back to anonymous get_user_by_id shows no rename needed
+    // Falling back to get_user_by_id shows no rename needed
     github_mock
         .expect_get_user_by_id()
-        .return_once(|_| Ok(github_user(GITHUB_ID, EXISTING_LOGIN)));
+        .return_once(|_, _| Ok(github_user(GITHUB_ID, EXISTING_LOGIN)));
 
     let result = UpdateTest {
         dry_run: false,
@@ -201,6 +213,7 @@ async fn github_unauthorized_fallback_success_no_update() {
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -222,6 +235,7 @@ async fn github_unauthorized_enterprise_user() {
         github_mock,
         expected_username: "asmith_microsoft",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -236,10 +250,10 @@ async fn github_unauthorized_fallback_success_yes_update() {
     github_mock
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Unauthorized(anyhow::anyhow!("Not allowed"))));
-    // Falling back to anonymous get_user_by_id shows yes rename needed
+    // Falling back to get_user_by_id shows yes rename needed
     github_mock
         .expect_get_user_by_id()
-        .return_once(|_| Ok(github_user(GITHUB_ID, "updated-username")));
+        .return_once(|_, _| Ok(github_user(GITHUB_ID, "updated-username")));
 
     let result = UpdateTest {
         dry_run: false,
@@ -247,6 +261,7 @@ async fn github_unauthorized_fallback_success_yes_update() {
         github_mock,
         expected_username: "updated-username",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -261,10 +276,10 @@ async fn github_unauthorized_fallback_not_found_deleted() {
     github_mock
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Unauthorized(anyhow::anyhow!("Not allowed"))));
-    // Falling back to anonymous get_user_by_id shows the user has been deleted
+    // Falling back to get_user_by_id shows the user has been deleted
     github_mock
         .expect_get_user_by_id()
-        .return_once(|_| Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))));
+        .return_once(|_, _| Err(GitHubError::NotFound(anyhow::anyhow!("404 Not Found"))));
 
     let result = UpdateTest {
         dry_run: false,
@@ -272,6 +287,7 @@ async fn github_unauthorized_fallback_not_found_deleted() {
         github_mock,
         expected_username: "ghost_1",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -286,10 +302,10 @@ async fn github_unauthorized_fallback_other_error_no_update() {
     github_mock
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Unauthorized(anyhow::anyhow!("Not allowed"))));
-    // Falling back to anonymous get_user_by_id fails too; try again later
+    // Falling back to get_user_by_id fails too; try again later
     github_mock
         .expect_get_user_by_id()
-        .return_once(|_| Err(GitHubError::Other(anyhow::anyhow!("Over your rate limit"))));
+        .return_once(|_, _| Err(GitHubError::Other(anyhow::anyhow!("Over your rate limit"))));
 
     let result = UpdateTest {
         dry_run: false,
@@ -297,6 +313,31 @@ async fn github_unauthorized_fallback_other_error_no_update() {
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
+        sync_github_app_configured: true,
+    }
+    .run()
+    .await;
+
+    assert_err!(result);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_unauthorized_without_sync_github_app_no_update() {
+    let mut github_mock = MockGitHubClient::new();
+    // This could mean the user's oauth token has been revoked or similar
+    github_mock
+        .expect_current_user()
+        .return_once(|_| Err(GitHubError::Unauthorized(anyhow::anyhow!("Not allowed"))));
+    // The github app isn't configured, so we shouldn't call the user API
+    github_mock.expect_get_user_by_id().never();
+
+    let result = UpdateTest {
+        dry_run: false,
+        existing_gh_user: github_user(GITHUB_ID, EXISTING_LOGIN),
+        github_mock,
+        expected_username: EXISTING_LOGIN,
+        expected_last_sync_updated: false,
+        sync_github_app_configured: false,
     }
     .run()
     .await;
@@ -311,10 +352,10 @@ async fn github_forbidden_fallback_success_yes_update() {
     github_mock
         .expect_current_user()
         .return_once(|_| Err(GitHubError::Forbidden(anyhow::anyhow!("Not allowed"))));
-    // Falling back to anonymous get_user_by_id shows yes rename needed
+    // Falling back to get_user_by_id shows yes rename needed
     github_mock
         .expect_get_user_by_id()
-        .return_once(|_| Ok(github_user(GITHUB_ID, "updated-username")));
+        .return_once(|_, _| Ok(github_user(GITHUB_ID, "updated-username")));
 
     let result = UpdateTest {
         dry_run: false,
@@ -322,6 +363,7 @@ async fn github_forbidden_fallback_success_yes_update() {
         github_mock,
         expected_username: "updated-username",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -344,6 +386,7 @@ async fn github_unavailable() {
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -366,6 +409,7 @@ async fn undeleted() {
         github_mock,
         expected_username: "my-new-username",
         expected_last_sync_updated: true,
+        sync_github_app_configured: true,
     }
     .run()
     .await;
@@ -386,6 +430,7 @@ async fn dry_run_mode_doesnt_update() {
         github_mock,
         expected_username: EXISTING_LOGIN,
         expected_last_sync_updated: false,
+        sync_github_app_configured: true,
     }
     .run()
     .await;

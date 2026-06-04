@@ -54,7 +54,7 @@ impl MockData {
             .returning(|_auth| self.current_user());
 
         mock.expect_get_user_by_id()
-            .returning(|account_id| self.get_user_by_id(account_id));
+            .returning(|account_id, _auth| self.get_user_by_id(account_id));
 
         mock.expect_org_by_name()
             .returning(|org_name, _auth| self.org_by_name(org_name));

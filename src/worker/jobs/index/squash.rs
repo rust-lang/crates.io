@@ -56,10 +56,10 @@ impl BackgroundJob for SquashIndex {
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Squashing the index into a single commit via the GitHub API");
 
-        let github_app = env
-            .github_app
+        let index_sync_github_app = env
+            .index_sync_github_app
             .as_ref()
-            .ok_or_else(|| anyhow!("GitHub App is not configured"))?;
+            .ok_or_else(|| anyhow!("index sync GitHub App is not configured"))?;
 
         let (owner, repo) = parse_github_slug(&env.repository_config.index_location)
             .context("Failed to parse index URL as `owner/repo`")?;
@@ -76,7 +76,7 @@ impl BackgroundJob for SquashIndex {
         let snapshot_branch = snapshot_branch_name();
         let message = squash_commit_message(&original_sha, &snapshot_branch);
 
-        let token = github_app.installation_token().await?;
+        let token = index_sync_github_app.installation_token().await?;
         let auth = AccessToken::new(token.expose_secret().into());
 
         let squash_start = Instant::now();
