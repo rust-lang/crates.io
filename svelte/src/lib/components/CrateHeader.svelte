@@ -94,10 +94,7 @@
       {#each keywords as keyword (keyword.id)}
         <li>
           <a href={resolve('/keywords/[keyword_id]', { keyword_id: keyword.id })} data-test-keyword={keyword.id}>
-            <!-- TODO: Replace with `flex-wrap` after the Svelte migration. The leading whitespace
-                 inside the <a> mirrors the Ember rendering and is what allows the list to wrap. -->
-            <!-- eslint-disable-next-line svelte/no-useless-mustaches -->
-            {' '}<span class="hash" aria-hidden="true">#</span>{keyword.id}
+            <span class="hash" aria-hidden="true">#</span>{keyword.id}
           </a>
         </li>
       {/each}
@@ -183,23 +180,35 @@
 
   .keywords {
     list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
     margin: var(--space-xs) 0 0;
     padding: 0;
-    font-size: calc(0.9 * var(--space-s));
+    font-size: calc(0.85 * var(--space-s));
+    overflow: hidden;
 
-    > * {
-      display: inline;
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-4xs);
+      padding: var(--space-4xs) var(--space-xs);
+      color: var(--main-color-light);
+      background: var(--main-bg);
+      border-radius: 99999px;
+      white-space: nowrap;
+      transition: color var(--transition-fast);
 
-      + * {
-        margin-left: var(--space-s);
+      &:hover {
+        color: var(--main-color);
       }
     }
   }
 
   .hash {
-    margin-right: 1px;
     font-family: var(--font-monospace);
-    font-size: 90%;
+    color: var(--main-color-light);
+    opacity: 0.65;
   }
 
   .follow-button {
