@@ -146,8 +146,11 @@
     margin: 0;
     padding: 0;
     word-break: break-word;
+    font-size: var(--space-l);
 
     small {
+      font-size: var(--space-m);
+      font-weight: 500;
       color: var(--main-color-light);
     }
   }
@@ -174,6 +177,7 @@
 
   .description {
     margin-top: var(--space-xs);
+    font-size: calc(0.9 * var(--space-s));
     line-height: 1.35;
   }
 
@@ -181,6 +185,7 @@
     list-style: none;
     margin: var(--space-xs) 0 0;
     padding: 0;
+    font-size: calc(0.9 * var(--space-s));
 
     > * {
       display: inline;
