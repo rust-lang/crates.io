@@ -3,13 +3,21 @@
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     theme?: 'light';
+    /**
+     * Screen reader label for the spinner. Set to `null` when an adjacent
+     * visible label already describes the loading state, to avoid announcing
+     * it twice.
+     */
+    label?: string | null;
   }
 
-  let { theme, class: className, ...restProps }: Props = $props();
+  let { theme, label = 'Loading…', class: className, ...restProps }: Props = $props();
 </script>
 
 <div class={['spinner', theme, className]} data-test-spinner {...restProps}>
-  <span class="sr-only">Loading…</span>
+  {#if label}
+    <span class="sr-only">{label}</span>
+  {/if}
 </div>
 
 <style>

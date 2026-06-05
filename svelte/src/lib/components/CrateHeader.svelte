@@ -4,7 +4,6 @@
   import { resolve } from '$app/paths';
 
   import CrateFollowButton from '$lib/components/CrateFollowButton.svelte';
-  import Icon from '$lib/components/Icon.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { getSession } from '$lib/utils/session.svelte';
@@ -64,23 +63,25 @@
 </script>
 
 <div class="header" data-test-heading>
-  <h1 class="heading">
-    <span data-test-crate-name>{crate.name}</span>
-    {#if version}
-      <small data-test-crate-version>v{version.num}</small>
-
-      {#if version.yanked}
-        <span class="yanked-badge" data-test-yanked>
-          <Icon class="i-mdi:trash-can-outline" /> Yanked
-
-          <Tooltip>
-            This crate has been yanked, but it is still available for download for other crates that may be depending on
-            it.
-          </Tooltip>
-        </span>
+  <div class="title-row">
+    <h1 class="heading">
+      <span data-test-crate-name>{crate.name}</span>
+      {#if version}
+        <small data-test-crate-version>v{version.num}</small>
       {/if}
+    </h1>
+
+    {#if version?.yanked}
+      <span class="yanked-badge" data-test-yanked>
+        Yanked
+
+        <Tooltip>
+          This crate has been yanked, but it is still available for download for other crates that may be depending on
+          it.
+        </Tooltip>
+      </span>
     {/if}
-  </h1>
+  </div>
 
   {#if crate.description}
     <div class="description">
@@ -93,10 +94,7 @@
       {#each keywords as keyword (keyword.id)}
         <li>
           <a href={resolve('/keywords/[keyword_id]', { keyword_id: keyword.id })} data-test-keyword={keyword.id}>
-            <!-- TODO: Replace with `flex-wrap` after the Svelte migration. The leading whitespace
-                 inside the <a> mirrors the Ember rendering and is what allows the list to wrap. -->
-            <!-- eslint-disable-next-line svelte/no-useless-mustaches -->
-            {' '}<span class="hash" aria-hidden="true">#</span>{keyword.id}
+            <span class="hash" aria-hidden="true">#</span>{keyword.id}
           </a>
         </li>
       {/each}
@@ -128,64 +126,89 @@
 
 <style>
   .header {
+    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+
     padding: var(--space-s) var(--space-m);
-    background-color: var(--main-bg-dark);
+    background-color: light-dark(white, #141413);
     margin-bottom: var(--space-s);
     border-radius: 5px;
+    box-shadow: var(--shadow);
   }
 
   .heading {
-    display: flex;
+    display: inline-flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: var(--space-xs);
     margin: 0;
     padding: 0;
     word-break: break-word;
+    font-size: var(--space-l);
 
     small {
+      font-size: var(--space-m);
+      font-weight: 500;
       color: var(--main-color-light);
     }
   }
 
   .yanked-badge {
-    background: #d30000;
+    display: inline-block;
+    margin-left: var(--space-2xs);
+    margin-top: var(--space-2xs);
+    /* Suppress the text-derived baseline so the synthesized baseline is the
+       pill's bottom edge, letting it sit on the title's baseline. */
+    overflow: hidden;
+
+    background: light-dark(oklch(0.9 0.02 24), oklch(0.25 0.03 24));
     border-radius: 99999px;
-    padding: var(--space-3xs) var(--space-s);
-    font-size: var(--space-s);
-    color: white;
-    align-self: center;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3xs);
+    padding: var(--space-4xs) var(--space-2xs);
+    font-size: calc(0.9 * var(--space-xs));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: light-dark(oklch(0.5 0.15 24), oklch(0.8 0.07 24));
     white-space: nowrap;
     cursor: default;
-    --icon-size: 1.25em;
   }
 
   .description {
     margin-top: var(--space-xs);
+    font-size: calc(0.9 * var(--space-s));
     line-height: 1.35;
   }
 
   .keywords {
     list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
     margin: var(--space-xs) 0 0;
     padding: 0;
+    font-size: calc(0.85 * var(--space-s));
+    overflow: hidden;
 
-    > * {
-      display: inline;
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-4xs);
+      padding: var(--space-4xs) var(--space-xs);
+      color: var(--main-color-light);
+      background: var(--main-bg);
+      border-radius: 99999px;
+      white-space: nowrap;
+      transition: color var(--transition-fast);
 
-      + * {
-        margin-left: var(--space-s);
+      &:hover {
+        color: var(--main-color);
       }
     }
   }
 
   .hash {
-    margin-right: 1px;
     font-family: var(--font-monospace);
-    font-size: 90%;
+    color: var(--main-color-light);
+    opacity: 0.65;
   }
 
   .follow-button {
@@ -199,7 +222,7 @@
     }
 
     .follow-button {
-      margin: -10px -10px 0 var(--space-s);
+      margin: 0 calc(var(--space-s) - var(--space-m)) 0 var(--space-s);
       grid-column: 2;
       grid-row: 1;
     }
