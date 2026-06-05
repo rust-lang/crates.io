@@ -2,7 +2,7 @@ use crate::TestApp;
 use crate::util::github::next_gh_id;
 use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
-use claims::assert_ok;
+use claims::{assert_ok, assert_ok_eq};
 use crates_io::controllers::session;
 use crates_io::models::{ApiToken, Email, OauthGithub, User};
 use crates_io::schema::oauth_github;
@@ -363,6 +363,38 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     assert!(additional_user_oauth_github.avatar.is_none());
     let decrypted_token = encryption.decrypt(&additional_user_oauth_github.encrypted_token)?;
     assert_eq!(decrypted_token.secret(), "a different random token");
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn existing_user_can_log_in_during_read_only_mode() -> anyhow::Result<()> {
+    let (app, _) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let emails = &app.as_inner().emails;
+
+    let gh_user = GitHubUser {
+        id: next_gh_id(),
+        login: "github_user".to_string(),
+        name: Some("My Name".to_string()),
+        email: None,
+        avatar_url: None,
+    };
+
+    // Create the user and its `oauth_github` record while the database is writable.
+    let user_id = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await?;
+
+    // Switch the connection into read-only mode, mirroring how the app configures
+    // read-only connections in `ConnectionConfig::apply()`.
+    diesel::sql_query("SET default_transaction_read_only = 't'")
+        .execute(&mut conn)
+        .await?;
+
+    // Logging in again as an existing user must still succeed by falling back to a lookup, even
+    // though the write attempts fail in read-only mode.
+    let result = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await;
+
+    assert_ok_eq!(result, user_id);
 
     Ok(())
 }
