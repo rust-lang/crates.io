@@ -221,5 +221,6 @@ Before submitting:
 - `/docs/ARCHITECTURE.md` - System architecture and design decisions
 - `/docs/API-DESIGN.md` - JSON API conventions for new endpoints
 - `/docs/PR-REVIEW.md` - Guidelines for reviewing pull requests
+- `/docs/AI-TOOLS.md` - Guidelines for using AI tools when contributing
 - `/script/import-database-dump.sh` - Import production database dump for testing
 - `/.github/workflows/ci.yml` - CI pipeline definition and tool versions
