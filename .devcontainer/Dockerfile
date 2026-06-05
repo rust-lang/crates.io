@@ -15,7 +15,7 @@ RUN install -d /usr/share/postgresql-common/pgdg \
     && rm -rf /var/lib/apt/lists/*
 
 # renovate: datasource=crate depName=diesel_cli versioning=semver
-ARG DIESEL_CLI_VERSION=2.3.9
+ARG DIESEL_CLI_VERSION=2.3.10
 
 RUN cargo install --locked diesel_cli --version $DIESEL_CLI_VERSION \
     --no-default-features --features postgres
