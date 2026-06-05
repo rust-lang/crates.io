@@ -46,6 +46,7 @@ async fn show_latest_user_case_insensitively() {
     let user1 = NewUser::builder()
         .gh_id(1)
         .gh_login("foobar")
+        .username("foobar")
         .name("I was first then deleted my github account")
         .gh_encrypted_token(&[])
         .build();
@@ -53,6 +54,7 @@ async fn show_latest_user_case_insensitively() {
     let user2 = NewUser::builder()
         .gh_id(2)
         .gh_login("FOOBAR")
+        .username("FOOBAR")
         .name("I was second, I took the foobar username on github")
         .gh_encrypted_token(&[])
         .build();
@@ -81,6 +83,7 @@ async fn user_without_github_account() {
         // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
         .gh_id(-1)
         .gh_login("foobar")
+        .username("foobar")
         .name("I deleted my github account")
         .gh_encrypted_token(&[])
         .build();

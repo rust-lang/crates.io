@@ -48,6 +48,7 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
     let other_user_id = NewUser::builder()
         .gh_id(111)
         .gh_login("other_user")
+        .username("other_user")
         .gh_encrypted_token(&[])
         .build()
         .insert(&conn)

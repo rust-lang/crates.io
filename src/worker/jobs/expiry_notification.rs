@@ -157,6 +157,7 @@ mod tests {
         let user_id = NewUser::builder()
             .gh_id(0)
             .gh_login("a")
+            .username("a")
             .gh_encrypted_token(&[])
             .build()
             .insert(&conn)
