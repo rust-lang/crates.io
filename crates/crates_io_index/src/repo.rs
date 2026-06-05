@@ -65,11 +65,21 @@ pub struct Repository {
     checkout_path: TempDir,
     repository: git2::Repository,
     credentials: Credentials,
+    /// Whether the local clone only contains the tip commit (`--depth 1`).
+    ///
+    /// Shallow clones keep [`Self::reset_head`] fetches shallow too, so the
+    /// local commit history stays pinned to the tip instead of retaining one
+    /// more commit per fetch.
+    shallow: bool,
 }
 
 impl Repository {
-    /// Clones the crate index from a remote git server and returns a
-    /// `Repository` struct to interact with the local copy of the crate index.
+    /// Clones the full history of the crate index from a remote git server and
+    /// returns a `Repository` struct to interact with the local copy of the
+    /// crate index.
+    ///
+    /// See [`Self::open_shallow`] for a variant that only fetches the tip
+    /// commit.
     ///
     /// Note that the `user` configuration for the repository is automatically
     /// set to `bors <bors@rust-lang.org>`.
@@ -82,6 +92,29 @@ impl Repository {
     ///
     #[instrument(skip_all)]
     pub fn open(repository_config: &RepositoryConfig) -> anyhow::Result<Self> {
+        Self::open_inner(repository_config, false)
+    }
+
+    /// Clones only the tip commit of the crate index (`--depth 1`) and returns
+    /// a `Repository` struct to interact with the local copy of the crate
+    /// index.
+    ///
+    /// This is much cheaper than [`Self::open`] for the large index history,
+    /// but only supports operations that work against the current tip:
+    /// reading entries, listing entries, and committing/pushing new commits on
+    /// top of `HEAD`. History-dependent operations such as
+    /// [`Self::get_files_modified_since`] with a `starting_commit` will fail
+    /// because older commits are not present locally.
+    ///
+    /// # Errors
+    ///
+    /// See [`Self::open`].
+    #[instrument(skip_all)]
+    pub fn open_shallow(repository_config: &RepositoryConfig) -> anyhow::Result<Self> {
+        Self::open_inner(repository_config, true)
+    }
+
+    fn open_inner(repository_config: &RepositoryConfig, shallow: bool) -> anyhow::Result<Self> {
         let checkout_path = tempfile::Builder::new()
             .prefix("git")
             .tempdir()
@@ -91,17 +124,15 @@ impl Repository {
             return Err(anyhow!("Failed to convert Path to &str"));
         };
 
-        run_via_cli(
-            Command::new("git").args([
-                "clone",
-                "--bare",
-                "--single-branch",
-                repository_config.index_location.as_str(),
-                checkout_path_str,
-            ]),
-            &repository_config.credentials,
-        )
-        .context("Failed to clone index repository")?;
+        let mut command = Command::new("git");
+        command.args(["clone", "--bare", "--single-branch"]);
+        if shallow {
+            command.args(["--depth", "1"]);
+        }
+        command.args([repository_config.index_location.as_str(), checkout_path_str]);
+
+        run_via_cli(&mut command, &repository_config.credentials)
+            .context("Failed to clone index repository")?;
 
         let repository = git2::Repository::open_bare(checkout_path.path())
             .context("Failed to open cloned index repository")?;
@@ -123,6 +154,7 @@ impl Repository {
             checkout_path,
             repository,
             credentials: repository_config.credentials.clone(),
+            shallow,
         })
     }
 
@@ -304,7 +336,16 @@ impl Repository {
         let original_head = self.head_oid()?;
 
         let fetch_start = Instant::now();
-        self.run_command(Command::new("git").args(["fetch", "origin", "master"]))?;
+        let mut command = Command::new("git");
+        command.arg("fetch");
+        // Keep a shallow clone shallow: without `--depth 1` the shallow boundary
+        // stays at the previous tip, so each fetch retains one more commit and
+        // the local history grows over the lifetime of the clone.
+        if self.shallow {
+            command.args(["--depth", "1"]);
+        }
+        command.args(["origin", "master"]);
+        self.run_command(&mut command)?;
         info!(duration = fetch_start.elapsed().as_nanos(), "Index fetched");
 
         let fetch_head = self
@@ -449,6 +490,53 @@ mod tests {
         repo.reset_head().unwrap();
 
         assert_ok_eq!(repo.list_entries(), vec!["serde".to_string()]);
+    }
+
+    #[test]
+    fn shallow_clone_supports_read_commit_and_fetch() {
+        let upstream = UpstreamIndex::new().unwrap();
+        // Build up some history so the shallow clone is meaningfully smaller.
+        upstream.write_file("se/rd/serde", "hello\n").unwrap();
+        upstream.write_file("an/yh/anyhow", "world\n").unwrap();
+
+        let config = RepositoryConfig {
+            index_location: upstream.url(),
+            credentials: Credentials::Missing,
+        };
+        let repo = Repository::open_shallow(&config).unwrap();
+
+        // Reading the current tip works.
+        assert_some_eq!(repo.read_entry("serde").unwrap(), b"hello\n".to_vec());
+
+        // Committing on top of the tip and pushing works from a shallow clone,
+        // because the parent commit already exists on the remote.
+        let mut builder = repo.commit_builder("Create crate `tokio`").unwrap();
+        builder.upsert_entry("tokio", b"tokio\n").unwrap();
+        builder.commit_and_push().unwrap();
+        assert_ok_eq!(upstream.read_file("to/ki/tokio"), "tokio\n".to_string());
+
+        // New upstream commits are picked up by the (shallow) fetch.
+        upstream.write_file("ra/yo/rayon", "rayon\n").unwrap();
+        repo.reset_head().unwrap();
+        assert_some_eq!(repo.read_entry("rayon").unwrap(), b"rayon\n".to_vec());
+    }
+
+    #[test]
+    fn shallow_clone_lacks_older_history() {
+        let upstream = UpstreamIndex::new().unwrap();
+        let initial = upstream.branch_oid("master").unwrap();
+        upstream.write_file("se/rd/serde", "hello\n").unwrap();
+
+        let config = RepositoryConfig {
+            index_location: upstream.url(),
+            credentials: Credentials::Missing,
+        };
+        let repo = Repository::open_shallow(&config).unwrap();
+
+        // The shallow clone only contains the tip commit, so diffing against
+        // the older initial commit fails because it is not present locally.
+        // This documents why history-dependent callers must use `open`.
+        assert_err!(repo.get_files_modified_since(Some(&initial.to_string())));
     }
 
     #[test]

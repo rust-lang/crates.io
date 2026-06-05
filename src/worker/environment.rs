@@ -60,7 +60,10 @@ impl Environment {
             info!("Cloning index");
             let clone_start = Instant::now();
 
-            *repo = Some(Repository::open(&self.repository_config)?);
+            // The worker only ever reads the current tip and commits/pushes on
+            // top of it, so a shallow clone is sufficient and avoids fetching
+            // the large index history.
+            *repo = Some(Repository::open_shallow(&self.repository_config)?);
 
             let clone_duration = clone_start.elapsed();
             info!(duration = clone_duration.as_nanos(), "Index cloned");
