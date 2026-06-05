@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.102"
-diesel = { version = "=2.3.9", features = ["postgres", "serde_json"] }
+diesel = { version = "=2.3.10", features = ["postgres", "serde_json"] }
 diesel-async = { version = "=0.9.0", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 futures-util = "=0.3.32"
 sentry-core = { version = "=0.48.2", features = ["client"] }
