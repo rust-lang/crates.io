@@ -439,53 +439,65 @@ pub async fn create_or_update_github_team(
         )));
     }
 
-    let token = encryption
-        .decrypt(&req_user.gh_encrypted_token)
-        .map_err(|err| {
-            custom(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to decrypt GitHub token: {err}"),
-            )
-        })?;
-    let team = gh_client.team_by_name(org_name, team_name, &token).await
-        .map_err(|_| {
-            bad_request(format_args!(
-                "could not find the github team {org_name}/{team_name}. \
-                    Make sure that you have the right permissions in GitHub. \
-                    See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
-            ))
-        })?;
+    let token = req_user
+        .gh_encrypted_token
+        .as_ref()
+        .map(|gh_encrypted_token| {
+            encryption.decrypt(gh_encrypted_token).map_err(|err| {
+                custom(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to decrypt GitHub token: {err}"),
+                )
+            })
+        })
+        .transpose()?;
 
-    let org_id = team.organization.id;
-    let gh_login = &req_user.gh_login;
+    if let Some(token) = token.as_ref() {
+        let team = gh_client.team_by_name(org_name, team_name, token).await
+            .map_err(|_| {
+                bad_request(format_args!(
+                    "could not find the github team {org_name}/{team_name}. \
+                        Make sure that you have the right permissions in GitHub. \
+                        See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
+                ))
+            })?;
 
-    let is_team_member = gh_client
-        .team_membership(org_id, team.id, gh_login, &token)
-        .await?
-        .is_some_and(|m| m.is_active());
+        let org_id = team.organization.id;
+        let gh_login = &req_user.gh_login;
 
-    let can_add_team =
-        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &token).await?;
+        let is_team_member = gh_client
+            .team_membership(org_id, team.id, gh_login, token)
+            .await?
+            .is_some_and(|m| m.is_active());
 
-    if !can_add_team {
-        return Err(custom(
+        let can_add_team =
+            is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, token).await?;
+
+        if !can_add_team {
+            return Err(custom(
+                StatusCode::FORBIDDEN,
+                "only members of a team or organization owners can add it as an owner",
+            ));
+        }
+
+        let org = gh_client.org_by_name(org_name, token).await?;
+
+        NewTeam::builder()
+            .login(&login.to_lowercase())
+            .org_id(org_id)
+            .github_id(team.id)
+            .maybe_name(team.name.as_deref())
+            .maybe_avatar(org.avatar_url.as_deref())
+            .build()
+            .create_or_update(conn)
+            .await
+            .map_err(Into::into)
+    } else {
+        Err(custom(
             StatusCode::FORBIDDEN,
             "only members of a team or organization owners can add it as an owner",
-        ));
+        ))
     }
-
-    let org = gh_client.org_by_name(org_name, &token).await?;
-
-    NewTeam::builder()
-        .login(&login.to_lowercase())
-        .org_id(org_id)
-        .github_id(team.id)
-        .maybe_name(team.name.as_deref())
-        .maybe_avatar(org.avatar_url.as_deref())
-        .build()
-        .create_or_update(conn)
-        .await
-        .map_err(Into::into)
 }
 
 async fn is_gh_org_owner(

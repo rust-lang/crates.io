@@ -6,10 +6,10 @@ use crate::controllers::trustpub::github_configs::json;
 use crate::util::errors::{AppResult, bad_request, custom, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
-use crates_io_database::models::OwnerKind;
 use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
-use crates_io_database::schema::{crate_owners, emails, users};
+use crates_io_database::models::{OauthGithub, OwnerKind};
+use crates_io_database::schema::{crate_owners, emails, oauth_github, users};
 use crates_io_github::GitHubError;
 use crates_io_trustpub::github::validation::{
     validate_environment, validate_owner, validate_repo, validate_workflow_filename,
@@ -52,6 +52,11 @@ pub async fn create_trustpub_github_config(
         .check(&parts, &mut conn)
         .await?;
     let auth_user = auth.user();
+    let oauth_github = oauth_github::table
+        .filter(oauth_github::user_id.eq(auth_user.id))
+        .select(OauthGithub::as_select())
+        .first(&mut conn)
+        .await?;
 
     let krate = load_crate(&conn, &json_config.krate).await?;
 
@@ -90,7 +95,7 @@ pub async fn create_trustpub_github_config(
     let owner = &json_config.repository_owner;
 
     let encryption = &state.config.gh_token_encryption;
-    let gh_auth = &auth_user.gh_encrypted_token;
+    let gh_auth = &oauth_github.encrypted_token;
     let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
         let login = &auth_user.gh_login;
         warn!("Failed to decrypt GitHub token for user {login}: {err}");

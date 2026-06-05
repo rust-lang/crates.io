@@ -28,9 +28,15 @@ impl Rights {
         owners: &[Owner],
         encryption: &GitHubTokenEncryption,
     ) -> Result<Self, BoxedAppError> {
-        let token = encryption
-            .decrypt(&user.gh_encrypted_token)
-            .map_err(GitHubError::Other)?;
+        let token = user
+            .gh_encrypted_token
+            .as_ref()
+            .map(|gh_encrypted_token| {
+                encryption
+                    .decrypt(gh_encrypted_token)
+                    .map_err(GitHubError::Other)
+            })
+            .transpose()?;
 
         let mut best = Self::None;
         for owner in owners {
@@ -41,35 +47,37 @@ impl Rights {
                     }
                 }
                 Owner::Team(ref team) => {
-                    // Phones home to GitHub to ask if this User is a member of the given team.
-                    // Note that we're assuming that the given user is the one interested in
-                    // the answer. If this is not the case, then we could accidentally leak
-                    // private membership information here.
-                    let is_team_member = match gh_client
-                        .team_membership(team.org_id, team.github_id, &user.gh_login, &token)
-                        .await
-                    {
-                        Ok(membership) => membership.is_some_and(|m| m.is_active()),
-                        Err(GitHubError::Forbidden(_)) => {
-                            let org_name = team
-                                .split_login()
-                                .map(|(_, org, _)| org.to_string())
-                                .unwrap_or_else(|| "unknown".to_string());
+                    if let Some(token) = token.as_ref() {
+                        // Phones home to GitHub to ask if this User is a member of the given team.
+                        // Note that we're assuming that the given user is the one interested in
+                        // the answer. If this is not the case, then we could accidentally leak
+                        // private membership information here.
+                        let is_team_member = match gh_client
+                            .team_membership(team.org_id, team.github_id, &user.gh_login, token)
+                            .await
+                        {
+                            Ok(membership) => membership.is_some_and(|m| m.is_active()),
+                            Err(GitHubError::Forbidden(_)) => {
+                                let org_name = team
+                                    .split_login()
+                                    .map(|(_, org, _)| org.to_string())
+                                    .unwrap_or_else(|| "unknown".to_string());
 
-                            return Err(custom(
-                                StatusCode::FORBIDDEN,
-                                format!(
-                                    "GitHub organization '{org_name}' has restricted OAuth access. \
-                                     A '{org_name}' administrator must approve the 'crates.io' \
-                                     application in the organization's 'Third-party access' settings."
-                                ),
-                            ));
+                                return Err(custom(
+                                    StatusCode::FORBIDDEN,
+                                    format!(
+                                        "GitHub organization '{org_name}' has restricted OAuth access. \
+                                         A '{org_name}' administrator must approve the 'crates.io' \
+                                         application in the organization's 'Third-party access' settings."
+                                    ),
+                                ));
+                            }
+                            Err(e) => return Err(e.into()),
+                        };
+
+                        if is_team_member {
+                            best = Self::Publish;
                         }
-                        Err(e) => return Err(e.into()),
-                    };
-
-                    if is_team_member {
-                        best = Self::Publish;
                     }
                 }
             }

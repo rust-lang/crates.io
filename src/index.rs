@@ -142,7 +142,7 @@ pub async fn index_metadata(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::schema::users;
+    use crate::schema::{oauth_github, users};
     use chrono::{Days, Utc};
     use crates_io_test_db::TestDatabase;
     use crates_io_test_utils::builders::{CrateBuilder, VersionBuilder};
@@ -162,6 +162,17 @@ mod tests {
             ))
             .returning(users::id)
             .get_result::<i32>(&mut conn)
+            .await
+            .unwrap();
+
+        diesel::insert_into(oauth_github::table)
+            .values((
+                oauth_github::user_id.eq(user_id),
+                oauth_github::login.eq("user1"),
+                oauth_github::account_id.eq(42),
+                oauth_github::encrypted_token.eq(&[]),
+            ))
+            .execute(&mut conn)
             .await
             .unwrap();
 
@@ -210,6 +221,17 @@ mod tests {
             ))
             .returning(users::id)
             .get_result::<i32>(&mut conn)
+            .await
+            .unwrap();
+
+        diesel::insert_into(oauth_github::table)
+            .values((
+                oauth_github::user_id.eq(user_id),
+                oauth_github::login.eq("user1"),
+                oauth_github::account_id.eq(42),
+                oauth_github::encrypted_token.eq(&[]),
+            ))
+            .execute(&mut conn)
             .await
             .unwrap();
 
