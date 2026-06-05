@@ -117,6 +117,7 @@ mod tests {
         NewUser::builder()
             .gh_id(2)
             .gh_login("login")
+            .username("login")
             .gh_encrypted_token(&[])
             .build()
             .insert(conn)

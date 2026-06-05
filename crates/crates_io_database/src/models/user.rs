@@ -30,6 +30,7 @@ pub struct User {
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
     pub publish_notifications: bool,
+    pub username: Option<String>,
 }
 
 impl User {
@@ -92,6 +93,7 @@ impl User {
 pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,
+    pub username: &'a str,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_encrypted_token: &'a [u8],
@@ -123,6 +125,7 @@ impl NewUser<'_> {
             .do_update()
             .set((
                 users::gh_login.eq(excluded(users::gh_login)),
+                users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),

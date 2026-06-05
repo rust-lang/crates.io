@@ -1009,6 +1009,8 @@ diesel::table! {
         name -> Nullable<Varchar>,
         /// Whether or not the user wants to receive notifications when a package they own is published
         publish_notifications -> Bool,
+        /// Username associated with the user's crates.io account, independent of linked OAuth usernames.
+        username -> Nullable<Varchar>,
     }
 }
 
