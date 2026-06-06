@@ -13,6 +13,7 @@ use chrono::Utc;
 use crates_io_github::GitHubUser;
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
+use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use minijinja::context;
@@ -142,80 +143,63 @@ pub async fn save_user_to_database(
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    // The SELECT, UPDATE, and INSERTs in this function need to happen in a transaction to avoid
-    // race conditions.
-    conn.transaction(async |conn| {
-        // First, try to update an existing `oauth_github` record with the specified GitHub ID.
-        match diesel::update(oauth_github::table)
-            .filter(oauth_github::account_id.eq(gh_user.id as i64))
-            .set((
-                oauth_github::encrypted_token.eq(encrypted_token),
-                oauth_github::login.eq(&gh_user.login),
-                oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .get_result::<OauthGithub>(conn)
-            .await
-        {
-            Ok(oauth_github) => {
-                // If the update succeeds, the `oauth_github` record already existed, which means
-                // we know the associated user record.
+    // First, try to update an existing `oauth_github` record with the specified GitHub ID and the
+    // associated `users` record in a transaction so that either both `oauth_github` and `users`
+    // get updated or neither do.
+    //
+    // For now, update user display name, gh_login, and username. Eventually, we will
+    // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
+    match conn
+        .transaction(async |conn| {
+            let oauth_github = diesel::update(oauth_github::table)
+                .filter(oauth_github::account_id.eq(gh_user.id as i64))
+                .set((
+                    oauth_github::encrypted_token.eq(encrypted_token),
+                    oauth_github::login.eq(&gh_user.login),
+                    oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+                    oauth_github::last_sync.eq(Utc::now()),
+                ))
+                .get_result::<OauthGithub>(conn)
+                .await?;
+            diesel::update(users::table)
+                .filter(users::id.eq(oauth_github.user_id))
+                .set((
+                    users::name.eq(gh_user.name.as_ref()),
+                    users::gh_login.eq(&gh_user.login),
+                    users::username.eq(&gh_user.login),
+                ))
+                .execute(conn)
+                .await?;
 
-                // For now, update user display name, gh_login, and username. Eventually, we will
-                // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
-                diesel::update(users::table)
-                    .filter(users::id.eq(oauth_github.user_id))
-                    .set((
-                        users::name.eq(gh_user.name.as_ref()),
-                        users::gh_login.eq(&gh_user.login),
-                        users::username.eq(&gh_user.login),
-                    ))
-                    .execute(conn)
-                    .await?;
-
-                Ok(oauth_github.user_id)
-            }
-            Err(diesel::result::Error::NotFound) => {
-                // If the update fails because the `oauth_github` record doesn't exist, this
-                // currently means the `user` record doesn't exist either and we need to create
-                // both. This assumption holds because crates.io and GitHub accounts currently have
-                // a one-to-one relationship; this will need to be changed if/when we allow
-                // crates.io users to link more than one GitHub account to their crates.io account.
-                let new_user = NewUser::builder()
-                    .gh_id(gh_user.id)
-                    .gh_login(&gh_user.login)
-                    .username(&gh_user.login)
-                    .maybe_name(gh_user.name.as_deref())
-                    .gh_encrypted_token(encrypted_token)
-                    .build();
-
-                let user_id =
-                    create_or_update_user(&new_user, gh_user.email.as_deref(), emails, conn)
-                        .await?;
-
-                diesel::insert_into(oauth_github::table)
-                    .values((
-                        oauth_github::user_id.eq(user_id),
-                        oauth_github::account_id.eq(gh_user.id as i64),
-                        oauth_github::encrypted_token.eq(encrypted_token),
-                        oauth_github::login.eq(&gh_user.login),
-                        oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
-                        oauth_github::last_sync.eq(Utc::now()),
-                    ))
-                    .execute(conn)
-                    .await?;
-
-                Ok(user_id)
-            }
-            Err(error) if is_read_only_error(&error) => {
-                // If we're in read only mode, we can't update their details
-                // just look for an existing user
-                find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
-            }
-            Err(error) => Err(error),
+            Ok(oauth_github.user_id)
+        })
+        .await
+    {
+        Ok(user_id) => Ok(user_id),
+        Err(error) if is_read_only_error(&error) => {
+            // If we're in read only mode, we can't update their details or create new users.
+            // just look for an existing user
+            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
         }
-    })
-    .await
+        Err(diesel::result::Error::NotFound) => {
+            // If the update fails because the `oauth_github` record doesn't exist, this
+            // currently means the `user` record doesn't exist either and we need to create
+            // both. This assumption holds because crates.io and GitHub accounts currently have
+            // a one-to-one relationship; this will need to be changed if/when we allow
+            // crates.io users to link more than one GitHub account to their crates.io account.
+            let user_id = create_or_update_user(
+                gh_user,
+                encrypted_token,
+                gh_user.email.as_deref(),
+                emails,
+                conn,
+            )
+            .await?;
+
+            Ok(user_id)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 /// Inserts the user into the database, or updates an existing one.
@@ -223,13 +207,47 @@ pub async fn save_user_to_database(
 /// This method also inserts the email address into the `emails` table
 /// and sends a confirmation email to the user.
 async fn create_or_update_user(
-    new_user: &NewUser<'_>,
+    gh_user: &GitHubUser,
+    encrypted_token: &[u8],
     email: Option<&str>,
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
+    let new_user = NewUser::builder()
+        .gh_id(gh_user.id)
+        .gh_login(&gh_user.login)
+        .username(&gh_user.login)
+        .maybe_name(gh_user.name.as_deref())
+        .gh_encrypted_token(encrypted_token)
+        .build();
+
     conn.transaction(async |conn| {
+        // This currently inserts or updates based on `users::gh_id` being unique. When we switch
+        // to using `users::username` for uniqueness instead, this logic will need to change.
+        // See note on [`NewUser#insert_or_update`].
         let user_id = new_user.insert_or_update(conn).await?;
+
+        // Do an upsert on a github ID conflict here in case a record for this github ID has been
+        // created between when the "update" transaction in `save_user_to_database` ran and now.
+        diesel::insert_into(oauth_github::table)
+            .values((
+                oauth_github::user_id.eq(user_id),
+                oauth_github::account_id.eq(gh_user.id as i64),
+                oauth_github::encrypted_token.eq(encrypted_token),
+                oauth_github::login.eq(&gh_user.login),
+                oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+                oauth_github::last_sync.eq(Utc::now()),
+            ))
+            .on_conflict(oauth_github::account_id)
+            .do_update()
+            .set((
+                oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
+                oauth_github::login.eq(excluded(oauth_github::login)),
+                oauth_github::avatar.eq(excluded(oauth_github::avatar)),
+                oauth_github::last_sync.eq(Utc::now()),
+            ))
+            .execute(conn)
+            .await?;
 
         // To send the user an account verification email
         if let Some(user_email) = email {

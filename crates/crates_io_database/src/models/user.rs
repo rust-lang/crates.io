@@ -110,6 +110,11 @@ impl NewUser<'_> {
     }
 
     /// Inserts the user into the database, or updates an existing one.
+    ///
+    /// This currently works because `users::gh_id` is unique. When we switch to `users::username`
+    /// being the unique key, we should NOT upsert based solely on matching usernames, because we
+    /// might be trying to create a new user who is trying to create their account with a username
+    /// that has already been claimed.
     pub async fn insert_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<i32> {
         diesel::insert_into(users::table)
             .values(self)

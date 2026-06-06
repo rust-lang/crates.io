@@ -2,7 +2,7 @@ use crate::TestApp;
 use crate::util::github::next_gh_id;
 use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
-use claims::{assert_ok, assert_ok_eq};
+use claims::{assert_err, assert_ok, assert_ok_eq};
 use crates_io::controllers::session;
 use crates_io::models::{ApiToken, Email, OauthGithub, User};
 use crates_io::schema::oauth_github;
@@ -424,6 +424,38 @@ async fn existing_user_can_log_in_during_read_only_mode() -> anyhow::Result<()> 
     let result = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await;
 
     assert_ok_eq!(result, user_id);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_user_cannot_log_in_during_read_only_mode() -> anyhow::Result<()> {
+    let (app, _) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let emails = &app.as_inner().emails;
+
+    let gh_user = GitHubUser {
+        id: next_gh_id(),
+        login: "github_user".to_string(),
+        name: Some("My Name".to_string()),
+        email: None,
+        avatar_url: None,
+    };
+
+    // Switch the connection into read-only mode, mirroring how the app configures
+    // read-only connections in `ConnectionConfig::apply()`.
+    diesel::sql_query("SET default_transaction_read_only = 't'")
+        .execute(&mut conn)
+        .await?;
+
+    // Logging in as a new user can't work in read-only mode.
+    let result = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await;
+
+    let error = assert_err!(result);
+    assert_eq!(
+        error.to_string(),
+        "cannot execute UPDATE in a read-only transaction"
+    );
 
     Ok(())
 }
