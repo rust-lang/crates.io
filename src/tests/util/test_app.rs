@@ -169,7 +169,7 @@ impl TestApp {
             account_lock_until: None,
             is_admin: false,
             publish_notifications: true,
-            username: Some(new_user.gh_login.to_string()),
+            username: new_user.gh_login.to_string(),
         };
 
         MockCookieUser {

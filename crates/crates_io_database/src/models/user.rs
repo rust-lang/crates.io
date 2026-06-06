@@ -30,7 +30,7 @@ pub struct User {
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
     pub publish_notifications: bool,
-    pub username: Option<String>,
+    pub username: String,
 }
 
 impl User {

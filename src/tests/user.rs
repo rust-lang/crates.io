@@ -296,7 +296,7 @@ async fn also_write_to_users_username() -> anyhow::Result<()> {
     let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
     let u = User::find(&conn, uid).await?;
 
-    assert_eq!(u.username, Some("arbitrary_username".to_string()));
+    assert_eq!(u.username, "arbitrary_username");
 
     Ok(())
 }
