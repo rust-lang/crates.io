@@ -92,6 +92,7 @@ async fn create_user(
         .values((
             users::name.eq(name),
             users::gh_login.eq(name),
+            users::username.eq(name),
             users::gh_id.eq(account_id as i32),
             users::gh_encrypted_token.eq(&[]),
             users::is_admin.eq(is_admin),
