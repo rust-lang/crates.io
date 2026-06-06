@@ -6,13 +6,9 @@ use crate::models::{NewEmail, NewOauthGithub, NewUser};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
-use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
-use axum::extract::{FromRequestParts, Query};
-use axum_extra::TypedHeader;
-use axum_extra::headers::CacheControl;
 use crates_io_github::GitHubUser;
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
@@ -49,29 +45,6 @@ pub struct BeginResponse {
     responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
 pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
-    begin(&app, &session)
-}
-
-/// Begin authentication flow.
-///
-/// `GET` variant retained for clients that have not migrated to the `POST`
-/// endpoint yet. New clients should use the `POST` endpoint instead.
-#[utoipa::path(
-    get,
-    path = "/api/private/session/begin",
-    tag = "session",
-    extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
-)]
-#[deprecated = "Use the `POST` endpoint instead"]
-pub async fn begin_session_get(
-    app: AppState,
-    session: SessionExtension,
-) -> (TypedHeader<CacheControl>, Json<BeginResponse>) {
-    (no_store(), begin(&app, &session))
-}
-
-fn begin(app: &AppState, session: &SessionExtension) -> Json<BeginResponse> {
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
@@ -83,18 +56,6 @@ fn begin(app: &AppState, session: &SessionExtension) -> Json<BeginResponse> {
 
     let url = url.to_string();
     Json(BeginResponse { url, state })
-}
-
-#[derive(Clone, Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
-#[from_request(via(Query))]
-#[into_params(parameter_in = Query)]
-pub struct AuthorizeQuery {
-    /// Temporary code received from the GitHub API.
-    #[param(value_type = String, example = "901dd10e07c7e9fa1cd5")]
-    code: AuthorizationCode,
-    /// State parameter received from the GitHub API.
-    #[param(value_type = String, example = "fYcUY3FMdUUz00FC7vLT7A")]
-    state: CsrfToken,
 }
 
 #[derive(Clone, Debug, Deserialize, utoipa::ToSchema)]
@@ -129,45 +90,10 @@ pub async fn authorize_session(
     req: Parts,
     Json(body): Json<AuthorizeBody>,
 ) -> AppResult<Json<EncodableMe>> {
-    authorize(body.code, body.state, app, session, req).await
-}
-
-/// Complete authentication flow.
-///
-/// `GET` variant retained for clients that have not migrated to the `POST`
-/// endpoint yet. New clients should use the `POST` endpoint instead.
-#[utoipa::path(
-    get,
-    path = "/api/private/session/authorize",
-    tag = "session",
-    params(AuthorizeQuery),
-    extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
-)]
-#[deprecated = "Use the `POST` endpoint instead"]
-pub async fn authorize_session_get(
-    query: AuthorizeQuery,
-    app: AppState,
-    session: SessionExtension,
-    req: Parts,
-) -> AppResult<(TypedHeader<CacheControl>, Json<EncodableMe>)> {
-    Ok((
-        no_store(),
-        authorize(query.code, query.state, app, session, req).await?,
-    ))
-}
-
-async fn authorize(
-    code: AuthorizationCode,
-    state: CsrfToken,
-    app: AppState,
-    session: SessionExtension,
-    req: Parts,
-) -> AppResult<Json<EncodableMe>> {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
-    if session_state.is_none_or(|session_state| state.secret() != session_state.secret()) {
+    if session_state.is_none_or(|session_state| body.state.secret() != session_state.secret()) {
         return Err(bad_request("invalid state parameter"));
     }
 
@@ -180,7 +106,7 @@ async fn authorize(
 
     let token = app
         .github_oauth
-        .exchange_code(code)
+        .exchange_code(body.code)
         .request_async(&client)
         .await
         .map_err(|err| {
