@@ -1,16 +1,19 @@
 use crate::background_job::DEFAULT_QUEUE;
 use crate::job_registry::JobRegistry;
 use crate::worker::Worker;
-use crate::{BackgroundJob, storage};
+use crate::{BackgroundJob, listener, storage};
 use anyhow::anyhow;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
+use futures_util::FutureExt;
 use futures_util::future::join_all;
 use std::collections::HashMap;
+use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Notify;
 use tokio::task::JoinHandle;
-use tracing::{Instrument, info, info_span, warn};
+use tracing::{Instrument, error, info, info_span, warn};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
@@ -67,6 +70,31 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     ///
     /// This returns a `RunningRunner` which can be used to wait for the workers to shutdown.
     pub fn start(&self) -> RunHandle {
+        // Workers wait on this to be woken up when a new job is enqueued.
+        let notify = Arc::new(Notify::new());
+
+        // Listen for `NOTIFY` messages and wake up the workers. This is skipped
+        // when shutting down on an empty queue (e.g. in tests), where workers
+        // simply poll until the queue drains.
+        if !self.shutdown_when_queue_empty {
+            let pool = self.connection_pool.clone();
+            let notify = notify.clone();
+            tokio::spawn(async move {
+                // `listen_for_new_jobs()` loops forever, so it should never
+                // return. Catch a panic (or an unexpected return) and log it,
+                // since the workers otherwise silently fall back to polling.
+                if AssertUnwindSafe(listener::listen_for_new_jobs(pool, notify))
+                    .catch_unwind()
+                    .await
+                    .is_err()
+                {
+                    error!("Background job listener panicked");
+                } else {
+                    warn!("Background job listener stopped unexpectedly");
+                }
+            });
+        }
+
         let mut handles = Vec::new();
         for (queue_name, queue) in &self.queues {
             for i in 1..=queue.num_workers {
@@ -79,6 +107,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
                     job_registry: Arc::new(queue.job_registry.clone()),
                     shutdown_when_queue_empty: self.shutdown_when_queue_empty,
                     poll_interval: queue.poll_interval,
+                    notify: notify.clone(),
                 };
 
                 let span = info_span!("worker", worker.name = %name);

@@ -1,7 +1,8 @@
 //! Runs enqueued background jobs
 //!
 //! This binary will loop until interrupted. It will run all jobs in the
-//! background queue, sleeping for 1 second whenever the queue is empty. If we
+//! background queue, waiting for a Postgres `NOTIFY` (or polling once per
+//! second as a fallback) whenever the queue is empty. If we
 //! are unable to spawn workers to run jobs (either because we couldn't connect
 //! to the DB, an error occurred while loading, or we just never heard back from
 //! the worker thread), we will rebuild the runner and try again up to 5 times.

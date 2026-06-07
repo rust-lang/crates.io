@@ -35,7 +35,7 @@ The system consists of three main components:
   - Executes job logic with error handling and retry logic
   - Reports job completion or failure back to the database
 
-Jobs are stored in the `background_jobs` PostgreSQL table and processed asynchronously by worker instances that poll for available work in their assigned queues.
+Jobs are stored in the `background_jobs` PostgreSQL table and processed asynchronously by worker instances that poll for available work in their assigned queues. To avoid unnecessary polling latency, a database trigger emits a `NOTIFY` on the `background_jobs` channel whenever a job is enqueued, and the `Runner` keeps a dedicated connection open to `LISTEN` for these notifications and wake the workers immediately. Polling also runs as a fallback so that retriable jobs are eventually picked up even without a notification.
 
 ### Job Processing and Locking
 
