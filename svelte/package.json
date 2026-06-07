@@ -50,7 +50,7 @@
     "@storybook/sveltekit": "10.4.2",
     "@sveltejs/adapter-static": "3.0.10",
     "@sveltejs/enhanced-img": "0.10.4",
-    "@sveltejs/kit": "2.62.0",
+    "@sveltejs/kit": "2.63.0",
     "@sveltejs/vite-plugin-svelte": "7.1.2",
     "@types/node": "24.12.4",
     "@types/semver": "7.7.1",
