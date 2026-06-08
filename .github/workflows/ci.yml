@@ -175,6 +175,10 @@ jobs:
 
       - name: Install cargo-insta
         run: curl -LsSf https://github.com/mitsuhiko/insta/releases/download/${CARGO_INSTA_VERSION}/cargo-insta-installer.sh | sh
+        # `shell: bash` enables `pipefail` so a failing `curl` fails the step
+        # instead of being masked by `sh` exiting successfully.
+        # See https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#exit-codes-and-error-action-preference
+        shell: bash
 
       - run: sudo systemctl start postgresql.service
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
