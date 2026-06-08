@@ -238,8 +238,8 @@ importers:
         specifier: 4.1.8
         version: 4.1.8(@vitest/browser@4.1.8)(vitest@4.1.8)
       chromatic:
-        specifier: 17.2.0
-        version: 17.2.0
+        specifier: 17.3.0
+        version: 17.3.0
       magic-string:
         specifier: 0.30.21
         version: 0.30.21
@@ -2069,8 +2069,8 @@ packages:
       '@chromatic-com/vitest':
         optional: true
 
-  chromatic@17.2.0:
-    resolution: {integrity: sha512-jxuFtNNMuxbVcM2oAAPsa1fDuygt5e1SVJpvTmvSPkVXFQGylFvApsbhDP9a94qI8QMJeUMmts4bXMqrBotWjg==}
+  chromatic@17.3.0:
+    resolution: {integrity: sha512-x6fjCx72uvc37RyqHxa8I8LqaYhiwzvGg0KyOR1Pwgx+KQ9w1SA7e1rg4oBhGW14gcpcyptLVnVaGxX8wSkaxA==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -5520,7 +5520,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.60.1
       debug: 4.4.3(supports-color@10.2.2)
       minimatch: 10.2.5
-      semver: 7.8.1
+      semver: 7.8.2
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
@@ -5858,9 +5858,9 @@ snapshots:
     dependencies:
       semver: 7.8.1
 
-  chromatic@17.2.0:
+  chromatic@17.3.0:
     dependencies:
-      semver: 7.8.1
+      semver: 7.8.2
 
   ci-info@4.4.0: {}
 
@@ -6809,7 +6809,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.8.1
+      semver: 7.8.2
 
   marked@16.4.2: {}
 
