@@ -4,7 +4,7 @@ use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::email::EmailMessage;
 use crate::models::NewDeletedCrate;
-use crate::schema::{crate_downloads, crates, dependencies};
+use crate::schema::{crate_downloads, crates, dependencies, versions};
 use crate::util::errors::{AppResult, BoxedAppError, custom};
 use crate::worker::jobs;
 use axum::extract::rejection::QueryRejection;
@@ -187,7 +187,13 @@ pub fn max_downloads(age: &TimeDelta) -> u64 {
 
 async fn has_rev_dep(mut conn: &AsyncPgConnection, crate_id: i32) -> QueryResult<bool> {
     let rev_dep = dependencies::table
+        .inner_join(versions::table)
         .filter(dependencies::crate_id.eq(crate_id))
+        // Ignore self-referencing dependencies, i.e. dependencies where the
+        // depending version belongs to the same crate that is being depended
+        // upon. Some crates depend on themselves (e.g. for backwards
+        // compatibility), and these should not block deletion.
+        .filter(versions::crate_id.ne(crate_id))
         .select(dependencies::id)
         .first::<i32>(&mut conn)
         .await
