@@ -68,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
 async fn process_path(path: &Path, pb: &ProgressBar) {
     let file = File::open(path)
         .await
-        .map_err(|error| pb.suspend(|| warn!(%error, "Failed to read crate file")));
+        .map_err(|error| pb.suspend(|| warn!("Failed to read crate file: {error}")));
 
     let Ok(mut file) = file else {
         return;
@@ -81,7 +81,9 @@ async fn process_path(path: &Path, pb: &ProgressBar) {
     let result = process_tarball(&pkg_name, &mut file, u64::MAX).await;
     pb.suspend(|| match result {
         Ok(result) => debug!(%pkg_name, path = %path.display(), ?result),
-        Err(error) => warn!(%pkg_name, path = %path.display(), %error, "Failed to process tarball"),
+        Err(error) => {
+            warn!(%pkg_name, path = %path.display(), "Failed to process tarball: {error}")
+        }
     })
 }
 

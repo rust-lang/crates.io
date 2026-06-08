@@ -123,7 +123,7 @@ fn log_instance_metrics_thread(app: Arc<App>) {
     std::thread::spawn(move || {
         loop {
             if let Err(err) = log_instance_metrics_inner(&app) {
-                error!(?err, "log_instance_metrics error");
+                error!("log_instance_metrics error: {err}");
             }
             std::thread::sleep(interval);
         }

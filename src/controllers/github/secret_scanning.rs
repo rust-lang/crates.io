@@ -206,8 +206,8 @@ async fn alert_revoke_token(
 
     if let Err(error) = send_notification_email(&token, alert, state, conn).await {
         warn!(
-            token_id = %token.id, user_id = %token.user_id, ?error,
-            "Failed to send email notification",
+            token_id = %token.id, user_id = %token.user_id,
+            "Failed to send email notification: {error}",
         )
     }
 
@@ -303,8 +303,8 @@ async fn send_trustpub_notification_emails(
 
         let Ok(email_template) = message.inspect_err(|error| {
             warn!(
-                %email, ?crate_names, ?error,
-                "Failed to create trusted publishing token exposure email template"
+                %email, ?crate_names,
+                "Failed to create trusted publishing token exposure email template: {error}"
             );
         }) else {
             continue;
@@ -312,8 +312,8 @@ async fn send_trustpub_notification_emails(
 
         if let Err(error) = state.emails.send(&email, email_template).await {
             warn!(
-                %email, ?crate_names, ?error,
-                "Failed to send trusted publishing token exposure notification"
+                %email, ?crate_names,
+                "Failed to send trusted publishing token exposure notification: {error}"
             );
         }
     }

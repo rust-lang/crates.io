@@ -49,8 +49,7 @@ impl BackgroundJob for DocsRsQueueRebuild {
                 error!(
                     name = self.name,
                     version = self.version,
-                    ?err,
-                    "couldn't queue docs rebuild. won't retry"
+                    "couldn't queue docs rebuild. won't retry: {err}"
                 );
                 Ok(())
             }

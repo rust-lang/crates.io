@@ -123,7 +123,7 @@ fn main() -> anyhow::Result<()> {
         let environment = environment.clone();
         move || {
             if let Err(err) = environment.lock_index() {
-                warn!(%err, "Failed to clone index");
+                warn!("Failed to clone index: {err}");
             };
         }
     });

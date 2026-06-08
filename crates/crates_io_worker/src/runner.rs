@@ -116,7 +116,7 @@ impl RunHandle {
     pub async fn wait_for_shutdown(self) {
         join_all(self.handles).await.into_iter().for_each(|result| {
             if let Err(error) = result {
-                warn!(%error, "Background worker task panicked");
+                warn!("Background worker task panicked: {error}");
             }
         });
     }

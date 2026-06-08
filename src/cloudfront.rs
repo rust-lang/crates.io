@@ -143,6 +143,6 @@ impl CloudFront {
             .await
             .map(|_| ()) // We don't care about the result, just that it worked
             .inspect(|_| debug!("Invalidation request successful"))
-            .inspect_err(|error| warn!(?error, "Invalidation request failed"))?)
+            .inspect_err(|error| warn!("Invalidation request failed: {error}"))?)
     }
 }
