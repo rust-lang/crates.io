@@ -38,7 +38,7 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
         };
 
         if let Err(error) = result {
-            pb.suspend(|| warn!(%crate_id, %error, "Failed to update the default version"));
+            pb.suspend(|| warn!(%crate_id, "Failed to update the default version: {error}"));
         }
     }
 

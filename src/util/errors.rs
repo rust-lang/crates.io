@@ -164,7 +164,7 @@ impl From<EmailError> for BoxedAppError {
             EmailError::AddressError(error) => Box::new(error),
             EmailError::MessageBuilderError(error) => Box::new(error),
             EmailError::TransportError(error) => {
-                error!(?error, "Failed to send email");
+                error!("Failed to send email: {error}");
                 server_error("Failed to send the email")
             }
         }

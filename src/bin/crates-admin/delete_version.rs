@@ -79,13 +79,13 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 );
             }
             Err(error) => {
-                warn!(%crate_name, ?error, "Failed to delete versions from the database")
+                warn!(%crate_name, "Failed to delete versions from the database: {error}")
             }
         }
 
         info!(%crate_name, %crate_id, "Updating default version in the database");
         if let Err(error) = update_default_version(crate_id, conn).await {
-            warn!(%crate_name, %crate_id, ?error, "Failed to update default version");
+            warn!(%crate_name, %crate_id, "Failed to update default version: {error}");
         }
 
         Ok::<_, anyhow::Error>(opts)
@@ -108,7 +108,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
         if let Err(error) = store.delete_crate_file(crate_name, version).await {
-            warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
+            warn!(%crate_name, %version, "Failed to delete crate file from S3: {error}");
         } else {
             paths.push(store.crate_location(crate_name, version));
         }
@@ -117,7 +117,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         match store.delete_readme(crate_name, version).await {
             Err(object_store::Error::NotFound { .. }) => {}
             Err(error) => {
-                warn!(%crate_name, %version, ?error, "Failed to delete readme file from S3")
+                warn!(%crate_name, %version, "Failed to delete readme file from S3: {error}")
             }
             Ok(_) => {
                 paths.push(store.readme_location(crate_name, version));

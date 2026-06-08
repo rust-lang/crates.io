@@ -91,9 +91,8 @@ async fn check(
                 if let Err(error) = send_notification_email(emails, recipient, &email_context).await
                 {
                     error!(
-                        ?error,
                         ?recipient,
-                        "Failed to send possible typosquat notification"
+                        "Failed to send possible typosquat notification: {error}"
                     );
                 }
             }

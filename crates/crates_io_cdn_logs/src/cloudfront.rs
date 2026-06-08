@@ -104,7 +104,7 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
         let date = match date.parse::<NaiveDate>() {
             Ok(date) => date,
             Err(error) => {
-                warn!(%date, %error, "Failed to parse date");
+                warn!(%date, "Failed to parse date `{date}`: {error}");
                 continue;
             }
         };

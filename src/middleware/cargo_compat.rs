@@ -108,7 +108,7 @@ async fn ensure_json_errors(res: Response) -> Response {
     }
 
     convert_to_json_response(res).await.unwrap_or_else(|error| {
-        error!(%error, "Failed to convert response to JSON");
+        error!("Failed to convert response to JSON: {error}");
         StatusCode::INTERNAL_SERVER_ERROR.into_response()
     })
 }
