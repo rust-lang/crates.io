@@ -295,6 +295,30 @@ async fn test_rev_deps() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_self_referencing_dep() -> anyhow::Result<()> {
+    let (_app, anon, user) = TestApp::full().with_user().await;
+
+    publish_crate(&user, "foo").await;
+
+    // Publish a new version of the same crate that depends on itself. Some
+    // crates do this for backwards compatibility reasons, and it should not
+    // prevent the crate from being deleted.
+    let pb = PublishBuilder::new("foo", "2.0.0")
+        .dependency(DependencyBuilder::new("foo").version_req("^1.0.0"));
+    let response = user.publish_crate(pb).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let response = delete_crate(&user, "foo").await;
+    assert_snapshot!(response.status(), @"204 No Content");
+    assert!(response.body().is_empty());
+
+    // Assert that the crate no longer exists
+    assert_crate_exists(&anon, "foo", false).await;
+
+    Ok(())
+}
+
 // Publishes a crate with the given name and a single `v1.0.0` version.
 async fn publish_crate(user: &impl RequestHelper, name: &str) {
     let pb = PublishBuilder::new(name, "1.0.0");
