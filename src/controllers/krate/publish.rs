@@ -46,7 +46,7 @@ use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidd
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
-use crates_io_database::canon_crate_name;
+use crates_io_database::fns::canon_crate_name;
 use crates_io_database::models::{TrustpubData, User, versions_published_by};
 use crates_io_trustpub::access_token::AccessToken;
 

@@ -1,4 +1,4 @@
-use crate::canon_crate_name;
+use crate::fns::canon_crate_name;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};

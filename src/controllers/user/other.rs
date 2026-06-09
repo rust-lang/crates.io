@@ -6,7 +6,7 @@ use crate::views::EncodablePublicUser;
 use axum::Json;
 use axum::extract::Path;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use crates_io_database::lower;
+use crates_io_database::fns::lower;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Serialize;

@@ -3,7 +3,7 @@ use crate::app::AppState;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, server_error};
 use axum::Json;
 use chrono::{DateTime, Utc};
-use crates_io_database::lower;
+use crates_io_database::fns::lower;
 use crates_io_database::models::trustpub::{
     GitHubConfig, GitLabConfig, NewToken, NewUsedJti, TrustpubData,
 };

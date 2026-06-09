@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
-use crate::lower;
+use crate::fns::lower;
 use crate::models::Crate;
 use crate::schema::*;
 

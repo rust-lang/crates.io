@@ -7,7 +7,7 @@
 use anyhow::Result;
 use crates_io::worker::jobs;
 use crates_io::{db, schema::*};
-use crates_io_database::canon_crate_name;
+use crates_io_database::fns::canon_crate_name;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_pagerduty as pagerduty;
 use crates_io_pagerduty::PagerdutyClient;
