@@ -5,8 +5,8 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 use self::crate_owner_builder::{SetOwnerId, SetOwnerKind};
 use crate::models::{Crate, CrateOwnerInvitation, Team, User};
+use crate::pg_enum;
 use crate::schema::crate_owners;
-use crates_io_diesel_helpers::pg_enum;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy, Builder)]
 #[diesel(

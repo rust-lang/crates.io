@@ -1,8 +1,8 @@
 use crate::models::{ApiToken, User, Version};
+use crate::pg_enum;
 use crate::schema::*;
 use bon::Builder;
 use chrono::{DateTime, Utc};
-use crates_io_diesel_helpers::pg_enum;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 

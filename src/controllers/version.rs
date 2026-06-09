@@ -8,7 +8,7 @@ pub mod update;
 pub mod yank;
 
 use axum::extract::{FromRequestParts, Path};
-use crates_io_diesel_helpers::canon_crate_name;
+use crates_io_database::canon_crate_name;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::de::Error;

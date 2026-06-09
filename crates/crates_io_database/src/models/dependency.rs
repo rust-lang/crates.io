@@ -1,6 +1,6 @@
 use crate::models::{Crate, Version};
+use crate::pg_enum;
 use crate::schema::*;
-use crates_io_diesel_helpers::pg_enum;
 use crates_io_index::DependencyKind as IndexDependencyKind;
 use diesel::prelude::*;
 use diesel::sql_types::{BigInt, Text};
