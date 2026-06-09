@@ -109,7 +109,7 @@ flate2 = "=1.1.9"
 futures-util = "=0.3.32"
 git2 = "=0.21.0"
 hex = "=0.4.3"
-http = "=1.4.1"
+http = "=1.4.2"
 hyper = { version = "=1.10.1", features = ["client", "http1"] }
 indexmap = { version = "=2.14.0", features = ["serde"] }
 indicatif = "=0.18.4"
