@@ -7,7 +7,7 @@ use diesel::sql_types::Text;
 /// ## Example
 ///
 /// ```rust
-/// # use crates_io_diesel_helpers::SemverVersion;
+/// # use crates_io_database::SemverVersion;
 /// # use crates_io_database::schema::versions;
 /// # use diesel::prelude::*;
 /// #

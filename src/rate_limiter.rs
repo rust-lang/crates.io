@@ -1,7 +1,8 @@
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{DateTime, Utc};
-use crates_io_diesel_helpers::{date_part, floor, greatest, interval_part, least, pg_enum};
+use crates_io_database::fns::{date_part, floor, greatest, interval_part, least};
+use crates_io_database::pg_enum;
 use diesel::dsl::IntervalDsl;
 use diesel::prelude::*;
 use diesel::sql_types::Interval;

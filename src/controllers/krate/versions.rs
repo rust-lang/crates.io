@@ -15,7 +15,7 @@ use crate::views::release_tracks::ReleaseTracks;
 use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
-use crates_io_diesel_helpers::semver_ord_v2;
+use crates_io_database::fns::semver_ord_v2;
 use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};

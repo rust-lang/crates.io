@@ -1,7 +1,10 @@
 # crates_io_database
 
-This package contains the crates.io database schema as derived by `diesel print-schema`
-from the database after all the migrations have been applied.
+This package contains the crates.io database layer: the Diesel schema, the
+model structs built on top of it, and helpers for writing Diesel queries.
+
+The schema is derived by `diesel print-schema` from the database after all the
+migrations have been applied.
 
 After creating new migrations (via `diesel migration generate`), you can update
 the schema by running:

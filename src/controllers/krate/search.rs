@@ -30,7 +30,7 @@ use crate::models::krate::ALL_COLUMNS;
 use crate::util::RequestUtils;
 use crate::util::no_store;
 use crate::util::string_excl_null::StringExclNull;
-use crates_io_diesel_helpers::{array_agg, canon_crate_name, lower};
+use crates_io_database::fns::{array_agg, canon_crate_name, lower};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ListResponse {

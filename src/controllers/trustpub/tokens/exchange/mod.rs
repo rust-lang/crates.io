@@ -3,11 +3,11 @@ use crate::app::AppState;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, server_error};
 use axum::Json;
 use chrono::{DateTime, Utc};
+use crates_io_database::fns::lower;
 use crates_io_database::models::trustpub::{
     GitHubConfig, GitLabConfig, NewToken, NewUsedJti, TrustpubData,
 };
 use crates_io_database::schema::{trustpub_configs_github, trustpub_configs_gitlab};
-use crates_io_diesel_helpers::lower;
 use crates_io_trustpub::JWT_LEEWAY;
 use crates_io_trustpub::access_token::AccessToken;
 use crates_io_trustpub::github::{GITHUB_ISSUER_URL, GitHubClaims};

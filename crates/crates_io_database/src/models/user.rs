@@ -7,9 +7,9 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
+use crate::fns::lower;
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
-use crates_io_diesel_helpers::lower;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, HasQuery, Identifiable, Serialize)]

@@ -46,8 +46,8 @@ use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidd
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
+use crates_io_database::fns::canon_crate_name;
 use crates_io_database::models::{TrustpubData, User, versions_published_by};
-use crates_io_diesel_helpers::canon_crate_name;
 use crates_io_trustpub::access_token::AccessToken;
 
 const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \

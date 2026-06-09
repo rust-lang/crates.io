@@ -1,5 +1,5 @@
+use crate::SemverVersion;
 use crate::schema::{default_versions, versions};
-use crates_io_diesel_helpers::SemverVersion;
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;

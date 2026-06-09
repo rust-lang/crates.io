@@ -1444,7 +1444,6 @@ dependencies = [
  "crates_io_cdn_logs",
  "crates_io_database",
  "crates_io_database_dump",
- "crates_io_diesel_helpers",
  "crates_io_docs_rs",
  "crates_io_env_vars",
  "crates_io_fastly",
@@ -1573,7 +1572,6 @@ dependencies = [
  "bon",
  "chrono",
  "claims",
- "crates_io_diesel_helpers",
  "crates_io_index",
  "crates_io_test_db",
  "crates_io_validation",
@@ -1616,16 +1614,6 @@ dependencies = [
  "toml 1.1.2+spec-1.1.0",
  "tracing",
  "zip",
-]
-
-[[package]]
-name = "crates_io_diesel_helpers"
-version = "0.0.0"
-dependencies = [
- "crates_io_database",
- "diesel",
- "semver",
- "serde",
 ]
 
 [[package]]

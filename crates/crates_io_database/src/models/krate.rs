@@ -1,9 +1,9 @@
+use crate::fns::canon_crate_name;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
 use crate::schema::*;
 use chrono::{DateTime, Utc};
-use crates_io_diesel_helpers::canon_crate_name;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;

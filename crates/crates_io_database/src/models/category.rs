@@ -17,7 +17,7 @@ pub struct Category {
     pub created_at: DateTime<Utc>,
 }
 
-type WithSlug<'a> = dsl::Eq<categories::slug, crates_io_diesel_helpers::lower<Text, &'a str>>;
+type WithSlug<'a> = dsl::Eq<categories::slug, crate::fns::lower<Text, &'a str>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[diesel(
@@ -34,7 +34,7 @@ pub struct CrateCategory {
 
 impl Category {
     pub fn with_slug(slug: &str) -> WithSlug<'_> {
-        categories::slug.eq(crates_io_diesel_helpers::lower(slug))
+        categories::slug.eq(crate::fns::lower(slug))
     }
 
     #[dsl::auto_type(no_type_alias)]
