@@ -1,5 +1,5 @@
 use diesel::define_sql_function;
-use diesel::sql_types::{Date, Double, Integer, Interval, SingleValue, Text, Timestamptz};
+use diesel::sql_types::{Array, Date, Double, Integer, Interval, SingleValue, Text, Timestamptz};
 
 define_sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 define_sql_function!(fn canon_crate_name(x: Text) -> Text);
@@ -15,3 +15,7 @@ define_sql_function!(fn greatest<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn least<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn split_part(string: Text, delimiter: Text, n: Integer) -> Text);
 define_sql_function!(fn semver_ord_v2(num: Text) -> Nullable<Bytea>);
+define_sql_function! {
+    /// Rebuilds the `reverse_dependencies` rows for the given dependent crate ids.
+    fn rebuild_reverse_dependencies(dependent_crate_ids: Array<Integer>);
+}

@@ -11,6 +11,7 @@ mod migrate;
 mod populate;
 mod render_og_images;
 mod render_readmes;
+mod reverse_dependencies;
 mod sync_index;
 mod test_email;
 mod upload_index;
@@ -36,6 +37,8 @@ enum Command {
     EnqueueJob(enqueue_job::Command),
     #[clap(subcommand)]
     DefaultVersions(default_versions::Command),
+    #[clap(subcommand)]
+    ReverseDependencies(reverse_dependencies::Command),
 }
 
 #[tokio::main]
@@ -66,6 +69,7 @@ async fn main() -> anyhow::Result<()> {
         Command::YankVersion(opts) => yank_version::run(opts).await,
         Command::EnqueueJob(command) => enqueue_job::run(command).await,
         Command::DefaultVersions(opts) => default_versions::run(opts).await,
+        Command::ReverseDependencies(opts) => reverse_dependencies::run(opts).await,
     }
 }
 
