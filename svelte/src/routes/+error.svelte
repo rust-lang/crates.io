@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
 
-  import Ferris from '$lib/assets/cuddlyferris.svg';
+  import Ferris from '$lib/components/Ferris.svelte';
   import { getSession } from '$lib/utils/session.svelte';
 
   let session = getSession();
@@ -24,7 +24,7 @@
 
 <div class="wrapper" data-test-404-page>
   <div class="content">
-    <img src={Ferris} alt="" class="logo" />
+    <Ferris style="max-width: 200px" />
 
     <h1 class="title" data-test-title>
       {errorMessage(page)}
@@ -63,10 +63,6 @@
     display: grid;
     place-items: center;
     margin: var(--space-m) 0;
-  }
-
-  .logo {
-    max-width: 200px;
   }
 
   .link {
