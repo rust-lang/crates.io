@@ -64,7 +64,9 @@ export const nativeReplacements: Record<string, NativeReplacement> = {
   },
 
   matches: {
-    description: 'The <code>matches!</code> macro has been part of the standard library since Rust 1.42.',
+    description:
+      'The <code>matches!</code> macro has been in <code>std</code> since Rust 1.42, and ' +
+      '<code>assert_matches!</code> / <code>debug_assert_matches!</code> followed in Rust 1.96.',
     url: 'https://doc.rust-lang.org/std/macro.matches.html',
   },
 
