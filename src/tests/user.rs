@@ -471,10 +471,7 @@ async fn new_user_cannot_log_in_during_read_only_mode() -> anyhow::Result<()> {
     let result = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await;
 
     let error = assert_err!(result);
-    assert_eq!(
-        error.to_string(),
-        "cannot execute UPDATE in a read-only transaction"
-    );
+    assert_snapshot!(error, @"cannot execute UPDATE in a read-only transaction");
 
     Ok(())
 }
