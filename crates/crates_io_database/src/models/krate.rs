@@ -1,7 +1,6 @@
 use crate::fns::canon_crate_name;
-use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
-use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
+use crate::models::{CrateOwner, Owner, OwnerKind, User, Version};
 use crate::schema::*;
 use chrono::{DateTime, Utc};
 use diesel::associations::Identifiable;
@@ -13,7 +12,6 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 use serde::Serialize;
 use thiserror::Error;
-use tracing::instrument;
 
 use super::Team;
 
@@ -274,28 +272,6 @@ impl Crate {
         }
 
         Ok(())
-    }
-
-    /// Returns (dependency, dependent crate name, dependent crate downloads)
-    #[instrument(skip_all, fields(krate.name = %self.name))]
-    pub async fn reverse_dependencies(
-        &self,
-        mut conn: &AsyncPgConnection,
-        offset: i64,
-        limit: i64,
-    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
-        use diesel::sql_query;
-        use diesel::sql_types::{BigInt, Integer};
-
-        let rows: Vec<WithCount<ReverseDependency>> =
-            sql_query(include_str!("krate_reverse_dependencies.sql"))
-                .bind::<Integer, _>(self.id)
-                .bind::<BigInt, _>(offset)
-                .bind::<BigInt, _>(limit)
-                .load(&mut conn)
-                .await?;
-
-        Ok(rows.records_and_total())
     }
 }
 
