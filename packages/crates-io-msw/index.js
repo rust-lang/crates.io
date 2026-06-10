@@ -8,6 +8,7 @@ import inviteHandlers from './handlers/invites.js';
 import keywordHandlers from './handlers/keywords.js';
 import metadataHandlers from './handlers/metadata.js';
 import playgroundHandlers from './handlers/playground.js';
+import rustsecHandlers from './handlers/rustsec.js';
 import sessionHandlers from './handlers/sessions.js';
 import summaryHandlers from './handlers/summary.js';
 import teamHandlers from './handlers/teams.js';
@@ -26,6 +27,7 @@ export const handlers = [
   ...keywordHandlers,
   ...metadataHandlers,
   ...playgroundHandlers,
+  ...rustsecHandlers,
   ...sessionHandlers,
   ...summaryHandlers,
   ...teamHandlers,

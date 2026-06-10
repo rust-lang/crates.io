@@ -93,10 +93,6 @@ test.describe('Acceptance | crate security page', { tag: '@acceptance' }, () => 
     let crate = await msw.db.crate.create({ name: 'safe-crate' });
     await msw.db.version.create({ crate, num: '1.0.0' });
 
-    msw.worker.use(
-      http.get('https://rustsec.org/packages/:crateId.json', () => HttpResponse.text('not found', { status: 404 })),
-    );
-
     await page.goto('/crates/safe-crate/security');
 
     await expect(page.locator('[data-no-advisories]')).toBeVisible();
