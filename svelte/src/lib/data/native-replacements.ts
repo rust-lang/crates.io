@@ -58,8 +58,8 @@ export const nativeReplacements: Record<string, NativeReplacement> = {
   once_cell: {
     description:
       'Most of <code>once_cell</code> is now in <code>std</code>: <code>OnceCell</code>/<code>OnceLock</code> ' +
-      '(Rust 1.70) and <code>LazyCell</code>/<code>LazyLock</code> (Rust 1.80). A few APIs (e.g. fallible ' +
-      '<code>get_or_try_init</code>) are not yet stable in <code>std</code>.',
+      '(Rust 1.70) and <code>LazyCell</code>/<code>LazyLock</code> (Rust 1.80). The <code>race</code> module and ' +
+      'fallible <code>get_or_try_init</code> have no stable <code>std</code> equivalent yet.',
     url: 'https://blog.rust-lang.org/2024/07/25/Rust-1.80.0/',
   },
 
