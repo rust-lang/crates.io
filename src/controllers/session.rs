@@ -229,7 +229,7 @@ async fn create_or_update_user(
     conn.transaction(async |conn| {
         // This currently inserts or updates based on `users::gh_id` being unique. When we switch
         // to using `users::username` for uniqueness instead, this logic will need to change.
-        // See note on [`NewUser#insert_or_update`].
+        // See note on `NewUser::insert_or_update`.
         let user_id = new_user.insert_or_update(conn).await?;
 
         // Do an upsert on a github ID conflict here in case a record for this github ID has been
