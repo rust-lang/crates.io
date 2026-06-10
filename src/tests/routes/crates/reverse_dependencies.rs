@@ -189,6 +189,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
         .expect_build(&mut conn)
         .await;
     CrateBuilder::new("c2", user.id)
+        .downloads(100)
         .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
         .expect_build(&mut conn)
         .await;
@@ -204,6 +205,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
 
     // c3's version will have the published by info recorded
     CrateBuilder::new("c3", user.id)
+        .downloads(10)
         .version(VersionBuilder::new("3.0.0").dependency(&c1, None))
         .expect_build(&mut conn)
         .await;

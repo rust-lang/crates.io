@@ -7,7 +7,7 @@ expression: response.json()
     {
       "crate_id": "c1",
       "default_features": false,
-      "downloads": 0,
+      "downloads": 100,
       "features": [],
       "id": 1,
       "kind": "normal",
@@ -19,7 +19,7 @@ expression: response.json()
     {
       "crate_id": "c1",
       "default_features": false,
-      "downloads": 0,
+      "downloads": 10,
       "features": [],
       "id": 2,
       "kind": "normal",
