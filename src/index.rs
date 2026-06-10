@@ -157,6 +157,7 @@ mod tests {
             .values((
                 users::name.eq("user1"),
                 users::gh_login.eq("user1"),
+                users::username.eq("user1"),
                 users::gh_id.eq(42),
                 users::gh_encrypted_token.eq(&[]),
             ))
@@ -205,6 +206,7 @@ mod tests {
             .values((
                 users::name.eq("user1"),
                 users::gh_login.eq("user1"),
+                users::username.eq("user1"),
                 users::gh_id.eq(42),
                 users::gh_encrypted_token.eq(&[]),
             ))
