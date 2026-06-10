@@ -165,8 +165,12 @@ pub async fn save_user_to_database(
                 .filter(users::id.eq(oauth_github.user_id))
                 .set((
                     users::name.eq(gh_user.name.as_ref()),
-                    users::gh_login.eq(&gh_user.login),
                     users::username.eq(&gh_user.login),
+                    // These fields are soon to be deprecated.
+                    users::gh_login.eq(&gh_user.login),
+                    users::gh_id.eq(&gh_user.id),
+                    users::gh_encrypted_token.eq(encrypted_token),
+                    users::gh_avatar.eq(gh_user.avatar_url.as_deref()),
                 ))
                 .execute(conn)
                 .await?;

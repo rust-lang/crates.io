@@ -301,15 +301,18 @@ async fn also_write_to_users_username() -> anyhow::Result<()> {
     Ok(())
 }
 
-// To assist in eventually someday allowing OAuth with more than GitHub, verify that we're starting
-// to also write the GitHub info to the `oauth_github` table. Nothing currently reads from this
-// table other than this test.
+// To assist in eventually someday allowing OAuth with more than GitHub, verify that we're writing
+// the GitHub info to both the `users` and `oauth_github` tables.
 #[tokio::test(flavor = "multi_thread")]
-async fn also_write_to_oauth_github() -> anyhow::Result<()> {
+async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
     let encryption = GitHubTokenEncryption::for_testing();
     let gh_id = next_gh_id();
+    let gh_login = "arbitrary_username".to_string();
+    let gh_display_name = "Arbitrary Username".to_string();
+    let gh_avatar = "http://example.com/icon-the-first.png".to_string();
+    let gh_token = "some random token";
     let email = "potahto@example.com";
     let emails = &app.as_inner().emails;
 
@@ -317,66 +320,82 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     // directly into the database and we want to test the OAuth flow here.
     let gh_user = GitHubUser {
         id: gh_id,
-        login: "arbitrary_username".to_string(),
-        name: None,
+        login: gh_login.clone(),
+        name: Some(gh_display_name.clone()),
         email: Some(email.to_string()),
-        avatar_url: None,
+        avatar_url: Some(gh_avatar.clone()),
     };
-    let encrypted_token = encryption.encrypt("some random token")?;
+    let encrypted_token = encryption.encrypt(gh_token)?;
     let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
     let u = User::find(&conn, uid).await?;
+    assert_eq!(u.username, gh_login);
+    assert_eq!(u.name.unwrap(), gh_display_name);
+    assert_eq!(u.gh_id, gh_id);
+    assert_eq!(u.gh_login, gh_login);
+    assert_eq!(u.gh_avatar.unwrap(), gh_avatar);
+    let decrypted_token = encryption.decrypt(&u.gh_encrypted_token)?;
+    assert_eq!(decrypted_token.secret(), gh_token);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     assert_eq!(oauth_github_records.len(), 1);
     let oauth_github = &oauth_github_records[0];
     assert_eq!(oauth_github.user_id, u.id);
     assert_eq!(oauth_github.account_id, gh_id as i64);
-    assert_eq!(oauth_github.login, u.gh_login);
-    assert!(oauth_github.avatar.is_none());
+    assert_eq!(oauth_github.login, gh_login);
+    assert_eq!(oauth_github.avatar.as_ref().unwrap(), &gh_avatar);
     let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "some random token");
+    assert_eq!(decrypted_token.secret(), gh_token);
 
     // Log in again with the same gh_id but different login, avatar, and token; these should get
-    // updated in the `oauth_github` table as well.
+    // updated in both the `users` and `oauth_github` tables.
+    let different_gh_login = "i_changed_my_username".to_string();
+    let different_gh_display_name = "Someone Else".to_string();
+    let different_gh_avatar = "http://example.com/icon-the-second.png".to_string();
+    let different_gh_token = "a different token";
     let gh_user = GitHubUser {
         id: gh_id,
-        login: "i_changed_my_username".to_string(),
-        name: None,
+        login: different_gh_login.clone(),
+        name: Some(different_gh_display_name.clone()),
         email: Some(email.to_string()),
-        avatar_url: Some("http://example.com/icon.png".into()),
+        avatar_url: Some(different_gh_avatar.clone()),
     };
-    let encrypted_token = encryption.encrypt("a different token")?;
+    let encrypted_token = encryption.encrypt(different_gh_token)?;
     let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
     let u = User::find(&conn, uid).await?;
+    assert_eq!(u.username, different_gh_login);
+    assert_eq!(u.name.unwrap(), different_gh_display_name);
+    assert_eq!(u.gh_id, gh_id);
+    assert_eq!(u.gh_login, different_gh_login);
+    assert_eq!(u.gh_avatar.unwrap(), different_gh_avatar);
+    let decrypted_token = encryption.decrypt(&u.gh_encrypted_token)?;
+    assert_eq!(decrypted_token.secret(), different_gh_token);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     // There still should only be one `oauth_github` record that got updated, not a new insertion
     assert_eq!(oauth_github_records.len(), 1);
     let oauth_github = &oauth_github_records[0];
     assert_eq!(oauth_github.user_id, u.id);
-    assert_eq!(oauth_github.login, "i_changed_my_username");
-    assert_eq!(
-        oauth_github.avatar.as_ref().unwrap(),
-        "http://example.com/icon.png"
-    );
+    assert_eq!(oauth_github.login, different_gh_login);
+    assert_eq!(oauth_github.avatar.as_ref().unwrap(), &different_gh_avatar,);
     let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "a different token");
+    assert_eq!(decrypted_token.secret(), different_gh_token);
 
     // Now that the user has renamed their account on GitHub, someone else can claim it and log in
     // to crates.io with it (with a different GitHub ID)
     let new_gh_id = gh_id + 1;
     let gh_user = GitHubUser {
         id: new_gh_id,
-        login: "arbitrary_username".to_string(),
+        login: gh_login.clone(),
         name: None,
         email: Some(email.to_string()),
         avatar_url: None,
     };
-    let encrypted_token = encryption.encrypt("a different random token")?;
+    let another_gh_token = "a different random token";
+    let encrypted_token = encryption.encrypt(another_gh_token)?;
     let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
     let u = User::find(&conn, uid).await?;
 
-    assert_eq!(u.gh_login, "arbitrary_username");
+    assert_eq!(u.gh_login, gh_login);
     assert_eq!(u.gh_id, new_gh_id);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
@@ -388,10 +407,10 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
 
     assert_eq!(additional_user_oauth_github.user_id, u.id);
     assert_eq!(additional_user_oauth_github.account_id, new_gh_id as i64);
-    assert_eq!(additional_user_oauth_github.login, u.gh_login);
+    assert_eq!(additional_user_oauth_github.login, gh_login);
     assert!(additional_user_oauth_github.avatar.is_none());
     let decrypted_token = encryption.decrypt(&additional_user_oauth_github.encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "a different random token");
+    assert_eq!(decrypted_token.secret(), another_gh_token);
 
     Ok(())
 }
