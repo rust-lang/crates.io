@@ -1,4 +1,5 @@
 use crate::builders::{DependencyBuilder, PublishBuilder};
+use crate::routes::crates::versions::yank_unyank::YankRequestHelper;
 use crate::util::{RequestHelper, Response, TestApp};
 use axum::RequestPartsExt;
 use bigdecimal::ToPrimitive;
@@ -281,14 +282,23 @@ async fn test_rev_deps() -> anyhow::Result<()> {
 
     publish_crate(&user, "foo").await;
 
-    // Publish another crate
+    // Publish another crate with two versions that both depend on `foo`, so we
+    // can confirm the error message names a deterministic version.
     let pb = PublishBuilder::new("bar", "1.0.0").dependency(DependencyBuilder::new("foo"));
     let response = user.publish_crate(pb).await;
     assert_snapshot!(response.status(), @"200 OK");
 
+    let pb = PublishBuilder::new("bar", "2.0.0").dependency(DependencyBuilder::new("foo"));
+    let response = user.publish_crate(pb).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    // Yank the version that would be named in the error to confirm that yanked
+    // versions still count as reverse dependencies.
+    user.yank("bar", "2.0.0").await.good();
+
     let response = delete_crate(&user, "foo").await;
     assert_snapshot!(response.status(), @"422 Unprocessable Entity");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates without reverse dependencies can be deleted"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates without reverse dependencies can be deleted (e.g. bar@2.0.0 depends on this crate)"}]}"#);
 
     assert_crate_exists(&anon, "foo", true).await;
 
