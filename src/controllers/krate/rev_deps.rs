@@ -50,8 +50,10 @@ pub async fn list_reverse_dependencies(
 
     let offset = pagination_options.offset().unwrap_or_default();
     let limit = pagination_options.per_page;
-    let rev_deps = ReverseDependency::page_for_crate(krate.id, &conn, offset, limit).await?;
-    let total = ReverseDependency::count_for_crate(krate.id, &conn).await?;
+    let (rev_deps, total) = tokio::try_join!(
+        ReverseDependency::page_for_crate(krate.id, &conn, offset, limit),
+        ReverseDependency::count_for_crate(krate.id, &conn),
+    )?;
 
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
