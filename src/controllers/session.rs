@@ -222,6 +222,7 @@ async fn create_or_update_user(
         .gh_login(&gh_user.login)
         .username(&gh_user.login)
         .maybe_name(gh_user.name.as_deref())
+        .maybe_gh_avatar(gh_user.avatar_url.as_deref())
         .gh_encrypted_token(encrypted_token)
         .build();
 
