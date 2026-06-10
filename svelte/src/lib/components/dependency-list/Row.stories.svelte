@@ -46,6 +46,12 @@
   <h1>No Description</h1>
   <Row dependency={createDependency()} descriptionPromise={resolved(null)} />
 
+  <h1>Superseded by std (native replacement)</h1>
+  <Row
+    dependency={createDependency({ crate_id: 'lazy_static' })}
+    descriptionPromise={resolved('A macro for declaring lazily evaluated statics')}
+  />
+
   <h1>Loading Description</h1>
   <Row dependency={createDependency()} descriptionPromise={pending()} />
 

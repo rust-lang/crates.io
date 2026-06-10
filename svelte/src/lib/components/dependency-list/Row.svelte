@@ -6,6 +6,7 @@
   import Icon from '$lib/components/Icon.svelte';
   import Placeholder from '$lib/components/Placeholder.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
+  import { nativeReplacements } from '$lib/data/native-replacements';
 
   type Dependency = components['schemas']['Dependency'];
 
@@ -19,6 +20,10 @@
   let focused = $state(false);
 
   let formattedReq = $derived(dependency.req === '*' ? '' : dependency.req);
+
+  let nativeReplacement = $derived(nativeReplacements[dependency.crate_id]);
+
+  const replacementHint = 'This dependency might not be needed anymore.';
 
   let featuresDescription = $derived.by(() => {
     let { default_features: defaultFeatures, features } = dependency;
@@ -54,6 +59,24 @@
       >
         {dependency.crate_id}
       </a>
+
+      {#if nativeReplacement}
+        <span class="native-replacement" data-test-native-replacement={dependency.crate_id}>
+          <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- always an external std/release-notes URL -->
+          <a href={nativeReplacement.url} target="_blank" rel="noopener noreferrer" aria-label={replacementHint}>
+            <Icon class="i-octicon:light-bulb-16" />
+          </a>
+          <Tooltip>
+            <div class="replacement-tooltip" data-test-native-replacement-tooltip>
+              <strong>{replacementHint}</strong>
+              <p>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -- curated, in-repo HTML, never user input -->
+                {@html nativeReplacement.description}
+              </p>
+            </div>
+          </Tooltip>
+        </span>
+      {/if}
 
       {#if dependency.optional}
         <span class="optional-label" data-test-optional>optional</span>
@@ -147,8 +170,48 @@
       cursor: help;
     }
 
+    .native-replacement {
+      position: absolute;
+      top: 0;
+      right: 0;
+
+      a {
+        display: inline-flex;
+        padding: var(--space-2xs);
+        padding-top: calc(0.2em + var(--space-2xs));
+        color: var(--grey600);
+
+        &:hover {
+          color: var(--yellow500);
+        }
+      }
+    }
+
     @media only screen and (max-width: 550px) {
       display: block;
+    }
+  }
+
+  .replacement-tooltip {
+    text-align: left;
+
+    strong {
+      font-weight: 500;
+    }
+
+    p {
+      margin: var(--space-3xs) 0 0;
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+
+    :global(code) {
+      font-family: var(--font-monospace);
+      font-size: 0.9em;
+      letter-spacing: -2%;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 0.1em 0.25em;
+      border-radius: 0.3em;
     }
   }
 
