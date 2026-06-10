@@ -1,8 +1,131 @@
-import type { Advisory } from './version-ranges';
+import type { Advisory } from './rustsec';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { versionRanges } from './version-ranges';
+import { fetchAdvisories, loadAdvisories, loadUnmaintained, versionRanges } from './rustsec';
+
+const UNMAINTAINED = 'RUSTSEC-2021-0139';
+
+function unmaintainedAdvisory(overrides: Partial<Advisory> = {}): Advisory {
+  return {
+    id: UNMAINTAINED,
+    summary: 'foo is unmaintained',
+    details: '',
+    affected: [{ ranges: [], database_specific: { informational: 'unmaintained' } }],
+    ...overrides,
+  };
+}
+
+function mockFetch(body: unknown, { ok = true, status = 200 }: { ok?: boolean; status?: number } = {}) {
+  return vi.fn(async () => ({ ok, status, json: async () => body }) as Response);
+}
+
+describe('fetchAdvisories', () => {
+  it('returns the parsed advisory list', async () => {
+    let advisories = [unmaintainedAdvisory()];
+    let fetch = mockFetch(advisories);
+
+    expect(await fetchAdvisories(fetch, 'foo')).toEqual(advisories);
+    expect(fetch).toHaveBeenCalledWith('https://rustsec.org/packages/foo.json');
+  });
+
+  it('returns an empty array on a 404 response', async () => {
+    let fetch = mockFetch('not found', { ok: false, status: 404 });
+    expect(await fetchAdvisories(fetch, 'foo')).toEqual([]);
+  });
+
+  it('throws on other non-OK responses', async () => {
+    let fetch = mockFetch('boom', { ok: false, status: 500 });
+    await expect(fetchAdvisories(fetch, 'foo')).rejects.toThrow('HTTP error! status: 500');
+  });
+});
+
+describe('loadAdvisories', () => {
+  it('enriches advisories with version ranges and CVSS', async () => {
+    let advisory: Advisory = {
+      id: 'RUSTSEC-2020-0001',
+      summary: 'vulnerable',
+      details: '',
+      affected: [{ ranges: [{ type: 'SEMVER', events: [{ introduced: '0.0.0-0' }, { fixed: '1.2.0' }] }] }],
+      severity: [
+        { type: 'CVSS_V3', score: 'CVSS:3.1/AV:N' },
+        { type: 'CVSS_V4', score: 'CVSS:4.0/AV:N' },
+      ],
+    };
+    let fetch = mockFetch([advisory]);
+
+    let [enriched] = await loadAdvisories(fetch, 'foo');
+    expect(enriched.versionRanges).toBe('<1.2.0');
+    expect(enriched.cvss).toBe('CVSS:4.0/AV:N');
+  });
+
+  it('filters out withdrawn and informational unmaintained advisories', async () => {
+    let advisories: Advisory[] = [
+      unmaintainedAdvisory(),
+      { id: 'RUSTSEC-2020-0002', summary: 'withdrawn', details: '', withdrawn: '2022-01-01T00:00:00Z' },
+      { id: 'RUSTSEC-2020-0003', summary: 'real', details: '' },
+    ];
+    let fetch = mockFetch(advisories);
+
+    let result = await loadAdvisories(fetch, 'foo');
+    expect(result.map(a => a.id)).toEqual(['RUSTSEC-2020-0003']);
+  });
+});
+
+describe('loadUnmaintained', () => {
+  it('returns the advisory id and url for an unmaintained crate', async () => {
+    let fetch = mockFetch([unmaintainedAdvisory()]);
+
+    let result = await loadUnmaintained(fetch, 'foo');
+
+    expect(result).toEqual({ id: UNMAINTAINED, url: `https://rustsec.org/advisories/${UNMAINTAINED}.html` });
+    expect(fetch).toHaveBeenCalledWith('https://rustsec.org/packages/foo.json');
+  });
+
+  it('returns null when there are no advisories', async () => {
+    let fetch = mockFetch([]);
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+  });
+
+  it('returns null on a 404 response', async () => {
+    let fetch = mockFetch('not found', { ok: false, status: 404 });
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+  });
+
+  it('returns null when the fetch rejects', async () => {
+    let fetch = vi.fn(async () => {
+      throw new Error('network down');
+    });
+    expect(await loadUnmaintained(fetch as unknown as typeof globalThis.fetch, 'foo')).toBe(null);
+  });
+
+  it('ignores advisories that are not informational unmaintained', async () => {
+    let advisory = unmaintainedAdvisory({
+      affected: [{ ranges: [], database_specific: { informational: 'unsound' } }],
+    });
+    let fetch = mockFetch([advisory]);
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+  });
+
+  it('ignores withdrawn advisories', async () => {
+    let advisory = unmaintainedAdvisory({ withdrawn: '2022-01-01T00:00:00Z' });
+    let fetch = mockFetch([advisory]);
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+  });
+
+  it('ignores advisories that point at a patched version', async () => {
+    let advisory = unmaintainedAdvisory({
+      affected: [
+        {
+          ranges: [{ type: 'SEMVER', events: [{ introduced: '0.0.0-0' }, { fixed: '1.2.0' }] }],
+          database_specific: { informational: 'unmaintained' },
+        },
+      ],
+    });
+    let fetch = mockFetch([advisory]);
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+  });
+});
 
 describe('versionRanges', () => {
   it('returns null when advisory has no affected field', () => {

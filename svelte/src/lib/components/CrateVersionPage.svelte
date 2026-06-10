@@ -3,6 +3,7 @@
   import type { DownloadChartData } from '$lib/components/download-chart/data';
   import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
+  import type { Unmaintained } from '$lib/utils/rustsec';
 
   import { resolve } from '$app/paths';
 
@@ -15,6 +16,7 @@
   import NativeReplacementBanner from '$lib/components/NativeReplacementBanner.svelte';
   import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
+  import UnmaintainedBanner from '$lib/components/UnmaintainedBanner.svelte';
   import { nativeReplacements } from '$lib/data/native-replacements';
   import { loadReadme } from '$lib/utils/readme';
 
@@ -35,6 +37,7 @@
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
     docsRsStatusPromise: Promise<DocsRsStatus | null>;
     downloadsPromise: Promise<DownloadChartData>;
+    unmaintainedPromise: Promise<Unmaintained | null>;
   }
 
   let {
@@ -48,6 +51,7 @@
     playgroundCratesPromise,
     docsRsStatusPromise,
     downloadsPromise,
+    unmaintainedPromise,
   }: Props = $props();
   let owners: Owner[] = $state([]);
 
@@ -83,8 +87,16 @@
 
 <CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} {ownersPromise} />
 
+{#await unmaintainedPromise then unmaintained}
+  {#if unmaintained}
+    <div class="banner">
+      <UnmaintainedBanner {unmaintained} />
+    </div>
+  {/if}
+{/await}
+
 {#if nativeReplacement}
-  <div class="native-replacement">
+  <div class="banner">
     <NativeReplacementBanner replacement={nativeReplacement} />
   </div>
 {/if}
@@ -183,7 +195,7 @@
 </div>
 
 <style>
-  .native-replacement {
+  .banner {
     margin-bottom: var(--space-m);
   }
 
