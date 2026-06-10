@@ -5,13 +5,16 @@ use crates_io_worker::{BackgroundJob, Runner};
 use diesel::prelude::*;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::pooled_connection::deadpool::Pool;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use futures_util::StreamExt;
 use insta::assert_compact_json_snapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU8, Ordering};
-use tokio::sync::Barrier;
+use std::time::Duration;
+use tokio::sync::{Barrier, Notify};
+use tokio::time::{sleep, timeout};
 
 async fn all_jobs(conn: &mut AsyncPgConnection) -> QueryResult<Vec<(String, Value)>> {
     background_jobs::table
@@ -310,6 +313,107 @@ async fn jobs_can_be_deduplicated() -> anyhow::Result<()> {
     // Resolve the final barrier to finish the test
     test_context.assertions_finished_barrier.wait().await;
     runner.wait_for_shutdown().await;
+
+    Ok(())
+}
+
+/// A database trigger should emit a `NOTIFY` on the `background_jobs` channel
+/// whenever a job is enqueued, so that listening workers can wake up
+/// immediately instead of waiting for the next poll.
+#[tokio::test]
+async fn enqueueing_a_job_emits_a_notification() -> anyhow::Result<()> {
+    #[derive(Serialize, Deserialize)]
+    struct TestJob;
+
+    impl BackgroundJob for TestJob {
+        const JOB_NAME: &'static str = "test";
+        type Context = ();
+
+        async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
+            Ok(())
+        }
+    }
+
+    let test_database = TestDatabase::new();
+
+    // One connection listens on the channel…
+    let mut listen_conn = AsyncPgConnection::establish(test_database.url()).await?;
+    diesel::sql_query("LISTEN background_jobs")
+        .execute(&mut listen_conn)
+        .await?;
+
+    // …while another one enqueues a job.
+    let conn = AsyncPgConnection::establish(test_database.url()).await?;
+    TestJob.enqueue(&conn).await?;
+
+    // The listener should receive a notification on the expected channel.
+    let mut notifications = std::pin::pin!(listen_conn.notifications_stream());
+    let notification = timeout(Duration::from_secs(5), notifications.next())
+        .await?
+        .expect("notification stream ended unexpectedly")?;
+
+    assert_eq!(notification.channel, "background_jobs");
+
+    Ok(())
+}
+
+/// A worker should be woken by the database notification as soon as a job is
+/// enqueued, instead of waiting for the next poll. The poll interval is set far
+/// higher than the assertion timeout, so a timely pickup can only be the result
+/// of the notification rather than of polling.
+///
+/// This runs on a multi-threaded runtime because, unlike the other tests, it
+/// keeps a non-shutdown runner (with its listener) alive in the background, and
+/// relies on the timeout firing independently of those busy tasks.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn workers_wake_up_on_notification() -> anyhow::Result<()> {
+    #[derive(Clone)]
+    struct TestContext {
+        job_ran: Arc<Notify>,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    struct TestJob;
+
+    impl BackgroundJob for TestJob {
+        const JOB_NAME: &'static str = "test";
+        type Context = TestContext;
+
+        async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+            ctx.job_ran.notify_one();
+            Ok(())
+        }
+    }
+
+    let test_database = TestDatabase::new();
+
+    let test_context = TestContext {
+        job_ran: Arc::new(Notify::new()),
+    };
+
+    let pool = pool(test_database.url())?;
+    let conn = pool.get().await?;
+
+    // Note the deliberately long poll interval and the lack of
+    // `shutdown_when_queue_empty()`, so that the listener is started and the
+    // worker relies on the notification rather than polling.
+    let runner = Runner::new(pool, test_context.clone())
+        .register_job_type::<TestJob>()
+        .configure_default_queue(|queue| queue.poll_interval(Duration::from_secs(3600)));
+
+    let _handle = runner.start();
+
+    // Give the listener a moment to establish its `LISTEN` before enqueueing, so
+    // that the notification is not emitted before anyone is listening.
+    sleep(Duration::from_secs(1)).await;
+
+    // Enqueue the job only once the worker is idle and waiting for a notification.
+    TestJob.enqueue(&conn).await?;
+
+    // The worker should wake up and run the job well within the poll interval.
+    timeout(Duration::from_secs(5), test_context.job_ran.notified())
+        .await
+        .map_err(|_| anyhow::anyhow!("worker was not woken by the notification"))?;
 
     Ok(())
 }

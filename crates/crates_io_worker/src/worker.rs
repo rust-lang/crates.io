@@ -9,6 +9,7 @@ use futures_util::FutureExt;
 use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Notify;
 use tokio::time::sleep;
 use tracing::{Instrument, debug, error, info_span, warn};
 
@@ -18,24 +19,39 @@ pub struct Worker<Context> {
     pub(crate) job_registry: Arc<JobRegistry<Context>>,
     pub(crate) shutdown_when_queue_empty: bool,
     pub(crate) poll_interval: Duration,
+    /// Signaled by the [`listener`](crate::listener) when a new job is enqueued.
+    pub(crate) notify: Arc<Notify>,
 }
 
 impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
     /// Run background jobs forever, or until the queue is empty if `shutdown_when_queue_empty` is set.
     pub async fn run(&self) {
         loop {
+            // Register interest in notifications *before* querying the database,
+            // so that a notification arriving while we run or look up a job is
+            // not missed.
+            let mut notified = std::pin::pin!(self.notify.notified());
+            notified.as_mut().enable();
+
             match self.run_next_job().await {
-                Ok(Some(_)) => {}
+                // A job was run, so immediately look for the next one.
+                Ok(Some(_)) => continue,
                 Ok(None) if self.shutdown_when_queue_empty => {
                     debug!("No pending background worker jobs found. Shutting down the worker…");
                     break;
                 }
                 Ok(None) => {
                     debug!(
-                        "No pending background worker jobs found. Polling again in {:?}…",
+                        "No pending background worker jobs found. Waiting for a notification, or polling again in {:?}…",
                         self.poll_interval
                     );
-                    sleep(self.poll_interval).await;
+                    // Wake up as soon as a new job is enqueued, but keep polling
+                    // as a fallback so that retriable jobs are eventually picked
+                    // up even without a notification.
+                    tokio::select! {
+                        _ = notified => {}
+                        _ = sleep(self.poll_interval) => {}
+                    }
                 }
                 Err(error) => {
                     error!("Failed to run job: {error}");
