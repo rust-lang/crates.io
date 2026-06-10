@@ -1,9 +1,12 @@
+use crate::models::helpers::with_count::*;
 use crate::models::{Crate, Version};
 use crate::pg_enum;
 use crate::schema::*;
 use crates_io_index::DependencyKind as IndexDependencyKind;
 use diesel::prelude::*;
-use diesel::sql_types::{BigInt, Text};
+use diesel::sql_types::{BigInt, Integer, Text};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use tracing::instrument;
 
 #[derive(Identifiable, Associations, Debug, HasQuery, QueryableByName)]
 #[diesel(
@@ -32,6 +35,26 @@ pub struct ReverseDependency {
     pub crate_downloads: i64,
     #[diesel(sql_type = Text, column_name = crate_name)]
     pub name: String,
+}
+
+impl ReverseDependency {
+    #[instrument(skip_all, fields(krate.name = %krate.name))]
+    pub async fn for_crate(
+        krate: &Crate,
+        mut conn: &AsyncPgConnection,
+        offset: i64,
+        limit: i64,
+    ) -> QueryResult<(Vec<Self>, i64)> {
+        let rows: Vec<WithCount<Self>> =
+            diesel::sql_query(include_str!("krate_reverse_dependencies.sql"))
+                .bind::<Integer, _>(krate.id)
+                .bind::<BigInt, _>(offset)
+                .bind::<BigInt, _>(limit)
+                .load(&mut conn)
+                .await?;
+
+        Ok(rows.records_and_total())
+    }
 }
 
 pg_enum! {

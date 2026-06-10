@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::controllers::krate::CratePath;
-use crate::models::{CrateName, User, Version, VersionOwnerAction};
+use crate::models::{CrateName, ReverseDependency, User, Version, VersionOwnerAction};
 use crate::util::errors::AppResult;
 use crate::views::{EncodableDependency, EncodableVersion};
 use axum::Json;
@@ -50,7 +50,7 @@ pub async fn list_reverse_dependencies(
 
     let offset = pagination_options.offset().unwrap_or_default();
     let limit = pagination_options.per_page;
-    let (rev_deps, total) = krate.reverse_dependencies(&conn, offset, limit).await?;
+    let (rev_deps, total) = ReverseDependency::for_crate(&krate, &conn, offset, limit).await?;
 
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
