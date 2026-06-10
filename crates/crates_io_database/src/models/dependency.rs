@@ -38,16 +38,16 @@ pub struct ReverseDependency {
 }
 
 impl ReverseDependency {
-    #[instrument(skip_all, fields(krate.name = %krate.name))]
+    #[instrument(skip_all, fields(crate_id))]
     pub async fn for_crate(
-        krate: &Crate,
+        crate_id: i32,
         mut conn: &AsyncPgConnection,
         offset: i64,
         limit: i64,
     ) -> QueryResult<(Vec<Self>, i64)> {
         let rows: Vec<WithCount<Self>> =
             diesel::sql_query(include_str!("krate_reverse_dependencies.sql"))
-                .bind::<Integer, _>(krate.id)
+                .bind::<Integer, _>(crate_id)
                 .bind::<BigInt, _>(offset)
                 .bind::<BigInt, _>(limit)
                 .load(&mut conn)

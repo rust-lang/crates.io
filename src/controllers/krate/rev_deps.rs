@@ -50,7 +50,7 @@ pub async fn list_reverse_dependencies(
 
     let offset = pagination_options.offset().unwrap_or_default();
     let limit = pagination_options.per_page;
-    let (rev_deps, total) = ReverseDependency::for_crate(&krate, &conn, offset, limit).await?;
+    let (rev_deps, total) = ReverseDependency::for_crate(krate.id, &conn, offset, limit).await?;
 
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
