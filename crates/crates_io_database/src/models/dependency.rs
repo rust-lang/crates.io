@@ -41,21 +41,10 @@ pub struct ReverseDependency {
 }
 
 impl ReverseDependency {
-    #[instrument(skip_all, fields(crate_id))]
-    pub async fn for_crate(
-        crate_id: i32,
-        conn: &AsyncPgConnection,
-        offset: i64,
-        limit: i64,
-    ) -> QueryResult<(Vec<Self>, i64)> {
-        let records = Self::page_for_crate(crate_id, conn, offset, limit).await?;
-        let total = Self::count_for_crate(crate_id, conn).await?;
-        Ok((records, total))
-    }
-
     /// Returns a page of reverse dependencies, ordered by the dependent crate's
     /// total downloads.
-    async fn page_for_crate(
+    #[instrument(skip_all, fields(crate_id))]
+    pub async fn page_for_crate(
         crate_id: i32,
         mut conn: &AsyncPgConnection,
         offset: i64,
@@ -74,7 +63,8 @@ impl ReverseDependency {
     }
 
     /// Returns the total number of reverse dependencies for the crate.
-    async fn count_for_crate(crate_id: i32, mut conn: &AsyncPgConnection) -> QueryResult<i64> {
+    #[instrument(skip_all, fields(crate_id))]
+    pub async fn count_for_crate(crate_id: i32, mut conn: &AsyncPgConnection) -> QueryResult<i64> {
         reverse_dependencies::table
             .filter(reverse_dependencies::target_crate_id.eq(crate_id))
             .count()
