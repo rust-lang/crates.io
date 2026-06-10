@@ -135,6 +135,7 @@ jobs:
     if: needs.filter-jobs.outputs.backend-test == 'true'
 
     env:
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
       RUST_BACKTRACE: 1
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
       RUSTFLAGS: '-D warnings'
