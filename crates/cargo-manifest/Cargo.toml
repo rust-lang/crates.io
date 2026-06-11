@@ -27,6 +27,3 @@ toml = { version = "0.8", default-features = false, features = [
 insta = "1.39.0"
 tempfile = "3.10.1"
 toml = { version = "0.8", default-features = false, features = ["display"] }
-
-[package.metadata.release]
-pre-release-hook = ["git", "cliff", "-o", "--tag", "{{version}}"]
