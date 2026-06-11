@@ -132,7 +132,7 @@ pub struct WorkspacePackage {
     pub edition: Option<Edition>,
     /// e.g. "1.9.0"
     pub version: Option<String>,
-    /// e.g. ["Author <e@mail>", "etc"]
+    /// e.g. `["Author <e@mail>", "etc"]`
     pub authors: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     /// A short blurb about the package. This is not rendered in any format when
@@ -972,7 +972,7 @@ pub struct Package<Metadata = Value> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub workspace: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    /// e.g. ["Author <e@mail>", "etc"]
+    /// e.g. `["Author <e@mail>", "etc"]`
     pub authors: Option<MaybeInherited<Vec<String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<String>,
