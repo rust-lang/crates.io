@@ -1,0 +1,42 @@
+# comment
+
+[package]
+name = "byteorder"
+version = "1.2.3"
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Library for reading/writing numbers in big-endian and little-endian."
+homepage = "https://github.com/BurntSushi/byteorder"
+documentation = "https://docs.rs/byteorder"
+readme = "README.md"
+keywords = ["byte", "endian", "big-endian", "little-endian", "binary"]
+categories = ["encoding", "parsing"]
+license = "Unlicense/MIT"
+repository = "https://github.com/BurntSushi/byteorder"
+publish = false
+
+[profile.bench]
+opt-level = 3
+split-debuginfo = "unpacked"
+
+[profile.my-custom]
+opt-level = 2
+
+[lib]
+name = "byteorder"
+bench = false
+[dev-dependencies.quickcheck]
+version = "0.6"
+default-features = false
+
+[dev-dependencies.rand]
+version = "0.4"
+
+[features]
+default = ["std"]
+i128 = []
+std = []
+[badges.travis-ci]
+repository = "BurntSushi/byteorder"
+
+[patch.crates-io]
+rand = { default-features = false }

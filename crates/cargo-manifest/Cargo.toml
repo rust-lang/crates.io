@@ -1,0 +1,32 @@
+[package]
+edition = "2021"
+name = "cargo-manifest"
+version = "0.19.1"
+authors = ["Kornel <kornel@geekhood.net>", "Luca Palmieri <rust@lpalmieri.com>"]
+description = "Helper crate to parse and manipulate manifests - `Cargo.toml` files."
+keywords = ["cargo", "metadata", "toml", "serde", "manifest"]
+categories = ["rust-patterns", "parser-implementations"]
+repository = "https://github.com/LukeMathWalker/cargo-manifest"
+documentation = "https://docs.rs/cargo-manifest"
+license = "Apache-2.0 OR MIT"
+exclude = ["tests"]
+
+[lib]
+name = "cargo_manifest"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0.114", features = ["derive"] }
+thiserror = "2.0.9"
+toml = { version = "0.8", default-features = false, features = [
+  "parse",
+  "preserve_order",
+] }
+
+[dev-dependencies]
+insta = "1.39.0"
+tempfile = "3.10.1"
+toml = { version = "0.8", default-features = false, features = ["display"] }
+
+[package.metadata.release]
+pre-release-hook = ["git", "cliff", "-o", "--tag", "{{version}}"]

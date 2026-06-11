@@ -1,0 +1,63 @@
+---
+source: tests/parse.rs
+expression: m
+snapshot_kind: text
+---
+Manifest {
+    package: None,
+    cargo_features: None,
+    workspace: Some(
+        Workspace {
+            members: [
+                "core",
+            ],
+            default_members: None,
+            exclude: None,
+            resolver: None,
+            dependencies: Some(
+                {
+                    "chrono": Simple(
+                        "0.4",
+                    ),
+                    "serde": Detailed(
+                        DependencyDetail {
+                            version: Some(
+                                "1.0",
+                            ),
+                            registry: None,
+                            registry_index: None,
+                            path: None,
+                            git: None,
+                            branch: None,
+                            tag: None,
+                            rev: None,
+                            features: Some(
+                                [
+                                    "derive",
+                                ],
+                            ),
+                            optional: None,
+                            default_features: None,
+                            package: None,
+                        },
+                    ),
+                },
+            ),
+            package: None,
+            metadata: None,
+        },
+    ),
+    dependencies: None,
+    dev_dependencies: None,
+    build_dependencies: None,
+    target: None,
+    features: None,
+    bin: [],
+    bench: [],
+    test: [],
+    example: [],
+    patch: None,
+    lib: None,
+    profile: None,
+    badges: None,
+}

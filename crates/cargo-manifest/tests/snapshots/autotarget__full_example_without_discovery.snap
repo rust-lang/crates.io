@@ -1,0 +1,94 @@
+---
+source: tests/autotarget.rs
+expression: m
+---
+Manifest {
+    package: Some(
+        Package {
+            name: "test-package",
+            edition: Some(
+                Local(
+                    E2021,
+                ),
+            ),
+            version: Some(
+                Local(
+                    "0.1.0",
+                ),
+            ),
+            build: None,
+            workspace: None,
+            authors: None,
+            links: None,
+            description: None,
+            homepage: None,
+            documentation: None,
+            readme: None,
+            keywords: None,
+            categories: None,
+            license: None,
+            license_file: None,
+            repository: None,
+            metadata: None,
+            rust_version: None,
+            exclude: None,
+            include: None,
+            default_run: None,
+            autolib: None,
+            autobins: Some(
+                false,
+            ),
+            autoexamples: Some(
+                false,
+            ),
+            autotests: Some(
+                false,
+            ),
+            autobenches: Some(
+                false,
+            ),
+            publish: None,
+            resolver: None,
+        },
+    ),
+    cargo_features: None,
+    workspace: None,
+    dependencies: None,
+    dev_dependencies: None,
+    build_dependencies: None,
+    target: None,
+    features: None,
+    bin: [],
+    bench: [],
+    test: [],
+    example: [],
+    patch: None,
+    lib: Some(
+        Product {
+            path: Some(
+                "src/lib.rs",
+            ),
+            name: Some(
+                "test_package",
+            ),
+            test: true,
+            doctest: true,
+            bench: true,
+            doc: true,
+            plugin: false,
+            proc_macro: false,
+            harness: true,
+            edition: Some(
+                E2021,
+            ),
+            required_features: [],
+            crate_type: Some(
+                [
+                    "lib",
+                ],
+            ),
+        },
+    ),
+    profile: None,
+    badges: None,
+}

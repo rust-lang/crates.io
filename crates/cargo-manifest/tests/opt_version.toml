@@ -1,0 +1,5 @@
+[package]
+name = "opt_version"
+
+[lib]
+path = "lib.rs"

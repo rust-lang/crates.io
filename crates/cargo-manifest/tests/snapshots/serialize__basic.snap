@@ -1,0 +1,8 @@
+---
+source: tests/serialize.rs
+expression: serialized
+---
+[package]
+name = "foo"
+version = "1.0.0"
+

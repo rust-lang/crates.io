@@ -1,0 +1,84 @@
+---
+source: tests/parse.rs
+expression: m
+---
+Manifest {
+    package: Some(
+        Package {
+            name: "foo",
+            edition: None,
+            version: Some(
+                Local(
+                    "1",
+                ),
+            ),
+            build: None,
+            workspace: None,
+            authors: None,
+            links: None,
+            description: None,
+            homepage: None,
+            documentation: None,
+            readme: None,
+            keywords: None,
+            categories: None,
+            license: None,
+            license_file: None,
+            repository: None,
+            metadata: None,
+            rust_version: None,
+            exclude: None,
+            include: None,
+            default_run: None,
+            autolib: None,
+            autobins: None,
+            autoexamples: None,
+            autotests: None,
+            autobenches: None,
+            publish: None,
+            resolver: None,
+        },
+    ),
+    cargo_features: None,
+    workspace: None,
+    dependencies: Some(
+        {
+            "rusoto_core": Detailed(
+                DependencyDetail {
+                    version: Some(
+                        "0.45.0",
+                    ),
+                    registry: None,
+                    registry_index: None,
+                    path: None,
+                    git: None,
+                    branch: None,
+                    tag: None,
+                    rev: None,
+                    features: Some(
+                        [
+                            "rustls",
+                        ],
+                    ),
+                    optional: None,
+                    default_features: Some(
+                        false,
+                    ),
+                    package: None,
+                },
+            ),
+        },
+    ),
+    dev_dependencies: None,
+    build_dependencies: None,
+    target: None,
+    features: None,
+    bin: [],
+    bench: [],
+    test: [],
+    example: [],
+    patch: None,
+    lib: None,
+    profile: None,
+    badges: None,
+}

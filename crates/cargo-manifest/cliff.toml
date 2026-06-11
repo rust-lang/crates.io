@@ -1,0 +1,70 @@
+# git-cliff ~ default configuration file
+# https://git-cliff.org/docs/configuration
+
+[git]
+conventional_commits = false
+topo_order = true
+
+[remote.github]
+owner = "LukeMathWalker"
+repo = "cargo-manifest"
+# token = "from GITHUB_TOKEN env var"
+
+[changelog]
+header = "# Changelog\n\n"
+
+body = """
+{% if version %}\
+    ## v{{ version | trim_start_matches(pat="v") }} ({{ timestamp | date(format="%Y-%m-%d") }})\n
+{% else %}\
+    ## [unreleased]\n
+{% endif %}\
+
+{% set_global breaking = [] %}\
+{% set_global enhancements = [] %}\
+{% set_global bugs = [] %}\
+{% set_global docs = [] %}\
+{% set_global internal = [] %}\
+{%- for pr_number, commits in commits | group_by(attribute="github.pr_number") -%}
+    {% set commit = commits | first %}
+    {%- if commit.github.pr_labels is containing("breaking") -%}
+        {% set_global breaking = breaking | concat(with=commit) %}
+    {%- elif commit.github.pr_labels is containing("enhancement") -%}
+        {% set_global enhancements = enhancements | concat(with=commit) %}
+    {%- elif commit.github.pr_labels is containing("bug") -%}
+        {% set_global bugs = bugs | concat(with=commit) %}
+    {%- elif commit.github.pr_labels is containing("documentation") -%}
+        {% set_global docs = docs | concat(with=commit) %}
+    {%- elif commit.github.pr_labels is containing("internal") -%}
+        {% set_global internal = internal | concat(with=commit) %}
+    {%- endif -%}
+{%- endfor -%}
+
+{{ self::section(title=":boom: Breaking Change", commits=breaking) }}\
+{{ self::section(title=":rocket: Enhancements", commits=enhancements) }}\
+{{ self::section(title=":bug: Bugfixes", commits=bugs) }}\
+{{ self::section(title=":memo: Documentation", commits=docs) }}\
+{{ self::section(title=":house: Internal", commits=internal) }}\
+
+{% macro section(title, commits) -%}
+    {%- if commits | length > 0 -%}
+        ### {{ title }}
+
+        {% for commit in commits -%}
+            {{ self::commit(commit=commit) }}
+        {%- endfor %}
+    {% endif -%}
+{%- endmacro -%}
+
+{%- macro commit(commit) -%}
+    - [#{{ commit.github.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.github.pr_number }}) \
+    {{ commit.github.pr_title }} \
+    {% if commit.github.username -%}
+        ([@{{ commit.github.username }}](https://github/{{ commit.github.username }}))
+    {%- endif %}
+{% endmacro -%}
+
+{%- macro remote_url() -%}
+    https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
+{%- endmacro -%}
+"""

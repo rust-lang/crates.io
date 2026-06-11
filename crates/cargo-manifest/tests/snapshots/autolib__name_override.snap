@@ -1,0 +1,26 @@
+---
+source: tests/autolib.rs
+expression: lib
+---
+Product {
+    path: Some(
+        "src/lib.rs",
+    ),
+    name: Some(
+        "foo",
+    ),
+    test: true,
+    doctest: true,
+    bench: true,
+    doc: true,
+    plugin: false,
+    proc_macro: false,
+    harness: true,
+    edition: None,
+    required_features: [],
+    crate_type: Some(
+        [
+            "lib",
+        ],
+    ),
+}

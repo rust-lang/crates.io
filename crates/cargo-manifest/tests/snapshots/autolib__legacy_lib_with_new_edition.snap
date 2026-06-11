@@ -1,0 +1,5 @@
+---
+source: tests/autolib.rs
+expression: error
+---
+can't find library, rename file to `src/lib.rs` or specify lib.path
