@@ -26,7 +26,6 @@ TarballInfo {
                 license: None,
                 license_file: None,
                 repository: None,
-                metadata: None,
                 rust_version: Some(
                     Local(
                         "1.23",

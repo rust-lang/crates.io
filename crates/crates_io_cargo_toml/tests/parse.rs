@@ -10,8 +10,7 @@ fn own() {
     let m = Manifest::from_slice(&read("Cargo.toml").unwrap()).unwrap();
     let package = m.package.as_ref().unwrap();
     assert_eq!("crates_io_cargo_toml", package.name);
-    let m =
-        Manifest::<toml::Value>::from_slice_with_metadata(&read("Cargo.toml").unwrap()).unwrap();
+    let m = Manifest::from_slice(&read("Cargo.toml").unwrap()).unwrap();
     let package = m.package.as_ref().unwrap();
     assert_eq!("crates_io_cargo_toml", package.name);
     assert_eq!(

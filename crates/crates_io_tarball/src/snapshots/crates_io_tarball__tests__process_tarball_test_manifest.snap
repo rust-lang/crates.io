@@ -36,7 +36,6 @@ TarballInfo {
                         "https://github.com/foo/bar",
                     ),
                 ),
-                metadata: None,
                 rust_version: Some(
                     Local(
                         "1.59",

@@ -23,14 +23,11 @@ use serde::de::{Error as _, Unexpected};
 use std::str::FromStr;
 
 /// The top-level `Cargo.toml` structure
-///
-/// The `Metadata` is a type for `[package.metadata]` table. You can replace it with
-/// your own struct type if you use the metadata and don't want to use the catch-all `Value` type.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Manifest<PackageMetadata = Value> {
+pub struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub package: Option<Package<PackageMetadata>>,
+    pub package: Option<Package>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_features: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -63,7 +60,7 @@ pub struct Manifest<PackageMetadata = Value> {
     pub lib: Option<Product>,
 }
 
-impl<PackageMetadata> Default for Manifest<PackageMetadata> {
+impl Default for Manifest {
     #[allow(deprecated)]
     fn default() -> Self {
         Self {
@@ -96,23 +93,7 @@ fn is_false(value: &bool) -> bool {
     !value
 }
 
-impl Manifest<Value> {
-    /// Parse contents of a `Cargo.toml` file already loaded as a byte slice.
-    ///
-    /// It does not call `complete_from_path`, so may be missing implicit data.
-    pub fn from_slice(cargo_toml_content: &[u8]) -> Result<Self, Error> {
-        Self::from_slice_with_metadata(cargo_toml_content)
-    }
-
-    /// Parse contents from a `Cargo.toml` file on disk.
-    ///
-    /// Calls `complete_from_path`.
-    pub fn from_path(cargo_toml_path: impl AsRef<Path>) -> Result<Self, Error> {
-        Self::from_path_with_metadata(cargo_toml_path)
-    }
-}
-
-impl FromStr for Manifest<Value> {
+impl FromStr for Manifest {
     type Err = Error;
 
     /// Parse contents of a `Cargo.toml` file loaded as a string
@@ -121,15 +102,15 @@ impl FromStr for Manifest<Value> {
     ///
     /// It does not call `complete_from_path`, so may be missing implicit data.
     fn from_str(cargo_toml_content: &str) -> Result<Self, Self::Err> {
-        Self::from_slice_with_metadata(cargo_toml_content.as_bytes())
+        Self::from_slice(cargo_toml_content.as_bytes())
     }
 }
 
-impl<Metadata: for<'a> Deserialize<'a>> Manifest<Metadata> {
-    /// Parse `Cargo.toml`, and parse its `[package.metadata]` into a custom Serde-compatible type.
+impl Manifest {
+    /// Parse contents of a `Cargo.toml` file already loaded as a byte slice.
     ///
     /// It does not call `complete_from_path`, so may be missing implicit data.
-    pub fn from_slice_with_metadata(cargo_toml_content: &[u8]) -> Result<Self, Error> {
+    pub fn from_slice(cargo_toml_content: &[u8]) -> Result<Self, Error> {
         let mut manifest: Self = toml_from_slice(cargo_toml_content)?;
         if manifest.package.is_none() {
             // Some old crates lack the `[package]` header
@@ -144,13 +125,13 @@ impl<Metadata: for<'a> Deserialize<'a>> Manifest<Metadata> {
         Ok(manifest)
     }
 
-    /// Parse contents from `Cargo.toml` file on disk, with custom Serde-compatible metadata type.
+    /// Parse contents from a `Cargo.toml` file on disk.
     ///
-    /// Calls `complete_from_path`
-    pub fn from_path_with_metadata(cargo_toml_path: impl AsRef<Path>) -> Result<Self, Error> {
+    /// Calls `complete_from_path`.
+    pub fn from_path(cargo_toml_path: impl AsRef<Path>) -> Result<Self, Error> {
         let cargo_toml_path = cargo_toml_path.as_ref();
         let cargo_toml_content = fs::read(cargo_toml_path)?;
-        let mut manifest = Self::from_slice_with_metadata(&cargo_toml_content)?;
+        let mut manifest = Self::from_slice(&cargo_toml_content)?;
         manifest.complete_from_path(cargo_toml_path)?;
         Ok(manifest)
     }
@@ -779,10 +760,8 @@ impl<'de> Deserialize<'de> for True {
     }
 }
 
-/// You can replace `Metadata` type with your own
-/// to parse into something more useful than a generic toml `Value`
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Package<Metadata = Value> {
+pub struct Package {
     /// Careful: some names are uppercase
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -827,8 +806,6 @@ pub struct Package<Metadata = Value> {
     pub license_file: Option<MaybeInherited<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub repository: Option<MaybeInherited<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<Metadata>,
     /// e.g. "1.63.0"
     #[serde(rename = "rust-version")]
     pub rust_version: Option<MaybeInherited<String>>,
@@ -871,7 +848,7 @@ pub struct Package<Metadata = Value> {
     pub resolver: Option<Resolver>,
 }
 
-impl<Metadata> Package<Metadata> {
+impl Package {
     pub fn new(name: String, version: String) -> Self {
         Self {
             name,
@@ -890,7 +867,6 @@ impl<Metadata> Package<Metadata> {
             license: None,
             license_file: None,
             repository: None,
-            metadata: None,
             rust_version: None,
             exclude: None,
             include: None,
@@ -1021,7 +997,7 @@ mod tests {
     #[test]
     fn test_auto_discovery_defaults() {
         let mut manifest = Manifest {
-            package: Some(Package::<()>::new("foo".into(), "1.0.0".into())),
+            package: Some(Package::new("foo".into(), "1.0.0".into())),
             ..Default::default()
         };
         assert!(manifest.autobins());
@@ -1057,7 +1033,7 @@ mod tests {
 
     #[test]
     fn test_legacy_auto_discovery_flag() {
-        let mut package = Package::<()>::new("foo".into(), "1.0.0".into());
+        let mut package = Package::new("foo".into(), "1.0.0".into());
         assert!(package.uses_legacy_auto_discovery());
 
         package.edition = Some(MaybeInherited::Local(Edition::E2015));

@@ -29,7 +29,6 @@ Manifest {
             license: None,
             license_file: None,
             repository: None,
-            metadata: None,
             rust_version: None,
             exclude: None,
             include: None,
