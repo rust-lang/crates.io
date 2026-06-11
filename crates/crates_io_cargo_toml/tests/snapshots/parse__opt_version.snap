@@ -22,8 +22,6 @@ Manifest {
             license_file: None,
             repository: None,
             rust_version: None,
-            exclude: None,
-            include: None,
             default_run: None,
             autolib: None,
             autobins: None,

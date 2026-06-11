@@ -806,10 +806,6 @@ pub struct Package {
     /// e.g. "1.63.0"
     #[serde(rename = "rust-version")]
     pub rust_version: Option<MaybeInherited<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub exclude: Option<MaybeInherited<Vec<String>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub include: Option<MaybeInherited<Vec<String>>>,
 
     #[serde(rename = "default-run")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -861,8 +857,6 @@ impl Package {
             license_file: None,
             repository: None,
             rust_version: None,
-            exclude: None,
-            include: None,
             default_run: None,
             autolib: None,
             autobins: None,

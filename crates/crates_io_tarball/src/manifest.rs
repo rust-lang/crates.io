@@ -49,8 +49,6 @@ pub fn validate_package(package: &Package) -> Result<(), Error> {
         || package.readme.is_inherited()
         || package.keywords.is_inherited()
         || package.categories.is_inherited()
-        || package.exclude.is_inherited()
-        || package.include.is_inherited()
         || package.license.is_inherited()
         || package.license_file.is_inherited()
         || package.repository.is_inherited()

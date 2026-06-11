@@ -31,8 +31,6 @@ TarballInfo {
                         "1.23",
                     ),
                 ),
-                exclude: None,
-                include: None,
                 default_run: None,
                 autolib: None,
                 autobins: None,
