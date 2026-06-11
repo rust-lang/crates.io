@@ -95,7 +95,7 @@
             - /url: https://github.com/BurntSushi/quickcheck
         - listitem:
           - link "Documentation":
-            - /url: http://burntsushi.net/rustdoc/quickcheck/
+            - /url: https://burntsushi.net/rustdoc/quickcheck/
         - listitem:
           - link "Repository":
             - /url: https://github.com/BurntSushi/quickcheck
@@ -161,7 +161,7 @@
             - /url: https://github.com/BurntSushi/quickcheck
         - listitem:
           - link "Documentation":
-            - /url: http://burntsushi.net/rustdoc/quickcheck/
+            - /url: https://burntsushi.net/rustdoc/quickcheck/
         - listitem:
           - link "Repository":
             - /url: https://github.com/BurntSushi/quickcheck
@@ -244,7 +244,7 @@
       - list:
         - listitem:
           - link "Documentation":
-            - /url: http://ogeon.github.io/docs/rustful/master/rustful/index.html
+            - /url: https://ogeon.github.io/docs/rustful/master/rustful/index.html
         - listitem:
           - link "Repository":
             - /url: https://github.com/Ogeon/rustful
@@ -264,7 +264,7 @@
       - list:
         - listitem:
           - link "Documentation":
-            - /url: http://rust.unhandledexpression.com/nom/
+            - /url: https://rust.unhandledexpression.com/nom/
         - listitem:
           - link "Repository":
             - /url: https://github.com/Geal/nom
@@ -339,7 +339,7 @@
             - /url: https://github.com/livioribeiro/rusted-cypher
         - listitem:
           - link "Documentation":
-            - /url: http://livioribeiro.github.io/rusted_cypher/rusted_cypher/
+            - /url: https://livioribeiro.github.io/rusted_cypher/rusted_cypher/
         - listitem:
           - link "Repository":
             - /url: https://github.com/livioribeiro/rusted-cypher
@@ -372,7 +372,7 @@
       - list:
         - listitem:
           - link "Documentation":
-            - /url: http://benashford.github.io/rs-es/rs_es/index.html
+            - /url: https://benashford.github.io/rs-es/rs_es/index.html
         - listitem:
           - link "Repository":
             - /url: https://github.com/benashford/rs-es
@@ -415,7 +415,7 @@
             - /url: https://github.com/whatisinternet/inflector
         - listitem:
           - link "Documentation":
-            - /url: http://whatisinternet.github.io/inflector/doc/inflector/
+            - /url: https://whatisinternet.github.io/inflector/doc/inflector/
         - listitem:
           - link "Repository":
             - /url: https://github.com/whatisinternet/inflector
