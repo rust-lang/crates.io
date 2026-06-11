@@ -1097,7 +1097,7 @@ impl<Metadata> Package<Metadata> {
     /// from the 2015 Rust edition.
     ///
     /// The default value for target auto-discovery changed in the 2018 edition
-    /// (see https://doc.rust-lang.org/cargo/reference/cargo-targets.html#target-auto-discovery).
+    /// (see <https://doc.rust-lang.org/cargo/reference/cargo-targets.html#target-auto-discovery>).
     ///
     /// - If the edition is not set or is set to 2015, we use the legacy behavior.
     /// - If the edition is set to 2018 or later, we use the new behavior.
