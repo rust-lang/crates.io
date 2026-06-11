@@ -25,6 +25,11 @@ export interface Advisory {
   severity?: { type: string; score: string }[];
 }
 
+export interface EnrichedAdvisory extends Advisory {
+  versionRanges: string | null;
+  cvss: string | null;
+}
+
 /**
  * Extracts version ranges from a RustSec advisory.
  *
@@ -73,4 +78,33 @@ export function versionRanges(advisory: Advisory): string | null {
   }
 
   return ranges.length === 0 ? null : ranges.join('; ');
+}
+
+function extractCvss(advisory: Advisory): string | null {
+  let cvssEntry =
+    advisory.severity?.find(s => s.type === 'CVSS_V4') ?? advisory.severity?.find(s => s.type === 'CVSS_V3');
+  return cvssEntry?.score ?? null;
+}
+
+export async function fetchAdvisories(crateId: string, fetch: typeof globalThis.fetch): Promise<EnrichedAdvisory[]> {
+  let url = `https://rustsec.org/packages/${crateId}.json`;
+  let response = await fetch(url);
+  if (response.status === 404) {
+    return [];
+  } else if (response.ok) {
+    let advisories: Advisory[] = await response.json();
+    return advisories
+      .filter(
+        advisory =>
+          !advisory.withdrawn &&
+          !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
+      )
+      .map(advisory => ({
+        ...advisory,
+        versionRanges: versionRanges(advisory),
+        cvss: extractCvss(advisory),
+      }));
+  } else {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 }
