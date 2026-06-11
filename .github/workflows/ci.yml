@@ -298,6 +298,10 @@ jobs:
 
       - run: pnpm playwright install chromium
 
+      # Reuse the Chromium that Playwright just installed instead of letting
+      # @percy/core download its own.
+      - run: echo "PERCY_BROWSER_EXECUTABLE=$(node -e "console.log(require('@playwright/test').chromium.executablePath())")" >> "$GITHUB_ENV"
+
       - if: github.repository == 'rust-lang/crates.io'
         run: pnpm percy exec -- pnpm e2e:svelte
 
