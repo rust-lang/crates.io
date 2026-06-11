@@ -115,7 +115,7 @@ fn main() -> anyhow::Result<()> {
         .maybe_index_sync_github_app(index_sync_github_app)
         .maybe_sync_github_app(sync_github_app)
         .github(github)
-        .og_image_generator(OgImageGenerator::from_environment()?)
+        .og_image_generator(OgImageGenerator::from_environment()?.with_oxipng())
         .build();
 
     let environment = Arc::new(environment);

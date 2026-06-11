@@ -24,12 +24,8 @@ env:
   CARGO_MACHETE_VERSION: 0.9.2
   # renovate: datasource=crate depName=diesel-guard versioning=semver
   DIESEL_GUARD_VERSION: 0.11.0
-  # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
-  OXIPNG_VERSION: 10.1.1
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 11.5.3
-  # renovate: datasource=github-releases depName=typst/typst versioning=semver
-  TYPST_VERSION: 0.14.2
   # renovate: datasource=pypi depName=zizmor
   ZIZMOR_VERSION: 1.25.2
 
@@ -148,22 +144,6 @@ jobs:
 
       # Remove the Android SDK in the background to free up space
       - run: sudo rm -rf /usr/local/lib/android &
-
-      - name: Install Typst
-        run: |
-          wget -q "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz"
-          tar -xf "typst-x86_64-unknown-linux-musl.tar.xz"
-          sudo mv "typst-x86_64-unknown-linux-musl/typst" /usr/local/bin/
-          rm -rf "typst-x86_64-unknown-linux-musl" "typst-x86_64-unknown-linux-musl.tar.xz"
-          typst --version
-
-      - name: Install oxipng
-        run: |
-          wget -q "https://github.com/shssoichiro/oxipng/releases/download/v${OXIPNG_VERSION}/oxipng-${OXIPNG_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-          tar -xf "oxipng-${OXIPNG_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-          sudo mv "oxipng-${OXIPNG_VERSION}-x86_64-unknown-linux-musl/oxipng" /usr/local/bin/
-          rm -rf "oxipng-${OXIPNG_VERSION}-x86_64-unknown-linux-musl" "oxipng-${OXIPNG_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-          oxipng --version
 
       - name: Download Fira Sans font
         run: |
