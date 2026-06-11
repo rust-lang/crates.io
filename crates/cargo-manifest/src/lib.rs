@@ -1271,20 +1271,15 @@ impl Edition {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Copy, Clone, Hash, Serialize, Deserialize)]
 pub enum Resolver {
+    #[default]
     #[serde(rename = "1")]
     V1,
     #[serde(rename = "2")]
     V2,
     #[serde(rename = "3")]
     V3,
-}
-
-impl Default for Resolver {
-    fn default() -> Self {
-        Self::V1
-    }
 }
 
 #[cfg(test)]
