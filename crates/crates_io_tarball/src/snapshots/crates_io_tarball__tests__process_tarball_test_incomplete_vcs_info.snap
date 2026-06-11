@@ -41,7 +41,6 @@ TarballInfo {
             },
         ),
         cargo_features: None,
-        workspace: None,
         dependencies: None,
         dev_dependencies: None,
         build_dependencies: None,

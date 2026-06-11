@@ -28,13 +28,11 @@ use std::str::FromStr;
 /// your own struct type if you use the metadata and don't want to use the catch-all `Value` type.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Manifest<PackageMetadata = Value, WorkspaceMetadata = Value> {
+pub struct Manifest<PackageMetadata = Value> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub package: Option<Package<PackageMetadata>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_features: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub workspace: Option<Workspace<WorkspaceMetadata>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dependencies: Option<DepsSet>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "dev_dependencies")]
@@ -65,13 +63,12 @@ pub struct Manifest<PackageMetadata = Value, WorkspaceMetadata = Value> {
     pub lib: Option<Product>,
 }
 
-impl<PackageMetadata, WorkspaceMetadata> Default for Manifest<PackageMetadata, WorkspaceMetadata> {
+impl<PackageMetadata> Default for Manifest<PackageMetadata> {
     #[allow(deprecated)]
     fn default() -> Self {
         Self {
             package: None,
             cargo_features: None,
-            workspace: None,
             dependencies: None,
             dev_dependencies: None,
             build_dependencies: None,
@@ -85,82 +82,6 @@ impl<PackageMetadata, WorkspaceMetadata> Default for Manifest<PackageMetadata, W
             example: Default::default(),
         }
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
-pub struct Workspace<Metadata = Value> {
-    #[serde(default)]
-    pub members: Vec<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none", alias = "default_members")]
-    pub default_members: Option<Vec<String>>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub exclude: Option<Vec<String>>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolver: Option<Resolver>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub dependencies: Option<DepsSet>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub package: Option<WorkspacePackage>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<Metadata>,
-}
-
-/// The workspace.package table is where you define keys that can be inherited by members of a
-/// workspace. These keys can be inherited by defining them in the member package with
-/// `{key}.workspace = true`.
-///
-/// See <https://doc.rust-lang.org/nightly/cargo/reference/workspaces.html#the-package-table>
-/// for more details.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
-pub struct WorkspacePackage {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub edition: Option<Edition>,
-    /// e.g. "1.9.0"
-    pub version: Option<String>,
-    /// e.g. `["Author <e@mail>", "etc"]`
-    pub authors: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    /// A short blurb about the package. This is not rendered in any format when
-    /// uploaded to crates.io (aka this is not markdown).
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub homepage: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub documentation: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    /// This points to a file under the package root (relative to this `Cargo.toml`).
-    pub readme: Option<StringOrBool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub keywords: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    /// This is a list of up to five categories where this crate would fit.
-    /// e.g. ["command-line-utilities", "development-tools::cargo-plugins"]
-    pub categories: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    /// e.g. "MIT"
-    pub license: Option<String>,
-    #[serde(rename = "license-file")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub license_file: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub publish: Option<Publish>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub exclude: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub include: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub repository: Option<String>,
-    /// e.g. "1.63.0"
-    #[serde(rename = "rust-version")]
-    pub rust_version: Option<String>,
 }
 
 fn default_true() -> bool {
@@ -210,7 +131,7 @@ impl<Metadata: for<'a> Deserialize<'a>> Manifest<Metadata> {
     /// It does not call `complete_from_path`, so may be missing implicit data.
     pub fn from_slice_with_metadata(cargo_toml_content: &[u8]) -> Result<Self, Error> {
         let mut manifest: Self = toml_from_slice(cargo_toml_content)?;
-        if manifest.package.is_none() && manifest.workspace.is_none() {
+        if manifest.package.is_none() {
             // Some old crates lack the `[package]` header
 
             let val: Value = toml_from_slice(cargo_toml_content)?;

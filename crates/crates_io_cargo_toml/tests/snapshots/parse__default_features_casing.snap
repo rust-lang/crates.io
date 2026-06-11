@@ -40,7 +40,6 @@ Manifest {
         },
     ),
     cargo_features: None,
-    workspace: None,
     dependencies: Some(
         {
             "rusoto_core": Detailed(

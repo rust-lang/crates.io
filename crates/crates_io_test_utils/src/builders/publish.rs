@@ -175,7 +175,7 @@ impl PublishBuilder {
                     };
                 }
 
-                let manifest = crates_io_cargo_toml::Manifest::<(), ()> {
+                let manifest = crates_io_cargo_toml::Manifest::<()> {
                     package: Some(package),
                     build_dependencies: build_deps.none_or_filled(),
                     dependencies: deps.none_or_filled(),

@@ -194,18 +194,6 @@ documentation.workspace = true
 fn workspace_dependency() {
     let m = Manifest::from_str(
         r#"
-[workspace]
-members = ["core"]
-[workspace.dependencies]
-chrono = "0.4"
-serde = { version = "1.0", features = [ "derive" ] }
-"#,
-    )
-    .unwrap();
-    insta::assert_debug_snapshot!(m);
-
-    let m = Manifest::from_str(
-        r#"
 [package]
 name = "core"
 version = "0.1.0"

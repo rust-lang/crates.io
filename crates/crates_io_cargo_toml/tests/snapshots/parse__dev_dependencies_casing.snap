@@ -40,7 +40,6 @@ Manifest {
         },
     ),
     cargo_features: None,
-    workspace: None,
     dependencies: None,
     dev_dependencies: Some(
         {
