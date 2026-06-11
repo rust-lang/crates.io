@@ -12,12 +12,13 @@ workspace = true
 [dependencies]
 serde = { version = "1.0.114", features = ["derive"] }
 thiserror = "2.0.9"
-toml = { version = "0.8", default-features = false, features = [
+toml = { version = "1.1.2", default-features = false, features = [
   "parse",
+  "serde",
   "preserve_order",
 ] }
 
 [dev-dependencies]
 insta = "1.39.0"
 tempfile = "3.10.1"
-toml = { version = "0.8", default-features = false, features = ["display"] }
+toml = { version = "1.1.2", default-features = false, features = ["display"] }
