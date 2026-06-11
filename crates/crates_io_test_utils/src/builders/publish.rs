@@ -1,6 +1,6 @@
 use bytes::{BufMut, Bytes, BytesMut};
-use cargo_manifest::{DependencyDetail, DepsSet, MaybeInherited};
 use crates_io_api_types::krate_publish;
+use crates_io_cargo_toml::{DependencyDetail, DepsSet, MaybeInherited};
 use crates_io_database::models::DependencyKind;
 use std::collections::BTreeMap;
 
@@ -151,8 +151,10 @@ impl PublishBuilder {
         match self.manifest {
             Manifest::None => {}
             Manifest::Generated => {
-                let mut package =
-                    cargo_manifest::Package::new(self.krate_name.clone(), self.version.to_string());
+                let mut package = crates_io_cargo_toml::Package::new(
+                    self.krate_name.clone(),
+                    self.version.to_string(),
+                );
                 package.categories = self.categories.none_or_filled().map(MaybeInherited::Local);
                 package.description = self.desc.map(MaybeInherited::Local);
                 package.documentation = self.doc_url.map(MaybeInherited::Local);
@@ -173,7 +175,7 @@ impl PublishBuilder {
                     };
                 }
 
-                let manifest = cargo_manifest::Manifest::<(), ()> {
+                let manifest = crates_io_cargo_toml::Manifest {
                     package: Some(package),
                     build_dependencies: build_deps.none_or_filled(),
                     dependencies: deps.none_or_filled(),
@@ -231,7 +233,7 @@ impl From<PublishBuilder> for Bytes {
 
 fn convert_dependency(
     encoded: &krate_publish::EncodableCrateDependency,
-) -> (String, cargo_manifest::Dependency) {
+) -> (String, crates_io_cargo_toml::Dependency) {
     let (name, package) = match encoded.explicit_name_in_toml.as_ref() {
         None => (encoded.name.to_string(), None),
         Some(explicit_name_in_toml) => (
@@ -256,7 +258,7 @@ fn convert_dependency(
         ..Default::default()
     };
 
-    let dependency = cargo_manifest::Dependency::Detailed(dependency).simplify();
+    let dependency = crates_io_cargo_toml::Dependency::Detailed(dependency).simplify();
     (name, dependency)
 }
 

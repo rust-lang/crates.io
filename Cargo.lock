@@ -1032,17 +1032,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-manifest"
-version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1d8af896b707212cd0e99c112a78c9497dd32994192a463ed2f7419d29bd8c6"
-dependencies = [
- "serde",
- "thiserror 2.0.18",
- "toml 0.8.23",
-]
-
-[[package]]
 name = "caseless"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1434,13 +1423,13 @@ dependencies = [
  "bigdecimal",
  "bon",
  "bytes",
- "cargo-manifest",
  "chrono",
  "claims",
  "clap",
  "colored 3.1.1",
  "cookie",
  "crates_io_api_types",
+ "crates_io_cargo_toml",
  "crates_io_cdn_logs",
  "crates_io_database",
  "crates_io_database_dump",
@@ -1542,6 +1531,17 @@ dependencies = [
  "serde_json",
  "url",
  "utoipa",
+]
+
+[[package]]
+name = "crates_io_cargo_toml"
+version = "0.0.0"
+dependencies = [
+ "insta",
+ "serde",
+ "tempfile",
+ "thiserror 2.0.18",
+ "toml 1.1.2+spec-1.1.0",
 ]
 
 [[package]]
@@ -1824,9 +1824,9 @@ dependencies = [
  "anyhow",
  "astral-tokio-tar",
  "async-compression",
- "cargo-manifest",
  "claims",
  "clap",
+ "crates_io_cargo_toml",
  "flate2",
  "futures-util",
  "indicatif",
@@ -1875,9 +1875,9 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "bytes",
- "cargo-manifest",
  "chrono",
  "crates_io_api_types",
+ "crates_io_cargo_toml",
  "crates_io_database",
  "crates_io_tarball",
  "diesel",
@@ -6617,7 +6617,6 @@ version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc1beb996b9d83529a9e75c17a1686767d148d70663143c7854d8b4a09ced362"
 dependencies = [
- "indexmap",
  "serde",
  "serde_spanned 0.6.9",
  "toml_datetime 0.6.11",

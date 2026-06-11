@@ -1,0 +1,61 @@
+---
+source: crates/crates_io_cargo_toml/tests/parse.rs
+expression: m
+---
+Manifest {
+    package: Some(
+        Package {
+            name: "foo",
+            edition: None,
+            version: Some(
+                Local(
+                    "1",
+                ),
+            ),
+            build: None,
+            authors: None,
+            links: None,
+            description: None,
+            homepage: None,
+            documentation: None,
+            readme: None,
+            keywords: None,
+            categories: None,
+            license: None,
+            license_file: None,
+            repository: None,
+            rust_version: None,
+            autolib: None,
+            autobins: None,
+            autoexamples: None,
+            autotests: None,
+            autobenches: None,
+        },
+    ),
+    dependencies: None,
+    dev_dependencies: None,
+    build_dependencies: None,
+    target: None,
+    features: None,
+    bin: [],
+    bench: [],
+    test: [],
+    example: [],
+    patch: None,
+    lib: Some(
+        Product {
+            path: None,
+            name: None,
+            test: true,
+            doctest: true,
+            bench: true,
+            doc: true,
+            plugin: false,
+            proc_macro: true,
+            harness: true,
+            edition: None,
+            required_features: [],
+            crate_type: None,
+        },
+    ),
+}
