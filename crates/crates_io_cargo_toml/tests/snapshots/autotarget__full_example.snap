@@ -1,5 +1,5 @@
 ---
-source: tests/autotarget.rs
+source: crates/crates_io_cargo_toml/tests/autotarget.rs
 expression: m
 ---
 Manifest {
@@ -268,5 +268,4 @@ Manifest {
         },
     ),
     profile: None,
-    badges: None,
 }

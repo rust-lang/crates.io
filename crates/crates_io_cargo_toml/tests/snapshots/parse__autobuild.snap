@@ -1,5 +1,5 @@
 ---
-source: tests/parse.rs
+source: crates/crates_io_cargo_toml/tests/parse.rs
 expression: m
 ---
 Manifest {
@@ -57,5 +57,4 @@ Manifest {
     patch: None,
     lib: None,
     profile: None,
-    badges: None,
 }

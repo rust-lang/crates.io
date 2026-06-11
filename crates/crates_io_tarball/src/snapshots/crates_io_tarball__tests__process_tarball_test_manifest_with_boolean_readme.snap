@@ -60,7 +60,6 @@ TarballInfo {
         patch: None,
         lib: None,
         profile: None,
-        badges: None,
     },
     vcs_info: None,
 }

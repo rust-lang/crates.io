@@ -137,7 +137,6 @@ TarballInfo {
             },
         ),
         profile: None,
-        badges: None,
     },
     vcs_info: None,
 }

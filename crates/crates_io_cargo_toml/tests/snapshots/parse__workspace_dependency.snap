@@ -1,7 +1,6 @@
 ---
-source: tests/parse.rs
+source: crates/crates_io_cargo_toml/tests/parse.rs
 expression: m
-snapshot_kind: text
 ---
 Manifest {
     package: None,
@@ -59,5 +58,4 @@ Manifest {
     patch: None,
     lib: None,
     profile: None,
-    badges: None,
 }

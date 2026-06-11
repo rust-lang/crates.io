@@ -1,5 +1,5 @@
 ---
-source: tests/parse.rs
+source: crates/crates_io_cargo_toml/tests/parse.rs
 expression: m
 ---
 Manifest {
@@ -247,29 +247,6 @@ Manifest {
                     split_debuginfo: None,
                     build_override: None,
                 },
-            },
-        },
-    ),
-    badges: Some(
-        Badges {
-            appveyor: None,
-            circle_ci: None,
-            gitlab: None,
-            travis_ci: Some(
-                Badge {
-                    repository: "BurntSushi/byteorder",
-                    branch: "master",
-                    service: None,
-                    id: None,
-                    project_name: None,
-                },
-            ),
-            codecov: None,
-            coveralls: None,
-            is_it_maintained_issue_resolution: None,
-            is_it_maintained_open_issues: None,
-            maintenance: Maintenance {
-                status: None,
             },
         },
     ),
