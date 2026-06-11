@@ -534,6 +534,12 @@ pub enum Dependency {
 }
 
 impl Dependency {
+    /// Returns `true` if the dependency is inherited from the workspace
+    /// (`{ workspace = true }`) rather than defined locally.
+    pub const fn is_inherited(&self) -> bool {
+        matches!(self, Dependency::Inherited(_))
+    }
+
     pub fn detail(&self) -> Option<&DependencyDetail> {
         match *self {
             Dependency::Detailed(ref d) => Some(d),
@@ -724,6 +730,12 @@ impl<T> MaybeInherited<T> {
             Self::Local(x) => MaybeInherited::Local(x),
             Self::Inherited { .. } => MaybeInherited::Inherited { workspace: True },
         }
+    }
+
+    /// Returns `true` if the value is inherited from the workspace
+    /// (`{ workspace = true }`) rather than set locally.
+    pub const fn is_inherited(&self) -> bool {
+        matches!(self, Self::Inherited { .. })
     }
 }
 
