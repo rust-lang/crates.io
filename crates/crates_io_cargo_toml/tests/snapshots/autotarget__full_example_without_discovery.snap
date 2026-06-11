@@ -46,7 +46,6 @@ Manifest {
             autobenches: Some(
                 false,
             ),
-            publish: None,
         },
     ),
     dependencies: None,

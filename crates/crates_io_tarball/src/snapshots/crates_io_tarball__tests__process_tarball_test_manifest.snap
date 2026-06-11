@@ -49,7 +49,6 @@ TarballInfo {
                 autoexamples: None,
                 autotests: None,
                 autobenches: None,
-                publish: None,
             },
         ),
         dependencies: None,

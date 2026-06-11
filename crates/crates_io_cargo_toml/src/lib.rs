@@ -839,8 +839,6 @@ pub struct Package {
     /// Use [Manifest::autobenches()] to get the effective value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autobenches: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub publish: Option<MaybeInherited<Publish>>,
 }
 
 impl Package {
@@ -871,7 +869,6 @@ impl Package {
             autoexamples: None,
             autotests: None,
             autobenches: None,
-            publish: None,
         }
     }
 
@@ -912,34 +909,6 @@ impl Package {
 pub enum StringOrBool {
     String(String),
     Bool(bool),
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum Publish {
-    Flag(bool),
-    Registry(Vec<String>),
-}
-
-impl Default for Publish {
-    fn default() -> Self {
-        Publish::Flag(true)
-    }
-}
-
-impl PartialEq<Publish> for bool {
-    fn eq(&self, p: &Publish) -> bool {
-        match *p {
-            Publish::Flag(flag) => flag == *self,
-            Publish::Registry(ref reg) => reg.is_empty() != *self,
-        }
-    }
-}
-
-impl PartialEq<bool> for Publish {
-    fn eq(&self, b: &bool) -> bool {
-        b.eq(self)
-    }
 }
 
 fn toml_from_slice<T>(s: &'_ [u8]) -> Result<T, Error>

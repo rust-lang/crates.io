@@ -54,7 +54,6 @@ pub fn validate_package(package: &Package) -> Result<(), Error> {
         || package.license.is_inherited()
         || package.license_file.is_inherited()
         || package.repository.is_inherited()
-        || package.publish.is_inherited()
     {
         return Err(Error::Other(
             "value from workspace hasn't been set".to_string(),
