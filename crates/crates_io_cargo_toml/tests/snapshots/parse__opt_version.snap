@@ -34,7 +34,6 @@ Manifest {
             resolver: None,
         },
     ),
-    cargo_features: None,
     dependencies: None,
     dev_dependencies: None,
     build_dependencies: None,

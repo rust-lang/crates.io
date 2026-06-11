@@ -29,8 +29,6 @@ pub struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub package: Option<Package>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cargo_features: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub dependencies: Option<DepsSet>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "dev_dependencies")]
     pub dev_dependencies: Option<DepsSet>,
@@ -65,7 +63,6 @@ impl Default for Manifest {
     fn default() -> Self {
         Self {
             package: None,
-            cargo_features: None,
             dependencies: None,
             dev_dependencies: None,
             build_dependencies: None,

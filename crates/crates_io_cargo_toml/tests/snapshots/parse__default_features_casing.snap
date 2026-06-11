@@ -38,7 +38,6 @@ Manifest {
             resolver: None,
         },
     ),
-    cargo_features: None,
     dependencies: Some(
         {
             "rusoto_core": Detailed(
