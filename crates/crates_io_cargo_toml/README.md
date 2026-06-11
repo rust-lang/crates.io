@@ -1,4 +1,4 @@
-cargo-manifest
+crates_io_cargo_toml
 ==============================================================================
 
 [`serde`](https://serde.rs) definitions to read and write
@@ -25,19 +25,11 @@ binaries.
 > `Cargo.toml` files.
 
 
-Installation
-------------------------------------------------------------------------------
-
-```sh
-cargo add cargo-manifest
-```
-
-
 Usage
 ------------------------------------------------------------------------------
 
 ```rust
-use cargo_manifest::Manifest;
+use crates_io_cargo_toml::Manifest;
 
 let manifest = Manifest::from_path("Cargo.toml").unwrap();
 ```

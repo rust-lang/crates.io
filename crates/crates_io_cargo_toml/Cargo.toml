@@ -1,7 +1,7 @@
 [package]
 edition = "2024"
-name = "cargo-manifest"
-version = "0.19.1"
+name = "crates_io_cargo_toml"
+version = "0.0.0"
 authors = ["Kornel <kornel@geekhood.net>", "Luca Palmieri <rust@lpalmieri.com>"]
 description = "Helper crate to parse and manipulate manifests - `Cargo.toml` files."
 license = "Apache-2.0 OR MIT"

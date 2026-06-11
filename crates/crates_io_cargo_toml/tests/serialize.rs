@@ -1,4 +1,4 @@
-use cargo_manifest::{Manifest, Package};
+use crates_io_cargo_toml::{Manifest, Package};
 
 #[test]
 fn basic() {

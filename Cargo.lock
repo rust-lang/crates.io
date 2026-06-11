@@ -1032,17 +1032,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-manifest"
-version = "0.19.1"
-dependencies = [
- "insta",
- "serde",
- "tempfile",
- "thiserror 2.0.18",
- "toml 1.1.2+spec-1.1.0",
-]
-
-[[package]]
 name = "caseless"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1434,13 +1423,13 @@ dependencies = [
  "bigdecimal",
  "bon",
  "bytes",
- "cargo-manifest",
  "chrono",
  "claims",
  "clap",
  "colored 3.1.1",
  "cookie",
  "crates_io_api_types",
+ "crates_io_cargo_toml",
  "crates_io_cdn_logs",
  "crates_io_database",
  "crates_io_database_dump",
@@ -1542,6 +1531,17 @@ dependencies = [
  "serde_json",
  "url",
  "utoipa",
+]
+
+[[package]]
+name = "crates_io_cargo_toml"
+version = "0.0.0"
+dependencies = [
+ "insta",
+ "serde",
+ "tempfile",
+ "thiserror 2.0.18",
+ "toml 1.1.2+spec-1.1.0",
 ]
 
 [[package]]
@@ -1824,9 +1824,9 @@ dependencies = [
  "anyhow",
  "astral-tokio-tar",
  "async-compression",
- "cargo-manifest",
  "claims",
  "clap",
+ "crates_io_cargo_toml",
  "flate2",
  "futures-util",
  "indicatif",
@@ -1875,9 +1875,9 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "bytes",
- "cargo-manifest",
  "chrono",
  "crates_io_api_types",
+ "crates_io_cargo_toml",
  "crates_io_database",
  "crates_io_tarball",
  "diesel",

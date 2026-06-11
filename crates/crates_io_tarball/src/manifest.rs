@@ -1,4 +1,4 @@
-use cargo_manifest::{Dependency, DepsSet, Error, Manifest, MaybeInherited, Package};
+use crates_io_cargo_toml::{Dependency, DepsSet, Error, Manifest, MaybeInherited, Package};
 
 pub fn validate_manifest(manifest: &Manifest) -> Result<(), Error> {
     let package = manifest.package.as_ref();

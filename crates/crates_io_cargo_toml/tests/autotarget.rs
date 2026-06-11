@@ -1,4 +1,4 @@
-use cargo_manifest::{Manifest, Product};
+use crates_io_cargo_toml::{Manifest, Product};
 
 mod utils;
 

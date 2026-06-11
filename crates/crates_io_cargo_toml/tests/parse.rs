@@ -1,5 +1,5 @@
-use cargo_manifest as lib;
-use cargo_manifest::{Manifest, MaybeInherited};
+use crates_io_cargo_toml as lib;
+use crates_io_cargo_toml::{Manifest, MaybeInherited};
 use std::fs::read;
 use std::str::FromStr;
 
@@ -9,11 +9,11 @@ mod utils;
 fn own() {
     let m = Manifest::from_slice(&read("Cargo.toml").unwrap()).unwrap();
     let package = m.package.as_ref().unwrap();
-    assert_eq!("cargo-manifest", package.name);
+    assert_eq!("crates_io_cargo_toml", package.name);
     let m =
         Manifest::<toml::Value>::from_slice_with_metadata(&read("Cargo.toml").unwrap()).unwrap();
     let package = m.package.as_ref().unwrap();
-    assert_eq!("cargo-manifest", package.name);
+    assert_eq!("crates_io_cargo_toml", package.name);
     assert_eq!(
         Some(MaybeInherited::Local(lib::Edition::E2024)),
         package.edition

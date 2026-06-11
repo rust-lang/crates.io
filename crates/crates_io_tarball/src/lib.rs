@@ -9,8 +9,8 @@ pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
-use cargo_manifest::AbstractFilesystem;
-pub use cargo_manifest::{Manifest, StringOrBool};
+use crates_io_cargo_toml::AbstractFilesystem;
+pub use crates_io_cargo_toml::{Manifest, StringOrBool};
 use futures_util::StreamExt;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
@@ -50,7 +50,7 @@ pub enum TarballError {
     #[error("Cargo.toml manifest is missing")]
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
-    InvalidManifest(#[from] cargo_manifest::Error),
+    InvalidManifest(#[from] crates_io_cargo_toml::Error),
     #[error("Cargo.toml manifest is incorrectly cased: {0:?}")]
     IncorrectlyCasedManifest(PathBuf),
     #[error("more than one Cargo.toml manifest in tarball: {0:?}")]
@@ -227,7 +227,7 @@ impl AbstractFilesystem for PathsFileSystem {
             .iter()
             .filter_map(move |p| p.strip_prefix(rel_path).ok())
             .filter_map(|name| match name.components().next() {
-                // We can skip non-utf8 paths, since those are not checked by `cargo_manifest` anyway
+                // We can skip non-utf8 paths, since those are not checked by `crates_io_cargo_toml` anyway
                 Some(Component::Normal(p)) => p.to_str(),
                 _ => None,
             })
