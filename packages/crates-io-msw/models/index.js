@@ -85,6 +85,7 @@ export const db = {
   reset() {
     counters.reset();
 
+    // eslint-disable-next-line unicorn/no-this-outside-of-class -- `this` is the surrounding object literal
     for (let collection of Object.values(this)) {
       collection.clear?.();
     }
