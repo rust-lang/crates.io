@@ -21,7 +21,7 @@
   let cargoAddCommand = $derived(exactVersion ? `cargo add ${crate}@=${version}` : `cargo add ${crate}`);
 
   let tomlSnippet = $derived.by(() => {
-    let v = version.split('+')[0];
+    let v = version.split('+', 1)[0];
     let exact = exactVersion ? '=' : '';
     return `${crate} = "${exact}${v}"`;
   });
