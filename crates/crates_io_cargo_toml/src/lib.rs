@@ -807,11 +807,6 @@ pub struct Package {
     #[serde(rename = "rust-version")]
     pub rust_version: Option<MaybeInherited<String>>,
 
-    #[serde(rename = "default-run")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    /// The default binary to run by cargo run.
-    pub default_run: Option<String>,
-
     /// Disables library auto discovery.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autolib: Option<bool>,
@@ -857,7 +852,6 @@ impl Package {
             license_file: None,
             repository: None,
             rust_version: None,
-            default_run: None,
             autolib: None,
             autobins: None,
             autoexamples: None,

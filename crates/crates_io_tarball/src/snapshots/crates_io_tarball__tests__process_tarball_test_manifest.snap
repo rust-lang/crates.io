@@ -41,7 +41,6 @@ TarballInfo {
                         "1.59",
                     ),
                 ),
-                default_run: None,
                 autolib: None,
                 autobins: None,
                 autoexamples: None,
