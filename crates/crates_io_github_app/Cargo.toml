@@ -26,6 +26,6 @@ url = "=2.5.8"
 [dev-dependencies]
 claims = "=0.8.0"
 clap = { version = "=4.6.1", features = ["derive", "env"] }
-insta = "=1.47.2"
+insta = "=1.48.0"
 mockito = "=1.7.2"
 tokio = { version = "=1.52.3", features = ["macros", "rt-multi-thread"] }

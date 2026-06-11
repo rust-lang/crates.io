@@ -19,6 +19,6 @@ toml = { version = "=1.1.2", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-insta = "=1.47.2"
+insta = "=1.48.0"
 tempfile = "=3.27.0"
 toml = { version = "=1.1.2", default-features = false, features = ["display"] }
