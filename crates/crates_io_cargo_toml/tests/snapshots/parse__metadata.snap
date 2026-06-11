@@ -17,7 +17,6 @@ Manifest {
                     "foobar.rs",
                 ),
             ),
-            workspace: None,
             authors: None,
             links: None,
             description: None,

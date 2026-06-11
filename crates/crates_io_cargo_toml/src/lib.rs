@@ -772,8 +772,6 @@ pub struct Package {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build: Option<StringOrBool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub workspace: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     /// e.g. `["Author <e@mail>", "etc"]`
     pub authors: Option<MaybeInherited<Vec<String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -839,7 +837,6 @@ impl Package {
             edition: None,
             version: Some(MaybeInherited::Local(version)),
             build: None,
-            workspace: None,
             authors: None,
             links: None,
             description: None,

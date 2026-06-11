@@ -13,7 +13,6 @@ Manifest {
                 },
             ),
             build: None,
-            workspace: None,
             authors: Some(
                 Inherited {
                     workspace: True,

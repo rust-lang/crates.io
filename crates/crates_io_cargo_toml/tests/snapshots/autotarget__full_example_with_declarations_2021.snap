@@ -17,7 +17,6 @@ Manifest {
                 ),
             ),
             build: None,
-            workspace: None,
             authors: None,
             links: None,
             description: None,
