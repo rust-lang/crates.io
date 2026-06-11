@@ -4,10 +4,6 @@ name = "cargo-manifest"
 version = "0.19.1"
 authors = ["Kornel <kornel@geekhood.net>", "Luca Palmieri <rust@lpalmieri.com>"]
 description = "Helper crate to parse and manipulate manifests - `Cargo.toml` files."
-keywords = ["cargo", "metadata", "toml", "serde", "manifest"]
-categories = ["rust-patterns", "parser-implementations"]
-repository = "https://github.com/LukeMathWalker/cargo-manifest"
-documentation = "https://docs.rs/cargo-manifest"
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
