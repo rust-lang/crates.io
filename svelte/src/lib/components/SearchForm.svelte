@@ -44,7 +44,7 @@
       return;
     }
 
-    if (event.key === 's' || event.key === 'S' || event.key === '/') {
+    if (['s', 'S', '/'].includes(event.key)) {
       event.preventDefault();
       inputElement?.focus();
     }
