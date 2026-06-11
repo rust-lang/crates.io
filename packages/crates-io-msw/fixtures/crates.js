@@ -84,7 +84,7 @@ export default [
     created_at: '2015-10-10T15:26:24Z',
     description:
       'Adds String based inflections for Rust. Snake, kebab, camel, sentence, class, title, upper, and lower cases as well as ordinalize, deordinalize, demodulize, and foreign key are supported as both traits and pure functions acting on String types.\n',
-    documentation: 'http://whatisinternet.github.io/inflector/doc/inflector/',
+    documentation: 'https://whatisinternet.github.io/inflector/doc/inflector/',
     downloads: 57,
     recent_downloads: 1,
     homepage: 'https://github.com/whatisinternet/inflector',
@@ -97,7 +97,7 @@ export default [
   {
     created_at: '2015-05-21T17:43:38Z',
     description: 'Client for the ElasticSearch REST API',
-    documentation: 'http://benashford.github.io/rs-es/rs_es/index.html',
+    documentation: 'https://benashford.github.io/rs-es/rs_es/index.html',
     downloads: 321,
     recent_downloads: 21,
     homepage: null,
@@ -162,7 +162,7 @@ export default [
   {
     created_at: '2015-08-26T13:50:58Z',
     description: 'Send cypher queries to a neo4j database',
-    documentation: 'http://livioribeiro.github.io/rusted_cypher/rusted_cypher/',
+    documentation: 'https://livioribeiro.github.io/rusted_cypher/rusted_cypher/',
     downloads: 156,
     recent_downloads: 54,
     homepage: 'https://github.com/livioribeiro/rusted-cypher',
@@ -190,7 +190,7 @@ export default [
     created_at: '2015-05-08T19:34:16Z',
     description:
       'A light HTTP framework, with some REST-like features and the ambition of being simple, modular and non-intrusive.',
-    documentation: 'http://ogeon.github.io/docs/rustful/master/rustful/index.html',
+    documentation: 'https://ogeon.github.io/docs/rustful/master/rustful/index.html',
     downloads: 576,
     recent_downloads: 76,
     homepage: null,
@@ -216,7 +216,7 @@ export default [
   {
     created_at: '2014-11-21T00:20:47Z',
     description: 'Automatic property based testing with shrinking.',
-    documentation: 'http://burntsushi.net/rustdoc/quickcheck/',
+    documentation: 'https://burntsushi.net/rustdoc/quickcheck/',
     downloads: 19_271,
     recent_downloads: 143,
     homepage: 'https://github.com/BurntSushi/quickcheck',
@@ -229,7 +229,7 @@ export default [
   {
     created_at: '2014-11-21T00:21:04Z',
     description: 'A macro attribute for quickcheck.',
-    documentation: 'http://burntsushi.net/rustdoc/quickcheck/',
+    documentation: 'https://burntsushi.net/rustdoc/quickcheck/',
     downloads: 3796,
     recent_downloads: 768,
     homepage: 'https://github.com/BurntSushi/quickcheck',
@@ -256,7 +256,7 @@ export default [
   {
     created_at: '2015-01-17T17:47:52Z',
     description: 'A byte-oriented, zero-copy, parser combinators library',
-    documentation: 'http://rust.unhandledexpression.com/nom/',
+    documentation: 'https://rust.unhandledexpression.com/nom/',
     downloads: 5169,
     recent_downloads: 69,
     homepage: null,

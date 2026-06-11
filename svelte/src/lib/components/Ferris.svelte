@@ -101,6 +101,7 @@
 
 <svelte:window onpointermove={enabled ? handlePointerMove : undefined} />
 
+<!-- eslint-disable unicorn/prefer-https -- SVG namespace identifier, not a fetchable URL -->
 <svg
   bind:this={svgEl}
   class={['ferris', className]}
@@ -139,6 +140,8 @@
     transform={`translate(${eyes.left.x} ${eyes.left.y})`}
   />
 </svg>
+
+<!-- eslint-enable unicorn/prefer-https -->
 
 <style>
   .ferris {

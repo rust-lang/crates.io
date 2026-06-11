@@ -17,7 +17,7 @@ export interface DownloadChartData {
 
 export type DownloadChartDataset = ChartDataset<'line', { x: Date; y: number }[]>;
 
-// Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
+// Colors by https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 const BG_COLORS = ['#d3b5bc', '#eabdc0', '#f3d0ca', '#fce4d9', '#deedf5', '#c9deed', '#2166ac', '#053061'];
 
