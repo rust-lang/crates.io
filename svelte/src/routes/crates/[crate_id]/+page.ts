@@ -2,18 +2,20 @@ import { createClient } from '@crates-io/api-client';
 
 import { loadDocsRsStatus } from '$lib/utils/docs-rs';
 import { loadReadme } from '$lib/utils/readme';
+import { loadUnmaintained } from '$lib/utils/rustsec';
 
 export async function load({ fetch, params, parent }) {
   let client = createClient({ fetch });
 
   let crateName = params.crate_id;
   let downloadsPromise = loadDownloads(client, crateName);
+  let unmaintainedPromise = loadUnmaintained(fetch, crateName);
 
   let { crate, defaultVersion } = await parent();
   let readmePromise = loadReadme(fetch, crate.name, defaultVersion.num);
   let docsRsStatusPromise = loadDocsRsStatus(fetch, crate.name, defaultVersion.num);
 
-  return { readmePromise, downloadsPromise, docsRsStatusPromise };
+  return { readmePromise, downloadsPromise, docsRsStatusPromise, unmaintainedPromise };
 }
 
 /**

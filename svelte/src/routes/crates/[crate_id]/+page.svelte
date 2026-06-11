@@ -17,5 +17,6 @@
   readmePromise={data.readmePromise}
   playgroundCratesPromise={data.playgroundCratesPromise}
   docsRsStatusPromise={data.docsRsStatusPromise}
+  unmaintainedPromise={data.unmaintainedPromise}
   {downloadsPromise}
 />
