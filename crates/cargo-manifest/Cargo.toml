@@ -11,10 +11,6 @@ documentation = "https://docs.rs/cargo-manifest"
 license = "Apache-2.0 OR MIT"
 exclude = ["tests"]
 
-[lib]
-name = "cargo_manifest"
-path = "src/lib.rs"
-
 [dependencies]
 serde = { version = "1.0.114", features = ["derive"] }
 thiserror = "2.0.9"
