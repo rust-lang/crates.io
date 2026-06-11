@@ -586,13 +586,13 @@ impl TryFrom<Value> for StripSetting {
                 other => {
                     return Err(Error::Other(format!(
                         "'{other}' is not a valid value for 'strip'"
-                    )))
+                    )));
                 }
             },
             _ => {
                 return Err(Error::Other(
                     "wrong data type for strip setting".to_string(),
-                ))
+                ));
             }
         })
     }
@@ -917,7 +917,7 @@ impl<T> MaybeInherited<T> {
 
     pub const fn as_ref(&self) -> MaybeInherited<&T> {
         match self {
-            Self::Local(ref x) => MaybeInherited::Local(x),
+            Self::Local(x) => MaybeInherited::Local(x),
             Self::Inherited { .. } => MaybeInherited::Inherited { workspace: True },
         }
     }

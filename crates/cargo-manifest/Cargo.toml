@@ -1,5 +1,5 @@
 [package]
-edition = "2021"
+edition = "2024"
 name = "cargo-manifest"
 version = "0.19.1"
 authors = ["Kornel <kornel@geekhood.net>", "Luca Palmieri <rust@lpalmieri.com>"]

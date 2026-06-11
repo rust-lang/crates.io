@@ -15,9 +15,9 @@ pub enum Error {
 impl Clone for Error {
     fn clone(&self) -> Self {
         match self {
-            Error::Parse(ref err) => Error::Parse(err.clone()),
-            Error::Io(ref err) => Error::Io(io::Error::new(err.kind(), err.to_string())),
-            Error::Utf8(ref err) => Error::Utf8(*err),
+            Error::Parse(err) => Error::Parse(err.clone()),
+            Error::Io(err) => Error::Io(io::Error::new(err.kind(), err.to_string())),
+            Error::Utf8(err) => Error::Utf8(*err),
             Error::Other(msg) => Error::Other(msg.clone()),
         }
     }

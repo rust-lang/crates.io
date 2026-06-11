@@ -15,7 +15,7 @@ fn own() {
     let package = m.package.as_ref().unwrap();
     assert_eq!("cargo-manifest", package.name);
     assert_eq!(
-        Some(MaybeInherited::Local(lib::Edition::E2021)),
+        Some(MaybeInherited::Local(lib::Edition::E2024)),
         package.edition
     );
 }
