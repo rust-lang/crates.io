@@ -1,5 +1,5 @@
 ---
-source: tests/autolib.rs
+source: crates/crates_io_cargo_toml/tests/autolib.rs
 expression: lib
 ---
 Product {

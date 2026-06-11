@@ -1,8 +1,7 @@
 ---
-source: tests/serialize.rs
+source: crates/crates_io_cargo_toml/tests/serialize.rs
 expression: serialized
 ---
 [package]
 name = "foo"
 version = "1.0.0"
-
