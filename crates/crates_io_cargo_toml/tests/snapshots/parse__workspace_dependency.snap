@@ -35,7 +35,6 @@ Manifest {
             autotests: None,
             autobenches: None,
             publish: None,
-            resolver: None,
         },
     ),
     dependencies: Some(

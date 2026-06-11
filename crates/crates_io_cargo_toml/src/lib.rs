@@ -841,8 +841,6 @@ pub struct Package {
     pub autobenches: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub publish: Option<MaybeInherited<Publish>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolver: Option<Resolver>,
 }
 
 impl Package {
@@ -874,7 +872,6 @@ impl Package {
             autotests: None,
             autobenches: None,
             publish: None,
-            resolver: None,
         }
     }
 
@@ -974,17 +971,6 @@ impl Edition {
             Self::E2024 => "2024",
         }
     }
-}
-
-#[derive(Debug, Default, PartialEq, Eq, Copy, Clone, Hash, Serialize, Deserialize)]
-pub enum Resolver {
-    #[default]
-    #[serde(rename = "1")]
-    V1,
-    #[serde(rename = "2")]
-    V2,
-    #[serde(rename = "3")]
-    V3,
 }
 
 #[cfg(test)]

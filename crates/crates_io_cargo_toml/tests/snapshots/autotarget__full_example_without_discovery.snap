@@ -47,7 +47,6 @@ Manifest {
                 false,
             ),
             publish: None,
-            resolver: None,
         },
     ),
     dependencies: None,
