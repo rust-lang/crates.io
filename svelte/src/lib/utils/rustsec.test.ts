@@ -1,8 +1,8 @@
-import type { Advisory } from './version-ranges';
+import type { Advisory } from './rustsec';
 
 import { describe, expect, it } from 'vitest';
 
-import { versionRanges } from './version-ranges';
+import { versionRanges } from './rustsec';
 
 describe('versionRanges', () => {
   it('returns null when advisory has no affected field', () => {
