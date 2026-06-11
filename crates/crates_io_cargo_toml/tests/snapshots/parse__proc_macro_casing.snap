@@ -67,5 +67,4 @@ Manifest {
             crate_type: None,
         },
     ),
-    profile: None,
 }

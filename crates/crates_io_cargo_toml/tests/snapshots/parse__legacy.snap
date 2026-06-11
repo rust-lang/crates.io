@@ -52,5 +52,4 @@ Manifest {
     example: [],
     patch: None,
     lib: None,
-    profile: None,
 }

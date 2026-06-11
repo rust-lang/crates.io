@@ -72,7 +72,6 @@ TarballInfo {
         example: [],
         patch: None,
         lib: None,
-        profile: None,
     },
     vcs_info: None,
 }

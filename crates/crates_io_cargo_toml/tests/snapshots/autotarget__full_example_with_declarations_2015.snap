@@ -155,5 +155,4 @@ Manifest {
             ),
         },
     ),
-    profile: None,
 }

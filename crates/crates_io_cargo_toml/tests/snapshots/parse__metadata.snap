@@ -79,5 +79,4 @@ Manifest {
             ),
         },
     ),
-    profile: None,
 }

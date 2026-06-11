@@ -76,7 +76,6 @@ TarballInfo {
                 ),
             },
         ),
-        profile: None,
     },
     vcs_info: None,
 }

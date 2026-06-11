@@ -21,12 +21,6 @@ fn own() {
 }
 
 #[test]
-fn opt_level() {
-    let m = Manifest::from_slice(&read("tests/opt_level.toml").unwrap()).unwrap();
-    insta::assert_debug_snapshot!(m);
-}
-
-#[test]
 fn opt_version() {
     let m = Manifest::from_path("tests/opt_version.toml").expect("load metadata");
     insta::assert_debug_snapshot!(m);

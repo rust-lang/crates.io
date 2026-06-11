@@ -267,5 +267,4 @@ Manifest {
             ),
         },
     ),
-    profile: None,
 }

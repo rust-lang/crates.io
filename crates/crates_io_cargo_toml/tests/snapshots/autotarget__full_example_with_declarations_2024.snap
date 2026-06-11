@@ -293,5 +293,4 @@ Manifest {
             ),
         },
     ),
-    profile: None,
 }
