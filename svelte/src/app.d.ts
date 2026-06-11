@@ -22,5 +22,4 @@ declare global {
   const __TEST__: boolean;
 }
 
-// eslint-disable-next-line unicorn/require-module-specifiers -- needed so `declare global` works
 export {};
