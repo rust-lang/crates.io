@@ -136,7 +136,7 @@
             - /url: https://github.com/livioribeiro/rusted-cypher
         - listitem:
           - link "Documentation":
-            - /url: http://livioribeiro.github.io/rusted_cypher/rusted_cypher/
+            - /url: https://livioribeiro.github.io/rusted_cypher/rusted_cypher/
         - listitem:
           - link "Repository":
             - /url: https://github.com/livioribeiro/rusted-cypher
@@ -156,7 +156,7 @@
       - list:
         - listitem:
           - link "Documentation":
-            - /url: http://ogeon.github.io/docs/rustful/master/rustful/index.html
+            - /url: https://ogeon.github.io/docs/rustful/master/rustful/index.html
         - listitem:
           - link "Repository":
             - /url: https://github.com/Ogeon/rustful
