@@ -8061,13 +8061,13 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "typomania"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38f8c4efb88486b445b83759c6589b97a0fe4cf82bd36be336c164b49af13bef"
+checksum = "d38affe9145e7241f8ae34880cd791b6a63676d30a53d8084db4774dff7e7840"
 dependencies = [
  "bitflip",
- "itertools 0.11.0",
- "thiserror 1.0.69",
+ "itertools 0.14.0",
+ "thiserror 2.0.18",
  "tracing",
 ]
 
