@@ -11,7 +11,6 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tokio::fs;
 use tracing::{error, info, instrument, warn};
 
 #[derive(Serialize, Deserialize)]
@@ -87,10 +86,7 @@ impl BackgroundJob for GenerateOgImage {
         };
 
         // Generate the OG image
-        let temp_file = option.generate(og_data).await?;
-
-        // Read the generated image
-        let image_bytes = fs::read(temp_file.path()).await?;
+        let image_bytes = option.generate(og_data).await?;
 
         // Upload to storage
         ctx.storage

@@ -512,7 +512,9 @@ impl TestAppBuilder {
 
     pub fn with_og_image_generator(mut self) -> Self {
         let og_generator = OgImageGenerator::from_environment()
-            .expect("Failed to create OG image generator for tests");
+            .expect("Failed to create OG image generator for tests")
+            .with_oxipng();
+
         self.og_image_generator = Some(og_generator);
         self
     }

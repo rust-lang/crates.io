@@ -82,7 +82,7 @@ crates_io_github_app = { path = "crates/crates_io_github_app" }
 crates_io_index = { path = "crates/crates_io_index" }
 crates_io_linecount = { path = "crates/crates_io_linecount" }
 crates_io_markdown = { path = "crates/crates_io_markdown" }
-crates_io_og_image = "=0.2.3"
+crates_io_og_image = "=0.3.0"
 crates_io_pagerduty = { path = "crates/crates_io_pagerduty" }
 crates_io_real_ip = { path = "crates/crates_io_real_ip" }
 crates_io_session = { path = "crates/crates_io_session" }
