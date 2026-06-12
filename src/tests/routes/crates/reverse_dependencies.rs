@@ -29,6 +29,7 @@ async fn reverse_dependencies() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 
     // c1 has no dependent crates.
@@ -39,6 +40,7 @@ async fn reverse_dependencies() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -66,6 +68,7 @@ async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -93,6 +96,7 @@ async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -125,6 +129,7 @@ async fn prerelease_versions_not_included_in_reverse_dependencies() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -152,6 +157,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 
     use crates_io::schema::versions;
@@ -171,6 +177,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -217,6 +224,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -246,6 +254,7 @@ async fn reverse_dependencies_query_supports_u64_version_number_parts() {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 

@@ -1,0 +1,37 @@
+---
+source: src/tests/routes/private/crate_owner_invitations.rs
+expression: invitations
+---
+{
+  "invitations": [
+    {
+      "invitee_id": 2,
+      "inviter_id": 1,
+      "crate_id": 2,
+      "crate_name": "crate_2",
+      "created_at": "[datetime]",
+      "expires_at": "[datetime]"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "login": "foo",
+      "name": null,
+      "avatar": null,
+      "url": "https://github.com/foo",
+      "created_at": "[datetime]"
+    },
+    {
+      "id": 2,
+      "login": "invited_user",
+      "name": null,
+      "avatar": null,
+      "url": "https://github.com/invited_user",
+      "created_at": "[datetime]"
+    }
+  ],
+  "meta": {
+    "next_page": null
+  }
+}

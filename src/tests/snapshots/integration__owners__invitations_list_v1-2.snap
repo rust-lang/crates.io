@@ -1,0 +1,35 @@
+---
+source: src/tests/owners.rs
+expression: invitations
+---
+{
+  "crate_owner_invitations": [
+    {
+      "invitee_id": 2,
+      "inviter_id": 1,
+      "invited_by_username": "foo",
+      "crate_name": "invited_crate",
+      "crate_id": 1,
+      "created_at": "[datetime]",
+      "expires_at": "[datetime]"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "login": "foo",
+      "name": null,
+      "avatar": null,
+      "url": "https://github.com/foo",
+      "created_at": "[datetime]"
+    },
+    {
+      "id": 2,
+      "login": "invited_user",
+      "name": null,
+      "avatar": null,
+      "url": "https://github.com/invited_user",
+      "created_at": "[datetime]"
+    }
+  ]
+}

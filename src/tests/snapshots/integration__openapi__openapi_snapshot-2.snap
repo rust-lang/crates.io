@@ -107,6 +107,14 @@ expression: response.json()
               "null"
             ]
           },
+          "created_at": {
+            "description": "The date and time the user was created.\n\nFor users created before June 19, 2026, the creation time will be the\ntime the user's GitHub account was created. If the GitHub account was\ndeleted before June 19, 2026, this field will be empty.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "email": {
             "description": "The user's email address, if set.",
             "example": "kate@morgan.dev",
@@ -950,6 +958,14 @@ expression: response.json()
           "avatar": {
             "description": "The user's avatar URL, if set.",
             "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "description": "The date and time the user was created.\n\nFor users created before June 19, 2026, the creation time will be the\ntime the user's GitHub account was created. If the GitHub account was\ndeleted before June 19, 2026, this field will be empty.",
+            "format": "date-time",
             "type": [
               "string",
               "null"

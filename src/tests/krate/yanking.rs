@@ -248,7 +248,9 @@ async fn patch_version_yank_unyank() {
         assert_json_snapshot!(json, {
             ".version.created_at" => "[datetime]",
             ".version.updated_at" => "[datetime]",
+            ".version.published_by.created_at" => "[datetime]",
             ".version.audit_actions[].time" => "[datetime]",
+            ".version.audit_actions[].user.created_at" => "[datetime]",
         });
     };
 

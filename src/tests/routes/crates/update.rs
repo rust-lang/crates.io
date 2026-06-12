@@ -48,6 +48,7 @@ async fn test_enable_trustpub_only() {
         ".crate.updated_at" => "[datetime]",
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 
     assert_snapshot!(app.emails_snapshot().await);
@@ -99,6 +100,7 @@ async fn test_disable_trustpub_only() {
         ".crate.updated_at" => "[datetime]",
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 
     assert_snapshot!(app.emails_snapshot().await);

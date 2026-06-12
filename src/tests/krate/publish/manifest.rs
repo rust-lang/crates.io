@@ -43,8 +43,10 @@ async fn boolean_readme() {
         ".version.id" => any_id_redaction(),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
+        ".version.published_by.created_at" => "[datetime]",
         ".version.published_by.id" => id_redaction(token.as_model().user_id),
         ".version.audit_actions[].time" => "[datetime]",
+        ".version.audit_actions[].user.created_at" => "[datetime]",
         ".version.audit_actions[].user.id" => id_redaction(token.as_model().user_id),
     });
 }
@@ -201,8 +203,10 @@ async fn test_lib_and_bin_crate() {
         ".version.id" => any_id_redaction(),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
+        ".version.published_by.created_at" => "[datetime]",
         ".version.published_by.id" => id_redaction(token.as_model().user_id),
         ".version.audit_actions[].time" => "[datetime]",
+        ".version.audit_actions[].user.created_at" => "[datetime]",
         ".version.audit_actions[].user.id" => id_redaction(token.as_model().user_id),
     });
 

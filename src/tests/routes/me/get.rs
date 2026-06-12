@@ -28,7 +28,9 @@ async fn me() {
 
     let response = user.get::<()>("/api/v1/me").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_json_snapshot!(response.json());
+    assert_json_snapshot!(response.json(), {
+        ".user.created_at" => "[datetime]",
+    });
 
     CrateBuilder::new("foo_my_packages", user.as_model().id)
         .expect_build(&mut conn)
@@ -36,7 +38,9 @@ async fn me() {
 
     let response = user.get::<()>("/api/v1/me").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_json_snapshot!(response.json());
+    assert_json_snapshot!(response.json(), {
+        ".user.created_at" => "[datetime]",
+    });
 }
 
 #[tokio::test(flavor = "multi_thread")]

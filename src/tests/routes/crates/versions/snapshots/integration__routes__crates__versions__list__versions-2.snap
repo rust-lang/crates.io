@@ -69,6 +69,7 @@ expression: response.json()
       "num": "0.5.1",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,
@@ -109,6 +110,7 @@ expression: response.json()
       "num": "0.5.0",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,

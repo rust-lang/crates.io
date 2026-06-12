@@ -48,6 +48,7 @@ expression: response.json()
       "num": "1.0.18446744073709551615",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,

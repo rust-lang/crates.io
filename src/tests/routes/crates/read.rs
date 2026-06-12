@@ -44,6 +44,7 @@ async fn show() {
         ".keywords[].created_at" => "[datetime]",
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -102,6 +103,7 @@ async fn show_all_yanked() {
         ".keywords[].created_at" => "[datetime]",
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 }
 
@@ -207,6 +209,7 @@ async fn test_include_default_version() {
         ".crate.updated_at" => "[datetime]",
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 
     let resp_versions = anon

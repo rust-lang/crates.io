@@ -718,6 +718,13 @@ pub struct EncodablePrivateUser {
     /// Whether the user has opted in to receive publish notifications via email.
     #[schema(example = true)]
     pub publish_notifications: bool,
+
+    /// The date and time the user was created.
+    ///
+    /// For users created before June 19, 2026, the creation time will be the
+    /// time the user's GitHub account was created. If the GitHub account was
+    /// deleted before June 19, 2026, this field will be empty.
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 impl EncodablePrivateUser {
@@ -735,6 +742,7 @@ impl EncodablePrivateUser {
             gh_avatar,
             is_admin,
             publish_notifications,
+            created_at,
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
@@ -750,6 +758,7 @@ impl EncodablePrivateUser {
             url: Some(url),
             is_admin,
             publish_notifications,
+            created_at,
         }
     }
 }
@@ -776,6 +785,13 @@ pub struct EncodablePublicUser {
     /// The user's GitHub profile URL.
     #[schema(example = "https://github.com/ghost")]
     pub url: String,
+
+    /// The date and time the user was created.
+    ///
+    /// For users created before June 19, 2026, the creation time will be the
+    /// time the user's GitHub account was created. If the GitHub account was
+    /// deleted before June 19, 2026, this field will be empty.
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 /// Converts a `User` model into an `EncodablePublicUser` for JSON serialization.
@@ -786,6 +802,7 @@ impl From<User> for EncodablePublicUser {
             name,
             gh_login,
             gh_avatar,
+            created_at,
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
@@ -795,6 +812,7 @@ impl From<User> for EncodablePublicUser {
             login: gh_login,
             name,
             url,
+            created_at,
         }
     }
 }
@@ -1152,6 +1170,7 @@ mod tests {
                     name: None,
                     avatar: None,
                     url: String::new(),
+                    created_at: None,
                 },
                 time: NaiveDate::from_ymd_opt(2017, 1, 6)
                     .unwrap()
