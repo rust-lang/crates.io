@@ -30,9 +30,9 @@ fn master_ref(sha: &str) -> GitRef {
 /// Queue a one-shot `get_ref(refs/heads/master)` that returns `sha`.
 fn expect_get_master(mock: &mut MockGitHubClient, sha: &'static str) {
     mock.expect_get_ref()
-        .withf(|owner, repo, ref_name| owner == OWNER && repo == REPO && ref_name == MASTER_REF)
+        .withf(|owner, repo, ref_name, _| owner == OWNER && repo == REPO && ref_name == MASTER_REF)
         .times(1)
-        .returning(move |_, _, _| Ok(master_ref(sha)));
+        .returning(move |_, _, _, _| Ok(master_ref(sha)));
 }
 
 /// Queue a `get_commit(commit_sha)` that returns a commit pointing at `tree_sha`.
@@ -42,9 +42,9 @@ fn expect_get_commit(
     tree_sha: &'static str,
 ) {
     mock.expect_get_commit()
-        .withf(move |owner, repo, sha| owner == OWNER && repo == REPO && sha == commit_sha)
+        .withf(move |owner, repo, sha, _| owner == OWNER && repo == REPO && sha == commit_sha)
         .times(1)
-        .returning(move |_, _, _| {
+        .returning(move |_, _, _, _| {
             Ok(GitCommit {
                 sha: commit_sha.into(),
                 tree: GitObject {

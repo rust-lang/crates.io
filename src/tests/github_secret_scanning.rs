@@ -95,7 +95,7 @@ async fn insert_trustpub_token(
 fn github_mock() -> MockGitHubClient {
     let mut mock = MockGitHubClient::new();
 
-    mock.expect_public_keys().returning(|_, _| {
+    mock.expect_public_keys().returning(|_| {
         let key = GitHubPublicKey {
             key_identifier: KEY_IDENTIFIER.to_string(),
             key: PUBLIC_KEY.to_string(),

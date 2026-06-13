@@ -10,7 +10,7 @@ use crates_io_database::models::OwnerKind;
 use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
 use crates_io_database::schema::{crate_owners, emails, users};
-use crates_io_github::GitHubError;
+use crates_io_github::{GitHubAuth, GitHubError};
 use crates_io_trustpub::github::validation::{
     validate_environment, validate_owner, validate_repo, validate_workflow_filename,
 };
@@ -96,6 +96,7 @@ pub async fn create_trustpub_github_config(
         warn!("Failed to decrypt GitHub token for user {login}: {err}");
         server_error("Internal server error")
     })?;
+    let gh_auth = GitHubAuth::bearer(gh_auth);
 
     let github_user = match state.github.get_user(owner, &gh_auth).await {
         Ok(user) => user,

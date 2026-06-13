@@ -2,7 +2,7 @@ use crate::worker::Environment;
 use crate::worker::jobs::ArchiveIndexBranch;
 use anyhow::{Context, anyhow};
 use chrono::Utc;
-use crates_io_github::{CreateCommit, parse_github_slug};
+use crates_io_github::{CreateCommit, GitHubAuth, parse_github_slug};
 use crates_io_worker::BackgroundJob;
 use oauth2::AccessToken;
 use secrecy::ExposeSecret;
@@ -66,18 +66,22 @@ impl BackgroundJob for SquashIndex {
 
         let github = env.github.as_ref();
 
-        let original_head = github.get_ref(&owner, &repo, MASTER_REF).await?;
+        let original_head = github
+            .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
+            .await?;
         let original_sha = original_head.object.sha;
         info!("Read original HEAD: {original_sha}");
 
-        let original_commit = github.get_commit(&owner, &repo, &original_sha).await?;
+        let original_commit = github
+            .get_commit(&owner, &repo, &original_sha, &GitHubAuth::None)
+            .await?;
         let tree_sha = original_commit.tree.sha;
 
         let snapshot_branch = snapshot_branch_name();
         let message = squash_commit_message(&original_sha, &snapshot_branch);
 
         let token = index_sync_github_app.installation_token().await?;
-        let auth = AccessToken::new(token.expose_secret().into());
+        let auth = GitHubAuth::bearer(AccessToken::new(token.expose_secret().into()));
 
         let squash_start = Instant::now();
         let input = CreateCommit {
@@ -101,7 +105,9 @@ impl BackgroundJob for SquashIndex {
         // Best-effort drift check. GitHub has no CAS for refs, so the
         // `repository` queue is the real primary defense; this only
         // shrinks the race window.
-        let current_head = github.get_ref(&owner, &repo, MASTER_REF).await?;
+        let current_head = github
+            .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
+            .await?;
         if current_head.object.sha != original_sha {
             return Err(anyhow!(
                 "`{}` drifted during squash (was {original_sha}, now {})",

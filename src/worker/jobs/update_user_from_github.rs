@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use chrono::Utc;
-use crates_io_github::{GitHubError, GitHubUser};
+use crates_io_github::{GitHubAuth, GitHubError, GitHubUser};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -97,7 +97,9 @@ impl UpdateUserFromGithub {
             .gh_token_encryption
             .decrypt(&oauth_github.encrypted_token)?;
 
-        match github.current_user(&token).await {
+        let auth = GitHubAuth::bearer(token);
+
+        match github.current_user(&auth).await {
             Ok(github_user) => Ok(github_user),
             // If the user is not found, the account has been deleted. Update to the ghost
             // username.
@@ -131,15 +133,11 @@ impl UpdateUserFromGithub {
                         return Err(error);
                     };
 
-                    let token = AccessToken::new(
-                        sync_github_app
-                            .installation_token()
-                            .await?
-                            .expose_secret()
-                            .into(),
-                    );
+                    let token = sync_github_app.installation_token().await?;
+                    let token = AccessToken::new(token.expose_secret().into());
+                    let auth = GitHubAuth::bearer(token);
 
-                    match github.get_user_by_id(self.account_id, &token).await {
+                    match github.get_user_by_id(self.account_id, &auth).await {
                         Ok(github_user) => Ok(github_user),
                         Err(GitHubError::NotFound(_)) => Ok(self.ghost_user(oauth_github.user_id)),
                         // For any other error, stop and try this user again later.

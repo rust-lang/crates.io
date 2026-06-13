@@ -10,7 +10,7 @@ use axum::body::Bytes;
 use base64::{Engine, engine::general_purpose};
 use crates_io_database::models::OwnerKind;
 use crates_io_database::schema::trustpub_tokens;
-use crates_io_github::GitHubPublicKey;
+use crates_io_github::{GitHubAuth, GitHubPublicKey};
 use crates_io_trustpub::access_token::AccessToken;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -62,9 +62,11 @@ async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Boxed
     }
 
     // Fetch from GitHub API
-    let client_id = &state.config.gh_client_id;
-    let client_secret = state.config.gh_client_secret.secret();
-    let keys = state.github.public_keys(client_id, client_secret).await?;
+    let auth = GitHubAuth::basic(
+        state.config.gh_client_id.as_str(),
+        state.config.gh_client_secret.secret().clone(),
+    );
+    let keys = state.github.public_keys(&auth).await?;
 
     // Populate cache
     cache.keys.clone_from(&keys);
