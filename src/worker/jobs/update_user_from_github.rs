@@ -95,7 +95,7 @@ impl UpdateUserFromGithub {
             .gh_token_encryption
             .decrypt(&oauth_github.encrypted_token)?;
 
-        let auth = GitHubAuth::bearer(token.into_secret());
+        let auth = GitHubAuth::bearer(token);
 
         match github.current_user(&auth).await {
             Ok(github_user) => Ok(github_user),

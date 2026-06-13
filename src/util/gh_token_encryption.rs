@@ -1,7 +1,7 @@
 use aes_gcm::aead::{Aead, AeadCore, OsRng};
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
 use anyhow::{Context, Result};
-use oauth2::AccessToken;
+use secrecy::SecretString;
 
 /// A struct that encapsulates GitHub token encryption and decryption
 /// using AES-256-GCM.
@@ -68,7 +68,7 @@ impl GitHubTokenEncryption {
     /// Decrypts a GitHub access token using AES-256-GCM
     ///
     /// Expects the data format: `[12-byte nonce][encrypted data]`
-    pub fn decrypt(&self, encrypted: &[u8]) -> Result<AccessToken> {
+    pub fn decrypt(&self, encrypted: &[u8]) -> Result<SecretString> {
         if encrypted.len() < 12 {
             anyhow::bail!("Invalid encrypted token: too short");
         }
@@ -86,7 +86,7 @@ impl GitHubTokenEncryption {
         let plaintext =
             String::from_utf8(plaintext).context("Decrypted token is not valid UTF-8")?;
 
-        Ok(AccessToken::new(plaintext))
+        Ok(plaintext.into())
     }
 }
 
@@ -96,6 +96,7 @@ mod tests {
     use aes_gcm::{Key, KeyInit};
     use claims::{assert_err, assert_ok};
     use insta::assert_snapshot;
+    use secrecy::ExposeSecret;
 
     fn create_test_encryption() -> GitHubTokenEncryption {
         let key = Key::<Aes256Gcm>::from_slice(b"test_master_key_32_bytes_long!!!");
@@ -114,7 +115,7 @@ mod tests {
         // Decrypt it back
         let decrypted = assert_ok!(encryption.decrypt(&encrypted));
 
-        assert_eq!(original_token, decrypted.secret());
+        assert_eq!(original_token, decrypted.expose_secret());
     }
 
     #[test]
@@ -133,8 +134,8 @@ mod tests {
         let decrypted1 = assert_ok!(encryption.decrypt(&encrypted1));
         let decrypted2 = assert_ok!(encryption.decrypt(&encrypted2));
 
-        assert_eq!(decrypted1.secret(), decrypted2.secret());
-        assert_eq!(decrypted1.secret(), token);
+        assert_eq!(decrypted1.expose_secret(), decrypted2.expose_secret());
+        assert_eq!(decrypted1.expose_secret(), token);
     }
 
     #[test]
@@ -171,6 +172,6 @@ mod tests {
 
         // But encryption1 should still work
         let decrypted = assert_ok!(encryption1.decrypt(&encrypted));
-        assert_eq!(decrypted.secret(), token);
+        assert_eq!(decrypted.expose_secret(), token);
     }
 }
