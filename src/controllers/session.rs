@@ -9,7 +9,7 @@ use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
-use crates_io_github::GitHubUser;
+use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -124,7 +124,8 @@ pub async fn authorize_session(
     })?;
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = app.github.current_user(token).await?;
+    let auth = GitHubAuth::bearer(token.clone());
+    let ghuser = app.github.current_user(&auth).await?;
 
     let mut conn = app.db_write().await?;
     let user_id = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use crates_io_github::{GitHubClient, RealGitHubClient, parse_github_slug};
+use crates_io_github::{GitHubAuth, GitHubClient, RealGitHubClient, parse_github_slug};
 use reqwest::Client;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -28,9 +28,10 @@ async fn main() -> Result<()> {
     let ref_name = format!("refs/heads/{}", opts.branch);
 
     let client = RealGitHubClient::new(Client::new());
-    let git_ref = client.get_ref(&owner, &repo, &ref_name).await?;
+    let auth = GitHubAuth::None;
+    let git_ref = client.get_ref(&owner, &repo, &ref_name, &auth).await?;
     let commit = client
-        .get_commit(&owner, &repo, &git_ref.object.sha)
+        .get_commit(&owner, &repo, &git_ref.object.sha, &auth)
         .await?;
 
     println!("ref:      {}", git_ref.ref_name);
