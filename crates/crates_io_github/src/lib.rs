@@ -7,7 +7,6 @@ mod slug;
 
 pub use crate::slug::{ParseSlugError, parse_github_slug};
 
-use oauth2::AccessToken;
 use reqwest::{self, RequestBuilder, header};
 
 use secrecy::{ExposeSecret, SecretString};
@@ -33,7 +32,7 @@ pub enum GitHubAuth {
     /// repositories where the unauthenticated rate limit is sufficient.
     None,
     /// OAuth/installation bearer token authentication.
-    Bearer { token: AccessToken },
+    Bearer { token: SecretString },
     /// HTTP basic authentication, used for the secret-scanning public key
     /// endpoint where the OAuth client id/secret act as the credentials.
     Basic {
@@ -45,8 +44,10 @@ pub enum GitHubAuth {
 impl GitHubAuth {
     /// Creates a [`GitHubAuth::Bearer`] authentication mode from a bearer
     /// token.
-    pub fn bearer(token: AccessToken) -> Self {
-        GitHubAuth::Bearer { token }
+    pub fn bearer(token: impl Into<SecretString>) -> Self {
+        GitHubAuth::Bearer {
+            token: token.into(),
+        }
     }
 
     /// Creates an [`GitHubAuth::Basic`] authentication mode from a username
@@ -62,7 +63,7 @@ impl GitHubAuth {
     fn apply(&self, request: RequestBuilder) -> RequestBuilder {
         match self {
             GitHubAuth::None => request,
-            GitHubAuth::Bearer { token } => request.bearer_auth(token.secret()),
+            GitHubAuth::Bearer { token } => request.bearer_auth(token.expose_secret()),
             GitHubAuth::Basic { username, password } => {
                 request.basic_auth(username, Some(password.expose_secret()))
             }
@@ -572,7 +573,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = GitHubAuth::bearer(AccessToken::new("test-token".into()));
+        let auth = GitHubAuth::bearer("test-token");
         let user = client.get_user("johnnydee", &auth).await.unwrap();
 
         assert_eq!(user.login, "johnnydee");
@@ -690,7 +691,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = GitHubAuth::bearer(AccessToken::new("test-token".into()));
+        let auth = GitHubAuth::bearer("test-token");
         let parents = [parent];
         let input = CreateCommit {
             message: "collapse",
@@ -737,7 +738,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = GitHubAuth::bearer(AccessToken::new("test-token".into()));
+        let auth = GitHubAuth::bearer("test-token");
 
         let got = client
             .create_ref("rust-lang", "crates.io-index", ref_name, sha, &auth)
@@ -780,7 +781,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = GitHubAuth::bearer(AccessToken::new("test-token".into()));
+        let auth = GitHubAuth::bearer("test-token");
 
         let got = client
             .update_ref(
@@ -832,7 +833,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = GitHubAuth::bearer(AccessToken::new("test-token".into()));
+        let auth = GitHubAuth::bearer("test-token");
         let user = client.get_user("johnnydee", &auth).await.unwrap();
 
         assert_eq!(user.login, "johnnydee");

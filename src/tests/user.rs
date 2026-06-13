@@ -12,6 +12,7 @@ use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
+use secrecy::ExposeSecret;
 use serde_json::json;
 
 impl crate::util::MockCookieUser {
@@ -51,7 +52,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
 
     assert_eq!(user.gh_login, "bar");
     let decrypted_token = encryption.decrypt(&user.gh_encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "bar_token");
+    assert_eq!(decrypted_token.expose_secret(), "bar_token");
 
     Ok(())
 }
@@ -334,7 +335,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     assert_eq!(oauth_github.login, u.gh_login);
     assert!(oauth_github.avatar.is_none());
     let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "some random token");
+    assert_eq!(decrypted_token.expose_secret(), "some random token");
 
     // Log in again with the same gh_id but different login, avatar, and token; these should get
     // updated in the `oauth_github` table as well.
@@ -360,7 +361,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
         "http://example.com/icon.png"
     );
     let decrypted_token = encryption.decrypt(&oauth_github.encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "a different token");
+    assert_eq!(decrypted_token.expose_secret(), "a different token");
 
     // Now that the user has renamed their account on GitHub, someone else can claim it and log in
     // to crates.io with it (with a different GitHub ID)
@@ -391,7 +392,7 @@ async fn also_write_to_oauth_github() -> anyhow::Result<()> {
     assert_eq!(additional_user_oauth_github.login, u.gh_login);
     assert!(additional_user_oauth_github.avatar.is_none());
     let decrypted_token = encryption.decrypt(&additional_user_oauth_github.encrypted_token)?;
-    assert_eq!(decrypted_token.secret(), "a different random token");
+    assert_eq!(decrypted_token.expose_secret(), "a different random token");
 
     Ok(())
 }

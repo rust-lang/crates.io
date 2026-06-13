@@ -9,8 +9,6 @@ use crates_io_github::{GitHubAuth, GitHubError, GitHubUser};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use oauth2::AccessToken;
-use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -134,7 +132,6 @@ impl UpdateUserFromGithub {
                     };
 
                     let token = sync_github_app.installation_token().await?;
-                    let token = AccessToken::new(token.expose_secret().into());
                     let auth = GitHubAuth::bearer(token);
 
                     match github.get_user_by_id(self.account_id, &auth).await {

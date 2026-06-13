@@ -1871,7 +1871,6 @@ dependencies = [
  "clap",
  "mockall",
  "mockito",
- "oauth2",
  "reqwest 0.13.4",
  "secrecy",
  "serde",
