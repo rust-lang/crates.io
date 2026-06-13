@@ -1,8 +1,7 @@
 use anyhow::Result;
 use crates_io_github::{GitHubAuth, GitHubClient, RealGitHubClient};
-use oauth2::AccessToken;
 use reqwest::Client;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -82,7 +81,7 @@ enum Request {
 impl AuthArgs {
     fn into_auth(self) -> GitHubAuth {
         if let Some(access_token) = self.access_token {
-            GitHubAuth::bearer(AccessToken::new(access_token.expose_secret().into()))
+            GitHubAuth::bearer(access_token)
         } else if let (Some(username), Some(password)) = (self.client_id, self.client_secret) {
             GitHubAuth::basic(username, password)
         } else if let (Some(username), Some(password)) = (self.username, self.password) {

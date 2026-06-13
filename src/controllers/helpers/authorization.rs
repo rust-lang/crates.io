@@ -32,7 +32,7 @@ impl Rights {
             .decrypt(&user.gh_encrypted_token)
             .map_err(GitHubError::Other)?;
 
-        let auth = GitHubAuth::bearer(token);
+        let auth = GitHubAuth::bearer(token.into_secret());
 
         let mut best = Self::None;
         for owner in owners {

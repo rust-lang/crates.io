@@ -4,8 +4,6 @@ use anyhow::{Context, anyhow};
 use chrono::Utc;
 use crates_io_github::{CreateCommit, GitHubAuth, parse_github_slug};
 use crates_io_worker::BackgroundJob;
-use oauth2::AccessToken;
-use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::sync::Arc;
@@ -81,7 +79,7 @@ impl BackgroundJob for SquashIndex {
         let message = squash_commit_message(&original_sha, &snapshot_branch);
 
         let token = index_sync_github_app.installation_token().await?;
-        let auth = GitHubAuth::bearer(AccessToken::new(token.expose_secret().into()));
+        let auth = GitHubAuth::bearer(token);
 
         let squash_start = Instant::now();
         let input = CreateCommit {

@@ -96,7 +96,7 @@ pub async fn create_trustpub_github_config(
         warn!("Failed to decrypt GitHub token for user {login}: {err}");
         server_error("Internal server error")
     })?;
-    let gh_auth = GitHubAuth::bearer(gh_auth);
+    let gh_auth = GitHubAuth::bearer(gh_auth.into_secret());
 
     let github_user = match state.github.get_user(owner, &gh_auth).await {
         Ok(user) => user,

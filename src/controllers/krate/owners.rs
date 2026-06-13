@@ -447,7 +447,7 @@ pub async fn create_or_update_github_team(
             )
         })?;
 
-    let auth = GitHubAuth::bearer(token);
+    let auth = GitHubAuth::bearer(token.into_secret());
     let team = gh_client.team_by_name(org_name, team_name, &auth).await
         .map_err(|_| {
             bad_request(format_args!(

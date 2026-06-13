@@ -124,7 +124,7 @@ pub async fn authorize_session(
     })?;
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
-    let auth = GitHubAuth::bearer(token.clone());
+    let auth = GitHubAuth::bearer(token.secret().clone());
     let ghuser = app.github.current_user(&auth).await?;
 
     let mut conn = app.db_write().await?;
