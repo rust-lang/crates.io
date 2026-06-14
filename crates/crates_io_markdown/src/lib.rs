@@ -88,6 +88,7 @@ impl<'a> MarkdownRenderer<'a> {
         let extension_options = options::Extension::builder()
             .alerts(true)
             .autolink(true)
+            .description_lists(true)
             .multiline_block_quotes(true)
             .strikethrough(true)
             .table(true)
@@ -644,6 +645,19 @@ There can also be some text in between!
     fn tables_with_rowspan_and_colspan() {
         let text = "<table><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></table>\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r#"<table><tbody><tr><th rowspan="1" colspan="2">Target</th></tr></tbody></table>"#);
+    }
+
+    #[test]
+    fn definition_lists() {
+        let text = "First term\n: First definition\n\nSecond term\n: Second definition\n";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <dl>
+        <dt>First term</dt>
+        <dd>First definition</dd>
+        <dt>Second term</dt>
+        <dd>Second definition</dd>
+        </dl>
+        "#);
     }
 
     #[test]
