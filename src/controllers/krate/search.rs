@@ -32,6 +32,10 @@ use crate::util::no_store;
 use crate::util::string_excl_null::StringExclNull;
 use crates_io_database::fns::{array_agg, canon_crate_name, lower};
 
+/// The maximum number of crates that are ranked by relevance for a search
+/// query (see [`FilterParams::relevance_candidate_ids`]).
+const RELEVANCE_CANDIDATE_LIMIT: i64 = 1000;
+
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ListResponse {
     crates: Vec<EncodableCrate>,
@@ -61,6 +65,9 @@ pub struct ListMeta {
 /// - Alphabetical listing of crates
 /// - List of crates under a specific owner
 /// - Listing a user's followed crates
+///
+/// When sorting by relevance, only the first 1000 results can be accessed, even
+/// though `meta.total` may report a higher number of matching crates.
 #[utoipa::path(
     get,
     path = "/api/v1/crates",
@@ -136,6 +143,16 @@ pub async fn list_crates(
         query = query.order(Crate::with_name(q_string).desc());
 
         if sort == "relevance" {
+            // Ranking every crate that matches the query is prohibitively
+            // expensive for short or common terms (see
+            // `relevance_candidate_ids`), so we restrict the ranking to a
+            // bounded set of the most promising candidates. Results beyond this
+            // set are intentionally not reachable when sorting by relevance.
+            let candidate_ids = filter_params
+                .relevance_candidate_ids(&mut conn, RELEVANCE_CANDIDATE_LIMIT)
+                .await?;
+            query = query.filter(crates::id.eq_any(candidate_ids));
+
             let q = plainto_tsquery_with_search_config(TsConfigurationByName("english"), q_string);
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.select((
@@ -203,6 +220,19 @@ pub async fn list_crates(
         .gather(&req)?;
 
     let explicit_page = matches!(pagination.page, Page::Numeric(_));
+
+    // When sorting by relevance only the first `RELEVANCE_CANDIDATE_LIMIT`
+    // results are reachable, so reject explicit pages that start beyond it
+    // instead of returning an empty page. Seek pagination needs no equivalent:
+    // it stops handing out keys once it reaches the boundary.
+    if matches!(seek, Some(Seek::Relevance))
+        && let Some(offset) = pagination.offset()
+        && offset >= RELEVANCE_CANDIDATE_LIMIT
+    {
+        return Err(bad_request(format!(
+            "Cannot page beyond the first {RELEVANCE_CANDIDATE_LIMIT} results when sorting by relevance. Please take a look at https://crates.io/data-access for alternatives."
+        )));
+    }
 
     // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
     // not been provided. This way clients relying on meta.next_page will use the faster seek-based
@@ -489,6 +519,35 @@ impl FilterParams {
         }
 
         query
+    }
+
+    /// Returns the ids of the crates to rank by relevance for the search query.
+    ///
+    /// Ranking every match with `ts_rank_cd` is too expensive for short or
+    /// common terms, which match a large fraction of crates each with a large,
+    /// TOAST-ed `tsvector`. Instead we rank only the `limit` matches with the
+    /// most recent downloads, plus any exact name match regardless of its
+    /// download count.
+    async fn relevance_candidate_ids(
+        &self,
+        conn: &mut AsyncPgConnection,
+        limit: i64,
+    ) -> AppResult<Vec<i32>> {
+        let q_string = self.q_string.as_ref().expect("q_string should not be None");
+        let ids = self
+            .make_query()
+            .left_join(recent_crate_downloads::table)
+            .select(crates::id)
+            .order((
+                Crate::with_name(q_string.as_str()).desc(),
+                recent_crate_downloads::downloads.desc().nulls_last(),
+                crates::id,
+            ))
+            .limit(limit)
+            .load::<i32>(conn)
+            .await?;
+
+        Ok(ids)
     }
 
     fn seek_after(&self, seek_payload: &seek::SeekPayload) -> BoxedCondition<'_> {

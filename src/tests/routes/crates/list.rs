@@ -343,12 +343,13 @@ async fn insert_popular_widget_matches(conn: &mut diesel_async::AsyncPgConnectio
         .unwrap();
 }
 
-/// Relevance ranking surfaces the most textually relevant crate first, even
-/// when it has far fewer recent downloads than the other matches.
+/// A more textually relevant crate that is not among the most-downloaded
+/// matches is excluded from relevance results, since ranking is bounded to the
+/// most-downloaded candidates.
 #[tokio::test(flavor = "multi_thread")]
-async fn relevance_search_ranks_most_relevant_crate_first() -> anyhow::Result<()> {
-    // A large field of equally-relevant matches for the more relevant crate
-    // below to be ranked ahead of.
+async fn relevance_search_is_bounded_to_most_downloaded_candidates() -> anyhow::Result<()> {
+    // More matches than RELEVANCE_CANDIDATE_LIMIT (1000), so the least
+    // downloaded matches fall outside the candidate set.
     const POPULAR_MATCH_COUNT: i64 = 1111;
 
     let (app, anon, user) = TestApp::init().with_user().await;
@@ -357,7 +358,8 @@ async fn relevance_search_ranks_most_relevant_crate_first() -> anyhow::Result<()
 
     insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
 
-    // Higher text relevance, but no recent downloads.
+    // Higher text relevance, but no recent downloads, so it falls outside the
+    // candidate set.
     CrateBuilder::new("relevant_widget", user.id)
         .description("widget widget widget")
         .recent_downloads(0)
@@ -369,7 +371,6 @@ async fn relevance_search_ranks_most_relevant_crate_first() -> anyhow::Result<()
     let crate_names = json.crates.into_iter().map(|c| c.name).collect::<Vec<_>>();
     assert_debug_snapshot!(crate_names, @r#"
     [
-        "relevant_widget",
         "filler_widget_1111",
         "filler_widget_1110",
         "filler_widget_1109",
@@ -379,6 +380,7 @@ async fn relevance_search_ranks_most_relevant_crate_first() -> anyhow::Result<()
         "filler_widget_1105",
         "filler_widget_1104",
         "filler_widget_1103",
+        "filler_widget_1102",
     ]
     "#);
 
@@ -420,6 +422,32 @@ async fn relevance_search_always_includes_exact_name_match() -> anyhow::Result<(
         "filler_widget_1103",
     ]
     "#);
+
+    Ok(())
+}
+
+/// Requesting an explicit page beyond the bounded candidate set returns an
+/// error instead of a silently empty page. Seek pagination has no equivalent
+/// guard because it stops handing out keys once it reaches the boundary.
+#[tokio::test(flavor = "multi_thread")]
+async fn relevance_search_rejects_paging_beyond_candidate_limit() -> anyhow::Result<()> {
+    const POPULAR_MATCH_COUNT: i64 = 1111;
+
+    let (app, anon, _user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
+
+    // The last page within the candidate limit still succeeds.
+    let json = anon.search("q=widget&per_page=100&page=10").await;
+    assert_eq!(json.crates.len(), 100);
+
+    // The next page would start beyond the candidate limit and is rejected.
+    let response = anon
+        .get_with_query::<()>("/api/v1/crates", "q=widget&per_page=100&page=11")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Cannot page beyond the first 1000 results when sorting by relevance. Please take a look at https://crates.io/data-access for alternatives."}]}"#);
 
     Ok(())
 }
