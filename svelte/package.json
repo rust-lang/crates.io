@@ -52,7 +52,7 @@
     "@sveltejs/enhanced-img": "0.10.4",
     "@sveltejs/kit": "2.64.0",
     "@sveltejs/vite-plugin-svelte": "7.1.2",
-    "@types/node": "24.13.1",
+    "@types/node": "24.13.2",
     "@types/semver": "7.7.1",
     "@unocss/preset-icons": "66.7.0",
     "@unocss/transformer-directives": "66.7.0",
