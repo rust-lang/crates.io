@@ -2,14 +2,14 @@ use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::{new_category, new_user};
 use crates_io::models::Category;
-use crates_io::schema::crates;
+use crates_io::schema::{crates, version_downloads, versions};
 use crates_io_database::schema::categories;
 use diesel::sql_types::Timestamptz;
 use diesel::{dsl::*, prelude::*, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::{assert_json_snapshot, assert_snapshot};
+use insta::{assert_debug_snapshot, assert_json_snapshot, assert_snapshot};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -275,6 +275,151 @@ async fn exact_match_first_on_queries() -> anyhow::Result<()> {
         assert_eq!(json.crates[1].name, "bar-exact");
         assert_eq!(json.crates[2].name, "foo_exact");
     }
+
+    Ok(())
+}
+
+/// Inserts `count` crates that all match a search for `widget` (via their
+/// description). Each crate gets a distinct recent-download count equal to its
+/// index, so the most-downloaded candidates are unambiguous. Names are
+/// zero-padded so that lexical and numeric order match.
+async fn insert_popular_widget_matches(conn: &mut diesel_async::AsyncPgConnection, count: i64) {
+    let new_crates = (1..=count)
+        .map(|i| {
+            (
+                crates::name.eq(format!("filler_widget_{i:04}")),
+                crates::description.eq("widget"),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let crate_ids: Vec<i32> = insert_into(crates::table)
+        .values(new_crates)
+        .returning(crates::id)
+        .get_results(conn)
+        .await
+        .unwrap();
+
+    let new_versions = crate_ids
+        .iter()
+        .map(|&crate_id| {
+            (
+                versions::crate_id.eq(crate_id),
+                versions::num.eq("1.0.0"),
+                versions::num_no_build.eq("1.0.0"),
+                versions::crate_size.eq(0),
+                versions::checksum.eq("0".repeat(64)),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let version_ids: Vec<i32> = insert_into(versions::table)
+        .values(new_versions)
+        .returning(versions::id)
+        .get_results(conn)
+        .await
+        .unwrap();
+
+    let new_downloads = version_ids
+        .iter()
+        .zip(1..=count)
+        .map(|(&version_id, i)| {
+            (
+                version_downloads::version_id.eq(version_id),
+                version_downloads::downloads.eq(i as i32),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    insert_into(version_downloads::table)
+        .values(new_downloads)
+        .execute(conn)
+        .await
+        .unwrap();
+
+    diesel::sql_query("REFRESH MATERIALIZED VIEW recent_crate_downloads")
+        .execute(conn)
+        .await
+        .unwrap();
+}
+
+/// Relevance ranking surfaces the most textually relevant crate first, even
+/// when it has far fewer recent downloads than the other matches.
+#[tokio::test(flavor = "multi_thread")]
+async fn relevance_search_ranks_most_relevant_crate_first() -> anyhow::Result<()> {
+    // A large field of equally-relevant matches for the more relevant crate
+    // below to be ranked ahead of.
+    const POPULAR_MATCH_COUNT: i64 = 1111;
+
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
+
+    // Higher text relevance, but no recent downloads.
+    CrateBuilder::new("relevant_widget", user.id)
+        .description("widget widget widget")
+        .recent_downloads(0)
+        .expect_build(&mut conn)
+        .await;
+
+    let json = anon.search("q=widget").await;
+    assert_eq!(json.meta.total as i64, POPULAR_MATCH_COUNT + 1);
+    let crate_names = json.crates.into_iter().map(|c| c.name).collect::<Vec<_>>();
+    assert_debug_snapshot!(crate_names, @r#"
+    [
+        "relevant_widget",
+        "filler_widget_0001",
+        "filler_widget_0002",
+        "filler_widget_0003",
+        "filler_widget_0004",
+        "filler_widget_0005",
+        "filler_widget_0006",
+        "filler_widget_0007",
+        "filler_widget_0008",
+        "filler_widget_0009",
+    ]
+    "#);
+
+    Ok(())
+}
+
+/// An exact name match is always ranked, and ranked first, even with no
+/// downloads and many more popular matches.
+#[tokio::test(flavor = "multi_thread")]
+async fn relevance_search_always_includes_exact_name_match() -> anyhow::Result<()> {
+    const POPULAR_MATCH_COUNT: i64 = 1111;
+
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
+
+    // Exact name match, but without any recent downloads.
+    CrateBuilder::new("widget", user.id)
+        .recent_downloads(0)
+        .expect_build(&mut conn)
+        .await;
+
+    let json = anon.search("q=widget").await;
+    assert_eq!(json.meta.total as i64, POPULAR_MATCH_COUNT + 1);
+    let crate_names = json.crates.into_iter().map(|c| c.name).collect::<Vec<_>>();
+    assert_debug_snapshot!(crate_names, @r#"
+    [
+        "widget",
+        "filler_widget_0001",
+        "filler_widget_0002",
+        "filler_widget_0003",
+        "filler_widget_0004",
+        "filler_widget_0005",
+        "filler_widget_0006",
+        "filler_widget_0007",
+        "filler_widget_0008",
+        "filler_widget_0009",
+    ]
+    "#);
 
     Ok(())
 }
