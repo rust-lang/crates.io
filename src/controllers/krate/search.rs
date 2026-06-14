@@ -149,7 +149,12 @@ pub async fn list_crates(
                 default_versions::num_versions.nullable(),
             ));
             seek = Some(Seek::Relevance);
-            query = query.then_order_by(rank.desc())
+            // Within equal relevance, prefer the more popular crate. Common
+            // terms produce many ties on `ts_rank_cd`, so without this the top
+            // results would be ordered alphabetically by name.
+            query = query
+                .then_order_by(rank.desc())
+                .then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
         } else {
             query = query.select((
                 ALL_COLUMNS,
@@ -617,14 +622,24 @@ impl FilterParams {
             SeekPayload::Relevance(Relevance {
                 exact_match: exact,
                 rank: rank_in,
+                recent_downloads,
                 id,
             }) => {
                 // Equivalent of:
+                // for recent_downloads is not None:
                 // ```
-                // WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
+                // WHERE (exact_match = exact_match' AND rank = rank' AND recent_downloads = recent_downloads' AND name > name')
+                //      OR (exact_match = exact_match' AND rank = rank' AND (recent_downloads < recent_downloads' OR recent_downloads IS NULL))
                 //      OR (exact_match = exact_match' AND rank < rank')
                 //      OR exact_match < exact_match'
-                // ORDER BY exact_match DESC, rank DESC, name ASC
+                // ORDER BY exact_match DESC, rank DESC, recent_downloads DESC NULLS LAST, name ASC
+                // ```
+                // for recent_downloads is None:
+                // ```
+                // WHERE (exact_match = exact_match' AND rank = rank' AND recent_downloads IS NULL AND name > name')
+                //      OR (exact_match = exact_match' AND rank < rank')
+                //      OR exact_match < exact_match'
+                // ORDER BY exact_match DESC, rank DESC, recent_downloads DESC NULLS LAST, name ASC
                 // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let q = plainto_tsquery_with_search_config(
@@ -633,17 +648,44 @@ impl FilterParams {
                 );
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 let name_exact_match = Crate::with_name(q_string.as_str());
-                vec![
-                    Box::new(
-                        name_exact_match
-                            .eq(exact)
-                            .and(rank.eq(rank_in))
-                            .and(crates::name.nullable().gt(crate_name_by_id(id)))
-                            .nullable(),
-                    ),
-                    Box::new(name_exact_match.eq(exact).and(rank.lt(rank_in)).nullable()),
+                let downloads = recent_crate_downloads::downloads;
+
+                let mut conditions: Vec<BoxedCondition<'_>> = vec![
                     Box::new(name_exact_match.lt(exact).nullable()),
-                ]
+                    Box::new(name_exact_match.eq(exact).and(rank.lt(rank_in)).nullable()),
+                ];
+                // Break the exact-match/rank tie by recent downloads
+                // (DESC NULLS LAST), then by name.
+                match recent_downloads {
+                    Some(dl) => {
+                        conditions.push(Box::new(
+                            name_exact_match
+                                .eq(exact)
+                                .and(rank.eq(rank_in))
+                                .and(downloads.lt(dl).or(downloads.is_null()))
+                                .nullable(),
+                        ));
+                        conditions.push(Box::new(
+                            name_exact_match
+                                .eq(exact)
+                                .and(rank.eq(rank_in))
+                                .and(downloads.eq(dl))
+                                .and(crates::name.nullable().gt(crate_name_by_id(id)))
+                                .nullable(),
+                        ));
+                    }
+                    None => {
+                        conditions.push(Box::new(
+                            name_exact_match
+                                .eq(exact)
+                                .and(rank.eq(rank_in))
+                                .and(downloads.is_null())
+                                .and(crates::name.nullable().gt(crate_name_by_id(id)))
+                                .nullable(),
+                        ));
+                    }
+                }
+                conditions
             }
         };
 
@@ -698,6 +740,7 @@ mod seek {
             Relevance {
                 exact_match: bool,
                 rank: f32,
+                recent_downloads: Option<i64>,
                 id: i32,
             },
         }
@@ -726,6 +769,7 @@ mod seek {
                 Seek::Relevance => SeekPayload::Relevance(Relevance {
                     exact_match,
                     rank,
+                    recent_downloads,
                     id,
                 }),
             }

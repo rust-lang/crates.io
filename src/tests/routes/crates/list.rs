@@ -370,15 +370,15 @@ async fn relevance_search_ranks_most_relevant_crate_first() -> anyhow::Result<()
     assert_debug_snapshot!(crate_names, @r#"
     [
         "relevant_widget",
-        "filler_widget_0001",
-        "filler_widget_0002",
-        "filler_widget_0003",
-        "filler_widget_0004",
-        "filler_widget_0005",
-        "filler_widget_0006",
-        "filler_widget_0007",
-        "filler_widget_0008",
-        "filler_widget_0009",
+        "filler_widget_1111",
+        "filler_widget_1110",
+        "filler_widget_1109",
+        "filler_widget_1108",
+        "filler_widget_1107",
+        "filler_widget_1106",
+        "filler_widget_1105",
+        "filler_widget_1104",
+        "filler_widget_1103",
     ]
     "#);
 
@@ -409,15 +409,15 @@ async fn relevance_search_always_includes_exact_name_match() -> anyhow::Result<(
     assert_debug_snapshot!(crate_names, @r#"
     [
         "widget",
-        "filler_widget_0001",
-        "filler_widget_0002",
-        "filler_widget_0003",
-        "filler_widget_0004",
-        "filler_widget_0005",
-        "filler_widget_0006",
-        "filler_widget_0007",
-        "filler_widget_0008",
-        "filler_widget_0009",
+        "filler_widget_1111",
+        "filler_widget_1110",
+        "filler_widget_1109",
+        "filler_widget_1108",
+        "filler_widget_1107",
+        "filler_widget_1106",
+        "filler_widget_1105",
+        "filler_widget_1104",
+        "filler_widget_1103",
     ]
     "#);
 
@@ -577,15 +577,15 @@ async fn index_sorting() -> anyhow::Result<()> {
     assert_eq!(calls, 5);
 
     // Sort by relevance
-    // ordering (exact match desc, rank desc, name asc)
+    // ordering (exact match desc, rank desc, recent downloads desc nulls last, name asc)
     let query = "q=foo_sort";
     let (resp, calls) = page_with_seek(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "foo_sort");
-        // same rank, by name asc
-        assert_eq!(resp[1].crates[0].name, "bar_sort");
-        assert_eq!(resp[2].crates[0].name, "baz_sort");
+        // same rank, by recent downloads desc (baz_sort 50, bar_sort 0)
+        assert_eq!(resp[1].crates[0].name, "baz_sort");
+        assert_eq!(resp[2].crates[0].name, "bar_sort");
     }
     assert_eq!(calls, 4);
     let ranks = querystring_rank(&mut conn, "foo_sort").await;
@@ -598,9 +598,9 @@ async fn index_sorting() -> anyhow::Result<()> {
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "foo_sort");
-        // same rank, by name asc
-        assert_eq!(resp[1].crates[0].name, "bar_sort");
-        assert_eq!(resp[2].crates[0].name, "baz_sort");
+        // same rank, by recent downloads desc (baz_sort 50, bar_sort 0)
+        assert_eq!(resp[1].crates[0].name, "baz_sort");
+        assert_eq!(resp[2].crates[0].name, "bar_sort");
     }
     assert_eq!(calls, 4);
     let ranks = querystring_rank(&mut conn, "foo%20sort").await;
