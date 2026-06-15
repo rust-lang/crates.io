@@ -279,6 +279,8 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
 ///   `batch_execute` can't run.
 /// - Lines starting with `\` (psql meta-commands like `\restrict`/
 ///   `\unrestrict`, emitted by `pg_dump` 17+) are stripped.
+/// - SETs for configuration that pg_dump 17+ emit that PostgreSQL 16 can't
+///   handle.
 /// - A trailing `RESET ALL` clears any session state the preamble's
 ///   `SET` / `set_config('search_path', …)` calls left behind so it
 ///   doesn't leak to the next checkout of the pooled connection.
@@ -311,6 +313,11 @@ fn capture_template_ddl(base_url: &Url, out: &mut impl Write) -> anyhow::Result<
 
     for line in raw.lines() {
         if line.starts_with('\\') {
+            continue;
+        }
+        // pg_dump 17+ will generate a SET transaction_timeout statement that
+        // PostgreSQL 16 chokes on.
+        if line.trim_start().starts_with("SET transaction_timeout") {
             continue;
         }
         writeln!(out, "{line}")?;
