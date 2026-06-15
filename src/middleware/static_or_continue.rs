@@ -5,7 +5,7 @@ use axum::body::Body;
 use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::Response;
-use http::{HeaderValue, Method, StatusCode, header};
+use http::{Method, StatusCode};
 use std::path::Path;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
@@ -50,16 +50,7 @@ async fn serve_static<P: AsRef<Path>>(path: P, request: Request) -> Result<Respo
         return Err(request);
     }
 
-    let mut response = response.map(Body::new);
-
-    // FIXME: `ServeDir` does not set `Vary: Accept-Encoding` on precompressed
-    // responses yet. Remove this once a tower-http release including
-    // https://github.com/tower-rs/tower-http/pull/692 is available.
-    response
-        .headers_mut()
-        .insert(header::VARY, HeaderValue::from_static("accept-encoding"));
-
-    Ok(response)
+    Ok(response.map(Body::new))
 }
 
 #[cfg(test)]
