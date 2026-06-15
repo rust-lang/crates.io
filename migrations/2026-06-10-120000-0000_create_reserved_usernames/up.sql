@@ -2,21 +2,14 @@ CREATE FUNCTION canon_username(text) RETURNS text AS $$
     SELECT replace(lower($1), '-', '_');
 $$ LANGUAGE SQL IMMUTABLE;
 
--- safety-assured:start
--- Suppresses the "CREATE TABLE without IF NOT EXISTS" diesel-guard check.
--- The table is brand new and `IF NOT EXISTS` is already used, so retrying a
--- partially-failed migration is safe.
 CREATE TABLE IF NOT EXISTS reserved_usernames (
     username TEXT PRIMARY KEY
 );
--- safety-assured:end
 
 -- safety-assured:start
--- Suppresses the "ADD INDEX without CONCURRENTLY" and "CREATE INDEX without
--- IF NOT EXISTS" diesel-guard checks. The table is brand new and empty, so
--- the unique index builds instantly with no meaningful SHARE lock contention;
--- CONCURRENTLY is unnecessary. `IF NOT EXISTS` is already used for idempotent
--- retries.
+-- Suppresses the "ADD INDEX without CONCURRENTLY" diesel-guard check.
+-- The table is brand new and empty, so the unique index builds instantly with
+-- no meaningful SHARE lock contention; CONCURRENTLY is unnecessary.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reserved_usernames_canon_username ON reserved_usernames (canon_username(username));
 -- safety-assured:end
 
