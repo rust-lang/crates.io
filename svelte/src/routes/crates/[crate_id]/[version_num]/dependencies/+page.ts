@@ -1,6 +1,7 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { loadNativeReplacements } from '$lib/data/native-replacements';
 import { loadCrateDescriptions } from '$lib/utils/crate-descriptions';
 
 export async function load({ fetch, params }) {
@@ -9,14 +10,17 @@ export async function load({ fetch, params }) {
   let crateName = params.crate_id;
   let versionNum = params.version_num;
 
-  let dependencies = await loadDependencies(client, crateName, versionNum);
+  let [dependencies, nativeReplacements] = await Promise.all([
+    loadDependencies(client, crateName, versionNum),
+    loadNativeReplacements(fetch),
+  ]);
 
   let descriptionMap = loadCrateDescriptions(
     client,
     dependencies.map(d => d.crate_id),
   );
 
-  return { dependencies, descriptionMap };
+  return { dependencies, descriptionMap, nativeReplacements };
 }
 
 async function loadDependencies(client: ReturnType<typeof createClient>, name: string, version: string) {

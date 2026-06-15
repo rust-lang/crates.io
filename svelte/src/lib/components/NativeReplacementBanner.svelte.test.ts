@@ -9,12 +9,12 @@ import NativeReplacementBanner from './NativeReplacementBanner.svelte';
 const STD_URL = 'https://doc.rust-lang.org/std/sync/struct.LazyLock.html';
 
 const replacement: NativeReplacement = {
-  description: 'Use <code>std::sync::LazyLock</code> (Rust 1.80) instead.',
+  description: 'Use `std::sync::LazyLock` (Rust 1.80) instead.',
   url: STD_URL,
 };
 
 describe('NativeReplacementBanner', () => {
-  it('renders the description HTML and a "Learn more" link', async () => {
+  it('renders the description Markdown and a "Learn more" link', async () => {
     render(NativeReplacementBanner, { replacement });
 
     let banner = page.getByCSS('[data-test-native-replacement-banner]');
