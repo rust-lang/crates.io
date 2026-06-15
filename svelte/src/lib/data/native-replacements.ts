@@ -40,7 +40,7 @@
 
 /** A crate whose functionality is (largely) available in std. */
 export interface NativeReplacement {
-  /** HTML fragment describing the std replacement. */
+  /** Markdown describing the std replacement. */
   description: string;
   /** Representative docs URL (std docs or release notes) shown as a "Learn more" link. */
   url: string;
@@ -49,32 +49,32 @@ export interface NativeReplacement {
 export const nativeReplacements: Record<string, NativeReplacement> = {
   lazy_static: {
     description:
-      'The standard library provides <code>std::sync::LazyLock</code> (stable since Rust 1.80), which lets ' +
-      'you replace the <code>lazy_static!</code> macro with a plain <code>static</code> and remove the ' +
+      'The standard library provides `std::sync::LazyLock` (stable since Rust 1.80), which lets ' +
+      'you replace the `lazy_static!` macro with a plain `static` and remove the ' +
       'dependency.',
     url: 'https://doc.rust-lang.org/std/sync/struct.LazyLock.html',
   },
 
   once_cell: {
     description:
-      'Most of <code>once_cell</code> is now in <code>std</code>: <code>OnceCell</code>/<code>OnceLock</code> ' +
-      '(Rust 1.70) and <code>LazyCell</code>/<code>LazyLock</code> (Rust 1.80). The <code>race</code> module and ' +
-      'fallible <code>get_or_try_init</code> have no stable <code>std</code> equivalent yet.',
+      'Most of `once_cell` is now in `std`: `OnceCell`/`OnceLock` ' +
+      '(Rust 1.70) and `LazyCell`/`LazyLock` (Rust 1.80). The `race` module and ' +
+      'fallible `get_or_try_init` have no stable `std` equivalent yet.',
     url: 'https://blog.rust-lang.org/2024/07/25/Rust-1.80.0/',
   },
 
   matches: {
     description:
-      'The <code>matches!</code> macro has been in <code>std</code> since Rust 1.42, and ' +
-      '<code>assert_matches!</code> / <code>debug_assert_matches!</code> followed in Rust 1.96.',
+      'The `matches!` macro has been in `std` since Rust 1.42, and ' +
+      '`assert_matches!` / `debug_assert_matches!` followed in Rust 1.96.',
     url: 'https://doc.rust-lang.org/std/macro.matches.html',
   },
 
   num_cpus: {
     description:
-      'For most uses, <code>std::thread::available_parallelism</code> (Rust 1.59) returns the parallelism ' +
+      'For most uses, `std::thread::available_parallelism` (Rust 1.59) returns the parallelism ' +
       'available to the process. (It does not distinguish physical vs logical cores the way ' +
-      '<code>num_cpus</code> does.)',
+      '`num_cpus` does.)',
     url: 'https://doc.rust-lang.org/std/thread/fn.available_parallelism.html',
   },
 };

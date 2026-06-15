@@ -7,6 +7,7 @@
   import Placeholder from '$lib/components/Placeholder.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { nativeReplacements } from '$lib/data/native-replacements';
+  import { renderSimpleMarkdown } from '$lib/utils/markdown';
 
   type Dependency = components['schemas']['Dependency'];
 
@@ -69,10 +70,8 @@
           <Tooltip>
             <div class="replacement-tooltip" data-test-native-replacement-tooltip>
               <strong>{replacementHint}</strong>
-              <p>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -- curated, in-repo HTML, never user input -->
-                {@html nativeReplacement.description}
-              </p>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -- escaped micromark output -->
+              {@html renderSimpleMarkdown(nativeReplacement.description)}
             </div>
           </Tooltip>
         </span>
@@ -199,7 +198,7 @@
       font-weight: 500;
     }
 
-    p {
+    :global(p) {
       margin: var(--space-3xs) 0 0;
       font-size: 0.9em;
       line-height: 1.4;
