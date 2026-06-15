@@ -25,5 +25,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_ensure_username_not_reserved
-BEFORE INSERT OR UPDATE ON users
+BEFORE INSERT OR UPDATE OF username ON users
 FOR EACH ROW EXECUTE PROCEDURE ensure_username_not_reserved();
