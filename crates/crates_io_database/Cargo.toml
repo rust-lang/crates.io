@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-bon = "=3.9.2"
+bon = "=3.9.3"
 chrono = { version = "=0.4.45", default-features = false, features = ["serde"] }
 crates_io_index = { path = "../crates_io_index" }
 crates_io_validation = { path = "../crates_io_validation" }
