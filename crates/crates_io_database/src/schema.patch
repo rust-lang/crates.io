@@ -40,7 +40,7 @@
          /// The `id` column of the `dependencies` table.
          ///
          /// Its SQL type is `Int4`.
-@@ -802,6 +796,24 @@
+@@ -798,6 +792,24 @@
  }
  
  diesel::table! {
@@ -65,7 +65,7 @@
      use diesel::sql_types::*;
      use diesel_full_text_search::Tsvector;
  
-@@ -1243,7 +1255,8 @@
+@@ -1279,7 +1291,8 @@
  diesel::joinable!(crate_downloads -> crates (crate_id));
  diesel::joinable!(crate_owner_invitations -> crates (crate_id));
  diesel::joinable!(crate_owners -> crates (crate_id));
@@ -75,7 +75,7 @@
  diesel::joinable!(crates_categories -> categories (category_id));
  diesel::joinable!(crates_categories -> crates (crate_id));
  diesel::joinable!(crates_keywords -> crates (crate_id));
-@@ -1260,6 +1273,7 @@
+@@ -1296,6 +1309,7 @@
  diesel::joinable!(publish_limit_buckets -> users (user_id));
  diesel::joinable!(publish_rate_overrides -> users (user_id));
  diesel::joinable!(readme_renderings -> versions (version_id));
@@ -83,11 +83,11 @@
  diesel::joinable!(reverse_dependencies -> versions (version_id));
  diesel::joinable!(trustpub_configs_github -> crates (crate_id));
  diesel::joinable!(trustpub_configs_gitlab -> crates (crate_id));
-@@ -1293,6 +1307,7 @@
+@@ -1330,6 +1344,7 @@
      publish_limit_buckets,
      publish_rate_overrides,
      readme_renderings,
 +    recent_crate_downloads,
      reserved_crate_names,
+     reserved_usernames,
      reverse_dependencies,
-     teams,
