@@ -6,20 +6,8 @@ export async function load({ fetch, params }) {
   let crateName = params.crate_id;
 
   try {
-    let [advisories, micromarkModule, gfmModule] = await Promise.all([
-      fetchAdvisories(crateName, fetch),
-      import('micromark'),
-      import('micromark-extension-gfm'),
-    ]);
-
-    let convertMarkdown = (markdown: string): string => {
-      return micromarkModule.micromark(markdown, {
-        extensions: [gfmModule.gfm()],
-        htmlExtensions: [gfmModule.gfmHtml()],
-      });
-    };
-
-    return { advisories, convertMarkdown };
+    let advisories = await fetchAdvisories(crateName, fetch);
+    return { advisories };
   } catch {
     error(500, { message: `${crateName}: Failed to load advisories`, tryAgain: true });
   }
