@@ -168,6 +168,9 @@ export interface paths {
          *     - Alphabetical listing of crates
          *     - List of crates under a specific owner
          *     - Listing a user's followed crates
+         *
+         *     When sorting by relevance, only the first 1000 results can be accessed, even
+         *     though `meta.total` may report a higher number of matching crates.
          */
         get: operations["list_crates"];
         put?: never;

@@ -1537,7 +1537,7 @@ expression: response.json()
     },
     "/api/v1/crates": {
       "get": {
-        "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
+        "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates\n\nWhen sorting by relevance, only the first 1000 results can be accessed, even\nthough `meta.total` may report a higher number of matching crates.",
         "operationId": "list_crates",
         "parameters": [
           {
