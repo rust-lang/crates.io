@@ -1,6 +1,7 @@
 <script lang="ts">
   import CrateHeader from '$lib/components/CrateHeader.svelte';
   import Row from '$lib/components/dependency-list/Row.svelte';
+  import { nativeReplacements } from '$lib/data/native-replacements';
 
   let { data } = $props();
 
@@ -22,7 +23,13 @@
 {#if normal.length !== 0}
   <ul class="list" data-test-dependencies>
     {#each normal as dependency (dependency.id)}
-      <li><Row {dependency} descriptionPromise={descriptions.get(dependency.crate_id)} /></li>
+      <li>
+        <Row
+          {dependency}
+          descriptionPromise={descriptions.get(dependency.crate_id)}
+          nativeReplacement={nativeReplacements[dependency.crate_id]}
+        />
+      </li>
     {/each}
   </ul>
 {:else}
@@ -35,7 +42,13 @@
   <h2 class="heading">Build-Dependencies</h2>
   <ul class="list" data-test-build-dependencies>
     {#each build as dependency (dependency.id)}
-      <li><Row {dependency} descriptionPromise={descriptions.get(dependency.crate_id)} /></li>
+      <li>
+        <Row
+          {dependency}
+          descriptionPromise={descriptions.get(dependency.crate_id)}
+          nativeReplacement={nativeReplacements[dependency.crate_id]}
+        />
+      </li>
     {/each}
   </ul>
 {/if}
@@ -44,7 +57,13 @@
   <h2 class="heading">Dev-Dependencies</h2>
   <ul class="list" data-test-dev-dependencies>
     {#each dev as dependency (dependency.id)}
-      <li><Row {dependency} descriptionPromise={descriptions.get(dependency.crate_id)} /></li>
+      <li>
+        <Row
+          {dependency}
+          descriptionPromise={descriptions.get(dependency.crate_id)}
+          nativeReplacement={nativeReplacements[dependency.crate_id]}
+        />
+      </li>
     {/each}
   </ul>
 {/if}

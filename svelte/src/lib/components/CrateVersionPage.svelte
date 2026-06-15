@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
   import type { DownloadChartData } from '$lib/components/download-chart/data';
+  import type { NativeReplacement } from '$lib/data/native-replacements';
   import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
 
@@ -15,7 +16,6 @@
   import NativeReplacementBanner from '$lib/components/NativeReplacementBanner.svelte';
   import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
-  import { nativeReplacements } from '$lib/data/native-replacements';
   import { loadReadme } from '$lib/utils/readme';
 
   type Crate = components['schemas']['Crate'];
@@ -35,6 +35,7 @@
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
     docsRsStatusPromise: Promise<DocsRsStatus | null>;
     downloadsPromise: Promise<DownloadChartData>;
+    nativeReplacement?: NativeReplacement;
   }
 
   let {
@@ -48,6 +49,7 @@
     playgroundCratesPromise,
     docsRsStatusPromise,
     downloadsPromise,
+    nativeReplacement,
   }: Props = $props();
   let owners: Owner[] = $state([]);
 
@@ -59,8 +61,6 @@
   let stackedGraph = $state(true);
 
   let downloadsContext = $derived(requestedVersion ? version : crate);
-
-  let nativeReplacement = $derived(nativeReplacements[crate.name]);
 
   let retryReadmePromise = $state<typeof readmePromise | null>(null);
   let activeReadmePromise = $derived(retryReadmePromise ?? readmePromise);

@@ -1,5 +1,6 @@
 <script lang="ts">
   import CrateVersionPage from '$lib/components/CrateVersionPage.svelte';
+  import { nativeReplacements } from '$lib/data/native-replacements';
 
   let { data } = $props();
 
@@ -19,4 +20,5 @@
   playgroundCratesPromise={data.playgroundCratesPromise}
   docsRsStatusPromise={data.docsRsStatusPromise}
   {downloadsPromise}
+  nativeReplacement={nativeReplacements[data.crate.name]}
 />

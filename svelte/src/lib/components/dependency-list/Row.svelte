@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
+  import type { NativeReplacement } from '$lib/data/native-replacements';
 
   import { resolve } from '$app/paths';
 
   import Icon from '$lib/components/Icon.svelte';
   import Placeholder from '$lib/components/Placeholder.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
-  import { nativeReplacements } from '$lib/data/native-replacements';
   import { renderSimpleMarkdown } from '$lib/utils/markdown';
 
   type Dependency = components['schemas']['Dependency'];
@@ -14,15 +14,14 @@
   interface Props {
     dependency: Dependency;
     descriptionPromise: Promise<string | null> | undefined;
+    nativeReplacement?: NativeReplacement;
   }
 
-  let { dependency, descriptionPromise }: Props = $props();
+  let { dependency, descriptionPromise, nativeReplacement }: Props = $props();
 
   let focused = $state(false);
 
   let formattedReq = $derived(dependency.req === '*' ? '' : dependency.req);
-
-  let nativeReplacement = $derived(nativeReplacements[dependency.crate_id]);
 
   const replacementHint = 'This dependency might not be needed anymore.';
 
