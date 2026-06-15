@@ -6,6 +6,11 @@ CREATE TABLE IF NOT EXISTS reserved_usernames (
     username TEXT PRIMARY KEY
 );
 
+COMMENT ON TABLE reserved_usernames IS
+    'Usernames that may not be used for crates.io accounts.';
+COMMENT ON COLUMN reserved_usernames.username IS
+    'The reserved username. Matching is case-insensitive and treats `-` and `_` as equivalent (see `canon_username()`).';
+
 -- safety-assured:start
 -- Suppresses the "ADD INDEX without CONCURRENTLY" diesel-guard check.
 -- The table is brand new and empty, so the unique index builds instantly with
