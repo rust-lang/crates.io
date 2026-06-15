@@ -1,7 +1,6 @@
 <script lang="ts">
   import CrateHeader from '$lib/components/CrateHeader.svelte';
   import Row from '$lib/components/dependency-list/Row.svelte';
-  import { nativeReplacements } from '$lib/data/native-replacements';
 
   let { data } = $props();
 
@@ -9,6 +8,7 @@
   let build = $derived(data.dependencies.filter(d => d.kind === 'build'));
   let dev = $derived(data.dependencies.filter(d => d.kind === 'dev'));
   let descriptions = $derived(data.descriptionMap);
+  let nativeReplacements = $derived(data.nativeReplacements);
 </script>
 
 <CrateHeader

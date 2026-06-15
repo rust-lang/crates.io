@@ -1,5 +1,6 @@
 import { createClient } from '@crates-io/api-client';
 
+import { loadNativeReplacements } from '$lib/data/native-replacements';
 import { loadDocsRsStatus } from '$lib/utils/docs-rs';
 import { loadReadme } from '$lib/utils/readme';
 
@@ -10,8 +11,9 @@ export async function load({ fetch, params }) {
   let readmePromise = loadReadme(fetch, crateName, versionNum);
   let downloadsPromise = loadDownloads(fetch, crateName, versionNum);
   let docsRsStatusPromise = loadDocsRsStatus(fetch, crateName, versionNum);
+  let nativeReplacements = await loadNativeReplacements(fetch);
 
-  return { readmePromise, downloadsPromise, docsRsStatusPromise };
+  return { readmePromise, downloadsPromise, docsRsStatusPromise, nativeReplacements };
 }
 
 /**
