@@ -197,6 +197,9 @@ rendered_at = "private"
 [reserved_crate_names.columns]
 name = "public"
 
+[reserved_usernames.columns]
+username = "public"
+
 # Derived cache table maintained from `default_versions`/`dependencies`; not
 # part of the public database dump.
 [reverse_dependencies.columns]

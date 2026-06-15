@@ -11,6 +11,7 @@ BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
     \copy "metadata" ("total_downloads") TO 'data/metadata.csv' WITH CSV HEADER
     \copy "oauth_github" ("account_id", "avatar", "login", "user_id") TO 'data/oauth_github.csv' WITH CSV HEADER
     \copy "reserved_crate_names" ("name") TO 'data/reserved_crate_names.csv' WITH CSV HEADER
+    \copy "reserved_usernames" ("username") TO 'data/reserved_usernames.csv' WITH CSV HEADER
     \copy "teams" ("avatar", "github_id", "id", "login", "name", "org_id") TO 'data/teams.csv' WITH CSV HEADER
     \copy (SELECT "created_at", "gh_avatar", "gh_id", "gh_login", "id", "name", "username" FROM "users" WHERE id in (     SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0     UNION     SELECT published_by as user_id FROM versions )) TO 'data/users.csv' WITH CSV HEADER
 

@@ -830,6 +830,17 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
 
+    /// Usernames that may not be used for crates.io accounts.
+    reserved_usernames (username) {
+        /// The reserved username. Matching is case-insensitive and treats `-` and `_` as equivalent (see `canon_username()`).
+        username -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     /// Precomputed reverse-dependency edges (target crate <- dependent crate's default version). Derived cache table maintained by database triggers.
     reverse_dependencies (target_crate_id, dependent_crate_id) {
         /// The `dependencies` row used to hydrate the response.
@@ -1331,6 +1342,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     readme_renderings,
     recent_crate_downloads,
     reserved_crate_names,
+    reserved_usernames,
     reverse_dependencies,
     teams,
     trustpub_configs_github,

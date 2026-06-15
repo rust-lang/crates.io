@@ -3,6 +3,7 @@ use diesel::sql_types::{Array, Date, Double, Integer, Interval, SingleValue, Tex
 
 define_sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 define_sql_function!(fn canon_crate_name(x: Text) -> Text);
+define_sql_function!(fn canon_username(x: Text) -> Text);
 define_sql_function!(fn to_char(a: Date, b: Text) -> Text);
 define_sql_function!(fn lower<T: SingleValue>(x: T) -> T);
 define_sql_function!(fn date_part(x: Text, y: Timestamptz) -> Double);

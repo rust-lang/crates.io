@@ -12,6 +12,7 @@ BEGIN;
     ALTER TABLE "metadata" DISABLE TRIGGER ALL;
     ALTER TABLE "oauth_github" DISABLE TRIGGER ALL;
     ALTER TABLE "reserved_crate_names" DISABLE TRIGGER ALL;
+    ALTER TABLE "reserved_usernames" DISABLE TRIGGER ALL;
     ALTER TABLE "teams" DISABLE TRIGGER ALL;
     ALTER TABLE "users" DISABLE TRIGGER ALL;
     ALTER TABLE "crates_categories" DISABLE TRIGGER ALL;
@@ -37,6 +38,7 @@ BEGIN;
     TRUNCATE "metadata" RESTART IDENTITY CASCADE;
     TRUNCATE "oauth_github" RESTART IDENTITY CASCADE;
     TRUNCATE "reserved_crate_names" RESTART IDENTITY CASCADE;
+    TRUNCATE "reserved_usernames" RESTART IDENTITY CASCADE;
     TRUNCATE "teams" RESTART IDENTITY CASCADE;
     TRUNCATE "users" RESTART IDENTITY CASCADE;
     TRUNCATE "crates_categories" RESTART IDENTITY CASCADE;
@@ -63,6 +65,7 @@ BEGIN;
     \copy "metadata" ("total_downloads") FROM 'data/metadata.csv' WITH CSV HEADER
     \copy "oauth_github" ("account_id", "avatar", "login", "user_id") FROM 'data/oauth_github.csv' WITH CSV HEADER
     \copy "reserved_crate_names" ("name") FROM 'data/reserved_crate_names.csv' WITH CSV HEADER
+    \copy "reserved_usernames" ("username") FROM 'data/reserved_usernames.csv' WITH CSV HEADER
     \copy "teams" ("avatar", "github_id", "id", "login", "name", "org_id") FROM 'data/teams.csv' WITH CSV HEADER
     \copy "users" ("created_at", "gh_avatar", "gh_id", "gh_login", "id", "name", "username") FROM 'data/users.csv' WITH CSV HEADER
     \copy "crates_categories" ("category_id", "crate_id") FROM 'data/crates_categories.csv' WITH CSV HEADER
@@ -88,6 +91,7 @@ BEGIN;
     ALTER TABLE "metadata" ENABLE TRIGGER ALL;
     ALTER TABLE "oauth_github" ENABLE TRIGGER ALL;
     ALTER TABLE "reserved_crate_names" ENABLE TRIGGER ALL;
+    ALTER TABLE "reserved_usernames" ENABLE TRIGGER ALL;
     ALTER TABLE "teams" ENABLE TRIGGER ALL;
     ALTER TABLE "users" ENABLE TRIGGER ALL;
     ALTER TABLE "crates_categories" ENABLE TRIGGER ALL;
