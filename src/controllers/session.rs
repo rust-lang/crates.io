@@ -176,8 +176,9 @@ async fn create_or_update_user(
         let user_id = new_user.insert_or_update(conn).await?;
 
         // To assist in eventually someday allowing OAuth with more than GitHub, also
-        // write the GitHub info to the `oauth_github` table. Nothing currently reads
-        // from this table. Only log errors but don't fail login if this writing fails.
+        // write the GitHub info to the `oauth_github` table. This table is read when
+        // loading user details (e.g. the avatar), so a failure to write must fail the
+        // request just like a failure to write to the `users` table.
         let new_oauth_github = NewOauthGithub::builder()
             .user_id(user_id)
             .account_id(new_user.gh_id as i64)
@@ -185,9 +186,8 @@ async fn create_or_update_user(
             .login(new_user.gh_login)
             .maybe_avatar(new_user.gh_avatar)
             .build();
-        if let Err(e) = new_oauth_github.insert_or_update(conn).await {
-            error!("Error inserting or updating oauth_github record: {e}");
-        }
+
+        new_oauth_github.insert_or_update(conn).await?;
 
         // To send the user an account verification email
         if let Some(user_email) = email {
