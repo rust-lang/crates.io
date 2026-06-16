@@ -12,6 +12,7 @@ set -e
 echo "Exchanging OIDC token..." >&2
 RESPONSE=$(curl -s -X POST https://crates.io/api/v1/trusted_publishing/tokens \\
   -H "Content-Type: application/json" \\
+  -H "User-Agent: gitlab-trusted-publishing (your@email.com)" \\
   -d "{\\"jwt\\": \\"$CRATES_IO_ID_TOKEN\\"}")
 
 # Extract publish token
