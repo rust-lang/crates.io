@@ -50,6 +50,19 @@
     apply.
   </p>
 
+  <h2 id="crate-content"><a href="#crate-content">Crate content</a></h2>
+
+  <p>
+    Crates can be downloaded directly from the crates.io CDN. For example, to download <code>rand</code> version 0.10.1,
+    you can do so with a
+    <code>GET</code> request to
+    <a href="https://static.crates.io/crates/rand/rand-0.10.1.crate"
+      >https://static.crates.io/crates/rand/rand-0.10.1.crate</a
+    >.
+  </p>
+
+  <p>No rate limits apply to static.crates.io at present.</p>
+
   <h2 id="rss-feeds"><a href="#rss-feeds">RSS feeds</a></h2>
 
   <p>crates.io provides a couple of RSS feeds that contain information on new crates and crate updates:</p>
