@@ -60,33 +60,60 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             continue;
         }
 
-        let values = line.split('\t').collect::<Vec<_>>();
+        let mut num_values = 0;
+        let mut date = None;
+        let mut method = None;
+        let mut path = None;
+        let mut status = None;
+        let mut user_agent = None;
+        for (i, value) in line.split('\t').enumerate() {
+            let index = Some(i);
+            if index == date_index {
+                date = Some(value);
+            } else if index == method_index {
+                method = Some(value);
+            } else if index == path_index {
+                path = Some(value);
+            } else if index == status_index {
+                status = Some(value);
+            } else if index == user_agent_index {
+                user_agent = Some(value);
+            }
+            num_values = i + 1;
+        }
 
-        let num_values = values.len();
         if num_values != num_fields {
             warn!("Expected {num_fields} fields, but found {num_values}");
             continue;
         }
 
-        let method = get_value(&values, method_index, FIELD_METHOD);
+        let Some(method) = method else {
+            warn!("Failed to find {FIELD_METHOD} field.");
+            continue;
+        };
         if method != "GET" {
             // Ignore non-GET requests.
             continue;
         }
 
-        let status = get_value(&values, status_index, FIELD_STATUS);
+        let Some(status) = status else {
+            warn!("Failed to find {FIELD_STATUS} field.");
+            continue;
+        };
         if status != "200" {
             // Ignore non-200 responses.
             continue;
         }
 
-        let user_agent = get_optional_value(&values, user_agent_index);
         if user_agent.is_some_and(|ua| !should_count_user_agent(ua)) {
             // Ignore requests from user agents that should not be counted.
             continue;
         }
 
-        let path = get_value(&values, path_index, FIELD_PATH);
+        let Some(path) = path else {
+            warn!("Failed to find {FIELD_PATH} field.");
+            continue;
+        };
 
         // Deal with paths like `/crates/tikv-jemalloc-sys/tikv-jemalloc-sys-0.5.4%252B5.3.0-patched.crate`.
         //
@@ -100,7 +127,10 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             continue;
         };
 
-        let date = get_value(&values, date_index, FIELD_DATE);
+        let Some(date) = date else {
+            warn!("Failed to find {FIELD_DATE} field.");
+            continue;
+        };
         let date = match date.parse::<NaiveDate>() {
             Ok(date) => date,
             Err(error) => {
@@ -118,20 +148,6 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
 #[instrument(level = "debug", skip(path))]
 fn decode_path(path: &str) -> Cow<'_, str> {
     percent_encoding::percent_decode_str(path).decode_utf8_lossy()
-}
-
-fn get_value<'a>(values: &'a [&'a str], index: Option<usize>, field_name: &'static str) -> &'a str {
-    index
-        .and_then(|i| values.get(i))
-        .copied()
-        .unwrap_or_else(|| {
-            warn!(?index, "Failed to find {field_name} field.");
-            ""
-        })
-}
-
-fn get_optional_value<'a>(values: &'a [&'a str], index: Option<usize>) -> Option<&'a str> {
-    index.and_then(|i| values.get(i)).copied()
 }
 
 #[cfg(test)]
