@@ -18,4 +18,5 @@
   playgroundCratesPromise={data.playgroundCratesPromise}
   docsRsStatusPromise={data.docsRsStatusPromise}
   {downloadsPromise}
+  nativeReplacement={data.nativeReplacements[data.crate.name]}
 />

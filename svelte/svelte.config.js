@@ -44,6 +44,8 @@ const config = {
           'https://docs.rs',
           // Rust Playground top-100 crates list
           'https://play.rust-lang.org',
+          // std-replacement dataset
+          'https://rust-lang.github.io',
           // Trusted Publisher setup verifies the workflow file exists in the repo
           'https://raw.githubusercontent.com',
           // RustSec advisory lookup on the crate security tab
