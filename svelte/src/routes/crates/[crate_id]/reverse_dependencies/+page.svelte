@@ -5,9 +5,11 @@
   import Row from '$lib/components/rev-dep-list/Row.svelte';
   import { calculatePagination } from '$lib/utils/pagination';
 
+  const MAX_PAGES = 20;
+
   let { data } = $props();
 
-  let pagination = $derived(calculatePagination(data.page, data.perPage, data.total));
+  let pagination = $derived(calculatePagination(data.page, data.perPage, data.total, MAX_PAGES));
 </script>
 
 <CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
