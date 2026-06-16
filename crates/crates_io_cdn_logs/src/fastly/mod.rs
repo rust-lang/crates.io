@@ -66,7 +66,10 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             continue;
         };
 
-        let date = json.date_time().date_naive();
+        let Some(date) = json.date() else {
+            warn!("Failed to parse date `{}`", json.date_time);
+            continue;
+        };
 
         downloads.add(name, version, date);
     }
