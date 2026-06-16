@@ -4,9 +4,9 @@
 //! and <https://www.w3.org/TR/WD-logfile.html>.
 
 use crate::DownloadsMap;
+use crate::date::parse_date;
 use crate::paths::parse_path;
 use crate::user_agent::should_count_user_agent;
-use chrono::NaiveDate;
 use std::borrow::Cow;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tracing::{instrument, warn};
@@ -131,12 +131,9 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             warn!("Failed to find {FIELD_DATE} field.");
             continue;
         };
-        let date = match date.parse::<NaiveDate>() {
-            Ok(date) => date,
-            Err(error) => {
-                warn!(%date, "Failed to parse date `{date}`: {error}");
-                continue;
-            }
+        let Some(date) = parse_date(date) else {
+            warn!("Failed to parse date `{date}`");
+            continue;
         };
 
         downloads.add(name, version, date);

@@ -1,5 +1,6 @@
 //! Imported from <https://github.com/rust-lang/simpleinfra/blob/4fb365809295de075d28d8b2d51f6f419537be7d/terragrunt/modules/crates-io/compute-static/src/log_line.rs>
 
+use crate::date::parse_date;
 use chrono::NaiveDate;
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -46,7 +47,7 @@ impl LogLine<'_> {
     /// Parses the date portion (`YYYY-MM-DD`) from the start of the `date_time`
     /// timestamp. Fastly emits UTC timestamps, so this is the UTC date.
     pub fn date(&self) -> Option<NaiveDate> {
-        self.date_time.get(..10).and_then(|date| date.parse().ok())
+        self.date_time.get(..10).and_then(parse_date)
     }
 
     pub fn method(&self) -> &str {
