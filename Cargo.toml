@@ -53,7 +53,7 @@ path = "src/tests/mod.rs"
 [dependencies]
 aes-gcm = { version = "=0.10.3", features = ["std"] }
 anyhow = "=1.0.102"
-astral-tokio-tar = "=0.6.2"
+astral-tokio-tar = { version = "=0.6.2", default-features = false }
 async-compression = { version = "=0.4.42", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
 aws-credential-types = { version = "=1.2.14", features = ["hardcoded-credentials"] }
@@ -136,7 +136,7 @@ serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.150"
 sha2 = "=0.11.0"
 spdx = "=0.13.4"
-tar = "=0.4.46"
+tar = { version = "=0.4.46", default-features = false }
 tempfile = "=3.27.0"
 thiserror = "=2.0.18"
 tikv-jemallocator = { version = "=0.7.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
