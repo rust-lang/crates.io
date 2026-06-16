@@ -33,6 +33,11 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             }
         };
 
+        if json.version() != "1" {
+            warn!("Unsupported log line version: {}", json.version());
+            continue;
+        }
+
         if json.method() != "GET" {
             // Ignore non-GET requests.
             continue;
@@ -61,7 +66,10 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             continue;
         };
 
-        let date = json.date_time().date_naive();
+        let Some(date) = json.date() else {
+            warn!("Failed to parse date `{}`", json.date_time);
+            continue;
+        };
 
         downloads.add(name, version, date);
     }
