@@ -250,6 +250,32 @@ async fn reverse_dependencies_query_supports_u64_version_number_parts() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn reverse_dependencies_blocks_high_page_numbers() {
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| {
+            config.max_allowed_page_offset = 1;
+        })
+        .with_user()
+        .await;
+
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    CrateBuilder::new("c1", user.id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = anon
+        .get_with_query::<()>(
+            "/api/v1/crates/c1/reverse_dependencies",
+            "page=2&per_page=1",
+        )
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Page 2 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
     let (_, anon) = TestApp::init().empty().await;
 
