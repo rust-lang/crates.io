@@ -33,6 +33,11 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             }
         };
 
+        if json.version() != "1" {
+            warn!("Unsupported log line version: {}", json.version());
+            continue;
+        }
+
         if json.method() != "GET" {
             // Ignore non-GET requests.
             continue;
