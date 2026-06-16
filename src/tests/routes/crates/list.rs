@@ -2,14 +2,14 @@ use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::{new_category, new_user};
 use crates_io::models::Category;
-use crates_io::schema::crates;
+use crates_io::schema::{crates, version_downloads, versions};
 use crates_io_database::schema::categories;
 use diesel::sql_types::Timestamptz;
 use diesel::{dsl::*, prelude::*, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::{assert_json_snapshot, assert_snapshot};
+use insta::{assert_debug_snapshot, assert_json_snapshot, assert_snapshot};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -279,6 +279,179 @@ async fn exact_match_first_on_queries() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Inserts `count` crates that all match a search for `widget` (via their
+/// description). Each crate gets a distinct recent-download count equal to its
+/// index, so the most-downloaded candidates are unambiguous. Names are
+/// zero-padded so that lexical and numeric order match.
+async fn insert_popular_widget_matches(conn: &mut diesel_async::AsyncPgConnection, count: i64) {
+    let new_crates = (1..=count)
+        .map(|i| {
+            (
+                crates::name.eq(format!("filler_widget_{i:04}")),
+                crates::description.eq("widget"),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let crate_ids: Vec<i32> = insert_into(crates::table)
+        .values(new_crates)
+        .returning(crates::id)
+        .get_results(conn)
+        .await
+        .unwrap();
+
+    let new_versions = crate_ids
+        .iter()
+        .map(|&crate_id| {
+            (
+                versions::crate_id.eq(crate_id),
+                versions::num.eq("1.0.0"),
+                versions::num_no_build.eq("1.0.0"),
+                versions::crate_size.eq(0),
+                versions::checksum.eq("0".repeat(64)),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let version_ids: Vec<i32> = insert_into(versions::table)
+        .values(new_versions)
+        .returning(versions::id)
+        .get_results(conn)
+        .await
+        .unwrap();
+
+    let new_downloads = version_ids
+        .iter()
+        .zip(1..=count)
+        .map(|(&version_id, i)| {
+            (
+                version_downloads::version_id.eq(version_id),
+                version_downloads::downloads.eq(i as i32),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    insert_into(version_downloads::table)
+        .values(new_downloads)
+        .execute(conn)
+        .await
+        .unwrap();
+
+    diesel::sql_query("REFRESH MATERIALIZED VIEW recent_crate_downloads")
+        .execute(conn)
+        .await
+        .unwrap();
+}
+
+/// A more textually relevant crate that is not among the most-downloaded
+/// matches is excluded from relevance results, since ranking is bounded to the
+/// most-downloaded candidates.
+#[tokio::test(flavor = "multi_thread")]
+async fn relevance_search_is_bounded_to_most_downloaded_candidates() -> anyhow::Result<()> {
+    // More matches than RELEVANCE_CANDIDATE_LIMIT (1000), so the least
+    // downloaded matches fall outside the candidate set.
+    const POPULAR_MATCH_COUNT: i64 = 1111;
+
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
+
+    // Higher text relevance, but no recent downloads, so it falls outside the
+    // candidate set.
+    CrateBuilder::new("relevant_widget", user.id)
+        .description("widget widget widget")
+        .recent_downloads(0)
+        .expect_build(&mut conn)
+        .await;
+
+    let json = anon.search("q=widget").await;
+    assert_eq!(json.meta.total as i64, POPULAR_MATCH_COUNT + 1);
+    let crate_names = json.crates.into_iter().map(|c| c.name).collect::<Vec<_>>();
+    assert_debug_snapshot!(crate_names, @r#"
+    [
+        "filler_widget_1111",
+        "filler_widget_1110",
+        "filler_widget_1109",
+        "filler_widget_1108",
+        "filler_widget_1107",
+        "filler_widget_1106",
+        "filler_widget_1105",
+        "filler_widget_1104",
+        "filler_widget_1103",
+        "filler_widget_1102",
+    ]
+    "#);
+
+    Ok(())
+}
+
+/// An exact name match is always ranked, and ranked first, even with no
+/// downloads and many more popular matches.
+#[tokio::test(flavor = "multi_thread")]
+async fn relevance_search_always_includes_exact_name_match() -> anyhow::Result<()> {
+    const POPULAR_MATCH_COUNT: i64 = 1111;
+
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
+
+    // Exact name match, but without any recent downloads.
+    CrateBuilder::new("widget", user.id)
+        .recent_downloads(0)
+        .expect_build(&mut conn)
+        .await;
+
+    let json = anon.search("q=widget").await;
+    assert_eq!(json.meta.total as i64, POPULAR_MATCH_COUNT + 1);
+    let crate_names = json.crates.into_iter().map(|c| c.name).collect::<Vec<_>>();
+    assert_debug_snapshot!(crate_names, @r#"
+    [
+        "widget",
+        "filler_widget_1111",
+        "filler_widget_1110",
+        "filler_widget_1109",
+        "filler_widget_1108",
+        "filler_widget_1107",
+        "filler_widget_1106",
+        "filler_widget_1105",
+        "filler_widget_1104",
+        "filler_widget_1103",
+    ]
+    "#);
+
+    Ok(())
+}
+
+/// Requesting an explicit page beyond the bounded candidate set returns an
+/// error instead of a silently empty page. Seek pagination has no equivalent
+/// guard because it stops handing out keys once it reaches the boundary.
+#[tokio::test(flavor = "multi_thread")]
+async fn relevance_search_rejects_paging_beyond_candidate_limit() -> anyhow::Result<()> {
+    const POPULAR_MATCH_COUNT: i64 = 1111;
+
+    let (app, anon, _user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    insert_popular_widget_matches(&mut conn, POPULAR_MATCH_COUNT).await;
+
+    // The last page within the candidate limit still succeeds.
+    let json = anon.search("q=widget&per_page=100&page=10").await;
+    assert_eq!(json.crates.len(), 100);
+
+    // The next page would start beyond the candidate limit and is rejected.
+    let response = anon
+        .get_with_query::<()>("/api/v1/crates", "q=widget&per_page=100&page=11")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Cannot page beyond the first 1000 results when sorting by relevance. Please take a look at https://crates.io/data-access for alternatives."}]}"#);
+
+    Ok(())
+}
+
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
 async fn index_sorting() -> anyhow::Result<()> {
@@ -432,15 +605,15 @@ async fn index_sorting() -> anyhow::Result<()> {
     assert_eq!(calls, 5);
 
     // Sort by relevance
-    // ordering (exact match desc, rank desc, name asc)
+    // ordering (exact match desc, rank desc, recent downloads desc nulls last, name asc)
     let query = "q=foo_sort";
     let (resp, calls) = page_with_seek(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "foo_sort");
-        // same rank, by name asc
-        assert_eq!(resp[1].crates[0].name, "bar_sort");
-        assert_eq!(resp[2].crates[0].name, "baz_sort");
+        // same rank, by recent downloads desc (baz_sort 50, bar_sort 0)
+        assert_eq!(resp[1].crates[0].name, "baz_sort");
+        assert_eq!(resp[2].crates[0].name, "bar_sort");
     }
     assert_eq!(calls, 4);
     let ranks = querystring_rank(&mut conn, "foo_sort").await;
@@ -453,9 +626,9 @@ async fn index_sorting() -> anyhow::Result<()> {
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "foo_sort");
-        // same rank, by name asc
-        assert_eq!(resp[1].crates[0].name, "bar_sort");
-        assert_eq!(resp[2].crates[0].name, "baz_sort");
+        // same rank, by recent downloads desc (baz_sort 50, bar_sort 0)
+        assert_eq!(resp[1].crates[0].name, "baz_sort");
+        assert_eq!(resp[2].crates[0].name, "bar_sort");
     }
     assert_eq!(calls, 4);
     let ranks = querystring_rank(&mut conn, "foo%20sort").await;
