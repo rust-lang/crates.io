@@ -12,6 +12,7 @@ anyhow = "=1.0.102"
 async-compression = { version = "=0.4.42", features = ["gzip", "tokio", "zstd"] }
 chrono = { version = "=0.4.45", features = ["serde"] }
 derive_more = { version = "=2.1.1", features = ["deref"] }
+foldhash = "=0.2.0"
 percent-encoding = "=2.3.2"
 semver = "=1.0.28"
 serde = { version = "=1.0.228", features = ["derive"] }
