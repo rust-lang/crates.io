@@ -44,7 +44,9 @@ pub async fn list_reverse_dependencies(
 ) -> AppResult<Json<RevDepsResponse>> {
     let mut conn = app.db_read().await?;
 
-    let pagination_options = PaginationOptions::builder().gather(&req)?;
+    let pagination_options = PaginationOptions::builder()
+        .limit_page_numbers()
+        .gather(&req)?;
 
     let krate = path.load_crate(&conn).await?;
 
