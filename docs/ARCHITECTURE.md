@@ -31,7 +31,7 @@ The database schema is managed as a series of Diesel migrations in `migrations/`
 
 ## Object storage
 
-Anything too large to belong in the database is kept in object storage, which is Amazon S3 in production and a local directory during development. This includes the crate files themselves, rendered README HTML, generated OG images, and the database dumps we publish for others to consume. The dumps give consumers who need bulk crate data a snapshot to download instead of scraping the API.
+Anything too large to belong in the database is kept in object storage, which is Amazon S3 in production and a local directory during development. This includes the crate files themselves, rendered README HTML, generated OG images, and the database dumps we publish for others to consume. The dumps give consumers who need bulk crate data a snapshot to download instead of scraping the API. Alongside each `.crate` we also store a seekable per-version `.zip` source archive and a `.zip.json` manifest of its contents.
 
 Crate files are immutable once published and are served to users from `static.crates.io` through the CDNs, so reads come straight from the cache and object storage rarely sees download traffic directly. The backend writes to object storage when a crate is published and when background jobs render content like READMEs and OG images.
 
@@ -97,7 +97,7 @@ When a user runs `cargo publish`, the following happens:
 2. The server authenticates the request, confirms the caller is allowed to publish the crate, and validates the uploaded crate file and its metadata.
 3. The crate file is stored in object storage, from where it will later be served via `static.crates.io`. The new version and its metadata are recorded in PostgreSQL.
 4. The server enqueues background jobs for the slower follow-up work and returns success to cargo, so the publish completes without waiting on that work.
-5. The `background-worker` then rewrites the crate's entry in the index so cargo clients can see the new version, invalidates the relevant CDN caches, and renders derived content like the README and the crate's OG image.
+5. The `background-worker` then rewrites the crate's entry in the index so cargo clients can see the new version, invalidates the relevant CDN caches, builds the `.zip` source archive and its manifest, and renders derived content like the README and the crate's OG image.
 
 ### Downloading a crate
 
