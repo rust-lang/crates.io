@@ -24,7 +24,7 @@ pub struct Version {
     pub license: Option<String>,
     pub crate_size: i32,
     pub published_by: Option<i32>,
-    pub checksum: String,
+    pub tar_sha256: Vec<u8>,
     pub links: Option<String>,
     pub rust_version: Option<String>,
     pub has_lib: Option<bool>,

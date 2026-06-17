@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 chrono = { version = "=0.4.45", default-features = false, features = ["serde"] }
 crates_io_database = { path = "../crates_io_database" }
+hex = "=0.4.3"
 indexmap = { version = "=2.14.0", features = ["serde"] }
 semver = { version = "=1.0.28", features = ["serde"] }
 sentry-core = "=0.48.2"

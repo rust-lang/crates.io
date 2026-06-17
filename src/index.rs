@@ -123,7 +123,7 @@ pub async fn index_metadata(
             let krate = crates_io_index::Crate {
                 name: krate.name.clone(),
                 vers: version.num.to_string(),
-                cksum: version.checksum,
+                cksum: hex::encode(version.tar_sha256),
                 yanked: Some(version.yanked),
                 deps,
                 features,
