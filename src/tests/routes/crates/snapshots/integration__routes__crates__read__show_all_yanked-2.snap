@@ -53,7 +53,7 @@ expression: response.json()
     {
       "audit_actions": [],
       "bin_names": null,
-      "checksum": "                                                                ",
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo_show",
       "crate_size": 0,
       "created_at": "[datetime]",
@@ -93,7 +93,7 @@ expression: response.json()
     {
       "audit_actions": [],
       "bin_names": null,
-      "checksum": "                                                                ",
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo_show",
       "crate_size": 0,
       "created_at": "[datetime]",

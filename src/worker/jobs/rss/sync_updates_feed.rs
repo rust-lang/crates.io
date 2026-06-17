@@ -252,7 +252,7 @@ mod tests {
                 versions::num_no_build.eq(version),
                 versions::created_at.eq(publish_time),
                 versions::updated_at.eq(publish_time),
-                versions::checksum.eq("checksum"),
+                versions::checksum.eq("0".repeat(64)),
                 versions::crate_size.eq(0),
             ))
             .returning(versions::id)

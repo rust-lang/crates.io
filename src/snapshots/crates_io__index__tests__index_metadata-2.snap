@@ -7,7 +7,7 @@ expression: metadata
     "name": "bar",
     "vers": "1.0.0-beta.1",
     "deps": [],
-    "cksum": "                                                                ",
+    "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
     "yanked": true
   },
@@ -15,7 +15,7 @@ expression: metadata
     "name": "bar",
     "vers": "1.0.0",
     "deps": [],
-    "cksum": "                                                                ",
+    "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
     "yanked": false
   },
@@ -33,7 +33,7 @@ expression: metadata
         "kind": "normal"
       }
     ],
-    "cksum": "                                                                ",
+    "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
     "yanked": false
   },
@@ -41,7 +41,7 @@ expression: metadata
     "name": "bar",
     "vers": "1.0.1",
     "deps": [],
-    "cksum": "0123456789abcdef                                                ",
+    "cksum": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     "features": {},
     "yanked": false
   }

@@ -189,7 +189,10 @@ mod tests {
                     .created_at(created_at_2)
                     .dependency(&fooo, None),
             )
-            .version(VersionBuilder::new("1.0.1").checksum("0123456789abcdef"))
+            .version(
+                VersionBuilder::new("1.0.1")
+                    .checksum("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+            )
             .expect_build(&mut conn)
             .await;
 

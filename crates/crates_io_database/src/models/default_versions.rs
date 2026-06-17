@@ -268,7 +268,7 @@ mod tests {
                 versions::crate_id.eq(crate_id),
                 versions::num.eq(num),
                 versions::num_no_build.eq(num),
-                versions::checksum.eq(""),
+                versions::checksum.eq("0".repeat(64)),
                 versions::crate_size.eq(0),
             ))
             .execute(&mut conn)
