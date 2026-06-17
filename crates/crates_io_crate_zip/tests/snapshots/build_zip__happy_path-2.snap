@@ -1,0 +1,56 @@
+---
+source: crates/crates_io_crate_zip/tests/build_zip.rs
+expression: manifest
+---
+Manifest {
+    files: [
+        FileEntry {
+            path: "build.rs",
+            data_offset: 325,
+            compressed_size: 15,
+            uncompressed_size: 13,
+            compression: "deflate",
+            sha256: "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+        },
+        FileEntry {
+            path: "Cargo.toml",
+            data_offset: 40,
+            compressed_size: 43,
+            uncompressed_size: 43,
+            compression: "deflate",
+            sha256: "9852e18020a0055014cf9af781fefb867ed00f0ad9bb755cacdc8dbef520754b",
+        },
+        FileEntry {
+            path: "empty.txt",
+            data_offset: 236,
+            compressed_size: 2,
+            uncompressed_size: 0,
+            compression: "deflate",
+            sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        },
+        FileEntry {
+            path: "README.md",
+            data_offset: 277,
+            compressed_size: 10,
+            uncompressed_size: 8,
+            compression: "deflate",
+            sha256: "57477b42845df2c93b7835f675c7164138ecad7a89d02b1dd7400884a284bbe9",
+        },
+        FileEntry {
+            path: "src/lib.rs",
+            data_offset: 123,
+            compressed_size: 18,
+            uncompressed_size: 16,
+            compression: "deflate",
+            sha256: "8f46e21779e9807d1c3d9828c172b1cac2f2b98924494a59d1512ca82ea42fb8",
+        },
+        FileEntry {
+            path: "src/main.rs",
+            data_offset: 182,
+            compressed_size: 15,
+            uncompressed_size: 13,
+            compression: "deflate",
+            sha256: "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+        },
+    ],
+}
