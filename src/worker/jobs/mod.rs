@@ -1,5 +1,6 @@
 mod analyze_crate_file;
 mod archive_version_downloads;
+mod build_crate_zip;
 mod daily_db_maintenance;
 mod delete_crate;
 mod docs_rs_queue_rebuild;
@@ -22,6 +23,7 @@ mod update_user_from_github;
 
 pub use self::analyze_crate_file::AnalyzeCrateFile;
 pub use self::archive_version_downloads::ArchiveVersionDownloads;
+pub use self::build_crate_zip::BuildCrateZip;
 pub use self::daily_db_maintenance::DailyDbMaintenance;
 pub use self::delete_crate::DeleteCrateFromStorage;
 pub use self::docs_rs_queue_rebuild::DocsRsQueueRebuild;

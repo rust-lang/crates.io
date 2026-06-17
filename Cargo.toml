@@ -72,6 +72,7 @@ colored = "=3.1.1"
 crates_io_api_types = { path = "crates/crates_io_api_types" }
 crates_io_cargo_toml = { path = "crates/crates_io_cargo_toml" }
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
+crates_io_crate_zip = { path = "crates/crates_io_crate_zip" }
 crates_io_database = { path = "crates/crates_io_database" }
 crates_io_database_dump = { path = "crates/crates_io_database_dump" }
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs" }

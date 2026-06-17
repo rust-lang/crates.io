@@ -1633,6 +1633,7 @@ dependencies = [
  "crates_io_api_types",
  "crates_io_cargo_toml",
  "crates_io_cdn_logs",
+ "crates_io_crate_zip",
  "crates_io_database",
  "crates_io_database_dump",
  "crates_io_docs_rs",
