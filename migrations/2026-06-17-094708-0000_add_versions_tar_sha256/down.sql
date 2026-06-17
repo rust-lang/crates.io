@@ -1,0 +1,2 @@
+ALTER TABLE versions DROP CONSTRAINT IF EXISTS versions_tar_sha256_len;
+ALTER TABLE versions DROP COLUMN IF EXISTS tar_sha256;

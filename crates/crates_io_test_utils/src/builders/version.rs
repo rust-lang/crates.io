@@ -99,12 +99,16 @@ impl VersionBuilder {
 
         let version = self.num.to_string();
 
+        let tar_sha256 = hex::decode(&self.checksum)
+            .expect("VersionBuilder checksum must be a valid hex string");
+
         let new_version = NewVersion::builder(crate_id, &version)
             .features(serde_json::to_value(&self.features)?)
             .maybe_license(self.license.as_deref())
             .size(self.size)
             .published_by(published_by)
             .checksum(&self.checksum)
+            .tar_sha256(&tar_sha256)
             .maybe_links(self.links.as_deref())
             .maybe_rust_version(self.rust_version.as_deref())
             .yanked(self.yanked)

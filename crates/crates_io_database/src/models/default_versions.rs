@@ -269,6 +269,7 @@ mod tests {
                 versions::num.eq(num),
                 versions::num_no_build.eq(num),
                 versions::checksum.eq("0".repeat(64)),
+                versions::tar_sha256.eq(vec![0u8; 32]),
                 versions::crate_size.eq(0),
             ))
             .execute(&mut conn)

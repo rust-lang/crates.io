@@ -309,6 +309,7 @@ async fn insert_popular_widget_matches(conn: &mut diesel_async::AsyncPgConnectio
                 versions::num_no_build.eq("1.0.0"),
                 versions::crate_size.eq(0),
                 versions::checksum.eq("0".repeat(64)),
+                versions::tar_sha256.eq(vec![0u8; 32]),
             )
         })
         .collect::<Vec<_>>();
