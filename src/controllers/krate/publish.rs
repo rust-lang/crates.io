@@ -510,7 +510,6 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let edition = edition.map(|edition| edition.as_str());
 
         let tar_sha256 = Sha256::digest(&tarball_bytes);
-        let hex_cksum = hex::encode(tar_sha256.as_slice());
 
         // Persist the new version of this crate
         let new_version = NewVersion::builder(krate.id, &version_string)
@@ -520,7 +519,6 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             // to get here, and max upload sizes are way less than i32 max
             .size(content_length as i32)
             .maybe_published_by(auth.user_id())
-            .checksum(&hex_cksum)
             .tar_sha256(tar_sha256.as_slice())
             .maybe_links(package.links.as_deref())
             .maybe_rust_version(rust_version.as_deref())

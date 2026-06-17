@@ -1,0 +1,1 @@
+ALTER TABLE versions ALTER COLUMN checksum SET NOT NULL;

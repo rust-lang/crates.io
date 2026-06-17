@@ -136,7 +136,6 @@ mod tests {
 
         let version = NewVersion::builder(krate.id, "1.0.0")
             .published_by(user_id)
-            .checksum("0000000000000000000000000000000000000000000000000000000000000000")
             .tar_sha256(&[0; 32])
             .build();
 
