@@ -42,7 +42,7 @@ impl VersionBuilder {
             num,
             size: 0,
             yanked: false,
-            checksum: String::new(),
+            checksum: "0".repeat(64),
             links: None,
             rust_version: None,
         }
