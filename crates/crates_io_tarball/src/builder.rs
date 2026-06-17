@@ -22,6 +22,19 @@ impl TarballBuilder {
         self
     }
 
+    /// Adds a directory entry to the tarball.
+    pub fn add_dir(mut self, path: &str) -> Self {
+        let mut header = tar::Header::new_gnu();
+        header.set_entry_type(tar::EntryType::Directory);
+        header.set_size(0);
+        header.set_cksum();
+        self.inner
+            .append_data(&mut header, path, std::io::empty())
+            .unwrap();
+
+        self
+    }
+
     pub fn add_pax_extensions<'key, 'value, I>(mut self, headers: I) -> Self
     where
         I: IntoIterator<Item = (&'key str, &'value [u8])>,
