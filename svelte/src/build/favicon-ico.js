@@ -44,12 +44,9 @@ export default function faviconIco({ source }) {
     name: 'favicon-ico',
 
     async generateBundle() {
-      // `this` is the Rollup plugin context provided by the hook API.
-      /* eslint-disable unicorn/no-this-outside-of-class */
       // SvelteKit runs a separate SSR build that should not emit the asset.
       if (this.environment && this.environment.name !== 'client') return;
       this.emitFile({ type: 'asset', fileName: FILE_NAME, source: await build() });
-      /* eslint-enable unicorn/no-this-outside-of-class */
     },
 
     configureServer(server) {
