@@ -11,6 +11,20 @@
     'customManagers:dockerfileVersions',
     'customManagers:githubActionsVersions',
   ],
+  customManagers: [
+    {
+      // Track the latest commit on each buildpack's `main` branch and keep
+      // the pinned SHA1 in `.buildpacks` up to date.
+      customType: 'regex',
+      managerFilePatterns: ['/^\\.buildpacks$/'],
+      matchStrings: [
+        'https://github\\.com/(?<depName>[^#\\s]+?)#(?<currentDigest>[0-9a-f]{40})',
+      ],
+      currentValueTemplate: 'main',
+      packageNameTemplate: 'https://github.com/{{{depName}}}',
+      datasourceTemplate: 'git-refs',
+    },
+  ],
   packageRules: [
     {
       matchDepNames: ['@percy/cli', 'tj-actions/changed-files'],
@@ -46,6 +60,13 @@
     {
       matchUpdateTypes: ['digest'],
       enabled: false,
+    },
+    {
+      // Re-enable digest updates for the buildpack SHA1s tracked via `git-refs`.
+      matchManagers: ['custom.regex'],
+      matchDatasources: ['git-refs'],
+      matchUpdateTypes: ['digest'],
+      enabled: true,
     },
     {
       // This is causing various issues, so we disable it for now.
