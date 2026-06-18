@@ -62,11 +62,17 @@
       enabled: false,
     },
     {
-      // Re-enable digest updates for the buildpack SHA1s tracked via `git-refs`.
+      // Re-enable digest updates for the buildpack SHA1s tracked via `git-refs`,
+      // and link the package name and SHA1 diff in the PR table.
       matchManagers: ['custom.regex'],
       matchDatasources: ['git-refs'],
       matchUpdateTypes: ['digest'],
       enabled: true,
+      prBodyDefinitions: {
+        Package: '[{{{depName}}}](https://github.com/{{{depName}}})',
+        Change:
+          '[`{{{displayFrom}}}` → `{{{displayTo}}}`](https://github.com/{{{depName}}}/compare/{{{currentDigest}}}...{{{newDigest}}})',
+      },
     },
     {
       // This is causing various issues, so we disable it for now.
