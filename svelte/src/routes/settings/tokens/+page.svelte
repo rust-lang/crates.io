@@ -46,7 +46,7 @@
   }
 
   function sortTokens(tokens: ApiToken[]): ApiToken[] {
-    return [...tokens].sort((a, b) => {
+    return tokens.toSorted((a, b) => {
       let aExpired = isExpired(a);
       let bExpired = isExpired(b);
 

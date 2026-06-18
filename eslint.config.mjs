@@ -56,8 +56,6 @@ export default defineConfig(
       'prefer-let/prefer-let': 'error',
 
       'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
-      // disabled because `toSorted` is not "widely supported" yet
-      'unicorn/no-array-sort': 'off',
       // disabled because we are targeting only browsers at the moment
       'unicorn/prefer-global-this': 'off',
       // disabled because we don't want to go all-in on ES6 modules for Node.js code yet

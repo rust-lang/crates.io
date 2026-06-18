@@ -69,7 +69,7 @@
     let defaultFeatures = features.default ?? [];
     return Object.keys(features)
       .filter(name => name !== 'default')
-      .sort()
+      .toSorted()
       .map(name => ({ name, isDefault: defaultFeatures.includes(name), dependencies: features[name] ?? [] }));
   });
 

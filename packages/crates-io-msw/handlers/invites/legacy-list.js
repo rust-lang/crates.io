@@ -15,7 +15,7 @@ export default http.get('/api/v1/me/crate_owner_invitations', () => {
 
   let inviters = invites.map(invite => invite.inviter);
   let invitees = invites.map(invite => invite.invitee);
-  let users = [...new Set([...inviters, ...invitees])].sort((a, b) => a.id - b.id);
+  let users = [...new Set([...inviters, ...invitees])].toSorted((a, b) => a.id - b.id);
 
   return HttpResponse.json({
     crate_owner_invitations: invites.map(invite => serializeInvite(invite)),
