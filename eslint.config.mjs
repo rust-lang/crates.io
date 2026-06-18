@@ -66,8 +66,6 @@ export default defineConfig(
       'unicorn/prefer-module': 'off',
       // disabled because it seems unnecessary
       'unicorn/prefer-number-properties': 'off',
-      // disabled because it seems unnecessary
-      'unicorn/prefer-string-raw': 'off',
       // disabled because of false positives on non-array `push()` methods
       'unicorn/prefer-single-call': 'off',
       // disabled because of Sentry issues

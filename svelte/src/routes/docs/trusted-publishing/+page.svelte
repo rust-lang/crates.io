@@ -5,15 +5,15 @@
 
   // Defined as a variable to avoid Svelte parsing issues with
   // curly braces and backslash escapes in inline code blocks.
-  let exchangeTokenScript = `#!/bin/bash
+  let exchangeTokenScript = String.raw`#!/bin/bash
 set -e
 
 # Exchange JWT token
 echo "Exchanging OIDC token..." >&2
-RESPONSE=$(curl -s -X POST https://crates.io/api/v1/trusted_publishing/tokens \\
-  -H "Content-Type: application/json" \\
-  -H "User-Agent: gitlab-trusted-publishing (your@email.com)" \\
-  -d "{\\"jwt\\": \\"$CRATES_IO_ID_TOKEN\\"}")
+RESPONSE=$(curl -s -X POST https://crates.io/api/v1/trusted_publishing/tokens \
+  -H "Content-Type: application/json" \
+  -H "User-Agent: gitlab-trusted-publishing (your@email.com)" \
+  -d "{\"jwt\": \"$CRATES_IO_ID_TOKEN\"}")
 
 # Extract publish token
 CRATES_IO_PUBLISH_TOKEN=$(echo "$RESPONSE" | jq -r '.token')
