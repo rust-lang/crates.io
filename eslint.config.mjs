@@ -16,7 +16,7 @@ import svelteConfig from './svelte/svelte.config.js';
 const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
 
 export default defineConfig(
-  eslintPluginUnicorn.configs.recommended,
+  eslintPluginUnicorn.configs.unopinionated,
   includeIgnoreFile(gitignorePath),
   // `crates/` (Rust workspace crates) is not in `.gitignore` but should not be
   // linted. `svelte/static/` contains vendored files like `mockServiceWorker.js`
@@ -55,50 +55,18 @@ export default defineConfig(
       'prefer-const': 'off',
       'prefer-let/prefer-let': 'error',
 
-      // disabled because it seems unnecessary
-      'unicorn/consistent-function-scoping': 'off',
-      // disabled because TypeScript already catches arity mismatches that
-      // this rule is designed to flag (e.g. `arr.map(parseInt)`)
-      'unicorn/no-array-callback-reference': 'off',
       'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
-      // disabled because `toReversed` is not "widely supported" yet
-      'unicorn/no-array-reverse': 'off',
-      // disabled because `toSorted` is not "widely supported" yet
-      'unicorn/no-array-sort': 'off',
-      // disabled because it is annoying in some cases...
-      'unicorn/no-await-expression-member': 'off',
-      // disabled because we need `null` since JSON has no `undefined`
-      'unicorn/no-null': 'off',
-      // disabled because this rule conflicts with prettier
-      'unicorn/no-nested-ternary': 'off',
-      // disabled because of unfixable false positives
-      'unicorn/prevent-abbreviations': 'off',
-      // disabled because we are targeting only browsers at the moment
-      'unicorn/prefer-global-this': 'off',
       // disabled because we don't want to go all-in on ES6 modules for Node.js code yet
       'unicorn/prefer-module': 'off',
       // disabled because it seems unnecessary
       'unicorn/prefer-number-properties': 'off',
-      // disabled because it seems unnecessary
-      'unicorn/prefer-reflect-apply': 'off',
-      // disabled because it seems unnecessary
-      'unicorn/prefer-string-raw': 'off',
-      // disabled because `getElementById()` is faster than `querySelector("#id")`
-      // and expresses intent more clearly
-      'unicorn/prefer-query-selector': 'off',
       // disabled because of false positives on non-array `push()` methods
       'unicorn/prefer-single-call': 'off',
-      // disabled because of Sentry issues
-      'unicorn/prefer-string-replace-all': 'off',
       // disabled because switch statements in JS are quite error-prone
       'unicorn/prefer-switch': 'off',
       // disabled because Svelte component `<script>` blocks instantiate
       // synchronously, so top-level await is not appropriate there
       'unicorn/prefer-top-level-await': 'off',
-      // disabled because of false positives
-      'unicorn/consistent-destructuring': 'off',
-      // disabled because it does not play well with Svelte component naming conventions
-      'unicorn/filename-case': 'off',
     },
   },
   {

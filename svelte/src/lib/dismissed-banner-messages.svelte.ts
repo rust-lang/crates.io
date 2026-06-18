@@ -4,7 +4,7 @@ const BANNER_MESSAGE_STORAGE_KEY = 'dismissed-banner-messages';
 
 async function hash(content: string) {
   let input = new TextEncoder().encode(content);
-  let output = await window.crypto.subtle.digest('SHA-256', input);
+  let output = await globalThis.crypto.subtle.digest('SHA-256', input);
   return new Uint8Array(output).toHex();
 }
 

@@ -58,7 +58,7 @@ function waitForOAuthCallback(popup: Window): Promise<{ code: string; state: str
     let interval: ReturnType<typeof setInterval>;
 
     function onMessage(event: MessageEvent) {
-      if (event.origin !== window.location.origin || !event.data) return;
+      if (event.origin !== globalThis.location.origin || !event.data) return;
 
       let { code, state } = event.data;
       if (!code || !state) return;
@@ -224,7 +224,7 @@ export class SessionState {
       localStorage.removeItem(LOGIN_KEY);
 
       // Full page navigation to ensure all in-memory state is cleared on logout.
-      window.location.assign(resolve('/'));
+      globalThis.location.assign(resolve('/'));
     }
   }
 }

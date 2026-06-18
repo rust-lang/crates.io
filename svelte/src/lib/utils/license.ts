@@ -758,10 +758,10 @@ export interface LicenseToken {
 export function parseLicense(text: string): LicenseToken[] {
   return text
     .trim()
-    .replace(/\//g, ' OR ')
-    .replace(/(^\(| \()/g, ' ( ')
-    .replace(/(\)$|\) )/g, ' ) ')
-    .replace(/ +/g, ' ')
+    .replaceAll('/', ' OR ')
+    .replaceAll(/(^\(| \()/g, ' ( ')
+    .replaceAll(/(\)$|\) )/g, ' ) ')
+    .replaceAll(/ +/g, ' ')
     .split(' ')
     .filter(Boolean)
     .map(text => {
