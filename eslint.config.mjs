@@ -68,8 +68,6 @@ export default defineConfig(
       'unicorn/prefer-number-properties': 'off',
       // disabled because of false positives on non-array `push()` methods
       'unicorn/prefer-single-call': 'off',
-      // disabled because of Sentry issues
-      'unicorn/prefer-string-replace-all': 'off',
       // disabled because switch statements in JS are quite error-prone
       'unicorn/prefer-switch': 'off',
       // disabled because Svelte component `<script>` blocks instantiate
