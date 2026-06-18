@@ -35,7 +35,7 @@ export class PageTitleState {
   get title(): string {
     if (this.#tokens.length === 0) return BASE_TITLE;
 
-    let segments = this.#tokens.map(t => t.title).reverse();
+    let segments = this.#tokens.map(t => t.title).toReversed();
     return [...segments, BASE_TITLE].join(SEPARATOR);
   }
 

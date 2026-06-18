@@ -100,7 +100,7 @@ export function toChartData(data: DownloadChartData | null, now: Date): { datase
 
       return { data, label };
     })
-    .reverse()
+    .toReversed()
     .map(({ label, data }, index): DownloadChartDataset => {
       return {
         backgroundColor: BG_COLORS[index],

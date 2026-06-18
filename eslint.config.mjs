@@ -56,8 +56,6 @@ export default defineConfig(
       'prefer-let/prefer-let': 'error',
 
       'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
-      // disabled because `toReversed` is not "widely supported" yet
-      'unicorn/no-array-reverse': 'off',
       // disabled because `toSorted` is not "widely supported" yet
       'unicorn/no-array-sort': 'off',
       // disabled because we are targeting only browsers at the moment
