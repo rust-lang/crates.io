@@ -5,8 +5,7 @@ import * as counters from '../utils/counters.js';
 
 const schema = v.pipe(
   v.object({
-    // `v.string()` is used to support some of our old fixtures that use strings here for some reason
-    id: v.optional(v.union([v.number(), v.string()])),
+    id: v.optional(v.number()),
 
     name: v.optional(v.string()),
     description: v.optional(v.string()),
