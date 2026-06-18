@@ -209,6 +209,21 @@ impl Storage {
         apply_cdn_prefix(&self.cdn_prefix, &crate_file_path(name, version)).replace('+', "%2B")
     }
 
+    /// Returns the URL of an uploaded crate version's zip source archive.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn crate_zip_location(&self, name: &str, version: &str) -> String {
+        apply_cdn_prefix(&self.cdn_prefix, &crate_zip_path(name, version)).replace('+', "%2B")
+    }
+
+    /// Returns the URL of an uploaded crate version's zip source archive manifest.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn crate_zip_manifest_location(&self, name: &str, version: &str) -> String {
+        apply_cdn_prefix(&self.cdn_prefix, &crate_zip_manifest_path(name, version))
+            .replace('+', "%2B")
+    }
+
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
@@ -245,6 +260,20 @@ impl Storage {
     #[instrument(skip(self))]
     pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<()> {
         let path = crate_file_path(name, version);
+        self.store.delete(&path).await
+    }
+
+    /// Deletes a crate version's zip source archive.
+    #[instrument(skip(self))]
+    pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<()> {
+        let path = crate_zip_path(name, version);
+        self.store.delete(&path).await
+    }
+
+    /// Deletes a crate version's zip source archive manifest.
+    #[instrument(skip(self))]
+    pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<()> {
+        let path = crate_zip_manifest_path(name, version);
         self.store.delete(&path).await
     }
 
@@ -569,6 +598,38 @@ mod tests {
             assert_eq!(storage.crate_location(name, version), expected);
         }
 
+        let crate_zip_tests = vec![
+            (
+                "foo",
+                "1.2.3",
+                "https://static.crates.io/crates/foo/foo-1.2.3.zip",
+            ),
+            (
+                "some-long-crate-name",
+                "42.0.5-beta.1+foo",
+                "https://static.crates.io/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.zip",
+            ),
+        ];
+        for (name, version, expected) in crate_zip_tests {
+            assert_eq!(storage.crate_zip_location(name, version), expected);
+        }
+
+        let crate_zip_manifest_tests = vec![
+            (
+                "foo",
+                "1.2.3",
+                "https://static.crates.io/crates/foo/foo-1.2.3.zip.json",
+            ),
+            (
+                "some-long-crate-name",
+                "42.0.5-beta.1+foo",
+                "https://static.crates.io/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.zip.json",
+            ),
+        ];
+        for (name, version, expected) in crate_zip_manifest_tests {
+            assert_eq!(storage.crate_zip_manifest_location(name, version), expected);
+        }
+
         let readme_tests = vec![
             (
                 "foo",
@@ -688,6 +749,28 @@ mod tests {
             "readmes/foo/foo-1.2.3.html",
         ];
         assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn delete_crate_zip() {
+        let storage = Storage::from_config(&StorageConfig::in_memory());
+
+        for path in ["crates/foo/foo-1.2.3.zip", "crates/foo/foo-1.2.3.zip.json"] {
+            let payload = Bytes::new().into();
+            storage.store.put(&path.into(), payload).await.unwrap();
+        }
+
+        storage.delete_crate_zip("foo", "1.2.3").await.unwrap();
+        assert_eq!(
+            stored_files(&storage.store).await,
+            vec!["crates/foo/foo-1.2.3.zip.json"]
+        );
+
+        storage
+            .delete_crate_zip_manifest("foo", "1.2.3")
+            .await
+            .unwrap();
+        assert!(stored_files(&storage.store).await.is_empty());
     }
 
     #[tokio::test]
