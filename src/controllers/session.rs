@@ -142,16 +142,7 @@ pub async fn save_user_to_database(
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    let new_user = NewUser::builder()
-        .gh_id(user.id)
-        .gh_login(&user.login)
-        .username(&user.login)
-        .maybe_name(user.name.as_deref())
-        .maybe_gh_avatar(user.avatar_url.as_deref())
-        .gh_encrypted_token(encrypted_token)
-        .build();
-
-    match create_or_update_user(&new_user, user.email.as_deref(), emails, conn).await {
+    match create_or_update_user(user, encrypted_token, emails, conn).await {
         Ok(id) => Ok(id),
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
@@ -167,12 +158,21 @@ pub async fn save_user_to_database(
 /// This method also inserts the email address into the `emails` table
 /// and sends a confirmation email to the user.
 async fn create_or_update_user(
-    new_user: &NewUser<'_>,
-    email: Option<&str>,
+    user: &GitHubUser,
+    encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
     conn.transaction(async |conn| {
+        let new_user = NewUser::builder()
+            .gh_id(user.id)
+            .gh_login(&user.login)
+            .username(&user.login)
+            .maybe_name(user.name.as_deref())
+            .maybe_gh_avatar(user.avatar_url.as_deref())
+            .gh_encrypted_token(encrypted_token)
+            .build();
+
         let user_id = new_user.insert_or_update(conn).await?;
 
         // To assist in eventually someday allowing OAuth with more than GitHub, also
@@ -190,7 +190,7 @@ async fn create_or_update_user(
         new_oauth_github.insert_or_update(conn).await?;
 
         // To send the user an account verification email
-        if let Some(user_email) = email {
+        if let Some(user_email) = user.email.as_deref() {
             let new_email = NewEmail::builder()
                 .user_id(user_id)
                 .email(user_email)
