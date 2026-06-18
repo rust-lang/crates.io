@@ -20,6 +20,7 @@ crates_io_database = { path = "../crates_io_database" }
 crates_io_tarball = { path = "../crates_io_tarball", features = ["builder"] }
 diesel = "=2.3.10"
 diesel-async = "=0.9.1"
+hex = "=0.4.3"
 semver = "=1.0.28"
 serde_json = "=1.0.150"
 toml = "=1.1.2"

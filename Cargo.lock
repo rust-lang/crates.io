@@ -2087,6 +2087,7 @@ dependencies = [
  "crates_io_tarball",
  "diesel",
  "diesel-async",
+ "hex",
  "semver",
  "serde_json",
  "toml 1.1.2+spec-1.1.0",

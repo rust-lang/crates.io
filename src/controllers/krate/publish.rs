@@ -20,7 +20,6 @@ use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryStreamExt;
-use hex::ToHex;
 use http::StatusCode;
 use http::request::Parts;
 use secrecy::ExposeSecret;
@@ -507,8 +506,8 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let edition = edition.map(|edition| edition.as_str());
 
-        // Read tarball from request
-        let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
+        let tar_sha256 = Sha256::digest(&tarball_bytes);
+        let hex_cksum = hex::encode(tar_sha256.as_slice());
 
         // Persist the new version of this crate
         let new_version = NewVersion::builder(krate.id, &version_string)
@@ -519,6 +518,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .size(content_length as i32)
             .maybe_published_by(auth.user_id())
             .checksum(&hex_cksum)
+            .tar_sha256(tar_sha256.as_slice())
             .maybe_links(package.links.as_deref())
             .maybe_rust_version(rust_version.as_deref())
             .has_lib(tarball_info.manifest.lib.is_some())

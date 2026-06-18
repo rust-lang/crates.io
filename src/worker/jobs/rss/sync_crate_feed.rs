@@ -263,6 +263,7 @@ mod tests {
                 versions::created_at.eq(publish_time),
                 versions::updated_at.eq(publish_time),
                 versions::checksum.eq("0".repeat(64)),
+                versions::tar_sha256.eq(vec![0u8; 32]),
                 versions::crate_size.eq(0),
             ))
             .returning(versions::id)
