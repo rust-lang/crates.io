@@ -2,8 +2,8 @@ export async function init() {
   // Clear the bootstrap error handlers set in `app.html`; the app has loaded
   // successfully, so the load-failure fallback is no longer needed.
   // eslint-disable-next-line unicorn/prefer-add-event-listener
-  window.onerror = null;
-  window.onunhandledrejection = null;
+  globalThis.onerror = null;
+  globalThis.onunhandledrejection = null;
 
   if (import.meta.env.VITE_MSW_ENABLED) {
     let { http, passthrough } = await import('msw');
