@@ -103,6 +103,9 @@ pub struct Server {
     /// Enable Fastly CDN invalidation for sparse index files.
     pub sparse_index_fastly_enabled: bool,
 
+    /// Enable enqueueing of `BuildCrateZip` jobs in the publish flow.
+    pub zip_archives_enabled: bool,
+
     /// URL of a git repository to mirror the crate index's snapshot branches
     /// to. When set, the `ArchiveIndexBranch` background job pushes snapshot
     /// branches to this remote; when unset the job is a no-op.
@@ -251,6 +254,7 @@ impl Server {
             index_include_pubtime,
             sparse_index_fastly_enabled: var_parsed("SPARSE_INDEX_FASTLY_ENABLED")?
                 .unwrap_or(false),
+            zip_archives_enabled: var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false),
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
         })

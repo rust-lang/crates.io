@@ -113,6 +113,28 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             paths.push(store.crate_location(crate_name, version));
         }
 
+        debug!(%crate_name, %version, "Deleting zip source archive from S3");
+        match store.delete_crate_zip(crate_name, version).await {
+            Err(object_store::Error::NotFound { .. }) => {}
+            Err(error) => {
+                warn!(%crate_name, %version, "Failed to delete zip source archive from S3: {error}")
+            }
+            Ok(_) => {
+                paths.push(store.crate_zip_location(crate_name, version));
+            }
+        }
+
+        debug!(%crate_name, %version, "Deleting zip source archive manifest from S3");
+        match store.delete_crate_zip_manifest(crate_name, version).await {
+            Err(object_store::Error::NotFound { .. }) => {}
+            Err(error) => {
+                warn!(%crate_name, %version, "Failed to delete zip source archive manifest from S3: {error}")
+            }
+            Ok(_) => {
+                paths.push(store.crate_zip_manifest_location(crate_name, version));
+            }
+        }
+
         debug!(%crate_name, %version, "Deleting readme file from S3");
         match store.delete_readme(crate_name, version).await {
             Err(object_store::Error::NotFound { .. }) => {}

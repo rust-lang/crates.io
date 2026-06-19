@@ -52,8 +52,10 @@ async fn test_happy_path_new_crate() -> anyhow::Result<()> {
 
     assert_crate_exists(&anon, "foo", true).await;
     assert!(upstream.crate_exists("foo")?);
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo/foo-1.0.0.crate
+    crates/foo/foo-1.0.0.zip
+    crates/foo/foo-1.0.0.zip.json
     index/3/f/foo
     rss/crates.xml
     rss/crates/foo.xml
@@ -89,8 +91,10 @@ async fn test_happy_path_old_crate() -> anyhow::Result<()> {
 
     assert_crate_exists(&anon, "foo", true).await;
     assert!(upstream.crate_exists("foo")?);
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo/foo-1.0.0.crate
+    crates/foo/foo-1.0.0.zip
+    crates/foo/foo-1.0.0.zip.json
     index/3/f/foo
     rss/crates.xml
     rss/crates/foo.xml
@@ -126,8 +130,10 @@ async fn test_happy_path_really_old_crate() -> anyhow::Result<()> {
 
     assert_crate_exists(&anon, "foo", true).await;
     assert!(upstream.crate_exists("foo")?);
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo/foo-1.0.0.crate
+    crates/foo/foo-1.0.0.zip
+    crates/foo/foo-1.0.0.zip.json
     index/3/f/foo
     rss/crates.xml
     rss/crates/foo.xml

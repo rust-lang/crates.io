@@ -22,8 +22,10 @@ async fn new_krate() {
     let crates = app.crates_from_index_head("foo_new");
     assert_json_snapshot!(crates);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_new/foo_new-1.0.0.crate
+    crates/foo_new/foo_new-1.0.0.zip
+    crates/foo_new/foo_new-1.0.0.zip.json
     index/fo/o_/foo_new
     rss/crates.xml
     rss/crates/foo_new.xml
@@ -52,8 +54,10 @@ async fn new_krate_with_token() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_new/foo_new-1.0.0.crate
+    crates/foo_new/foo_new-1.0.0.zip
+    crates/foo_new/foo_new-1.0.0.zip.json
     index/fo/o_/foo_new
     rss/crates.xml
     rss/crates/foo_new.xml
@@ -73,8 +77,10 @@ async fn new_krate_weird_version() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_weird/foo_weird-0.0.0-pre.crate
+    crates/foo_weird/foo_weird-0.0.0-pre.zip
+    crates/foo_weird/foo_weird-0.0.0-pre.zip.json
     index/fo/o_/foo_weird
     rss/crates.xml
     rss/crates/foo_weird.xml
@@ -101,9 +107,13 @@ async fn new_krate_twice() {
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_twice/foo_twice-0.99.0.crate
+    crates/foo_twice/foo_twice-0.99.0.zip
+    crates/foo_twice/foo_twice-0.99.0.zip.json
     crates/foo_twice/foo_twice-2.0.0.crate
+    crates/foo_twice/foo_twice-2.0.0.zip
+    crates/foo_twice/foo_twice-2.0.0.zip.json
     index/fo/o_/foo_twice
     rss/crates.xml
     rss/crates/foo_twice.xml
@@ -132,9 +142,13 @@ async fn new_krate_twice_alt() {
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_twice/foo_twice-0.99.0.crate
+    crates/foo_twice/foo_twice-0.99.0.zip
+    crates/foo_twice/foo_twice-0.99.0.zip.json
     crates/foo_twice/foo_twice-2.0.0.crate
+    crates/foo_twice/foo_twice-2.0.0.zip
+    crates/foo_twice/foo_twice-2.0.0.zip.json
     index/fo/o_/foo_twice
     rss/crates.xml
     rss/crates/foo_twice.xml

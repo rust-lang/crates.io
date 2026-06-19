@@ -1633,6 +1633,7 @@ dependencies = [
  "crates_io_api_types",
  "crates_io_cargo_toml",
  "crates_io_cdn_logs",
+ "crates_io_crate_zip",
  "crates_io_database",
  "crates_io_database_dump",
  "crates_io_docs_rs",
@@ -1766,6 +1767,22 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "crates_io_crate_zip"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "claims",
+ "crates_io_tarball",
+ "flate2",
+ "hex",
+ "insta",
+ "serde",
+ "sha2 0.11.0",
+ "tar",
+ "zip",
 ]
 
 [[package]]

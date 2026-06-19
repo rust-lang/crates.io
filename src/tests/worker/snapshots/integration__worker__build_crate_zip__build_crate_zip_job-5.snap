@@ -1,0 +1,32 @@
+---
+source: src/tests/worker/build_crate_zip.rs
+expression: manifest
+---
+{
+  "files": [
+    {
+      "compressed_size": 72,
+      "compression": "deflate",
+      "data_offset": 40,
+      "path": "Cargo.toml",
+      "sha256": "240401ad078e72f6be9191c984bd0f9fd85565605626c5aed1309ba148cbd99b",
+      "uncompressed_size": 90
+    },
+    {
+      "compressed_size": 2,
+      "compression": "deflate",
+      "data_offset": 207,
+      "path": "src/empty.rs",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_size": 0
+    },
+    {
+      "compressed_size": 13,
+      "compression": "deflate",
+      "data_offset": 152,
+      "path": "src/lib.rs",
+      "sha256": "946a0a9b72211dc6aa777c30b51e5f8263162e350d905a36b392c832ff3a3baf",
+      "uncompressed_size": 11
+    }
+  ]
+}

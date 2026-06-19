@@ -71,8 +71,10 @@ async fn publish_new_crate_ratelimit_expires() {
     let crate_to_publish = PublishBuilder::new("rate_limited", "1.0.0");
     token.publish_crate(crate_to_publish).await.good();
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited/rate_limited-1.0.0.crate
+    crates/rate_limited/rate_limited-1.0.0.zip
+    crates/rate_limited/rate_limited-1.0.0.zip.json
     index/ra/te/rate_limited
     rss/crates.xml
     rss/crates/rate_limited.xml
@@ -112,8 +114,10 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
     token.publish_crate(crate_to_publish).await.good();
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml
@@ -126,9 +130,13 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     let crate_to_publish = PublishBuilder::new("rate_limited2", "1.0.0");
     token.publish_crate(crate_to_publish).await.good();
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     crates/rate_limited2/rate_limited2-1.0.0.crate
+    crates/rate_limited2/rate_limited2-1.0.0.zip
+    crates/rate_limited2/rate_limited2-1.0.0.zip.json
     index/ra/te/rate_limited1
     index/ra/te/rate_limited2
     rss/crates.xml
@@ -146,9 +154,13 @@ async fn publish_new_crate_override_loosens_ratelimit() {
         .await
         .assert_rate_limited(LimitedAction::PublishNew);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     crates/rate_limited2/rate_limited2-1.0.0.crate
+    crates/rate_limited2/rate_limited2-1.0.0.zip
+    crates/rate_limited2/rate_limited2-1.0.0.zip.json
     index/ra/te/rate_limited1
     index/ra/te/rate_limited2
     rss/crates.xml
@@ -191,8 +203,10 @@ async fn publish_new_crate_expired_override_ignored() {
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
     token.publish_crate(crate_to_publish).await.good();
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml
@@ -208,8 +222,10 @@ async fn publish_new_crate_expired_override_ignored() {
         .await
         .assert_rate_limited(LimitedAction::PublishNew);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml
@@ -250,8 +266,10 @@ async fn publish_existing_crate_rate_limited() {
 
     let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.0");
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml
@@ -264,9 +282,13 @@ async fn publish_existing_crate_rate_limited() {
 
     let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.1");
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     crates/rate_limited1/rate_limited1-1.0.1.crate
+    crates/rate_limited1/rate_limited1-1.0.1.zip
+    crates/rate_limited1/rate_limited1-1.0.1.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml
@@ -283,9 +305,13 @@ async fn publish_existing_crate_rate_limited() {
     // Check that  version 1.0.2 was not published
     let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.1");
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     crates/rate_limited1/rate_limited1-1.0.1.crate
+    crates/rate_limited1/rate_limited1-1.0.1.zip
+    crates/rate_limited1/rate_limited1-1.0.1.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml
@@ -309,10 +335,16 @@ async fn publish_existing_crate_rate_limited() {
 
     let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.2");
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/rate_limited1/rate_limited1-1.0.0.crate
+    crates/rate_limited1/rate_limited1-1.0.0.zip
+    crates/rate_limited1/rate_limited1-1.0.0.zip.json
     crates/rate_limited1/rate_limited1-1.0.1.crate
+    crates/rate_limited1/rate_limited1-1.0.1.zip
+    crates/rate_limited1/rate_limited1-1.0.1.zip.json
     crates/rate_limited1/rate_limited1-1.0.2.crate
+    crates/rate_limited1/rate_limited1-1.0.2.zip
+    crates/rate_limited1/rate_limited1-1.0.2.zip.json
     index/ra/te/rate_limited1
     rss/crates.xml
     rss/crates/rate_limited1.xml

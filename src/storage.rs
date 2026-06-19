@@ -17,7 +17,7 @@ use std::io::Cursor;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncRead, AsyncWriteExt};
 use tracing::{instrument, warn};
 
 const PREFIX_CRATES: &str = "crates";
@@ -27,6 +27,7 @@ const DEFAULT_REGION: &str = "us-west-1";
 const CONTENT_TYPE_CRATE: &str = "application/gzip";
 const CONTENT_TYPE_GZIP: &str = "application/gzip";
 const CONTENT_TYPE_ZIP: &str = "application/zip";
+const CONTENT_TYPE_JSON: &str = "application/json";
 const CONTENT_TYPE_INDEX: &str = "text/plain";
 const CONTENT_TYPE_README: &str = "text/html";
 const CONTENT_TYPE_OG_IMAGE: &str = "image/png";
@@ -208,6 +209,21 @@ impl Storage {
         apply_cdn_prefix(&self.cdn_prefix, &crate_file_path(name, version)).replace('+', "%2B")
     }
 
+    /// Returns the URL of an uploaded crate version's zip source archive.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn crate_zip_location(&self, name: &str, version: &str) -> String {
+        apply_cdn_prefix(&self.cdn_prefix, &crate_zip_path(name, version)).replace('+', "%2B")
+    }
+
+    /// Returns the URL of an uploaded crate version's zip source archive manifest.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn crate_zip_manifest_location(&self, name: &str, version: &str) -> String {
+        apply_cdn_prefix(&self.cdn_prefix, &crate_zip_manifest_path(name, version))
+            .replace('+', "%2B")
+    }
+
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
@@ -247,6 +263,20 @@ impl Storage {
         self.store.delete(&path).await
     }
 
+    /// Deletes a crate version's zip source archive.
+    #[instrument(skip(self))]
+    pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<()> {
+        let path = crate_zip_path(name, version);
+        self.store.delete(&path).await
+    }
+
+    /// Deletes a crate version's zip source archive manifest.
+    #[instrument(skip(self))]
+    pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<()> {
+        let path = crate_zip_manifest_path(name, version);
+        self.store.delete(&path).await
+    }
+
     #[instrument(skip(self))]
     pub async fn delete_readme(&self, name: &str, version: &str) -> Result<()> {
         let path = readme_path(name, version);
@@ -271,6 +301,56 @@ impl Storage {
         let path = crate_file_path(name, version);
         let attributes = self.attrs([
             (Attribute::ContentType, CONTENT_TYPE_CRATE),
+            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
+        ]);
+        let opts = attributes.into();
+        self.store.put_opts(&path, bytes.into(), opts).await?;
+        Ok(())
+    }
+
+    /// Uploads a crate version's zip source archive, streaming it from `reader`
+    /// so the whole archive is never buffered in memory.
+    #[instrument(skip(self, reader))]
+    pub async fn upload_crate_zip(
+        &self,
+        name: &str,
+        version: &str,
+        mut reader: impl AsyncRead + Unpin,
+    ) -> anyhow::Result<()> {
+        let path = crate_zip_path(name, version);
+        let attributes = self.attrs([
+            (Attribute::ContentType, CONTENT_TYPE_ZIP),
+            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
+        ]);
+
+        // Set up a streaming upload
+        let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), path)
+            .with_attributes(attributes);
+
+        // Upload the archive contents
+        if let Err(error) = tokio::io::copy(&mut reader, &mut writer).await {
+            // Abort the upload if something failed
+            writer.abort().await?;
+            return Err(error.into());
+        }
+
+        // ... or finalize upload
+        writer.shutdown().await?;
+
+        Ok(())
+    }
+
+    /// Uploads a crate version's zip source archive manifest.
+    #[instrument(skip(self, bytes))]
+    pub async fn upload_crate_zip_manifest(
+        &self,
+        name: &str,
+        version: &str,
+        bytes: Bytes,
+    ) -> Result<()> {
+        let path = crate_zip_manifest_path(name, version);
+        let attributes = self.attrs([
+            (Attribute::ContentType, CONTENT_TYPE_JSON),
             (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
         ]);
         let opts = attributes.into();
@@ -418,6 +498,14 @@ fn crate_file_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
 }
 
+fn crate_zip_path(name: &str, version: &str) -> Path {
+    format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip").into()
+}
+
+fn crate_zip_manifest_path(name: &str, version: &str) -> Path {
+    format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip.json").into()
+}
+
 fn readme_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
@@ -510,6 +598,38 @@ mod tests {
             assert_eq!(storage.crate_location(name, version), expected);
         }
 
+        let crate_zip_tests = vec![
+            (
+                "foo",
+                "1.2.3",
+                "https://static.crates.io/crates/foo/foo-1.2.3.zip",
+            ),
+            (
+                "some-long-crate-name",
+                "42.0.5-beta.1+foo",
+                "https://static.crates.io/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.zip",
+            ),
+        ];
+        for (name, version, expected) in crate_zip_tests {
+            assert_eq!(storage.crate_zip_location(name, version), expected);
+        }
+
+        let crate_zip_manifest_tests = vec![
+            (
+                "foo",
+                "1.2.3",
+                "https://static.crates.io/crates/foo/foo-1.2.3.zip.json",
+            ),
+            (
+                "some-long-crate-name",
+                "42.0.5-beta.1+foo",
+                "https://static.crates.io/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.zip.json",
+            ),
+        ];
+        for (name, version, expected) in crate_zip_manifest_tests {
+            assert_eq!(storage.crate_zip_manifest_location(name, version), expected);
+        }
+
         let readme_tests = vec![
             (
                 "foo",
@@ -568,12 +688,19 @@ mod tests {
     async fn delete_all_crate_files() {
         let storage = prepare().await;
 
+        for path in ["crates/foo/foo-1.2.3.zip", "crates/foo/foo-1.2.3.zip.json"] {
+            let payload = Bytes::new().into();
+            storage.store.put(&path.into(), payload).await.unwrap();
+        }
+
         let deleted_files = storage.delete_all_crate_files("foo").await.unwrap();
         assert_eq!(
             deleted_files,
             vec![
                 "crates/foo/foo-1.0.0.crate".into(),
                 "crates/foo/foo-1.2.3.crate".into(),
+                "crates/foo/foo-1.2.3.zip".into(),
+                "crates/foo/foo-1.2.3.zip.json".into(),
             ]
         );
 
@@ -625,6 +752,28 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn delete_crate_zip() {
+        let storage = Storage::from_config(&StorageConfig::in_memory());
+
+        for path in ["crates/foo/foo-1.2.3.zip", "crates/foo/foo-1.2.3.zip.json"] {
+            let payload = Bytes::new().into();
+            storage.store.put(&path.into(), payload).await.unwrap();
+        }
+
+        storage.delete_crate_zip("foo", "1.2.3").await.unwrap();
+        assert_eq!(
+            stored_files(&storage.store).await,
+            vec!["crates/foo/foo-1.2.3.zip.json"]
+        );
+
+        storage
+            .delete_crate_zip_manifest("foo", "1.2.3")
+            .await
+            .unwrap();
+        assert!(stored_files(&storage.store).await.is_empty());
+    }
+
+    #[tokio::test]
     async fn delete_readme() {
         let storage = prepare().await;
 
@@ -658,6 +807,48 @@ mod tests {
         let expected_files = vec![
             "crates/foo/foo-1.2.3.crate",
             "crates/foo/foo-2.0.0+foo.crate",
+        ];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn upload_crate_zip() {
+        let s = Storage::from_config(&StorageConfig::in_memory());
+
+        s.upload_crate_zip("foo", "1.2.3", &b"fake zip data"[..])
+            .await
+            .unwrap();
+
+        let expected_files = vec!["crates/foo/foo-1.2.3.zip"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.upload_crate_zip("foo", "2.0.0+foo", &b"fake zip data"[..])
+            .await
+            .unwrap();
+
+        let expected_files = vec!["crates/foo/foo-1.2.3.zip", "crates/foo/foo-2.0.0+foo.zip"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn upload_crate_zip_manifest() {
+        let s = Storage::from_config(&StorageConfig::in_memory());
+
+        let bytes = Bytes::from_static(b"{\"files\":[]}");
+        s.upload_crate_zip_manifest("foo", "1.2.3", bytes.clone())
+            .await
+            .unwrap();
+
+        let expected_files = vec!["crates/foo/foo-1.2.3.zip.json"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.upload_crate_zip_manifest("foo", "2.0.0+foo", bytes)
+            .await
+            .unwrap();
+
+        let expected_files = vec![
+            "crates/foo/foo-1.2.3.zip.json",
+            "crates/foo/foo-2.0.0+foo.zip.json",
         ];
         assert_eq!(stored_files(&s.store).await, expected_files);
     }

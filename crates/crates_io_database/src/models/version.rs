@@ -38,6 +38,12 @@ pub struct Version {
     pub repository: Option<String>,
     pub trustpub_data: Option<TrustpubData>,
     pub linecounts: Option<serde_json::Value>,
+    /// SHA256 checksum of the zip source archive,
+    /// or `None` if it has not been built yet.
+    pub zip_sha256: Option<Vec<u8>>,
+    /// SHA256 checksum of the zip source archive manifest,
+    /// or `None` if it has not been built yet.
+    pub zip_json_sha256: Option<Vec<u8>>,
 }
 
 impl Version {

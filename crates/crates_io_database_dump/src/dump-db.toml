@@ -331,6 +331,8 @@ keywords = "public"
 trustpub_data = "private"
 # The following column is private for now, until we can guarantee a stable data schema.
 linecounts = "private"
+zip_sha256 = "public"
+zip_json_sha256 = "public"
 
 [versions_published_by.columns]
 version_id = "private"
