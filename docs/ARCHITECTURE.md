@@ -79,6 +79,8 @@ The backend emits structured logs through the `tracing` framework. In production
 
 Errors and panics are additionally reported to Sentry, which groups them and captures the context needed to debug them, with sensitive headers stripped before anything is sent. The backend also exposes operational metrics in Prometheus format, such as queue depths and database pool usage, for monitoring and dashboards.
 
+Service-level metrics are also pushed to DataDog from the `background_worker` dyno via the direct HTTP submission API every few seconds.
+
 On top of all this, the `monitor` process watches for specific failure conditions and pages the on-call team through PagerDuty when it finds one, so that problems like a stalled job queue get a human's attention even outside of working hours.
 
 ## Deployment
