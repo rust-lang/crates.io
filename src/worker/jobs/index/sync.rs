@@ -196,9 +196,7 @@ impl BackgroundJob for SyncToSparseIndex {
 
         let path = Repository::relative_index_file_for_url(&self.krate);
 
-        if let Some(fastly) = env.fastly()
-            && env.config.sparse_index_fastly_enabled
-        {
+        if let Some(fastly) = env.fastly() {
             let domain_name = &env.config.domain_name;
             let domains = [
                 format!("index.{}", domain_name),
