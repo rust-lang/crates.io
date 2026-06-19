@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
 
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
 
-    let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client));
+    let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client.clone()));
     let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
     let sync_github_app = build_sync_github_app()?;
 
@@ -138,6 +138,11 @@ fn main() -> anyhow::Result<()> {
 
     runtime.block_on(async {
         let handle = runner.start();
+        crates_io::metrics::datadog::spawn(
+            &environment.config,
+            environment.deadpool.clone(),
+            http_client,
+        );
 
         info!("Runner booted, running jobs");
         handle.wait_for_shutdown().await
