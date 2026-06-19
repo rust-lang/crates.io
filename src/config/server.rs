@@ -100,9 +100,6 @@ pub struct Server {
     /// Include publication timestamp in index entries (ISO8601 format).
     pub index_include_pubtime: bool,
 
-    /// Enable Fastly CDN invalidation for sparse index files.
-    pub sparse_index_fastly_enabled: bool,
-
     /// Enable enqueueing of `BuildCrateZip` jobs in the publish flow.
     pub zip_archives_enabled: bool,
 
@@ -252,8 +249,6 @@ impl Server {
             disable_token_creation,
             banner_message,
             index_include_pubtime,
-            sparse_index_fastly_enabled: var_parsed("SPARSE_INDEX_FASTLY_ENABLED")?
-                .unwrap_or(false),
             zip_archives_enabled: var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false),
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
