@@ -1727,6 +1727,7 @@ dependencies = [
  "chrono",
  "claims",
  "crates_io_database",
+ "hex",
  "indexmap",
  "semver",
  "sentry-core",
