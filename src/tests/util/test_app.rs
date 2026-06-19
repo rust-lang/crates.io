@@ -592,8 +592,6 @@ fn simple_config() -> config::Server {
         metrics_authorization_token: None,
         instance_metrics_log_every_seconds: None,
         blocked_routes: HashSet::new(),
-        version_id_cache_size: 10000,
-        version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
 
         // The middleware has its own unit tests to verify its functionality.
