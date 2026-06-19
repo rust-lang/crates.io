@@ -1,0 +1,86 @@
+---
+source: src/metrics/datadog.rs
+expression: series
+---
+[
+  {
+    "metric": "crates_io.background_jobs",
+    "type": 3,
+    "points": [
+      {
+        "timestamp": 1000,
+        "value": 98.0
+      }
+    ],
+    "resources": [
+      {
+        "type": "host",
+        "name": "crates.io"
+      }
+    ],
+    "tags": [
+      "job:bar",
+      "priority:2",
+      "env:prod"
+    ]
+  },
+  {
+    "metric": "crates_io.background_jobs",
+    "type": 3,
+    "points": [
+      {
+        "timestamp": 1000,
+        "value": 42.0
+      }
+    ],
+    "resources": [
+      {
+        "type": "host",
+        "name": "crates.io"
+      }
+    ],
+    "tags": [
+      "job:foo",
+      "priority:1",
+      "env:prod"
+    ]
+  },
+  {
+    "metric": "crates_io.crates_total",
+    "type": 1,
+    "points": [
+      {
+        "timestamp": 1000,
+        "value": 7.0
+      }
+    ],
+    "resources": [
+      {
+        "type": "host",
+        "name": "crates.io"
+      }
+    ],
+    "tags": [
+      "env:prod"
+    ]
+  },
+  {
+    "metric": "other_metric",
+    "type": 1,
+    "points": [
+      {
+        "timestamp": 1000,
+        "value": 0.0
+      }
+    ],
+    "resources": [
+      {
+        "type": "host",
+        "name": "crates.io"
+      }
+    ],
+    "tags": [
+      "env:prod"
+    ]
+  }
+]
