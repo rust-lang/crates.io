@@ -611,6 +611,7 @@ fn simple_config() -> config::Server {
         banner_message: None,
         index_include_pubtime: false,
         sparse_index_fastly_enabled: true,
+        zip_archives_enabled: true,
         index_archive_url: None,
         postgres_bin_dir: None,
     }

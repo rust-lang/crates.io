@@ -647,11 +647,18 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let analyze_crate_file_job = AnalyzeCrateFile::new(version.id);
         let build_crate_zip_job = BuildCrateZip::new(version.id);
 
+        let build_crate_zip = async {
+            if app.config.zip_archives_enabled {
+                build_crate_zip_job.enqueue(&*conn).await?;
+            }
+            Ok(())
+        };
+
         tokio::try_join!(
             git_index_job.enqueue(&*conn),
             sparse_index_job.enqueue(&*conn),
             publish_notifications_job.enqueue(&*conn),
-            build_crate_zip_job.enqueue(&*conn),
+            build_crate_zip,
             enqueue_or_log(&crate_feed_job, &*conn),
             enqueue_or_log(&updates_feed_job, &*conn),
             enqueue_or_log(&analyze_crate_file_job, &*conn),
