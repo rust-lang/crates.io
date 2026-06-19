@@ -21,9 +21,6 @@ use std::str::FromStr;
 use std::time::Duration;
 use tracing::warn;
 
-const DEFAULT_VERSION_ID_CACHE_SIZE: u64 = 10_000;
-const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
-
 /// Maximum number of features a crate can have or that a feature itself can
 /// enable. This value can be overridden in the database on a per-crate basis.
 const DEFAULT_MAX_FEATURES: usize = 300;
@@ -61,8 +58,6 @@ pub struct Server {
     pub metrics_authorization_token: Option<String>,
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub blocked_routes: HashSet<String>,
-    pub version_id_cache_size: u64,
-    pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
@@ -232,11 +227,6 @@ impl Server {
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),
-            version_id_cache_size: var_parsed("VERSION_ID_CACHE_SIZE")?
-                .unwrap_or(DEFAULT_VERSION_ID_CACHE_SIZE),
-            version_id_cache_ttl: Duration::from_secs(
-                var_parsed("VERSION_ID_CACHE_TTL")?.unwrap_or(DEFAULT_VERSION_ID_CACHE_TTL),
-            ),
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
