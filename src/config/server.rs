@@ -53,7 +53,6 @@ pub struct Server {
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
-    pub downloads_persist_interval: Duration,
     pub ownership_invitations_expiration: chrono::Duration,
     pub metrics_authorization_token: Option<String>,
     pub instance_metrics_log_every_seconds: Option<u64>,
@@ -125,7 +124,6 @@ impl Server {
     /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///   traffic. See the `block_traffic` module for more documentation.
-    /// - `DOWNLOADS_PERSIST_INTERVAL_MS`: how frequent to persist download counts (in ms).
     /// - `METRICS_AUTHORIZATION_TOKEN`: authorization token needed to query metrics. If missing,
     ///   querying metrics will be completely disabled.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
@@ -220,9 +218,6 @@ impl Server {
             excluded_crate_names,
             domain_name,
             allowed_origins,
-            downloads_persist_interval: var_parsed("DOWNLOADS_PERSIST_INTERVAL_MS")?
-                .map(Duration::from_millis)
-                .unwrap_or(Duration::from_secs(60)),
             ownership_invitations_expiration: chrono::Duration::days(30),
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
