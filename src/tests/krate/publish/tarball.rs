@@ -47,6 +47,35 @@ async fn new_krate_tarball_with_hard_links() {
     assert_that!(app.stored_files().await, is_empty());
 }
 
+#[cfg(unix)]
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_non_utf8_path() {
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let tarball = {
+        let mut builder = TarballBuilder::new();
+
+        let mut header = tar::Header::new_gnu();
+        assert_ok!(header.set_path(OsStr::from_bytes(b"foo-1.1.0/\xff")));
+        header.set_size(0);
+        header.set_cksum();
+        assert_ok!(builder.as_mut().append(&header, &[][..]));
+
+        builder.build()
+    };
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid path found: foo-1.1.0/�"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
 async fn new_krate_tarball_with_device_entry(entry_type: tar::EntryType) {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
