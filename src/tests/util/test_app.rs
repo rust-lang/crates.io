@@ -3,7 +3,7 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
+    self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -589,6 +589,7 @@ fn simple_config() -> config::Server {
         allowed_origins: Default::default(),
         ownership_invitations_expiration: chrono::Duration::days(30),
         metrics_authorization_token: None,
+        datadog: DatadogConfig::default(),
         instance_metrics_log_every_seconds: None,
         blocked_routes: HashSet::new(),
         cdn_user_agent: "Amazon CloudFront".to_string(),

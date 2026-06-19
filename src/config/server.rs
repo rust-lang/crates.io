@@ -9,6 +9,7 @@ use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::CdnLogQueueConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
+use crate::config::datadog::DatadogConfig;
 use crate::middleware::{block_traffic::BlockCriteria, cargo_compat::StatusCodeConfig};
 use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
@@ -55,6 +56,7 @@ pub struct Server {
     pub allowed_origins: AllowedOrigins,
     pub ownership_invitations_expiration: chrono::Duration,
     pub metrics_authorization_token: Option<String>,
+    pub datadog: DatadogConfig,
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub blocked_routes: HashSet<String>,
     pub cdn_user_agent: String,
@@ -220,6 +222,7 @@ impl Server {
             allowed_origins,
             ownership_invitations_expiration: chrono::Duration::days(30),
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
+            datadog: DatadogConfig::from_env()?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
