@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { FILE_TREE_ICONS } from '@crates-io/file-tree-icons';
   import { FileTree as PierreFileTree } from '@pierre/trees';
 
   interface Props {
@@ -25,6 +26,7 @@
     if (!container) return;
     tree = new PierreFileTree({
       paths,
+      icons: FILE_TREE_ICONS,
       initialExpansion: 'closed',
       initialExpandedPaths: selectedPath ? ancestorDirectories(selectedPath) : [],
       flattenEmptyDirectories: true,
