@@ -519,7 +519,6 @@ mod tests {
                 versions::crate_id.eq(crate_id),
                 versions::num.eq(version),
                 versions::num_no_build.eq(version),
-                versions::checksum.eq("0".repeat(64)),
                 versions::tar_sha256.eq(vec![0u8; 32]),
                 versions::crate_size.eq(0),
             ))

@@ -107,7 +107,6 @@ impl VersionBuilder {
             .maybe_license(self.license.as_deref())
             .size(self.size)
             .published_by(published_by)
-            .checksum(&self.checksum)
             .tar_sha256(&tar_sha256)
             .maybe_links(self.links.as_deref())
             .maybe_rust_version(self.rust_version.as_deref())

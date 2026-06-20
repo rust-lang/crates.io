@@ -103,7 +103,6 @@ pub struct NewVersion<'a> {
     #[builder(default, name = "size")]
     crate_size: i32,
     published_by: Option<i32>,
-    checksum: &'a str,
     tar_sha256: &'a [u8],
     links: Option<&'a str>,
     rust_version: Option<&'a str>,
