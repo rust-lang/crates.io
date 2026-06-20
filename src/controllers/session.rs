@@ -169,7 +169,6 @@ async fn create_or_update_user(
             .gh_login(&user.login)
             .username(&user.login)
             .maybe_name(user.name.as_deref())
-            .maybe_gh_avatar(user.avatar_url.as_deref())
             .gh_encrypted_token(encrypted_token)
             .build();
 
@@ -184,7 +183,7 @@ async fn create_or_update_user(
             .account_id(new_user.gh_id as i64)
             .encrypted_token(new_user.gh_encrypted_token)
             .login(new_user.gh_login)
-            .maybe_avatar(new_user.gh_avatar)
+            .maybe_avatar(user.avatar_url.as_deref())
             .build();
 
         new_oauth_github.insert_or_update(conn).await?;

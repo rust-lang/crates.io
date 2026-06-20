@@ -266,7 +266,7 @@ id in (
 id = "public"
 gh_login = "public"
 name = "public"
-gh_avatar = "public"
+gh_avatar = "private"
 gh_id = "public"
 username = "public"
 created_at = "public"
