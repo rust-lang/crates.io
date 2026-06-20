@@ -9,7 +9,8 @@ async fn main() -> Result<()> {
 
     let access_token = env::args()
         .nth(1)
-        .ok_or_else(|| anyhow!("Missing access token"))?;
+        .ok_or_else(|| anyhow!("Missing access token"))?
+        .into();
 
     let docs_rs = RealDocsRsClient::new(Url::parse(DEFAULT_BASE_URL)?, access_token);
 
