@@ -107,10 +107,13 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut paths = Vec::new();
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
-        if let Err(error) = store.delete_crate_file(crate_name, version).await {
-            warn!(%crate_name, %version, "Failed to delete crate file from S3: {error}");
-        } else {
-            paths.push(store.crate_location(crate_name, version));
+        match store.delete_crate_file(crate_name, version).await {
+            Err(error) => {
+                warn!(%crate_name, %version, "Failed to delete crate file from S3: {error}");
+            }
+            Ok(path) => {
+                paths.push(path);
+            }
         }
 
         debug!(%crate_name, %version, "Deleting zip source archive from S3");
@@ -119,8 +122,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             Err(error) => {
                 warn!(%crate_name, %version, "Failed to delete zip source archive from S3: {error}")
             }
-            Ok(_) => {
-                paths.push(store.crate_zip_location(crate_name, version));
+            Ok(path) => {
+                paths.push(path);
             }
         }
 
@@ -130,8 +133,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             Err(error) => {
                 warn!(%crate_name, %version, "Failed to delete zip source archive manifest from S3: {error}")
             }
-            Ok(_) => {
-                paths.push(store.crate_zip_manifest_location(crate_name, version));
+            Ok(path) => {
+                paths.push(path);
             }
         }
 
@@ -141,8 +144,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             Err(error) => {
                 warn!(%crate_name, %version, "Failed to delete readme file from S3: {error}")
             }
-            Ok(_) => {
-                paths.push(store.readme_location(crate_name, version));
+            Ok(path) => {
+                paths.push(path);
             }
         }
     }

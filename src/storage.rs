@@ -257,30 +257,36 @@ impl Storage {
         self.delete_all_with_prefix(&prefix).await
     }
 
+    /// Deletes a crate version's archive, returning the path that was deleted.
     #[instrument(skip(self))]
-    pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<()> {
+    pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<Path> {
         let path = crate_file_path(name, version);
-        self.store.delete(&path).await
+        self.store.delete(&path).await?;
+        Ok(path)
     }
 
-    /// Deletes a crate version's zip source archive.
+    /// Deletes a crate version's zip source archive, returning the path that was deleted.
     #[instrument(skip(self))]
-    pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<()> {
+    pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<Path> {
         let path = crate_zip_path(name, version);
-        self.store.delete(&path).await
+        self.store.delete(&path).await?;
+        Ok(path)
     }
 
-    /// Deletes a crate version's zip source archive manifest.
+    /// Deletes a crate version's zip source archive manifest, returning the path that was deleted.
     #[instrument(skip(self))]
-    pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<()> {
+    pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<Path> {
         let path = crate_zip_manifest_path(name, version);
-        self.store.delete(&path).await
+        self.store.delete(&path).await?;
+        Ok(path)
     }
 
+    /// Deletes a crate version's readme, returning the path that was deleted.
     #[instrument(skip(self))]
-    pub async fn delete_readme(&self, name: &str, version: &str) -> Result<()> {
+    pub async fn delete_readme(&self, name: &str, version: &str) -> Result<Path> {
         let path = readme_path(name, version);
-        self.store.delete(&path).await
+        self.store.delete(&path).await?;
+        Ok(path)
     }
 
     /// Deletes the Open Graph image for the given crate.
