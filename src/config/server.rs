@@ -1,4 +1,5 @@
 use oauth2::{ClientId, ClientSecret};
+use secrecy::SecretString;
 use url::Url;
 
 use crate::Env;
@@ -55,7 +56,7 @@ pub struct Server {
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
     pub ownership_invitations_expiration: chrono::Duration,
-    pub metrics_authorization_token: Option<String>,
+    pub metrics_authorization_token: Option<SecretString>,
     pub datadog: DatadogConfig,
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub blocked_routes: HashSet<String>,
@@ -221,7 +222,7 @@ impl Server {
             domain_name,
             allowed_origins,
             ownership_invitations_expiration: chrono::Duration::days(30),
-            metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
+            metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?.map(Into::into),
             datadog: DatadogConfig::from_env()?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),
