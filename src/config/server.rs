@@ -9,20 +9,20 @@ use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::CdnLogQueueConfig;
+use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
 use crate::config::features::FeaturesConfig;
-use crate::middleware::{block_traffic::BlockCriteria, cargo_compat::StatusCodeConfig};
+use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
-use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
+use crates_io_env_vars::{list, required_var, var, var_parsed};
 use http::HeaderValue;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::convert::Infallible;
 use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
-use tracing::warn;
 
 /// Maximum number of features a crate can have or that a feature itself can
 /// enable. This value can be overridden in the database on a per-crate basis.
@@ -50,8 +50,7 @@ pub struct Server {
     pub max_features: usize,
     pub rate_limiter: HashMap<LimitedAction, RateLimiterConfig>,
     pub new_version_rate_limit: Option<u32>,
-    pub blocked_traffic: Vec<(String, Vec<BlockCriteria>)>,
-    pub blocked_ips: HashSet<IpAddr>,
+    pub block: BlockConfig,
     pub max_allowed_page_offset: u32,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
@@ -60,7 +59,6 @@ pub struct Server {
     pub metrics_authorization_token: Option<SecretString>,
     pub datadog: DatadogConfig,
     pub instance_metrics_log_every_seconds: Option<u64>,
-    pub blocked_routes: HashSet<String>,
     pub cdn_user_agent: String,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
@@ -122,8 +120,6 @@ impl Server {
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
-    /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
-    ///   traffic. See the `block_traffic` module for more documentation.
     /// - `METRICS_AUTHORIZATION_TOKEN`: authorization token needed to query metrics. If missing,
     ///   querying metrics will be completely disabled.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
@@ -132,8 +128,6 @@ impl Server {
     ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
     ///   endpoint even with a healthy database pool.
-    /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
-    ///   by an operator (e.g. `/crates/{crate_id}/{version}/download`).
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
     ///   and uses the value as the error message returned to users.
     /// - `GIT_ARCHIVE_REPO_URL`: HTTPS URL (e.g. `https://github.com/<org>/<repo>.git`) of a git
@@ -157,8 +151,6 @@ impl Server {
         };
 
         let port = var_parsed("PORT")?.unwrap_or(8888);
-
-        let blocked_ips = HashSet::from_iter(list_parsed("BLOCKED_IPS", IpAddr::from_str)?);
 
         let allowed_origins = AllowedOrigins::from_default_env()?;
 
@@ -211,8 +203,7 @@ impl Server {
             max_features: DEFAULT_MAX_FEATURES,
             rate_limiter,
             new_version_rate_limit: var_parsed("MAX_NEW_VERSIONS_DAILY")?,
-            blocked_traffic: blocked_traffic(),
-            blocked_ips,
+            block: BlockConfig::from_env()?,
             max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),
             excluded_crate_names,
             domain_name,
@@ -221,7 +212,6 @@ impl Server {
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?.map(Into::into),
             datadog: DatadogConfig::from_env()?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
-            blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
@@ -246,55 +236,6 @@ impl Server {
     }
 }
 
-fn blocked_traffic() -> Vec<(String, Vec<BlockCriteria>)> {
-    let pattern_list = dotenvy::var("BLOCKED_TRAFFIC").unwrap_or_default();
-    parse_traffic_patterns(&pattern_list)
-        .map(|(header, value_env_var)| {
-            let value_list = dotenvy::var(value_env_var).unwrap_or_default();
-            let values = parse_traffic_pattern_values(header, &value_list);
-            (header.into(), values)
-        })
-        .collect()
-}
-
-/// Extract from the `BLOCKED_TRAFFIC` env var value a comma-separated list of pairs containing a
-/// header name, an equals sign, and the name of another environment variable that contains the
-/// values of that header that should be blocked. For example, if `BLOCKED_TRAFFIC` is set to
-/// `User-Agent=BLOCKED_UAS,custom-header=BLOCKED_CUSTOM`, this function will return the pairs
-/// (`User-Agent`, `BLOCKED_UAS`) and (`custom-header`, `BLOCKED_CUSTOM`).
-///
-/// Patterns that do not contain an `=` are skipped with a warning, so that a single
-/// misconfigured entry does not prevent the remaining patterns from taking effect.
-fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> {
-    patterns.split_terminator(',').filter_map(|pattern| {
-        pattern.split_once('=').or_else(|| {
-            warn!("Skipping invalid BLOCKED_TRAFFIC pattern `{pattern}`: expected HEADER=VALUE_ENV_VAR");
-            None
-        })
-    })
-}
-
-/// After reading the value of an environment variable whose name was specified in the value of
-/// `BLOCKED_TRAFFIC`, parse a comma-separated list of values to be used as either regex matches or
-/// full string equality with the values of the header name specified in the `BLOCKED_TRAFFIC` pair.
-///
-/// Values that fail to parse are skipped with a warning, so that a single misconfigured entry
-/// does not prevent the remaining values from taking effect.
-fn parse_traffic_pattern_values(header: &str, value_list: &str) -> Vec<BlockCriteria> {
-    value_list
-        .split(',')
-        .filter_map(|value| match value.try_into() {
-            Ok(criteria) => Some(criteria),
-            Err(error) => {
-                warn!(
-                    "Skipping invalid BLOCKED_TRAFFIC value `{value}` for header `{header}`: {error}"
-                );
-                None
-            }
-        })
-        .collect()
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct AllowedOrigins(Vec<String>);
 
@@ -317,61 +258,5 @@ impl FromStr for AllowedOrigins {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self::from_str(s))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use claims::assert_none;
-
-    #[test]
-    fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
-        let pattern_string_1 = "Foo=BAR,Bar=BAZ";
-        let pattern_string_2 = "Baz=QUX";
-        let pattern_string_3 = "";
-
-        let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
-        assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
-
-        let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
-        assert_eq!(vec![("Baz", "QUX")], patterns_2);
-
-        assert_none!(parse_traffic_patterns(pattern_string_3).next());
-    }
-
-    #[test]
-    fn parse_traffic_patterns_skips_entries_missing_equals_sign() {
-        let pattern_string = "Foo=BAR,no-equals,Baz=QUX";
-
-        let patterns = parse_traffic_patterns(pattern_string).collect::<Vec<_>>();
-        assert_eq!(vec![("Foo", "BAR"), ("Baz", "QUX")], patterns);
-    }
-
-    #[test]
-    fn parse_traffic_pattern_values_splits_on_comma_even_if_escaping_is_attempted() {
-        let pattern = "web-tool 1.2.3,fancy-crate\\, run by fancy-author v4.5.6,/.*foo.*/";
-
-        let values = parse_traffic_pattern_values("User-Agent", pattern);
-        assert_eq!(
-            vec![
-                "web-tool 1.2.3",
-                "fancy-crate\\",
-                " run by fancy-author v4.5.6",
-                ".*foo.*",
-            ],
-            values.iter().map(|r| r.as_str()).collect::<Vec<_>>()
-        );
-    }
-
-    #[test]
-    fn parse_traffic_pattern_values_skips_invalid_regexes() {
-        let pattern = "/valid-regex/,/[invalid-regex/,exact-string";
-
-        let values = parse_traffic_pattern_values("User-Agent", pattern);
-        assert_eq!(
-            vec!["valid-regex", "exact-string"],
-            values.iter().map(|r| r.as_str()).collect::<Vec<_>>()
-        );
     }
 }

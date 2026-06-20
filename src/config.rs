@@ -1,4 +1,5 @@
 mod base;
+mod block;
 mod cdn_log_queue;
 mod cdn_log_storage;
 mod database_pools;
@@ -8,6 +9,7 @@ mod sentry;
 mod server;
 
 pub use self::base::Base;
+pub use self::block::BlockConfig;
 pub use self::cdn_log_queue::CdnLogQueueConfig;
 pub use self::cdn_log_storage::CdnLogStorageConfig;
 pub use self::database_pools::{DatabasePools, DbPoolConfig};

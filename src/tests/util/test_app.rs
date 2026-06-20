@@ -29,7 +29,7 @@ use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
@@ -582,8 +582,7 @@ fn simple_config() -> config::Server {
         max_dependencies: 10,
         rate_limiter: Default::default(),
         new_version_rate_limit: Some(10),
-        blocked_traffic: Default::default(),
-        blocked_ips: Default::default(),
+        block: Default::default(),
         max_allowed_page_offset: 200,
         excluded_crate_names: vec![],
         domain_name: "crates.io".into(),
@@ -592,7 +591,6 @@ fn simple_config() -> config::Server {
         metrics_authorization_token: None,
         datadog: DatadogConfig::default(),
         instance_metrics_log_every_seconds: None,
-        blocked_routes: HashSet::new(),
         cdn_user_agent: "Amazon CloudFront".to_string(),
 
         // The middleware has its own unit tests to verify its functionality.
