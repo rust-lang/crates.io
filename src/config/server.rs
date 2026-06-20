@@ -3,7 +3,6 @@ use secrecy::SecretString;
 use url::Url;
 
 use crate::Env;
-use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::util::gh_token_encryption::GitHubTokenEncryption;
 
 use super::base::Base;
@@ -13,16 +12,15 @@ use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
 use crate::config::features::FeaturesConfig;
+use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, required_var, var, var_parsed};
 use http::HeaderValue;
-use std::collections::HashMap;
 use std::convert::Infallible;
 use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::time::Duration;
 
 /// Maximum number of features a crate can have or that a feature itself can
 /// enable. This value can be overridden in the database on a per-crate basis.
@@ -48,8 +46,7 @@ pub struct Server {
     pub max_unpack_size: u64,
     pub max_dependencies: usize,
     pub max_features: usize,
-    pub rate_limiter: HashMap<LimitedAction, RateLimiterConfig>,
-    pub new_version_rate_limit: Option<u32>,
+    pub rate_limits: RateLimitsConfig,
     pub block: BlockConfig,
     pub max_allowed_page_offset: u32,
     pub excluded_crate_names: Vec<String>,
@@ -159,24 +156,6 @@ impl Server {
 
         let max_blocking_threads = var_parsed("SERVER_THREADS")?;
 
-        // Dynamically load the configuration for all the rate limiting actions. See
-        // `src/rate_limiter.rs` for their definition.
-        let mut rate_limiter = HashMap::new();
-        for action in LimitedAction::VARIANTS {
-            let env_var_key = action.env_var_key();
-            rate_limiter.insert(
-                *action,
-                RateLimiterConfig {
-                    rate: Duration::from_secs(
-                        var_parsed(&format!("RATE_LIMITER_{env_var_key}_RATE_SECONDS"))?
-                            .unwrap_or_else(|| action.default_rate_seconds()),
-                    ),
-                    burst: var_parsed(&format!("RATE_LIMITER_{env_var_key}_BURST"))?
-                        .unwrap_or_else(|| action.default_burst()),
-                },
-            );
-        }
-
         let storage = StorageConfig::from_environment();
 
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
@@ -201,8 +180,7 @@ impl Server {
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             max_dependencies: DEFAULT_MAX_DEPENDENCIES,
             max_features: DEFAULT_MAX_FEATURES,
-            rate_limiter,
-            new_version_rate_limit: var_parsed("MAX_NEW_VERSIONS_DAILY")?,
+            rate_limits: RateLimitsConfig::from_env()?,
             block: BlockConfig::from_env()?,
             max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),
             excluded_crate_names,

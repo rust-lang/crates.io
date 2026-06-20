@@ -4,7 +4,7 @@ use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
-    FeaturesConfig,
+    FeaturesConfig, RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -443,7 +443,8 @@ impl TestAppBuilder {
     pub fn with_rate_limit(self, action: LimitedAction, rate: Duration, burst: i32) -> Self {
         self.with_config(|config| {
             config
-                .rate_limiter
+                .rate_limits
+                .actions
                 .insert(action, RateLimiterConfig { rate, burst });
         })
     }
@@ -580,8 +581,10 @@ fn simple_config() -> config::Server {
         max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_features: 10,
         max_dependencies: 10,
-        rate_limiter: Default::default(),
-        new_version_rate_limit: Some(10),
+        rate_limits: RateLimitsConfig {
+            new_versions_daily: Some(10),
+            ..Default::default()
+        },
         block: Default::default(),
         max_allowed_page_offset: 200,
         excluded_crate_names: vec![],
@@ -631,7 +634,7 @@ fn build_app(
         .oidc_key_stores(oidc_key_stores)
         .emails(emails)
         .storage_from_config(&config.storage)
-        .rate_limiter_from_config(config.rate_limiter.clone())
+        .rate_limiter_from_config(config.rate_limits.actions.clone())
         .config(Arc::new(config))
         .build();
 

@@ -480,7 +480,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             )));
         }
 
-        if let Some(daily_version_limit) = app.config.new_version_rate_limit {
+        if let Some(daily_version_limit) = app.config.rate_limits.new_versions_daily {
             let published_today = count_versions_published_today(krate.id, conn).await?;
             if published_today >= daily_version_limit as i64 {
                 return Err(custom(

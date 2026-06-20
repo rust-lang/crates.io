@@ -5,6 +5,7 @@ mod cdn_log_storage;
 mod database_pools;
 mod datadog;
 mod features;
+mod rate_limits;
 mod sentry;
 mod server;
 
@@ -15,5 +16,6 @@ pub use self::cdn_log_storage::CdnLogStorageConfig;
 pub use self::database_pools::{DatabasePools, DbPoolConfig};
 pub use self::datadog::DatadogConfig;
 pub use self::features::FeaturesConfig;
+pub use self::rate_limits::RateLimitsConfig;
 pub use self::sentry::SentryConfig;
 pub use self::server::Server;

@@ -43,7 +43,7 @@ fn main() -> anyhow::Result<()> {
         .trustpub_providers(&list("TRUSTPUB_PROVIDERS")?)
         .emails(emails)
         .storage_from_config(&config.storage)
-        .rate_limiter_from_config(config.rate_limiter.clone())
+        .rate_limiter_from_config(config.rate_limits.actions.clone())
         .config(Arc::new(config))
         .build();
 
