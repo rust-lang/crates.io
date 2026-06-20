@@ -4,7 +4,7 @@ use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
-    FeaturesConfig, FrontendConfig, RateLimitsConfig,
+    FeaturesConfig, FrontendConfig, PublishLimitsConfig, RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -577,10 +577,7 @@ fn simple_config() -> config::Server {
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
         gh_token_encryption: GitHubTokenEncryption::for_testing(),
-        max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
-        max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
-        max_features: 10,
-        max_dependencies: 10,
+        publish_limits: PublishLimitsConfig::for_testing(),
         rate_limits: RateLimitsConfig {
             new_versions_daily: Some(10),
             ..Default::default()

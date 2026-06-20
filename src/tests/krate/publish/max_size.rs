@@ -11,8 +11,8 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
     let max_upload_size = 5 * 1024 * 1024;
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = max_upload_size;
-            config.max_unpack_size = max_upload_size as u64;
+            config.publish_limits.upload_size = max_upload_size;
+            config.publish_limits.unpack_size = max_upload_size as u64;
         })
         .with_token()
         .await;
@@ -66,8 +66,8 @@ async fn tarball_bigger_than_max_upload_size() {
     let max_upload_size = 5 * 1024 * 1024;
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = max_upload_size;
-            config.max_unpack_size = max_upload_size as u64;
+            config.publish_limits.upload_size = max_upload_size;
+            config.publish_limits.unpack_size = max_upload_size as u64;
         })
         .with_token()
         .await;
@@ -101,8 +101,8 @@ async fn tarball_bigger_than_max_upload_size() {
 async fn new_krate_gzip_bomb() {
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = 3000;
-            config.max_unpack_size = 2000;
+            config.publish_limits.upload_size = 3000;
+            config.publish_limits.unpack_size = 2000;
         })
         .with_token()
         .await;
@@ -120,8 +120,8 @@ async fn new_krate_gzip_bomb() {
 async fn new_krate_too_big() {
     let (app, _, user) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = 3000;
-            config.max_unpack_size = 2000;
+            config.publish_limits.upload_size = 3000;
+            config.publish_limits.unpack_size = 2000;
         })
         .with_user()
         .await;

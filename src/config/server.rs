@@ -13,6 +13,7 @@ use crate::config::datadog::DatadogConfig;
 use crate::config::features::FeaturesConfig;
 use crate::config::frontend::FrontendConfig;
 use crate::config::metrics::MetricsConfig;
+use crate::config::publish_limits::PublishLimitsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
@@ -22,13 +23,6 @@ use std::convert::Infallible;
 use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
-
-/// Maximum number of features a crate can have or that a feature itself can
-/// enable. This value can be overridden in the database on a per-crate basis.
-const DEFAULT_MAX_FEATURES: usize = 300;
-
-/// Maximum number of dependencies a crate can have.
-const DEFAULT_MAX_DEPENDENCIES: usize = 500;
 
 pub struct Server {
     pub base: Base,
@@ -43,10 +37,7 @@ pub struct Server {
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
     pub gh_token_encryption: GitHubTokenEncryption,
-    pub max_upload_size: u32,
-    pub max_unpack_size: u64,
-    pub max_dependencies: usize,
-    pub max_features: usize,
+    pub publish_limits: PublishLimitsConfig,
     pub rate_limits: RateLimitsConfig,
     pub block: BlockConfig,
     pub max_allowed_page_offset: u32,
@@ -157,10 +148,7 @@ impl Server {
             gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),
             gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
             gh_token_encryption: GitHubTokenEncryption::from_environment()?,
-            max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
-            max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            max_dependencies: DEFAULT_MAX_DEPENDENCIES,
-            max_features: DEFAULT_MAX_FEATURES,
+            publish_limits: PublishLimitsConfig::default(),
             rate_limits: RateLimitsConfig::from_env()?,
             block: BlockConfig::from_env()?,
             max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),

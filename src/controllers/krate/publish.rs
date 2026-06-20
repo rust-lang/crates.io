@@ -247,13 +247,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let max_upload_size = existing_crate
         .as_ref()
         .and_then(|c| c.max_upload_size())
-        .unwrap_or(app.config.max_upload_size);
+        .unwrap_or(app.config.publish_limits.upload_size);
 
     let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
-    let max_unpack_size = std::cmp::max(app.config.max_unpack_size, max_upload_size as u64);
+    let max_unpack_size = std::cmp::max(
+        app.config.publish_limits.unpack_size,
+        max_upload_size as u64,
+    );
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, max_unpack_size).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
@@ -369,7 +372,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let max_features = existing_crate
         .as_ref()
         .and_then(|c| c.max_features.map(|mf| mf as usize))
-        .unwrap_or(app.config.max_features);
+        .unwrap_or(app.config.publish_limits.features);
 
     let features = tarball_info.manifest.features.unwrap_or_default();
     let num_features = features.len();
@@ -417,7 +420,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         tarball_info.manifest.target.as_ref(),
     );
 
-    let max_dependencies = app.config.max_dependencies;
+    let max_dependencies = app.config.publish_limits.dependencies;
     if deps.len() > max_dependencies {
         return Err(bad_request(format!(
             "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
