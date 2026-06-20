@@ -648,7 +648,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let build_crate_zip_job = BuildCrateZip::new(version.id);
 
         let build_crate_zip = async {
-            if app.config.zip_archives_enabled {
+            if app.config.features.zip_archives_enabled {
                 build_crate_zip_job.enqueue(&*conn).await?;
             }
             Ok(())

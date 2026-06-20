@@ -4,6 +4,7 @@ use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
+    FeaturesConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -607,8 +608,10 @@ fn simple_config() -> config::Server {
         trustpub_audience: AUDIENCE.to_string(),
         disable_token_creation: None,
         banner_message: None,
-        index_include_pubtime: false,
-        zip_archives_enabled: true,
+        features: FeaturesConfig {
+            index_include_pubtime: false,
+            zip_archives_enabled: true,
+        },
         index_archive_url: None,
         postgres_bin_dir: None,
     }

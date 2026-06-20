@@ -40,9 +40,13 @@ impl BackgroundJob for SyncToGitIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let new = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
-            .await
-            .context("Failed to get index data")?;
+        let new = get_index_data(
+            &crate_name,
+            &mut conn,
+            env.config.features.index_include_pubtime,
+        )
+        .await
+        .context("Failed to get index data")?;
 
         spawn_blocking(move || {
             let repo = env.lock_index()?;
@@ -113,7 +117,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
         let handle = Handle::current();
         spawn_blocking(move || {
             let repo = env.lock_index()?;
-            let include_pubtime = env.config.index_include_pubtime;
+            let include_pubtime = env.config.features.index_include_pubtime;
 
             let mut builder = repo.commit_builder(commit_message)?;
             let mut num_changes = 0;
@@ -187,9 +191,13 @@ impl BackgroundJob for SyncToSparseIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let content = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
-            .await
-            .context("Failed to get index data")?;
+        let content = get_index_data(
+            &crate_name,
+            &mut conn,
+            env.config.features.index_include_pubtime,
+        )
+        .await
+        .context("Failed to get index data")?;
 
         let future = env.storage.sync_index(&self.krate, content);
         future.await.context("Failed to sync index data")?;

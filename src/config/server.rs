@@ -11,6 +11,7 @@ use super::database_pools::DatabasePools;
 use crate::config::CdnLogQueueConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
+use crate::config::features::FeaturesConfig;
 use crate::middleware::{block_traffic::BlockCriteria, cargo_compat::StatusCodeConfig};
 use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
@@ -94,11 +95,7 @@ pub struct Server {
     /// Banner message to display on all pages (e.g., for security incidents).
     pub banner_message: Option<String>,
 
-    /// Include publication timestamp in index entries (ISO8601 format).
-    pub index_include_pubtime: bool,
-
-    /// Enable enqueueing of `BuildCrateZip` jobs in the publish flow.
-    pub zip_archives_enabled: bool,
+    pub features: FeaturesConfig,
 
     /// URL of a git repository to mirror the crate index's snapshot branches
     /// to. When set, the `ArchiveIndexBranch` background job pushes snapshot
@@ -194,7 +191,6 @@ impl Server {
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
         let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
         let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
-        let index_include_pubtime = var_parsed("INDEX_INCLUDE_PUBTIME")?.unwrap_or(false);
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
@@ -237,8 +233,7 @@ impl Server {
             trustpub_audience,
             disable_token_creation,
             banner_message,
-            index_include_pubtime,
-            zip_archives_enabled: var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false),
+            features: FeaturesConfig::from_env()?,
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
         })
