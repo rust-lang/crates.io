@@ -5,7 +5,7 @@ use http::StatusCode;
 #[tokio::test(flavor = "multi_thread")]
 async fn metrics_endpoint_works() {
     let (_, anon) = TestApp::init()
-        .with_config(|config| config.metrics_authorization_token = Some("foobar".into()))
+        .with_config(|config| config.metrics.authorization_token = Some("foobar".into()))
         .empty()
         .await;
 
@@ -22,7 +22,7 @@ async fn metrics_endpoint_works() {
 #[tokio::test(flavor = "multi_thread")]
 async fn metrics_endpoint_wrong_auth() {
     let (_, anon) = TestApp::init()
-        .with_config(|config| config.metrics_authorization_token = Some("secret".into()))
+        .with_config(|config| config.metrics.authorization_token = Some("secret".into()))
         .empty()
         .await;
 
@@ -52,7 +52,7 @@ async fn metrics_endpoint_wrong_auth() {
 #[tokio::test(flavor = "multi_thread")]
 async fn metrics_endpoint_auth_disabled() {
     let (_, anon) = TestApp::init()
-        .with_config(|config| config.metrics_authorization_token = None)
+        .with_config(|config| config.metrics.authorization_token = None)
         .empty()
         .await;
 

@@ -42,7 +42,7 @@ async fn user_agent_is_not_required_for_download() {
 async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
-            config.blocked_traffic = vec![("Never-Given".into(), vec!["1".try_into().unwrap()])];
+            config.block.traffic = vec![("Never-Given".into(), vec!["1".try_into().unwrap()])];
         })
         .with_user()
         .await;
@@ -63,7 +63,7 @@ async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
 async fn block_traffic_via_arbitrary_header_and_value() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
-            config.blocked_traffic = vec![(
+            config.block.traffic = vec![(
                 "User-Agent".into(),
                 vec![
                     // This is an exact string match because it doesn't start with `/`
@@ -159,7 +159,7 @@ async fn block_traffic_via_arbitrary_header_and_value() {
 async fn block_traffic_via_ip() {
     let (_app, anon) = TestApp::init()
         .with_config(|config| {
-            config.blocked_ips = HashSet::from(["127.0.0.1".parse().unwrap()]);
+            config.block.ips = HashSet::from(["127.0.0.1".parse().unwrap()]);
         })
         .empty()
         .await;

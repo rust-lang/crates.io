@@ -100,7 +100,7 @@ async fn invalid_feature_name_start_with_hyphen() {
 async fn too_many_features() {
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_features = 3;
+            config.publish_limits.features = 3;
         })
         .with_token()
         .await;
@@ -121,7 +121,7 @@ async fn too_many_features() {
 async fn too_many_features_with_custom_limit() {
     let (app, _, user, token) = TestApp::full()
         .with_config(|config| {
-            config.max_features = 3;
+            config.publish_limits.features = 3;
         })
         .with_token()
         .await;
@@ -164,7 +164,7 @@ async fn too_many_features_with_custom_limit() {
 async fn too_many_enabled_features() {
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_features = 3;
+            config.publish_limits.features = 3;
         })
         .with_token()
         .await;
@@ -181,7 +181,7 @@ async fn too_many_enabled_features() {
 async fn too_many_enabled_features_with_custom_limit() {
     let (app, _, user, token) = TestApp::full()
         .with_config(|config| {
-            config.max_features = 3;
+            config.publish_limits.features = 3;
         })
         .with_token()
         .await;

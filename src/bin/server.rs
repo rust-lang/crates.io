@@ -43,7 +43,7 @@ fn main() -> anyhow::Result<()> {
         .trustpub_providers(&list("TRUSTPUB_PROVIDERS")?)
         .emails(emails)
         .storage_from_config(&config.storage)
-        .rate_limiter_from_config(config.rate_limiter.clone())
+        .rate_limiter_from_config(config.rate_limits.actions.clone())
         .config(Arc::new(config))
         .build();
 
@@ -74,7 +74,7 @@ fn main() -> anyhow::Result<()> {
     // Block the main thread until the server has shutdown
     rt.block_on(async {
         // Create a `TcpListener` using tokio.
-        let listener = TcpListener::bind((app.config.ip, app.config.port)).await?;
+        let listener = TcpListener::bind((app.config.bind.ip, app.config.bind.port)).await?;
 
         let addr = listener.local_addr()?;
 
@@ -115,7 +115,7 @@ async fn shutdown_signal() {
 
 fn log_instance_metrics_thread(app: Arc<App>) {
     // Only run the thread if the configuration is provided
-    let interval = match app.config.instance_metrics_log_every_seconds {
+    let interval = match app.config.metrics.instance_log_every_seconds {
         Some(secs) => Duration::from_secs(secs),
         None => return,
     };

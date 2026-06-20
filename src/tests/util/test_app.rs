@@ -3,7 +3,9 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
+    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
+    DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
+    RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -28,7 +30,7 @@ use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
@@ -442,7 +444,8 @@ impl TestAppBuilder {
     pub fn with_rate_limit(self, action: LimitedAction, rate: Duration, burst: i32) -> Self {
         self.with_config(|config| {
             config
-                .rate_limiter
+                .rate_limits
+                .actions
                 .insert(action, RateLimiterConfig { rate, burst });
         })
     }
@@ -564,34 +567,34 @@ fn simple_config() -> config::Server {
 
     config::Server {
         base,
-        ip: [127, 0, 0, 1].into(),
-        port: 8888,
+        bind: BindConfig {
+            ip: [127, 0, 0, 1].into(),
+            port: 8888,
+        },
         max_blocking_threads: None,
         db,
         storage,
         cdn_log_queue: CdnLogQueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
-        gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
-        gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        github_oauth: GitHubOAuthConfig {
+            client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
+            client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        },
         gh_token_encryption: GitHubTokenEncryption::for_testing(),
-        max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
-        max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
-        max_features: 10,
-        max_dependencies: 10,
-        rate_limiter: Default::default(),
-        new_version_rate_limit: Some(10),
-        blocked_traffic: Default::default(),
-        blocked_ips: Default::default(),
+        publish_limits: PublishLimitsConfig::for_testing(),
+        rate_limits: RateLimitsConfig {
+            new_versions_daily: Some(10),
+            ..Default::default()
+        },
+        block: Default::default(),
         max_allowed_page_offset: 200,
         excluded_crate_names: vec![],
         domain_name: "crates.io".into(),
         allowed_origins: Default::default(),
         ownership_invitations_expiration: chrono::Duration::days(30),
-        metrics_authorization_token: None,
+        metrics: Default::default(),
         datadog: DatadogConfig::default(),
-        instance_metrics_log_every_seconds: None,
-        blocked_routes: HashSet::new(),
         cdn_user_agent: "Amazon CloudFront".to_string(),
 
         // The middleware has its own unit tests to verify its functionality.
@@ -600,15 +603,19 @@ fn simple_config() -> config::Server {
         cargo_compat_status_code_config: StatusCodeConfig::Disabled,
 
         // The frontend code is not needed for the backend tests.
-        serve_dist: false,
-        serve_html: false,
-        og_image_base_url: None,
-        html_render_cache_max_capacity: 1024,
+        frontend: FrontendConfig {
+            serve_dist: false,
+            serve_html: false,
+            og_image_base_url: None,
+            html_render_cache_max_capacity: 1024,
+        },
         trustpub_audience: AUDIENCE.to_string(),
         disable_token_creation: None,
         banner_message: None,
-        index_include_pubtime: false,
-        zip_archives_enabled: true,
+        features: FeaturesConfig {
+            index_include_pubtime: false,
+            zip_archives_enabled: true,
+        },
         index_archive_url: None,
         postgres_bin_dir: None,
     }
@@ -630,7 +637,7 @@ fn build_app(
         .oidc_key_stores(oidc_key_stores)
         .emails(emails)
         .storage_from_config(&config.storage)
-        .rate_limiter_from_config(config.rate_limiter.clone())
+        .rate_limiter_from_config(config.rate_limits.actions.clone())
         .config(Arc::new(config))
         .build();
 

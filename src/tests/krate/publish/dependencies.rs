@@ -375,7 +375,7 @@ async fn invalid_feature_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dep_limit() {
     let (app, _, user, token) = TestApp::full()
-        .with_config(|config| config.max_dependencies = 1)
+        .with_config(|config| config.publish_limits.dependencies = 1)
         .with_token()
         .await;
 

@@ -70,16 +70,16 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         ))
         .layer(from_fn_with_state(state.clone(), block_traffic::middleware))
         .layer(from_fn(common_headers::add_common_headers))
-        .layer(conditional_layer(config.serve_html, || {
+        .layer(conditional_layer(config.frontend.serve_html, || {
             from_fn(svelte_redirect::redirect)
         }))
         .layer(conditional_layer(env == Env::Development, || {
             from_fn(static_or_continue::serve_local_uploads)
         }))
-        .layer(conditional_layer(config.serve_dist, || {
+        .layer(conditional_layer(config.frontend.serve_dist, || {
             from_fn(static_or_continue::serve_svelte)
         }))
-        .layer(conditional_layer(config.serve_html, || {
+        .layer(conditional_layer(config.frontend.serve_html, || {
             from_fn_with_state(state.clone(), frontend_html::serve)
         }))
         .layer(AddExtensionLayer::new(state.clone()));

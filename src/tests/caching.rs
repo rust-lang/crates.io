@@ -111,7 +111,7 @@ async fn admin_list_is_not_cached() {
 #[tokio::test(flavor = "multi_thread")]
 async fn metrics_is_not_cached() {
     let (_, anon) = TestApp::init()
-        .with_config(|config| config.metrics_authorization_token = Some("secret".into()))
+        .with_config(|config| config.metrics.authorization_token = Some("secret".into()))
         .empty()
         .await;
     let mut request = anon.get_request("/api/private/metrics/service");
