@@ -591,9 +591,8 @@ fn simple_config() -> config::Server {
         domain_name: "crates.io".into(),
         allowed_origins: Default::default(),
         ownership_invitations_expiration: chrono::Duration::days(30),
-        metrics_authorization_token: None,
+        metrics: Default::default(),
         datadog: DatadogConfig::default(),
-        instance_metrics_log_every_seconds: None,
         cdn_user_agent: "Amazon CloudFront".to_string(),
 
         // The middleware has its own unit tests to verify its functionality.

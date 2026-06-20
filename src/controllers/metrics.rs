@@ -16,7 +16,7 @@ pub async fn prometheus(
     Path(kind): Path<String>,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, String)> {
-    if let Some(expected_token) = &app.config.metrics_authorization_token {
+    if let Some(expected_token) = &app.config.metrics.authorization_token {
         let provided_token = req
             .headers
             .get(header::AUTHORIZATION)

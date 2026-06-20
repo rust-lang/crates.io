@@ -1,5 +1,4 @@
 use oauth2::{ClientId, ClientSecret};
-use secrecy::SecretString;
 use url::Url;
 
 use crate::Env;
@@ -12,6 +11,7 @@ use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
 use crate::config::features::FeaturesConfig;
+use crate::config::metrics::MetricsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
@@ -53,9 +53,8 @@ pub struct Server {
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
     pub ownership_invitations_expiration: chrono::Duration,
-    pub metrics_authorization_token: Option<SecretString>,
+    pub metrics: MetricsConfig,
     pub datadog: DatadogConfig,
-    pub instance_metrics_log_every_seconds: Option<u64>,
     pub cdn_user_agent: String,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
@@ -117,12 +116,8 @@ impl Server {
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
-    /// - `METRICS_AUTHORIZATION_TOKEN`: authorization token needed to query metrics. If missing,
-    ///   querying metrics will be completely disabled.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
-    /// - `INSTANCE_METRICS_LOG_EVERY_SECONDS`: How frequently should instance metrics be logged.
-    ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
     ///   endpoint even with a healthy database pool.
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
@@ -187,9 +182,8 @@ impl Server {
             domain_name,
             allowed_origins,
             ownership_invitations_expiration: chrono::Duration::days(30),
-            metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?.map(Into::into),
+            metrics: MetricsConfig::from_env()?,
             datadog: DatadogConfig::from_env()?,
-            instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?

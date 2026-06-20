@@ -115,7 +115,7 @@ async fn shutdown_signal() {
 
 fn log_instance_metrics_thread(app: Arc<App>) {
     // Only run the thread if the configuration is provided
-    let interval = match app.config.instance_metrics_log_every_seconds {
+    let interval = match app.config.metrics.instance_log_every_seconds {
         Some(secs) => Duration::from_secs(secs),
         None => return,
     };
