@@ -1,4 +1,3 @@
-use oauth2::{ClientId, ClientSecret};
 use url::Url;
 
 use crate::Env;
@@ -13,6 +12,7 @@ use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
 use crate::config::features::FeaturesConfig;
 use crate::config::frontend::FrontendConfig;
+use crate::config::github::GitHubOAuthConfig;
 use crate::config::metrics::MetricsConfig;
 use crate::config::publish_limits::PublishLimitsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
@@ -33,8 +33,7 @@ pub struct Server {
     pub cdn_log_storage: CdnLogStorageConfig,
     pub cdn_log_queue: CdnLogQueueConfig,
     pub session_key: cookie::Key,
-    pub gh_client_id: ClientId,
-    pub gh_client_secret: ClientSecret,
+    pub github_oauth: GitHubOAuthConfig,
     pub gh_token_encryption: GitHubTokenEncryption,
     pub publish_limits: PublishLimitsConfig,
     pub rate_limits: RateLimitsConfig,
@@ -89,8 +88,6 @@ impl Server {
     /// Pulls values from the following environment variables:
     ///
     /// - `SESSION_KEY`: The key used to sign and encrypt session cookies.
-    /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
-    /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
@@ -132,8 +129,7 @@ impl Server {
             bind: BindConfig::from_env()?,
             max_blocking_threads,
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
-            gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),
-            gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
+            github_oauth: GitHubOAuthConfig::from_env()?,
             gh_token_encryption: GitHubTokenEncryption::from_environment()?,
             publish_limits: PublishLimitsConfig::default(),
             rate_limits: RateLimitsConfig::from_env()?,

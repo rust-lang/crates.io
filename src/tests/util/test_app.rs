@@ -4,7 +4,8 @@ use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
     self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
-    DbPoolConfig, FeaturesConfig, FrontendConfig, PublishLimitsConfig, RateLimitsConfig,
+    DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
+    RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -576,8 +577,10 @@ fn simple_config() -> config::Server {
         cdn_log_queue: CdnLogQueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
-        gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
-        gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        github_oauth: GitHubOAuthConfig {
+            client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
+            client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        },
         gh_token_encryption: GitHubTokenEncryption::for_testing(),
         publish_limits: PublishLimitsConfig::for_testing(),
         rate_limits: RateLimitsConfig {

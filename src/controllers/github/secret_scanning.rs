@@ -63,8 +63,8 @@ async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Boxed
 
     // Fetch from GitHub API
     let auth = GitHubAuth::basic(
-        state.config.gh_client_id.as_str(),
-        state.config.gh_client_secret.secret().clone(),
+        state.config.github_oauth.client_id.as_str(),
+        state.config.github_oauth.client_secret.secret().clone(),
     );
     let keys = state.github.public_keys(&auth).await?;
 

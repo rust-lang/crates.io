@@ -12,7 +12,9 @@ struct AuthResponse {
 #[tokio::test(flavor = "multi_thread")]
 async fn post_gives_a_token() {
     let (_, anon) = TestApp::init()
-        .with_config(|config| config.gh_client_id = ClientId::new("test-client-id".into()))
+        .with_config(|config| {
+            config.github_oauth.client_id = ClientId::new("test-client-id".into())
+        })
         .empty()
         .await;
 

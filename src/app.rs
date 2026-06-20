@@ -89,8 +89,8 @@ impl<S: app_builder::State> AppBuilder<S> {
         let token_url = "https://github.com/login/oauth/access_token";
         let token_url = TokenUrl::new(token_url.into()).unwrap();
 
-        let github_oauth = BasicClient::new(config.gh_client_id.clone())
-            .set_client_secret(config.gh_client_secret.clone())
+        let github_oauth = BasicClient::new(config.github_oauth.client_id.clone())
+            .set_client_secret(config.github_oauth.client_secret.clone())
             .set_auth_uri(auth_url)
             .set_token_uri(token_url);
 
