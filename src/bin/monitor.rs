@@ -19,7 +19,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 #[tokio::main]
 async fn main() -> Result<()> {
     let api_token = required_var("PAGERDUTY_API_TOKEN")?.into();
-    let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?;
+    let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
     let client = PagerdutyClient::new(api_token, service_key);
 
     let conn = &mut db::oneoff_connection().await?;

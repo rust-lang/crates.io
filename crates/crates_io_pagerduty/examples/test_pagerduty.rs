@@ -31,8 +31,8 @@ struct Opts {
     #[arg(long, env = "PAGERDUTY_API_TOKEN", hide_env_values = true)]
     api_token: SecretString,
 
-    #[arg(long, env = "PAGERDUTY_INTEGRATION_KEY")]
-    integration_key: String,
+    #[arg(long, env = "PAGERDUTY_INTEGRATION_KEY", hide_env_values = true)]
+    integration_key: SecretString,
 
     #[arg(value_enum)]
     event_type: EventType,
