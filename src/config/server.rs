@@ -11,6 +11,7 @@ use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
 use crate::config::features::FeaturesConfig;
+use crate::config::frontend::FrontendConfig;
 use crate::config::metrics::MetricsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
@@ -61,22 +62,7 @@ pub struct Server {
     /// status codes to `200 OK` for all endpoints that are relevant for cargo.
     pub cargo_compat_status_code_config: StatusCodeConfig,
 
-    /// Should the server serve the frontend assets in the `dist` directory?
-    pub serve_dist: bool,
-
-    /// Should the server serve the frontend `index.html` for all
-    /// non-API requests?
-    pub serve_html: bool,
-
-    /// Base URL for the service from which the OpenGraph images
-    /// for crates are loaded. Required if
-    /// [`Self::serve_html`] is set.
-    pub og_image_base_url: Option<Url>,
-
-    /// Maximum number of items that the HTML render
-    /// cache in `crate::middleware::frontend_html::serve`
-    /// can hold. Defaults to 1024.
-    pub html_render_cache_max_capacity: u64,
+    pub frontend: FrontendConfig,
 
     /// The expected audience claim (`aud`) for the Trusted Publishing
     /// token exchange.
@@ -188,10 +174,7 @@ impl Server {
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
-            serve_dist: true,
-            serve_html: true,
-            og_image_base_url: var_parsed("OG_IMAGE_BASE_URL")?,
-            html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
+            frontend: FrontendConfig::from_env()?,
             trustpub_audience,
             disable_token_creation,
             banner_message,

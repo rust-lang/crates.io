@@ -80,16 +80,17 @@ pub async fn serve(state: AppState, request: Request, next: Next) -> Response {
             return (StatusCode::METHOD_NOT_ALLOWED, headers).into_response();
         }
 
-        // `state.config.og_image_base_url` will always be `Some` as that's required
-        // if `state.config.serve_html` is `true`, and otherwise this
+        // `state.config.frontend.og_image_base_url` will always be `Some` as that's required
+        // if `state.config.frontend.serve_html` is `true`, and otherwise this
         // middleware won't be executed; see `crate::middleware::apply_axum_middleware`.
-        let og_image_url = generate_og_image_url(path, state.config.og_image_base_url.as_ref())
-            .map(|url| Cow::Owned(url.to_string()))
-            .unwrap_or(Cow::Borrowed(OG_IMAGE_FALLBACK_URL));
+        let og_image_url =
+            generate_og_image_url(path, state.config.frontend.og_image_base_url.as_ref())
+                .map(|url| Cow::Owned(url.to_string()))
+                .unwrap_or(Cow::Borrowed(OG_IMAGE_FALLBACK_URL));
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
         let html_cache = RENDERED_HTML_CACHE
-            .get_or_init(|| init_html_cache(state.config.html_render_cache_max_capacity));
+            .get_or_init(|| init_html_cache(state.config.frontend.html_render_cache_max_capacity));
 
         let render_result = html_cache
             .entry_by_ref(&og_image_url)

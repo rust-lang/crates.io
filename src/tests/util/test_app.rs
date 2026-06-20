@@ -4,7 +4,7 @@ use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
-    FeaturesConfig, RateLimitsConfig,
+    FeaturesConfig, FrontendConfig, RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -601,10 +601,12 @@ fn simple_config() -> config::Server {
         cargo_compat_status_code_config: StatusCodeConfig::Disabled,
 
         // The frontend code is not needed for the backend tests.
-        serve_dist: false,
-        serve_html: false,
-        og_image_base_url: None,
-        html_render_cache_max_capacity: 1024,
+        frontend: FrontendConfig {
+            serve_dist: false,
+            serve_html: false,
+            og_image_base_url: None,
+            html_render_cache_max_capacity: 1024,
+        },
         trustpub_audience: AUDIENCE.to_string(),
         disable_token_creation: None,
         banner_message: None,
