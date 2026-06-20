@@ -7,6 +7,7 @@ use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::CdnLogQueueConfig;
+use crate::config::bind::BindConfig;
 use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
@@ -20,14 +21,12 @@ use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, required_var, var, var_parsed};
 use http::HeaderValue;
 use std::convert::Infallible;
-use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 pub struct Server {
     pub base: Base,
-    pub ip: IpAddr,
-    pub port: u16,
+    pub bind: BindConfig,
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
     pub storage: StorageConfig,
@@ -110,17 +109,6 @@ impl Server {
     ///
     /// This function panics if the Server configuration is invalid.
     pub fn from_environment() -> anyhow::Result<Self> {
-        let docker = var("DEV_DOCKER")?.is_some();
-        let heroku = var("HEROKU")?.is_some();
-
-        let ip = if heroku || docker {
-            [0, 0, 0, 0].into()
-        } else {
-            [127, 0, 0, 1].into()
-        };
-
-        let port = var_parsed("PORT")?.unwrap_or(8888);
-
         let allowed_origins = AllowedOrigins::from_default_env()?;
 
         let base = Base::from_environment()?;
@@ -141,8 +129,7 @@ impl Server {
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
             cdn_log_queue: CdnLogQueueConfig::from_env()?,
             base,
-            ip,
-            port,
+            bind: BindConfig::from_env()?,
             max_blocking_threads,
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
             gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),

@@ -1,4 +1,5 @@
 mod base;
+mod bind;
 mod block;
 mod cdn_log_queue;
 mod cdn_log_storage;
@@ -13,6 +14,7 @@ mod sentry;
 mod server;
 
 pub use self::base::Base;
+pub use self::bind::BindConfig;
 pub use self::block::BlockConfig;
 pub use self::cdn_log_queue::CdnLogQueueConfig;
 pub use self::cdn_log_storage::CdnLogStorageConfig;

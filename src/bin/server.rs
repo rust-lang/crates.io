@@ -74,7 +74,7 @@ fn main() -> anyhow::Result<()> {
     // Block the main thread until the server has shutdown
     rt.block_on(async {
         // Create a `TcpListener` using tokio.
-        let listener = TcpListener::bind((app.config.ip, app.config.port)).await?;
+        let listener = TcpListener::bind((app.config.bind.ip, app.config.bind.port)).await?;
 
         let addr = listener.local_addr()?;
 

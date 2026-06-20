@@ -3,8 +3,8 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
-    FeaturesConfig, FrontendConfig, PublishLimitsConfig, RateLimitsConfig,
+    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
+    DbPoolConfig, FeaturesConfig, FrontendConfig, PublishLimitsConfig, RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -566,8 +566,10 @@ fn simple_config() -> config::Server {
 
     config::Server {
         base,
-        ip: [127, 0, 0, 1].into(),
-        port: 8888,
+        bind: BindConfig {
+            ip: [127, 0, 0, 1].into(),
+            port: 8888,
+        },
         max_blocking_threads: None,
         db,
         storage,
