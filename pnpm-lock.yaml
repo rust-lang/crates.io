@@ -238,8 +238,8 @@ importers:
         specifier: 4.1.9
         version: 4.1.9(@vitest/browser@4.1.9)(vitest@4.1.9)
       chromatic:
-        specifier: 17.4.1
-        version: 17.4.1
+        specifier: 17.5.0
+        version: 17.5.0
       magic-string:
         specifier: 0.30.21
         version: 0.30.21
@@ -2230,8 +2230,8 @@ packages:
       '@chromatic-com/vitest':
         optional: true
 
-  chromatic@17.4.1:
-    resolution: {integrity: sha512-qL1f0IhOBi0Z6kpQZGR62fJzzCOdjFJLHrJw3QL9YNktj2Kl3+adlU+6psqNGfZUycKF7+pizCSbhsUQNIS/uQ==}
+  chromatic@17.5.0:
+    resolution: {integrity: sha512-jYtXDaY1VeaNaWMom4HewLQTL574s4wTtkg5Kryov9Cj7D6i8Pe7twpLsetG7apxD0aITWUhx6KiqfN6p380rw==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -6131,7 +6131,7 @@ snapshots:
     dependencies:
       semver: 7.8.4
 
-  chromatic@17.4.1:
+  chromatic@17.5.0:
     dependencies:
       semver: 7.8.4
 
