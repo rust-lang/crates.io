@@ -35,8 +35,11 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    // Don't trigger if user is typing in an input/textarea or if modifier keys are pressed
-    let target = event.target as HTMLElement;
+    // Don't trigger if user is typing in an input/textarea or if modifier keys are pressed.
+    // `event.target` is retargeted to the shadow host for events originating
+    // inside a shadow root (e.g. an input within a web component), so read the
+    // real innermost element from the composed path instead.
+    let target = event.composedPath()[0] as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
       return;
     }
