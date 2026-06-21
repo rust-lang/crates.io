@@ -4348,6 +4348,11 @@ expression: response.json()
                         "null"
                       ]
                     },
+                    "cdn_base": {
+                      "description": "CDN base URL that e.g. crate files are served from.",
+                      "example": "https://static.crates.io",
+                      "type": "string"
+                    },
                     "commit": {
                       "description": "The SHA1 of the currently deployed commit.",
                       "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
@@ -4366,6 +4371,7 @@ expression: response.json()
                   "required": [
                     "deployed_sha",
                     "commit",
+                    "cdn_base",
                     "read_only"
                   ],
                   "type": "object"

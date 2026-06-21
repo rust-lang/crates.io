@@ -3595,6 +3595,11 @@ export interface operations {
                         /** @description Optional banner message to display on all pages. */
                         banner_message?: string | null;
                         /**
+                         * @description CDN base URL that e.g. crate files are served from.
+                         * @example https://static.crates.io
+                         */
+                        cdn_base: string;
+                        /**
                          * @description The SHA1 of the currently deployed commit.
                          * @example 0aebe2cdfacae1229b93853b1c58f9352195f081
                          */
