@@ -1,0 +1,73 @@
+import { expect, test } from '@/e2e/helper';
+
+const SOURCE_FILES = {
+  'Cargo.toml': '[package]\nname = "serde"\n',
+  'src/lib.rs': '// serde crate root\npub fn answer() -> u32 { 42 }\n',
+  'src/de.rs': '// serde deserializer\npub struct Deserializer;\n',
+  'docs/guide.md': '# Guide\n\nWelcome.\n',
+  'examples/icon.png': `PNG${String.fromCodePoint(0)}binary data`,
+};
+
+test.describe('Acceptance | crate code viewer', { tag: '@acceptance' }, () => {
+  test('redirects `/code` to the default file and renders it', async ({ page, msw, percy }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/1.0.0/code');
+    await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/lib.rs');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde crate root');
+    await expect(page.getByRole('treeitem', { name: 'lib.rs', selected: true })).toBeVisible();
+
+    await percy.snapshot();
+    await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
+  });
+
+  test('redirects a directory to its first file', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/1.0.0/code/docs');
+    await expect(page).toHaveURL('/crates/serde/1.0.0/code/docs/guide.md');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('Welcome.');
+  });
+
+  test('navigates between files via the tree and browser history', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/1.0.0/code/src/lib.rs');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde crate root');
+
+    await page.getByRole('treeitem', { name: 'de.rs' }).click();
+    await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/de.rs');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde deserializer');
+
+    await page.goBack();
+    await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/lib.rs');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde crate root');
+  });
+
+  test('shows a message for binary files', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/1.0.0/code/examples/icon.png');
+    await expect(page.locator('[data-test-binary-file]')).toBeVisible();
+  });
+
+  test('shows a not-available message when the archive is missing', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+
+    await page.goto('/crates/serde/1.0.0/code');
+    await expect(page.locator('[data-test-archive-unavailable]')).toBeVisible();
+  });
+
+  test('shows an error for an unknown file path', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/1.0.0/code/src/missing.rs');
+    await expect(page.locator('[data-test-load-error]')).toBeVisible();
+  });
+});
