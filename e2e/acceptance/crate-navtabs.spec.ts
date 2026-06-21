@@ -6,7 +6,11 @@ test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () =
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.1' });
 
+    let user = await msw.db.user.create({ isAdmin: true });
+    await msw.authenticateAs(user);
+
     let tabReadme = page.locator('[data-test-readme-tab] a');
+    let tabCode = page.locator('[data-test-code-tab] a');
     let tabVersions = page.locator('[data-test-versions-tab] a');
     let tabDeps = page.locator('[data-test-deps-tab] a');
     let tabRevDeps = page.locator('[data-test-rev-deps-tab] a');
@@ -15,6 +19,8 @@ test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () =
     async function checkLinks(version: string = '') {
       let readmeLink = version ? `/crates/nanomsg/${version}` : '/crates/nanomsg';
       await expect(tabReadme).toHaveAttribute('href', readmeLink);
+      let codeLink = version ? `/crates/nanomsg/${version}/code` : '/crates/nanomsg/code';
+      await expect(tabCode).toHaveAttribute('href', codeLink);
       await expect(tabVersions).toHaveAttribute('href', '/crates/nanomsg/versions');
       let depsLink = version ? `/crates/nanomsg/${version}/dependencies` : '/crates/nanomsg/dependencies';
       await expect(tabDeps).toHaveAttribute('href', depsLink);
@@ -23,7 +29,7 @@ test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () =
 
     async function checkTabActiveState(currentTab: Locator) {
       await expect(currentTab).toHaveAttribute('data-test-active');
-      let otherTabs = [tabReadme, tabVersions, tabDeps, tabRevDeps].filter(tab => tab !== currentTab);
+      let otherTabs = [tabReadme, tabCode, tabVersions, tabDeps, tabRevDeps].filter(tab => tab !== currentTab);
       for (let tab of otherTabs) {
         await expect(tab).not.toHaveAttribute('data-test-active');
       }
@@ -34,6 +40,14 @@ test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () =
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
     await checkLinks();
+    await checkTabActiveState(currentTab);
+    await expect(tabSettings).toHaveCount(0);
+
+    // Code
+    currentTab = tabCode;
+    await currentTab.click();
+    await expect(page).toHaveURL('/crates/nanomsg/0.6.1/code');
+    await checkLinks('0.6.1');
     await checkTabActiveState(currentTab);
     await expect(tabSettings).toHaveCount(0);
 
