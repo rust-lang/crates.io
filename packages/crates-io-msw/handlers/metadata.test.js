@@ -5,6 +5,7 @@ test('returns the deployed SHA1 and read-only status', async function () {
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
+      "cdn_base": "https://static.crates.io",
       "commit": "5048d31943118c6d67359bd207d307c854e82f45",
       "deployed_sha": "5048d31943118c6d67359bd207d307c854e82f45",
       "read_only": false,

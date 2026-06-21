@@ -8,6 +8,7 @@ export default [
       commit: EXAMPLE_SHA1,
       deployed_sha: EXAMPLE_SHA1,
       read_only: false,
+      cdn_base: 'https://static.crates.io',
     });
   }),
 ];

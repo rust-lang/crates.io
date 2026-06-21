@@ -250,6 +250,12 @@ impl Storage {
         self.apply_cdn_prefix(&feed_id.into()).replace('+', "%2B")
     }
 
+    /// Returns the base URL that crate files are served from, e.g.
+    /// `https://static.crates.io`.
+    pub fn cdn_base(&self) -> &str {
+        &self.cdn_base
+    }
+
     fn apply_cdn_prefix(&self, path: &Path) -> String {
         format!("{}/{path}", self.cdn_base)
     }

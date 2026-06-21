@@ -14,6 +14,10 @@ pub struct MetadataResponse<'a> {
     #[schema(example = "0aebe2cdfacae1229b93853b1c58f9352195f081")]
     pub commit: &'a str,
 
+    /// CDN base URL that e.g. crate files are served from.
+    #[schema(example = "https://static.crates.io")]
+    pub cdn_base: &'a str,
+
     /// Whether the crates.io service is in read-only mode.
     pub read_only: bool,
 
@@ -42,6 +46,7 @@ pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
         commit: deployed_sha,
         read_only,
         banner_message: state.config.banner_message.as_deref(),
+        cdn_base: state.storage.cdn_base(),
     })
     .into_response()
 }
