@@ -117,7 +117,7 @@ impl StorageConfig {
 }
 
 pub struct Storage {
-    cdn_prefix: Option<String>,
+    cdn_base: String,
     store: Arc<dyn ObjectStore>,
     index_store: Arc<dyn ObjectStore>,
     supports_attributes: bool,
@@ -129,7 +129,11 @@ impl Storage {
     }
 
     pub fn from_config(config: &StorageConfig) -> Self {
-        let cdn_prefix = config.cdn_prefix.clone();
+        let cdn_base = match config.cdn_prefix.as_deref() {
+            Some(prefix) if prefix.starts_with("https://") => prefix.to_string(),
+            Some(prefix) => format!("https://{prefix}"),
+            None => String::new(),
+        };
 
         match &config.backend {
             StorageBackend::S3 { default, index } => {
@@ -148,12 +152,12 @@ impl Storage {
 
                 let index_store = build_s3(index, Default::default());
 
-                if cdn_prefix.is_none() {
+                if config.cdn_prefix.is_none() {
                     panic!("Missing S3_CDN environment variable");
                 }
 
                 Self {
-                    cdn_prefix,
+                    cdn_base,
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
                     supports_attributes: true,
@@ -181,7 +185,7 @@ impl Storage {
                 let index_store: Arc<dyn ObjectStore> = Arc::new(local_index);
 
                 Self {
-                    cdn_prefix,
+                    cdn_base,
                     store,
                     index_store,
                     supports_attributes: false,
@@ -193,7 +197,7 @@ impl Storage {
                 let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
 
                 Self {
-                    cdn_prefix,
+                    cdn_base,
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
                     supports_attributes: true,
@@ -206,21 +210,23 @@ impl Storage {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_location(&self, name: &str, version: &str) -> String {
-        apply_cdn_prefix(&self.cdn_prefix, &crate_file_path(name, version)).replace('+', "%2B")
+        self.apply_cdn_prefix(&crate_file_path(name, version))
+            .replace('+', "%2B")
     }
 
     /// Returns the URL of an uploaded crate version's zip source archive.
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_zip_location(&self, name: &str, version: &str) -> String {
-        apply_cdn_prefix(&self.cdn_prefix, &crate_zip_path(name, version)).replace('+', "%2B")
+        self.apply_cdn_prefix(&crate_zip_path(name, version))
+            .replace('+', "%2B")
     }
 
     /// Returns the URL of an uploaded crate version's zip source archive manifest.
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_zip_manifest_location(&self, name: &str, version: &str) -> String {
-        apply_cdn_prefix(&self.cdn_prefix, &crate_zip_manifest_path(name, version))
+        self.apply_cdn_prefix(&crate_zip_manifest_path(name, version))
             .replace('+', "%2B")
     }
 
@@ -228,19 +234,24 @@ impl Storage {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn readme_location(&self, name: &str, version: &str) -> String {
-        apply_cdn_prefix(&self.cdn_prefix, &readme_path(name, version)).replace('+', "%2B")
+        self.apply_cdn_prefix(&readme_path(name, version))
+            .replace('+', "%2B")
     }
 
     /// Returns the URL of an uploaded crate's Open Graph image.
     ///
     /// The function doesn't check for the existence of the file.
     pub fn og_image_location(&self, name: &str) -> String {
-        apply_cdn_prefix(&self.cdn_prefix, &og_image_path(name))
+        self.apply_cdn_prefix(&og_image_path(name))
     }
 
     /// Returns the URL of an uploaded RSS feed.
     pub fn feed_url(&self, feed_id: &FeedId<'_>) -> String {
-        apply_cdn_prefix(&self.cdn_prefix, &feed_id.into()).replace('+', "%2B")
+        self.apply_cdn_prefix(&feed_id.into()).replace('+', "%2B")
+    }
+
+    fn apply_cdn_prefix(&self, path: &Path) -> String {
+        format!("{}/{path}", self.cdn_base)
     }
 
     /// Deletes all crate files for the given crate, returning the paths that were deleted.
@@ -520,16 +531,6 @@ fn og_image_path(name: &str) -> Path {
     format!("{PREFIX_OG_IMAGES}/{name}.png").into()
 }
 
-fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
-    match cdn_prefix {
-        Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
-            format!("https://{cdn_prefix}/{path}")
-        }
-        Some(cdn_prefix) => format!("{cdn_prefix}/{path}"),
-        None => format!("/{path}"),
-    }
-}
-
 #[derive(Debug)]
 pub enum FeedId<'a> {
     Crate { name: &'a str },
@@ -666,26 +667,29 @@ mod tests {
 
     #[test]
     fn cdn_prefix() {
-        assert_eq!(apply_cdn_prefix(&None, &"foo".into()), "/foo");
+        fn storage(cdn_prefix: Option<&str>) -> Storage {
+            let mut config = StorageConfig::in_memory();
+            config.cdn_prefix = cdn_prefix.map(str::to_string);
+            Storage::from_config(&config)
+        }
+
+        assert_eq!(storage(None).apply_cdn_prefix(&"foo".into()), "/foo");
         assert_eq!(
-            apply_cdn_prefix(&Some("static.crates.io".to_string()), &"foo".into()),
+            storage(Some("static.crates.io")).apply_cdn_prefix(&"foo".into()),
             "https://static.crates.io/foo"
         );
         assert_eq!(
-            apply_cdn_prefix(
-                &Some("https://fastly-static.crates.io".to_string()),
-                &"foo".into()
-            ),
+            storage(Some("https://fastly-static.crates.io")).apply_cdn_prefix(&"foo".into()),
             "https://fastly-static.crates.io/foo"
         );
 
         assert_eq!(
-            apply_cdn_prefix(&Some("static.crates.io".to_string()), &"/foo/bar".into()),
+            storage(Some("static.crates.io")).apply_cdn_prefix(&"/foo/bar".into()),
             "https://static.crates.io/foo/bar"
         );
 
         assert_eq!(
-            apply_cdn_prefix(&Some("static.crates.io/".to_string()), &"/foo/bar".into()),
+            storage(Some("static.crates.io/")).apply_cdn_prefix(&"/foo/bar".into()),
             "https://static.crates.io//foo/bar"
         );
     }
