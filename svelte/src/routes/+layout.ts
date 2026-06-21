@@ -2,6 +2,7 @@ import { createClient } from '@crates-io/api-client';
 
 import { loadPlaygroundCrates } from '$lib/utils/playground';
 import { loadUser } from '$lib/utils/session.svelte';
+import { loadSiteMetadata } from '$lib/utils/site-metadata';
 
 export const ssr = false;
 
@@ -10,7 +11,7 @@ export async function load({ fetch }) {
 
   return {
     playgroundCratesPromise: loadPlaygroundCrates(fetch),
-    siteMetadataPromise: client.GET('/api/v1/site_metadata'),
+    siteMetadataPromise: loadSiteMetadata(client),
     userPromise: loadUser(client),
   };
 }
