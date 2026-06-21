@@ -25,6 +25,11 @@ const schema = v.pipe(
     trustpub_data: v.optional(v.any(), null),
     linecounts: v.optional(v.any()),
 
+    // Maps a source file path to its text contents. When set, the CDN handler
+    // serves a synthesized `.zip` archive and `.zip.json` manifest for the
+    // version. `null` simulates an archive that has not been built yet.
+    source_files: v.optional(v.nullable(v.record(v.string(), v.string())), null),
+
     crate: v.any(),
     publishedBy: v.optional(v.any(), null),
   }),

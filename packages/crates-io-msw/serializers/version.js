@@ -16,6 +16,7 @@ export function serializeVersion(version) {
   serialized.published_by = version.publishedBy ? serializeUser(version.publishedBy) : null;
 
   delete serialized.readme;
+  delete serialized.source_files;
 
   return serialized;
 }
