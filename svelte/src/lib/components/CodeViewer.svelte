@@ -1,6 +1,8 @@
 <script lang="ts">
+  import type { CodeViewOptions } from '@pierre/diffs';
+
   import { onMount } from 'svelte';
-  import { File as FileView } from '@pierre/diffs';
+  import { CodeView } from '@pierre/diffs';
 
   import { languageForPath } from '$lib/utils/syntax-language';
 
@@ -14,26 +16,37 @@
   const THEMES = { light: 'github-light', dark: 'github-dark' } as const;
 
   let container = $state.raw<HTMLElement>();
-  let view = $state.raw<FileView>();
+  let view = $state.raw<CodeView>();
 
-  onMount(() => {
-    view = new FileView({
+  function options(): CodeViewOptions<undefined> {
+    return {
       theme: THEMES,
       themeType: colorScheme,
       overflow: 'wrap',
+      layout: {
+        paddingTop: 0,
+        paddingBottom: 0,
+        gap: 0,
+      },
       renderHeaderMetadata: () => content?.meta ?? null,
-    });
+    };
+  }
+
+  onMount(() => {
+    view = new CodeView(options());
+    view.setup(container!);
     return () => view?.cleanUp();
   });
 
-  $effect(() => view?.setThemeType(colorScheme));
+  $effect(() => view?.setOptions(options()));
 
   $effect(() => {
-    if (!container || !content) return;
-    view?.render({
-      file: { name: content.path, contents: content.text, lang: languageForPath(content.path) },
-      containerWrapper: container,
-    });
+    let items = [];
+    if (content) {
+      let file = { name: content.path, contents: content.text, lang: languageForPath(content.path) };
+      items.push({ id: content.path, type: 'file' as const, file });
+    }
+    view?.setItems(items);
   });
 </script>
 
