@@ -182,8 +182,7 @@ ${detail}
       aria-invalid={detailInvalid}
       rows="5"
       data-test-id="detail-input"
-      oninput={() => (detailInvalid = false)}
-    ></textarea>
+      oninput={() => (detailInvalid = false)}></textarea>
     {#if detailInvalid}
       <div class="form-group-error" data-test-id="detail-invalid">Please provide some detail.</div>
     {/if}
