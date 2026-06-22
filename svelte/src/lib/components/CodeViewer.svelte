@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { CodeViewOptions } from '@pierre/diffs';
+  import type { WorkerPoolManager } from '@pierre/diffs/worker';
 
   import { onMount } from 'svelte';
   import { CodeView } from '@pierre/diffs';
+  import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
+  import WorkerUrl from '@pierre/diffs/worker/worker.js?worker&url';
 
   import { languageForPath } from '$lib/utils/syntax-language';
 
@@ -32,8 +35,21 @@
     };
   }
 
+  function getHighlighterPool(): WorkerPoolManager {
+    return getOrCreateWorkerPoolSingleton({
+      poolOptions: {
+        workerFactory: () => new Worker(WorkerUrl, { type: 'module' }),
+        poolSize: 1,
+      },
+      highlighterOptions: {
+        theme: THEMES,
+        langs: ['rust', 'toml'],
+      },
+    });
+  }
+
   onMount(() => {
-    view = new CodeView(options());
+    view = new CodeView(options(), getHighlighterPool());
     view.setup(container!);
     return () => view?.cleanUp();
   });
