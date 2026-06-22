@@ -22,6 +22,24 @@ test.describe('Acceptance | crate code viewer', { tag: '@acceptance' }, () => {
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
 
+  test('redirects `/code` without a version to the default version', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/code');
+    await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/lib.rs');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde crate root');
+  });
+
+  test('forwards the requested path when redirecting to the default version', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    await page.goto('/crates/serde/code/src/de.rs');
+    await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/de.rs');
+    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde deserializer');
+  });
+
   test('redirects a directory to its first file', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'serde' });
     await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
