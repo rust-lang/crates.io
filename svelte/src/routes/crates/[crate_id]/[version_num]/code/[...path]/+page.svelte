@@ -2,20 +2,17 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { File as FileView } from '@pierre/diffs';
   import { FileTree } from '@pierre/trees';
   import prettyBytes from 'pretty-bytes';
 
   import { getColorScheme } from '$lib/color-scheme.svelte';
+  import CodeViewer from '$lib/components/CodeViewer.svelte';
   import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import { languageForPath } from '$lib/utils/syntax-language';
   import { loadFile } from '$lib/utils/zip-archive';
 
-  const THEMES = { light: 'github-light', dark: 'github-dark' } as const;
-
-  // The mutually exclusive display states of the code panel.
   type FileState =
-    | { kind: 'content' }
+    | { kind: 'loading' }
+    | { kind: 'content'; path: string; text: string }
     | { kind: 'binary' }
     | { kind: 'unavailable' }
     | { kind: 'error'; message: string };
@@ -35,10 +32,17 @@
   let tree = $state.raw<FileTree>();
   let treeContainer = $state.raw<HTMLElement>();
 
-  let fileView = $state.raw<FileView>();
-  let fileContainer = $state.raw<HTMLElement>();
+  let fileState = $state<FileState>({ kind: 'loading' });
 
-  let fileState = $state<FileState>({ kind: 'content' });
+  let content = $derived.by(() => {
+    if (fileState.kind !== 'content') return null;
+    let entry = filesByPath.get(fileState.path);
+    return {
+      path: fileState.path,
+      text: fileState.text,
+      meta: entry ? prettyBytes(entry.uncompressed_size, { binary: true }) : null,
+    };
+  });
 
   // Canonical ancestor directory paths (trailing slash) for a file path,
   // e.g. `src/core/de.rs` -> [`src/`, `src/core/`]. Used to reveal a file in an
@@ -49,7 +53,7 @@
   }
 
   onMount(() => {
-    if (!manifest || !treeContainer || !fileContainer) return;
+    if (!manifest || !treeContainer) return;
 
     tree = new FileTree({
       paths: manifest.files.map(file => file.path),
@@ -73,22 +77,7 @@
 
     tree.render({ containerWrapper: treeContainer });
 
-    fileView = new FileView({
-      theme: THEMES,
-      themeType: colorScheme.scheme,
-      overflow: 'wrap',
-      // Show the uncompressed file size in the built-in header. The callback
-      // receives the file whose `name` is its archive path.
-      renderHeaderMetadata: file => {
-        let entry = filesByPath.get(file.name);
-        return entry ? prettyBytes(entry.uncompressed_size, { binary: true }) : null;
-      },
-    });
-
-    return () => {
-      tree?.cleanUp();
-      fileView?.cleanUp();
-    };
+    return () => tree?.cleanUp();
   });
 
   // Load and display whichever file the URL points at and keep the tree's
@@ -101,10 +90,8 @@
     syncTreeSelection(path);
   });
 
-  // Keep the code view and file tree in sync with the user's color scheme.
+  // Keep the file tree in sync with the user's color scheme.
   $effect(() => {
-    fileView?.setThemeType(colorScheme.scheme);
-
     let fileTreeContainer = tree?.getFileTreeContainer();
     if (fileTreeContainer) {
       fileTreeContainer.style.colorScheme = colorScheme.resolvedScheme;
@@ -112,8 +99,6 @@
   });
 
   async function showFile(path: string) {
-    if (!fileView || !fileContainer) return;
-
     let file = filesByPath.get(path);
     if (!file) {
       fileState = { kind: 'error', message: `File "${path}" was not found in this archive.` };
@@ -129,20 +114,11 @@
 
       if (result === null) {
         fileState = { kind: 'unavailable' };
-        return;
-      }
-
-      if (result.kind === 'binary') {
+      } else if (result.kind === 'binary') {
         fileState = { kind: 'binary' };
-        return;
+      } else {
+        fileState = { kind: 'content', path, text: result.text };
       }
-
-      fileState = { kind: 'content' };
-
-      fileView.render({
-        file: { name: path, contents: result.text, lang: languageForPath(path) },
-        containerWrapper: fileContainer,
-      });
     } catch (error) {
       if (selectedPath !== path) return;
 
@@ -203,12 +179,7 @@
         <div class="error" data-test-load-error>Failed to load file: {fileState.message}</div>
       {/if}
 
-      <div
-        class="code"
-        class:hidden={fileState.kind !== 'content'}
-        bind:this={fileContainer}
-        data-test-code-viewer
-      ></div>
+      <CodeViewer {content} colorScheme={colorScheme.resolvedScheme} />
     </section>
   </div>
 {/if}
@@ -228,10 +199,6 @@
   .error {
     padding: var(--space-s);
     color: light-dark(oklch(0.5 0.15 24), oklch(0.8 0.07 24));
-  }
-
-  .hidden {
-    display: none;
   }
 
   .viewer {
@@ -266,21 +233,6 @@
     border-radius: var(--space-3xs);
     box-shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
     overflow: hidden;
-  }
-
-  .code {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    font-size: calc(0.85 * var(--space-s));
-    background-color: light-dark(white, #141413);
-  }
-
-  .code :global(diffs-container) {
-    --diffs-font-family: var(--font-monospace);
-    --diffs-header-font-family: var(--font-body);
-    --diffs-light-bg: white;
-    --diffs-dark-bg: #141413;
   }
 
   @media only screen and (max-width: 750px) {
