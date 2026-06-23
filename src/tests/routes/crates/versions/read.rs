@@ -28,6 +28,7 @@ async fn show_by_crate_name_and_version() {
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
         ".version.published_by.id" => insta::id_redaction(user.id),
+        ".version.published_by.created_at" => "[datetime]",
     });
 }
 

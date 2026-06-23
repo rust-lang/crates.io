@@ -30,6 +30,8 @@ async fn test_crate_with_links_field() {
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
         ".version.audit_actions[].time" => "[datetime]",
+        ".version.audit_actions[].user.created_at" => "[datetime]",
+        ".version.published_by.created_at" => "[datetime]",
         ".version.published_by.id" => insta::any_id_redaction(),
     });
     assert_snapshot!(response.status(), @"200 OK");

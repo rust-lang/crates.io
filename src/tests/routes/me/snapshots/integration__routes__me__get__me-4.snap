@@ -6,6 +6,7 @@ expression: response.json()
   "owned_crates": [],
   "user": {
     "avatar": null,
+    "created_at": "[datetime]",
     "email": "foo@example.com",
     "email_verification_sent": true,
     "email_verified": true,

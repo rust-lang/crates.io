@@ -67,6 +67,7 @@ expression: json
       "num": "0.99.0",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,

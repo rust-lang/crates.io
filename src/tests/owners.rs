@@ -11,8 +11,8 @@ use chrono::Utc;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use insta::assert_snapshot;
-use serde::Deserialize;
+use insta::{assert_json_snapshot, assert_snapshot};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Deserialize)]
@@ -23,7 +23,7 @@ struct TeamResponse {
 struct UserResponse {
     users: Vec<EncodableOwner>,
 }
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 struct InvitationListResponse {
     crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
     users: Vec<EncodablePublicUser>,
@@ -431,7 +431,7 @@ async fn invitations_list_v1() {
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    let krate = CrateBuilder::new("invited_crate", owner.id)
+    let _krate = CrateBuilder::new("invited_crate", owner.id)
         .expect_build(&mut conn)
         .await;
 
@@ -445,23 +445,11 @@ async fn invitations_list_v1() {
     assert_snapshot!(response.status(), @"200 OK");
 
     let invitations = user.list_invitations().await;
-    assert_eq!(
-        invitations,
-        InvitationListResponse {
-            crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
-                crate_id: krate.id,
-                crate_name: krate.name,
-                invited_by_username: owner.gh_login.clone(),
-                invitee_id: user.as_model().id,
-                inviter_id: owner.id,
-                // This value changes with each test run so we can't use a fixed value here
-                created_at: invitations.crate_owner_invitations[0].created_at,
-                // This value changes with each test run so we can't use a fixed value here
-                expires_at: invitations.crate_owner_invitations[0].expires_at,
-            }],
-            users: vec![owner.clone().into(), user.as_model().clone().into()],
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".crate_owner_invitations[].created_at" => "[datetime]",
+        ".crate_owner_invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -475,7 +463,7 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
     let krate1 = CrateBuilder::new("invited_crate_1", owner.id)
         .expect_build(&mut conn)
         .await;
-    let krate2 = CrateBuilder::new("invited_crate_2", owner.id)
+    let _krate2 = CrateBuilder::new("invited_crate_2", owner.id)
         .expect_build(&mut conn)
         .await;
     token
@@ -491,23 +479,11 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
     expire_invitation(&app, krate1.id).await;
 
     let invitations = user.list_invitations().await;
-    assert_eq!(
-        invitations,
-        InvitationListResponse {
-            crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
-                crate_id: krate2.id,
-                crate_name: krate2.name,
-                invited_by_username: owner.gh_login.clone(),
-                invitee_id: user.as_model().id,
-                inviter_id: owner.id,
-                // This value changes with each test run so we can't use a fixed value here
-                created_at: invitations.crate_owner_invitations[0].created_at,
-                // This value changes with each test run so we can't use a fixed value here
-                expires_at: invitations.crate_owner_invitations[0].expires_at,
-            }],
-            users: vec![owner.clone().into(), user.as_model().clone().into()],
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".crate_owner_invitations[].created_at" => "[datetime]",
+        ".crate_owner_invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 /// Given a user inviting a different user to be a crate

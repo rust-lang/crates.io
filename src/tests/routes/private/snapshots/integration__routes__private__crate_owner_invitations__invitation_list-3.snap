@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/private/crate_owner_invitations.rs
+expression: invitations
+---
+{
+  "invitations": [],
+  "users": [],
+  "meta": {
+    "next_page": null
+  }
+}
