@@ -50,19 +50,39 @@ test.describe('Acceptance | crate code viewer', { tag: '@acceptance' }, () => {
   });
 
   test('navigates between files via the tree and browser history', async ({ page, msw }) => {
+    let longBody = Array.from({ length: 300 }, (_, i) => `// line ${i}`).join('\n');
+    let sourceFiles = {
+      ...SOURCE_FILES,
+      'src/long-a.rs': `// long file a\n${longBody}\n`,
+      'src/long-b.rs': `// long file b\n${longBody}\n`,
+    };
+
     let crate = await msw.db.crate.create({ name: 'serde' });
-    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: sourceFiles });
+
+    let viewer = page.locator('[data-test-code-viewer]');
 
     await page.goto('/crates/serde/1.0.0/code/src/lib.rs');
-    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde crate root');
+    await expect(viewer).toContainText('// serde crate root');
 
     await page.getByRole('treeitem', { name: 'de.rs' }).click();
     await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/de.rs');
-    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde deserializer');
+    await expect(viewer).toContainText('// serde deserializer');
 
     await page.goBack();
     await expect(page).toHaveURL('/crates/serde/1.0.0/code/src/lib.rs');
-    await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde crate root');
+    await expect(viewer).toContainText('// serde crate root');
+
+    await page.getByRole('treeitem', { name: 'long-a.rs' }).click();
+    await expect(viewer).toContainText('// long file a');
+    await viewer.evaluate(el => {
+      el.scrollTop = el.scrollHeight;
+    });
+    await expect.poll(() => viewer.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+
+    await page.getByRole('treeitem', { name: 'long-b.rs' }).click();
+    await expect(viewer).toContainText('// long file b');
+    await expect.poll(() => viewer.evaluate(el => el.scrollTop)).toBe(0);
   });
 
   test('shows a message for binary files', async ({ page, msw }) => {

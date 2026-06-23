@@ -68,6 +68,10 @@
       items.push({ id: content.path, type: 'file' as const, file });
     }
     view?.setItems(items);
+
+    if (content) {
+      view?.scrollTo({ type: 'position', position: 0, behavior: 'instant' });
+    }
   });
 </script>
 
