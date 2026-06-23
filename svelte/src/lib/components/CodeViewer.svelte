@@ -10,7 +10,7 @@
   import { languageForPath } from '$lib/utils/syntax-language';
 
   interface Props {
-    content: { path: string; text: string; meta: string | null } | null;
+    content: { path: string; text: string; meta: string } | null;
     colorScheme: 'light' | 'dark';
   }
 
