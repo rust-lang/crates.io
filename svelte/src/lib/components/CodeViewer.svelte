@@ -25,7 +25,7 @@
     return {
       theme: THEMES,
       themeType: colorScheme,
-      overflow: 'wrap',
+      overflow: 'scroll',
       layout: {
         paddingTop: 0,
         paddingBottom: 0,
