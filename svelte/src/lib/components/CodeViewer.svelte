@@ -10,7 +10,7 @@
   import { languageForPath } from '$lib/utils/syntax-language';
 
   interface Props {
-    content: { path: string; text: string; meta: string } | null;
+    content: { path: string; text: string; meta: string; cacheKey: string } | null;
     colorScheme: 'light' | 'dark';
   }
 
@@ -59,7 +59,12 @@
   $effect(() => {
     let items = [];
     if (content) {
-      let file = { name: content.path, contents: content.text, lang: languageForPath(content.path) };
+      let file = {
+        name: content.path,
+        contents: content.text,
+        lang: languageForPath(content.path),
+        cacheKey: content.cacheKey,
+      };
       items.push({ id: content.path, type: 'file' as const, file });
     }
     view?.setItems(items);

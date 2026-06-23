@@ -20,16 +20,19 @@
       path: 'Cargo.toml',
       text: '[package]\nname = "example"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\nserde = "1"\nserde_json = "1"\n',
       meta: '88 B',
+      cacheKey: 'cargo-toml',
     },
     {
       path: 'src/main.rs',
       text: 'fn main() {\n    println!("Hello, world!");\n}\n',
       meta: '42 B',
+      cacheKey: 'main-rs',
     },
     {
       path: 'README.md',
       text: '# Example\n\nA sample crate used in the CodeViewer story.\n',
       meta: '52 B',
+      cacheKey: 'readme-md',
     },
   ];
 </script>

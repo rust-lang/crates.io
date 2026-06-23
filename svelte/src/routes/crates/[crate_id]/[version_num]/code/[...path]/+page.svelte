@@ -38,6 +38,7 @@
       path: fileState.file.path,
       text: fileState.text,
       meta: prettyBytes(fileState.file.uncompressed_size, { binary: true }),
+      cacheKey: fileState.file.sha256,
     };
   });
 
