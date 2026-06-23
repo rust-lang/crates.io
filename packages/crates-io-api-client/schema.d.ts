@@ -1039,6 +1039,15 @@ export interface components {
              */
             avatar?: string | null;
             /**
+             * Format: date-time
+             * @description The date and time the user was created.
+             *
+             *     For users created before June 19, 2026, the creation time will be the
+             *     time the user's GitHub account was created. If the GitHub account was
+             *     deleted before June 19, 2026, this field will be empty.
+             */
+            created_at?: string | null;
+            /**
              * @description The user's email address, if set.
              * @example kate@morgan.dev
              */
@@ -1580,6 +1589,15 @@ export interface components {
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
             avatar?: string | null;
+            /**
+             * Format: date-time
+             * @description The date and time the user was created.
+             *
+             *     For users created before June 19, 2026, the creation time will be the
+             *     time the user's GitHub account was created. If the GitHub account was
+             *     deleted before June 19, 2026, this field will be empty.
+             */
+            created_at?: string | null;
             /**
              * Format: int32
              * @description An opaque identifier for the user.
