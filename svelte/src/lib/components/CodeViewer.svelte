@@ -7,7 +7,7 @@
   import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
   import WorkerUrl from '@pierre/diffs/worker/worker.js?worker&url';
 
-  import { languageForPath } from '$lib/utils/syntax-language';
+  import { registerCustomExtensions } from '$lib/utils/syntax-language';
 
   interface Props {
     content: { path: string; text: string; meta: string; cacheKey: string } | null;
@@ -49,6 +49,7 @@
   }
 
   onMount(() => {
+    registerCustomExtensions();
     view = new CodeView(options(), getHighlighterPool());
     view.setup(container!);
     return () => view?.cleanUp();
@@ -62,7 +63,6 @@
       let file = {
         name: content.path,
         contents: content.text,
-        lang: languageForPath(content.path),
         cacheKey: content.cacheKey,
       };
       items.push({ id: content.path, type: 'file' as const, file });
