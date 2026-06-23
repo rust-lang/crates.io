@@ -1,34 +1,25 @@
+import { getFiletypeFromFileName } from '@pierre/diffs';
 import { describe, expect, it } from 'vitest';
 
-import { languageForPath } from './syntax-language';
+import { registerCustomExtensions } from './syntax-language';
 
-describe('languageForPath', () => {
-  it('maps a file extension to its Shiki language id', () => {
-    expect(languageForPath('src/lib.rs')).toBe('rust');
-    expect(languageForPath('Cargo.toml')).toBe('toml');
-    expect(languageForPath('README.md')).toBe('markdown');
-    expect(languageForPath('build.js')).toBe('javascript');
+describe('registerCustomExtensions', () => {
+  registerCustomExtensions();
+
+  it('highlights `Cargo.lock` as TOML', () => {
+    expect(getFiletypeFromFileName('Cargo.lock')).toBe('toml');
   });
 
-  it('resolves the language from the file name, ignoring directories', () => {
-    expect(languageForPath('src/core/de.rs')).toBe('rust');
+  it('highlights `*.toml.orig` as TOML, ignoring directories', () => {
+    expect(getFiletypeFromFileName('Cargo.toml.orig')).toBe('toml');
+    expect(getFiletypeFromFileName('vendor/Cargo.toml.orig')).toBe('toml');
   });
 
-  it('matches extensions case-insensitively', () => {
-    expect(languageForPath('SRC/LIB.RS')).toBe('rust');
+  it('highlights SVG files as XML', () => {
+    expect(getFiletypeFromFileName('icon.svg')).toBe('xml');
   });
 
-  it('maps well-known file names whose extension is not a language', () => {
-    expect(languageForPath('Cargo.lock')).toBe('toml');
-    expect(languageForPath('vendor/Cargo.toml.orig')).toBe('toml');
-  });
-
-  it('falls back to plain text for an unknown extension', () => {
-    expect(languageForPath('assets/icon.bin')).toBe('text');
-  });
-
-  it('falls back to plain text for a file without an extension', () => {
-    expect(languageForPath('LICENSE')).toBe('text');
-    expect(languageForPath('Makefile')).toBe('text');
+  it('leaves other files to the highlighter to infer', () => {
+    expect(getFiletypeFromFileName('src/lib.rs')).toBe('rust');
   });
 });
