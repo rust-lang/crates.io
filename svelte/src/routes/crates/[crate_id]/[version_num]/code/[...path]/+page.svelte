@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { ManifestFile } from '$lib/utils/zip-archive';
+
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import prettyBytes from 'pretty-bytes';
@@ -11,7 +13,7 @@
 
   type FileState =
     | { kind: 'loading' }
-    | { kind: 'content'; path: string; text: string }
+    | { kind: 'content'; file: ManifestFile; text: string }
     | { kind: 'binary' }
     | { kind: 'unavailable' }
     | { kind: 'error'; message: string };
@@ -32,11 +34,11 @@
 
   let content = $derived.by(() => {
     if (fileState.kind !== 'content') return null;
-    let entry = filesByPath.get(fileState.path);
     return {
-      path: fileState.path,
+      path: fileState.file.path,
       text: fileState.text,
-      meta: entry ? prettyBytes(entry.uncompressed_size, { binary: true }) : null,
+      meta: prettyBytes(fileState.file.uncompressed_size, { binary: true }),
+      cacheKey: fileState.file.sha256,
     };
   });
 
@@ -66,7 +68,7 @@
       } else if (result.kind === 'binary') {
         fileState = { kind: 'binary' };
       } else {
-        fileState = { kind: 'content', path, text: result.text };
+        fileState = { kind: 'content', file, text: result.text };
       }
     } catch (error) {
       if (selectedPath !== path) return;
