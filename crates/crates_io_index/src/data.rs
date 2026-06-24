@@ -26,7 +26,7 @@ pub struct Crate {
     pub links: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_version: Option<String>,
-    /// Publication timestamp in ISO8601 format
+    /// Publication timestamp in ISO8601 format.
     #[serde(
         skip_serializing_if = "Option::is_none",
         serialize_with = "serialize_pubtime"

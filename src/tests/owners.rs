@@ -174,7 +174,7 @@ async fn create_and_add_owner(
 }
 
 /// Ensures that so long as at least one owner remains associated with the crate,
-/// a user can still remove their own login as an owner
+/// a user can still remove their own login as an owner.
 #[tokio::test(flavor = "multi_thread")]
 async fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token().await;

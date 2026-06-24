@@ -70,7 +70,7 @@ impl BackgroundJob for AnalyzeCrateFile {
     }
 }
 
-/// Retrieves crate name and version number for a given version ID
+/// Retrieves crate name and version number for a given version ID.
 #[instrument(skip(conn))]
 async fn get_crate_version_info(
     version_id: i32,
@@ -86,7 +86,7 @@ async fn get_crate_version_info(
         .context("Failed to query crate and version info")
 }
 
-/// Downloads and analyzes a crate tarball to generate linecount statistics
+/// Downloads and analyzes a crate tarball to generate linecount statistics.
 #[instrument(skip(storage))]
 async fn analyze_crate_tarball(
     krate: &str,
@@ -131,7 +131,7 @@ async fn analyze_crate_tarball(
     Ok(linecount_stats)
 }
 
-/// Updates the linecount statistics for a version in the database
+/// Updates the linecount statistics for a version in the database.
 #[instrument(skip(conn, linecount_stats))]
 async fn update_version_linecount_stats(
     version_id: i32,

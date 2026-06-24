@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::controllers::util::RequestPartsExt;
 
-/// Adds an `app()` method to the `Request` type returning the global `App` instance
+/// Adds an `app()` method to the `Request` type returning the global `App` instance.
 pub trait RequestApp {
     fn app(&self) -> &AppState;
 }

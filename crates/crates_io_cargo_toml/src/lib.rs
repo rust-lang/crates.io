@@ -39,7 +39,7 @@ pub struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<FeatureSet>,
     /// Note that due to autobins feature this is not the complete list
-    /// unless you run `complete_from_path`
+    /// unless you run `complete_from_path`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bin: Vec<Product>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -53,7 +53,7 @@ pub struct Manifest {
     pub patch: Option<PatchSet>,
 
     /// Note that due to autolibs feature this is not the complete list
-    /// unless you run `complete_from_path`
+    /// unless you run `complete_from_path`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lib: Option<Product>,
 }

@@ -171,7 +171,7 @@ impl SanitizeUrl {
     }
 }
 
-/// Groups media-related URL info
+/// Groups media-related URL info.
 struct MediaUrl {
     is_media: bool,
     add_sanitize_query: bool,
