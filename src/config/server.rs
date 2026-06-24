@@ -82,8 +82,8 @@ impl Server {
     ///
     /// Sets the following default values:
     ///
-    /// - `Config::max_upload_size`: 10MiB
-    /// - `Config::ownership_invitations_expiration_days`: 30
+    /// - `PublishLimitsConfig::upload_size`: 10MiB
+    /// - `Server::ownership_invitations_expiration`: 30 days
     ///
     /// Pulls values from the following environment variables:
     ///
