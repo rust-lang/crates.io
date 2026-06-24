@@ -351,7 +351,7 @@ fn test_missing_names() {
     insta::assert_snapshot!(format_products(&m.bench), @"<None>  →  large-input.rs");
 }
 
-/// see https://doc.rust-lang.org/cargo/reference/cargo-targets.html#target-auto-discovery
+/// see <https://doc.rust-lang.org/cargo/reference/cargo-targets.html#target-auto-discovery>
 #[test]
 fn test_bin_module_example() {
     let manifest = r#"

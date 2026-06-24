@@ -42,7 +42,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
         self
     }
 
-    /// Adjust the configuration of the [DEFAULT_QUEUE] queue.
+    /// Adjust the configuration of the [`DEFAULT_QUEUE`] queue.
     pub fn configure_default_queue<F>(self, f: F) -> Self
     where
         F: FnOnce(&mut Queue<Context>) -> &Queue<Context>,

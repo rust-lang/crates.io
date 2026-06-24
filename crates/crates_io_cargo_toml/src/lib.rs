@@ -325,7 +325,7 @@ struct DiscoveredTarget {
     path: String,
 }
 
-/// Fills in missing [Product::path] fields from the auto-discovered targets
+/// Fills in missing [`Product::path`] fields from the auto-discovered targets
 /// and optionally adds the additional auto-discovered targets to the list
 /// of targets.
 fn process_discovered_targets(
@@ -777,7 +777,7 @@ pub struct Package {
     pub edition: Option<MaybeInherited<Edition>>,
     /// The version of the package (e.g. "1.9.0").
     ///
-    /// Use [Package::version()] to get the effective value, with the default
+    /// Use [`Package::version()`] to get the effective value, with the default
     /// value of "0.0.0" applied.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<MaybeInherited<String>>,
@@ -803,7 +803,7 @@ pub struct Package {
     pub keywords: Option<MaybeInherited<Vec<String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     /// This is a list of up to five categories where this crate would fit.
-    /// e.g. ["command-line-utilities", "development-tools::cargo-plugins"]
+    /// e.g. `["command-line-utilities", "development-tools::cargo-plugins"]`
     pub categories: Option<MaybeInherited<Vec<String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     /// e.g. "MIT"
@@ -822,22 +822,22 @@ pub struct Package {
     pub autolib: Option<bool>,
     /// Disables binary auto discovery.
     ///
-    /// Use [Manifest::autobins()] to get the effective value.
+    /// Use [`Manifest::autobins()`] to get the effective value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autobins: Option<bool>,
     /// Disables example auto discovery.
     ///
-    /// Use [Manifest::autoexamples()] to get the effective value.
+    /// Use [`Manifest::autoexamples()`] to get the effective value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autoexamples: Option<bool>,
     /// Disables test auto discovery.
     ///
-    /// Use [Manifest::autotests()] to get the effective value.
+    /// Use [`Manifest::autotests()`] to get the effective value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autotests: Option<bool>,
     /// Disables bench auto discovery.
     ///
-    /// Use [Manifest::autobenches()] to get the effective value.
+    /// Use [`Manifest::autobenches()`] to get the effective value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autobenches: Option<bool>,
 }

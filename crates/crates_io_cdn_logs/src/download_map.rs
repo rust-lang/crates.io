@@ -18,7 +18,7 @@ impl DownloadsMap {
         *self.0.entry((name, version, date)).or_default() += 1;
     }
 
-    /// Returns a [HashSet] of all crate names in the map.
+    /// Returns a [`HashSet`] of all crate names in the map.
     pub fn unique_crates(&self) -> HashSet<&str> {
         self.0.keys().map(|(krate, _, _)| krate.as_str()).collect()
     }

@@ -1,4 +1,4 @@
-# crates_io_docs_rs
+# `crates_io_docs_rs`
 
 This package implements functionality for interacting with the docs.rs API.
 

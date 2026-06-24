@@ -13,7 +13,7 @@ use tracing::{debug, instrument, warn};
 /// resolution.
 ///
 /// It implements [Ord] in a way that sorts versions by the criteria specified
-/// in the [update_default_version] function documentation. The default version
+/// in the [`update_default_version`] function documentation. The default version
 /// will be the "maximum" element in a sorted list of versions.
 #[derive(Clone, Debug, PartialEq, Eq, HasQuery)]
 #[diesel(table_name = versions)]

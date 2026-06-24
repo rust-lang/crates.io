@@ -21,7 +21,7 @@ async fn enqueue_archive_job(env: &Environment, branch: &str) -> anyhow::Result<
 /// Collapses the index into a single commit by driving the GitHub API
 /// directly, without touching the local bare clone. This avoids the
 /// pack generation that `git push` triggers for the full squash, which
-/// has been OOMing the worker.
+/// has been running the worker out of memory.
 ///
 /// Git's object model has three layers we care about here: blobs hold
 /// file contents, a tree maps names to blobs (and to nested trees) to

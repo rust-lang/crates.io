@@ -24,6 +24,7 @@ unescaped_backticks = "warn"
 
 [workspace.lints.clippy]
 dbg_macro = "warn"
+doc_markdown = "warn"
 todo = "warn"
 
 [package.metadata.cargo-machete]

@@ -90,7 +90,7 @@ fn legacy() {
 
 // -- Multi-word identifiers can be specified using both snake_case and kebab-case --
 
-/// This test ensures that the snake_case variant is handled correctly for `default-features`
+/// This test ensures that the `snake_case` variant is handled correctly for `default-features`
 #[test]
 fn default_features_casing() {
     let m = Manifest::from_str(
@@ -107,7 +107,7 @@ rusoto_core = { version = "0.45.0", default_features=false, features=["rustls"] 
     insta::assert_debug_snapshot!(m);
 }
 
-/// This test ensures that the snake_case variant is handled correctly for `build-dependencies`
+/// This test ensures that the `snake_case` variant is handled correctly for `build-dependencies`
 #[test]
 fn build_dependencies_casing() {
     let m = Manifest::from_str(
@@ -124,7 +124,7 @@ lazy_static = "1.4.0"
     insta::assert_debug_snapshot!(m);
 }
 
-/// This test ensures that the snake_case variant is handled correctly for `dev-dependencies`
+/// This test ensures that the `snake_case` variant is handled correctly for `dev-dependencies`
 #[test]
 fn dev_dependencies_casing() {
     let m = Manifest::from_str(
@@ -141,7 +141,7 @@ lazy_static = "1.4.0"
     insta::assert_debug_snapshot!(m);
 }
 
-/// This test ensures that both the kebap-case and the snake_case variant is handled correctly for `proc-macro`
+/// This test ensures that both the kebap-case and the `snake_case` variant is handled correctly for `proc-macro`
 #[test]
 fn proc_macro_casing() {
     let m = Manifest::from_str(

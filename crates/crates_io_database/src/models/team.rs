@@ -13,7 +13,7 @@ pub struct Team {
     pub id: i32,
     /// "github:org:team"
     /// An opaque unique ID, that was at one point parsed out to query GitHub.
-    /// We only query membership with github using the github_id, though.
+    /// We only query membership with github using the `github_id`, though.
     /// This is the only name we should ever talk to Cargo about.
     pub login: String,
     /// The GitHub API works on team ID numbers. This can change, if a team

@@ -1,4 +1,4 @@
-# crates_io_validation
+# `crates_io_validation`
 
 This package contains some low-level validation functions that are used across
 the code base.

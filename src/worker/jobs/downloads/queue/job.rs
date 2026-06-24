@@ -39,7 +39,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
     }
 }
 
-/// Builds an [SqsQueue] implementation based on the [CdnLogQueueConfig].
+/// Builds an [`SqsQueue`] implementation based on the [`CdnLogQueueConfig`].
 fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
     match config {
         CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
@@ -63,7 +63,7 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
 
 /// Processes messages from the CDN log queue.
 ///
-/// This function is separate from the [BackgroundJob] implementation so that it
+/// This function is separate from the [`BackgroundJob`] implementation so that it
 /// can be tested without needing to construct a full [Environment] struct.
 async fn run(
     queue: &impl SqsQueue,

@@ -1,7 +1,7 @@
-# crates_io_tarball
+# `crates_io_tarball`
 
 This package is used to extract metadata from a `.crate` file, which is the
-format used to distribute Rust libraries on https://crates.io.
+format used to distribute Rust libraries on <https://crates.io>.
 
 The main source of metadata is the `Cargo.toml` file, which must be included in
 the `.crate` file.

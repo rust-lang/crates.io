@@ -1,4 +1,4 @@
-crates_io_cargo_toml
+`crates_io_cargo_toml`
 ==============================================================================
 
 [`serde`](https://serde.rs) definitions to read and write

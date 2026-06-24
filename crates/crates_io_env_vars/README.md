@@ -1,4 +1,4 @@
-# crates_io_env_vars
+# `crates_io_env_vars`
 
 This package contains convenient wrappers for the `std::env::var()` function.
 

@@ -23,7 +23,7 @@ pub struct VersionBuilder {
 
 #[allow(dead_code)]
 impl VersionBuilder {
-    /// Creates a VersionBuilder from a string slice `num` representing the version's number.
+    /// Creates a `VersionBuilder` from a string slice `num` representing the version's number.
     ///
     /// # Panics
     ///

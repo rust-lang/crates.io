@@ -197,7 +197,7 @@ struct TrustpubOnlyChangedEmail<'a> {
     auth_user: &'a User,
     /// The crate for which the setting was changed.
     krate: &'a Crate,
-    /// The new value of the trustpub_only flag.
+    /// The new value of the `trustpub_only` flag.
     trustpub_only: bool,
 }
 

@@ -1,4 +1,4 @@
-# crates_io_database
+# `crates_io_database`
 
 This package contains the crates.io database layer: the Diesel schema, the
 model structs built on top of it, and helpers for writing Diesel queries.
