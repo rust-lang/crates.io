@@ -251,7 +251,7 @@ pub trait RequestHelper {
         self.delete_with_body(&url, body).await
     }
 
-    /// Remove a single owner to the specified crate.
+    /// Remove a single owner from the specified crate.
     async fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OwnerResp> {
         self.remove_named_owners(krate_name, &[owner]).await
     }
