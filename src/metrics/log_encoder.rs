@@ -140,9 +140,9 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
 /// do that, so we need to do the splitting ourselves.
 ///
 /// This function takes an iterator of serializable items and returns the serialized version,
-/// possibly split into multiple chunks. Each chunk is *at least* `max_size_hint` long, as the
-/// function stops serializing new items in the same chunk only when the size limit is reached
-/// after serializing an item.
+/// possibly split into multiple chunks. Every chunk except the last is *at least* `max_size_hint`
+/// long, as the function stops serializing new items in the same chunk only when the size limit is
+/// reached after serializing an item.
 ///
 /// Because of that `max_size_hint` should be lower than the upper bound we can't cross.
 fn serialize_and_split_list<'a, S: Serialize + 'a>(
