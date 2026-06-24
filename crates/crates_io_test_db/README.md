@@ -1,4 +1,4 @@
-# crates_io_test_db
+# `crates_io_test_db`
 
 A database testing infrastructure for creating isolated, ephemeral PostgreSQL test databases with automatic cleanup.
 

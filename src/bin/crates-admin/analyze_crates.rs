@@ -138,7 +138,7 @@ struct NewBackgroundJob {
 }
 
 impl NewBackgroundJob {
-    /// Create a new [AnalyzeCrateFile] background job with the specified priority
+    /// Create a new [`AnalyzeCrateFile`] background job with the specified priority
     fn new(version_id: i32, priority: i16) -> anyhow::Result<Self> {
         let job = AnalyzeCrateFile::new(version_id);
         let data = serde_json::to_value(&job).context("Failed to serialize job data")?;

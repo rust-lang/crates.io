@@ -1,4 +1,4 @@
-# crates_io_fastly
+# `crates_io_fastly`
 
 This package implements functionality for interacting with the Fastly API.
 

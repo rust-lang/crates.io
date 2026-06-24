@@ -1,4 +1,4 @@
-# crates_io_version
+# `crates_io_version`
 
 This package provides utilities for determining the currently running version
 of the crates.io application.

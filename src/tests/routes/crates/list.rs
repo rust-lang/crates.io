@@ -1020,7 +1020,7 @@ async fn max_stable_version() -> anyhow::Result<()> {
 /// Given two crates, one with downloads less than 90 days ago, the
 /// other with all downloads greater than 90 days ago, check that
 /// the order returned is by recent downloads, descending. Check
-/// also that recent download counts are returned in recent_downloads,
+/// also that recent download counts are returned in `recent_downloads`,
 /// and total downloads counts are returned in downloads, and that
 /// these numbers do not overlap.
 #[tokio::test(flavor = "multi_thread")]

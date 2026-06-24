@@ -44,7 +44,7 @@ impl GitLabClaims {
         Ok(claims)
     }
 
-    /// Extract the workflow filename from the [`workflow_ref`](Self::workflow_ref)
+    /// Extract the workflow filename from the [`ci_config_ref_uri`](Self::ci_config_ref_uri)
     /// field or return `None` if the filename cannot be extracted.
     pub fn workflow_filepath(&self) -> Option<&str> {
         extract_workflow_filepath(&self.ci_config_ref_uri)

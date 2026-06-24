@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-/// Represents relevant contents of .cargo_vcs_info.json file when uploaded from cargo
+/// Represents relevant contents of `.cargo_vcs_info.json` file when uploaded from cargo
 /// or downloaded from crates.io
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 pub struct CargoVcsInfo {

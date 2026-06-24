@@ -1,4 +1,4 @@
-# crates_io_heroku
+# `crates_io_heroku`
 
 This package contains utilities for accessing Heroku-specific environment
 variables.

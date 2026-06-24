@@ -14,7 +14,9 @@ use tracing::{info, warn};
 const CHUNKS_MAX_SIZE_BYTES: usize = 5000;
 
 /// The `LogEncoder` struct encodes Prometheus metrics in the format [`crates-io-heroku-metrics`]
-/// expects metrics to be logged. This can be used to forward instance metrics to it, allowing them
+/// expects metrics to be logged.
+///
+/// This can be used to forward instance metrics to it, allowing them
 /// to be scraped by the Rust infrastructure monitoring system.
 ///
 /// The metrics are encoded in the format [Vector expects them][vector], and the list of metrics is

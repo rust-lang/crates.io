@@ -8,9 +8,10 @@ use crates_io_tarball::TarballBuilder;
 
 use super::DependencyBuilder;
 
-/// A builder for constructing a crate for the purposes of testing publishing. If you only need
-/// a crate to exist and don't need to test behavior caused by the publish request, inserting
-/// a crate into the database directly by using CrateBuilder will be faster.
+/// A builder for constructing a crate for the purposes of testing publishing.
+///
+/// If you only need a crate to exist and don't need to test behavior caused by the publish
+/// request, inserting a crate into the database directly by using `CrateBuilder` will be faster.
 pub struct PublishBuilder {
     categories: Vec<String>,
     deps: Vec<krate_publish::EncodableCrateDependency>,

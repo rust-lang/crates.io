@@ -60,10 +60,10 @@ impl BackgroundJob for ProcessCdnLog {
     }
 }
 
-/// Builds an object store based on the [CdnLogStorageConfig] and the
+/// Builds an object store based on the [`CdnLogStorageConfig`] and the
 /// `region` and `bucket` arguments.
 ///
-/// If the passed in [CdnLogStorageConfig] is using local file or in-memory
+/// If the passed in [`CdnLogStorageConfig`] is using local file or in-memory
 /// storage the `region` and `bucket` arguments are ignored.
 fn build_store(
     config: &CdnLogStorageConfig,

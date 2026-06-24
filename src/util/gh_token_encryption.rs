@@ -10,12 +10,12 @@ pub struct GitHubTokenEncryption {
 }
 
 impl GitHubTokenEncryption {
-    /// Creates a new [GitHubTokenEncryption] instance with the provided cipher
+    /// Creates a new [`GitHubTokenEncryption`] instance with the provided cipher
     pub fn new(cipher: Aes256Gcm) -> Self {
         Self { cipher }
     }
 
-    /// Creates a new [GitHubTokenEncryption] instance with a cipher for testing
+    /// Creates a new [`GitHubTokenEncryption`] instance with a cipher for testing
     /// purposes.
     #[cfg(any(test, debug_assertions))]
     pub fn for_testing() -> Self {
@@ -23,7 +23,7 @@ impl GitHubTokenEncryption {
         Self::new(Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(test_key)))
     }
 
-    /// Creates a new [GitHubTokenEncryption] instance from the environment
+    /// Creates a new [`GitHubTokenEncryption`] instance from the environment
     ///
     /// Reads the `GITHUB_TOKEN_ENCRYPTION_KEY` environment variable, which
     /// should be a 64-character hex string (32 bytes when decoded).

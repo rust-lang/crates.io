@@ -1,4 +1,4 @@
-# crates_io_worker
+# `crates_io_worker`
 
 A robust background job processing system for the crates.io application.
 
