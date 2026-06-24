@@ -87,7 +87,7 @@ impl UpstreamIndex {
         }
     }
 
-    /// Obtain a list of crates from the index HEAD
+    /// Obtains a list of crates from the index HEAD.
     pub fn crates_from_index_head(&self, crate_name: &str) -> anyhow::Result<Vec<crate::Crate>> {
         let repo = self.repository.lock().unwrap();
 
@@ -166,7 +166,7 @@ impl UpstreamIndex {
         Ok(())
     }
 
-    /// Resolve the given branch to the commit it points at.
+    /// Resolves the given branch to the commit it points at.
     pub fn branch_oid(&self, branch: &str) -> anyhow::Result<Oid> {
         let repo = self.repository.lock().unwrap();
         let ref_name = format!("refs/heads/{branch}");
@@ -174,7 +174,7 @@ impl UpstreamIndex {
         Ok(reference.peel_to_commit()?.id())
     }
 
-    /// Create a branch with a single parentless commit containing the given
+    /// Creates a branch with a single parentless commit containing the given
     /// file. Mirrors the shape of post-squash snapshot branches, which share
     /// no common ancestor with `master`.
     pub fn create_orphan_branch(

@@ -1,7 +1,7 @@
 use semver::Version;
 use tracing::instrument;
 
-/// Parse crate name and version from a download URL or URL path.
+/// Parses crate name and version from a download URL or URL path.
 ///
 /// This function supports both URL formats:
 ///

@@ -7,7 +7,7 @@ use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
 
 impl crate::util::MockAnonymousUser {
-    /// List the team owners of the specified crate.
+    /// Lists the team owners of the specified crate.
     async fn crate_owner_teams(
         &self,
         krate_name: &str,
@@ -17,7 +17,7 @@ impl crate::util::MockAnonymousUser {
     }
 }
 
-/// Test adding team without `github:`
+/// Tests adding team without `github:`
 #[tokio::test(flavor = "multi_thread")]
 async fn not_github() {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -51,7 +51,7 @@ async fn weird_name() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
-/// Test adding team without second `:`
+/// Tests adding team without second `:`
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -82,7 +82,7 @@ async fn add_nonexistent_team() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find the github team test-org/this-does-not-exist. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"#);
 }
 
-/// Test adding a renamed team
+/// Tests adding a renamed team
 #[tokio::test(flavor = "multi_thread")]
 async fn add_renamed_team() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
@@ -124,7 +124,7 @@ async fn add_renamed_team() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Test adding team names with mixed case, when on the team
+/// Tests adding team names with mixed case, when on the team
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_mixed_case() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
@@ -183,7 +183,7 @@ async fn add_team_as_org_owner() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Test adding team as owner when not on it
+/// Tests adding team as owner when not on it
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_as_non_member() {
     let (app, _) = TestApp::init().empty().await;
@@ -314,7 +314,7 @@ async fn remove_nonexistent_team() {
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
 
-/// Test trying to publish a crate we don't own
+/// Tests trying to publish a crate we don't own
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_not_owned() {
     let (app, _) = TestApp::full().empty().await;
@@ -367,7 +367,7 @@ async fn publish_org_owner_owned() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
-/// Test trying to publish a krate we do own (but only because of teams)
+/// Tests trying to publish a krate we do own (but only because of teams)
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_owned() {
     let (app, _) = TestApp::full().empty().await;
@@ -397,7 +397,7 @@ async fn publish_owned() {
     assert_snapshot!(app.emails_snapshot().await);
 }
 
-/// Test trying to change owners (when only on an owning team)
+/// Tests trying to change owners (when only on an owning team)
 #[tokio::test(flavor = "multi_thread")]
 async fn add_owners_as_org_owner() {
     let (app, _) = TestApp::init().empty().await;

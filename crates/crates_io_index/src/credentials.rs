@@ -22,7 +22,7 @@ impl Credentials {
         }
     }
 
-    /// Write the SSH key to a temporary file and return the path. The file is
+    /// Writes the SSH key to a temporary file and returns the path. The file is
     /// deleted once the returned path is dropped.
     ///
     /// This function can be used when running `git push` instead of using the

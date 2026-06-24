@@ -20,7 +20,7 @@ mod tests {
     use super::*;
     use crate::util::errors::BoxedAppError;
 
-    /// Test that [`spawn_blocking`] works with [`anyhow`].
+    /// Tests that [`spawn_blocking`] works with [`anyhow`].
     #[tokio::test]
     async fn test_spawn_blocking_anyhow() {
         spawn_blocking(|| Ok::<_, anyhow::Error>(()))
@@ -29,7 +29,7 @@ mod tests {
             .unwrap()
     }
 
-    /// Test that [`spawn_blocking`] works with [`BoxedAppError`].
+    /// Tests that [`spawn_blocking`] works with [`BoxedAppError`].
     #[tokio::test]
     async fn test_spawn_blocking_apperror() {
         spawn_blocking(|| Ok::<_, BoxedAppError>(()))

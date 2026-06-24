@@ -218,7 +218,7 @@ fn test_full_example_without_discovery() {
     insta::assert_snapshot!(format_products(&m.bench), @"");
 }
 
-/// Check that broken paths are handled without errors. It is up to the
+/// Checks that broken paths are handled without errors. It is up to the
 /// user to potentially turn this into a warning or error.
 #[test]
 fn test_declarations_with_broken_paths() {
@@ -251,7 +251,7 @@ fn test_declarations_with_broken_paths() {
     insta::assert_snapshot!(format_products(&m.bench), @"large-input  →  large-input.rs");
 }
 
-/// Check that missing and broken paths are handled without errors. It is up
+/// Checks that missing and broken paths are handled without errors. It is up
 /// to the user to potentially turn this into a warning or error.
 #[test]
 fn test_declarations_with_missing_and_broken_paths() {
@@ -280,7 +280,7 @@ fn test_declarations_with_missing_and_broken_paths() {
     insta::assert_snapshot!(format_products(&m.bench), @"large-input  →  <None>");
 }
 
-/// Check that duplicate names are handled without errors. It is up to the
+/// Checks that duplicate names are handled without errors. It is up to the
 /// user to potentially turn this into a warning or error.
 #[test]
 fn test_duplicate_names() {
@@ -322,7 +322,7 @@ fn test_duplicate_names() {
     "###);
 }
 
-/// Check that missing names are handled without errors. It is up to the
+/// Checks that missing names are handled without errors. It is up to the
 /// user to potentially turn this into a warning or error.
 #[test]
 fn test_missing_names() {

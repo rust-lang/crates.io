@@ -63,7 +63,7 @@ impl DatabasePools {
 }
 
 impl DatabasePools {
-    /// Load settings for one or more database pools from the environment
+    /// Loads settings for one or more database pools from the environment.
     ///
     /// # Errors
     ///

@@ -122,8 +122,8 @@ pub async fn handler(
     (TypedHeader(ContentType::json()), bytes.clone())
 }
 
-/// Mutate `openapi` in place: drop operations marked `x-internal: true` when
-/// `include_internal` is false, and strip the marker from any remaining
+/// Mutates `openapi` in place: drops operations marked `x-internal: true` when
+/// `include_internal` is false, and strips the marker from any remaining
 /// operations regardless.
 fn apply_visibility(openapi: &mut OpenApiDoc, include_internal: bool) {
     openapi.paths.paths.retain(|_, item| {

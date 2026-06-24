@@ -24,7 +24,7 @@ impl<T> Response<T>
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    /// Assert that the response is good and deserialize the message
+    /// Asserts that the response is good and deserializes the message
     #[track_caller]
     pub fn good(self) -> T {
         assert_that!(self.status(), is_success());
@@ -41,7 +41,7 @@ impl<T> Response<T> {
         }
     }
 
-    /// Consume the response body and convert it to a JSON value
+    /// Consumes the response body and converts it to a JSON value
     #[track_caller]
     pub fn json(&self) -> Value {
         json(&self.response)
@@ -62,7 +62,7 @@ impl<T> Response<T> {
         self
     }
 
-    /// Assert that the response carries the given `Cache-Control` header value.
+    /// Asserts that the response carries the given `Cache-Control` header value.
     #[track_caller]
     pub fn assert_cache_control(&self, expected: &str) -> &Self {
         let value = assert_some!(self.response.headers().get(header::CACHE_CONTROL));
@@ -70,7 +70,7 @@ impl<T> Response<T> {
         self
     }
 
-    /// Assert that no `Cache-Control` header is present, i.e. the response may be
+    /// Asserts that no `Cache-Control` header is present, i.e. the response may be
     /// freely cached by shared caches.
     #[track_caller]
     pub fn assert_no_cache_control(&self) -> &Self {
@@ -78,7 +78,7 @@ impl<T> Response<T> {
         self
     }
 
-    /// Assert that the `Vary` header lists exactly the given values, ignoring
+    /// Asserts that the `Vary` header lists exactly the given values, ignoring
     /// order, case, and how the values are spread across multiple header lines.
     #[track_caller]
     pub fn assert_vary(&self, expected: &[&str]) -> &Self {
@@ -100,7 +100,7 @@ impl<T> Response<T> {
         self
     }
 
-    /// Assert that the status code is 429 and that the body matches a rate limit.
+    /// Asserts that the status code is 429 and that the body matches a rate limit.
     #[track_caller]
     pub fn assert_rate_limited(self, action: LimitedAction) {
         #[derive(serde::Deserialize)]

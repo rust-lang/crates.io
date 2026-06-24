@@ -53,7 +53,7 @@ pub struct FileEntry {
     pub sha256: String,
 }
 
-/// Build a deterministic zip from a `.crate` (gzipped tarball) and return its
+/// Builds a deterministic zip from a `.crate` (gzipped tarball) and returns its
 /// [`Manifest`].
 pub fn build_zip<R: Read + Seek, W: Read + Write + Seek>(
     tarball: &mut R,
@@ -162,7 +162,7 @@ pub fn build_zip<R: Read + Seek, W: Read + Write + Seek>(
     Ok(Manifest { files })
 }
 
-/// Decode the gzipped tarball and invoke `callback` for each regular file
+/// Decodes the gzipped tarball and invokes `callback` for each regular file
 /// entry, passing its crate-root-relative path and a reader over its contents.
 /// `tarball` is rewound before decoding, so it can be called repeatedly on the
 /// same reader.
@@ -207,7 +207,7 @@ fn for_each_file<R: Read + Seek>(
     Ok(())
 }
 
-/// Stream one entry into the zip, computing the sha256 of its uncompressed
+/// Streams one entry into the zip, computing the sha256 of its uncompressed
 /// contents as the bytes flow through. Returns the raw 32-byte digest.
 fn write_entry<W: Write + Seek>(
     zip: &mut ZipWriter<W>,

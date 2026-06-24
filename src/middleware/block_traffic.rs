@@ -47,7 +47,7 @@ impl BlockCriteria {
 impl TryFrom<&str> for BlockCriteria {
     type Error = regex::Error;
 
-    /// Parse a string into a [`BlockCriteria`].
+    /// Parses a string into a [`BlockCriteria`].
     ///
     /// - If the specified string starts and ends with `/` and has at least one character between
     ///   the slashes, interpret the value as a [`Regex`].
@@ -130,7 +130,7 @@ fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> impl IntoRe
     (StatusCode::FORBIDDEN, body)
 }
 
-/// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
+/// Allows blocking individual routes by their pattern through the `BLOCKED_ROUTES`
 /// environment variable.
 pub fn block_routes(
     matched_path: Option<&MatchedPath>,

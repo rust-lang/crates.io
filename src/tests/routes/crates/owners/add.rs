@@ -346,7 +346,7 @@ async fn max_invites_per_request() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"too many invites for this request - maximum 10"}]}"#);
 }
 
-/// Assert that emails are only sent if the request succeeds.
+/// Asserts that emails are only sent if the request succeeds.
 #[tokio::test(flavor = "multi_thread")]
 async fn no_invite_emails_for_txn_rollback() {
     let (app, _, _, token) = TestApp::init().with_token().await;

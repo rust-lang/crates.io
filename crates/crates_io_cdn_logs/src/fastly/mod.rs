@@ -89,7 +89,7 @@ fn parse_json(json: &str) -> Result<json::LogLine<'_>, serde_json::Error> {
     serde_json::from_str(json)
 }
 
-/// Deal with paths like `/crates/tikv-jemalloc-sys/tikv-jemalloc-sys-0.5.4%2B5.3.0-patched.crate`.
+/// Deals with paths like `/crates/tikv-jemalloc-sys/tikv-jemalloc-sys-0.5.4%2B5.3.0-patched.crate`.
 ///
 /// Compared to the CloudFront logs, we only need a single round of
 /// percent-decoding here, since JSON has its own escaping rules.

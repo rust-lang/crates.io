@@ -16,7 +16,7 @@ pub fn write_crates<W: Write>(crates: &[Crate], mut writer: W) -> anyhow::Result
     Ok(())
 }
 
-/// Serialize `pubtime` with seconds precision `DateTime<Utc>`
+/// Serializes `pubtime` with seconds precision `DateTime<Utc>`.
 pub fn serialize_pubtime<S>(dt: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,

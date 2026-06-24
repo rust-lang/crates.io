@@ -85,7 +85,7 @@ pub async fn http_backend(
     .unwrap_or_else(|_| Err(StatusCode::INTERNAL_SERVER_ERROR))
 }
 
-/// Obtain the value of a header
+/// Obtains the value of a header.
 ///
 /// If multiple headers have the same name, only one will be returned.
 ///

@@ -41,7 +41,7 @@ impl<'a> CommitBuilder<'a> {
         })
     }
 
-    /// Stage `bytes` as the contents of the index entry for `name`, creating
+    /// Stages `bytes` as the contents of the index entry for `name`, creating
     /// or overwriting the entry.
     pub fn upsert_entry(&mut self, name: &str, bytes: &[u8]) -> anyhow::Result<()> {
         let oid = self
@@ -54,7 +54,7 @@ impl<'a> CommitBuilder<'a> {
         Ok(())
     }
 
-    /// Stage removal of the index entry for `name`.
+    /// Stages removal of the index entry for `name`.
     pub fn remove_entry(&mut self, name: &str) -> anyhow::Result<()> {
         let path = Repository::relative_index_file_for_url(name);
         self.tub.remove(&path);

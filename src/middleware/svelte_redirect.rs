@@ -19,7 +19,7 @@ pub async fn redirect(request: Request, next: Next) -> Response {
     Redirect::temporary(&target).into_response()
 }
 
-/// Compute the redirect target for a request to a `/svelte/...` path.
+/// Computes the redirect target for a request to a `/svelte/...` path.
 ///
 /// Returns [`None`] if the request should not be redirected. The result
 /// preserves the query string, if any.

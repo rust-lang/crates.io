@@ -25,7 +25,7 @@ async fn serve<P: AsRef<Path>>(path: P, request: Request, next: Next) -> Respons
     }
 }
 
-/// Serve a static file from `path`, using the precompressed `.br`/`.gz`
+/// Serves a static file from `path`, using the precompressed `.br`/`.gz`
 /// variants when available and accepted.
 ///
 /// Returns the original request back as [`Err`] when it should fall through to

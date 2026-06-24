@@ -31,7 +31,7 @@ pub struct UsersResponse {
     pub users: Vec<EncodableOwner>,
 }
 
-/// List crate owners.
+/// Lists crate owners.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owners",
@@ -59,7 +59,7 @@ pub struct TeamsResponse {
     pub teams: Vec<EncodableOwner>,
 }
 
-/// List team owners of a crate.
+/// Lists team owners of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owner_team",
@@ -80,7 +80,7 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
     Ok(Json(TeamsResponse { teams }))
 }
 
-/// List user owners of a crate.
+/// Lists user owners of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owner_user",
@@ -112,7 +112,7 @@ pub struct ModifyResponse {
     pub ok: bool,
 }
 
-/// Add crate owners.
+/// Adds crate owners.
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/owners",
@@ -134,7 +134,7 @@ pub async fn add_owners(
     modify_owners(app, path.name, parts, body, true).await
 }
 
-/// Remove crate owners.
+/// Removes crate owners.
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/owners",
@@ -314,7 +314,7 @@ async fn modify_owners(
     Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
-/// Invite `login` as an owner of this crate, returning the created
+/// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
 async fn add_owner(
     app: &App,

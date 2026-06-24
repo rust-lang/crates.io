@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Check for old background jobs that are not currently running.
+/// Checks for old background jobs that are not currently running.
 ///
 /// This check includes `skip_locked` in the query and will only trigger on
 /// enqueued jobs that have attempted to run and have failed (and are in the
@@ -83,7 +83,7 @@ async fn check_failing_background_jobs(
     Ok(())
 }
 
-/// Check for an `update_downloads` job that has run longer than expected
+/// Checks for an `update_downloads` job that has run longer than expected
 async fn check_stalled_update_downloads(
     mut conn: &AsyncPgConnection,
     pagerduty: &PagerdutyClient,
@@ -128,7 +128,7 @@ async fn check_stalled_update_downloads(
     .await
 }
 
-/// Check for known spam patterns
+/// Checks for known spam patterns
 async fn check_spam_attack(
     mut conn: &AsyncPgConnection,
     pagerduty: &PagerdutyClient,

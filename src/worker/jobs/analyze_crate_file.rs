@@ -150,8 +150,8 @@ async fn update_version_linecount_stats(
     Ok(())
 }
 
-/// Check whether the `version_id` is a default version of any crate and
-/// schedule an OpenGraph image rerender background job if that is the case.
+/// Checks whether the `version_id` is a default version of any crate and
+/// schedules an OpenGraph image rerender background job if that is the case.
 #[instrument(skip(conn))]
 async fn handle_og_image_rerender(
     crate_name: &str,

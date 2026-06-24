@@ -189,13 +189,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get crate metadata (for the `new` crate).
+         * Gets crate metadata (for the `new` crate).
          * @description This endpoint works around a small limitation in `axum` and is delegating
          *     to the `GET /api/v1/crates/{name}` endpoint internally.
          */
         get: operations["find_new_crate"];
         /**
-         * Publish a new crate/version.
+         * Publishes a new crate/version.
          * @description Used by `cargo publish` to publish a new crate or to publish a new version of an
          *     existing crate.
          */
@@ -214,7 +214,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get crate metadata. */
+        /** Gets crate metadata. */
         get: operations["find_crate"];
         put?: never;
         post?: never;
@@ -231,7 +231,7 @@ export interface paths {
         delete: operations["delete_crate"];
         options?: never;
         head?: never;
-        /** Update crate settings. */
+        /** Updates crate settings. */
         patch: operations["update_crate"];
         trace?: never;
     };
@@ -298,7 +298,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List team owners of a crate. */
+        /** Lists team owners of a crate. */
         get: operations["get_team_owners"];
         put?: never;
         post?: never;
@@ -315,7 +315,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List user owners of a crate. */
+        /** Lists user owners of a crate. */
         get: operations["get_user_owners"];
         put?: never;
         post?: never;
@@ -332,12 +332,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List crate owners. */
+        /** Lists crate owners. */
         get: operations["list_owners"];
-        /** Add crate owners. */
+        /** Adds crate owners. */
         put: operations["add_owners"];
         post?: never;
-        /** Remove crate owners. */
+        /** Removes crate owners. */
         delete: operations["remove_owners"];
         options?: never;
         head?: never;
@@ -351,7 +351,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List reverse dependencies of a crate. */
+        /** Lists reverse dependencies of a crate. */
         get: operations["list_reverse_dependencies"];
         put?: never;
         post?: never;

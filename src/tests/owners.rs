@@ -50,7 +50,7 @@ impl MockCookieUser {
         self.put(&url, body.to_string()).await
     }
 
-    /// As the currently logged in user, accept an invitation to become an owner of the named
+    /// As the currently logged in user, accepts an invitation to become an owner of the named
     /// crate.
     async fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
         #[derive(Deserialize)]
@@ -67,7 +67,7 @@ impl MockCookieUser {
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
 
-    /// As the currently logged in user, decline an invitation to become an owner of the named
+    /// As the currently logged in user, declines an invitation to become an owner of the named
     /// crate.
     async fn decline_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
         let body = json!({
@@ -92,7 +92,7 @@ impl MockCookieUser {
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
 
-    /// As the currently logged in user, list my pending invitations.
+    /// As the currently logged in user, lists my pending invitations.
     async fn list_invitations(&self) -> InvitationListResponse {
         self.get("/api/v1/me/crate_owner_invitations").await.good()
     }
@@ -209,7 +209,7 @@ async fn owners_can_remove_self() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
-/// Verify consistency when adidng or removing multiple owners in a single request.
+/// Verifies consistency when adding or removing multiple owners in a single request.
 #[tokio::test(flavor = "multi_thread")]
 async fn modify_multiple_owners() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -270,7 +270,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Testing the crate ownership between two crates and one team.
+/// Tests the crate ownership between two crates and one team.
 /// Given two crates, one crate owned by both a team and a user,
 /// one only owned by a user, check that the `CrateList` returned
 /// for the `user_id` contains only the crates owned by that user,
@@ -344,7 +344,7 @@ async fn check_ownership_one_crate() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Assert the error response when attempting to add a team as a crate owner
+/// Asserts the error response when attempting to add a team as a crate owner
 /// when that team is already a crate owner.
 #[tokio::test(flavor = "multi_thread")]
 async fn add_existing_team() {

@@ -92,7 +92,7 @@ pub trait RequestHelper {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest;
     fn app(&self) -> &TestApp;
 
-    /// Run a request that is expected to succeed
+    /// Runs a request that is expected to succeed
     fn run<T>(&self, request: Request<impl Into<Body>>) -> impl Future<Output = Response<T>> {
         let app = self.app();
         let request = request.map(Into::into);
@@ -117,29 +117,29 @@ pub trait RequestHelper {
         inner(app, request).map(Response::new)
     }
 
-    /// Create a get request
+    /// Creates a GET request
     fn get_request(&self, path: &str) -> MockRequest {
         self.request_builder(Method::GET, path)
     }
 
-    /// Create a POST request
+    /// Creates a POST request
     fn post_request(&self, path: &str) -> MockRequest {
         self.request_builder(Method::POST, path)
     }
 
-    /// Issue a GET request
+    /// Issues a GET request
     async fn get<T>(&self, path: &str) -> Response<T> {
         self.run(self.get_request(path)).await
     }
 
-    /// Issue a GET request that includes query parameters
+    /// Issues a GET request that includes query parameters
     async fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
         let path_and_query = format!("{path}?{query}");
         let request = self.request_builder(Method::GET, &path_and_query);
         self.run(request).await
     }
 
-    /// Issue a POST request
+    /// Issues a POST request
     async fn post<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let request = self
             .request_builder(Method::POST, path)
@@ -148,7 +148,7 @@ pub trait RequestHelper {
         self.run(request).await
     }
 
-    /// Issue a PUT request
+    /// Issues a PUT request
     async fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let request = self
             .request_builder(Method::PUT, path)
@@ -157,7 +157,7 @@ pub trait RequestHelper {
         self.run(request).await
     }
 
-    /// Issue a PATCH request
+    /// Issues a PATCH request
     async fn patch<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let request = self
             .request_builder(Method::PATCH, path)
@@ -166,13 +166,13 @@ pub trait RequestHelper {
         self.run(request).await
     }
 
-    /// Issue a DELETE request
+    /// Issues a DELETE request
     async fn delete<T>(&self, path: &str) -> Response<T> {
         let request = self.request_builder(Method::DELETE, path);
         self.run(request).await
     }
 
-    /// Issue a DELETE request with a body... yes we do it, for crate owner removal
+    /// Issues a DELETE request with a body... yes we do it, for crate owner removal
     async fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let request = self
             .request_builder(Method::DELETE, path)
@@ -181,18 +181,18 @@ pub trait RequestHelper {
         self.run(request).await
     }
 
-    /// Search for crates matching a query string
+    /// Searches for crates matching a query string
     async fn search(&self, query: &str) -> CrateList {
         self.get_with_query("/api/v1/crates", query).await.good()
     }
 
-    /// Request the JSON used for the admin list page
+    /// Requests the JSON used for the admin list page
     async fn admin_list<T>(&self, owner: &str) -> Response<T> {
         let url = format!("/api/private/admin_list/{owner}");
         self.get(&url).await
     }
 
-    /// Publish the crate and run background jobs to completion
+    /// Publishes the crate and runs background jobs to completion
     ///
     /// Background jobs will publish to the git index and sync to the HTTP index.
     async fn publish_crate(&self, body: impl Into<Bytes>) -> Response<GoodCrate> {
@@ -201,19 +201,19 @@ pub trait RequestHelper {
         response
     }
 
-    /// Request the JSON used for a crate's page
+    /// Requests the JSON used for a crate's page
     async fn show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{krate_name}");
         self.get(&url).await.good()
     }
 
-    /// Request the JSON used to list a crate's owners
+    /// Requests the JSON used to list a crate's owners
     async fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         self.get(&url).await.good()
     }
 
-    /// Request the JSON used for a crate version's page
+    /// Requests the JSON used for a crate version's page
     async fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
         let url = format!("/api/v1/crates/{krate_name}/{version}");
         self.get(&url).await.good()
@@ -229,7 +229,7 @@ pub trait RequestHelper {
         self.get(url).await.good()
     }
 
-    /// Add to the specified crate the specified owners.
+    /// Adds to the specified crate the specified owners.
     async fn add_named_owners<T>(&self, krate_name: &str, owners: &[T]) -> Response<OwnerResp>
     where
         T: serde::Serialize,
@@ -239,12 +239,12 @@ pub trait RequestHelper {
         self.put(&url, body).await
     }
 
-    /// Add a single owner to the specified crate.
+    /// Adds a single owner to the specified crate.
     async fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OwnerResp> {
         self.add_named_owners(krate_name, &[owner]).await
     }
 
-    /// Remove from the specified crate the specified owners.
+    /// Removes from the specified crate the specified owners.
     async fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OwnerResp> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();

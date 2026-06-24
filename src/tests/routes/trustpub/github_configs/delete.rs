@@ -36,7 +36,7 @@ async fn get_all_configs(conn: &mut AsyncPgConnection) -> QueryResult<Vec<GitHub
     GitHubConfig::query().load(conn).await
 }
 
-/// Delete the config with a valid user that is an owner of the crate.
+/// Deletes the config with a valid user that is an owner of the crate.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
@@ -59,7 +59,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Try to delete the config with an unauthenticated client.
+/// Tries to delete the config with an unauthenticated client.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unauthenticated() -> anyhow::Result<()> {
     let (app, client, cookie_client) = TestApp::full().with_user().await;
@@ -82,7 +82,7 @@ async fn test_unauthenticated() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Delete the config with a legacy API token.
+/// Deletes the config with a legacy API token.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_legacy_token_auth() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full().with_token().await;
@@ -105,7 +105,7 @@ async fn test_legacy_token_auth() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Try to delete a config that does not exist.
+/// Tries to delete a config that does not exist.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_config_not_found() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
@@ -120,7 +120,7 @@ async fn test_config_not_found() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Try to delete the config with a user who is not an owner of the crate.
+/// Tries to delete the config with a user who is not an owner of the crate.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_non_owner() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
@@ -146,7 +146,7 @@ async fn test_non_owner() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Try to delete the config with a user that is part of a team that owns
+/// Tries to delete the config with a user that is part of a team that owns
 /// the crate.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_team_owner() -> anyhow::Result<()> {
@@ -177,7 +177,7 @@ async fn test_team_owner() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Delete the config with an API token that has the correct scopes.
+/// Deletes the config with an API token that has the correct scopes.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_auth_with_trusted_publishing_scope() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full()
@@ -205,7 +205,7 @@ async fn test_token_auth_with_trusted_publishing_scope() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Try to delete the config with an API token that does not have the required endpoint scope.
+/// Tries to delete the config with an API token that does not have the required endpoint scope.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_auth_without_trusted_publishing_scope() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full()
@@ -233,7 +233,7 @@ async fn test_token_auth_without_trusted_publishing_scope() -> anyhow::Result<()
     Ok(())
 }
 
-/// Try to delete the config with an API token that has the correct endpoint scope but wrong crate scope.
+/// Tries to delete the config with an API token that has the correct endpoint scope but wrong crate scope.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_auth_with_wrong_crate_scope() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full()
@@ -261,7 +261,7 @@ async fn test_token_auth_with_wrong_crate_scope() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Delete the config with an API token that has a wildcard crate scope.
+/// Deletes the config with an API token that has a wildcard crate scope.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full()

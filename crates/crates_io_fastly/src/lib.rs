@@ -40,7 +40,7 @@ impl Fastly {
         Self { client, api_token }
     }
 
-    /// Invalidate a path on Fastly
+    /// Invalidates a path on Fastly
     ///
     /// This method takes a path and invalidates the cached content on Fastly. The path must not
     /// contain a wildcard, since the Fastly API does not support wildcard invalidations. Paths are
@@ -61,7 +61,7 @@ impl Fastly {
         Ok(())
     }
 
-    /// Invalidate a path on Fastly
+    /// Invalidates a path on Fastly
     ///
     /// This method takes a domain and path and invalidates the cached content
     /// on Fastly. The path must not contain a wildcard, since the Fastly API

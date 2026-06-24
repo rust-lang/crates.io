@@ -55,7 +55,7 @@ pub async fn get_index_data(
     Ok(Some(str))
 }
 
-/// Gather all the necessary data to write an index metadata file
+/// Gathers all the necessary data to write an index metadata file.
 pub async fn index_metadata(
     krate: &Crate,
     conn: &mut AsyncPgConnection,

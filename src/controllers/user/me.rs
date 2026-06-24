@@ -39,7 +39,7 @@ pub async fn get_authenticated_user(
     Ok((no_store(), authenticated_user(&mut conn, user_id).await?))
 }
 
-/// Load the profile of the user with the given id.
+/// Loads the profile of the user with the given id.
 pub async fn authenticated_user(
     conn: &mut AsyncPgConnection,
     user_id: i32,
