@@ -102,7 +102,7 @@ impl<S: app_builder::State> AppBuilder<S> {
     /// This method configures the OIDC key stores for the specified providers
     /// and expects a list of provider names as input.
     ///
-    /// Currently, only "github" is supported as a provider.
+    /// Currently, "github" and "gitlab" are supported as providers.
     pub fn trustpub_providers(
         self,
         providers: &[String],

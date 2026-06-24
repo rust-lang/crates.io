@@ -499,7 +499,7 @@ async fn is_gh_org_owner(
     Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
-/// Error results from a [`add_owner()`] model call.
+/// Error results from an [`add_owner()`] call.
 #[derive(Debug, Error)]
 enum OwnerAddError {
     #[error(transparent)]

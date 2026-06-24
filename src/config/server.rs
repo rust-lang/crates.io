@@ -82,8 +82,8 @@ impl Server {
     ///
     /// Sets the following default values:
     ///
-    /// - `Config::max_upload_size`: 10MiB
-    /// - `Config::ownership_invitations_expiration_days`: 30
+    /// - `PublishLimitsConfig::upload_size`: 10MiB
+    /// - `Server::ownership_invitations_expiration`: 30 days
     ///
     /// Pulls values from the following environment variables:
     ///
@@ -91,8 +91,6 @@ impl Server {
     /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
-    /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
-    ///   endpoint even with a healthy database pool.
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
     ///   and uses the value as the error message returned to users.
     /// - `GIT_ARCHIVE_REPO_URL`: HTTPS URL (e.g. `https://github.com/<org>/<repo>.git`) of a git

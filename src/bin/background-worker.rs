@@ -179,8 +179,8 @@ fn build_index_sync_github_app(
 }
 
 /// Builds the GitHub App client used to authenticate requests to
-/// the users API. `GH_SYNC_APP_ORG`,`GH_SYNC_APP_CLIENT_ID`, and `GH_SYNC_APP_PRIVATE_KEY` must
-/// all be present.
+/// the users API. Returns `None` when `GH_SYNC_APP_CLIENT_ID` is unset. When it
+/// is set, `GH_SYNC_APP_ORG` and `GH_SYNC_APP_PRIVATE_KEY` must also be present.
 fn build_sync_github_app() -> anyhow::Result<Option<Arc<dyn GitHubApp>>> {
     let Some(client_id) = var("GH_SYNC_APP_CLIENT_ID")? else {
         return Ok(None);

@@ -1,12 +1,12 @@
 //! This module provides utility types and traits for managing a test session
 //!
-//! Tests start by using one of the `TestApp` constructors: `init`, `with_proxy`, or `full`.  This returns a
+//! Tests start by using one of the `TestApp` constructors: `init` or `full`.  This returns a
 //! `TestAppBuilder` which provides convenience methods for creating up to one user, optionally with
 //! a token.  The builder methods all return at least an initialized `TestApp` and a
 //! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
 //! unauthenticated session.
 //!
-//! A `TestApp` value provides raw access to the database through the `db` function and can
+//! A `TestApp` value provides raw access to the database through the `db_conn` function and can
 //! construct new users via the `db_new_user` function.  This function returns a
 //! `MockCookieUser`, which can be used to generate one or more tokens via its `db_new_token`
 //! function, which in turn returns a `MockTokenUser`.
@@ -251,7 +251,7 @@ pub trait RequestHelper {
         self.delete_with_body(&url, body).await
     }
 
-    /// Remove a single owner to the specified crate.
+    /// Remove a single owner from the specified crate.
     async fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OwnerResp> {
         self.remove_named_owners(krate_name, &[owner]).await
     }

@@ -11,9 +11,11 @@ use tracing::warn;
 /// otherwise it is required to be a valid DSN string. `SENTRY_ENV_API` must
 /// be set if a DSN is provided.
 ///
-/// `HEROKU_SLUG_COMMIT`, if present, will be used as the `release` property
-/// on all events. This environment variable is provided by Heroku when the
-/// `runtime-dyno-metadata` Labs feature is enabled.
+/// `HEROKU_BUILD_COMMIT`, if present, will be used as the `release` property
+/// on all events, falling back to the deprecated `HEROKU_SLUG_COMMIT`. These
+/// environment variables are provided by Heroku when the
+/// `runtime-dyno-build-metadata` and `runtime-dyno-metadata` Labs features are
+/// enabled, respectively.
 pub fn init() -> Option<ClientInitGuard> {
     let config = match SentryConfig::from_environment() {
         Ok(config) => config,

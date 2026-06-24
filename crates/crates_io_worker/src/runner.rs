@@ -68,7 +68,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
 
     /// Start the background workers.
     ///
-    /// This returns a `RunningRunner` which can be used to wait for the workers to shutdown.
+    /// This returns a `RunHandle` which can be used to wait for the workers to shutdown.
     pub fn start(&self) -> RunHandle {
         // Workers wait on this to be woken up when a new job is enqueued.
         let notify = Arc::new(Notify::new());

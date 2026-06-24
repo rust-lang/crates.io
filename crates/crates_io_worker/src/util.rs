@@ -31,7 +31,7 @@ where
     result
 }
 
-/// Try to figure out what's in the box, and print it if we can.
+/// Tries to figure out what's in the box, and wraps it in an error if we can.
 ///
 /// The actual error type we will get from `panic::catch_unwind` is really poorly documented.
 /// However, the `panic::set_hook` functions deal with a `PanicHookInfo` type, and its payload is

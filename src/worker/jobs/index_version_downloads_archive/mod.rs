@@ -12,7 +12,7 @@ use tracing::{info, warn};
 const INDEX_PATH: &str = "archive/version-downloads/index.html";
 const INDEX_JSON_PATH: &str = "archive/version-downloads/index.json";
 
-/// Generate an index.html for the version download CSVs exported to S3.
+/// Generates `index.html` and `index.json` for the version download CSVs exported to S3.
 #[derive(Serialize, Deserialize, Default)]
 pub struct IndexVersionDownloadsArchive;
 
