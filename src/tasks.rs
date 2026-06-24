@@ -4,7 +4,7 @@ use tokio::task::JoinHandle;
 /// Runs the provided closure on a thread where blocking is acceptable.
 ///
 /// This is using [`tokio::task::spawn_blocking`] internally, but automatically
-/// runs the callback function in the context of the current Sentry ['Hub'].
+/// runs the callback function in the context of the current Sentry [`Hub`].
 pub fn spawn_blocking<F, R>(f: F) -> JoinHandle<R>
 where
     F: FnOnce() -> R + Send + 'static,
@@ -20,7 +20,7 @@ mod tests {
     use super::*;
     use crate::util::errors::BoxedAppError;
 
-    /// Test that [`spawn_blocking`] works with ['anyhow'].
+    /// Test that [`spawn_blocking`] works with [`anyhow`].
     #[tokio::test]
     async fn test_spawn_blocking_anyhow() {
         spawn_blocking(|| Ok::<_, anyhow::Error>(()))

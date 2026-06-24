@@ -24,6 +24,7 @@ unescaped_backticks = "warn"
 
 [workspace.lints.clippy]
 dbg_macro = "warn"
+doc_link_with_quotes = "warn"
 doc_markdown = "warn"
 todo = "warn"
 too_long_first_doc_paragraph = "warn"
