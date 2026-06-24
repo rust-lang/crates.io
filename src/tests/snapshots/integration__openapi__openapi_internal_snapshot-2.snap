@@ -6667,6 +6667,12 @@ expression: response.json()
                           "boolean",
                           "null"
                         ]
+                      },
+                      "username": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     },
                     "type": "object"
