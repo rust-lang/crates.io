@@ -1,5 +1,5 @@
 use crate::dialoguer;
-use anyhow::{Result, bail};
+use anyhow::Result;
 use chrono::{NaiveDate, NaiveTime, TimeZone, Utc};
 use clap::builder::ArgAction;
 use crates_io::db;
@@ -9,6 +9,7 @@ use crates_io_worker::BackgroundJob;
 use crates_io_worker::schema::background_jobs;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use tracing::warn;
 
 const BATCH_SIZE: usize = 1000;
 
@@ -92,24 +93,20 @@ pub async fn run(opts: Opts) -> Result<()> {
             .load(&mut conn)
             .await?
     } else {
-        // Validate all crates exist before enqueueing any jobs
+        // Check which crates exist in the database. Crates that don't
+        // exist will still be synced, which removes them from the index.
         let existing_crates: Vec<String> = crates::table
             .filter(crates::name.eq_any(&opts.names))
             .select(crates::name)
             .load(&mut conn)
             .await?;
 
-        let missing_crates: Vec<_> = opts
-            .names
-            .iter()
-            .filter(|name| !existing_crates.contains(name))
-            .collect();
-
-        let num_missing_crates = missing_crates.len();
-        if num_missing_crates == 1 {
-            bail!("Crate {} does not exist", missing_crates[0]);
-        } else if num_missing_crates > 1 {
-            bail!("Crates {missing_crates:?} do not exist");
+        for name in &opts.names {
+            if !existing_crates.contains(name) {
+                warn!(
+                    "Crate `{name}` does not exist in the database and will be removed from the index."
+                );
+            }
         }
 
         opts.names
