@@ -14,8 +14,6 @@ const ONE_YEAR: Duration = Duration::from_secs(365 * 24 * 60 * 60);
 pub async fn add_common_headers(request: Request, next: Next) -> impl IntoResponse {
     let v = HeaderValue::from_static;
 
-    let mut headers = HeaderMap::new();
-
     let path = request.uri().path();
 
     const STATIC_FILES: [&str; 6] = [
@@ -26,18 +24,25 @@ pub async fn add_common_headers(request: Request, next: Next) -> impl IntoRespon
         "/opensearch.xml",
         "/.well-known/security.txt",
     ];
-    if STATIC_FILES.contains(&path) {
-        expires(&mut headers, ONE_DAY);
-    }
-
-    if path.starts_with("/_app/immutable/") {
-        expires(&mut headers, 10 * ONE_YEAR);
-    }
+    let cache_duration = if STATIC_FILES.contains(&path) {
+        Some(ONE_DAY)
+    } else if path.starts_with("/_app/immutable/") {
+        Some(10 * ONE_YEAR)
+    } else {
+        None
+    };
 
     let response = next.run(request).await;
 
+    let mut headers = HeaderMap::new();
     headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, v("*"));
     headers.insert(header::STRICT_TRANSPORT_SECURITY, v("max-age=31536000"));
+
+    if let Some(cache_duration) = cache_duration
+        && response.status().is_success()
+    {
+        expires(&mut headers, cache_duration);
+    }
 
     if NGINX_SUCCESS_CODES.contains(&response.status().as_u16()) {
         headers.insert(header::X_CONTENT_TYPE_OPTIONS, v("nosniff"));
