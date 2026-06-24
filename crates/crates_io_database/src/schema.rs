@@ -1022,6 +1022,8 @@ diesel::table! {
         account_lock_until -> Nullable<Timestamptz>,
         /// The time the user was created.
         created_at -> Nullable<Timestamptz>,
+        /// Time when this user began using their current username (may be NULL if not available)
+        current_username_adopted_at -> Nullable<Timestamptz>,
         /// Encrypted GitHub access token
         gh_encrypted_token -> Bytea,
         /// The `gh_id` column of the `users` table.

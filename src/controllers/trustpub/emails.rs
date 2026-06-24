@@ -64,6 +64,7 @@ mod tests {
             account_lock_until: None,
             is_admin: false,
             publish_notifications: true,
+            current_username_adopted_at: None,
             username: "octocat".into(),
             created_at: None,
         }

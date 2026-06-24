@@ -31,6 +31,7 @@ pub struct User {
     pub is_admin: bool,
     pub publish_notifications: bool,
     pub username: String,
+    pub current_username_adopted_at: Option<DateTime<Utc>>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
