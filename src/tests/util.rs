@@ -1,6 +1,6 @@
 //! This module provides utility types and traits for managing a test session
 //!
-//! Tests start by using one of the `TestApp` constructors: `init`, `with_proxy`, or `full`.  This returns a
+//! Tests start by using one of the `TestApp` constructors: `init` or `full`.  This returns a
 //! `TestAppBuilder` which provides convenience methods for creating up to one user, optionally with
 //! a token.  The builder methods all return at least an initialized `TestApp` and a
 //! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
