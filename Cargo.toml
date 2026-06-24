@@ -26,6 +26,7 @@ unescaped_backticks = "warn"
 dbg_macro = "warn"
 doc_markdown = "warn"
 todo = "warn"
+too_long_first_doc_paragraph = "warn"
 
 [package.metadata.cargo-machete]
 ignored = ["astral-tokio-tar"]

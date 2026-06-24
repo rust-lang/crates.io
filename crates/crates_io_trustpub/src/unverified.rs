@@ -3,7 +3,9 @@ use jsonwebtoken::errors::Error;
 use serde::Deserialize;
 
 /// Claims that are extracted from the JWT without any signature
-/// validation. Specifically, this only extracts the `iss` claim, which is
+/// validation.
+///
+/// Specifically, this only extracts the `iss` claim, which is
 /// used to look up the corresponding OIDC key set to then verify the
 /// JWT signature.
 #[derive(Debug, Clone, Deserialize)]

@@ -700,6 +700,7 @@ pub struct InheritedDependencyDetail {
 }
 
 /// Used as a wrapper for properties that may be inherited by workspace-level settings.
+///
 /// It currently does not support more complex interactions (e.g. specifying part of the property
 /// in the local manifest while inheriting another part of it from the workspace manifest, as it
 /// happens for dependency features).

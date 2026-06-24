@@ -1,7 +1,8 @@
 //! This module handles the expected information a crate should have
 //! and manages the serialising and deserializing of this information
-//! to and from structs. The serializing is only utilised in
-//! integration tests.
+//! to and from structs.
+//!
+//! The serializing is only utilised in integration tests.
 
 use crates_io_database::models::DependencyKind;
 use serde::{Deserialize, Serialize};
