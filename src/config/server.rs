@@ -91,8 +91,6 @@ impl Server {
     /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
-    /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
-    ///   endpoint even with a healthy database pool.
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
     ///   and uses the value as the error message returned to users.
     /// - `GIT_ARCHIVE_REPO_URL`: HTTPS URL (e.g. `https://github.com/<org>/<repo>.git`) of a git
