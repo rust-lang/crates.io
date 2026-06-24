@@ -1,4 +1,4 @@
-//! Tests for the `GET /api/private/crate-owners-invitations` endpoint
+//! Tests for the `GET /api/private/crate_owner_invitations` endpoint
 
 use crate::builders::CrateBuilder;
 use crate::util::{MockCookieUser, RequestHelper, TestApp};
