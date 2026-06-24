@@ -74,7 +74,7 @@ impl ProcessCloudfrontInvalidationQueue {
         Ok(item_count)
     }
 
-    /// Invalidate paths on CloudFront with exponential backoff for `TooManyInvalidationsInProgress`
+    /// Invalidates paths on CloudFront with exponential backoff for `TooManyInvalidationsInProgress`.
     #[instrument(skip_all)]
     async fn invalidate_with_backoff(
         &self,

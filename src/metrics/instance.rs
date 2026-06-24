@@ -43,7 +43,7 @@ metrics! {
 
         /// Response times of our endpoints
         pub response_times: HistogramVec["endpoint"],
-        /// Nmber of responses per status code
+        /// Number of responses per status code
         pub responses_by_status_code_total: IntCounterVec["status"],
     }
 

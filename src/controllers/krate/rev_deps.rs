@@ -29,7 +29,7 @@ pub struct RevDepsMeta {
     total: i64,
 }
 
-/// List reverse dependencies of a crate.
+/// Lists reverse dependencies of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/reverse_dependencies",

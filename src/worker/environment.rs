@@ -82,7 +82,7 @@ impl Environment {
         self.fastly.as_ref()
     }
 
-    /// Invalidate a file in all registered CDNs.
+    /// Invalidates a file in all registered CDNs.
     pub(crate) async fn invalidate_cdns(
         &self,
         conn: &AsyncPgConnection,

@@ -2081,7 +2081,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "Get crate metadata (for the `new` crate).",
+        "summary": "Gets crate metadata (for the `new` crate).",
         "tags": [
           "crates"
         ]
@@ -2124,7 +2124,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Publish a new crate/version.",
+        "summary": "Publishes a new crate/version.",
         "tags": [
           "publish"
         ]
@@ -2244,7 +2244,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "Get crate metadata.",
+        "summary": "Gets crate metadata.",
         "tags": [
           "crates"
         ]
@@ -2323,7 +2323,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Update crate settings.",
+        "summary": "Updates crate settings.",
         "tags": [
           "crates"
         ]
@@ -2604,7 +2604,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List team owners of a crate.",
+        "summary": "Lists team owners of a crate.",
         "tags": [
           "owners"
         ]
@@ -2647,7 +2647,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List user owners of a crate.",
+        "summary": "Lists user owners of a crate.",
         "tags": [
           "owners"
         ]
@@ -2728,7 +2728,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Remove crate owners.",
+        "summary": "Removes crate owners.",
         "tags": [
           "owners"
         ]
@@ -2769,7 +2769,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List crate owners.",
+        "summary": "Lists crate owners.",
         "tags": [
           "owners"
         ]
@@ -2848,7 +2848,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Add crate owners.",
+        "summary": "Adds crate owners.",
         "tags": [
           "owners"
         ]
@@ -2945,7 +2945,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List reverse dependencies of a crate.",
+        "summary": "Lists reverse dependencies of a crate.",
         "tags": [
           "crates"
         ]

@@ -81,7 +81,7 @@ impl AuthType {
     }
 }
 
-/// Publish a new crate/version.
+/// Publishes a new crate/version.
 ///
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.

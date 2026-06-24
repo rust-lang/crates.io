@@ -121,7 +121,7 @@ async fn load_versions(
     query.load(&mut conn).await
 }
 
-/// Parse crate specification in the format "crate@version" or just "crate"
+/// Parses crate specification in the format "crate@version" or just "crate"
 fn parse_crate_spec(spec: &str) -> (&str, Option<&str>) {
     if let Some((name, ver)) = spec.split_once('@') {
         (name, Some(ver))
@@ -140,7 +140,7 @@ struct NewBackgroundJob {
 }
 
 impl NewBackgroundJob {
-    /// Create a new [`BuildCrateZip`] background job with the specified priority
+    /// Creates a new [`BuildCrateZip`] background job with the specified priority
     fn new(version_id: i32, priority: i16) -> anyhow::Result<Self> {
         let job = BuildCrateZip::new(version_id);
         let data = serde_json::to_value(&job).context("Failed to serialize job data")?;

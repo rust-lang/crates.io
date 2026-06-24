@@ -53,7 +53,7 @@ fn blocked_traffic() -> Vec<(String, Vec<BlockCriteria>)> {
         .collect()
 }
 
-/// Extract from the `BLOCKED_TRAFFIC` env var value a comma-separated list of pairs containing a
+/// Extracts from the `BLOCKED_TRAFFIC` env var value a comma-separated list of pairs containing a
 /// header name, an equals sign, and the name of another environment variable that contains the
 /// values of that header that should be blocked. For example, if `BLOCKED_TRAFFIC` is set to
 /// `User-Agent=BLOCKED_UAS,custom-header=BLOCKED_CUSTOM`, this function will return the pairs
@@ -71,7 +71,7 @@ fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> 
 }
 
 /// After reading the value of an environment variable whose name was specified in the value of
-/// `BLOCKED_TRAFFIC`, parse a comma-separated list of values to be used as either regex matches or
+/// `BLOCKED_TRAFFIC`, parses a comma-separated list of values to be used as either regex matches or
 /// full string equality with the values of the header name specified in the `BLOCKED_TRAFFIC` pair.
 ///
 /// Values that fail to parse are skipped with a warning, so that a single misconfigured entry

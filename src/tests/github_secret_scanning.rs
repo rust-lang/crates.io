@@ -27,7 +27,7 @@ static URL: &str = "/api/github/secret-scanning/verify";
 static GITHUB_ALERT: &[u8] =
     br#"[{"token":"some_token","type":"some_type","url":"some_url","source":"some_source"}]"#;
 
-/// Generate a GitHub alert with a given token
+/// Generates a GitHub alert with a given token
 fn github_alert_with_token(token: &str) -> Vec<u8> {
     format!(
         r#"[{{"token":"{token}","type":"some_type","url":"some_url","source":"some_source"}}]"#,
@@ -59,13 +59,13 @@ static KEY_IDENTIFIER: &str = "2aafbbe2d329af78d875cd2dd0291048799176466844315b6
 static SIGNING_KEY: LazyLock<SigningKey> =
     LazyLock::new(|| SigningKey::from_pkcs8_pem(PRIVATE_KEY).unwrap());
 
-/// Generate a signature for the payload using our private key
+/// Generates a signature for the payload using our private key
 fn sign_payload(payload: &[u8]) -> String {
     let signature: Signature = SIGNING_KEY.sign(payload);
     general_purpose::STANDARD.encode(signature.to_der())
 }
 
-/// Generate a new Trusted Publishing token and its SHA256 hash
+/// Generates a new Trusted Publishing token and its SHA256 hash
 fn generate_trustpub_token() -> (String, Vec<u8>) {
     let token = AccessToken::generate();
     let finalized_token = token.finalize().expose_secret().to_string();
@@ -73,7 +73,7 @@ fn generate_trustpub_token() -> (String, Vec<u8>) {
     (finalized_token, hashed_token)
 }
 
-/// Create a new Trusted Publishing token in the database
+/// Creates a new Trusted Publishing token in the database
 async fn insert_trustpub_token(
     conn: &mut diesel_async::AsyncPgConnection,
     crate_ids: &[i32],

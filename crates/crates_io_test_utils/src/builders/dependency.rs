@@ -10,7 +10,7 @@ pub struct DependencyBuilder {
 }
 
 impl DependencyBuilder {
-    /// Create a dependency on the crate with the given name.
+    /// Creates a dependency on the crate with the given name.
     pub fn new(name: &str) -> Self {
         DependencyBuilder {
             explicit_name_in_toml: None,
@@ -21,13 +21,13 @@ impl DependencyBuilder {
         }
     }
 
-    /// Rename this dependency.
+    /// Renames this dependency.
     pub fn rename(mut self, new_name: &str) -> Self {
         self.explicit_name_in_toml = Some(new_name.to_string());
         self
     }
 
-    /// Set an alternative registry for this dependency.
+    /// Sets an alternative registry for this dependency.
     pub fn registry(mut self, registry: &str) -> Self {
         self.registry = Some(registry.to_string());
         self
@@ -45,7 +45,7 @@ impl DependencyBuilder {
         self
     }
 
-    /// Consume this builder to create a `krate_publish::EncodableCrateDependency`. If the dependent crate doesn't
+    /// Consumes this builder to create a `krate_publish::EncodableCrateDependency`. If the dependent crate doesn't
     /// already exist, publishing a crate with this dependency will fail.
     pub fn build(self) -> krate_publish::EncodableCrateDependency {
         krate_publish::EncodableCrateDependency {

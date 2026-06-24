@@ -73,7 +73,7 @@ pub struct NewCloudFrontInvalidationQueueItem<'a> {
 }
 
 impl CloudFrontInvalidationQueueItem {
-    /// Queue multiple invalidation paths for later processing
+    /// Queues multiple invalidation paths for later processing.
     pub async fn queue_paths(
         mut conn: &AsyncPgConnection,
         distribution: CloudFrontDistribution,
@@ -90,7 +90,7 @@ impl CloudFrontInvalidationQueueItem {
             .await
     }
 
-    /// Fetch the oldest paths from the queue for a specific distribution
+    /// Fetches the oldest paths from the queue for a specific distribution.
     pub async fn fetch_batch(
         mut conn: &AsyncPgConnection,
         distribution: CloudFrontDistribution,
@@ -105,7 +105,7 @@ impl CloudFrontInvalidationQueueItem {
             .await
     }
 
-    /// Remove queue items by their IDs
+    /// Removes queue items by their IDs.
     pub async fn remove_items(
         mut conn: &AsyncPgConnection,
         item_ids: &[i64],

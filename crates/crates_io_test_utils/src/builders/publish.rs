@@ -35,7 +35,7 @@ enum Manifest {
 }
 
 impl PublishBuilder {
-    /// Create a request to publish a crate with the given name and version, and no files
+    /// Creates a request to publish a crate with the given name and version, and no files
     /// in its tarball.
     pub fn new(krate_name: &str, version: &str) -> Self {
         PublishBuilder {
@@ -55,63 +55,63 @@ impl PublishBuilder {
         }
     }
 
-    /// Add a dependency to this crate. Make sure the dependency already exists in the
+    /// Adds a dependency to this crate. Make sure the dependency already exists in the
     /// database or publish will fail.
     pub fn dependency(mut self, dep: DependencyBuilder) -> Self {
         self.deps.push(dep.build());
         self
     }
 
-    /// Set the description of this crate
+    /// Sets the description of this crate.
     pub fn description(mut self, description: &str) -> Self {
         self.desc = Some(description.to_string());
         self
     }
 
-    /// Unset the description of this crate. Publish will fail unless description is reset.
+    /// Unsets the description of this crate. Publish will fail unless description is reset.
     pub fn unset_description(mut self) -> Self {
         self.desc = None;
         self
     }
 
-    /// Set the readme of this crate
+    /// Sets the readme of this crate.
     pub fn readme(mut self, readme: &str) -> Self {
         self.readme = Some(readme.to_string());
         self
     }
 
-    /// Set the documentation URL of this crate
+    /// Sets the documentation URL of this crate.
     pub fn documentation(mut self, documentation: &str) -> Self {
         self.doc_url = Some(documentation.to_string());
         self
     }
 
-    /// Add a keyword to this crate.
+    /// Adds a keyword to this crate.
     pub fn keyword(mut self, keyword: &str) -> Self {
         self.keywords.push(keyword.into());
         self
     }
 
-    /// Add a category to this crate. Make sure the category already exists in the
+    /// Adds a category to this crate. Make sure the category already exists in the
     /// database or it will be ignored.
     pub fn category(mut self, slug: &str) -> Self {
         self.categories.push(slug.into());
         self
     }
 
-    /// Set the license from this crate.
+    /// Sets the license from this crate.
     pub fn license<T: Into<String>>(mut self, license: T) -> Self {
         self.license = Some(license.into());
         self
     }
 
-    /// Remove the license from this crate. Publish will fail unless license or license file is set.
+    /// Removes the license from this crate. Publish will fail unless license or license file is set.
     pub fn unset_license(mut self) -> Self {
         self.license = None;
         self
     }
 
-    /// Set the license file for this crate
+    /// Sets the license file for this crate.
     pub fn license_file(mut self, license_file: &str) -> Self {
         self.license_file = Some(license_file.into());
         self
@@ -206,7 +206,7 @@ impl PublishBuilder {
         (serde_json::to_string(&metadata).unwrap(), tarball)
     }
 
-    /// Consume this builder to make the Put request body
+    /// Consumes this builder to make the Put request body.
     pub fn body(self) -> Bytes {
         let (json, tarball) = self.build();
         PublishBuilder::create_publish_body(&json, &tarball)

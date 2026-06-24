@@ -80,7 +80,7 @@ impl BackgroundJob for ArchiveVersionDownloads {
     }
 }
 
-/// Export a subset of the `version_downloads` table to a CSV file.
+/// Exports a subset of the `version_downloads` table to a CSV file.
 ///
 /// The subset includes all rows with a date before the given `before` date.
 async fn export(
@@ -106,7 +106,7 @@ async fn export(
     Ok(())
 }
 
-/// Run a psql command on the given database.
+/// Runs a psql command on the given database.
 ///
 /// Returns an error with the stderr output if the command fails.
 async fn psql(database_url: &SecretString, command: &str) -> anyhow::Result<()> {
@@ -127,7 +127,7 @@ async fn psql(database_url: &SecretString, command: &str) -> anyhow::Result<()> 
     Ok(())
 }
 
-/// Split the version downloads CSV file into multiple files.
+/// Splits the version downloads CSV file into multiple files.
 ///
 /// The file is split based on the value of the first column, which is assumed
 /// to be the `date` and dropped from the resulting files. The date is used as
@@ -178,7 +178,7 @@ fn split(path: impl AsRef<Path>) -> anyhow::Result<Vec<NaiveDate>> {
     Ok(writers.into_values().map(|(date, _)| date).collect())
 }
 
-/// Upload per-date CSV files from the given directory to the object store.
+/// Uploads per-date CSV files from the given directory to the object store.
 ///
 /// Uploads are done concurrently with a maximum of 10 files at a time and
 /// only the dates for which the upload was successful are returned. For
@@ -208,7 +208,7 @@ async fn upload(
     Ok(uploaded_dates)
 }
 
-/// Upload a single file to the object store.
+/// Uploads a single file to the object store.
 async fn upload_file(store: &impl ObjectStore, path: impl AsRef<Path>) -> anyhow::Result<()> {
     let path = path.as_ref();
     let content = tokio::fs::read(path).await?;
@@ -226,7 +226,7 @@ async fn upload_file(store: &impl ObjectStore, path: impl AsRef<Path>) -> anyhow
     Ok(())
 }
 
-/// Delete version downloads for the given dates from the database.
+/// Deletes version downloads for the given dates from the database.
 async fn delete(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     // Delete version downloads for the given dates in chunks to avoid running
     // into the maximum query parameter limit.

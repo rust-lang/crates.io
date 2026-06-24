@@ -39,7 +39,7 @@ fn build(input: &[u8]) -> (Vec<u8>, Manifest) {
     (out.into_inner(), manifest)
 }
 
-/// Read one manifest entry's payload straight out of the raw zip bytes using
+/// Reads one manifest entry's payload straight out of the raw zip bytes using
 /// only `data_offset` / `compressed_size` / `compression`, mirroring what a
 /// range-fetching consumer would do.
 fn payload_from_offsets(zip_bytes: &[u8], file: &FileEntry) -> Vec<u8> {

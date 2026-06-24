@@ -34,7 +34,7 @@ impl FromStr for StatusCodeConfig {
     }
 }
 
-/// Convert plain text errors into JSON errors and adjust status codes.
+/// Converts plain text errors into JSON errors and adjusts status codes.
 pub async fn middleware(
     State(config): State<StatusCodeConfig>,
     req: Request,
@@ -90,7 +90,7 @@ fn is_cargo_endpoint(method: &Method, path: &str) -> bool {
         .any(|(m, p)| m == method && p == &path)
 }
 
-/// Convert plain text errors into JSON errors.
+/// Converts plain text errors into JSON errors.
 ///
 /// The built-in extractors in [axum] return plain text errors, but our API
 /// contract promises JSON errors. This middleware converts such plain text

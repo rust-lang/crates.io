@@ -192,13 +192,13 @@ impl App {
         &self.config.session_key
     }
 
-    /// Obtain a read/write database connection from the async primary pool
+    /// Obtains a read/write database connection from the async primary pool
     #[instrument(skip_all)]
     pub async fn db_write(&self) -> DeadpoolResult {
         self.primary_database.get().await
     }
 
-    /// Obtain a readonly database connection from the replica pool
+    /// Obtains a readonly database connection from the replica pool
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     #[instrument(skip_all)]
@@ -226,7 +226,7 @@ impl App {
         }
     }
 
-    /// Obtain a readonly database connection from the primary pool
+    /// Obtains a readonly database connection from the primary pool
     ///
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
     #[instrument(skip_all)]

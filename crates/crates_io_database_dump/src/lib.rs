@@ -15,7 +15,7 @@ mod gen_scripts;
 pub use configuration::VisibilityConfig;
 pub use gen_scripts::gen_scripts;
 
-/// Manage the export directory.
+/// Manages the export directory.
 ///
 /// Create the directory, populate it with the psql scripts and CSV dumps, and
 /// make sure it gets deleted again even in the case of an error.
@@ -46,7 +46,7 @@ impl DumpDirectory {
         self.tempdir.path()
     }
 
-    /// Resolve the path of a PostgreSQL client binary, honoring the configured
+    /// Resolves the path of a PostgreSQL client binary, honoring the configured
     /// [`Self::postgres_bin_dir`] override. When no override is set the bare
     /// name is returned, which `Command::new` will resolve via `PATH`.
     fn pg_program(&self, name: &str) -> PathBuf {
@@ -56,7 +56,7 @@ impl DumpDirectory {
         }
     }
 
-    /// Generate the full export directory (README, metadata, `schema.sql`,
+    /// Generates the full export directory (README, metadata, `schema.sql`,
     /// `export.sql`/`import.sql`, and CSV data files) from the database at
     /// `database_url`. When `schema` is `Some`, the dump is restricted to that
     /// Postgres schema; when `None`, every schema in the database is dumped.

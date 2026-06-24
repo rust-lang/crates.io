@@ -48,7 +48,7 @@ struct GitHubPublicKeyCache {
     timestamp: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-/// Check if cache of public keys is populated and not expired
+/// Checks if cache of public keys is populated and not expired
 fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
     timestamp.is_some_and(|timestamp| chrono::Utc::now() < timestamp + PUBLIC_KEY_CACHE_LIFETIME)
 }

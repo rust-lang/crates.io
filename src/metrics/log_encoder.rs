@@ -133,7 +133,7 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
     events
 }
 
-/// Serialize a list of items into multiple Base64-encoded JSON chunks.
+/// Serializes a list of items into multiple Base64-encoded JSON chunks.
 ///
 /// Our hosting platform (Heroku) limits the size of log lines, arbitrarily splitting them once
 /// they reach a threshold. We can't let Heroku do the split as it doesn't know where to properly

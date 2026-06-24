@@ -42,7 +42,7 @@ pub type BoxedAppError = Box<dyn AppError>;
 // (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
 // non-200 response codes for its stores to work properly.
 
-/// Return an error with status 400 and the provided description as JSON
+/// Returns an error with status 400 and the provided description as JSON
 pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
     custom(StatusCode::BAD_REQUEST, error.to_string())
 }
@@ -88,7 +88,7 @@ pub fn version_not_found(krate: &str, version: &str) -> BoxedAppError {
 // AppError trait
 
 pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
-    /// Generate an HTTP response for the error
+    /// Generates an HTTP response for the error
     ///
     /// If none is returned, the error will bubble up the middleware stack
     /// where it is eventually logged and turned into a status 500 response.

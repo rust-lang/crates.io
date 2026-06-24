@@ -39,7 +39,7 @@ pub async fn update_metrics(
     response
 }
 
-/// A struct that stores a reference to an `IntGauge` so it can be decremented when dropped
+/// A struct that stores a reference to an `IntGauge` so it can be decremented when dropped.
 struct GaugeGuard<'a> {
     gauge: &'a IntGauge,
 }

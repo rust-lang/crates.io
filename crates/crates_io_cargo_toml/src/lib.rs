@@ -39,7 +39,7 @@ pub struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<FeatureSet>,
     /// Note that due to autobins feature this is not the complete list
-    /// unless you run `complete_from_path`
+    /// unless you run `complete_from_path`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bin: Vec<Product>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -53,7 +53,7 @@ pub struct Manifest {
     pub patch: Option<PatchSet>,
 
     /// Note that due to autolibs feature this is not the complete list
-    /// unless you run `complete_from_path`
+    /// unless you run `complete_from_path`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lib: Option<Product>,
 }
@@ -93,7 +93,7 @@ fn is_false(value: &bool) -> bool {
 impl FromStr for Manifest {
     type Err = Error;
 
-    /// Parse contents of a `Cargo.toml` file loaded as a string
+    /// Parses contents of a `Cargo.toml` file loaded as a string
     ///
     /// Note: this is **not** a file name, but file's content. See `from_path`.
     ///
@@ -104,7 +104,7 @@ impl FromStr for Manifest {
 }
 
 impl Manifest {
-    /// Parse contents of a `Cargo.toml` file already loaded as a byte slice.
+    /// Parses contents of a `Cargo.toml` file already loaded as a byte slice.
     ///
     /// It does not call `complete_from_path`, so may be missing implicit data.
     pub fn from_slice(cargo_toml_content: &[u8]) -> Result<Self, Error> {
@@ -122,7 +122,7 @@ impl Manifest {
         Ok(manifest)
     }
 
-    /// Parse contents from a `Cargo.toml` file on disk.
+    /// Parses contents from a `Cargo.toml` file on disk.
     ///
     /// Calls `complete_from_path`.
     pub fn from_path(cargo_toml_path: impl AsRef<Path>) -> Result<Self, Error> {
@@ -378,7 +378,7 @@ fn process_discovered_targets(
     Ok(())
 }
 
-/// Discover targets in a specific directory
+/// Discovers targets in a specific directory
 /// (see <https://doc.rust-lang.org/cargo/guide/project-layout.html>).
 ///
 /// This function can be used to discover e.g. binary targets in the `src/bin`

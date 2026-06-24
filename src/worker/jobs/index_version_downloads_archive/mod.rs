@@ -75,7 +75,7 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
     }
 }
 
-/// Generate and upload an index.html based on the objects within the given store.
+/// Generates and uploads an index.html based on the objects within the given store.
 async fn generate_html(store: &impl ObjectStore, files: &FileSet) -> anyhow::Result<()> {
     let index = files.to_html().context("rendering template")?;
 
@@ -87,7 +87,7 @@ async fn generate_html(store: &impl ObjectStore, files: &FileSet) -> anyhow::Res
     Ok(())
 }
 
-/// Generate and upload an index.json based on the objects within the given store.
+/// Generates and uploads an index.json based on the objects within the given store.
 async fn generate_json(store: &impl ObjectStore, files: &FileSet) -> anyhow::Result<()> {
     let content = serde_json::to_string(files)?;
 

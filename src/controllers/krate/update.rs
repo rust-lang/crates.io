@@ -38,7 +38,7 @@ pub struct PatchResponse {
     krate: EncodableCrate,
 }
 
-/// Update crate settings.
+/// Updates crate settings.
 #[utoipa::path(
     patch,
     path = "/api/v1/crates/{name}",

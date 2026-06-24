@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, warn};
 
-/// A background job that queues a docs rebuild for a specific release
+/// A background job that queues a docs rebuild for a specific release.
 #[derive(Serialize, Deserialize)]
 pub struct DocsRsQueueRebuild {
     name: String,

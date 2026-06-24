@@ -11,7 +11,7 @@ const DOMAIN_BLOCKLIST: &[&str] = &[
     "ncollide.org",
 ];
 
-/// Return `None` if the documentation URL host matches a blocked host
+/// Returns `None` if the documentation URL host matches a blocked host.
 pub fn remove_blocked_urls(url: Option<String>) -> Option<String> {
     // Handles if documentation URL is None
     let url = url?;

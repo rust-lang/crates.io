@@ -100,7 +100,7 @@ impl Drop for TestAppInner {
 pub struct TestApp(Rc<TestAppInner>);
 
 impl TestApp {
-    /// Initialize an application with an `Uploader` that panics
+    /// Initializes an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
         crates_io::util::tracing::init_for_test();
 
@@ -130,7 +130,7 @@ impl TestApp {
         }
     }
 
-    /// Initialize a full application, with a proxy, index, and background worker
+    /// Initializes a full application, with an index and background worker
     pub fn full() -> TestAppBuilder {
         Self::init().with_git_index().with_job_runner()
     }
@@ -181,12 +181,12 @@ impl TestApp {
         }
     }
 
-    /// Obtain a reference to the upstream repository ("the index")
+    /// Obtains a reference to the upstream repository ("the index")
     pub fn upstream_index(&self) -> &UpstreamIndex {
         assert_some!(self.0.index.as_ref())
     }
 
-    /// Obtain a list of crates from the index HEAD
+    /// Obtains a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<crates_io_index::Crate> {
         self.upstream_index()
             .crates_from_index_head(crate_name)
@@ -267,7 +267,7 @@ impl TestApp {
         runner.check_for_failed_jobs().await
     }
 
-    /// Obtain a reference to the inner `App` value
+    /// Obtains a reference to the inner `App` value
     pub fn as_inner(&self) -> &App {
         &self.0.app
     }
@@ -279,7 +279,7 @@ impl TestApp {
         self.0.test_database.schema()
     }
 
-    /// Obtain a reference to the axum Router
+    /// Obtains a reference to the axum Router
     pub fn router(&self) -> &axum::Router {
         &self.0.router
     }
@@ -315,7 +315,7 @@ pub struct TestAppBuilder {
 }
 
 impl TestAppBuilder {
-    /// Create a `TestApp` with an empty database
+    /// Creates a `TestApp` with an empty database
     pub async fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
@@ -415,7 +415,7 @@ impl TestAppBuilder {
         (app, anon, user)
     }
 
-    /// Create a `TestApp` with a database including a default user and its token
+    /// Creates a `TestApp` with a database including a default user and its token
     pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo").await;
@@ -484,7 +484,7 @@ impl TestAppBuilder {
         self
     }
 
-    /// Add a new OIDC keystore to the application
+    /// Adds a new OIDC keystore to the application
     pub fn with_oidc_keystore(
         mut self,
         issuer_url: impl Into<String>,

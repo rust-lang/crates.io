@@ -14,7 +14,7 @@ pub struct UnverifiedClaims {
 }
 
 impl UnverifiedClaims {
-    /// Decode the JWT and extract the `iss` claim without any
+    /// Decodes the JWT and extracts the `iss` claim without any
     /// signature validation.
     ///
     /// **This must only be used to extract the `iss` claim from the JWT, which

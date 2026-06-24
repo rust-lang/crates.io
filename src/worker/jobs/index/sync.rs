@@ -32,7 +32,7 @@ impl BackgroundJob for SyncToGitIndex {
 
     type Context = Arc<Environment>;
 
-    /// Regenerates or removes an index file for a single crate
+    /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
@@ -85,7 +85,7 @@ impl BackgroundJob for SyncToGitIndex {
     }
 }
 
-/// Syncs index files for multiple crates in a single commit
+/// Syncs index files for multiple crates in a single commit.
 #[derive(Serialize, Deserialize)]
 pub struct BulkSyncToGitIndex {
     crate_names: Vec<String>,
@@ -183,7 +183,7 @@ impl BackgroundJob for SyncToSparseIndex {
 
     type Context = Arc<Environment>;
 
-    /// Regenerates or removes an index file for a single crate
+    /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");

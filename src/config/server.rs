@@ -78,7 +78,7 @@ pub struct Server {
 }
 
 impl Server {
-    /// Returns a default value for the application's config
+    /// Returns a default value for the application's config.
     ///
     /// Sets the following default values:
     ///

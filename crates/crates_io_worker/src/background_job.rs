@@ -33,7 +33,7 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// The application data provided to this job at runtime.
     type Context: Clone + Send + 'static;
 
-    /// Execute the task. This method should define its logic.
+    /// Executes the task. This method should define its logic.
     fn run(&self, ctx: Self::Context) -> impl Future<Output = anyhow::Result<()>> + Send;
 
     #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]

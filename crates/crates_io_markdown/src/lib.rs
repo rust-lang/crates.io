@@ -125,7 +125,7 @@ impl<'a> MarkdownRenderer<'a> {
     }
 }
 
-/// Iterate the nodes in the CommonMark AST, used in comrak.
+/// Iterates the nodes in the CommonMark AST, used in comrak.
 fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
 where
     F: Fn(&'a AstNode<'a>),
@@ -136,7 +136,7 @@ where
     }
 }
 
-/// Add trailing slash and remove `.git` suffix of base URL.
+/// Adds trailing slash and removes `.git` suffix of base URL.
 fn canon_base_url(mut base_url: String) -> String {
     if !base_url.ends_with('/') {
         base_url.push('/');
@@ -171,14 +171,14 @@ impl SanitizeUrl {
     }
 }
 
-/// Groups media-related URL info
+/// Groups media-related URL info.
 struct MediaUrl {
     is_media: bool,
     add_sanitize_query: bool,
 }
 
-/// Determine whether the given URL has a media file extension.
-/// Also check if `sanitize=true` must be added to the query string,
+/// Determines whether the given URL has a media file extension.
+/// Also checks if `sanitize=true` must be added to the query string,
 /// which is required to load SVGs properly from GitHub.
 fn is_media_url(url: &str) -> MediaUrl {
     Path::new(url)

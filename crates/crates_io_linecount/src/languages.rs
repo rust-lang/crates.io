@@ -1,6 +1,6 @@
 use tokei::LanguageType;
 
-/// Determine if a language should be counted or ignored
+/// Determines if a language should be counted or ignored.
 pub fn should_ignore_language(lang: LanguageType) -> bool {
     matches!(
         lang,

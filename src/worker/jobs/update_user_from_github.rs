@@ -30,8 +30,8 @@ impl BackgroundJob for UpdateUserFromGithub {
 
     type Context = Arc<Environment>;
 
-    /// For the specified user, query the GitHub API for the user's current information to see if
-    /// their account has been deleted or renamed. Update the `users` and `oauth_github` tables,
+    /// For the specified user, queries the GitHub API for the user's current information to see if
+    /// their account has been deleted or renamed. Updates the `users` and `oauth_github` tables,
     /// saving the current time in `last_sync` even if the user information hasn't changed.
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         let mut conn = ctx.deadpool.get().await?;
@@ -82,7 +82,7 @@ impl BackgroundJob for UpdateUserFromGithub {
 }
 
 impl UpdateUserFromGithub {
-    /// Given the current environment's context, request information from GitHub using the user's
+    /// Given the current environment's context, requests information from GitHub using the user's
     /// API token.
     async fn refresh_user(
         &self,
@@ -148,7 +148,7 @@ impl UpdateUserFromGithub {
         }
     }
 
-    /// Given the information from GitHub about the current user, make the appropriate changes to
+    /// Given the information from GitHub about the current user, makes the appropriate changes to
     /// the `users` and `oauth_github` tables.
     async fn apply_update(
         &self,
@@ -199,7 +199,7 @@ impl UpdateUserFromGithub {
         }
     }
 
-    /// If this user has been deleted, ensure their username has been changed to
+    /// If this user has been deleted, ensures their username has been changed to
     /// `ghost_{crates.io id}` to ensure uniqueness by creating a `GitHubUser` by hand.
     fn ghost_user(&self, user_id: i32) -> GitHubUser {
         GitHubUser {

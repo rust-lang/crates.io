@@ -37,7 +37,7 @@ impl BackgroundJob for SendTokenExpiryNotifications {
     }
 }
 
-/// Find tokens that are about to expire and send notifications to their owners.
+/// Finds tokens that are about to expire and sends notifications to their owners.
 async fn check(emails: &Emails, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
     let before = chrono::Utc::now() + EXPIRY_THRESHOLD;
     info!("Searching for tokens that will expire before {before}…");
@@ -73,7 +73,7 @@ async fn check(emails: &Emails, conn: &mut AsyncPgConnection) -> anyhow::Result<
     Ok(())
 }
 
-/// Send an email to the user associated with the token.
+/// Sends an email to the user associated with the token.
 async fn handle_expiring_token(
     conn: &mut AsyncPgConnection,
     token: &ApiToken,
@@ -113,7 +113,7 @@ async fn handle_expiring_token(
     Ok(())
 }
 
-/// Find tokens that will expire before the given date, but haven't expired yet
+/// Finds tokens that will expire before the given date, but haven't expired yet
 /// and haven't been notified about their impending expiry. Revoked tokens are
 /// also ignored.
 ///

@@ -32,7 +32,7 @@ const TEMPLATE_PATH: &str = "svelte/build/200.html";
 type TemplateEnvFut = Shared<BoxFuture<'static, Arc<minijinja::Environment<'static>>>>;
 type TemplateCache = moka::future::Cache<Cow<'static, str>, String>;
 
-/// Initialize [`minijinja::Environment`] given the SvelteKit fallback
+/// Initializes [`minijinja::Environment`] given the SvelteKit fallback
 /// document at [`TEMPLATE_PATH`]. This should only be done once as it will
 /// load said file from persistent storage.
 async fn init_template_env() -> Arc<minijinja::Environment<'static>> {
@@ -52,7 +52,7 @@ async fn init_template_env() -> Arc<minijinja::Environment<'static>> {
     Arc::new(env)
 }
 
-/// Initialize the [`moka::future::Cache`] used to cache the rendered HTML.
+/// Initializes the [`moka::future::Cache`] used to cache the rendered HTML.
 fn init_html_cache(max_capacity: u64) -> TemplateCache {
     moka::future::CacheBuilder::new(max_capacity)
         .name("rendered_index_html")
@@ -129,7 +129,7 @@ pub async fn serve(state: AppState, request: Request, next: Next) -> Response {
     }
 }
 
-/// Extract the crate name from the path by stripping the
+/// Extracts the crate name from the path by stripping the
 /// [`PATH_PREFIX_CRATES`] prefix and returning the first path segment from the
 /// result. Returns `None` if the path was not prefixed with [`PATH_PREFIX_CRATES`].
 fn extract_crate_name(path: &str) -> Option<&str> {
@@ -139,7 +139,7 @@ fn extract_crate_name(path: &str) -> Option<&str> {
     krate.is_empty().not().then_some(krate)
 }
 
-/// Come up with an Open Graph image URL. In case a crate page is requested,
+/// Comes up with an Open Graph image URL. In case a crate page is requested,
 /// we use the crate's name as extracted from the request path and the OG image
 /// base URL from config to generate one, otherwise we use the fallback image.
 fn generate_og_image_url(path: &str, og_image_base_url: Option<&Url>) -> Option<Url> {

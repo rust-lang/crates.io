@@ -15,7 +15,7 @@ impl BackgroundJob for DailyDbMaintenance {
 
     type Context = Arc<Environment>;
 
-    /// Run daily database maintenance tasks
+    /// Runs daily database maintenance tasks.
     ///
     /// By default PostgreSQL will run an auto-vacuum when 20% of the tuples in a table are dead.
     /// Because the `version_downloads` table includes years of historical data, we can accumulate

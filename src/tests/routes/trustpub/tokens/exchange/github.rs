@@ -135,7 +135,7 @@ async fn test_happy_path_with_ignored_environment() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Check that the owner name, repository name, and environment are accepted in
+/// Checks that the owner name, repository name, and environment are accepted in
 /// a case-insensitive manner.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_case_insensitive() -> anyhow::Result<()> {
@@ -284,7 +284,7 @@ async fn test_invalid_audience() -> anyhow::Result<()> {
 // JTI replay prevention tests
 // ============================================================================
 
-/// Test that OIDC tokens can only be exchanged once
+/// Tests that OIDC tokens can only be exchanged once.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_reuse() -> anyhow::Result<()> {
     let client = prepare().await?;

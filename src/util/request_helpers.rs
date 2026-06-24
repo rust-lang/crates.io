@@ -28,7 +28,7 @@ pub fn redirect(url: String) -> Response {
     (StatusCode::FOUND, [(header::LOCATION, url)]).into_response()
 }
 
-/// Build a `Cache-Control: no-store` header that prevents any cache (shared CDN
+/// Builds a `Cache-Control: no-store` header that prevents any cache (shared CDN
 /// cache or browser cache) from storing a per-user response.
 ///
 /// Used on responses that depend on the authenticated identity, which can come

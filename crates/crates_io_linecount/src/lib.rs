@@ -41,12 +41,12 @@ pub struct LinecountStats {
 }
 
 impl LinecountStats {
-    /// Create a new empty statistics collection
+    /// Creates a new empty statistics collection.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Add a single file to the statistics
+    /// Adds a single file to the statistics.
     ///
     /// The caller can use `PathDetails::should_ignore()` to skip files that should
     /// not be processed before decompressing to avoid unnecessary work.

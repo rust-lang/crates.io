@@ -35,8 +35,8 @@ impl BackgroundJob for DumpDb {
 
     type Context = Arc<Environment>;
 
-    /// Create CSV dumps of the public information in the database, wrap them in a
-    /// tarball and upload to S3.
+    /// Creates CSV dumps of the public information in the database, wraps them in a
+    /// tarball and uploads to S3.
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         const TAR_PATH: &str = "db-dump.tar.gz";
         const ZIP_PATH: &str = "db-dump.zip";
