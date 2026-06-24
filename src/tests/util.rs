@@ -6,7 +6,7 @@
 //! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
 //! unauthenticated session.
 //!
-//! A `TestApp` value provides raw access to the database through the `db` function and can
+//! A `TestApp` value provides raw access to the database through the `db_conn` function and can
 //! construct new users via the `db_new_user` function.  This function returns a
 //! `MockCookieUser`, which can be used to generate one or more tokens via its `db_new_token`
 //! function, which in turn returns a `MockTokenUser`.
