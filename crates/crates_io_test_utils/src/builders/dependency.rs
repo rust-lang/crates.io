@@ -34,10 +34,6 @@ impl DependencyBuilder {
     }
 
     /// Set the version requirement for this dependency.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the `version_req` string specified isn't a valid `semver::VersionReq`.
     #[track_caller]
     pub fn version_req(mut self, version_req: &str) -> Self {
         self.version_req = version_req.to_string();
