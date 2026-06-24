@@ -33,7 +33,7 @@ impl Credentials {
     ///
     /// # Errors
     ///
-    /// - If non-SSH credentials are use, `Err` is returned.
+    /// - If non-SSH credentials are used, `Err` is returned.
     /// - If creation of the temporary file fails, `Err` is returned.
     ///
     pub(crate) fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
