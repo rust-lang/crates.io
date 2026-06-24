@@ -19,8 +19,6 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     const JOB_NAME: &'static str;
 
     /// Default priority of the task.
-    ///
-    /// [Self::enqueue_with_priority] can be used to override the priority value.
     const PRIORITY: i16 = 0;
 
     /// Whether the job should be deduplicated.
