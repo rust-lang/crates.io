@@ -94,7 +94,7 @@ fn build_store(
 }
 
 /// Loads the given log file from the object store and counts the number of
-/// downloads for each crate and version. The results are printed to the log.
+/// downloads for each crate and version. The results are saved to the database.
 ///
 /// This function is separate from the [`BackgroundJob`] trait method so that
 /// it can be tested without having to construct a full [`Environment`]
