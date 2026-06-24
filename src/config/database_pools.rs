@@ -65,9 +65,9 @@ impl DatabasePools {
 impl DatabasePools {
     /// Load settings for one or more database pools from the environment
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
+    /// This function returns an error if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
     pub fn full_from_environment(base: &Base) -> anyhow::Result<Self> {
         let leader_url = required_var("DATABASE_URL")?.into();
         let follower_url = var("READ_ONLY_REPLICA_URL")?.map(Into::into);
