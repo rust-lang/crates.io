@@ -279,8 +279,8 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
 ///   `batch_execute` can't run.
 /// - Lines starting with `\` (psql meta-commands like `\restrict`/
 ///   `\unrestrict`, emitted by `pg_dump` 17+) are stripped.
-/// - SETs for configuration that `pg_dump` 17+ emit that PostgreSQL 16 can't
-///   handle.
+/// - SETs for configuration that `pg_dump` 17+ emit but PostgreSQL 16 can't
+///   handle are stripped.
 /// - A trailing `RESET ALL` clears any session state the preamble's
 ///   `SET` / `set_config('search_path', …)` calls left behind so it
 ///   doesn't leak to the next checkout of the pooled connection.
