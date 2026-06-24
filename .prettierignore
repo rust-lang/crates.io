@@ -1,5 +1,6 @@
 dist/
 packages/crates-io-api-client/schema.d.ts
+packages/crates-io-file-tree-icons/sprite.gen.js
 
 # Markdown is intentionally not formatted by prettier in this repo.
 **/*.md
