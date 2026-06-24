@@ -81,7 +81,7 @@ jobs:
 
       - run: cargo fmt --check --all
       - run: cargo clippy --all-targets --all-features --workspace
-      - run: cargo doc --no-deps --document-private-items
+      - run: cargo doc --no-deps --document-private-items --workspace
 
   backend-deps:
     name: Backend / dependencies
