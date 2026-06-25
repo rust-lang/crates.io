@@ -245,6 +245,13 @@ impl Storage {
         self.apply_cdn_prefix(&og_image_path(name))
     }
 
+    /// Returns the public URL of the file identified by `key`.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn location(&self, key: &StorageKey<'_>) -> String {
+        format!("{}/{}", self.cdn_base, key.cdn_path())
+    }
+
     /// Returns the URL of an uploaded RSS feed.
     pub fn feed_url(&self, key: &StorageKey<'_>) -> String {
         self.apply_cdn_prefix(&key.path()).replace('+', "%2B")
