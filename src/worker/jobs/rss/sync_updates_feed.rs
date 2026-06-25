@@ -39,7 +39,7 @@ impl BackgroundJob for SyncUpdatesFeed {
         let version_updates = load_version_updates(&conn).await?;
 
         let link = rss::extension::atom::Link {
-            href: ctx.storage.feed_url(&key),
+            href: ctx.storage.location(&key),
             rel: "self".to_string(),
             mime_type: Some("application/rss+xml".to_string()),
             ..Default::default()

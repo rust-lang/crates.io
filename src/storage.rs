@@ -252,11 +252,6 @@ impl Storage {
         format!("{}/{}", self.cdn_base, key.cdn_path())
     }
 
-    /// Returns the URL of an uploaded RSS feed.
-    pub fn feed_url(&self, key: &StorageKey<'_>) -> String {
-        self.apply_cdn_prefix(&key.path()).replace('+', "%2B")
-    }
-
     /// Returns the base URL that crate files are served from, e.g.
     /// `https://static.crates.io`.
     pub fn cdn_base(&self) -> &str {

@@ -39,7 +39,7 @@ impl BackgroundJob for SyncCratesFeed {
         let new_crates = load_new_crates(&conn).await?;
 
         let link = rss::extension::atom::Link {
-            href: ctx.storage.feed_url(&key),
+            href: ctx.storage.location(&key),
             rel: "self".to_string(),
             mime_type: Some("application/rss+xml".to_string()),
             ..Default::default()
