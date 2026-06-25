@@ -217,3 +217,101 @@ async fn enqueue_sync_jobs(
     })
     .await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crates_io_database::models::NewUser;
+    use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::builders::CrateBuilder;
+
+    fn opts_for_names(names: &[&str]) -> Opts {
+        Opts {
+            names: names.iter().map(|s| s.to_string()).collect(),
+            git: true,
+            sparse: true,
+            batch_size: None,
+            commit_message: None,
+            updated_before: None,
+            priority: None,
+        }
+    }
+
+    async fn create_user(conn: &AsyncPgConnection) -> i32 {
+        NewUser {
+            gh_id: 1,
+            gh_login: "testuser",
+            username: "testuser",
+            name: None,
+            gh_encrypted_token: b"token",
+        }
+        .insert(conn)
+        .await
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn resolve_crate_names_returns_existing_names() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let user_id = create_user(&conn).await;
+
+        CrateBuilder::new("foo", user_id)
+            .expect_build(&mut conn)
+            .await;
+        CrateBuilder::new("bar", user_id)
+            .expect_build(&mut conn)
+            .await;
+
+        let opts = opts_for_names(&["foo", "bar"]);
+        let result = resolve_crate_names(&mut conn, &opts).await.unwrap();
+        assert_eq!(result, vec!["foo", "bar"]);
+    }
+
+    #[tokio::test]
+    async fn resolve_crate_names_includes_nonexistent_names() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let user_id = create_user(&conn).await;
+
+        CrateBuilder::new("foo", user_id)
+            .expect_build(&mut conn)
+            .await;
+
+        let opts = opts_for_names(&["foo", "deleted-crate"]);
+        let result = resolve_crate_names(&mut conn, &opts).await.unwrap();
+        assert_eq!(result, vec!["foo", "deleted-crate"]);
+    }
+
+    #[tokio::test]
+    async fn resolve_crate_names_with_updated_before() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let user_id = create_user(&conn).await;
+
+        let old_date = Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap();
+        let recent_date = Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap();
+
+        CrateBuilder::new("old-crate", user_id)
+            .updated_at(old_date)
+            .expect_build(&mut conn)
+            .await;
+        CrateBuilder::new("recent-crate", user_id)
+            .updated_at(recent_date)
+            .expect_build(&mut conn)
+            .await;
+
+        let opts = Opts {
+            names: vec![],
+            git: true,
+            sparse: true,
+            batch_size: Some(100),
+            commit_message: Some("test".to_string()),
+            updated_before: Some(NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()),
+            priority: None,
+        };
+
+        let result = resolve_crate_names(&mut conn, &opts).await.unwrap();
+        assert_eq!(result, vec!["old-crate"]);
+    }
+}
