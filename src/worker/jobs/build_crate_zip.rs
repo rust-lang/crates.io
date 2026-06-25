@@ -66,7 +66,7 @@ impl BackgroundJob for BuildCrateZip {
 
         let zip_key = StorageKey::for_crate_zip(name, version);
         env.storage
-            .upload_crate_zip(&zip_key, tokio::fs::File::from_std(artifacts.zip))
+            .upload_stream(&zip_key, tokio::fs::File::from_std(artifacts.zip))
             .await
             .context("Failed to upload zip archive")?;
 

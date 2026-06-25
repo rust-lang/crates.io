@@ -253,10 +253,10 @@ impl Storage {
         Ok(())
     }
 
-    /// Uploads a crate version's zip source archive, streaming it from `reader`
-    /// so the whole archive is never buffered in memory.
+    /// Uploads the contents of `reader` to the location identified by `key`,
+    /// streaming it so the whole file is never buffered in memory.
     #[instrument(skip(self, reader))]
-    pub async fn upload_crate_zip(
+    pub async fn upload_stream(
         &self,
         key: &StorageKey<'_>,
         mut reader: impl AsyncRead + Unpin,
@@ -337,25 +337,8 @@ impl Storage {
         key: &StorageKey<'_>,
         local_path: &StdPath,
     ) -> anyhow::Result<()> {
-        let store = self.store.clone();
-
-        // Open the local tarball file
-        let mut local_file = File::open(local_path).await?;
-
-        // Set up a multipart upload
-        let mut writer = object_store::buffered::BufWriter::new(store, key.path());
-
-        // Upload file contents
-        if let Err(error) = tokio::io::copy(&mut local_file, &mut writer).await {
-            // Abort the upload if something failed
-            writer.abort().await?;
-            return Err(error.into());
-        }
-
-        // ... or finalize upload
-        writer.shutdown().await?;
-
-        Ok(())
+        let local_file = File::open(local_path).await?;
+        self.upload_stream(key, local_file).await
     }
 
     /// This should only be used for assertions in the test suite!
@@ -776,17 +759,13 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let key = StorageKey::for_crate_zip("foo", "1.2.3");
-        s.upload_crate_zip(&key, &b"fake zip data"[..])
-            .await
-            .unwrap();
+        s.upload_stream(&key, &b"fake zip data"[..]).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
         let key = StorageKey::for_crate_zip("foo", "2.0.0+foo");
-        s.upload_crate_zip(&key, &b"fake zip data"[..])
-            .await
-            .unwrap();
+        s.upload_stream(&key, &b"fake zip data"[..]).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip", "crates/foo/foo-2.0.0+foo.zip"];
         assert_eq!(stored_files(&s.store).await, expected_files);
