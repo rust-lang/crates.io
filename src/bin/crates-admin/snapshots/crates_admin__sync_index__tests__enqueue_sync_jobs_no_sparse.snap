@@ -1,0 +1,12 @@
+---
+source: src/bin/crates-admin/sync_index.rs
+expression: all_jobs(&mut conn).await
+---
+[
+  {
+    "job_type": "sync_to_git_index",
+    "data": {
+      "krate": "foo"
+    }
+  }
+]
