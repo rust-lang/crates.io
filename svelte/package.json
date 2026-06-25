@@ -44,7 +44,7 @@
     "@iconify-json/heroicons": "1.2.3",
     "@iconify-json/mdi": "1.2.3",
     "@iconify-json/octicon": "1.2.28",
-    "@iconify-json/simple-icons": "1.2.86",
+    "@iconify-json/simple-icons": "1.2.87",
     "@storybook/addon-a11y": "10.4.6",
     "@storybook/addon-docs": "10.4.6",
     "@storybook/addon-svelte-csf": "5.1.2",
