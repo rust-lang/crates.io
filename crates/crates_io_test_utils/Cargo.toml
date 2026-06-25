@@ -11,7 +11,7 @@ publish = false
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.102"
+anyhow = "=1.0.103"
 bytes = "=1.12.0"
 chrono = "=0.4.45"
 crates_io_api_types = { path = "../crates_io_api_types" }
