@@ -332,15 +332,18 @@ impl Storage {
     }
 
     #[instrument(skip(self))]
-    pub async fn upload_db_dump(&self, target: &str, local_path: &StdPath) -> anyhow::Result<()> {
+    pub async fn upload_db_dump(
+        &self,
+        key: &StorageKey<'_>,
+        local_path: &StdPath,
+    ) -> anyhow::Result<()> {
         let store = self.store.clone();
 
         // Open the local tarball file
         let mut local_file = File::open(local_path).await?;
 
         // Set up a multipart upload
-        let path = target.into();
-        let mut writer = object_store::buffered::BufWriter::new(store, path);
+        let mut writer = object_store::buffered::BufWriter::new(store, key.path());
 
         // Upload file contents
         if let Err(error) = tokio::io::copy(&mut local_file, &mut writer).await {
@@ -404,6 +407,8 @@ pub enum StorageKey<'a> {
     CrateFeed { name: &'a str },
     CratesFeed,
     UpdatesFeed,
+    DbDumpTar,
+    DbDumpZip,
 }
 
 impl<'a> StorageKey<'a> {
@@ -451,6 +456,8 @@ impl<'a> StorageKey<'a> {
             StorageKey::CrateFeed { name } => format!("rss/crates/{name}.xml").into(),
             StorageKey::CratesFeed => "rss/crates.xml".into(),
             StorageKey::UpdatesFeed => "rss/updates.xml".into(),
+            StorageKey::DbDumpTar => "db-dump.tar.gz".into(),
+            StorageKey::DbDumpZip => "db-dump.zip".into(),
         }
     }
 
@@ -486,6 +493,7 @@ impl<'a> StorageKey<'a> {
             StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
                 Attributes::from_iter([(Attribute::ContentType, "text/xml; charset=UTF-8")])
             }
+            StorageKey::DbDumpTar | StorageKey::DbDumpZip => Attributes::new(),
         }
     }
 }
@@ -849,11 +857,11 @@ mod tests {
 
         assert!(stored_files(&s.store).await.is_empty());
 
-        let target = "db-dump.tar.gz";
+        let key = StorageKey::DbDumpTar;
         let file = NamedTempFile::new().unwrap();
-        s.upload_db_dump(target, file.path()).await.unwrap();
+        s.upload_db_dump(&key, file.path()).await.unwrap();
 
-        let expected_files = vec![target];
+        let expected_files = vec!["db-dump.tar.gz"];
         assert_eq!(stored_files(&s.store).await, expected_files);
     }
 
