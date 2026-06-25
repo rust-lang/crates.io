@@ -420,15 +420,23 @@ impl Storage {
     }
 
     #[instrument(skip(self, channel))]
-    pub async fn upload_feed(&self, path: &Path, channel: &rss::Channel) -> anyhow::Result<()> {
+    pub async fn upload_feed(
+        &self,
+        key: &StorageKey<'_>,
+        channel: &rss::Channel,
+    ) -> anyhow::Result<()> {
         let mut buffer = Vec::new();
         let mut cursor = Cursor::new(&mut buffer);
         channel.pretty_write_to(&mut cursor, b' ', 4)?;
         let payload = PutPayload::from_bytes(buffer.into());
 
-        let attributes = self.attrs([(Attribute::ContentType, "text/xml; charset=UTF-8")]);
+        let attributes = self
+            .supports_attributes
+            .then(|| key.attributes())
+            .unwrap_or_default();
+
         let opts = attributes.into();
-        self.store.put_opts(path, payload, opts).await?;
+        self.store.put_opts(&key.path(), payload, opts).await?;
         Ok(())
     }
 
@@ -554,6 +562,15 @@ impl StorageKey<'_> {
     /// `%2B`.
     pub fn cdn_path(&self) -> String {
         self.path().as_ref().replace('+', "%2B")
+    }
+
+    /// The intended attribute set (content-type + cache-control) for the file.
+    pub fn attributes(&self) -> Attributes {
+        match self {
+            StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
+                Attributes::from_iter([(Attribute::ContentType, "text/xml; charset=UTF-8")])
+            }
+        }
     }
 }
 

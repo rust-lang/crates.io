@@ -80,7 +80,7 @@ impl BackgroundJob for SyncCrateFeed {
         let path = key.path();
 
         info!("Uploading feed to storage…");
-        ctx.storage.upload_feed(&path, &channel).await?;
+        ctx.storage.upload_feed(&key, &channel).await?;
 
         let dist = CloudFrontDistribution::Static;
         if let Err(error) = ctx.invalidate_cdns(&conn, dist, path.as_ref()).await {
