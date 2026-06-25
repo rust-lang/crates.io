@@ -547,6 +547,12 @@ impl StorageKey<'_> {
             StorageKey::UpdatesFeed => "rss/updates.xml".into(),
         }
     }
+
+    /// [`Self::path()`] rendered for a public URL, with `+` percent-encoded as
+    /// `%2B`.
+    pub fn cdn_path(&self) -> String {
+        self.path().as_ref().replace('+', "%2B")
+    }
 }
 
 #[cfg(test)]
