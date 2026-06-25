@@ -408,34 +408,49 @@ impl<'a> StorageKey<'a> {
         self.path().as_ref().replace('+', "%2B")
     }
 
+    /// The content-type the file should be stored with, or `None` to rely on
+    /// the store's default.
+    pub fn content_type(&self) -> Option<&'static str> {
+        match self {
+            StorageKey::CrateFile { .. } => Some("application/gzip"),
+            StorageKey::CrateZip { .. } => Some("application/zip"),
+            StorageKey::CrateZipManifest { .. } => Some("application/json"),
+            StorageKey::Readme { .. } => Some("text/html"),
+            StorageKey::OgImage { .. } => Some("image/png"),
+            StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
+                Some("text/xml; charset=UTF-8")
+            }
+            StorageKey::DbDumpTar | StorageKey::DbDumpZip => None,
+        }
+    }
+
+    /// The cache-control the file should be stored with, or `None` for no
+    /// override.
+    pub fn cache_control(&self) -> Option<&'static str> {
+        match self {
+            StorageKey::CrateFile { .. }
+            | StorageKey::CrateZip { .. }
+            | StorageKey::CrateZipManifest { .. } => Some(CACHE_CONTROL_IMMUTABLE),
+            StorageKey::Readme { .. } => Some(CACHE_CONTROL_README),
+            StorageKey::OgImage { .. } => Some(CACHE_CONTROL_OG_IMAGE),
+            StorageKey::CrateFeed { .. }
+            | StorageKey::CratesFeed
+            | StorageKey::UpdatesFeed
+            | StorageKey::DbDumpTar
+            | StorageKey::DbDumpZip => None,
+        }
+    }
+
     /// The intended attribute set (content-type + cache-control) for the file.
     pub fn attributes(&self) -> Attributes {
-        match self {
-            StorageKey::CrateFile { .. } => Attributes::from_iter([
-                (Attribute::ContentType, "application/gzip"),
-                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-            ]),
-            StorageKey::CrateZip { .. } => Attributes::from_iter([
-                (Attribute::ContentType, "application/zip"),
-                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-            ]),
-            StorageKey::CrateZipManifest { .. } => Attributes::from_iter([
-                (Attribute::ContentType, "application/json"),
-                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-            ]),
-            StorageKey::Readme { .. } => Attributes::from_iter([
-                (Attribute::ContentType, "text/html"),
-                (Attribute::CacheControl, CACHE_CONTROL_README),
-            ]),
-            StorageKey::OgImage { .. } => Attributes::from_iter([
-                (Attribute::ContentType, "image/png"),
-                (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
-            ]),
-            StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
-                Attributes::from_iter([(Attribute::ContentType, "text/xml; charset=UTF-8")])
-            }
-            StorageKey::DbDumpTar | StorageKey::DbDumpZip => Attributes::new(),
+        let mut attributes = Attributes::new();
+        if let Some(content_type) = self.content_type() {
+            attributes.insert(Attribute::ContentType, content_type.into());
         }
+        if let Some(cache_control) = self.cache_control() {
+            attributes.insert(Attribute::CacheControl, cache_control.into());
+        }
+        attributes
     }
 }
 
