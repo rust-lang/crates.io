@@ -130,12 +130,7 @@ impl Storage {
                     // Apply default content types for the version downloads archive
                     .with_content_type_for_suffix("html", "text/html")
                     .with_content_type_for_suffix("json", "application/json")
-                    .with_content_type_for_suffix("csv", "text/csv")
-                    // The `BufWriter::new()` API currently does not allow
-                    // specifying any file attributes, so we need to set the
-                    // content type here instead for the database dump upload.
-                    .with_content_type_for_suffix("gz", "application/gzip")
-                    .with_content_type_for_suffix("zip", "application/zip");
+                    .with_content_type_for_suffix("csv", "text/csv");
 
                 let store = build_s3(default, options);
 
@@ -420,7 +415,8 @@ impl<'a> StorageKey<'a> {
             StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
                 Some("text/xml; charset=UTF-8")
             }
-            StorageKey::DbDumpTar | StorageKey::DbDumpZip => None,
+            StorageKey::DbDumpTar => Some("application/gzip"),
+            StorageKey::DbDumpZip => Some("application/zip"),
         }
     }
 
