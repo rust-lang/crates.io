@@ -60,9 +60,8 @@ impl BackgroundJob for DumpDb {
 
         info!("Uploading tarball…");
         let tar_key = StorageKey::DbDumpTar;
-        env.storage
-            .upload_db_dump(&tar_key, archives.tar.path())
-            .await?;
+        let tar_file = tokio::fs::File::open(archives.tar.path()).await?;
+        env.storage.upload_stream(&tar_key, tar_file).await?;
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
@@ -75,9 +74,8 @@ impl BackgroundJob for DumpDb {
 
         info!("Uploading zip file…");
         let zip_key = StorageKey::DbDumpZip;
-        env.storage
-            .upload_db_dump(&zip_key, archives.zip.path())
-            .await?;
+        let zip_file = tokio::fs::File::open(archives.zip.path()).await?;
+        env.storage.upload_stream(&zip_key, zip_file).await?;
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");

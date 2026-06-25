@@ -16,7 +16,6 @@ use std::fs;
 use std::io::Cursor;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::fs::File;
 use tokio::io::{AsyncRead, AsyncWriteExt};
 use tracing::{instrument, warn};
 
@@ -35,8 +34,6 @@ const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
-
-type StdPath = std::path::Path;
 
 #[derive(Debug)]
 pub struct StorageConfig {
@@ -331,16 +328,6 @@ impl Storage {
         Ok(())
     }
 
-    #[instrument(skip(self))]
-    pub async fn upload_db_dump(
-        &self,
-        key: &StorageKey<'_>,
-        local_path: &StdPath,
-    ) -> anyhow::Result<()> {
-        let local_file = File::open(local_path).await?;
-        self.upload_stream(key, local_file).await
-    }
-
     /// This should only be used for assertions in the test suite!
     pub fn as_inner(&self) -> Arc<dyn ObjectStore> {
         self.store.clone()
@@ -485,7 +472,6 @@ impl<'a> StorageKey<'a> {
 mod tests {
     use super::*;
     use hyper::body::Bytes;
-    use tempfile::NamedTempFile;
 
     pub async fn prepare() -> Storage {
         let storage = Storage::from_config(&StorageConfig::in_memory());
@@ -837,8 +823,7 @@ mod tests {
         assert!(stored_files(&s.store).await.is_empty());
 
         let key = StorageKey::DbDumpTar;
-        let file = NamedTempFile::new().unwrap();
-        s.upload_db_dump(&key, file.path()).await.unwrap();
+        s.upload_stream(&key, &b"fake db dump"[..]).await.unwrap();
 
         let expected_files = vec!["db-dump.tar.gz"];
         assert_eq!(stored_files(&s.store).await, expected_files);
