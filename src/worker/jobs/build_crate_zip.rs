@@ -146,7 +146,7 @@ async fn download_to_tempfile(
 
     let key = StorageKey::for_crate_file(krate, version);
     let mut stream = storage
-        .download_crate_file(&key)
+        .download_stream(&key)
         .await
         .context("Failed to download crate file")?;
 

@@ -94,7 +94,7 @@ async fn analyze_crate_tarball(
     storage: &Storage,
 ) -> anyhow::Result<LinecountStats> {
     let key = StorageKey::for_crate_file(krate, version);
-    let result = storage.download_crate_file(&key).await;
+    let result = storage.download_stream(&key).await;
     let stream = result.context("Failed to download crate file")?;
     let reader = StreamReader::new(stream);
     let reader = BufReader::new(reader);

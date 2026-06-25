@@ -284,7 +284,7 @@ impl Storage {
     }
 
     #[instrument(skip(self))]
-    pub async fn download_crate_file(
+    pub async fn download_stream(
         &self,
         key: &StorageKey<'_>,
     ) -> Result<BoxStream<'_, Result<Bytes>>> {
