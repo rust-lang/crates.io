@@ -246,8 +246,8 @@ impl Storage {
     }
 
     /// Returns the URL of an uploaded RSS feed.
-    pub fn feed_url(&self, feed_id: &FeedId<'_>) -> String {
-        self.apply_cdn_prefix(&feed_id.into()).replace('+', "%2B")
+    pub fn feed_url(&self, key: &StorageKey<'_>) -> String {
+        self.apply_cdn_prefix(&key.into()).replace('+', "%2B")
     }
 
     /// Returns the base URL that crate files are served from, e.g.
@@ -314,8 +314,8 @@ impl Storage {
     }
 
     #[instrument(skip(self))]
-    pub async fn delete_feed(&self, feed_id: &FeedId<'_>) -> Result<()> {
-        let path = feed_id.into();
+    pub async fn delete_feed(&self, key: &StorageKey<'_>) -> Result<()> {
+        let path = key.into();
         self.store.delete(&path).await
     }
 
@@ -532,18 +532,18 @@ fn og_image_path(name: &str) -> Path {
 }
 
 #[derive(Debug)]
-pub enum FeedId<'a> {
-    Crate { name: &'a str },
-    Crates,
-    Updates,
+pub enum StorageKey<'a> {
+    CrateFeed { name: &'a str },
+    CratesFeed,
+    UpdatesFeed,
 }
 
-impl From<&FeedId<'_>> for Path {
-    fn from(feed_id: &FeedId<'_>) -> Path {
-        match feed_id {
-            FeedId::Crate { name } => format!("rss/crates/{name}.xml").into(),
-            FeedId::Crates => "rss/crates.xml".into(),
-            FeedId::Updates => "rss/updates.xml".into(),
+impl From<&StorageKey<'_>> for Path {
+    fn from(key: &StorageKey<'_>) -> Path {
+        match key {
+            StorageKey::CrateFeed { name } => format!("rss/crates/{name}.xml").into(),
+            StorageKey::CratesFeed => "rss/crates.xml".into(),
+            StorageKey::UpdatesFeed => "rss/updates.xml".into(),
         }
     }
 }

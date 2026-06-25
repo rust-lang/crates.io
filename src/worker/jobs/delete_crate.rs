@@ -1,4 +1,4 @@
-use crate::storage::FeedId;
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
@@ -28,7 +28,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;
-        let feed_id = FeedId::Crate { name };
+        let key = StorageKey::CrateFeed { name };
 
         let (crate_file_paths, readme_paths, _, _) = try_join!(
             async {
@@ -43,7 +43,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
             },
             async {
                 info!("{name}: Deleting RSS feed from S3…");
-                let result = ctx.storage.delete_feed(&feed_id).await;
+                let result = ctx.storage.delete_feed(&key).await;
                 result.context("Failed to delete RSS feed from S3")
             },
             async {
@@ -63,7 +63,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
                 .into_iter()
                 .chain(readme_paths)
                 .chain(std::iter::once(format!("og-images/{name}.png").into()))
-                .chain(std::iter::once(object_store::path::Path::from(&feed_id))),
+                .chain(std::iter::once(object_store::path::Path::from(&key))),
         )
         .enqueue(&conn)
         .await?;

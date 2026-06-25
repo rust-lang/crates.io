@@ -1,5 +1,5 @@
 use crate::schema::{crates, versions};
-use crate::storage::FeedId;
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use chrono::{Duration, Utc};
 use crates_io_database::models::CloudFrontDistribution;
@@ -47,10 +47,10 @@ impl BackgroundJob for SyncCrateFeed {
 
         let version_updates = load_version_updates(name, &conn).await?;
 
-        let feed_id = FeedId::Crate { name };
+        let key = StorageKey::CrateFeed { name };
 
         let link = rss::extension::atom::Link {
-            href: ctx.storage.feed_url(&feed_id),
+            href: ctx.storage.feed_url(&key),
             rel: "self".to_string(),
             mime_type: Some("application/rss+xml".to_string()),
             ..Default::default()
@@ -77,7 +77,7 @@ impl BackgroundJob for SyncCrateFeed {
             ..Default::default()
         };
 
-        let path = object_store::path::Path::from(&feed_id);
+        let path = object_store::path::Path::from(&key);
 
         info!("Uploading feed to storage…");
         ctx.storage.upload_feed(&path, &channel).await?;

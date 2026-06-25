@@ -1,5 +1,5 @@
 use crate::schema::{crates, versions};
-use crate::storage::FeedId;
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use chrono::{Duration, Utc};
 use crates_io_database::models::CloudFrontDistribution;
@@ -31,7 +31,7 @@ impl BackgroundJob for SyncUpdatesFeed {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
-        let feed_id = FeedId::Updates;
+        let key = StorageKey::UpdatesFeed;
         let domain = &ctx.config.domain_name;
 
         info!("Loading latest {NUM_ITEMS} version updates from the database…");
@@ -39,7 +39,7 @@ impl BackgroundJob for SyncUpdatesFeed {
         let version_updates = load_version_updates(&conn).await?;
 
         let link = rss::extension::atom::Link {
-            href: ctx.storage.feed_url(&feed_id),
+            href: ctx.storage.feed_url(&key),
             rel: "self".to_string(),
             mime_type: Some("application/rss+xml".to_string()),
             ..Default::default()
@@ -64,7 +64,7 @@ impl BackgroundJob for SyncUpdatesFeed {
             ..Default::default()
         };
 
-        let path = object_store::path::Path::from(&feed_id);
+        let path = object_store::path::Path::from(&key);
 
         info!("Uploading feed to storage…");
         ctx.storage.upload_feed(&path, &channel).await?;
