@@ -606,7 +606,6 @@ fn simple_config() -> config::Server {
         frontend: FrontendConfig {
             serve_dist: false,
             serve_html: false,
-            og_image_base_url: None,
             html_render_cache_max_capacity: 1024,
         },
         trustpub_audience: AUDIENCE.to_string(),
