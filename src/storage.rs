@@ -206,14 +206,6 @@ impl Storage {
         }
     }
 
-    /// Returns the URL of an uploaded crate's version archive.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn crate_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&crate_file_path(name, version))
-            .replace('+', "%2B")
-    }
-
     /// Returns the URL of an uploaded crate version's zip source archive.
     ///
     /// The function doesn't check for the existence of the file.
@@ -261,14 +253,6 @@ impl Storage {
         self.delete_all_with_prefix(&prefix).await
     }
 
-    /// Deletes a crate version's archive, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<Path> {
-        let path = crate_file_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
     /// Deletes a crate version's zip source archive, returning the path that was deleted.
     #[instrument(skip(self))]
     pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<Path> {
@@ -302,18 +286,6 @@ impl Storage {
 
         let opts = attributes.into();
         self.store.put_opts(&key.path(), payload, opts).await?;
-        Ok(())
-    }
-
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
-        let path = crate_file_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_CRATE),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
         Ok(())
     }
 
@@ -370,11 +342,9 @@ impl Storage {
     #[instrument(skip(self))]
     pub async fn download_crate_file(
         &self,
-        name: &str,
-        version: &str,
+        key: &StorageKey<'_>,
     ) -> Result<BoxStream<'_, Result<Bytes>>> {
-        let path = crate_file_path(name, version);
-        let result = self.store.get(&path).await?;
+        let result = self.store.get(&key.path()).await?;
         Ok(result.into_stream())
     }
 
@@ -480,10 +450,6 @@ fn build_s3(config: &S3Config, client_options: ClientOptions) -> AmazonS3 {
         .unwrap()
 }
 
-fn crate_file_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
-}
-
 fn crate_zip_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip").into()
 }
@@ -494,6 +460,7 @@ fn crate_zip_manifest_path(name: &str, version: &str) -> Path {
 
 #[derive(Debug)]
 pub enum StorageKey<'a> {
+    CrateFile { name: &'a str, version: &'a str },
     Readme { name: &'a str, version: &'a str },
     OgImage { name: &'a str },
     CrateFeed { name: &'a str },
@@ -502,6 +469,11 @@ pub enum StorageKey<'a> {
 }
 
 impl<'a> StorageKey<'a> {
+    /// Builds a [`StorageKey::CrateFile`] key for the given crate version.
+    pub fn for_crate_file(name: &'a str, version: &'a str) -> Self {
+        StorageKey::CrateFile { name, version }
+    }
+
     /// Builds a [`StorageKey::Readme`] key for the given crate version.
     pub fn for_readme(name: &'a str, version: &'a str) -> Self {
         StorageKey::Readme { name, version }
@@ -515,6 +487,9 @@ impl<'a> StorageKey<'a> {
     /// Object-store path used for put/get/delete operations.
     pub fn path(&self) -> Path {
         match self {
+            StorageKey::CrateFile { name, version } => {
+                format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
+            }
             StorageKey::Readme { name, version } => {
                 format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
             }
@@ -534,6 +509,10 @@ impl<'a> StorageKey<'a> {
     /// The intended attribute set (content-type + cache-control) for the file.
     pub fn attributes(&self) -> Attributes {
         match self {
+            StorageKey::CrateFile { .. } => Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_CRATE),
+                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
+            ]),
             StorageKey::Readme { .. } => Attributes::from_iter([
                 (Attribute::ContentType, CONTENT_TYPE_README),
                 (Attribute::CacheControl, CACHE_CONTROL_README),
@@ -603,7 +582,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in crate_tests {
-            assert_eq!(storage.crate_location(name, version), expected);
+            let key = StorageKey::for_crate_file(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let crate_zip_tests = vec![
@@ -752,7 +732,8 @@ mod tests {
     async fn delete_crate_file() {
         let storage = prepare().await;
 
-        storage.delete_crate_file("foo", "1.2.3").await.unwrap();
+        let key = StorageKey::for_crate_file("foo", "1.2.3");
+        storage.delete(&key).await.unwrap();
 
         let expected_files = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -807,16 +788,14 @@ mod tests {
     async fn upload_crate_file() {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
-        s.upload_crate_file("foo", "1.2.3", Bytes::new())
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_file("foo", "1.2.3");
+        s.upload(&key, Bytes::new().into()).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.crate"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_crate_file("foo", "2.0.0+foo", Bytes::new())
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_file("foo", "2.0.0+foo");
+        s.upload(&key, Bytes::new().into()).await.unwrap();
 
         let expected_files = vec![
             "crates/foo/foo-1.2.3.crate",

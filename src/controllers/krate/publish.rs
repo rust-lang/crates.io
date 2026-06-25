@@ -41,6 +41,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
+use crate::storage::StorageKey;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
@@ -636,7 +637,8 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         }
 
         // Upload crate tarball
-        app.storage.upload_crate_file(&krate.name, &version_string, tarball_bytes)
+        let key = StorageKey::for_crate_file(&krate.name, &version_string);
+        app.storage.upload(&key, tarball_bytes.into())
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 

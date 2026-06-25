@@ -1,4 +1,5 @@
 use crate::schema::{crates, versions};
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use anyhow::Context;
 use chrono::{DateTime, Datelike, Timelike, Utc};
@@ -141,8 +142,9 @@ async fn download_to_tempfile(
     let file = tempfile::tempfile().context("Failed to create temporary file")?;
     let mut writer = tokio::fs::File::from_std(file);
 
+    let key = StorageKey::for_crate_file(krate, version);
     let mut stream = storage
-        .download_crate_file(krate, version)
+        .download_crate_file(&key)
         .await
         .context("Failed to download crate file")?;
 

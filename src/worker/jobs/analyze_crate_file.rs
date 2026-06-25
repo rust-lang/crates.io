@@ -1,5 +1,5 @@
 use crate::schema::{crates, versions};
-use crate::storage::Storage;
+use crate::storage::{Storage, StorageKey};
 use crate::worker::Environment;
 use crate::worker::jobs::GenerateOgImage;
 use anyhow::Context;
@@ -93,7 +93,8 @@ async fn analyze_crate_tarball(
     version: &str,
     storage: &Storage,
 ) -> anyhow::Result<LinecountStats> {
-    let result = storage.download_crate_file(krate, version).await;
+    let key = StorageKey::for_crate_file(krate, version);
+    let result = storage.download_crate_file(&key).await;
     let stream = result.context("Failed to download crate file")?;
     let reader = StreamReader::new(stream);
     let reader = BufReader::new(reader);

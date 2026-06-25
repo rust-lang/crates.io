@@ -6,6 +6,7 @@ use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
+use crate::storage::StorageKey;
 use crate::util::errors::AppResult;
 use crate::util::{RequestUtils, redirect};
 use crate::views::EncodableVersionDownload;
@@ -46,7 +47,8 @@ pub async fn download_version(
     req: Parts,
 ) -> AppResult<Response> {
     let wants_json = req.wants_json();
-    let redirect_url = app.storage.crate_location(&path.name, &path.version);
+    let key = StorageKey::for_crate_file(&path.name, &path.version);
+    let redirect_url = app.storage.location(&key);
     let response = if wants_json {
         json!({ "url": redirect_url }).into_response()
     } else {

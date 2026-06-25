@@ -153,7 +153,8 @@ async fn get_readme(
 ) -> anyhow::Result<String> {
     let pkg_name = format!("{}-{}", krate_name, version.num);
 
-    let location = storage.crate_location(krate_name, &version.num.to_string());
+    let key = StorageKey::for_crate_file(krate_name, &version.num);
+    let location = storage.location(&key);
 
     let mut extra_headers = header::HeaderMap::new();
     extra_headers.insert(

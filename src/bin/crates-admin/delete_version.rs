@@ -107,12 +107,13 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut paths = Vec::new();
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
-        match store.delete_crate_file(crate_name, version).await {
+        let crate_file_key = StorageKey::for_crate_file(crate_name, version);
+        match store.delete(&crate_file_key).await {
             Err(error) => {
                 warn!(%crate_name, %version, "Failed to delete crate file from S3: {error}");
             }
-            Ok(path) => {
-                paths.push(path);
+            Ok(()) => {
+                paths.push(crate_file_key.path());
             }
         }
 
