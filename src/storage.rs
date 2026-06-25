@@ -247,7 +247,7 @@ impl Storage {
 
     /// Returns the URL of an uploaded RSS feed.
     pub fn feed_url(&self, key: &StorageKey<'_>) -> String {
-        self.apply_cdn_prefix(&key.into()).replace('+', "%2B")
+        self.apply_cdn_prefix(&key.path()).replace('+', "%2B")
     }
 
     /// Returns the base URL that crate files are served from, e.g.
@@ -315,7 +315,7 @@ impl Storage {
 
     #[instrument(skip(self))]
     pub async fn delete_feed(&self, key: &StorageKey<'_>) -> Result<()> {
-        let path = key.into();
+        let path = key.path();
         self.store.delete(&path).await
     }
 
@@ -538,9 +538,10 @@ pub enum StorageKey<'a> {
     UpdatesFeed,
 }
 
-impl From<&StorageKey<'_>> for Path {
-    fn from(key: &StorageKey<'_>) -> Path {
-        match key {
+impl StorageKey<'_> {
+    /// Object-store path used for put/get/delete operations.
+    pub fn path(&self) -> Path {
+        match self {
             StorageKey::CrateFeed { name } => format!("rss/crates/{name}.xml").into(),
             StorageKey::CratesFeed => "rss/crates.xml".into(),
             StorageKey::UpdatesFeed => "rss/updates.xml".into(),

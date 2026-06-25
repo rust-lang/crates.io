@@ -63,7 +63,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
                 .into_iter()
                 .chain(readme_paths)
                 .chain(std::iter::once(format!("og-images/{name}.png").into()))
-                .chain(std::iter::once(object_store::path::Path::from(&key))),
+                .chain(std::iter::once(key.path())),
         )
         .enqueue(&conn)
         .await?;

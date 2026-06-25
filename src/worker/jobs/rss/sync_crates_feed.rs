@@ -64,7 +64,7 @@ impl BackgroundJob for SyncCratesFeed {
             ..Default::default()
         };
 
-        let path = object_store::path::Path::from(&key);
+        let path = key.path();
 
         info!("Uploading feed to storage…");
         ctx.storage.upload_feed(&path, &channel).await?;
