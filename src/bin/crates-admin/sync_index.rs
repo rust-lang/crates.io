@@ -5,10 +5,12 @@ use clap::builder::ArgAction;
 use crates_io::db;
 use crates_io::schema::crates;
 use crates_io::worker::jobs;
+use crates_io_database::fns::canon_crate_name;
 use crates_io_worker::BackgroundJob;
 use crates_io_worker::schema::background_jobs;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use std::collections::HashMap;
 use tracing::warn;
 
 const BATCH_SIZE: usize = 1000;
@@ -119,21 +121,39 @@ async fn resolve_crate_names(conn: &mut AsyncPgConnection, opts: &Opts) -> Resul
 
     // Check which crates exist in the database. Crates that don't
     // exist will still be synced, which removes them from the index.
+    let canon_names = opts.names.iter().map(|name| canon(name));
     let existing_crates: Vec<String> = crates::table
-        .filter(crates::name.eq_any(&opts.names))
+        .filter(canon_crate_name(crates::name).eq_any(canon_names))
         .select(crates::name)
         .load(conn)
         .await?;
 
+    let by_canon: HashMap<String, String> = existing_crates
+        .into_iter()
+        .map(|name| (canon(&name), name))
+        .collect();
+
+    let mut crate_names = Vec::with_capacity(opts.names.len());
     for name in &opts.names {
-        if !existing_crates.contains(name) {
-            warn!(
-                "Crate `{name}` does not exist in the database and will be removed from the index."
-            );
+        match by_canon.get(&canon(name)) {
+            Some(stored_name) => crate_names.push(stored_name.clone()),
+            None => {
+                warn!(
+                    "Crate `{name}` does not exist in the database and will be removed from the index."
+                );
+                crate_names.push(name.clone());
+            }
         }
     }
 
-    Ok(opts.names.clone())
+    Ok(crate_names)
+}
+
+/// Normalizes a crate name the same way the database's `canon_crate_name()`
+/// function does, allowing user-provided names to be matched against the
+/// stored names regardless of case or `-`/`_` differences.
+fn canon(name: &str) -> String {
+    name.to_lowercase().replace('-', "_")
 }
 
 /// Shows a confirmation prompt when batch mode is used.
@@ -297,6 +317,24 @@ mod tests {
         let opts = opts_for_names(&["foo", "deleted-crate"]);
         let result = resolve_crate_names(&mut conn, &opts).await.unwrap();
         assert_eq!(result, vec!["foo", "deleted-crate"]);
+    }
+
+    #[tokio::test]
+    async fn resolve_crate_names_normalizes_to_stored_name() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let user_id = create_user(&conn).await;
+
+        CrateBuilder::new("NULL", user_id)
+            .expect_build(&mut conn)
+            .await;
+        CrateBuilder::new("foo-bar", user_id)
+            .expect_build(&mut conn)
+            .await;
+
+        let opts = opts_for_names(&["null", "foo_bar"]);
+        let result = resolve_crate_names(&mut conn, &opts).await.unwrap();
+        assert_eq!(result, vec!["NULL", "foo-bar"]);
     }
 
     #[tokio::test]
