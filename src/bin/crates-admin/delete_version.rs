@@ -2,7 +2,7 @@ use crate::dialoguer;
 use anyhow::Context;
 use crates_io::models::update_default_version;
 use crates_io::schema::crates;
-use crates_io::storage::Storage;
+use crates_io::storage::{Storage, StorageKey};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::versions};
 use crates_io_worker::BackgroundJob;
@@ -139,13 +139,14 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
 
         debug!(%crate_name, %version, "Deleting readme file from S3");
-        match store.delete_readme(crate_name, version).await {
+        let readme_key = StorageKey::for_readme(crate_name, version);
+        match store.delete(&readme_key).await {
             Err(object_store::Error::NotFound { .. }) => {}
             Err(error) => {
                 warn!(%crate_name, %version, "Failed to delete readme file from S3: {error}")
             }
-            Ok(path) => {
-                paths.push(path);
+            Ok(()) => {
+                paths.push(readme_key.path());
             }
         }
     }

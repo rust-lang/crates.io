@@ -230,14 +230,6 @@ impl Storage {
             .replace('+', "%2B")
     }
 
-    /// Returns the URL of an uploaded crate's version readme.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn readme_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&readme_path(name, version))
-            .replace('+', "%2B")
-    }
-
     /// Returns the public URL of the file identified by `key`.
     ///
     /// The function doesn't check for the existence of the file.
@@ -289,14 +281,6 @@ impl Storage {
     #[instrument(skip(self))]
     pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<Path> {
         let path = crate_zip_manifest_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
-    /// Deletes a crate version's readme, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_readme(&self, name: &str, version: &str) -> Result<Path> {
-        let path = readme_path(name, version);
         self.store.delete(&path).await?;
         Ok(path)
     }
@@ -392,18 +376,6 @@ impl Storage {
         let path = crate_file_path(name, version);
         let result = self.store.get(&path).await?;
         Ok(result.into_stream())
-    }
-
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
-        let path = readme_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_README),
-            (Attribute::CacheControl, CACHE_CONTROL_README),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
-        Ok(())
     }
 
     #[instrument(skip(self, channel))]
@@ -520,12 +492,9 @@ fn crate_zip_manifest_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip.json").into()
 }
 
-fn readme_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
-}
-
 #[derive(Debug)]
 pub enum StorageKey<'a> {
+    Readme { name: &'a str, version: &'a str },
     OgImage { name: &'a str },
     CrateFeed { name: &'a str },
     CratesFeed,
@@ -533,6 +502,11 @@ pub enum StorageKey<'a> {
 }
 
 impl<'a> StorageKey<'a> {
+    /// Builds a [`StorageKey::Readme`] key for the given crate version.
+    pub fn for_readme(name: &'a str, version: &'a str) -> Self {
+        StorageKey::Readme { name, version }
+    }
+
     /// Builds a [`StorageKey::OgImage`] key for the given crate.
     pub fn for_og_image(name: &'a str) -> Self {
         StorageKey::OgImage { name }
@@ -541,6 +515,9 @@ impl<'a> StorageKey<'a> {
     /// Object-store path used for put/get/delete operations.
     pub fn path(&self) -> Path {
         match self {
+            StorageKey::Readme { name, version } => {
+                format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
+            }
             StorageKey::OgImage { name } => format!("{PREFIX_OG_IMAGES}/{name}.png").into(),
             StorageKey::CrateFeed { name } => format!("rss/crates/{name}.xml").into(),
             StorageKey::CratesFeed => "rss/crates.xml".into(),
@@ -557,6 +534,10 @@ impl<'a> StorageKey<'a> {
     /// The intended attribute set (content-type + cache-control) for the file.
     pub fn attributes(&self) -> Attributes {
         match self {
+            StorageKey::Readme { .. } => Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_README),
+                (Attribute::CacheControl, CACHE_CONTROL_README),
+            ]),
             StorageKey::OgImage { .. } => Attributes::from_iter([
                 (Attribute::ContentType, CONTENT_TYPE_OG_IMAGE),
                 (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
@@ -670,7 +651,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in readme_tests {
-            assert_eq!(storage.readme_location(name, version), expected);
+            let key = StorageKey::for_readme(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let og_image_tests = vec![
@@ -808,7 +790,8 @@ mod tests {
     async fn delete_readme() {
         let storage = prepare().await;
 
-        storage.delete_readme("foo", "1.2.3").await.unwrap();
+        let key = StorageKey::for_readme("foo", "1.2.3");
+        storage.delete(&key).await.unwrap();
 
         let expected_files = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -889,14 +872,14 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"hello world");
-        s.upload_readme("foo", "1.2.3", bytes.clone())
-            .await
-            .unwrap();
+        let key = StorageKey::for_readme("foo", "1.2.3");
+        s.upload(&key, bytes.clone().into()).await.unwrap();
 
         let expected_files = vec!["readmes/foo/foo-1.2.3.html"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_readme("foo", "2.0.0+foo", bytes).await.unwrap();
+        let key = StorageKey::for_readme("foo", "2.0.0+foo");
+        s.upload(&key, bytes.into()).await.unwrap();
 
         let expected_files = vec![
             "readmes/foo/foo-1.2.3.html",

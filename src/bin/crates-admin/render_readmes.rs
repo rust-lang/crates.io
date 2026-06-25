@@ -10,7 +10,7 @@ use tokio_util::io::StreamReader;
 
 use async_compression::tokio::bufread::GzipDecoder;
 use chrono::{NaiveDateTime, Utc};
-use crates_io::storage::Storage;
+use crates_io::storage::{Storage, StorageKey};
 use crates_io::tasks::spawn_blocking;
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::{Manifest, StringOrBool};
@@ -121,8 +121,9 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(&storage, &client, &version, &krate_name).await?;
                 if !readme.is_empty() {
+                    let key = StorageKey::for_readme(&krate_name, &version.num);
                     storage
-                        .upload_readme(&krate_name, &version.num, readme.into())
+                        .upload(&key, readme.into())
                         .await
                         .context("Failed to upload rendered README file to S3")?;
                 }
