@@ -316,7 +316,7 @@ impl Storage {
     }
 
     #[instrument(skip(self))]
-    pub async fn delete_feed(&self, key: &StorageKey<'_>) -> Result<()> {
+    pub async fn delete(&self, key: &StorageKey<'_>) -> Result<()> {
         let path = key.path();
         self.store.delete(&path).await
     }

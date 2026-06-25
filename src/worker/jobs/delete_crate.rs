@@ -43,7 +43,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
             },
             async {
                 info!("{name}: Deleting RSS feed from S3…");
-                let result = ctx.storage.delete_feed(&key).await;
+                let result = ctx.storage.delete(&key).await;
                 result.context("Failed to delete RSS feed from S3")
             },
             async {
