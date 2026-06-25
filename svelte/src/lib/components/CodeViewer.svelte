@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { CodeViewOptions } from '@pierre/diffs';
+  import type { CodeViewOptions, SelectedLineRange } from '@pierre/diffs';
   import type { WorkerPoolManager } from '@pierre/diffs/worker';
 
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { CodeView } from '@pierre/diffs';
   import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
   import WorkerUrl from '@pierre/diffs/worker/worker.js?worker&url';
@@ -12,14 +12,19 @@
   interface Props {
     content: { path: string; text: string; meta: string; cacheKey: string } | null;
     colorScheme: 'light' | 'dark';
+    lineHash?: string;
+    onLineHashChange?: (hash: string) => void;
   }
 
-  let { content, colorScheme }: Props = $props();
+  let { content, colorScheme, lineHash = '', onLineHashChange }: Props = $props();
 
   const THEMES = { light: 'github-light', dark: 'github-dark' } as const;
 
+  const LINE_HASH_PATTERN = /^L([1-9]\d*)(?:-L([1-9]\d*))?$/;
+
   let container = $state.raw<HTMLElement>();
   let view = $state.raw<CodeView>();
+  let selectedRange = $derived(parseLineHash(lineHash));
 
   function options(): CodeViewOptions<undefined> {
     return {
@@ -30,6 +35,11 @@
         paddingTop: 0,
         paddingBottom: 0,
         gap: 0,
+      },
+      enableLineSelection: true,
+      onLineSelectionEnd: selection => {
+        let hash = formatLineHash(selection) ?? '';
+        onLineHashChange?.(hash);
       },
       renderHeaderMetadata: () => content?.meta ?? null,
     };
@@ -46,6 +56,24 @@
         langs: ['rust', 'toml'],
       },
     });
+  }
+
+  function parseLineHash(hash: string): SelectedLineRange | null {
+    let match = LINE_HASH_PATTERN.exec(hash.startsWith('#') ? hash.slice(1) : hash);
+    if (!match) return null;
+
+    let start = Number.parseInt(match[1]!, 10);
+    let end = match[2] ? Number.parseInt(match[2], 10) : start;
+
+    return { start, end };
+  }
+
+  function formatLineHash(range: SelectedLineRange | null): string | null {
+    if (!range) return null;
+
+    let start = Math.min(range.start, range.end);
+    let end = Math.max(range.start, range.end);
+    return start === end ? `#L${start}` : `#L${start}-L${end}`;
   }
 
   onMount(() => {
@@ -69,8 +97,24 @@
     }
     view?.setItems(items);
 
+    // Render immediately to avoid `scrollTo()` resolution warnings
+    view?.render(true);
+
     if (content) {
-      view?.scrollTo({ type: 'position', position: 0, behavior: 'instant' });
+      let range = untrack(() => selectedRange);
+      if (range) {
+        view?.scrollTo({ type: 'range', id: content.path, range });
+      } else {
+        view?.scrollTo({ type: 'position', position: 0, behavior: 'instant' });
+      }
+    }
+  });
+
+  $effect(() => {
+    if (content && selectedRange) {
+      view?.setSelectedLines({ id: content.path, range: selectedRange }, { notify: false });
+    } else {
+      view?.clearSelectedLines({ notify: false });
     }
   });
 </script>
