@@ -321,6 +321,20 @@ impl Storage {
         self.store.delete(&path).await
     }
 
+    /// Uploads `payload` to the location identified by `key`, storing it with
+    /// the key's intended attributes.
+    #[instrument(skip(self, payload))]
+    pub async fn upload(&self, key: &StorageKey<'_>, payload: PutPayload) -> Result<()> {
+        let attributes = self
+            .supports_attributes
+            .then(|| key.attributes())
+            .unwrap_or_default();
+
+        let opts = attributes.into();
+        self.store.put_opts(&key.path(), payload, opts).await?;
+        Ok(())
+    }
+
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
