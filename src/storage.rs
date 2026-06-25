@@ -22,13 +22,6 @@ const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const PREFIX_OG_IMAGES: &str = "og-images";
 const DEFAULT_REGION: &str = "us-west-1";
-const CONTENT_TYPE_CRATE: &str = "application/gzip";
-const CONTENT_TYPE_GZIP: &str = "application/gzip";
-const CONTENT_TYPE_ZIP: &str = "application/zip";
-const CONTENT_TYPE_JSON: &str = "application/json";
-const CONTENT_TYPE_INDEX: &str = "text/plain";
-const CONTENT_TYPE_README: &str = "text/html";
-const CONTENT_TYPE_OG_IMAGE: &str = "image/png";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
@@ -141,8 +134,8 @@ impl Storage {
                     // The `BufWriter::new()` API currently does not allow
                     // specifying any file attributes, so we need to set the
                     // content type here instead for the database dump upload.
-                    .with_content_type_for_suffix("gz", CONTENT_TYPE_GZIP)
-                    .with_content_type_for_suffix("zip", CONTENT_TYPE_ZIP);
+                    .with_content_type_for_suffix("gz", "application/gzip")
+                    .with_content_type_for_suffix("zip", "application/zip");
 
                 let store = build_s3(default, options);
 
@@ -293,7 +286,7 @@ impl Storage {
         let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
         if let Some(content) = content {
             let attributes = self.attrs([
-                (Attribute::ContentType, CONTENT_TYPE_INDEX),
+                (Attribute::ContentType, "text/plain"),
                 (Attribute::CacheControl, CACHE_CONTROL_INDEX),
             ]);
             let payload = content.into();
@@ -419,23 +412,23 @@ impl<'a> StorageKey<'a> {
     pub fn attributes(&self) -> Attributes {
         match self {
             StorageKey::CrateFile { .. } => Attributes::from_iter([
-                (Attribute::ContentType, CONTENT_TYPE_CRATE),
+                (Attribute::ContentType, "application/gzip"),
                 (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
             ]),
             StorageKey::CrateZip { .. } => Attributes::from_iter([
-                (Attribute::ContentType, CONTENT_TYPE_ZIP),
+                (Attribute::ContentType, "application/zip"),
                 (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
             ]),
             StorageKey::CrateZipManifest { .. } => Attributes::from_iter([
-                (Attribute::ContentType, CONTENT_TYPE_JSON),
+                (Attribute::ContentType, "application/json"),
                 (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
             ]),
             StorageKey::Readme { .. } => Attributes::from_iter([
-                (Attribute::ContentType, CONTENT_TYPE_README),
+                (Attribute::ContentType, "text/html"),
                 (Attribute::CacheControl, CACHE_CONTROL_README),
             ]),
             StorageKey::OgImage { .. } => Attributes::from_iter([
-                (Attribute::ContentType, CONTENT_TYPE_OG_IMAGE),
+                (Attribute::ContentType, "image/png"),
                 (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
             ]),
             StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
