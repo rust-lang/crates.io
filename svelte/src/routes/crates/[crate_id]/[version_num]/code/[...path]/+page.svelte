@@ -3,6 +3,7 @@
 
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
   import prettyBytes from 'pretty-bytes';
 
   import { getColorScheme } from '$lib/color-scheme.svelte';
@@ -25,6 +26,7 @@
   let manifest = $derived(data.manifest);
   let cdnBase = $derived(data.cdnBase);
   let selectedPath = $derived(data.selectedPath);
+  let lineHash = $derived(page.url.hash);
 
   let filesByPath = $derived(new Map((manifest?.files ?? []).map(file => [file.path, file])));
 
@@ -89,6 +91,19 @@
 
     void goto(href, { keepFocus: true, noScroll: true });
   }
+
+  function updateLineHash(hash: string) {
+    if (page.url.hash === hash) return;
+
+    let href = resolve('/crates/[crate_id]/[version_num]/code/[...path]', {
+      crate_id: crate.id,
+      version_num: version.num,
+      path: selectedPath ?? '',
+    });
+    let lineHref = (hash ? `${href}${hash}` : href) as typeof href;
+
+    void goto(lineHref, { keepFocus: true, noScroll: true, replaceState: true });
+  }
 </script>
 
 {#snippet unavailableMessage()}
@@ -127,7 +142,7 @@
         <div class="error" data-test-load-error>Failed to load file: {fileState.message}</div>
       {/if}
 
-      <CodeViewer {content} colorScheme={colorScheme.resolvedScheme} />
+      <CodeViewer {content} colorScheme={colorScheme.resolvedScheme} {lineHash} onLineHashChange={updateLineHash} />
     </section>
   </div>
 {/if}
