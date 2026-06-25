@@ -13,7 +13,6 @@ use object_store::{
 };
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
-use std::io::Cursor;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWriteExt};
@@ -287,27 +286,6 @@ impl Storage {
     ) -> Result<BoxStream<'_, Result<Bytes>>> {
         let result = self.store.get(&key.path()).await?;
         Ok(result.into_stream())
-    }
-
-    #[instrument(skip(self, channel))]
-    pub async fn upload_feed(
-        &self,
-        key: &StorageKey<'_>,
-        channel: &rss::Channel,
-    ) -> anyhow::Result<()> {
-        let mut buffer = Vec::new();
-        let mut cursor = Cursor::new(&mut buffer);
-        channel.pretty_write_to(&mut cursor, b' ', 4)?;
-        let payload = PutPayload::from_bytes(buffer.into());
-
-        let attributes = self
-            .supports_attributes
-            .then(|| key.attributes())
-            .unwrap_or_default();
-
-        let opts = attributes.into();
-        self.store.put_opts(&key.path(), payload, opts).await?;
-        Ok(())
     }
 
     #[instrument(skip(self, content))]
