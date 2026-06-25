@@ -206,22 +206,6 @@ impl Storage {
         }
     }
 
-    /// Returns the URL of an uploaded crate version's zip source archive.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn crate_zip_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&crate_zip_path(name, version))
-            .replace('+', "%2B")
-    }
-
-    /// Returns the URL of an uploaded crate version's zip source archive manifest.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn crate_zip_manifest_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&crate_zip_manifest_path(name, version))
-            .replace('+', "%2B")
-    }
-
     /// Returns the public URL of the file identified by `key`.
     ///
     /// The function doesn't check for the existence of the file.
@@ -233,10 +217,6 @@ impl Storage {
     /// `https://static.crates.io`.
     pub fn cdn_base(&self) -> &str {
         &self.cdn_base
-    }
-
-    fn apply_cdn_prefix(&self, path: &Path) -> String {
-        format!("{}/{path}", self.cdn_base)
     }
 
     /// Deletes all crate files for the given crate, returning the paths that were deleted.
@@ -251,22 +231,6 @@ impl Storage {
     pub async fn delete_all_readmes(&self, name: &str) -> Result<Vec<Path>> {
         let prefix = format!("{PREFIX_READMES}/{name}").into();
         self.delete_all_with_prefix(&prefix).await
-    }
-
-    /// Deletes a crate version's zip source archive, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<Path> {
-        let path = crate_zip_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
-    /// Deletes a crate version's zip source archive manifest, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<Path> {
-        let path = crate_zip_manifest_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
     }
 
     #[instrument(skip(self))]
@@ -294,18 +258,16 @@ impl Storage {
     #[instrument(skip(self, reader))]
     pub async fn upload_crate_zip(
         &self,
-        name: &str,
-        version: &str,
+        key: &StorageKey<'_>,
         mut reader: impl AsyncRead + Unpin,
     ) -> anyhow::Result<()> {
-        let path = crate_zip_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_ZIP),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
+        let attributes = self
+            .supports_attributes
+            .then(|| key.attributes())
+            .unwrap_or_default();
 
         // Set up a streaming upload
-        let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), path)
+        let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), key.path())
             .with_attributes(attributes);
 
         // Upload the archive contents
@@ -318,24 +280,6 @@ impl Storage {
         // ... or finalize upload
         writer.shutdown().await?;
 
-        Ok(())
-    }
-
-    /// Uploads a crate version's zip source archive manifest.
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_crate_zip_manifest(
-        &self,
-        name: &str,
-        version: &str,
-        bytes: Bytes,
-    ) -> Result<()> {
-        let path = crate_zip_manifest_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_JSON),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
         Ok(())
     }
 
@@ -450,17 +394,11 @@ fn build_s3(config: &S3Config, client_options: ClientOptions) -> AmazonS3 {
         .unwrap()
 }
 
-fn crate_zip_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip").into()
-}
-
-fn crate_zip_manifest_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip.json").into()
-}
-
 #[derive(Debug)]
 pub enum StorageKey<'a> {
     CrateFile { name: &'a str, version: &'a str },
+    CrateZip { name: &'a str, version: &'a str },
+    CrateZipManifest { name: &'a str, version: &'a str },
     Readme { name: &'a str, version: &'a str },
     OgImage { name: &'a str },
     CrateFeed { name: &'a str },
@@ -472,6 +410,16 @@ impl<'a> StorageKey<'a> {
     /// Builds a [`StorageKey::CrateFile`] key for the given crate version.
     pub fn for_crate_file(name: &'a str, version: &'a str) -> Self {
         StorageKey::CrateFile { name, version }
+    }
+
+    /// Builds a [`StorageKey::CrateZip`] key for the given crate version.
+    pub fn for_crate_zip(name: &'a str, version: &'a str) -> Self {
+        StorageKey::CrateZip { name, version }
+    }
+
+    /// Builds a [`StorageKey::CrateZipManifest`] key for the given crate version.
+    pub fn for_crate_zip_manifest(name: &'a str, version: &'a str) -> Self {
+        StorageKey::CrateZipManifest { name, version }
     }
 
     /// Builds a [`StorageKey::Readme`] key for the given crate version.
@@ -489,6 +437,12 @@ impl<'a> StorageKey<'a> {
         match self {
             StorageKey::CrateFile { name, version } => {
                 format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
+            }
+            StorageKey::CrateZip { name, version } => {
+                format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip").into()
+            }
+            StorageKey::CrateZipManifest { name, version } => {
+                format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip.json").into()
             }
             StorageKey::Readme { name, version } => {
                 format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
@@ -511,6 +465,14 @@ impl<'a> StorageKey<'a> {
         match self {
             StorageKey::CrateFile { .. } => Attributes::from_iter([
                 (Attribute::ContentType, CONTENT_TYPE_CRATE),
+                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
+            ]),
+            StorageKey::CrateZip { .. } => Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_ZIP),
+                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
+            ]),
+            StorageKey::CrateZipManifest { .. } => Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_JSON),
                 (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
             ]),
             StorageKey::Readme { .. } => Attributes::from_iter([
@@ -599,7 +561,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in crate_zip_tests {
-            assert_eq!(storage.crate_zip_location(name, version), expected);
+            let key = StorageKey::for_crate_zip(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let crate_zip_manifest_tests = vec![
@@ -615,7 +578,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in crate_zip_manifest_tests {
-            assert_eq!(storage.crate_zip_manifest_location(name, version), expected);
+            let key = StorageKey::for_crate_zip_manifest(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let readme_tests = vec![
@@ -656,24 +620,20 @@ mod tests {
             Storage::from_config(&config)
         }
 
-        assert_eq!(storage(None).apply_cdn_prefix(&"foo".into()), "/foo");
-        assert_eq!(
-            storage(Some("static.crates.io")).apply_cdn_prefix(&"foo".into()),
-            "https://static.crates.io/foo"
-        );
-        assert_eq!(
-            storage(Some("https://fastly-static.crates.io")).apply_cdn_prefix(&"foo".into()),
-            "https://fastly-static.crates.io/foo"
-        );
+        let key = StorageKey::for_og_image("foo");
 
+        assert_eq!(storage(None).location(&key), "/og-images/foo.png");
         assert_eq!(
-            storage(Some("static.crates.io")).apply_cdn_prefix(&"/foo/bar".into()),
-            "https://static.crates.io/foo/bar"
+            storage(Some("https://fastly-static.crates.io")).location(&key),
+            "https://fastly-static.crates.io/og-images/foo.png"
         );
-
         assert_eq!(
-            storage(Some("static.crates.io/")).apply_cdn_prefix(&"/foo/bar".into()),
-            "https://static.crates.io//foo/bar"
+            storage(Some("static.crates.io")).location(&key),
+            "https://static.crates.io/og-images/foo.png"
+        );
+        assert_eq!(
+            storage(Some("static.crates.io/")).location(&key),
+            "https://static.crates.io//og-images/foo.png"
         );
     }
 
@@ -754,16 +714,15 @@ mod tests {
             storage.store.put(&path.into(), payload).await.unwrap();
         }
 
-        storage.delete_crate_zip("foo", "1.2.3").await.unwrap();
+        let zip_key = StorageKey::for_crate_zip("foo", "1.2.3");
+        storage.delete(&zip_key).await.unwrap();
         assert_eq!(
             stored_files(&storage.store).await,
             vec!["crates/foo/foo-1.2.3.zip.json"]
         );
 
-        storage
-            .delete_crate_zip_manifest("foo", "1.2.3")
-            .await
-            .unwrap();
+        let manifest_key = StorageKey::for_crate_zip_manifest("foo", "1.2.3");
+        storage.delete(&manifest_key).await.unwrap();
         assert!(stored_files(&storage.store).await.is_empty());
     }
 
@@ -808,14 +767,16 @@ mod tests {
     async fn upload_crate_zip() {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
-        s.upload_crate_zip("foo", "1.2.3", &b"fake zip data"[..])
+        let key = StorageKey::for_crate_zip("foo", "1.2.3");
+        s.upload_crate_zip(&key, &b"fake zip data"[..])
             .await
             .unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_crate_zip("foo", "2.0.0+foo", &b"fake zip data"[..])
+        let key = StorageKey::for_crate_zip("foo", "2.0.0+foo");
+        s.upload_crate_zip(&key, &b"fake zip data"[..])
             .await
             .unwrap();
 
@@ -828,16 +789,14 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"{\"files\":[]}");
-        s.upload_crate_zip_manifest("foo", "1.2.3", bytes.clone())
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_zip_manifest("foo", "1.2.3");
+        s.upload(&key, bytes.clone().into()).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip.json"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_crate_zip_manifest("foo", "2.0.0+foo", bytes)
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_zip_manifest("foo", "2.0.0+foo");
+        s.upload(&key, bytes.into()).await.unwrap();
 
         let expected_files = vec![
             "crates/foo/foo-1.2.3.zip.json",

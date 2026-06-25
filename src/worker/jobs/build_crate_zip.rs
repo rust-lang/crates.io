@@ -64,13 +64,15 @@ impl BackgroundJob for BuildCrateZip {
             .await
             .context("Zip build task panicked")??;
 
+        let zip_key = StorageKey::for_crate_zip(name, version);
         env.storage
-            .upload_crate_zip(name, version, tokio::fs::File::from_std(artifacts.zip))
+            .upload_crate_zip(&zip_key, tokio::fs::File::from_std(artifacts.zip))
             .await
             .context("Failed to upload zip archive")?;
 
+        let manifest_key = StorageKey::for_crate_zip_manifest(name, version);
         env.storage
-            .upload_crate_zip_manifest(name, version, artifacts.manifest_json.into())
+            .upload(&manifest_key, artifacts.manifest_json.into())
             .await
             .context("Failed to upload zip manifest")?;
 
