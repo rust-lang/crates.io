@@ -64,11 +64,12 @@ impl BackgroundJob for SyncCratesFeed {
             ..Default::default()
         };
 
+        let path = object_store::path::Path::from(&feed_id);
+
         info!("Uploading feed to storage…");
-        ctx.storage.upload_feed(&feed_id, &channel).await?;
+        ctx.storage.upload_feed(&path, &channel).await?;
 
         let dist = CloudFrontDistribution::Static;
-        let path = object_store::path::Path::from(&feed_id);
         if let Err(error) = ctx.invalidate_cdns(&conn, dist, path.as_ref()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }

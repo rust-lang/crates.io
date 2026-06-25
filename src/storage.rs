@@ -418,13 +418,7 @@ impl Storage {
     }
 
     #[instrument(skip(self, channel))]
-    pub async fn upload_feed(
-        &self,
-        feed_id: &FeedId<'_>,
-        channel: &rss::Channel,
-    ) -> anyhow::Result<()> {
-        let path = feed_id.into();
-
+    pub async fn upload_feed(&self, path: &Path, channel: &rss::Channel) -> anyhow::Result<()> {
         let mut buffer = Vec::new();
         let mut cursor = Cursor::new(&mut buffer);
         channel.pretty_write_to(&mut cursor, b' ', 4)?;
@@ -432,7 +426,7 @@ impl Storage {
 
         let attributes = self.attrs([(Attribute::ContentType, "text/xml; charset=UTF-8")]);
         let opts = attributes.into();
-        self.store.put_opts(&path, payload, opts).await?;
+        self.store.put_opts(path, payload, opts).await?;
         Ok(())
     }
 
