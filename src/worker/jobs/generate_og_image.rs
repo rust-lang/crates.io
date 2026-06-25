@@ -1,5 +1,6 @@
 use crate::models::OwnerKind;
 use crate::schema::*;
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
@@ -89,9 +90,8 @@ impl BackgroundJob for GenerateOgImage {
         let image_bytes = option.generate(og_data).await?;
 
         // Upload to storage
-        ctx.storage
-            .upload_og_image(crate_name, image_bytes.into())
-            .await?;
+        let key = StorageKey::for_og_image(crate_name);
+        ctx.storage.upload(&key, image_bytes.into()).await?;
 
         info!("Successfully generated and uploaded OG image for crate {crate_name}");
 
@@ -101,7 +101,7 @@ impl BackgroundJob for GenerateOgImage {
         }
 
         // Invalidate CDN cache for the OG image
-        let og_image_path = format!("og-images/{crate_name}.png");
+        let og_image_path = key.cdn_path();
 
         // Queue CloudFront invalidation for batch processing
         if ctx.cloudfront().is_some() {

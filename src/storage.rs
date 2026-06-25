@@ -238,13 +238,6 @@ impl Storage {
             .replace('+', "%2B")
     }
 
-    /// Returns the URL of an uploaded crate's Open Graph image.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn og_image_location(&self, name: &str) -> String {
-        self.apply_cdn_prefix(&og_image_path(name))
-    }
-
     /// Returns the public URL of the file identified by `key`.
     ///
     /// The function doesn't check for the existence of the file.
@@ -306,13 +299,6 @@ impl Storage {
         let path = readme_path(name, version);
         self.store.delete(&path).await?;
         Ok(path)
-    }
-
-    /// Deletes the Open Graph image for the given crate.
-    #[instrument(skip(self))]
-    pub async fn delete_og_image(&self, name: &str) -> Result<()> {
-        let path = og_image_path(name);
-        self.store.delete(&path).await
     }
 
     #[instrument(skip(self))]
@@ -414,19 +400,6 @@ impl Storage {
         let attributes = self.attrs([
             (Attribute::ContentType, CONTENT_TYPE_README),
             (Attribute::CacheControl, CACHE_CONTROL_README),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
-        Ok(())
-    }
-
-    /// Uploads an Open Graph image for the given crate.
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_og_image(&self, name: &str, bytes: Bytes) -> Result<()> {
-        let path = og_image_path(name);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_OG_IMAGE),
-            (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
         ]);
         let opts = attributes.into();
         self.store.put_opts(&path, bytes.into(), opts).await?;
@@ -551,21 +524,24 @@ fn readme_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
 
-fn og_image_path(name: &str) -> Path {
-    format!("{PREFIX_OG_IMAGES}/{name}.png").into()
-}
-
 #[derive(Debug)]
 pub enum StorageKey<'a> {
+    OgImage { name: &'a str },
     CrateFeed { name: &'a str },
     CratesFeed,
     UpdatesFeed,
 }
 
-impl StorageKey<'_> {
+impl<'a> StorageKey<'a> {
+    /// Builds a [`StorageKey::OgImage`] key for the given crate.
+    pub fn for_og_image(name: &'a str) -> Self {
+        StorageKey::OgImage { name }
+    }
+
     /// Object-store path used for put/get/delete operations.
     pub fn path(&self) -> Path {
         match self {
+            StorageKey::OgImage { name } => format!("{PREFIX_OG_IMAGES}/{name}.png").into(),
             StorageKey::CrateFeed { name } => format!("rss/crates/{name}.xml").into(),
             StorageKey::CratesFeed => "rss/crates.xml".into(),
             StorageKey::UpdatesFeed => "rss/updates.xml".into(),
@@ -581,6 +557,10 @@ impl StorageKey<'_> {
     /// The intended attribute set (content-type + cache-control) for the file.
     pub fn attributes(&self) -> Attributes {
         match self {
+            StorageKey::OgImage { .. } => Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_OG_IMAGE),
+                (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
+            ]),
             StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
                 Attributes::from_iter([(Attribute::ContentType, "text/xml; charset=UTF-8")])
             }
@@ -701,7 +681,8 @@ mod tests {
             ),
         ];
         for (name, expected) in og_image_tests {
-            assert_eq!(storage.og_image_location(name), expected);
+            let key = StorageKey::for_og_image(name);
+            assert_eq!(storage.location(&key), expected);
         }
     }
 
@@ -960,14 +941,14 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"fake png data");
-        s.upload_og_image("foo", bytes.clone()).await.unwrap();
+        let key = StorageKey::for_og_image("foo");
+        s.upload(&key, bytes.clone().into()).await.unwrap();
 
         let expected_files = vec!["og-images/foo.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_og_image("some-long-crate-name", bytes)
-            .await
-            .unwrap();
+        let key = StorageKey::for_og_image("some-long-crate-name");
+        s.upload(&key, bytes.into()).await.unwrap();
 
         let expected_files = vec!["og-images/foo.png", "og-images/some-long-crate-name.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
@@ -978,13 +959,16 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"fake png data");
-        s.upload_og_image("foo", bytes.clone()).await.unwrap();
-        s.upload_og_image("bar", bytes).await.unwrap();
+
+        let foo_key = StorageKey::for_og_image("foo");
+        s.upload(&foo_key, bytes.clone().into()).await.unwrap();
+        let bar_key = StorageKey::for_og_image("bar");
+        s.upload(&bar_key, bytes.into()).await.unwrap();
 
         let expected_files = vec!["og-images/bar.png", "og-images/foo.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.delete_og_image("foo").await.unwrap();
+        s.delete(&foo_key).await.unwrap();
 
         let expected_files = vec!["og-images/bar.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);

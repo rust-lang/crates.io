@@ -19,6 +19,7 @@ use futures_util::future::{BoxFuture, Shared};
 use http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 
 use crate::app::AppState;
+use crate::storage::StorageKey;
 
 const OG_IMAGE_FALLBACK_URL: &str = "https://crates.io/assets/og-image.png";
 const PATH_PREFIX_CRATES: &str = "/crates/";
@@ -79,8 +80,10 @@ pub async fn serve(state: AppState, request: Request, next: Next) -> Response {
             return (StatusCode::METHOD_NOT_ALLOWED, headers).into_response();
         }
 
-        let og_image_url = extract_crate_name(path)
-            .map(|krate| Cow::Owned(state.storage.og_image_location(krate)))
+        let crate_name = extract_crate_name(path);
+        let key = crate_name.map(StorageKey::for_og_image);
+        let og_image_url = key
+            .map(|key| Cow::Owned(state.storage.location(&key)))
             .unwrap_or(Cow::Borrowed(OG_IMAGE_FALLBACK_URL));
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
