@@ -82,35 +82,7 @@ pub struct Opts {
 pub async fn run(opts: Opts) -> Result<()> {
     let mut conn = db::oneoff_connection().await?;
 
-    // Determine which crates to sync
-    let crate_names: Vec<String> = if let Some(date) = opts.updated_before {
-        let datetime = Utc.from_utc_datetime(&date.and_time(NaiveTime::MIN));
-
-        crates::table
-            .filter(crates::updated_at.lt(datetime))
-            .select(crates::name)
-            .order(crates::name)
-            .load(&mut conn)
-            .await?
-    } else {
-        // Check which crates exist in the database. Crates that don't
-        // exist will still be synced, which removes them from the index.
-        let existing_crates: Vec<String> = crates::table
-            .filter(crates::name.eq_any(&opts.names))
-            .select(crates::name)
-            .load(&mut conn)
-            .await?;
-
-        for name in &opts.names {
-            if !existing_crates.contains(name) {
-                warn!(
-                    "Crate `{name}` does not exist in the database and will be removed from the index."
-                );
-            }
-        }
-
-        opts.names
-    };
+    let crate_names = resolve_crate_names(&mut conn, &opts).await?;
 
     let num_crates = crate_names.len();
 
@@ -186,4 +158,42 @@ pub async fn run(opts: Opts) -> Result<()> {
         Ok(())
     })
     .await
+}
+
+/// Determines which crate names to sync based on the provided options.
+///
+/// When `updated_before` is set, queries for all crates updated before
+/// that date. Otherwise, uses the explicitly provided names, warning
+/// about any that don't exist in the database.
+async fn resolve_crate_names(conn: &mut AsyncPgConnection, opts: &Opts) -> Result<Vec<String>> {
+    if let Some(date) = opts.updated_before {
+        let datetime = Utc.from_utc_datetime(&date.and_time(NaiveTime::MIN));
+
+        let names = crates::table
+            .filter(crates::updated_at.lt(datetime))
+            .select(crates::name)
+            .order(crates::name)
+            .load(conn)
+            .await?;
+
+        return Ok(names);
+    }
+
+    // Check which crates exist in the database. Crates that don't
+    // exist will still be synced, which removes them from the index.
+    let existing_crates: Vec<String> = crates::table
+        .filter(crates::name.eq_any(&opts.names))
+        .select(crates::name)
+        .load(conn)
+        .await?;
+
+    for name in &opts.names {
+        if !existing_crates.contains(name) {
+            warn!(
+                "Crate `{name}` does not exist in the database and will be removed from the index."
+            );
+        }
+    }
+
+    Ok(opts.names.clone())
 }
