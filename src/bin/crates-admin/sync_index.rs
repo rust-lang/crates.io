@@ -224,6 +224,8 @@ mod tests {
     use crates_io_database::models::NewUser;
     use crates_io_test_db::TestDatabase;
     use crates_io_test_utils::builders::CrateBuilder;
+    use insta::assert_json_snapshot;
+    use serde::Serialize;
 
     fn opts_for_names(names: &[&str]) -> Opts {
         Opts {
@@ -248,6 +250,20 @@ mod tests {
         .insert(conn)
         .await
         .unwrap()
+    }
+
+    #[derive(HasQuery, Serialize)]
+    #[diesel(
+        table_name = background_jobs,
+        base_query = background_jobs::table.order(background_jobs::id)
+    )]
+    struct Job {
+        job_type: String,
+        data: serde_json::Value,
+    }
+
+    async fn all_jobs(conn: &mut AsyncPgConnection) -> Vec<Job> {
+        Job::query().get_results(conn).await.unwrap()
     }
 
     #[tokio::test]
@@ -313,5 +329,63 @@ mod tests {
 
         let result = resolve_crate_names(&mut conn, &opts).await.unwrap();
         assert_eq!(result, vec!["old-crate"]);
+    }
+
+    #[tokio::test]
+    async fn enqueue_sync_jobs_git_and_sparse() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let names = vec!["foo".to_string(), "bar".to_string()];
+        let opts = opts_for_names(&["foo", "bar"]);
+        enqueue_sync_jobs(&mut conn, &names, &opts).await.unwrap();
+
+        assert_json_snapshot!(all_jobs(&mut conn).await);
+    }
+
+    #[tokio::test]
+    async fn enqueue_sync_jobs_no_git() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let names = vec!["foo".to_string()];
+        let mut opts = opts_for_names(&["foo"]);
+        opts.git = false;
+        enqueue_sync_jobs(&mut conn, &names, &opts).await.unwrap();
+
+        assert_json_snapshot!(all_jobs(&mut conn).await);
+    }
+
+    #[tokio::test]
+    async fn enqueue_sync_jobs_no_sparse() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let names = vec!["foo".to_string()];
+        let mut opts = opts_for_names(&["foo"]);
+        opts.sparse = false;
+        enqueue_sync_jobs(&mut conn, &names, &opts).await.unwrap();
+
+        assert_json_snapshot!(all_jobs(&mut conn).await);
+    }
+
+    #[tokio::test]
+    async fn enqueue_sync_jobs_batch_mode() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let names: Vec<String> = (0..5).map(|i| format!("crate-{i}")).collect();
+        let opts = Opts {
+            names: names.clone(),
+            git: true,
+            sparse: true,
+            batch_size: Some(2),
+            commit_message: Some("bulk sync".to_string()),
+            updated_before: None,
+            priority: None,
+        };
+        enqueue_sync_jobs(&mut conn, &names, &opts).await.unwrap();
+
+        assert_json_snapshot!(all_jobs(&mut conn).await);
     }
 }
