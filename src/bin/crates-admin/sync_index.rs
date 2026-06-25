@@ -91,32 +91,8 @@ pub async fn run(opts: Opts) -> Result<()> {
         return Ok(());
     }
 
-    // Show confirmation prompt when batch mode is used
-    if let Some(batch_size) = opts.batch_size {
-        let mut prompt_parts = Vec::new();
-
-        if opts.git {
-            let num_batches = num_crates.div_ceil(batch_size);
-            prompt_parts.push(format!(
-                "This will sync {num_crates} crate{} to the git index in {num_batches} batch{}.",
-                if num_crates == 1 { "" } else { "s" },
-                if num_batches == 1 { "" } else { "es" }
-            ));
-        }
-
-        if opts.sparse {
-            prompt_parts.push(format!(
-                "This will enqueue {num_crates} sparse index sync job{}.",
-                if num_crates == 1 { "" } else { "s" }
-            ));
-        }
-
-        if !prompt_parts.is_empty() {
-            println!("{}", prompt_parts.join("\n"));
-            if !dialoguer::confirm("Do you want to continue?").await? {
-                return Ok(());
-            }
-        }
+    if !confirm_sync(&opts, num_crates).await? {
+        return Ok(());
     }
 
     conn.transaction(async |conn| {
@@ -196,4 +172,39 @@ async fn resolve_crate_names(conn: &mut AsyncPgConnection, opts: &Opts) -> Resul
     }
 
     Ok(opts.names.clone())
+}
+
+/// Shows a confirmation prompt when batch mode is used.
+///
+/// Returns `true` if the sync should proceed, `false` if the user
+/// declined or no confirmation was needed but nothing to do.
+async fn confirm_sync(opts: &Opts, num_crates: usize) -> Result<bool> {
+    let Some(batch_size) = opts.batch_size else {
+        return Ok(true);
+    };
+
+    let mut prompt_parts = Vec::new();
+
+    if opts.git {
+        let num_batches = num_crates.div_ceil(batch_size);
+        prompt_parts.push(format!(
+            "This will sync {num_crates} crate{} to the git index in {num_batches} batch{}.",
+            if num_crates == 1 { "" } else { "s" },
+            if num_batches == 1 { "" } else { "es" }
+        ));
+    }
+
+    if opts.sparse {
+        prompt_parts.push(format!(
+            "This will enqueue {num_crates} sparse index sync job{}.",
+            if num_crates == 1 { "" } else { "s" }
+        ));
+    }
+
+    if prompt_parts.is_empty() {
+        return Ok(true);
+    }
+
+    println!("{}", prompt_parts.join("\n"));
+    dialoguer::confirm("Do you want to continue?").await
 }
