@@ -84,7 +84,7 @@
 <CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} {ownersPromise} />
 
 {#if nativeReplacement}
-  <div class="native-replacement">
+  <div class="banner">
     <NativeReplacementBanner replacement={nativeReplacement} />
   </div>
 {/if}
@@ -183,7 +183,7 @@
 </div>
 
 <style>
-  .native-replacement {
+  .banner {
     margin-bottom: var(--space-m);
   }
 
