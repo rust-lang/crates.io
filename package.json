@@ -33,7 +33,7 @@
     "date-fns": "4.4.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.11.3",
+    "@axe-core/playwright": "4.12.1",
     "@crates-io/msw": "workspace:*",
     "@eslint/compat": "2.1.0",
     "@eslint/js": "10.0.1",
