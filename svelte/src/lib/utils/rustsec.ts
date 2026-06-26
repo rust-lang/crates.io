@@ -25,6 +25,7 @@ export interface Advisory {
   severity?: { type: string; score: string }[];
 }
 
+/** A security advisory enriched with the data the crate security page renders. */
 export interface EnrichedAdvisory extends Advisory {
   versionRanges: string | null;
   cvss: string | null;
@@ -86,25 +87,39 @@ function extractCvss(advisory: Advisory): string | null {
   return cvssEntry?.score ?? null;
 }
 
-export async function fetchAdvisories(fetch: typeof globalThis.fetch, crateId: string): Promise<EnrichedAdvisory[]> {
-  let url = `https://rustsec.org/packages/${crateId}.json`;
-  let response = await fetch(url);
+/**
+ * Fetches the raw RustSec advisory list for a crate.
+ *
+ * Returns an empty array when the crate has no advisories (RustSec answers with
+ * `404` in that case) and throws for any other non-OK response.
+ */
+export async function fetchAdvisories(fetch: typeof globalThis.fetch, crateId: string): Promise<Advisory[]> {
+  let response = await fetch(`https://rustsec.org/packages/${crateId}.json`);
   if (response.status === 404) {
     return [];
   } else if (response.ok) {
-    let advisories: Advisory[] = await response.json();
-    return advisories
-      .filter(
-        advisory =>
-          !advisory.withdrawn &&
-          !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
-      )
-      .map(advisory => ({
-        ...advisory,
-        versionRanges: versionRanges(advisory),
-        cvss: extractCvss(advisory),
-      }));
+    return response.json();
   } else {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+}
+
+/**
+ * Filters a raw advisory list down to the advisories shown on the crate security
+ * page: withdrawn and purely informational `unmaintained` advisories are dropped,
+ * and each remaining advisory is enriched with its affected version ranges and
+ * CVSS score.
+ */
+export function enrichAdvisories(advisories: Advisory[]): EnrichedAdvisory[] {
+  return advisories
+    .filter(
+      advisory =>
+        !advisory.withdrawn &&
+        !advisory.affected?.some(affected => affected.database_specific?.informational === 'unmaintained'),
+    )
+    .map(advisory => ({
+      ...advisory,
+      versionRanges: versionRanges(advisory),
+      cvss: extractCvss(advisory),
+    }));
 }

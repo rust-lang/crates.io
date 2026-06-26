@@ -1,8 +1,70 @@
 import type { Advisory } from './rustsec';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { versionRanges } from './rustsec';
+import { enrichAdvisories, fetchAdvisories, versionRanges } from './rustsec';
+
+const UNMAINTAINED = 'RUSTSEC-2021-0139';
+
+function unmaintainedAdvisory(overrides: Partial<Advisory> = {}): Advisory {
+  return {
+    id: UNMAINTAINED,
+    summary: 'foo is unmaintained',
+    details: '',
+    affected: [{ ranges: [], database_specific: { informational: 'unmaintained' } }],
+    ...overrides,
+  };
+}
+
+describe('fetchAdvisories', () => {
+  it('returns the parsed advisory list', async () => {
+    let advisories = [unmaintainedAdvisory()];
+    let fetch = vi.fn().mockResolvedValue(Response.json(advisories));
+
+    expect(await fetchAdvisories(fetch, 'foo')).toEqual(advisories);
+    expect(fetch).toHaveBeenCalledWith('https://rustsec.org/packages/foo.json');
+  });
+
+  it('returns an empty array on a 404 response', async () => {
+    let fetch = vi.fn().mockResolvedValue(Response.json('not found', { status: 404 }));
+    expect(await fetchAdvisories(fetch, 'foo')).toEqual([]);
+  });
+
+  it('throws on other non-OK responses', async () => {
+    let fetch = vi.fn().mockResolvedValue(Response.json('boom', { status: 500 }));
+    await expect(fetchAdvisories(fetch, 'foo')).rejects.toThrow('HTTP error! status: 500');
+  });
+});
+
+describe('enrichAdvisories', () => {
+  it('enriches advisories with version ranges and CVSS', () => {
+    let advisory: Advisory = {
+      id: 'RUSTSEC-2020-0001',
+      summary: 'vulnerable',
+      details: '',
+      affected: [{ ranges: [{ type: 'SEMVER', events: [{ introduced: '0.0.0-0' }, { fixed: '1.2.0' }] }] }],
+      severity: [
+        { type: 'CVSS_V3', score: 'CVSS:3.1/AV:N' },
+        { type: 'CVSS_V4', score: 'CVSS:4.0/AV:N' },
+      ],
+    };
+
+    let [enriched] = enrichAdvisories([advisory]);
+    expect(enriched.versionRanges).toBe('<1.2.0');
+    expect(enriched.cvss).toBe('CVSS:4.0/AV:N');
+  });
+
+  it('filters out withdrawn and informational unmaintained advisories', () => {
+    let advisories: Advisory[] = [
+      unmaintainedAdvisory(),
+      { id: 'RUSTSEC-2020-0002', summary: 'withdrawn', details: '', withdrawn: '2022-01-01T00:00:00Z' },
+      { id: 'RUSTSEC-2020-0003', summary: 'real', details: '' },
+    ];
+
+    let result = enrichAdvisories(advisories);
+    expect(result.map(a => a.id)).toEqual(['RUSTSEC-2020-0003']);
+  });
+});
 
 describe('versionRanges', () => {
   it('returns null when advisory has no affected field', () => {
