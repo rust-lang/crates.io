@@ -1,6 +1,6 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
-use crates_io_validation::MAX_NAME_LENGTH;
+use crates_io_validation::{MAX_NAME_LENGTH, MAX_VERSION_LENGTH};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -56,6 +56,19 @@ async fn invalid_version() {
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"\"broken\" is an invalid semver version"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn excessively_long_version() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let version = format!("1.0.0-{}", "a".repeat(MAX_VERSION_LENGTH));
+    let crate_to_publish = PublishBuilder::new("foo", &version);
+
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"the version number is too long (max 150 characters)"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 

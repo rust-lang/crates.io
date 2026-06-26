@@ -2,6 +2,16 @@
 
 pub const MAX_NAME_LENGTH: usize = 64;
 
+/// Maximum length of a version number.
+///
+/// CloudFront cache tags allow at most 256 characters per tag. The longest tag
+/// we emit is `release:{name}@{version}`, which adds 9 characters of prefix
+/// (`release:` plus `@`) to the crate name and version. With the crate name
+/// capped at [`MAX_NAME_LENGTH`] (64), the version can be at most
+/// `256 - 9 - 64 = 183` characters. We cap it at 150 to leave a bit of
+/// headroom.
+pub const MAX_VERSION_LENGTH: usize = 150;
+
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum InvalidFeature {
     #[error("feature cannot be empty")]
