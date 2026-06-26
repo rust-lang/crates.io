@@ -13,10 +13,8 @@ use object_store::{
 };
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
-use std::io::Cursor;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::fs::File;
 use tokio::io::{AsyncRead, AsyncWriteExt};
 use tracing::{instrument, warn};
 
@@ -24,19 +22,10 @@ const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const PREFIX_OG_IMAGES: &str = "og-images";
 const DEFAULT_REGION: &str = "us-west-1";
-const CONTENT_TYPE_CRATE: &str = "application/gzip";
-const CONTENT_TYPE_GZIP: &str = "application/gzip";
-const CONTENT_TYPE_ZIP: &str = "application/zip";
-const CONTENT_TYPE_JSON: &str = "application/json";
-const CONTENT_TYPE_INDEX: &str = "text/plain";
-const CONTENT_TYPE_README: &str = "text/html";
-const CONTENT_TYPE_OG_IMAGE: &str = "image/png";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
-
-type StdPath = std::path::Path;
 
 #[derive(Debug)]
 pub struct StorageConfig {
@@ -141,12 +130,7 @@ impl Storage {
                     // Apply default content types for the version downloads archive
                     .with_content_type_for_suffix("html", "text/html")
                     .with_content_type_for_suffix("json", "application/json")
-                    .with_content_type_for_suffix("csv", "text/csv")
-                    // The `BufWriter::new()` API currently does not allow
-                    // specifying any file attributes, so we need to set the
-                    // content type here instead for the database dump upload.
-                    .with_content_type_for_suffix("gz", CONTENT_TYPE_GZIP)
-                    .with_content_type_for_suffix("zip", CONTENT_TYPE_ZIP);
+                    .with_content_type_for_suffix("csv", "text/csv");
 
                 let store = build_s3(default, options);
 
@@ -206,58 +190,17 @@ impl Storage {
         }
     }
 
-    /// Returns the URL of an uploaded crate's version archive.
+    /// Returns the public URL of the file identified by `key`.
     ///
     /// The function doesn't check for the existence of the file.
-    pub fn crate_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&crate_file_path(name, version))
-            .replace('+', "%2B")
-    }
-
-    /// Returns the URL of an uploaded crate version's zip source archive.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn crate_zip_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&crate_zip_path(name, version))
-            .replace('+', "%2B")
-    }
-
-    /// Returns the URL of an uploaded crate version's zip source archive manifest.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn crate_zip_manifest_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&crate_zip_manifest_path(name, version))
-            .replace('+', "%2B")
-    }
-
-    /// Returns the URL of an uploaded crate's version readme.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn readme_location(&self, name: &str, version: &str) -> String {
-        self.apply_cdn_prefix(&readme_path(name, version))
-            .replace('+', "%2B")
-    }
-
-    /// Returns the URL of an uploaded crate's Open Graph image.
-    ///
-    /// The function doesn't check for the existence of the file.
-    pub fn og_image_location(&self, name: &str) -> String {
-        self.apply_cdn_prefix(&og_image_path(name))
-    }
-
-    /// Returns the URL of an uploaded RSS feed.
-    pub fn feed_url(&self, feed_id: &FeedId<'_>) -> String {
-        self.apply_cdn_prefix(&feed_id.into()).replace('+', "%2B")
+    pub fn location(&self, key: &StorageKey<'_>) -> String {
+        format!("{}/{}", self.cdn_base, key.cdn_path())
     }
 
     /// Returns the base URL that crate files are served from, e.g.
     /// `https://static.crates.io`.
     pub fn cdn_base(&self) -> &str {
         &self.cdn_base
-    }
-
-    fn apply_cdn_prefix(&self, path: &Path) -> String {
-        format!("{}/{path}", self.cdn_base)
     }
 
     /// Deletes all crate files for the given crate, returning the paths that were deleted.
@@ -274,80 +217,41 @@ impl Storage {
         self.delete_all_with_prefix(&prefix).await
     }
 
-    /// Deletes a crate version's archive, returning the path that was deleted.
     #[instrument(skip(self))]
-    pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<Path> {
-        let path = crate_file_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
-    /// Deletes a crate version's zip source archive, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_crate_zip(&self, name: &str, version: &str) -> Result<Path> {
-        let path = crate_zip_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
-    /// Deletes a crate version's zip source archive manifest, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_crate_zip_manifest(&self, name: &str, version: &str) -> Result<Path> {
-        let path = crate_zip_manifest_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
-    /// Deletes a crate version's readme, returning the path that was deleted.
-    #[instrument(skip(self))]
-    pub async fn delete_readme(&self, name: &str, version: &str) -> Result<Path> {
-        let path = readme_path(name, version);
-        self.store.delete(&path).await?;
-        Ok(path)
-    }
-
-    /// Deletes the Open Graph image for the given crate.
-    #[instrument(skip(self))]
-    pub async fn delete_og_image(&self, name: &str) -> Result<()> {
-        let path = og_image_path(name);
+    pub async fn delete(&self, key: &StorageKey<'_>) -> Result<()> {
+        let path = key.path();
         self.store.delete(&path).await
     }
 
-    #[instrument(skip(self))]
-    pub async fn delete_feed(&self, feed_id: &FeedId<'_>) -> Result<()> {
-        let path = feed_id.into();
-        self.store.delete(&path).await
-    }
+    /// Uploads `payload` to the location identified by `key`, storing it with
+    /// the key's intended attributes.
+    #[instrument(skip(self, payload))]
+    pub async fn upload(&self, key: &StorageKey<'_>, payload: PutPayload) -> Result<()> {
+        let attributes = self
+            .supports_attributes
+            .then(|| key.attributes())
+            .unwrap_or_default();
 
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
-        let path = crate_file_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_CRATE),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
         let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
+        self.store.put_opts(&key.path(), payload, opts).await?;
         Ok(())
     }
 
-    /// Uploads a crate version's zip source archive, streaming it from `reader`
-    /// so the whole archive is never buffered in memory.
+    /// Uploads the contents of `reader` to the location identified by `key`,
+    /// streaming it so the whole file is never buffered in memory.
     #[instrument(skip(self, reader))]
-    pub async fn upload_crate_zip(
+    pub async fn upload_stream(
         &self,
-        name: &str,
-        version: &str,
+        key: &StorageKey<'_>,
         mut reader: impl AsyncRead + Unpin,
     ) -> anyhow::Result<()> {
-        let path = crate_zip_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_ZIP),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
+        let attributes = self
+            .supports_attributes
+            .then(|| key.attributes())
+            .unwrap_or_default();
 
         // Set up a streaming upload
-        let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), path)
+        let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), key.path())
             .with_attributes(attributes);
 
         // Upload the archive contents
@@ -363,71 +267,13 @@ impl Storage {
         Ok(())
     }
 
-    /// Uploads a crate version's zip source archive manifest.
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_crate_zip_manifest(
-        &self,
-        name: &str,
-        version: &str,
-        bytes: Bytes,
-    ) -> Result<()> {
-        let path = crate_zip_manifest_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_JSON),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
-        Ok(())
-    }
-
     #[instrument(skip(self))]
-    pub async fn download_crate_file(
+    pub async fn download_stream(
         &self,
-        name: &str,
-        version: &str,
+        key: &StorageKey<'_>,
     ) -> Result<BoxStream<'_, Result<Bytes>>> {
-        let path = crate_file_path(name, version);
-        let result = self.store.get(&path).await?;
+        let result = self.store.get(&key.path()).await?;
         Ok(result.into_stream())
-    }
-
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
-        let path = readme_path(name, version);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_README),
-            (Attribute::CacheControl, CACHE_CONTROL_README),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
-        Ok(())
-    }
-
-    /// Uploads an Open Graph image for the given crate.
-    #[instrument(skip(self, bytes))]
-    pub async fn upload_og_image(&self, name: &str, bytes: Bytes) -> Result<()> {
-        let path = og_image_path(name);
-        let attributes = self.attrs([
-            (Attribute::ContentType, CONTENT_TYPE_OG_IMAGE),
-            (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
-        ]);
-        let opts = attributes.into();
-        self.store.put_opts(&path, bytes.into(), opts).await?;
-        Ok(())
-    }
-
-    #[instrument(skip(self, channel))]
-    pub async fn upload_feed(&self, path: &Path, channel: &rss::Channel) -> anyhow::Result<()> {
-        let mut buffer = Vec::new();
-        let mut cursor = Cursor::new(&mut buffer);
-        channel.pretty_write_to(&mut cursor, b' ', 4)?;
-        let payload = PutPayload::from_bytes(buffer.into());
-
-        let attributes = self.attrs([(Attribute::ContentType, "text/xml; charset=UTF-8")]);
-        let opts = attributes.into();
-        self.store.put_opts(path, payload, opts).await?;
-        Ok(())
     }
 
     #[instrument(skip(self, content))]
@@ -435,7 +281,7 @@ impl Storage {
         let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
         if let Some(content) = content {
             let attributes = self.attrs([
-                (Attribute::ContentType, CONTENT_TYPE_INDEX),
+                (Attribute::ContentType, "text/plain"),
                 (Attribute::CacheControl, CACHE_CONTROL_INDEX),
             ]);
             let payload = content.into();
@@ -444,30 +290,6 @@ impl Storage {
         } else {
             self.index_store.delete(&path).await?;
         }
-
-        Ok(())
-    }
-
-    #[instrument(skip(self))]
-    pub async fn upload_db_dump(&self, target: &str, local_path: &StdPath) -> anyhow::Result<()> {
-        let store = self.store.clone();
-
-        // Open the local tarball file
-        let mut local_file = File::open(local_path).await?;
-
-        // Set up a multipart upload
-        let path = target.into();
-        let mut writer = object_store::buffered::BufWriter::new(store, path);
-
-        // Upload file contents
-        if let Err(error) = tokio::io::copy(&mut local_file, &mut writer).await {
-            // Abort the upload if something failed
-            writer.abort().await?;
-            return Err(error.into());
-        }
-
-        // ... or finalize upload
-        writer.shutdown().await?;
 
         Ok(())
     }
@@ -511,40 +333,120 @@ fn build_s3(config: &S3Config, client_options: ClientOptions) -> AmazonS3 {
         .unwrap()
 }
 
-fn crate_file_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
-}
-
-fn crate_zip_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip").into()
-}
-
-fn crate_zip_manifest_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip.json").into()
-}
-
-fn readme_path(name: &str, version: &str) -> Path {
-    format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
-}
-
-fn og_image_path(name: &str) -> Path {
-    format!("{PREFIX_OG_IMAGES}/{name}.png").into()
-}
-
 #[derive(Debug)]
-pub enum FeedId<'a> {
-    Crate { name: &'a str },
-    Crates,
-    Updates,
+pub enum StorageKey<'a> {
+    CrateFile { name: &'a str, version: &'a str },
+    CrateZip { name: &'a str, version: &'a str },
+    CrateZipManifest { name: &'a str, version: &'a str },
+    Readme { name: &'a str, version: &'a str },
+    OgImage { name: &'a str },
+    CrateFeed { name: &'a str },
+    CratesFeed,
+    UpdatesFeed,
+    DbDumpTar,
+    DbDumpZip,
 }
 
-impl From<&FeedId<'_>> for Path {
-    fn from(feed_id: &FeedId<'_>) -> Path {
-        match feed_id {
-            FeedId::Crate { name } => format!("rss/crates/{name}.xml").into(),
-            FeedId::Crates => "rss/crates.xml".into(),
-            FeedId::Updates => "rss/updates.xml".into(),
+impl<'a> StorageKey<'a> {
+    /// Builds a [`StorageKey::CrateFile`] key for the given crate version.
+    pub fn for_crate_file(name: &'a str, version: &'a str) -> Self {
+        StorageKey::CrateFile { name, version }
+    }
+
+    /// Builds a [`StorageKey::CrateZip`] key for the given crate version.
+    pub fn for_crate_zip(name: &'a str, version: &'a str) -> Self {
+        StorageKey::CrateZip { name, version }
+    }
+
+    /// Builds a [`StorageKey::CrateZipManifest`] key for the given crate version.
+    pub fn for_crate_zip_manifest(name: &'a str, version: &'a str) -> Self {
+        StorageKey::CrateZipManifest { name, version }
+    }
+
+    /// Builds a [`StorageKey::Readme`] key for the given crate version.
+    pub fn for_readme(name: &'a str, version: &'a str) -> Self {
+        StorageKey::Readme { name, version }
+    }
+
+    /// Builds a [`StorageKey::OgImage`] key for the given crate.
+    pub fn for_og_image(name: &'a str) -> Self {
+        StorageKey::OgImage { name }
+    }
+
+    /// Object-store path used for put/get/delete operations.
+    pub fn path(&self) -> Path {
+        match self {
+            StorageKey::CrateFile { name, version } => {
+                format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
+            }
+            StorageKey::CrateZip { name, version } => {
+                format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip").into()
+            }
+            StorageKey::CrateZipManifest { name, version } => {
+                format!("{PREFIX_CRATES}/{name}/{name}-{version}.zip.json").into()
+            }
+            StorageKey::Readme { name, version } => {
+                format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
+            }
+            StorageKey::OgImage { name } => format!("{PREFIX_OG_IMAGES}/{name}.png").into(),
+            StorageKey::CrateFeed { name } => format!("rss/crates/{name}.xml").into(),
+            StorageKey::CratesFeed => "rss/crates.xml".into(),
+            StorageKey::UpdatesFeed => "rss/updates.xml".into(),
+            StorageKey::DbDumpTar => "db-dump.tar.gz".into(),
+            StorageKey::DbDumpZip => "db-dump.zip".into(),
         }
+    }
+
+    /// [`Self::path()`] rendered for a public URL, with `+` percent-encoded as
+    /// `%2B`.
+    pub fn cdn_path(&self) -> String {
+        self.path().as_ref().replace('+', "%2B")
+    }
+
+    /// The content-type the file should be stored with, or `None` to rely on
+    /// the store's default.
+    pub fn content_type(&self) -> Option<&'static str> {
+        match self {
+            StorageKey::CrateFile { .. } => Some("application/gzip"),
+            StorageKey::CrateZip { .. } => Some("application/zip"),
+            StorageKey::CrateZipManifest { .. } => Some("application/json"),
+            StorageKey::Readme { .. } => Some("text/html"),
+            StorageKey::OgImage { .. } => Some("image/png"),
+            StorageKey::CrateFeed { .. } | StorageKey::CratesFeed | StorageKey::UpdatesFeed => {
+                Some("text/xml; charset=UTF-8")
+            }
+            StorageKey::DbDumpTar => Some("application/gzip"),
+            StorageKey::DbDumpZip => Some("application/zip"),
+        }
+    }
+
+    /// The cache-control the file should be stored with, or `None` for no
+    /// override.
+    pub fn cache_control(&self) -> Option<&'static str> {
+        match self {
+            StorageKey::CrateFile { .. }
+            | StorageKey::CrateZip { .. }
+            | StorageKey::CrateZipManifest { .. } => Some(CACHE_CONTROL_IMMUTABLE),
+            StorageKey::Readme { .. } => Some(CACHE_CONTROL_README),
+            StorageKey::OgImage { .. } => Some(CACHE_CONTROL_OG_IMAGE),
+            StorageKey::CrateFeed { .. }
+            | StorageKey::CratesFeed
+            | StorageKey::UpdatesFeed
+            | StorageKey::DbDumpTar
+            | StorageKey::DbDumpZip => None,
+        }
+    }
+
+    /// The intended attribute set (content-type + cache-control) for the file.
+    pub fn attributes(&self) -> Attributes {
+        let mut attributes = Attributes::new();
+        if let Some(content_type) = self.content_type() {
+            attributes.insert(Attribute::ContentType, content_type.into());
+        }
+        if let Some(cache_control) = self.cache_control() {
+            attributes.insert(Attribute::CacheControl, cache_control.into());
+        }
+        attributes
     }
 }
 
@@ -552,7 +454,6 @@ impl From<&FeedId<'_>> for Path {
 mod tests {
     use super::*;
     use hyper::body::Bytes;
-    use tempfile::NamedTempFile;
 
     pub async fn prepare() -> Storage {
         let storage = Storage::from_config(&StorageConfig::in_memory());
@@ -602,7 +503,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in crate_tests {
-            assert_eq!(storage.crate_location(name, version), expected);
+            let key = StorageKey::for_crate_file(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let crate_zip_tests = vec![
@@ -618,7 +520,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in crate_zip_tests {
-            assert_eq!(storage.crate_zip_location(name, version), expected);
+            let key = StorageKey::for_crate_zip(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let crate_zip_manifest_tests = vec![
@@ -634,7 +537,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in crate_zip_manifest_tests {
-            assert_eq!(storage.crate_zip_manifest_location(name, version), expected);
+            let key = StorageKey::for_crate_zip_manifest(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let readme_tests = vec![
@@ -650,7 +554,8 @@ mod tests {
             ),
         ];
         for (name, version, expected) in readme_tests {
-            assert_eq!(storage.readme_location(name, version), expected);
+            let key = StorageKey::for_readme(name, version);
+            assert_eq!(storage.location(&key), expected);
         }
 
         let og_image_tests = vec![
@@ -661,7 +566,8 @@ mod tests {
             ),
         ];
         for (name, expected) in og_image_tests {
-            assert_eq!(storage.og_image_location(name), expected);
+            let key = StorageKey::for_og_image(name);
+            assert_eq!(storage.location(&key), expected);
         }
     }
 
@@ -673,24 +579,20 @@ mod tests {
             Storage::from_config(&config)
         }
 
-        assert_eq!(storage(None).apply_cdn_prefix(&"foo".into()), "/foo");
-        assert_eq!(
-            storage(Some("static.crates.io")).apply_cdn_prefix(&"foo".into()),
-            "https://static.crates.io/foo"
-        );
-        assert_eq!(
-            storage(Some("https://fastly-static.crates.io")).apply_cdn_prefix(&"foo".into()),
-            "https://fastly-static.crates.io/foo"
-        );
+        let key = StorageKey::for_og_image("foo");
 
+        assert_eq!(storage(None).location(&key), "/og-images/foo.png");
         assert_eq!(
-            storage(Some("static.crates.io")).apply_cdn_prefix(&"/foo/bar".into()),
-            "https://static.crates.io/foo/bar"
+            storage(Some("https://fastly-static.crates.io")).location(&key),
+            "https://fastly-static.crates.io/og-images/foo.png"
         );
-
         assert_eq!(
-            storage(Some("static.crates.io/")).apply_cdn_prefix(&"/foo/bar".into()),
-            "https://static.crates.io//foo/bar"
+            storage(Some("static.crates.io")).location(&key),
+            "https://static.crates.io/og-images/foo.png"
+        );
+        assert_eq!(
+            storage(Some("static.crates.io/")).location(&key),
+            "https://static.crates.io//og-images/foo.png"
         );
     }
 
@@ -749,7 +651,8 @@ mod tests {
     async fn delete_crate_file() {
         let storage = prepare().await;
 
-        storage.delete_crate_file("foo", "1.2.3").await.unwrap();
+        let key = StorageKey::for_crate_file("foo", "1.2.3");
+        storage.delete(&key).await.unwrap();
 
         let expected_files = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -770,16 +673,15 @@ mod tests {
             storage.store.put(&path.into(), payload).await.unwrap();
         }
 
-        storage.delete_crate_zip("foo", "1.2.3").await.unwrap();
+        let zip_key = StorageKey::for_crate_zip("foo", "1.2.3");
+        storage.delete(&zip_key).await.unwrap();
         assert_eq!(
             stored_files(&storage.store).await,
             vec!["crates/foo/foo-1.2.3.zip.json"]
         );
 
-        storage
-            .delete_crate_zip_manifest("foo", "1.2.3")
-            .await
-            .unwrap();
+        let manifest_key = StorageKey::for_crate_zip_manifest("foo", "1.2.3");
+        storage.delete(&manifest_key).await.unwrap();
         assert!(stored_files(&storage.store).await.is_empty());
     }
 
@@ -787,7 +689,8 @@ mod tests {
     async fn delete_readme() {
         let storage = prepare().await;
 
-        storage.delete_readme("foo", "1.2.3").await.unwrap();
+        let key = StorageKey::for_readme("foo", "1.2.3");
+        storage.delete(&key).await.unwrap();
 
         let expected_files = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -803,16 +706,14 @@ mod tests {
     async fn upload_crate_file() {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
-        s.upload_crate_file("foo", "1.2.3", Bytes::new())
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_file("foo", "1.2.3");
+        s.upload(&key, Bytes::new().into()).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.crate"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_crate_file("foo", "2.0.0+foo", Bytes::new())
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_file("foo", "2.0.0+foo");
+        s.upload(&key, Bytes::new().into()).await.unwrap();
 
         let expected_files = vec![
             "crates/foo/foo-1.2.3.crate",
@@ -825,16 +726,14 @@ mod tests {
     async fn upload_crate_zip() {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
-        s.upload_crate_zip("foo", "1.2.3", &b"fake zip data"[..])
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_zip("foo", "1.2.3");
+        s.upload_stream(&key, &b"fake zip data"[..]).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_crate_zip("foo", "2.0.0+foo", &b"fake zip data"[..])
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_zip("foo", "2.0.0+foo");
+        s.upload_stream(&key, &b"fake zip data"[..]).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip", "crates/foo/foo-2.0.0+foo.zip"];
         assert_eq!(stored_files(&s.store).await, expected_files);
@@ -845,16 +744,14 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"{\"files\":[]}");
-        s.upload_crate_zip_manifest("foo", "1.2.3", bytes.clone())
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_zip_manifest("foo", "1.2.3");
+        s.upload(&key, bytes.clone().into()).await.unwrap();
 
         let expected_files = vec!["crates/foo/foo-1.2.3.zip.json"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_crate_zip_manifest("foo", "2.0.0+foo", bytes)
-            .await
-            .unwrap();
+        let key = StorageKey::for_crate_zip_manifest("foo", "2.0.0+foo");
+        s.upload(&key, bytes.into()).await.unwrap();
 
         let expected_files = vec![
             "crates/foo/foo-1.2.3.zip.json",
@@ -868,14 +765,14 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"hello world");
-        s.upload_readme("foo", "1.2.3", bytes.clone())
-            .await
-            .unwrap();
+        let key = StorageKey::for_readme("foo", "1.2.3");
+        s.upload(&key, bytes.clone().into()).await.unwrap();
 
         let expected_files = vec!["readmes/foo/foo-1.2.3.html"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_readme("foo", "2.0.0+foo", bytes).await.unwrap();
+        let key = StorageKey::for_readme("foo", "2.0.0+foo");
+        s.upload(&key, bytes.into()).await.unwrap();
 
         let expected_files = vec![
             "readmes/foo/foo-1.2.3.html",
@@ -907,11 +804,10 @@ mod tests {
 
         assert!(stored_files(&s.store).await.is_empty());
 
-        let target = "db-dump.tar.gz";
-        let file = NamedTempFile::new().unwrap();
-        s.upload_db_dump(target, file.path()).await.unwrap();
+        let key = StorageKey::DbDumpTar;
+        s.upload_stream(&key, &b"fake db dump"[..]).await.unwrap();
 
-        let expected_files = vec![target];
+        let expected_files = vec!["db-dump.tar.gz"];
         assert_eq!(stored_files(&s.store).await, expected_files);
     }
 
@@ -920,14 +816,14 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"fake png data");
-        s.upload_og_image("foo", bytes.clone()).await.unwrap();
+        let key = StorageKey::for_og_image("foo");
+        s.upload(&key, bytes.clone().into()).await.unwrap();
 
         let expected_files = vec!["og-images/foo.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_og_image("some-long-crate-name", bytes)
-            .await
-            .unwrap();
+        let key = StorageKey::for_og_image("some-long-crate-name");
+        s.upload(&key, bytes.into()).await.unwrap();
 
         let expected_files = vec!["og-images/foo.png", "og-images/some-long-crate-name.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
@@ -938,13 +834,16 @@ mod tests {
         let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"fake png data");
-        s.upload_og_image("foo", bytes.clone()).await.unwrap();
-        s.upload_og_image("bar", bytes).await.unwrap();
+
+        let foo_key = StorageKey::for_og_image("foo");
+        s.upload(&foo_key, bytes.clone().into()).await.unwrap();
+        let bar_key = StorageKey::for_og_image("bar");
+        s.upload(&bar_key, bytes.into()).await.unwrap();
 
         let expected_files = vec!["og-images/bar.png", "og-images/foo.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.delete_og_image("foo").await.unwrap();
+        s.delete(&foo_key).await.unwrap();
 
         let expected_files = vec!["og-images/bar.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);

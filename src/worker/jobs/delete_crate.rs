@@ -1,4 +1,4 @@
-use crate::storage::FeedId;
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
@@ -28,7 +28,8 @@ impl BackgroundJob for DeleteCrateFromStorage {
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;
-        let feed_id = FeedId::Crate { name };
+        let og_image_key = StorageKey::for_og_image(name);
+        let feed_key = StorageKey::CrateFeed { name };
 
         let (crate_file_paths, readme_paths, _, _) = try_join!(
             async {
@@ -43,12 +44,12 @@ impl BackgroundJob for DeleteCrateFromStorage {
             },
             async {
                 info!("{name}: Deleting RSS feed from S3…");
-                let result = ctx.storage.delete_feed(&feed_id).await;
+                let result = ctx.storage.delete(&feed_key).await;
                 result.context("Failed to delete RSS feed from S3")
             },
             async {
                 info!("{name}: Deleting OG image from S3…");
-                let result = ctx.storage.delete_og_image(name).await;
+                let result = ctx.storage.delete(&og_image_key).await;
                 result.context("Failed to delete OG image from S3")
             }
         )?;
@@ -62,8 +63,8 @@ impl BackgroundJob for DeleteCrateFromStorage {
             crate_file_paths
                 .into_iter()
                 .chain(readme_paths)
-                .chain(std::iter::once(format!("og-images/{name}.png").into()))
-                .chain(std::iter::once(object_store::path::Path::from(&feed_id))),
+                .chain(std::iter::once(og_image_key.path()))
+                .chain(std::iter::once(feed_key.path())),
         )
         .enqueue(&conn)
         .await?;

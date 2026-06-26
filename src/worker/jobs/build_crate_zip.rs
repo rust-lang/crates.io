@@ -1,4 +1,5 @@
 use crate::schema::{crates, versions};
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use anyhow::Context;
 use chrono::{DateTime, Datelike, Timelike, Utc};
@@ -63,13 +64,15 @@ impl BackgroundJob for BuildCrateZip {
             .await
             .context("Zip build task panicked")??;
 
+        let zip_key = StorageKey::for_crate_zip(name, version);
         env.storage
-            .upload_crate_zip(name, version, tokio::fs::File::from_std(artifacts.zip))
+            .upload_stream(&zip_key, tokio::fs::File::from_std(artifacts.zip))
             .await
             .context("Failed to upload zip archive")?;
 
+        let manifest_key = StorageKey::for_crate_zip_manifest(name, version);
         env.storage
-            .upload_crate_zip_manifest(name, version, artifacts.manifest_json.into())
+            .upload(&manifest_key, artifacts.manifest_json.into())
             .await
             .context("Failed to upload zip manifest")?;
 
@@ -141,8 +144,9 @@ async fn download_to_tempfile(
     let file = tempfile::tempfile().context("Failed to create temporary file")?;
     let mut writer = tokio::fs::File::from_std(file);
 
+    let key = StorageKey::for_crate_file(krate, version);
     let mut stream = storage
-        .download_crate_file(krate, version)
+        .download_stream(&key)
         .await
         .context("Failed to download crate file")?;
 

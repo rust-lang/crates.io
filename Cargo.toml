@@ -27,6 +27,9 @@ unescaped_backticks = "warn"
 dbg_macro = "warn"
 doc_link_with_quotes = "warn"
 doc_markdown = "warn"
+# The `.then(...).unwrap_or_default()` form is often more compact than the
+# `if`/`else` that rustfmt produces for the equivalent condition.
+obfuscated_if_else = "allow"
 todo = "warn"
 too_long_first_doc_paragraph = "warn"
 
