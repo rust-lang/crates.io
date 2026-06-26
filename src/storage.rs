@@ -437,6 +437,31 @@ impl<'a> StorageKey<'a> {
         }
     }
 
+    /// The CDN cache tags the file should be stored with, rendered as a single
+    /// comma-separated metadata value, or `None` for untagged objects.
+    ///
+    /// Version-scoped objects carry both a `crate:{name}` and a
+    /// `release:{name}@{version}` tag, so a release purge drops one version,
+    /// and a crate purge drops the whole crate. Crate-scoped objects carry
+    /// only `crate:{name}`. Global objects are untagged and rely on URL purge.
+    pub fn cache_tags(&self) -> Option<String> {
+        match self {
+            StorageKey::CrateFile { name, version }
+            | StorageKey::CrateZip { name, version }
+            | StorageKey::CrateZipManifest { name, version }
+            | StorageKey::Readme { name, version } => {
+                Some(format!("crate:{name},release:{name}@{version}"))
+            }
+            StorageKey::OgImage { name } | StorageKey::CrateFeed { name } => {
+                Some(format!("crate:{name}"))
+            }
+            StorageKey::CratesFeed
+            | StorageKey::UpdatesFeed
+            | StorageKey::DbDumpTar
+            | StorageKey::DbDumpZip => None,
+        }
+    }
+
     /// The intended attribute set (content-type + cache-control) for the file.
     pub fn attributes(&self) -> Attributes {
         let mut attributes = Attributes::new();
@@ -594,6 +619,45 @@ mod tests {
             storage(Some("static.crates.io/")).location(&key),
             "https://static.crates.io//og-images/foo.png"
         );
+    }
+
+    #[test]
+    fn cache_tags() {
+        use claims::{assert_none, assert_some_eq};
+
+        let name = "Some_Crate-Name";
+        let version = "1.0.0-beta.1+build.2";
+
+        let version_scoped = [
+            StorageKey::for_crate_file(name, version),
+            StorageKey::for_crate_zip(name, version),
+            StorageKey::for_crate_zip_manifest(name, version),
+            StorageKey::for_readme(name, version),
+        ];
+        for key in version_scoped {
+            assert_some_eq!(
+                key.cache_tags(),
+                "crate:Some_Crate-Name,release:Some_Crate-Name@1.0.0-beta.1+build.2"
+            );
+        }
+
+        let crate_scoped = [
+            StorageKey::for_og_image(name),
+            StorageKey::CrateFeed { name },
+        ];
+        for key in crate_scoped {
+            assert_some_eq!(key.cache_tags(), "crate:Some_Crate-Name");
+        }
+
+        let untagged = [
+            StorageKey::CratesFeed,
+            StorageKey::UpdatesFeed,
+            StorageKey::DbDumpTar,
+            StorageKey::DbDumpZip,
+        ];
+        for key in untagged {
+            assert_none!(key.cache_tags());
+        }
     }
 
     #[tokio::test]
