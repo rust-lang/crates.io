@@ -471,6 +471,9 @@ impl<'a> StorageKey<'a> {
         if let Some(cache_control) = self.cache_control() {
             attributes.insert(Attribute::CacheControl, cache_control.into());
         }
+        if let Some(cache_tags) = self.cache_tags() {
+            attributes.insert(Attribute::Metadata("cache-tags".into()), cache_tags.into());
+        }
         attributes
     }
 }
@@ -658,6 +661,39 @@ mod tests {
         for key in untagged {
             assert_none!(key.cache_tags());
         }
+    }
+
+    async fn cache_tags_metadata(storage: &Storage, key: &StorageKey<'_>) -> Option<String> {
+        let result = storage.store.get(&key.path()).await.unwrap();
+        result
+            .attributes
+            .get(&Attribute::Metadata("cache-tags".into()))
+            .map(|value| value.as_ref().to_string())
+    }
+
+    #[tokio::test]
+    async fn upload_sets_cache_tags_metadata() {
+        use claims::{assert_none, assert_some_eq};
+
+        let s = Storage::from_config(&StorageConfig::in_memory());
+
+        let key = StorageKey::for_crate_file("foo", "1.2.3");
+        s.upload(&key, Bytes::new().into()).await.unwrap();
+        assert_some_eq!(
+            cache_tags_metadata(&s, &key).await,
+            "crate:foo,release:foo@1.2.3"
+        );
+
+        let key = StorageKey::for_crate_zip("foo", "1.2.3");
+        s.upload_stream(&key, &b"fake zip data"[..]).await.unwrap();
+        assert_some_eq!(
+            cache_tags_metadata(&s, &key).await,
+            "crate:foo,release:foo@1.2.3"
+        );
+
+        let key = StorageKey::DbDumpTar;
+        s.upload_stream(&key, &b"fake db dump"[..]).await.unwrap();
+        assert_none!(cache_tags_metadata(&s, &key).await);
     }
 
     #[tokio::test]
