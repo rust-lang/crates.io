@@ -1,10 +1,16 @@
 import type { Advisory } from './rustsec';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { enrichAdvisories, fetchAdvisories, findUnmaintained, versionRanges } from './rustsec';
+import { enrichAdvisories, fetchAdvisories, findUnmaintained, loadUnmaintained, versionRanges } from './rustsec';
 
 const UNMAINTAINED = 'RUSTSEC-2021-0139';
+const UNMAINTAINED_TIMEOUT_MS = 5000;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 function unmaintainedAdvisory(overrides: Partial<Advisory> = {}): Advisory {
   return {
@@ -99,6 +105,41 @@ describe('findUnmaintained', () => {
       ],
     });
     expect(findUnmaintained([advisory])).toBe(null);
+  });
+});
+
+describe('loadUnmaintained', () => {
+  it('returns the advisory data for an unmaintained crate', async () => {
+    let fetch = vi.fn().mockResolvedValue(Response.json([unmaintainedAdvisory()]));
+
+    expect(await loadUnmaintained(fetch, 'foo')).toEqual({
+      id: UNMAINTAINED,
+      url: `https://rustsec.org/advisories/${UNMAINTAINED}.html`,
+    });
+  });
+
+  it('returns null when the crate has no advisories', async () => {
+    let fetch = vi.fn().mockResolvedValue(Response.json('not found', { status: 404 }));
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+  });
+
+  it('returns null and warns on a failed request', async () => {
+    let warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let fetch = vi.fn().mockRejectedValue(new Error('offline'));
+
+    expect(await loadUnmaintained(fetch, 'foo')).toBe(null);
+    expect(warn).toHaveBeenCalledWith('Failed to load RustSec advisories: Error: offline');
+  });
+
+  it('returns null when RustSec does not answer within the timeout', async () => {
+    vi.useFakeTimers();
+    let { promise } = Promise.withResolvers<Response>();
+    let fetch = vi.fn().mockReturnValue(promise);
+
+    let result = loadUnmaintained(fetch, 'foo');
+    await vi.advanceTimersByTimeAsync(UNMAINTAINED_TIMEOUT_MS);
+
+    expect(await result).toBe(null);
   });
 });
 

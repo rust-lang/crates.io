@@ -1,3 +1,6 @@
+/** Maximum time {@link loadUnmaintained()} waits for RustSec before giving up. */
+const UNMAINTAINED_TIMEOUT_MS = 5000;
+
 interface RangeEvent {
   introduced?: string;
   fixed?: string;
@@ -130,6 +133,30 @@ export function enrichAdvisories(advisories: Advisory[]): EnrichedAdvisory[] {
       versionRanges: versionRanges(advisory),
       cvss: extractCvss(advisory),
     }));
+}
+
+/**
+ * Loads the crate's RustSec advisories and returns the first one marking it as
+ * unmaintained, or `null` if there is none.
+ *
+ * The banner is decorative, so this never rejects: on a network error, a non-OK
+ * response, or when RustSec does not answer within {@link UNMAINTAINED_TIMEOUT_MS}, it
+ * resolves to `null` so a slow or flaky RustSec never blocks or breaks the page.
+ */
+export function loadUnmaintained(fetch: typeof globalThis.fetch, crateId: string): Promise<Unmaintained | null> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  let timeout = new Promise<null>(resolve => {
+    timeoutId = setTimeout(() => resolve(null), UNMAINTAINED_TIMEOUT_MS);
+  });
+
+  let load = fetchAdvisories(fetch, crateId)
+    .then(findUnmaintained)
+    .catch(error => {
+      console.warn(`Failed to load RustSec advisories: ${error}`);
+      return null;
+    });
+
+  return Promise.race([load, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 /**
