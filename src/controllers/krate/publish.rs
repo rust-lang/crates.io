@@ -12,7 +12,8 @@ use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_cargo_toml::{Dependency, DepsSet, TargetDepsSet};
 use crates_io_tarball::{TarballError, process_tarball};
 use crates_io_validation::{
-    validate_crate_name, validate_dependency_name, validate_feature, validate_feature_name,
+    MAX_VERSION_LENGTH, validate_crate_name, validate_dependency_name, validate_feature,
+    validate_feature_name,
 };
 use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, now, select};
@@ -126,6 +127,12 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
     // Convert the version back to a string to deal with any inconsistencies
     let version_string = semver.to_string();
+
+    if version_string.chars().count() > MAX_VERSION_LENGTH {
+        return Err(bad_request(format_args!(
+            "the version number is too long (max {MAX_VERSION_LENGTH} characters)"
+        )));
+    }
 
     let request_log = req.request_log();
     request_log.add("crate_name", &*metadata.name);
