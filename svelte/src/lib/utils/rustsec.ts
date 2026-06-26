@@ -31,6 +31,14 @@ export interface EnrichedAdvisory extends Advisory {
   cvss: string | null;
 }
 
+/** The data the unmaintained banner needs about a single advisory. */
+export interface Unmaintained {
+  /** The RustSec advisory id, e.g. `RUSTSEC-2021-0139`. */
+  id: string;
+  /** Link to the advisory page on rustsec.org. */
+  url: string;
+}
+
 /**
  * Extracts version ranges from a RustSec advisory.
  *
@@ -122,4 +130,30 @@ export function enrichAdvisories(advisories: Advisory[]): EnrichedAdvisory[] {
       versionRanges: versionRanges(advisory),
       cvss: extractCvss(advisory),
     }));
+}
+
+/**
+ * Returns the first advisory that marks the crate as unmaintained, or `null` if
+ * there is none.
+ *
+ * An advisory only counts when it marks the crate as unmaintained without
+ * offering a way out: it must carry the `unmaintained` informational marker, must
+ * not have been withdrawn, and must not point at any patched version.
+ */
+export function findUnmaintained(advisories: Advisory[]): Unmaintained | null {
+  let advisory = advisories.find(advisory => {
+    if (advisory.withdrawn) {
+      return false;
+    }
+
+    let affected = advisory.affected ?? [];
+    let unmaintained = affected.some(entry => entry.database_specific?.informational === 'unmaintained');
+    let patched = affected.some(entry => entry.ranges?.some(range => range.events?.some(event => event.fixed != null)));
+    return unmaintained && !patched;
+  });
+  if (!advisory) {
+    return null;
+  }
+
+  return { id: advisory.id, url: `https://rustsec.org/advisories/${advisory.id}.html` };
 }

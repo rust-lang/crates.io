@@ -2,7 +2,7 @@ import type { Advisory } from './rustsec';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { enrichAdvisories, fetchAdvisories, versionRanges } from './rustsec';
+import { enrichAdvisories, fetchAdvisories, findUnmaintained, versionRanges } from './rustsec';
 
 const UNMAINTAINED = 'RUSTSEC-2021-0139';
 
@@ -63,6 +63,42 @@ describe('enrichAdvisories', () => {
 
     let result = enrichAdvisories(advisories);
     expect(result.map(a => a.id)).toEqual(['RUSTSEC-2020-0003']);
+  });
+});
+
+describe('findUnmaintained', () => {
+  it('returns the advisory id and url for an unmaintained crate', () => {
+    let result = findUnmaintained([unmaintainedAdvisory()]);
+
+    expect(result).toEqual({ id: UNMAINTAINED, url: `https://rustsec.org/advisories/${UNMAINTAINED}.html` });
+  });
+
+  it('returns null when there are no advisories', () => {
+    expect(findUnmaintained([])).toBe(null);
+  });
+
+  it('ignores advisories that are not informational unmaintained', () => {
+    let advisory = unmaintainedAdvisory({
+      affected: [{ ranges: [], database_specific: { informational: 'unsound' } }],
+    });
+    expect(findUnmaintained([advisory])).toBe(null);
+  });
+
+  it('ignores withdrawn advisories', () => {
+    let advisory = unmaintainedAdvisory({ withdrawn: '2022-01-01T00:00:00Z' });
+    expect(findUnmaintained([advisory])).toBe(null);
+  });
+
+  it('ignores advisories that point at a patched version', () => {
+    let advisory = unmaintainedAdvisory({
+      affected: [
+        {
+          ranges: [{ type: 'SEMVER', events: [{ introduced: '0.0.0-0' }, { fixed: '1.2.0' }] }],
+          database_specific: { informational: 'unmaintained' },
+        },
+      ],
+    });
+    expect(findUnmaintained([advisory])).toBe(null);
   });
 });
 
