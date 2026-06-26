@@ -64,7 +64,7 @@
     "chromatic": "17.5.0",
     "magic-string": "0.30.21",
     "msw": "2.14.6",
-    "playwright": "1.61.0",
+    "playwright": "1.61.1",
     "sharp": "0.35.2",
     "storybook": "10.4.6",
     "svelte": "5.56.3",
