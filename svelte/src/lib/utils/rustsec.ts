@@ -86,7 +86,7 @@ function extractCvss(advisory: Advisory): string | null {
   return cvssEntry?.score ?? null;
 }
 
-export async function fetchAdvisories(crateId: string, fetch: typeof globalThis.fetch): Promise<EnrichedAdvisory[]> {
+export async function fetchAdvisories(fetch: typeof globalThis.fetch, crateId: string): Promise<EnrichedAdvisory[]> {
   let url = `https://rustsec.org/packages/${crateId}.json`;
   let response = await fetch(url);
   if (response.status === 404) {
