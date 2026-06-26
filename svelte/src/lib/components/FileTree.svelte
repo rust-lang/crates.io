@@ -82,6 +82,7 @@
 
   .tree :global(file-tree-container) {
     --trees-bg-override: light-dark(white, #141413);
+    --trees-font-family-override: var(--font-body);
     padding-top: var(--space-xs);
   }
 </style>
