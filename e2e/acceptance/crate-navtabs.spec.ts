@@ -6,9 +6,6 @@ test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () =
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.1' });
 
-    let user = await msw.db.user.create({ isAdmin: true });
-    await msw.authenticateAs(user);
-
     let tabReadme = page.locator('[data-test-readme-tab] a');
     let tabCode = page.locator('[data-test-code-tab] a');
     let tabVersions = page.locator('[data-test-versions-tab] a');
