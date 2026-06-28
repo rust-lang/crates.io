@@ -142,11 +142,15 @@ async fn copy_with_cache_tags(
     let path = key.path();
     let path = path.as_ref();
 
+    // The `x-amz-copy-source` header requires the path to be URL-encoded.
+    // See <https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_RequestParameters>.
+    let copy_source = format!("{bucket}/{}", path.replace('+', "%2B"));
+
     let mut request = client
         .copy_object()
         .bucket(bucket)
         .key(path)
-        .copy_source(format!("{bucket}/{path}"))
+        .copy_source(copy_source)
         .metadata_directive(MetadataDirective::Replace);
 
     if let Some(content_type) = key.content_type() {
