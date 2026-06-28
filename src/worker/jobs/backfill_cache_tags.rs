@@ -75,8 +75,11 @@ impl BackgroundJob for BackfillCacheTags {
 
         let mut copied = 0;
         for key in &keys {
+            let path = key.path();
             if copy_with_cache_tags(&client, &bucket, key).await? {
                 copied += 1;
+            } else {
+                warn!(storage.key = %path, "File not found during cache-tags backfill: {path}");
             }
         }
         info!("Backfilled cache-tags for {copied}/{total} objects");
