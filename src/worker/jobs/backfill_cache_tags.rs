@@ -15,6 +15,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::time::Instant;
 use tracing::{info, instrument, warn};
 
 /// Copies every S3 object for a single crate over itself to attach the
@@ -76,8 +77,14 @@ impl BackgroundJob for BackfillCacheTags {
         let mut copied = 0;
         for key in &keys {
             let path = key.path();
+            let start = Instant::now();
             if copy_with_cache_tags(&client, &bucket, key).await? {
                 copied += 1;
+                info!(
+                    duration = start.elapsed().as_nanos(),
+                    storage.key = %path,
+                    "Copied file during cache-tags backfill: {path}",
+                );
             } else {
                 warn!(storage.key = %path, "File not found during cache-tags backfill: {path}");
             }
