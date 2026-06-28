@@ -11,16 +11,23 @@ pub struct FeaturesConfig {
     ///
     /// Read from the `ZIP_ARCHIVES_ENABLED` environment variable.
     pub zip_archives_enabled: bool,
+
+    /// Emit CDN cache tags as storage metadata on uploads.
+    ///
+    /// Read from the `CACHE_TAGS_ENABLED` environment variable.
+    pub cache_tags_enabled: bool,
 }
 
 impl FeaturesConfig {
     pub fn from_env() -> anyhow::Result<Self> {
         let index_include_pubtime = var_parsed("INDEX_INCLUDE_PUBTIME")?.unwrap_or(false);
         let zip_archives_enabled = var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false);
+        let cache_tags_enabled = var_parsed("CACHE_TAGS_ENABLED")?.unwrap_or(false);
 
         Ok(Self {
             index_include_pubtime,
             zip_archives_enabled,
+            cache_tags_enabled,
         })
     }
 }

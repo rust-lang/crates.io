@@ -31,6 +31,7 @@ const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
 pub struct StorageConfig {
     backend: StorageBackend,
     pub cdn_prefix: Option<String>,
+    pub cache_tags_enabled: bool,
 }
 
 #[derive(Debug)]
@@ -54,6 +55,7 @@ impl StorageConfig {
         Self {
             backend: StorageBackend::InMemory,
             cdn_prefix: None,
+            cache_tags_enabled: false,
         }
     }
 
@@ -87,6 +89,7 @@ impl StorageConfig {
             return Self {
                 backend,
                 cdn_prefix,
+                cache_tags_enabled: false,
             };
         }
 
@@ -101,6 +104,7 @@ impl StorageConfig {
         Self {
             backend,
             cdn_prefix: None,
+            cache_tags_enabled: false,
         }
     }
 }
@@ -110,6 +114,7 @@ pub struct Storage {
     store: Arc<dyn ObjectStore>,
     index_store: Arc<dyn ObjectStore>,
     supports_attributes: bool,
+    cache_tags_enabled: bool,
 }
 
 impl Storage {
@@ -145,6 +150,7 @@ impl Storage {
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
                     supports_attributes: true,
+                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
 
@@ -173,6 +179,7 @@ impl Storage {
                     store,
                     index_store,
                     supports_attributes: false,
+                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
 
@@ -185,6 +192,7 @@ impl Storage {
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
                     supports_attributes: true,
+                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
         }
@@ -227,10 +235,7 @@ impl Storage {
     /// the key's intended attributes.
     #[instrument(skip(self, payload))]
     pub async fn upload(&self, key: &StorageKey<'_>, payload: PutPayload) -> Result<()> {
-        let attributes = self
-            .supports_attributes
-            .then(|| key.attributes())
-            .unwrap_or_default();
+        let attributes = self.attributes(key);
 
         let opts = attributes.into();
         self.store.put_opts(&key.path(), payload, opts).await?;
@@ -245,10 +250,7 @@ impl Storage {
         key: &StorageKey<'_>,
         mut reader: impl AsyncRead + Unpin,
     ) -> anyhow::Result<()> {
-        let attributes = self
-            .supports_attributes
-            .then(|| key.attributes())
-            .unwrap_or_default();
+        let attributes = self.attributes(key);
 
         // Set up a streaming upload
         let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), key.path())
@@ -265,6 +267,22 @@ impl Storage {
         writer.shutdown().await?;
 
         Ok(())
+    }
+
+    fn attributes(&self, key: &StorageKey<'_>) -> Attributes {
+        if !self.supports_attributes {
+            return Attributes::new();
+        }
+
+        let mut attributes = key.attributes();
+
+        if self.cache_tags_enabled
+            && let Some(cache_tags) = key.cache_tags()
+        {
+            attributes.insert(Attribute::Metadata("cache-tags".into()), cache_tags.into());
+        }
+
+        attributes
     }
 
     #[instrument(skip(self))]
@@ -471,9 +489,6 @@ impl<'a> StorageKey<'a> {
         if let Some(cache_control) = self.cache_control() {
             attributes.insert(Attribute::CacheControl, cache_control.into());
         }
-        if let Some(cache_tags) = self.cache_tags() {
-            attributes.insert(Attribute::Metadata("cache-tags".into()), cache_tags.into());
-        }
         attributes
     }
 }
@@ -675,7 +690,9 @@ mod tests {
     async fn upload_sets_cache_tags_metadata() {
         use claims::{assert_none, assert_some_eq};
 
-        let s = Storage::from_config(&StorageConfig::in_memory());
+        let mut config = StorageConfig::in_memory();
+        config.cache_tags_enabled = true;
+        let s = Storage::from_config(&config);
 
         let key = StorageKey::for_crate_file("foo", "1.2.3");
         s.upload(&key, Bytes::new().into()).await.unwrap();
