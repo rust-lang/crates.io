@@ -15,6 +15,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::time::Instant;
 use tracing::{info, instrument, warn};
 
 /// Copies every S3 object for a single crate over itself to attach the
@@ -75,8 +76,17 @@ impl BackgroundJob for BackfillCacheTags {
 
         let mut copied = 0;
         for key in &keys {
+            let path = key.path();
+            let start = Instant::now();
             if copy_with_cache_tags(&client, &bucket, key).await? {
                 copied += 1;
+                info!(
+                    duration = start.elapsed().as_nanos(),
+                    storage.key = %path,
+                    "Copied file during cache-tags backfill: {path}",
+                );
+            } else {
+                warn!(storage.key = %path, "File not found during cache-tags backfill: {path}");
             }
         }
         info!("Backfilled cache-tags for {copied}/{total} objects");
@@ -114,15 +124,11 @@ async fn copy_with_cache_tags(
     let path = key.path();
     let path = path.as_ref();
 
-    // The `x-amz-copy-source` header requires the path to be URL-encoded.
-    // See <https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_RequestParameters>.
-    let copy_source = format!("{bucket}/{}", path.replace('+', "%2B"));
-
     let mut request = client
         .copy_object()
         .bucket(bucket)
         .key(path)
-        .copy_source(copy_source)
+        .copy_source(format!("{bucket}/{path}"))
         .metadata_directive(MetadataDirective::Replace);
 
     if let Some(content_type) = key.content_type() {
