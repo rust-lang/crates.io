@@ -39,6 +39,7 @@ use std::time::Duration;
 use url::Url;
 
 const DEFAULT_CACHE_TAGS_WORKERS: usize = 1;
+const DEFAULT_POOL_SIZE: usize = 10;
 
 fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
@@ -52,8 +53,8 @@ fn main() -> anyhow::Result<()> {
 
     let mut config = config::Server::from_environment()?;
 
-    // Override the pool size to 10 for the background worker
-    config.db.primary.pool_size = 10;
+    // Override the pool size for the background worker
+    config.db.primary.pool_size = var_parsed("DB_WORKER_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
 
     // We run some long-running queries in the background worker, so we need to
     // increase the statement timeout a bit…
