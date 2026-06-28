@@ -74,6 +74,7 @@ impl BackgroundJob for BackfillCacheTags {
 
         let (client, bucket) = s3_client()?;
 
+        let backfill_start = Instant::now();
         let mut copied = 0;
         for key in &keys {
             let path = key.path();
@@ -85,11 +86,22 @@ impl BackgroundJob for BackfillCacheTags {
                     storage.key = %path,
                     "Copied file during cache-tags backfill: {path}",
                 );
+            } else if matches!(key, StorageKey::Readme { .. }) {
+                info!(
+                    storage.key = %path,
+                    "Optional README file not found during cache-tags backfill: {path}",
+                );
             } else {
-                warn!(storage.key = %path, "File not found during cache-tags backfill: {path}");
+                warn!(
+                    storage.key = %path,
+                    "File not found during cache-tags backfill: {path}",
+                );
             }
         }
-        info!("Backfilled cache-tags for {copied}/{total} objects");
+        info!(
+            duration = backfill_start.elapsed().as_nanos(),
+            "Backfilled cache-tags for {copied}/{total} objects",
+        );
 
         record_completion(&mut conn, crate_id, name).await?;
 
