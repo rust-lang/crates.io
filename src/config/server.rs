@@ -111,7 +111,10 @@ impl Server {
 
         let max_blocking_threads = var_parsed("SERVER_THREADS")?;
 
-        let storage = StorageConfig::from_environment();
+        let features = FeaturesConfig::from_env()?;
+
+        let mut storage = StorageConfig::from_environment();
+        storage.cache_tags_enabled = features.cache_tags_enabled;
 
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
@@ -147,7 +150,7 @@ impl Server {
             trustpub_audience,
             disable_token_creation,
             banner_message,
-            features: FeaturesConfig::from_env()?,
+            features,
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
         })

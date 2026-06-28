@@ -564,6 +564,7 @@ fn simple_config() -> config::Server {
 
     let mut storage = StorageConfig::in_memory();
     storage.cdn_prefix = Some("static.crates.io".to_string());
+    storage.cache_tags_enabled = true;
 
     config::Server {
         base,
@@ -614,6 +615,7 @@ fn simple_config() -> config::Server {
         features: FeaturesConfig {
             index_include_pubtime: false,
             zip_archives_enabled: true,
+            cache_tags_enabled: true,
         },
         index_archive_url: None,
         postgres_bin_dir: None,

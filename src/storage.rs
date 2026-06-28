@@ -31,6 +31,7 @@ const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
 pub struct StorageConfig {
     backend: StorageBackend,
     pub cdn_prefix: Option<String>,
+    pub cache_tags_enabled: bool,
 }
 
 #[derive(Debug)]
@@ -54,6 +55,7 @@ impl StorageConfig {
         Self {
             backend: StorageBackend::InMemory,
             cdn_prefix: None,
+            cache_tags_enabled: false,
         }
     }
 
@@ -87,6 +89,7 @@ impl StorageConfig {
             return Self {
                 backend,
                 cdn_prefix,
+                cache_tags_enabled: false,
             };
         }
 
@@ -101,6 +104,7 @@ impl StorageConfig {
         Self {
             backend,
             cdn_prefix: None,
+            cache_tags_enabled: false,
         }
     }
 }
@@ -110,6 +114,7 @@ pub struct Storage {
     store: Arc<dyn ObjectStore>,
     index_store: Arc<dyn ObjectStore>,
     supports_attributes: bool,
+    cache_tags_enabled: bool,
 }
 
 impl Storage {
@@ -145,6 +150,7 @@ impl Storage {
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
                     supports_attributes: true,
+                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
 
@@ -173,6 +179,7 @@ impl Storage {
                     store,
                     index_store,
                     supports_attributes: false,
+                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
 
@@ -185,6 +192,7 @@ impl Storage {
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
                     supports_attributes: true,
+                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
         }
@@ -227,10 +235,7 @@ impl Storage {
     /// the key's intended attributes.
     #[instrument(skip(self, payload))]
     pub async fn upload(&self, key: &StorageKey<'_>, payload: PutPayload) -> Result<()> {
-        let attributes = self
-            .supports_attributes
-            .then(|| key.attributes())
-            .unwrap_or_default();
+        let attributes = self.attributes(key);
 
         let opts = attributes.into();
         self.store.put_opts(&key.path(), payload, opts).await?;
@@ -245,10 +250,7 @@ impl Storage {
         key: &StorageKey<'_>,
         mut reader: impl AsyncRead + Unpin,
     ) -> anyhow::Result<()> {
-        let attributes = self
-            .supports_attributes
-            .then(|| key.attributes())
-            .unwrap_or_default();
+        let attributes = self.attributes(key);
 
         // Set up a streaming upload
         let mut writer = object_store::buffered::BufWriter::new(self.store.clone(), key.path())
@@ -265,6 +267,22 @@ impl Storage {
         writer.shutdown().await?;
 
         Ok(())
+    }
+
+    fn attributes(&self, key: &StorageKey<'_>) -> Attributes {
+        if !self.supports_attributes {
+            return Attributes::new();
+        }
+
+        let mut attributes = key.attributes();
+
+        if self.cache_tags_enabled
+            && let Some(cache_tags) = key.cache_tags()
+        {
+            attributes.insert(Attribute::Metadata("cache-tags".into()), cache_tags.into());
+        }
+
+        attributes
     }
 
     #[instrument(skip(self))]
@@ -437,6 +455,31 @@ impl<'a> StorageKey<'a> {
         }
     }
 
+    /// The CDN cache tags the file should be stored with, rendered as a single
+    /// comma-separated metadata value, or `None` for untagged objects.
+    ///
+    /// Version-scoped objects carry both a `crate:{name}` and a
+    /// `release:{name}@{version}` tag, so a release purge drops one version,
+    /// and a crate purge drops the whole crate. Crate-scoped objects carry
+    /// only `crate:{name}`. Global objects are untagged and rely on URL purge.
+    pub fn cache_tags(&self) -> Option<String> {
+        match self {
+            StorageKey::CrateFile { name, version }
+            | StorageKey::CrateZip { name, version }
+            | StorageKey::CrateZipManifest { name, version }
+            | StorageKey::Readme { name, version } => {
+                Some(format!("crate:{name},release:{name}@{version}"))
+            }
+            StorageKey::OgImage { name } | StorageKey::CrateFeed { name } => {
+                Some(format!("crate:{name}"))
+            }
+            StorageKey::CratesFeed
+            | StorageKey::UpdatesFeed
+            | StorageKey::DbDumpTar
+            | StorageKey::DbDumpZip => None,
+        }
+    }
+
     /// The intended attribute set (content-type + cache-control) for the file.
     pub fn attributes(&self) -> Attributes {
         let mut attributes = Attributes::new();
@@ -594,6 +637,80 @@ mod tests {
             storage(Some("static.crates.io/")).location(&key),
             "https://static.crates.io//og-images/foo.png"
         );
+    }
+
+    #[test]
+    fn cache_tags() {
+        use claims::{assert_none, assert_some_eq};
+
+        let name = "Some_Crate-Name";
+        let version = "1.0.0-beta.1+build.2";
+
+        let version_scoped = [
+            StorageKey::for_crate_file(name, version),
+            StorageKey::for_crate_zip(name, version),
+            StorageKey::for_crate_zip_manifest(name, version),
+            StorageKey::for_readme(name, version),
+        ];
+        for key in version_scoped {
+            assert_some_eq!(
+                key.cache_tags(),
+                "crate:Some_Crate-Name,release:Some_Crate-Name@1.0.0-beta.1+build.2"
+            );
+        }
+
+        let crate_scoped = [
+            StorageKey::for_og_image(name),
+            StorageKey::CrateFeed { name },
+        ];
+        for key in crate_scoped {
+            assert_some_eq!(key.cache_tags(), "crate:Some_Crate-Name");
+        }
+
+        let untagged = [
+            StorageKey::CratesFeed,
+            StorageKey::UpdatesFeed,
+            StorageKey::DbDumpTar,
+            StorageKey::DbDumpZip,
+        ];
+        for key in untagged {
+            assert_none!(key.cache_tags());
+        }
+    }
+
+    async fn cache_tags_metadata(storage: &Storage, key: &StorageKey<'_>) -> Option<String> {
+        let result = storage.store.get(&key.path()).await.unwrap();
+        result
+            .attributes
+            .get(&Attribute::Metadata("cache-tags".into()))
+            .map(|value| value.as_ref().to_string())
+    }
+
+    #[tokio::test]
+    async fn upload_sets_cache_tags_metadata() {
+        use claims::{assert_none, assert_some_eq};
+
+        let mut config = StorageConfig::in_memory();
+        config.cache_tags_enabled = true;
+        let s = Storage::from_config(&config);
+
+        let key = StorageKey::for_crate_file("foo", "1.2.3");
+        s.upload(&key, Bytes::new().into()).await.unwrap();
+        assert_some_eq!(
+            cache_tags_metadata(&s, &key).await,
+            "crate:foo,release:foo@1.2.3"
+        );
+
+        let key = StorageKey::for_crate_zip("foo", "1.2.3");
+        s.upload_stream(&key, &b"fake zip data"[..]).await.unwrap();
+        assert_some_eq!(
+            cache_tags_metadata(&s, &key).await,
+            "crate:foo,release:foo@1.2.3"
+        );
+
+        let key = StorageKey::DbDumpTar;
+        s.upload_stream(&key, &b"fake db dump"[..]).await.unwrap();
+        assert_none!(cache_tags_metadata(&s, &key).await);
     }
 
     #[tokio::test]
