@@ -19,23 +19,26 @@ use crates_io::app::create_database_pool;
 use crates_io::cloudfront::CloudFront;
 use crates_io::ssh;
 use crates_io::storage::Storage;
+use crates_io::worker::jobs::BackfillCacheTags;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{Emails, config};
 use crates_io_docs_rs::RealDocsRsClient;
-use crates_io_env_vars::{required_var, var};
+use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_fastly::Fastly;
 use crates_io_github::{GitHubClient, RealGitHubClient};
 use crates_io_github_app::{GitHubApp, GitHubAppClient};
 use crates_io_index::RepositoryConfig;
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepoImpl;
-use crates_io_worker::Runner;
+use crates_io_worker::{BackgroundJob, Runner};
 use object_store::prefix::PrefixStore;
 use reqwest::Client;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 use url::Url;
+
+const DEFAULT_CACHE_TAGS_WORKERS: usize = 1;
 
 fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
@@ -129,11 +132,17 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
+    let cache_tags_workers =
+        var_parsed("CACHE_TAGS_WORKERS")?.unwrap_or(DEFAULT_CACHE_TAGS_WORKERS);
+
     let runner = Runner::new(deadpool, environment.clone())
         .configure_default_queue(|queue| queue.num_workers(5))
         .configure_queue("downloads", |queue| queue.num_workers(1))
         .configure_queue("repository", |queue| queue.num_workers(1))
         .configure_queue("cloudfront", |queue| queue.num_workers(1))
+        .configure_queue(BackfillCacheTags::QUEUE, |queue| {
+            queue.num_workers(cache_tags_workers)
+        })
         .register_crates_io_job_types();
 
     runtime.block_on(async {

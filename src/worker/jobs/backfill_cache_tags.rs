@@ -35,6 +35,7 @@ impl BackfillCacheTags {
 impl BackgroundJob for BackfillCacheTags {
     const JOB_NAME: &'static str = "backfill_cache_tags";
     const DEDUPLICATED: bool = true;
+    const QUEUE: &'static str = "cache-tags-backfill";
 
     type Context = Arc<Environment>;
 
@@ -46,27 +47,31 @@ impl BackgroundJob for BackfillCacheTags {
         }
 
         let name = &self.name;
-        let mut conn = ctx.deadpool.get().await?;
+        let (crate_id, nums) = {
+            let mut conn = ctx.deadpool.get().await?;
 
-        let crate_id = crates::table
-            .filter(crates::name.eq(name))
-            .select(crates::id)
-            .first::<i32>(&mut conn)
-            .await
-            .optional()
-            .context("Failed to look up crate")?;
+            let crate_id = crates::table
+                .filter(crates::name.eq(name))
+                .select(crates::id)
+                .first::<i32>(&mut conn)
+                .await
+                .optional()
+                .context("Failed to look up crate")?;
 
-        let Some(crate_id) = crate_id else {
-            warn!("Crate not found, skipping cache-tags backfill");
-            return Ok(());
+            let Some(crate_id) = crate_id else {
+                warn!("Crate not found, skipping cache-tags backfill");
+                return Ok(());
+            };
+
+            let nums = versions::table
+                .filter(versions::crate_id.eq(crate_id))
+                .select(versions::num)
+                .load::<String>(&mut conn)
+                .await
+                .context("Failed to load crate versions")?;
+
+            (crate_id, nums)
         };
-
-        let nums = versions::table
-            .filter(versions::crate_id.eq(crate_id))
-            .select(versions::num)
-            .load::<String>(&mut conn)
-            .await
-            .context("Failed to load crate versions")?;
 
         let keys = objects_to_backfill(name, &nums);
         let total = keys.len();
@@ -103,6 +108,7 @@ impl BackgroundJob for BackfillCacheTags {
             "Backfilled cache-tags for {copied}/{total} objects",
         );
 
+        let mut conn = ctx.deadpool.get().await?;
         record_completion(&mut conn, crate_id, name).await?;
 
         Ok(())
