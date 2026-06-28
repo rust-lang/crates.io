@@ -40,6 +40,12 @@ last_retry = "private"
 created_at = "private"
 priority = "private"
 
+[cache_tags_backfills.columns]
+id = "private"
+crate_id = "private"
+crate_name = "private"
+completed_at = "private"
+
 [categories.columns]
 id = "public"
 category = "public"

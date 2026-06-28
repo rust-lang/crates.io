@@ -133,6 +133,23 @@ diesel::table! {
 diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
+
+    /// Records which crates have had their S3 objects backfilled with `cache-tags` metadata. A row exists only for crates whose backfill completed.
+    cache_tags_backfills (id) {
+        /// Timestamp when the backfill for this crate completed.
+        completed_at -> Timestamptz,
+        /// The backfilled crate, or `NULL` if the crate was deleted after the backfill completed.
+        crate_id -> Nullable<Int4>,
+        /// The crate name at backfill time.
+        crate_name -> Text,
+        /// Unique identifier for each backfill record.
+        id -> Int8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
     use super::sql_types::Ltree;
 
     /// Representation of the `categories` table.
@@ -1277,6 +1294,7 @@ diesel::table! {
 }
 
 diesel::joinable!(api_tokens -> users (user_id));
+diesel::joinable!(cache_tags_backfills -> crates (crate_id));
 diesel::joinable!(crate_downloads -> crates (crate_id));
 diesel::joinable!(crate_owner_invitations -> crates (crate_id));
 diesel::joinable!(crate_owners -> crates (crate_id));
@@ -1313,6 +1331,7 @@ diesel::joinable!(versions_published_by -> versions (version_id));
 diesel::allow_tables_to_appear_in_same_query!(
     api_tokens,
     background_jobs,
+    cache_tags_backfills,
     categories,
     cloudfront_invalidation_queue,
     crate_downloads,
