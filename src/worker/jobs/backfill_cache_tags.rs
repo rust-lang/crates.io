@@ -86,8 +86,16 @@ impl BackgroundJob for BackfillCacheTags {
                     storage.key = %path,
                     "Copied file during cache-tags backfill: {path}",
                 );
+            } else if matches!(key, StorageKey::Readme { .. }) {
+                info!(
+                    storage.key = %path,
+                    "Optional README file not found during cache-tags backfill: {path}",
+                );
             } else {
-                warn!(storage.key = %path, "File not found during cache-tags backfill: {path}");
+                warn!(
+                    storage.key = %path,
+                    "File not found during cache-tags backfill: {path}",
+                );
             }
         }
         info!(
