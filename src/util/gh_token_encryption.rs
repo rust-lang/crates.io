@@ -1,5 +1,5 @@
-use aes_gcm::aead::{Aead, AeadCore, OsRng};
-use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
+use aes_gcm::aead::{Aead, Generate};
+use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use anyhow::{Context, Result};
 use secrecy::SecretString;
 
@@ -20,7 +20,7 @@ impl GitHubTokenEncryption {
     #[cfg(any(test, debug_assertions))]
     pub fn for_testing() -> Self {
         let test_key = b"test_key_32_bytes_long_for_tests";
-        Self::new(Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(test_key)))
+        Self::new(Aes256Gcm::new_from_slice(test_key).unwrap())
     }
 
     /// Creates a new [`GitHubTokenEncryption`] instance from the environment
@@ -38,7 +38,8 @@ impl GitHubTokenEncryption {
         let gh_token_key = hex::decode(gh_token_key.as_bytes())
             .context("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
 
-        let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(&gh_token_key));
+        let cipher = Aes256Gcm::new_from_slice(&gh_token_key)
+            .context("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
 
         Ok(Self::new(cipher))
     }
@@ -49,7 +50,7 @@ impl GitHubTokenEncryption {
     /// The nonce is randomly generated for each encryption to ensure uniqueness.
     pub fn encrypt(&self, plaintext: &str) -> Result<Vec<u8>> {
         // Generate a random nonce for this encryption
-        let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+        let nonce = Nonce::generate();
 
         // Encrypt the token
         let encrypted = self
@@ -75,12 +76,12 @@ impl GitHubTokenEncryption {
 
         // Extract nonce and ciphertext
         let (nonce_bytes, ciphertext) = encrypted.split_at(12);
-        let nonce = Nonce::from_slice(nonce_bytes);
+        let nonce = Nonce::try_from(nonce_bytes).context("Invalid encrypted token: bad nonce")?;
 
         // Decrypt the token
         let plaintext = self
             .cipher
-            .decrypt(nonce, ciphertext)
+            .decrypt(&nonce, ciphertext)
             .context("Failed to decrypt token")?;
 
         let plaintext =
@@ -93,14 +94,13 @@ impl GitHubTokenEncryption {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aes_gcm::{Key, KeyInit};
+    use aes_gcm::KeyInit;
     use claims::{assert_err, assert_ok};
     use insta::assert_snapshot;
     use secrecy::ExposeSecret;
 
     fn create_test_encryption() -> GitHubTokenEncryption {
-        let key = Key::<Aes256Gcm>::from_slice(b"test_master_key_32_bytes_long!!!");
-        let cipher = Aes256Gcm::new(key);
+        let cipher = Aes256Gcm::new_from_slice(b"test_master_key_32_bytes_long!!!").unwrap();
         GitHubTokenEncryption { cipher }
     }
 
@@ -157,8 +157,7 @@ mod tests {
         let encryption1 = create_test_encryption();
 
         // Create a different encryption with a different key
-        let key2 = Key::<Aes256Gcm>::from_slice(b"different_key_32_bytes_long!!!!!");
-        let cipher2 = Aes256Gcm::new(key2);
+        let cipher2 = Aes256Gcm::new_from_slice(b"different_key_32_bytes_long!!!!!").unwrap();
         let encryption2 = GitHubTokenEncryption { cipher: cipher2 };
 
         let token = "ghs_test_token_123456789";
