@@ -17,7 +17,7 @@ async fn invalid_dependency_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_with_renamed_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -141,7 +141,7 @@ async fn empty_dependency_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_with_underscore_renamed_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -162,7 +162,7 @@ async fn new_with_underscore_renamed_dependency() {
 async fn new_krate_with_dependency() {
     use crate::routes::crates::versions::dependencies::Deps;
 
-    let (app, anon, user, token) = TestApp::full().with_token().await;
+    let (app, anon, user, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
 
     // Insert a crate directly into the database so that new_dep can depend on it
@@ -333,7 +333,7 @@ async fn new_krate_dependency_missing() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_sorts_deps() {
-    let (app, _, user, token) = TestApp::full().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
 
     // Insert crates directly into the database so that two-deps can depend on it

@@ -5,7 +5,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn features_version_2() {
-    let (app, _, user, token) = TestApp::full().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
 
     // Insert a crate directly into the database so that foo_new can depend on it
@@ -27,7 +27,7 @@ async fn features_version_2() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn feature_name_with_dot() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.bar", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
@@ -36,7 +36,7 @@ async fn feature_name_with_dot() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn feature_name_start_with_number_and_underscore() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0")
         .feature("0foo1.bar", &[])
         .feature("_foo2.bar", &[]);
@@ -47,7 +47,7 @@ async fn feature_name_start_with_number_and_underscore() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn feature_name_with_unicode_chars() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.你好世界", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");

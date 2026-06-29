@@ -16,7 +16,7 @@ const UNNORMALIZED_ENTRY: &str = concat!(
 /// single commit on `master`.
 #[tokio::test(flavor = "multi_thread")]
 async fn normalize_index() {
-    let (app, _, _, _) = TestApp::full().with_token().await;
+    let (app, _, _, _) = TestApp::full().with_git_index().with_token().await;
     let conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
@@ -78,7 +78,7 @@ async fn normalize_index() {
 /// `normalization-dry-run` branch, leaving `master` untouched.
 #[tokio::test(flavor = "multi_thread")]
 async fn normalize_index_dry_run() {
-    let (app, _, _, _) = TestApp::full().with_token().await;
+    let (app, _, _, _) = TestApp::full().with_git_index().with_token().await;
     let conn = app.db_conn().await;
     let upstream = app.upstream_index();
 

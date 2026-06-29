@@ -66,6 +66,13 @@ pub struct Server {
 
     pub features: FeaturesConfig,
 
+    /// Whether to enqueue `SyncToGitIndex` jobs to update the
+    /// git-based crate index.
+    ///
+    /// Disabled by default in test environments to avoid unnecessary
+    /// git operations.
+    pub sync_git_index: bool,
+
     /// URL of a git repository to mirror the crate index's snapshot branches
     /// to. When set, the `ArchiveIndexBranch` background job pushes snapshot
     /// branches to this remote; when unset the job is a no-op.
@@ -151,6 +158,7 @@ impl Server {
             disable_token_creation,
             banner_message,
             features,
+            sync_git_index: true,
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
         })

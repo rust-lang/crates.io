@@ -26,6 +26,7 @@ async fn archive_index_branch() {
     let archive_url = archive.url();
 
     let (app, _) = TestApp::full()
+        .with_git_index()
         .with_config(|c| c.index_archive_url = Some(archive_url))
         .empty()
         .await;
@@ -45,7 +46,7 @@ async fn archive_index_branch() {
 /// without touching any repositories.
 #[tokio::test(flavor = "multi_thread")]
 async fn archive_index_branch_without_url_configured() {
-    let (app, _) = TestApp::full().empty().await;
+    let (app, _) = TestApp::full().with_git_index().empty().await;
     let conn = app.db_conn().await;
 
     // Seed a branch on origin so the test isn't trivially vacuous: the job
@@ -66,6 +67,7 @@ async fn archive_index_branch_without_index_sync_github_app() {
     let archive_url = archive.url();
 
     let (app, _) = TestApp::full()
+        .with_git_index()
         .with_config(|c| c.index_archive_url = Some(archive_url))
         .with_index_sync_github_app(None)
         .empty()
@@ -93,6 +95,7 @@ async fn archive_index_branch_missing_branch() {
     let archive_url = archive.url();
 
     let (app, _) = TestApp::full()
+        .with_git_index()
         .with_config(|c| c.index_archive_url = Some(archive_url))
         .empty()
         .await;

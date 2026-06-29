@@ -8,7 +8,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate() {
-    let (app, _, user) = TestApp::full().with_user().await;
+    let (app, _, user) = TestApp::full().with_git_index().with_user().await;
     let mut conn = app.db_conn().await;
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
@@ -90,7 +90,7 @@ async fn new_krate_weird_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_twice() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
     token.publish_crate(crate_to_publish).await.good();
@@ -125,7 +125,7 @@ async fn new_krate_twice() {
 // The primary purpose is to verify that the `default_version` we provide is as expected.
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_twice_alt() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
 
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");

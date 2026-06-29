@@ -10,7 +10,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
@@ -88,7 +88,7 @@ async fn test_config_changes() {
         "api": "https://crates.io"
     }"#;
 
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let upstream = app.upstream_index();
 
     // Initialize upstream index with a `config.json` file
@@ -120,7 +120,7 @@ async fn test_config_changes() {
 async fn bulk_sync_to_git_index() {
     use crates_io::schema::crates;
 
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
@@ -182,7 +182,7 @@ async fn bulk_sync_to_git_index() {
 /// entries already match the DB should not create a new commit.
 #[tokio::test(flavor = "multi_thread")]
 async fn bulk_sync_to_git_index_noop() {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
     let conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
