@@ -15,7 +15,7 @@ use std::time::Duration;
 #[tokio::test(flavor = "multi_thread")]
 #[allow(unknown_lints, clippy::bool_assert_comparison)] // for claim::assert_some_eq! with bool
 async fn yank_works_as_intended() {
-    let (app, anon, cookie, token) = TestApp::full().with_token().await;
+    let (app, anon, cookie, token) = TestApp::full().with_git_index().with_token().await;
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
@@ -80,6 +80,7 @@ fn check_yanked(app: &TestApp, is_yanked: bool) {
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_ratelimit_hit() {
     let (app, _, _, token) = TestApp::full()
+        .with_git_index()
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token()
         .await;
@@ -117,6 +118,7 @@ async fn yank_ratelimit_hit() {
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_ratelimit_expires() {
     let (app, _, _, token) = TestApp::full()
+        .with_git_index()
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token()
         .await;

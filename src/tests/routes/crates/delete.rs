@@ -40,7 +40,7 @@ async fn test_query_params() -> anyhow::Result<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path_new_crate() -> anyhow::Result<()> {
-    let (app, anon, user) = TestApp::full().with_user().await;
+    let (app, anon, user) = TestApp::full().with_git_index().with_user().await;
     let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
@@ -81,7 +81,7 @@ async fn test_happy_path_new_crate() -> anyhow::Result<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path_old_crate() -> anyhow::Result<()> {
-    let (app, anon, user) = TestApp::full().with_user().await;
+    let (app, anon, user) = TestApp::full().with_git_index().with_user().await;
     let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
@@ -120,7 +120,7 @@ async fn test_happy_path_old_crate() -> anyhow::Result<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path_really_old_crate() -> anyhow::Result<()> {
-    let (app, anon, user) = TestApp::full().with_user().await;
+    let (app, anon, user) = TestApp::full().with_git_index().with_user().await;
     let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 

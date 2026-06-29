@@ -179,12 +179,19 @@ pub async fn perform_version_yank_update(
         .insert(conn)
         .await?;
 
-    let git_index_job = SyncToGitIndex::new(&krate.name);
+    let sync_git_index = async {
+        if state.config.sync_git_index {
+            let git_index_job = SyncToGitIndex::new(&krate.name);
+            git_index_job.enqueue(&*conn).await?;
+        }
+        Ok(())
+    };
+
     let sparse_index_job = SyncToSparseIndex::new(&krate.name);
     let update_default_version_job = UpdateDefaultVersion::new(krate.id);
 
     tokio::try_join!(
-        git_index_job.enqueue(&*conn),
+        sync_git_index,
         sparse_index_job.enqueue(&*conn),
         update_default_version_job.enqueue(&*conn),
     )?;

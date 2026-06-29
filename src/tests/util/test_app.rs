@@ -130,9 +130,9 @@ impl TestApp {
         }
     }
 
-    /// Initializes a full application, with an index and background worker
+    /// Initializes a full application with a background worker.
     pub fn full() -> TestAppBuilder {
-        Self::init().with_git_index().with_job_runner()
+        Self::init().with_job_runner()
     }
 
     /// Obtain an async database connection from the primary database pool.
@@ -362,7 +362,7 @@ impl TestAppBuilder {
                 .index_location
                 .clone()
                 .or_else(|| self.index.as_ref().map(|i| i.url()))
-                .expect("Index or `index_location` must be configured to build a job runner");
+                .unwrap_or_else(|| Url::parse("file:///nonexistent").unwrap());
 
             let repository_config = RepositoryConfig {
                 index_location,
@@ -452,6 +452,7 @@ impl TestAppBuilder {
 
     pub fn with_git_index(mut self) -> Self {
         self.index = Some(UpstreamIndex::new().unwrap());
+        self.config.sync_git_index = true;
         self
     }
 
@@ -617,6 +618,7 @@ fn simple_config() -> config::Server {
             zip_archives_enabled: true,
             cache_tags_enabled: true,
         },
+        sync_git_index: false,
         index_archive_url: None,
         postgres_bin_dir: None,
     }

@@ -649,7 +649,14 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+        let sync_git_index = async {
+            if app.config.sync_git_index {
+                let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+                git_index_job.enqueue(&*conn).await?;
+            }
+            Ok(())
+        };
+
         let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
         let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
         let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
@@ -665,7 +672,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         };
 
         tokio::try_join!(
-            git_index_job.enqueue(&*conn),
+            sync_git_index,
             sparse_index_job.enqueue(&*conn),
             publish_notifications_job.enqueue(&*conn),
             build_crate_zip,
