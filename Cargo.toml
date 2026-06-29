@@ -46,6 +46,16 @@ workspace = true
 insta.opt-level = 3
 similar.opt-level = 3
 
+# This improves the performance of the database connection setup in the
+# test suite by building the crypto crates with optimizations.
+block-buffer.opt-level = 3
+crypto-common.opt-level = 3
+digest.opt-level = 3
+generic-array.opt-level = 3
+hmac.opt-level = 3
+postgres-protocol.opt-level = 3
+sha2.opt-level = 3
+
 [profile.release]
 opt-level = 2
 
