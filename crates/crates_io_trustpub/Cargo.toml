@@ -17,7 +17,7 @@ bon = { version = "=3.9.3", optional = true }
 chrono = { version = "=0.4.45", features = ["serde"] }
 crates_io_version = { path = "../crates_io_version" }
 jsonwebtoken = { version = "=10.4.0", features = ["aws_lc_rs"] }
-mockall = { version = "=0.14.0", optional = true }
+mockall = { version = "=0.15.0", optional = true }
 rand = "=0.10.1"
 reqwest = { version = "=0.13.4", features = ["gzip", "json"] }
 regex = "=1.12.4"
