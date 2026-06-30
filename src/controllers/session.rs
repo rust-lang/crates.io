@@ -190,7 +190,6 @@ async fn create_or_update_user(
                     users::username.eq(&gh_user.login),
                     // These fields are soon to be deprecated.
                     users::gh_login.eq(&gh_user.login),
-                    users::gh_id.eq(&gh_user.id),
                     users::gh_encrypted_token.eq(encrypted_token),
                 ))
                 .execute(conn)
