@@ -160,6 +160,14 @@ jobs:
         shell: bash
 
       - run: sudo systemctl start postgresql.service
+
+      - name: Disable Postgres durability
+        run: |
+          sudo -u postgres psql -c "ALTER SYSTEM SET fsync = off"
+          sudo -u postgres psql -c "ALTER SYSTEM SET synchronous_commit = off"
+          sudo -u postgres psql -c "ALTER SYSTEM SET full_page_writes = off"
+          sudo systemctl restart postgresql.service
+
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - run: sudo -u postgres createdb --lc-collate=C --lc-ctype=C -T template0 cargo_registry_test
 
