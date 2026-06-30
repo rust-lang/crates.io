@@ -112,7 +112,7 @@ impl AuthCheck {
         }
     }
 
-    /// Allow tokens with any crate scope without specifying a particular crate.
+    /// Allows tokens with any crate scope without specifying a particular crate.
     ///
     /// Use this for endpoints that deal with multiple crates at once, where the
     /// caller will handle crate scope filtering manually.

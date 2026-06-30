@@ -1,0 +1,65 @@
+---
+source: src/bin/crates-admin/sync_index.rs
+expression: all_jobs(&mut conn).await
+---
+[
+  {
+    "job_type": "bulk_sync_to_git_index",
+    "data": {
+      "commit_message": "bulk sync",
+      "crate_names": [
+        "crate-0",
+        "crate-1"
+      ]
+    }
+  },
+  {
+    "job_type": "bulk_sync_to_git_index",
+    "data": {
+      "commit_message": "bulk sync",
+      "crate_names": [
+        "crate-2",
+        "crate-3"
+      ]
+    }
+  },
+  {
+    "job_type": "bulk_sync_to_git_index",
+    "data": {
+      "commit_message": "bulk sync",
+      "crate_names": [
+        "crate-4"
+      ]
+    }
+  },
+  {
+    "job_type": "sync_to_sparse_index",
+    "data": {
+      "krate": "crate-0"
+    }
+  },
+  {
+    "job_type": "sync_to_sparse_index",
+    "data": {
+      "krate": "crate-1"
+    }
+  },
+  {
+    "job_type": "sync_to_sparse_index",
+    "data": {
+      "krate": "crate-2"
+    }
+  },
+  {
+    "job_type": "sync_to_sparse_index",
+    "data": {
+      "krate": "crate-3"
+    }
+  },
+  {
+    "job_type": "sync_to_sparse_index",
+    "data": {
+      "krate": "crate-4"
+    }
+  }
+]

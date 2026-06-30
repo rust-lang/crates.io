@@ -2,7 +2,7 @@ use crate::dialoguer;
 use anyhow::Context;
 use crates_io::models::update_default_version;
 use crates_io::schema::crates;
-use crates_io::storage::Storage;
+use crates_io::storage::{Storage, StorageKey};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::versions};
 use crates_io_worker::BackgroundJob;
@@ -107,20 +107,49 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut paths = Vec::new();
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
-        if let Err(error) = store.delete_crate_file(crate_name, version).await {
-            warn!(%crate_name, %version, "Failed to delete crate file from S3: {error}");
-        } else {
-            paths.push(store.crate_location(crate_name, version));
+        let crate_file_key = StorageKey::for_crate_file(crate_name, version);
+        match store.delete(&crate_file_key).await {
+            Err(error) => {
+                warn!(%crate_name, %version, "Failed to delete crate file from S3: {error}");
+            }
+            Ok(()) => {
+                paths.push(crate_file_key.path());
+            }
+        }
+
+        debug!(%crate_name, %version, "Deleting zip source archive from S3");
+        let zip_key = StorageKey::for_crate_zip(crate_name, version);
+        match store.delete(&zip_key).await {
+            Err(object_store::Error::NotFound { .. }) => {}
+            Err(error) => {
+                warn!(%crate_name, %version, "Failed to delete zip source archive from S3: {error}")
+            }
+            Ok(()) => {
+                paths.push(zip_key.path());
+            }
+        }
+
+        debug!(%crate_name, %version, "Deleting zip source archive manifest from S3");
+        let manifest_key = StorageKey::for_crate_zip_manifest(crate_name, version);
+        match store.delete(&manifest_key).await {
+            Err(object_store::Error::NotFound { .. }) => {}
+            Err(error) => {
+                warn!(%crate_name, %version, "Failed to delete zip source archive manifest from S3: {error}")
+            }
+            Ok(()) => {
+                paths.push(manifest_key.path());
+            }
         }
 
         debug!(%crate_name, %version, "Deleting readme file from S3");
-        match store.delete_readme(crate_name, version).await {
+        let readme_key = StorageKey::for_readme(crate_name, version);
+        match store.delete(&readme_key).await {
             Err(object_store::Error::NotFound { .. }) => {}
             Err(error) => {
                 warn!(%crate_name, %version, "Failed to delete readme file from S3: {error}")
             }
-            Ok(_) => {
-                paths.push(store.readme_location(crate_name, version));
+            Ok(()) => {
+                paths.push(readme_key.path());
             }
         }
     }

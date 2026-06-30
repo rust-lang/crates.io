@@ -1,3 +1,4 @@
+use crate::storage::StorageKey;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_database::models::CloudFrontDistribution;
@@ -35,12 +36,9 @@ impl BackgroundJob for DumpDb {
 
     type Context = Arc<Environment>;
 
-    /// Create CSV dumps of the public information in the database, wrap them in a
-    /// tarball and upload to S3.
+    /// Creates CSV dumps of the public information in the database, wraps them in a
+    /// tarball and uploads to S3.
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        const TAR_PATH: &str = "db-dump.tar.gz";
-        const ZIP_PATH: &str = "db-dump.zip";
-
         let db_config = &env.config.db;
         let db_pool_config = db_config.replica.as_ref().unwrap_or(&db_config.primary);
         let database_url = db_pool_config.url.clone();
@@ -61,27 +59,27 @@ impl BackgroundJob for DumpDb {
         .await??;
 
         info!("Uploading tarball…");
-        env.storage
-            .upload_db_dump(TAR_PATH, archives.tar.path())
-            .await?;
+        let tar_key = StorageKey::DbDumpTar;
+        let tar_file = tokio::fs::File::open(archives.tar.path()).await?;
+        env.storage.upload_stream(&tar_key, tar_file).await?;
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
         let conn = env.deadpool.get().await?;
         let dist = CloudFrontDistribution::Static;
 
-        if let Err(error) = env.invalidate_cdns(&conn, dist, TAR_PATH).await {
+        if let Err(error) = env.invalidate_cdns(&conn, dist, &tar_key.cdn_path()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
         info!("Uploading zip file…");
-        env.storage
-            .upload_db_dump(ZIP_PATH, archives.zip.path())
-            .await?;
+        let zip_key = StorageKey::DbDumpZip;
+        let zip_file = tokio::fs::File::open(archives.zip.path()).await?;
+        env.storage.upload_stream(&zip_key, zip_file).await?;
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Err(error) = env.invalidate_cdns(&conn, dist, ZIP_PATH).await {
+        if let Err(error) = env.invalidate_cdns(&conn, dist, &zip_key.cdn_path()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 

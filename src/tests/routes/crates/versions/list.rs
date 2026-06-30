@@ -36,6 +36,7 @@ async fn versions() -> anyhow::Result<()> {
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.created_at" => "[datetime]",
     });
 
     Ok(())

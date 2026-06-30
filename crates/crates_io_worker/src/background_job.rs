@@ -19,8 +19,6 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     const JOB_NAME: &'static str;
 
     /// Default priority of the task.
-    ///
-    /// [Self::enqueue_with_priority] can be used to override the priority value.
     const PRIORITY: i16 = 0;
 
     /// Whether the job should be deduplicated.
@@ -35,7 +33,7 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// The application data provided to this job at runtime.
     type Context: Clone + Send + 'static;
 
-    /// Execute the task. This method should define its logic.
+    /// Executes the task. This method should define its logic.
     fn run(&self, ctx: Self::Context) -> impl Future<Output = anyhow::Result<()>> + Send;
 
     #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]

@@ -13,7 +13,7 @@ workspace = true
 testing = []
 
 [dependencies]
-anyhow = "=1.0.102"
+anyhow = "=1.0.103"
 base64 = "=0.22.1"
 chrono = { version = "=0.4.45", features = ["serde"] }
 crates_io_env_vars = { path = "../crates_io_env_vars" }
@@ -27,4 +27,4 @@ url = "=2.5.8"
 
 [dev-dependencies]
 claims = "=0.8.0"
-insta = "=1.47.2"
+insta = "=1.48.0"

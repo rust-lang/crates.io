@@ -1,0 +1,24 @@
+[package]
+edition = "2024"
+name = "crates_io_cargo_toml"
+version = "0.0.0"
+authors = ["Kornel <kornel@geekhood.net>", "Luca Palmieri <rust@lpalmieri.com>"]
+description = "Helper crate to parse and manipulate manifests - `Cargo.toml` files."
+license = "Apache-2.0 OR MIT"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { version = "=1.0.228", features = ["derive"] }
+thiserror = "=2.0.18"
+toml = { version = "=1.1.2", default-features = false, features = [
+  "parse",
+  "serde",
+  "preserve_order",
+] }
+
+[dev-dependencies]
+insta = "=1.48.0"
+tempfile = "=3.27.0"
+toml = { version = "=1.1.2", default-features = false, features = ["display"] }

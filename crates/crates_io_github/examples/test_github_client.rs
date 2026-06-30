@@ -1,56 +1,95 @@
 use anyhow::Result;
-use crates_io_github::{GitHubClient, RealGitHubClient};
-use oauth2::AccessToken;
+use crates_io_github::{GitHubAuth, GitHubClient, RealGitHubClient};
 use reqwest::Client;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
 #[derive(clap::Parser, Debug)]
+struct Options {
+    #[clap(flatten)]
+    auth: AuthArgs,
+
+    #[clap(subcommand)]
+    request: Request,
+}
+
+/// Authentication options shared by all requests.
+///
+/// When no credentials are provided the request is sent unauthenticated.
+/// An access token results in bearer authentication, while the client
+/// id/secret or username/password pairs result in HTTP basic authentication.
+#[derive(clap::Args, Debug)]
+struct AuthArgs {
+    /// OAuth or personal access token used for bearer authentication.
+    #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
+    access_token: Option<SecretString>,
+
+    /// OAuth client id used for basic authentication.
+    #[clap(long, env = "GITHUB_CLIENT_ID", requires = "client_secret")]
+    client_id: Option<String>,
+    /// OAuth client secret used for basic authentication.
+    #[clap(
+        long,
+        env = "GITHUB_CLIENT_SECRET",
+        hide_env_values = true,
+        requires = "client_id"
+    )]
+    client_secret: Option<SecretString>,
+
+    /// Username used for basic authentication.
+    #[clap(long, env = "GITHUB_USERNAME", requires = "password")]
+    username: Option<String>,
+    /// Password used for basic authentication.
+    #[clap(
+        long,
+        env = "GITHUB_PASSWORD",
+        hide_env_values = true,
+        requires = "username"
+    )]
+    password: Option<SecretString>,
+}
+
+#[derive(clap::Subcommand, Debug)]
 enum Request {
-    CurrentUser {
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
-    },
+    CurrentUser,
     GetUser {
         name: String,
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
     },
     GetUserById {
         account_id: i64,
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
     },
     OrgByName {
         org_name: String,
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
     },
     TeamByName {
         org_name: String,
         team_name: String,
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
     },
     OrgMembership {
         org_id: i32,
         username: String,
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
     },
     TeamMembership {
         org_id: i32,
         team_id: i32,
         username: String,
-        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
-        access_token: SecretString,
     },
-    PublicKeys {
-        client_id: String,
-        #[clap(long, env = "GITHUB_CLIENT_SECRET", hide_env_values = true)]
-        client_secret: SecretString,
-    },
+    PublicKeys,
+}
+
+impl AuthArgs {
+    fn into_auth(self) -> GitHubAuth {
+        if let Some(access_token) = self.access_token {
+            GitHubAuth::bearer(access_token)
+        } else if let (Some(username), Some(password)) = (self.client_id, self.client_secret) {
+            GitHubAuth::basic(username, password)
+        } else if let (Some(username), Some(password)) = (self.username, self.password) {
+            GitHubAuth::basic(username, password)
+        } else {
+            GitHubAuth::None
+        }
+    }
 }
 
 #[tokio::main]
@@ -62,54 +101,38 @@ async fn main() -> Result<()> {
     let client = Client::new();
     let github_client = RealGitHubClient::new(client);
 
-    match Request::parse() {
-        Request::CurrentUser { access_token } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
-            let response = github_client.current_user(&access_token).await?;
+    let options = Options::parse();
+    let auth = options.auth.into_auth();
+
+    match options.request {
+        Request::CurrentUser => {
+            let response = github_client.current_user(&auth).await?;
             println!("{response:#?}");
         }
-        Request::GetUser { name, access_token } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
-            let response = github_client.get_user(&name, &access_token).await?;
+        Request::GetUser { name } => {
+            let response = github_client.get_user(&name, &auth).await?;
             println!("{response:#?}");
         }
-        Request::GetUserById {
-            account_id,
-            access_token,
-        } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
-            let response = github_client
-                .get_user_by_id(account_id, &access_token)
-                .await?;
+        Request::GetUserById { account_id } => {
+            let response = github_client.get_user_by_id(account_id, &auth).await?;
             println!("{response:#?}");
         }
-        Request::OrgByName {
-            org_name,
-            access_token,
-        } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
-            let response = github_client.org_by_name(&org_name, &access_token).await?;
+        Request::OrgByName { org_name } => {
+            let response = github_client.org_by_name(&org_name, &auth).await?;
             println!("{response:#?}");
         }
         Request::TeamByName {
             org_name,
             team_name,
-            access_token,
         } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
             let response = github_client
-                .team_by_name(&org_name, &team_name, &access_token)
+                .team_by_name(&org_name, &team_name, &auth)
                 .await?;
             println!("{response:#?}");
         }
-        Request::OrgMembership {
-            org_id,
-            username,
-            access_token,
-        } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
+        Request::OrgMembership { org_id, username } => {
             let response = github_client
-                .org_membership(org_id, &username, &access_token)
+                .org_membership(org_id, &username, &auth)
                 .await?;
             println!("{response:#?}");
         }
@@ -117,21 +140,14 @@ async fn main() -> Result<()> {
             org_id,
             team_id,
             username,
-            access_token,
         } => {
-            let access_token = AccessToken::new(access_token.expose_secret().into());
             let response = github_client
-                .team_membership(org_id, team_id, &username, &access_token)
+                .team_membership(org_id, team_id, &username, &auth)
                 .await?;
             println!("{response:#?}");
         }
-        Request::PublicKeys {
-            client_id,
-            client_secret,
-        } => {
-            let response = github_client
-                .public_keys(&client_id, client_secret.expose_secret())
-                .await?;
+        Request::PublicKeys => {
+            let response = github_client.public_keys(&auth).await?;
             println!("{response:#?}");
         }
     }

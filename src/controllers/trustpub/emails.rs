@@ -65,6 +65,7 @@ mod tests {
             is_admin: false,
             publish_notifications: true,
             username: "octocat".into(),
+            created_at: None,
         }
     }
 

@@ -1,15 +1,16 @@
 use chrono::NaiveDate;
 use derive_more::Deref;
+use foldhash::quality::FixedState;
 use semver::Version;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
 #[derive(Clone, Default, Deref)]
-pub struct DownloadsMap(HashMap<(String, Version, NaiveDate), u64>);
+pub struct DownloadsMap(HashMap<(String, Version, NaiveDate), u64, FixedState>);
 
 impl DownloadsMap {
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(HashMap::default())
     }
 
     /// Increments the download count for the given crate version on the given date.
@@ -17,7 +18,7 @@ impl DownloadsMap {
         *self.0.entry((name, version, date)).or_default() += 1;
     }
 
-    /// Returns a [HashSet] of all crate names in the map.
+    /// Returns a [`HashSet`] of all crate names in the map.
     pub fn unique_crates(&self) -> HashSet<&str> {
         self.0.keys().map(|(krate, _, _)| krate.as_str()).collect()
     }

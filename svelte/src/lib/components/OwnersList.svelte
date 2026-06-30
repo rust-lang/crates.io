@@ -19,7 +19,7 @@
     if (owner.kind === 'team') {
       // For teams, compute display_name as org_name/name
       // login format is "github:org_name:team_name"
-      let orgName = owner.login.split(':')[1];
+      let orgName = owner.login.split(':', 2)[1];
       return owner.name ? `${orgName}/${owner.name}` : owner.login;
     }
     return owner.name ?? owner.login;

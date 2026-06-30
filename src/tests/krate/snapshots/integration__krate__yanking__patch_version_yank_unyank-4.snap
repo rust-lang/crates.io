@@ -28,7 +28,8 @@ expression: json
       "login": "foo",
       "name": null,
       "avatar": null,
-      "url": "https://github.com/foo"
+      "url": "https://github.com/foo",
+      "created_at": "[datetime]"
     },
     "audit_actions": [
       {
@@ -38,7 +39,8 @@ expression: json
           "login": "foo",
           "name": null,
           "avatar": null,
-          "url": "https://github.com/foo"
+          "url": "https://github.com/foo",
+          "created_at": "[datetime]"
         },
         "time": "[datetime]"
       },
@@ -49,7 +51,8 @@ expression: json
           "login": "foo",
           "name": null,
           "avatar": null,
-          "url": "https://github.com/foo"
+          "url": "https://github.com/foo",
+          "created_at": "[datetime]"
         },
         "time": "[datetime]"
       },
@@ -60,7 +63,8 @@ expression: json
           "login": "foo",
           "name": null,
           "avatar": null,
-          "url": "https://github.com/foo"
+          "url": "https://github.com/foo",
+          "created_at": "[datetime]"
         },
         "time": "[datetime]"
       }

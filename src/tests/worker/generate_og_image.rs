@@ -1,29 +1,13 @@
 use crate::builders::CrateBuilder;
 use crate::util::TestApp;
 use claims::{assert_err, assert_ok};
-use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
 use insta::assert_binary_snapshot;
 use object_store::ObjectStoreExt;
-use std::process::Command;
-use tracing::warn;
-
-fn is_ci() -> bool {
-    var("CI").unwrap().is_some()
-}
-
-fn typst_available() -> bool {
-    Command::new("typst").arg("--version").spawn().is_ok()
-}
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_generate_og_image_job() {
     let (app, _, user) = TestApp::full().with_og_image_generator().with_user().await;
-
-    if !is_ci() && !typst_available() {
-        warn!("Skipping OG image generation test because 'typst' is not available");
-        return;
-    }
 
     let mut conn = app.db_conn().await;
 

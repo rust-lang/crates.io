@@ -1,4 +1,4 @@
-# crates_io_github
+# `crates_io_github`
 
 This package implements functionality for interacting with the GitHub API.
 

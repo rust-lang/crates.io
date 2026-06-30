@@ -27,24 +27,24 @@ fn master_ref(sha: &str) -> GitRef {
     }
 }
 
-/// Queue a one-shot `get_ref(refs/heads/master)` that returns `sha`.
+/// Queues a one-shot `get_ref(refs/heads/master)` that returns `sha`.
 fn expect_get_master(mock: &mut MockGitHubClient, sha: &'static str) {
     mock.expect_get_ref()
-        .withf(|owner, repo, ref_name| owner == OWNER && repo == REPO && ref_name == MASTER_REF)
+        .withf(|owner, repo, ref_name, _| owner == OWNER && repo == REPO && ref_name == MASTER_REF)
         .times(1)
-        .returning(move |_, _, _| Ok(master_ref(sha)));
+        .returning(move |_, _, _, _| Ok(master_ref(sha)));
 }
 
-/// Queue a `get_commit(commit_sha)` that returns a commit pointing at `tree_sha`.
+/// Queues a `get_commit(commit_sha)` that returns a commit pointing at `tree_sha`.
 fn expect_get_commit(
     mock: &mut MockGitHubClient,
     commit_sha: &'static str,
     tree_sha: &'static str,
 ) {
     mock.expect_get_commit()
-        .withf(move |owner, repo, sha| owner == OWNER && repo == REPO && sha == commit_sha)
+        .withf(move |owner, repo, sha, _| owner == OWNER && repo == REPO && sha == commit_sha)
         .times(1)
-        .returning(move |_, _, _| {
+        .returning(move |_, _, _, _| {
             Ok(GitCommit {
                 sha: commit_sha.into(),
                 tree: GitObject {
@@ -54,7 +54,7 @@ fn expect_get_commit(
         });
 }
 
-/// Queue a parentless `create_commit(tree=tree_sha)` that returns `new_sha`.
+/// Queues a parentless `create_commit(tree=tree_sha)` that returns `new_sha`.
 fn expect_create_commit(
     mock: &mut MockGitHubClient,
     tree_sha: &'static str,
@@ -79,7 +79,7 @@ fn expect_create_commit(
         });
 }
 
-/// Queue a `create_ref(refs/heads/snapshot-*, original_sha)`.
+/// Queues a `create_ref(refs/heads/snapshot-*, original_sha)`.
 fn expect_create_snapshot_ref(mock: &mut MockGitHubClient, original_sha: &'static str) {
     mock.expect_create_ref()
         .withf(move |owner, repo, ref_name, sha, _| {
@@ -99,7 +99,7 @@ fn expect_create_snapshot_ref(mock: &mut MockGitHubClient, original_sha: &'stati
         });
 }
 
-/// Queue a forced `update_ref(refs/heads/master, new_sha, force=true)`.
+/// Queues a forced `update_ref(refs/heads/master, new_sha, force=true)`.
 fn expect_update_master(mock: &mut MockGitHubClient, new_sha: &'static str) {
     mock.expect_update_ref()
         .withf(move |owner, repo, ref_name, sha, force, _| {

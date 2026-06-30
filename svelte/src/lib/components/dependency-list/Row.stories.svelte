@@ -50,6 +50,10 @@
   <Row
     dependency={createDependency({ crate_id: 'lazy_static' })}
     descriptionPromise={resolved('A macro for declaring lazily evaluated statics')}
+    nativeReplacement={{
+      description: 'Use `std::sync::LazyLock` instead.',
+      url: 'https://doc.rust-lang.org/std/sync/struct.LazyLock.html',
+    }}
   />
 
   <h1>Loading Description</h1>

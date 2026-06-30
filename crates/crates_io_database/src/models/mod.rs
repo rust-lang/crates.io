@@ -1,4 +1,5 @@
 pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
+pub use self::cache_tags_backfill::NewCacheTagsBackfillRow;
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::cloudfront_invalidation_queue::{
     CloudFrontDistribution, CloudFrontInvalidationQueueItem,
@@ -24,6 +25,7 @@ pub use self::version::{NewVersion, TopVersions, Version};
 pub mod helpers;
 
 mod action;
+mod cache_tags_backfill;
 pub mod category;
 mod cloudfront_invalidation_queue;
 pub mod crate_owner_invitation;

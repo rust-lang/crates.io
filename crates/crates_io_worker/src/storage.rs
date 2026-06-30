@@ -40,7 +40,7 @@ pub(super) async fn find_next_unlocked_job(
         .await
 }
 
-/// The number of jobs that have failed at least once
+/// The number of jobs that have failed at least once.
 pub(super) async fn failed_job_count(conn: &mut AsyncPgConnection) -> QueryResult<i64> {
     background_jobs::table
         .count()
@@ -49,7 +49,7 @@ pub(super) async fn failed_job_count(conn: &mut AsyncPgConnection) -> QueryResul
         .await
 }
 
-/// Deletes a job that has successfully completed running
+/// Deletes a job that has successfully completed running.
 pub(super) async fn delete_successful_job(
     conn: &mut AsyncPgConnection,
     job_id: i64,

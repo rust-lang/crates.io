@@ -41,7 +41,7 @@ expression: response.json()
     {
       "audit_actions": [],
       "bin_names": null,
-      "checksum": "                                                                ",
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo_default_version",
       "crate_size": 0,
       "created_at": "[datetime]",
@@ -65,6 +65,7 @@ expression: response.json()
       "num": "0.5.1",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,

@@ -1,4 +1,4 @@
-# crates_io_index
+# `crates_io_index`
 
 This package contains the code necessary to interact with the
 [crates.io-index repository](https://github.com/rust-lang/crates.io-index).

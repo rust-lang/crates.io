@@ -1,5 +1,5 @@
 use crate::schema::{crates, versions};
-use crate::storage::Storage;
+use crate::storage::{Storage, StorageKey};
 use crate::worker::Environment;
 use crate::worker::jobs::GenerateOgImage;
 use anyhow::Context;
@@ -70,7 +70,7 @@ impl BackgroundJob for AnalyzeCrateFile {
     }
 }
 
-/// Retrieves crate name and version number for a given version ID
+/// Retrieves crate name and version number for a given version ID.
 #[instrument(skip(conn))]
 async fn get_crate_version_info(
     version_id: i32,
@@ -86,14 +86,15 @@ async fn get_crate_version_info(
         .context("Failed to query crate and version info")
 }
 
-/// Downloads and analyzes a crate tarball to generate linecount statistics
+/// Downloads and analyzes a crate tarball to generate linecount statistics.
 #[instrument(skip(storage))]
 async fn analyze_crate_tarball(
     krate: &str,
     version: &str,
     storage: &Storage,
 ) -> anyhow::Result<LinecountStats> {
-    let result = storage.download_crate_file(krate, version).await;
+    let key = StorageKey::for_crate_file(krate, version);
+    let result = storage.download_stream(&key).await;
     let stream = result.context("Failed to download crate file")?;
     let reader = StreamReader::new(stream);
     let reader = BufReader::new(reader);
@@ -131,7 +132,7 @@ async fn analyze_crate_tarball(
     Ok(linecount_stats)
 }
 
-/// Updates the linecount statistics for a version in the database
+/// Updates the linecount statistics for a version in the database.
 #[instrument(skip(conn, linecount_stats))]
 async fn update_version_linecount_stats(
     version_id: i32,
@@ -150,8 +151,8 @@ async fn update_version_linecount_stats(
     Ok(())
 }
 
-/// Check whether the `version_id` is a default version of any crate and
-/// schedule an OpenGraph image rerender background job if that is the case.
+/// Checks whether the `version_id` is a default version of any crate and
+/// schedules an OpenGraph image rerender background job if that is the case.
 #[instrument(skip(conn))]
 async fn handle_og_image_rerender(
     crate_name: &str,

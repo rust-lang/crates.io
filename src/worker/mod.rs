@@ -22,6 +22,8 @@ impl RunnerExt for Runner<Arc<Environment>> {
         self.register_job_type::<jobs::AnalyzeCrateFile>()
             .register_job_type::<jobs::ArchiveIndexBranch>()
             .register_job_type::<jobs::ArchiveVersionDownloads>()
+            .register_job_type::<jobs::BackfillCacheTags>()
+            .register_job_type::<jobs::BuildCrateZip>()
             .register_job_type::<jobs::BulkSyncToGitIndex>()
             .register_job_type::<jobs::CheckTyposquat>()
             .register_job_type::<jobs::CleanProcessedLogFiles>()

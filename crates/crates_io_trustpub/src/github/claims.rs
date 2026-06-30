@@ -31,7 +31,7 @@ pub struct GitHubClaims {
 }
 
 impl GitHubClaims {
-    /// Decode and validate a JWT token, returning the relevant claims if valid.
+    /// Decodes and validates a JWT token, returning the relevant claims if valid.
     pub fn decode(token: &str, audience: &str, key: &DecodingKey) -> Result<Self, Error> {
         let validation = validation(audience);
 
@@ -45,8 +45,8 @@ impl GitHubClaims {
         Ok(claims)
     }
 
-    /// Extract the workflow filename from the [`workflow_ref`](Self::workflow_ref)
-    /// field or return `None` if the filename cannot be extracted.
+    /// Extracts the workflow filename from the [`workflow_ref`](Self::workflow_ref)
+    /// field or returns `None` if the filename cannot be extracted.
     pub fn workflow_filename(&self) -> Option<&str> {
         extract_workflow_filename(&self.workflow_ref)
     }

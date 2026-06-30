@@ -41,15 +41,15 @@ pub struct LinecountStats {
 }
 
 impl LinecountStats {
-    /// Create a new empty statistics collection
+    /// Creates a new empty statistics collection.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Add a single file to the statistics
+    /// Adds a single file to the statistics.
     ///
-    /// The caller can use `should_count_path()` to check if a file should be processed
-    /// before decompressing to avoid unnecessary work.
+    /// The caller can use `PathDetails::should_ignore()` to skip files that should
+    /// not be processed before decompressing to avoid unnecessary work.
     pub fn add_file(&mut self, language_type: LanguageType, content: &[u8]) {
         let file_stats = language_type.parse_from_slice(content, &TOKEI_CONFIG);
 

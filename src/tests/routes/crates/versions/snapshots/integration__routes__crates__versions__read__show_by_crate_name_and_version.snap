@@ -30,6 +30,7 @@ expression: json
     "num": "2.0.0",
     "published_by": {
       "avatar": null,
+      "created_at": "[datetime]",
       "id": "[id]",
       "login": "foo",
       "name": null,

@@ -104,8 +104,11 @@ pub async fn delete_crate(
 
     // All crates with reverse dependencies are blocked from being deleted to avoid unexpected
     // historical index changes.
-    if has_rev_dep(&conn, krate.id).await? {
-        let msg = "only crates without reverse dependencies can be deleted";
+    if let Some(rev_dep) = RevDep::for_crate(krate.id, &conn).await? {
+        let msg = format!(
+            "only crates without reverse dependencies can be deleted (e.g. {}@{} depends on this crate)",
+            rev_dep.name, rev_dep.version
+        );
         return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
     }
 
@@ -131,12 +134,19 @@ pub async fn delete_crate(
             .execute(conn)
             .await?;
 
-        let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+        let sync_git_index = async {
+            if app.config.sync_git_index {
+                let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+                git_index_job.enqueue(&*conn).await?;
+            }
+            Ok(())
+        };
+
         let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
         let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(path.name);
 
         tokio::try_join!(
-            git_index_job.enqueue(&*conn),
+            sync_git_index,
             sparse_index_job.enqueue(&*conn),
             delete_from_storage_job.enqueue(&*conn),
         )?;
@@ -185,19 +195,32 @@ pub fn max_downloads(age: &TimeDelta) -> u64 {
     DOWNLOADS_PER_MONTH_LIMIT * age_months
 }
 
-async fn has_rev_dep(mut conn: &AsyncPgConnection, crate_id: i32) -> QueryResult<bool> {
-    let rev_dep = dependencies::table
-        .inner_join(versions::table)
-        .filter(dependencies::crate_id.eq(crate_id))
-        // Ignore self-referencing dependencies, i.e. dependencies where the
-        // depending version belongs to the same crate that is being depended
-        // upon. Some crates depend on themselves (e.g. for backwards
-        // compatibility), and these should not block deletion.
-        .filter(versions::crate_id.ne(crate_id))
-        .select(dependencies::id)
-        .first::<i32>(&mut conn)
-        .await
-        .optional()?;
+/// Information about a single crate version that depends on another crate.
+#[derive(Debug, HasQuery)]
+#[diesel(base_query = dependencies::table.inner_join(versions::table.inner_join(crates::table)))]
+struct RevDep {
+    /// The name of the crate that depends on the crate being deleted.
+    #[diesel(select_expression = crates::name)]
+    name: String,
+    /// The version of that crate which declares the dependency.
+    #[diesel(select_expression = versions::num)]
+    version: String,
+}
 
-    Ok(rev_dep.is_some())
+impl RevDep {
+    /// Queries the database for the first matching reverse dependency of a crate, if any.
+    async fn for_crate(crate_id: i32, mut conn: &AsyncPgConnection) -> QueryResult<Option<Self>> {
+        Self::query()
+            .filter(dependencies::crate_id.eq(crate_id))
+            // Ignore self-referencing dependencies, i.e. dependencies where the
+            // depending version belongs to the same crate that is being depended
+            // upon. Some crates depend on themselves (e.g. for backwards
+            // compatibility), and these should not block deletion.
+            .filter(versions::crate_id.ne(crate_id))
+            // Order by indexed columns so the result is deterministic.
+            .order_by((dependencies::version_id.desc(), dependencies::id.desc()))
+            .first(&mut conn)
+            .await
+            .optional()
+    }
 }

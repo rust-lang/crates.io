@@ -10,10 +10,10 @@ export default [
   http.get('/api/v1/summary', () => {
     let crates = db.crate.findMany();
 
-    let just_updated = crates.sort((a, b) => compareDates(b.updated_at, a.updated_at)).slice(0, 10);
-    let most_downloaded = crates.sort((a, b) => b.downloads - a.downloads).slice(0, 10);
-    let new_crates = crates.sort((a, b) => b.id - a.id).slice(0, 10);
-    let most_recently_downloaded = crates.sort((a, b) => b.recent_downloads - a.recent_downloads).slice(0, 10);
+    let just_updated = crates.toSorted((a, b) => compareDates(b.updated_at, a.updated_at)).slice(0, 10);
+    let most_downloaded = crates.toSorted((a, b) => b.downloads - a.downloads).slice(0, 10);
+    let new_crates = crates.toSorted((a, b) => b.id - a.id).slice(0, 10);
+    let most_recently_downloaded = crates.toSorted((a, b) => b.recent_downloads - a.recent_downloads).slice(0, 10);
 
     let num_crates = crates.length;
     let num_downloads = crates.reduce((sum, crate) => sum + crate.downloads, 0);

@@ -60,10 +60,10 @@ impl BackgroundJob for ProcessCdnLog {
     }
 }
 
-/// Builds an object store based on the [CdnLogStorageConfig] and the
+/// Builds an object store based on the [`CdnLogStorageConfig`] and the
 /// `region` and `bucket` arguments.
 ///
-/// If the passed in [CdnLogStorageConfig] is using local file or in-memory
+/// If the passed in [`CdnLogStorageConfig`] is using local file or in-memory
 /// storage the `region` and `bucket` arguments are ignored.
 fn build_store(
     config: &CdnLogStorageConfig,
@@ -94,7 +94,7 @@ fn build_store(
 }
 
 /// Loads the given log file from the object store and counts the number of
-/// downloads for each crate and version. The results are printed to the log.
+/// downloads for each crate and version. The results are saved to the database.
 ///
 /// This function is separate from the [`BackgroundJob`] trait method so that
 /// it can be tested without having to construct a full [`Environment`]
@@ -519,7 +519,7 @@ mod tests {
                 versions::crate_id.eq(crate_id),
                 versions::num.eq(version),
                 versions::num_no_build.eq(version),
-                versions::checksum.eq("checksum"),
+                versions::tar_sha256.eq(vec![0u8; 32]),
                 versions::crate_size.eq(0),
             ))
             .execute(conn)

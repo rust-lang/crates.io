@@ -28,11 +28,8 @@ impl FromStr for EventType {
 #[derive(clap::Parser, Debug)]
 #[command(name = "test-pagerduty", about = "Send a test event to pagerduty")]
 struct Opts {
-    #[arg(long, env = "PAGERDUTY_API_TOKEN", hide_env_values = true)]
-    api_token: SecretString,
-
-    #[arg(long, env = "PAGERDUTY_INTEGRATION_KEY")]
-    integration_key: String,
+    #[arg(long, env = "PAGERDUTY_INTEGRATION_KEY", hide_env_values = true)]
+    integration_key: SecretString,
 
     #[arg(value_enum)]
     event_type: EventType,
@@ -45,7 +42,7 @@ async fn main() -> Result<()> {
 
     let opts = Opts::parse();
 
-    let client = PagerdutyClient::new(opts.api_token, opts.integration_key);
+    let client = PagerdutyClient::new(opts.integration_key);
 
     let event = match opts.event_type {
         EventType::Trigger => pagerduty::Event::Trigger {

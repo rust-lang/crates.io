@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
   import type { DownloadChartData } from '$lib/components/download-chart/data';
+  import type { NativeReplacement } from '$lib/data/native-replacements';
   import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
+  import type { Unmaintained } from '$lib/utils/rustsec';
 
   import { resolve } from '$app/paths';
 
@@ -15,7 +17,7 @@
   import NativeReplacementBanner from '$lib/components/NativeReplacementBanner.svelte';
   import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
   import RenderedHtml from '$lib/components/RenderedHtml.svelte';
-  import { nativeReplacements } from '$lib/data/native-replacements';
+  import UnmaintainedBanner from '$lib/components/UnmaintainedBanner.svelte';
   import { loadReadme } from '$lib/utils/readme';
 
   type Crate = components['schemas']['Crate'];
@@ -35,6 +37,8 @@
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
     docsRsStatusPromise: Promise<DocsRsStatus | null>;
     downloadsPromise: Promise<DownloadChartData>;
+    nativeReplacement?: NativeReplacement;
+    unmaintained: Unmaintained | null;
   }
 
   let {
@@ -48,6 +52,8 @@
     playgroundCratesPromise,
     docsRsStatusPromise,
     downloadsPromise,
+    nativeReplacement,
+    unmaintained,
   }: Props = $props();
   let owners: Owner[] = $state([]);
 
@@ -59,8 +65,6 @@
   let stackedGraph = $state(true);
 
   let downloadsContext = $derived(requestedVersion ? version : crate);
-
-  let nativeReplacement = $derived(nativeReplacements[crate.name]);
 
   let retryReadmePromise = $state<typeof readmePromise | null>(null);
   let activeReadmePromise = $derived(retryReadmePromise ?? readmePromise);
@@ -83,8 +87,14 @@
 
 <CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} {ownersPromise} />
 
+{#if unmaintained}
+  <div class="banner">
+    <UnmaintainedBanner {unmaintained} />
+  </div>
+{/if}
+
 {#if nativeReplacement}
-  <div class="native-replacement">
+  <div class="banner">
     <NativeReplacementBanner replacement={nativeReplacement} />
   </div>
 {/if}
@@ -183,7 +193,7 @@
 </div>
 
 <style>
-  .native-replacement {
+  .banner {
     margin-bottom: var(--space-m);
   }
 

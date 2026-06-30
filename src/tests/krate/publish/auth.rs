@@ -70,8 +70,10 @@ async fn new_krate_with_bearer_token() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_new/foo_new-1.0.0.crate
+    crates/foo_new/foo_new-1.0.0.zip
+    crates/foo_new/foo_new-1.0.0.zip.json
     index/fo/o_/foo_new
     rss/crates.xml
     rss/crates/foo_new.xml

@@ -1,5 +1,6 @@
 use crate::app::AppState;
 use crate::controllers::version::CrateVersionPath;
+use crate::storage::StorageKey;
 use crate::util::{RequestUtils, redirect};
 use axum::Json;
 use axum::response::{IntoResponse, Response};
@@ -26,7 +27,8 @@ pub struct UrlResponse {
     ),
 )]
 pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
-    let url = app.storage.readme_location(&path.name, &path.version);
+    let key = StorageKey::for_readme(&path.name, &path.version);
+    let url = app.storage.location(&key);
     let response = if req.wants_json() {
         Json(UrlResponse { url }).into_response()
     } else {

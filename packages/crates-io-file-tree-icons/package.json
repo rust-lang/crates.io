@@ -1,0 +1,25 @@
+{
+  "name": "@crates-io/file-tree-icons",
+  "version": "0.0.0",
+  "private": true,
+  "homepage": "https://github.com/rust-lang/crates.io#readme",
+  "bugs": {
+    "url": "https://github.com/rust-lang/crates.io/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-lang/crates.io.git"
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "regenerate": "vitest --run --update",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@catppuccin/palette": "1.8.0",
+    "@iconify-json/catppuccin": "1.2.17",
+    "vitest": "4.1.9"
+  }
+}

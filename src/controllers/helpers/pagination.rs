@@ -323,7 +323,7 @@ impl RawSeekPayload {
     }
 }
 
-/// Encode a payload to be used as a seek key.
+/// Encodes a payload to be used as a seek key.
 ///
 /// The payload is base64-encoded to hint that it shouldn't be manually constructed. There is no
 /// technical measure to prevent API consumers for manually creating or modifying them, but
@@ -333,7 +333,7 @@ pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
     Ok(encoded)
 }
 
-/// Decode a list of params previously encoded with [`encode_seek`].
+/// Decodes a list of params previously encoded with [`encode_seek`].
 pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> anyhow::Result<D> {
     let decoded = serde_json::from_slice(&general_purpose::URL_SAFE_NO_PAD.decode(seek)?)?;
     Ok(decoded)

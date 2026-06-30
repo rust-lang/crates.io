@@ -24,13 +24,13 @@ impl AccessToken {
     /// the checksum.
     const RAW_LENGTH: usize = 31;
 
-    /// Generate a new random access token.
+    /// Generates a new random access token.
     pub fn generate() -> Self {
         let raw = Alphanumeric.sample_string(&mut rand::rng(), Self::RAW_LENGTH);
         Self(raw.into())
     }
 
-    /// Wrap the raw access token with the token prefix and a checksum.
+    /// Wraps the raw access token with the token prefix and a checksum.
     ///
     /// This turns e.g. `ABC` into `cio_tp_ABC{checksum}`.
     pub fn finalize(&self) -> SecretString {
@@ -39,7 +39,7 @@ impl AccessToken {
         format!("{}{raw}{checksum}", Self::PREFIX).into()
     }
 
-    /// Generate a SHA256 hash of the access token.
+    /// Generates a SHA256 hash of the access token.
     ///
     /// This is used to create a hashed version of the token for storage in
     /// the database to avoid storing the plaintext token.
@@ -51,7 +51,7 @@ impl AccessToken {
 impl FromStr for AccessToken {
     type Err = AccessTokenError;
 
-    /// Parse a string into an access token.
+    /// Parses a string into an access token.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let suffix = s
             .strip_prefix(Self::PREFIX)

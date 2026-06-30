@@ -1,6 +1,6 @@
 //! Middleware that blocks requests with no user-agent header
 //!
-//! By default the middleware will treat "" and "Amazon CloudFront" as a missing user-agent. To
+//! By default the middleware will treat `""` and `"Amazon CloudFront"` as a missing user-agent. To
 //! change the 2nd value, set `WEB_CDN_USER_AGENT` to the appropriate string. To disable the CDN
 //! check, set `WEB_CDN_USER_AGENT` to the empty string.
 //!

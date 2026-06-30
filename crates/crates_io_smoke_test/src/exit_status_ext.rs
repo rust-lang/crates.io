@@ -1,4 +1,4 @@
-//! This is a backport of the unstable "exit_status_error" std library feature.
+//! This is a backport of the unstable `exit_status_error` std library feature.
 
 use std::process::ExitStatus;
 

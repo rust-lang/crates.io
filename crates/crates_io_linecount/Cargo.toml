@@ -10,8 +10,8 @@ workspace = true
 
 [dependencies]
 serde = { version = "=1.0.228", features = ["derive"] }
-tokei = "=14.0.0"
+tokei = { version = "=14.0.0", default-features = false }
 
 [dev-dependencies]
 claims = "=0.8.0"
-insta = { version = "=1.47.2", features = ["json"] }
+insta = { version = "=1.48.0", features = ["json"] }

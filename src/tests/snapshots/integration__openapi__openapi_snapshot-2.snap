@@ -107,6 +107,14 @@ expression: response.json()
               "null"
             ]
           },
+          "created_at": {
+            "description": "The date and time the user was created.\n\nFor users created before June 19, 2026, the creation time will be the\ntime the user's GitHub account was created. If the GitHub account was\ndeleted before June 19, 2026, this field will be empty.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "email": {
             "description": "The user's email address, if set.",
             "example": "kate@morgan.dev",
@@ -955,6 +963,14 @@ expression: response.json()
               "null"
             ]
           },
+          "created_at": {
+            "description": "The date and time the user was created.\n\nFor users created before June 19, 2026, the creation time will be the\ntime the user's GitHub account was created. If the GitHub account was\ndeleted before June 19, 2026, this field will be empty.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "id": {
             "description": "An opaque identifier for the user.",
             "example": 42,
@@ -1537,7 +1553,7 @@ expression: response.json()
     },
     "/api/v1/crates": {
       "get": {
-        "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
+        "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates\n\nWhen sorting by relevance, only the first 1000 results can be accessed, even\nthough `meta.total` may report a higher number of matching crates.",
         "operationId": "list_crates",
         "parameters": [
           {
@@ -1811,7 +1827,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "Get crate metadata (for the `new` crate).",
+        "summary": "Gets crate metadata (for the `new` crate).",
         "tags": [
           "crates"
         ]
@@ -1854,7 +1870,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Publish a new crate/version.",
+        "summary": "Publishes a new crate/version.",
         "tags": [
           "publish"
         ]
@@ -1937,7 +1953,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "Get crate metadata.",
+        "summary": "Gets crate metadata.",
         "tags": [
           "crates"
         ]
@@ -2016,7 +2032,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Update crate settings.",
+        "summary": "Updates crate settings.",
         "tags": [
           "crates"
         ]
@@ -2251,7 +2267,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List team owners of a crate.",
+        "summary": "Lists team owners of a crate.",
         "tags": [
           "owners"
         ]
@@ -2294,7 +2310,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List user owners of a crate.",
+        "summary": "Lists user owners of a crate.",
         "tags": [
           "owners"
         ]
@@ -2375,7 +2391,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Remove crate owners.",
+        "summary": "Removes crate owners.",
         "tags": [
           "owners"
         ]
@@ -2416,7 +2432,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List crate owners.",
+        "summary": "Lists crate owners.",
         "tags": [
           "owners"
         ]
@@ -2495,7 +2511,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Add crate owners.",
+        "summary": "Adds crate owners.",
         "tags": [
           "owners"
         ]
@@ -2592,7 +2608,7 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
-        "summary": "List reverse dependencies of a crate.",
+        "summary": "Lists reverse dependencies of a crate.",
         "tags": [
           "crates"
         ]
@@ -3675,6 +3691,11 @@ expression: response.json()
                         "null"
                       ]
                     },
+                    "cdn_base": {
+                      "description": "CDN base URL that e.g. crate files are served from.",
+                      "example": "https://static.crates.io",
+                      "type": "string"
+                    },
                     "commit": {
                       "description": "The SHA1 of the currently deployed commit.",
                       "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
@@ -3693,6 +3714,7 @@ expression: response.json()
                   "required": [
                     "deployed_sha",
                     "commit",
+                    "cdn_base",
                     "read_only"
                   ],
                   "type": "object"

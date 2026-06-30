@@ -89,8 +89,8 @@ impl<S: app_builder::State> AppBuilder<S> {
         let token_url = "https://github.com/login/oauth/access_token";
         let token_url = TokenUrl::new(token_url.into()).unwrap();
 
-        let github_oauth = BasicClient::new(config.gh_client_id.clone())
-            .set_client_secret(config.gh_client_secret.clone())
+        let github_oauth = BasicClient::new(config.github_oauth.client_id.clone())
+            .set_client_secret(config.github_oauth.client_secret.clone())
             .set_auth_uri(auth_url)
             .set_token_uri(token_url);
 
@@ -102,7 +102,7 @@ impl<S: app_builder::State> AppBuilder<S> {
     /// This method configures the OIDC key stores for the specified providers
     /// and expects a list of provider names as input.
     ///
-    /// Currently, only "github" is supported as a provider.
+    /// Currently, "github" and "gitlab" are supported as providers.
     pub fn trustpub_providers(
         self,
         providers: &[String],
@@ -192,13 +192,13 @@ impl App {
         &self.config.session_key
     }
 
-    /// Obtain a read/write database connection from the async primary pool
+    /// Obtains a read/write database connection from the async primary pool
     #[instrument(skip_all)]
     pub async fn db_write(&self) -> DeadpoolResult {
         self.primary_database.get().await
     }
 
-    /// Obtain a readonly database connection from the replica pool
+    /// Obtains a readonly database connection from the replica pool
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     #[instrument(skip_all)]
@@ -226,7 +226,7 @@ impl App {
         }
     }
 
-    /// Obtain a readonly database connection from the primary pool
+    /// Obtains a readonly database connection from the primary pool
     ///
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
     #[instrument(skip_all)]

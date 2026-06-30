@@ -3,6 +3,7 @@
 use async_trait::async_trait;
 use crates_io_env_vars::{var, var_parsed};
 use http::StatusCode;
+use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use tracing::warn;
 use url::Url;
@@ -41,18 +42,18 @@ pub trait DocsRsClient: Send + Sync {
 pub struct RealDocsRsClient {
     client: reqwest::Client,
     base_url: Url,
-    api_token: String,
+    api_token: SecretString,
 }
 
 impl RealDocsRsClient {
-    pub fn new(base_url: Url, api_token: impl Into<String>) -> Self {
+    pub fn new(base_url: Url, api_token: SecretString) -> Self {
         Self {
             client: reqwest::Client::builder()
                 .user_agent(crates_io_version::user_agent())
                 .build()
                 .unwrap(),
             base_url,
-            api_token: api_token.into(),
+            api_token,
         }
     }
 
@@ -68,7 +69,7 @@ impl RealDocsRsClient {
 
         let api_token = var("DOCS_RS_API_TOKEN").ok()??;
 
-        Some(Self::new(base_url, api_token))
+        Some(Self::new(base_url, api_token.into()))
     }
 }
 
@@ -83,7 +84,7 @@ impl DocsRsClient for RealDocsRsClient {
         let response = self
             .client
             .post(target_url)
-            .bearer_auth(&self.api_token)
+            .bearer_auth(self.api_token.expose_secret())
             .send()
             .await
             .map_err(|err| DocsRsError::Other(err.into()))?;
@@ -141,7 +142,7 @@ mod tests {
         let (server, mock) = mock("krate", "0.1.0", StatusCode::CREATED).await;
         mock.create();
 
-        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token");
+        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token".into());
 
         docs_rs.rebuild_docs("krate", "0.1.0").await?;
 
@@ -153,7 +154,7 @@ mod tests {
         let (server, mock) = mock("krate", "0.1.0", StatusCode::NOT_FOUND).await;
         mock.create();
 
-        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token");
+        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token".into());
 
         assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
@@ -168,7 +169,7 @@ mod tests {
         let (server, mock) = mock("krate", "0.1.0", StatusCode::TOO_MANY_REQUESTS).await;
         mock.create();
 
-        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token");
+        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token".into());
 
         assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
@@ -185,7 +186,7 @@ mod tests {
         let (server, mock) = mock("krate", "0.1.0", status).await;
         mock.create();
 
-        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token");
+        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token".into());
 
         assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
@@ -203,7 +204,7 @@ mod tests {
         }))?;
         mock.with_body(&body).create();
 
-        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token");
+        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token".into());
 
         assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
@@ -218,7 +219,7 @@ mod tests {
         let (server, mock) = mock("krate", "0.1.0", StatusCode::INTERNAL_SERVER_ERROR).await;
         mock.create();
 
-        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token");
+        let docs_rs = RealDocsRsClient::new(Url::parse(&server.url())?, "test_token".into());
 
         assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,

@@ -14,6 +14,7 @@ use std::sync::Arc;
 pub static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
+/// Request extension holding the session data
 #[derive(Clone, FromRequestParts)]
 #[from_request(via(Extension))]
 pub struct SessionExtension(Arc<RwLock<Session>>);
@@ -71,7 +72,6 @@ pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) 
     }
 }
 
-/// Request extension holding the session data
 pub struct Session {
     data: HashMap<String, String>,
     dirty: bool,

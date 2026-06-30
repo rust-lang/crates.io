@@ -10,7 +10,9 @@ BEGIN;
     ALTER TABLE "crates" DISABLE TRIGGER ALL;
     ALTER TABLE "keywords" DISABLE TRIGGER ALL;
     ALTER TABLE "metadata" DISABLE TRIGGER ALL;
+    ALTER TABLE "oauth_github" DISABLE TRIGGER ALL;
     ALTER TABLE "reserved_crate_names" DISABLE TRIGGER ALL;
+    ALTER TABLE "reserved_usernames" DISABLE TRIGGER ALL;
     ALTER TABLE "teams" DISABLE TRIGGER ALL;
     ALTER TABLE "users" DISABLE TRIGGER ALL;
     ALTER TABLE "crates_categories" DISABLE TRIGGER ALL;
@@ -24,6 +26,7 @@ BEGIN;
 
     -- Set defaults for non-nullable columns not included in the dump.
 
+    ALTER TABLE "oauth_github" ALTER COLUMN "encrypted_token" SET DEFAULT '';
     ALTER TABLE "users" ALTER COLUMN "gh_encrypted_token" SET DEFAULT '';
 
     -- Truncate all tables.
@@ -33,7 +36,9 @@ BEGIN;
     TRUNCATE "crates" RESTART IDENTITY CASCADE;
     TRUNCATE "keywords" RESTART IDENTITY CASCADE;
     TRUNCATE "metadata" RESTART IDENTITY CASCADE;
+    TRUNCATE "oauth_github" RESTART IDENTITY CASCADE;
     TRUNCATE "reserved_crate_names" RESTART IDENTITY CASCADE;
+    TRUNCATE "reserved_usernames" RESTART IDENTITY CASCADE;
     TRUNCATE "teams" RESTART IDENTITY CASCADE;
     TRUNCATE "users" RESTART IDENTITY CASCADE;
     TRUNCATE "crates_categories" RESTART IDENTITY CASCADE;
@@ -58,20 +63,23 @@ BEGIN;
     \copy "crates" ("created_at", "description", "documentation", "homepage", "id", "max_features", "max_upload_size", "name", "readme", "repository", "trustpub_only", "updated_at") FROM 'data/crates.csv' WITH CSV HEADER
     \copy "keywords" ("crates_cnt", "created_at", "id", "keyword") FROM 'data/keywords.csv' WITH CSV HEADER
     \copy "metadata" ("total_downloads") FROM 'data/metadata.csv' WITH CSV HEADER
+    \copy "oauth_github" ("account_id", "avatar", "login", "user_id") FROM 'data/oauth_github.csv' WITH CSV HEADER
     \copy "reserved_crate_names" ("name") FROM 'data/reserved_crate_names.csv' WITH CSV HEADER
+    \copy "reserved_usernames" ("username") FROM 'data/reserved_usernames.csv' WITH CSV HEADER
     \copy "teams" ("avatar", "github_id", "id", "login", "name", "org_id") FROM 'data/teams.csv' WITH CSV HEADER
-    \copy "users" ("gh_avatar", "gh_id", "gh_login", "id", "name", "username") FROM 'data/users.csv' WITH CSV HEADER
+    \copy "users" ("created_at", "gh_id", "gh_login", "id", "name", "username") FROM 'data/users.csv' WITH CSV HEADER
     \copy "crates_categories" ("category_id", "crate_id") FROM 'data/crates_categories.csv' WITH CSV HEADER
     \copy "crates_keywords" ("crate_id", "keyword_id") FROM 'data/crates_keywords.csv' WITH CSV HEADER
     \copy "crate_owners" ("crate_id", "created_at", "created_by", "owner_id", "owner_kind") FROM 'data/crate_owners.csv' WITH CSV HEADER
     \copy "deleted_crates" ("available_at", "created_at", "deleted_at", "deleted_by", "id", "message", "name") FROM 'data/deleted_crates.csv' WITH CSV HEADER
-    \copy "versions" ("bin_names", "categories", "checksum", "crate_id", "crate_size", "created_at", "description", "documentation", "downloads", "edition", "features", "has_lib", "homepage", "id", "keywords", "license", "links", "num", "num_no_build", "published_by", "repository", "rust_version", "updated_at", "yanked") FROM 'data/versions.csv' WITH CSV HEADER
+    \copy "versions" ("bin_names", "categories", "crate_id", "crate_size", "created_at", "description", "documentation", "downloads", "edition", "features", "has_lib", "homepage", "id", "keywords", "license", "links", "num", "num_no_build", "published_by", "repository", "rust_version", "tar_sha256", "updated_at", "yanked", "zip_json_sha256", "zip_sha256") FROM 'data/versions.csv' WITH CSV HEADER
     \copy "default_versions" ("crate_id", "num_versions", "version_id") FROM 'data/default_versions.csv' WITH CSV HEADER
     \copy "dependencies" ("crate_id", "default_features", "explicit_name", "features", "id", "kind", "optional", "req", "target", "version_id") FROM 'data/dependencies.csv' WITH CSV HEADER
     \copy "version_downloads" ("date", "downloads", "version_id") FROM 'data/version_downloads.csv' WITH CSV HEADER
 
     -- Drop the defaults again.
 
+    ALTER TABLE "oauth_github" ALTER COLUMN "encrypted_token" DROP DEFAULT;
     ALTER TABLE "users" ALTER COLUMN "gh_encrypted_token" DROP DEFAULT;
 
     -- Reenable triggers on each table.
@@ -81,7 +89,9 @@ BEGIN;
     ALTER TABLE "crates" ENABLE TRIGGER ALL;
     ALTER TABLE "keywords" ENABLE TRIGGER ALL;
     ALTER TABLE "metadata" ENABLE TRIGGER ALL;
+    ALTER TABLE "oauth_github" ENABLE TRIGGER ALL;
     ALTER TABLE "reserved_crate_names" ENABLE TRIGGER ALL;
+    ALTER TABLE "reserved_usernames" ENABLE TRIGGER ALL;
     ALTER TABLE "teams" ENABLE TRIGGER ALL;
     ALTER TABLE "users" ENABLE TRIGGER ALL;
     ALTER TABLE "crates_categories" ENABLE TRIGGER ALL;

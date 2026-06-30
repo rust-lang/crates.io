@@ -68,9 +68,9 @@ export default http.get('/api/v1/crates', async ({ request }) => {
 
   let sort = url.searchParams.get('sort');
   if (sort === 'alpha') {
-    crates = crates.sort((a, b) => compare(a.name.toLowerCase(), b.name.toLowerCase()));
+    crates = crates.toSorted((a, b) => compare(a.name.toLowerCase(), b.name.toLowerCase()));
   } else if (sort === 'recent-downloads') {
-    crates = crates.sort((a, b) => b.recent_downloads - a.recent_downloads);
+    crates = crates.toSorted((a, b) => b.recent_downloads - a.recent_downloads);
   }
 
   let total = crates.length;

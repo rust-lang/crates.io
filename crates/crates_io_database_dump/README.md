@@ -1,4 +1,4 @@
-# crates_io_database_dump
+# `crates_io_database_dump`
 
 This package contains the code and data to create a database dump for the
 crates.io database.

@@ -32,7 +32,7 @@ impl BackgroundJob for ArchiveIndexBranch {
 
     type Context = Arc<Environment>;
 
-    /// Mirror a snapshot branch from the crate index to the configured archive
+    /// Mirrors a snapshot branch from the crate index to the configured archive
     /// repository. No-op when no archive URL is configured.
     ///
     /// Each invocation works against a fresh, ephemeral bare clone of the
@@ -145,7 +145,7 @@ impl BackgroundJob for ArchiveIndexBranch {
     }
 }
 
-/// Return a copy of `base` with `x-access-token` / `token` embedded as the
+/// Returns a copy of `base` with `x-access-token` / `token` embedded as the
 /// HTTPS credentials git consumes when pushing. Returns `Err(())` when the
 /// URL scheme does not allow userinfo (e.g. `file://`).
 fn build_credentialed_url(base: &Url, token: &str) -> Result<Url, ()> {
@@ -155,7 +155,7 @@ fn build_credentialed_url(base: &Url, token: &str) -> Result<Url, ()> {
     Ok(url)
 }
 
-/// Pick the URL to use for the read-only clone of the index.
+/// Picks the URL to use for the read-only clone of the index.
 ///
 /// `GIT_REPO_URL` is configured as an SSH URL in production so the index
 /// workers that push can authenticate with the deploy key. github.com

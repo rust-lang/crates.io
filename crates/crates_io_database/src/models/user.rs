@@ -31,6 +31,7 @@ pub struct User {
     pub is_admin: bool,
     pub publish_notifications: bool,
     pub username: String,
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 impl User {
@@ -64,7 +65,7 @@ impl User {
     }
 
     /// Queries the database for the verified emails
-    /// belonging to a given user
+    /// belonging to a given user.
     pub async fn verified_email(
         &self,
         mut conn: &AsyncPgConnection,
@@ -77,7 +78,7 @@ impl User {
             .optional()
     }
 
-    /// Queries for the email belonging to a particular user
+    /// Queries for the email belonging to a particular user.
     pub async fn email(&self, mut conn: &AsyncPgConnection) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
@@ -95,7 +96,6 @@ pub struct NewUser<'a> {
     pub gh_login: &'a str,
     pub username: &'a str,
     pub name: Option<&'a str>,
-    pub gh_avatar: Option<&'a str>,
     pub gh_encrypted_token: &'a [u8],
 }
 
@@ -132,7 +132,6 @@ impl NewUser<'_> {
                 users::gh_login.eq(excluded(users::gh_login)),
                 users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
-                users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
             .returning(users::id)
@@ -152,14 +151,14 @@ impl NewUser<'_> {
 )]
 pub struct OauthGithub {
     /// In the process of being migrated from `users.gh_id`.
-    /// GitHub API docs describe this type as int64
+    /// GitHub API docs describe this type as int64.
     pub account_id: i64,
     /// In the process of being migrated from `users.gh_avatar`.
     pub avatar: Option<String>,
     /// In the process of being migrated from `users.gh_encrypted_token`.
     pub encrypted_token: Vec<u8>,
     /// The last time we verified with GitHub what the GitHub username for this user was, and
-    /// whether the account was valid
+    /// whether the account was valid.
     pub last_sync: DateTime<Utc>,
     /// In the process of being migrated from `users.gh_login`.
     pub login: String,

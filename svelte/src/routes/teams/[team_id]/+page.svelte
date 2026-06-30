@@ -15,7 +15,7 @@
   let pagination = $derived(calculatePagination(data.page, data.perPage, data.cratesResponse.meta.total, MAX_PAGES));
 
   // login format is "github:org_name:team_name"
-  let orgName = $derived(data.team.login.split(':')[1]);
+  let orgName = $derived(data.team.login.split(':', 2)[1]);
 
   let currentSortBy = $derived.by(() => {
     if (data.sort === 'downloads') return 'All-Time Downloads';

@@ -15,13 +15,12 @@ use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
-use crates_io_github::{GitHubClient, GitHubError};
+use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
-use oauth2::AccessToken;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -32,7 +31,7 @@ pub struct UsersResponse {
     pub users: Vec<EncodableOwner>,
 }
 
-/// List crate owners.
+/// Lists crate owners.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owners",
@@ -60,7 +59,7 @@ pub struct TeamsResponse {
     pub teams: Vec<EncodableOwner>,
 }
 
-/// List team owners of a crate.
+/// Lists team owners of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owner_team",
@@ -81,7 +80,7 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
     Ok(Json(TeamsResponse { teams }))
 }
 
-/// List user owners of a crate.
+/// Lists user owners of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owner_user",
@@ -113,7 +112,7 @@ pub struct ModifyResponse {
     pub ok: bool,
 }
 
-/// Add crate owners.
+/// Adds crate owners.
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/owners",
@@ -135,7 +134,7 @@ pub async fn add_owners(
     modify_owners(app, path.name, parts, body, true).await
 }
 
-/// Remove crate owners.
+/// Removes crate owners.
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/owners",
@@ -315,7 +314,7 @@ async fn modify_owners(
     Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
-/// Invite `login` as an owner of this crate, returning the created
+/// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
 async fn add_owner(
     app: &App,
@@ -447,7 +446,9 @@ pub async fn create_or_update_github_team(
                 format!("Failed to decrypt GitHub token: {err}"),
             )
         })?;
-    let team = gh_client.team_by_name(org_name, team_name, &token).await
+
+    let auth = GitHubAuth::bearer(token);
+    let team = gh_client.team_by_name(org_name, team_name, &auth).await
         .map_err(|_| {
             bad_request(format_args!(
                 "could not find the github team {org_name}/{team_name}. \
@@ -460,12 +461,12 @@ pub async fn create_or_update_github_team(
     let gh_login = &req_user.gh_login;
 
     let is_team_member = gh_client
-        .team_membership(org_id, team.id, gh_login, &token)
+        .team_membership(org_id, team.id, gh_login, &auth)
         .await?
         .is_some_and(|m| m.is_active());
 
     let can_add_team =
-        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &token).await?;
+        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &auth).await?;
 
     if !can_add_team {
         return Err(custom(
@@ -474,7 +475,7 @@ pub async fn create_or_update_github_team(
         ));
     }
 
-    let org = gh_client.org_by_name(org_name, &token).await?;
+    let org = gh_client.org_by_name(org_name, &auth).await?;
 
     NewTeam::builder()
         .login(&login.to_lowercase())
@@ -492,13 +493,13 @@ async fn is_gh_org_owner(
     gh_client: &dyn GitHubClient,
     org_id: i32,
     gh_login: &str,
-    token: &AccessToken,
+    auth: &GitHubAuth,
 ) -> Result<bool, GitHubError> {
-    let membership = gh_client.org_membership(org_id, gh_login, token).await?;
+    let membership = gh_client.org_membership(org_id, gh_login, auth).await?;
     Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
-/// Error results from a [`add_owner()`] model call.
+/// Error results from an [`add_owner()`] call.
 #[derive(Debug, Error)]
 enum OwnerAddError {
     #[error(transparent)]

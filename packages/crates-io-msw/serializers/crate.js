@@ -44,7 +44,7 @@ export function serializeCrate(
     serialized.max_version = unyankedVersions[0] ?? '0.0.0';
     serialized.max_stable_version = unyankedVersions.find(it => !prerelease(it, { loose: true })) ?? null;
 
-    let newestVersions = versions.filter(it => !it.yanked).sort((a, b) => compareDates(b.updated_at, a.updated_at));
+    let newestVersions = versions.filter(it => !it.yanked).toSorted((a, b) => compareDates(b.updated_at, a.updated_at));
     serialized.newest_version = newestVersions[0]?.num ?? '0.0.0';
   } else {
     serialized.max_version = '0.0.0';

@@ -33,6 +33,11 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             }
         };
 
+        if json.version() != "1" {
+            warn!("Unsupported log line version: {}", json.version());
+            continue;
+        }
+
         if json.method() != "GET" {
             // Ignore non-GET requests.
             continue;
@@ -61,7 +66,10 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             continue;
         };
 
-        let date = json.date_time().date_naive();
+        let Some(date) = json.date() else {
+            warn!("Failed to parse date `{}`", json.date_time);
+            continue;
+        };
 
         downloads.add(name, version, date);
     }
@@ -81,7 +89,7 @@ fn parse_json(json: &str) -> Result<json::LogLine<'_>, serde_json::Error> {
     serde_json::from_str(json)
 }
 
-/// Deal with paths like `/crates/tikv-jemalloc-sys/tikv-jemalloc-sys-0.5.4%2B5.3.0-patched.crate`.
+/// Deals with paths like `/crates/tikv-jemalloc-sys/tikv-jemalloc-sys-0.5.4%2B5.3.0-patched.crate`.
 ///
 /// Compared to the CloudFront logs, we only need a single round of
 /// percent-decoding here, since JSON has its own escaping rules.

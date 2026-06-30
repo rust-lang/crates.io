@@ -30,7 +30,7 @@ pub struct GitLabClaims {
 }
 
 impl GitLabClaims {
-    /// Decode and validate a JWT token, returning the relevant claims if valid.
+    /// Decodes and validates a JWT token, returning the relevant claims if valid.
     pub fn decode(token: &str, audience: &str, key: &DecodingKey) -> Result<Self, Error> {
         let validation = validation(audience);
 
@@ -44,8 +44,8 @@ impl GitLabClaims {
         Ok(claims)
     }
 
-    /// Extract the workflow filename from the [`workflow_ref`](Self::workflow_ref)
-    /// field or return `None` if the filename cannot be extracted.
+    /// Extracts the workflow filepath from the [`ci_config_ref_uri`](Self::ci_config_ref_uri)
+    /// field or returns `None` if the filepath cannot be extracted.
     pub fn workflow_filepath(&self) -> Option<&str> {
         extract_workflow_filepath(&self.ci_config_ref_uri)
     }

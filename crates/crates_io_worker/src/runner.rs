@@ -35,14 +35,14 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
         }
     }
 
-    /// Register a new job type for this job runner.
+    /// Registers a new job type for this job runner.
     pub fn register_job_type<J: BackgroundJob<Context = Context>>(mut self) -> Self {
         let queue = self.queues.entry(J::QUEUE.into()).or_default();
         queue.job_registry.register::<J>();
         self
     }
 
-    /// Adjust the configuration of the [DEFAULT_QUEUE] queue.
+    /// Adjusts the configuration of the [`DEFAULT_QUEUE`] queue.
     pub fn configure_default_queue<F>(self, f: F) -> Self
     where
         F: FnOnce(&mut Queue<Context>) -> &Queue<Context>,
@@ -50,7 +50,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
         self.configure_queue(DEFAULT_QUEUE, f)
     }
 
-    /// Adjust the configuration of a queue. If the queue does not exist,
+    /// Adjusts the configuration of a queue. If the queue does not exist,
     /// it will be created.
     pub fn configure_queue<F>(mut self, name: &str, f: F) -> Self
     where
@@ -60,15 +60,15 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
         self
     }
 
-    /// Set the runner to shut down when the background job queue is empty.
+    /// Sets the runner to shut down when the background job queue is empty.
     pub fn shutdown_when_queue_empty(mut self) -> Self {
         self.shutdown_when_queue_empty = true;
         self
     }
 
-    /// Start the background workers.
+    /// Starts the background workers.
     ///
-    /// This returns a `RunningRunner` which can be used to wait for the workers to shutdown.
+    /// This returns a `RunHandle` which can be used to wait for the workers to shutdown.
     pub fn start(&self) -> RunHandle {
         // Workers wait on this to be woken up when a new job is enqueued.
         let notify = Arc::new(Notify::new());
@@ -120,7 +120,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
         RunHandle { handles }
     }
 
-    /// Check if any jobs in the queue have failed.
+    /// Checks if any jobs in the queue have failed.
     ///
     /// This function is intended for use in tests and will return an error if
     /// any jobs have failed.
@@ -141,7 +141,7 @@ pub struct RunHandle {
 }
 
 impl RunHandle {
-    /// Wait for all background workers to shut down.
+    /// Waits for all background workers to shut down.
     pub async fn wait_for_shutdown(self) {
         join_all(self.handles).await.into_iter().for_each(|result| {
             if let Err(error) = result {
@@ -168,13 +168,13 @@ impl<Context> Default for Queue<Context> {
 }
 
 impl<Context> Queue<Context> {
-    /// Set the number of workers to spawn for this queue.
+    /// Sets the number of workers to spawn for this queue.
     pub fn num_workers(&mut self, num_workers: usize) -> &mut Self {
         self.num_workers = num_workers;
         self
     }
 
-    /// Set the interval after which each worker of this queue polls for new jobs.
+    /// Sets the interval after which each worker of this queue polls for new jobs.
     pub fn poll_interval(&mut self, poll_interval: Duration) -> &mut Self {
         self.poll_interval = poll_interval;
         self

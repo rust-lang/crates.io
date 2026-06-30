@@ -14,7 +14,9 @@ use tracing::{info, warn};
 const CHUNKS_MAX_SIZE_BYTES: usize = 5000;
 
 /// The `LogEncoder` struct encodes Prometheus metrics in the format [`crates-io-heroku-metrics`]
-/// expects metrics to be logged. This can be used to forward instance metrics to it, allowing them
+/// expects metrics to be logged.
+///
+/// This can be used to forward instance metrics to it, allowing them
 /// to be scraped by the Rust infrastructure monitoring system.
 ///
 /// The metrics are encoded in the format [Vector expects them][vector], and the list of metrics is
@@ -131,16 +133,16 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
     events
 }
 
-/// Serialize a list of items into multiple Base64-encoded JSON chunks.
+/// Serializes a list of items into multiple Base64-encoded JSON chunks.
 ///
 /// Our hosting platform (Heroku) limits the size of log lines, arbitrarily splitting them once
 /// they reach a threshold. We can't let Heroku do the split as it doesn't know where to properly
 /// do that, so we need to do the splitting ourselves.
 ///
 /// This function takes an iterator of serializable items and returns the serialized version,
-/// possibly split into multiple chunks. Each chunk is *at least* `max_size_hint` long, as the
-/// function stops serializing new items in the same chunk only when the size limit is reached
-/// after serializing an item.
+/// possibly split into multiple chunks. Every chunk except the last is *at least* `max_size_hint`
+/// long, as the function stops serializing new items in the same chunk only when the size limit is
+/// reached after serializing an item.
 ///
 /// Because of that `max_size_hint` should be lower than the upper bound we can't cross.
 fn serialize_and_split_list<'a, S: Serialize + 'a>(

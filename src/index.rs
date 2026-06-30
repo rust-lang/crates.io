@@ -55,7 +55,7 @@ pub async fn get_index_data(
     Ok(Some(str))
 }
 
-/// Gather all the necessary data to write an index metadata file
+/// Gathers all the necessary data to write an index metadata file.
 pub async fn index_metadata(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
@@ -123,7 +123,7 @@ pub async fn index_metadata(
             let krate = crates_io_index::Crate {
                 name: krate.name.clone(),
                 vers: version.num.to_string(),
-                cksum: version.checksum,
+                cksum: hex::encode(version.tar_sha256),
                 yanked: Some(version.yanked),
                 deps,
                 features,
@@ -189,7 +189,10 @@ mod tests {
                     .created_at(created_at_2)
                     .dependency(&fooo, None),
             )
-            .version(VersionBuilder::new("1.0.1").checksum("0123456789abcdef"))
+            .version(
+                VersionBuilder::new("1.0.1")
+                    .checksum("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+            )
             .expect_build(&mut conn)
             .await;
 

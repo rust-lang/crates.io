@@ -1,5 +1,6 @@
 use crate::models::OwnerKind;
 use crate::schema::*;
+use crate::storage::StorageKey;
 use crate::worker::Environment;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
@@ -11,7 +12,6 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tokio::fs;
 use tracing::{error, info, instrument, warn};
 
 #[derive(Serialize, Deserialize)]
@@ -87,15 +87,11 @@ impl BackgroundJob for GenerateOgImage {
         };
 
         // Generate the OG image
-        let temp_file = option.generate(og_data).await?;
-
-        // Read the generated image
-        let image_bytes = fs::read(temp_file.path()).await?;
+        let image_bytes = option.generate(og_data).await?;
 
         // Upload to storage
-        ctx.storage
-            .upload_og_image(crate_name, image_bytes.into())
-            .await?;
+        let key = StorageKey::for_og_image(crate_name);
+        ctx.storage.upload(&key, image_bytes.into()).await?;
 
         info!("Successfully generated and uploaded OG image for crate {crate_name}");
 
@@ -105,7 +101,7 @@ impl BackgroundJob for GenerateOgImage {
         }
 
         // Invalidate CDN cache for the OG image
-        let og_image_path = format!("og-images/{crate_name}.png");
+        let og_image_path = key.cdn_path();
 
         // Queue CloudFront invalidation for batch processing
         if ctx.cloudfront().is_some() {
@@ -192,10 +188,11 @@ async fn fetch_user_owners(
 ) -> QueryResult<Vec<(String, Option<String>)>> {
     crate_owners::table
         .inner_join(users::table.on(crate_owners::owner_id.eq(users::id)))
+        .left_join(oauth_github::table.on(users::id.eq(oauth_github::user_id)))
         .filter(crate_owners::crate_id.eq(crate_id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .filter(crate_owners::deleted.eq(false))
-        .select((users::gh_login, users::gh_avatar))
+        .select((users::gh_login, oauth_github::avatar.nullable()))
         .load(&mut conn)
         .await
 }

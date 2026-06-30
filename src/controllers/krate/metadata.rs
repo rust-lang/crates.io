@@ -58,7 +58,7 @@ pub struct GetResponse {
     categories: Option<Vec<EncodableCategory>>,
 }
 
-/// Get crate metadata (for the `new` crate).
+/// Gets crate metadata (for the `new` crate).
 ///
 /// This endpoint works around a small limitation in `axum` and is delegating
 /// to the `GET /api/v1/crates/{name}` endpoint internally.
@@ -76,7 +76,7 @@ pub async fn find_new_crate(
     find_crate(app, CratePath { name }, params).await
 }
 
-/// Get crate metadata.
+/// Gets crate metadata.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}",

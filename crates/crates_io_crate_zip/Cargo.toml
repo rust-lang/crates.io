@@ -1,0 +1,23 @@
+[package]
+name = "crates_io_crate_zip"
+version = "0.0.0"
+description = "Builds zip archives and JSON manifests from crate tarballs"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = "=1.0.103"
+flate2 = "=1.1.9"
+hex = "=0.4.3"
+serde = { version = "=1.0.228", features = ["derive"] }
+sha2 = "=0.11.0"
+tar = { version = "=0.4.46", default-features = false }
+zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+claims = "=0.8.0"
+crates_io_tarball = { path = "../crates_io_tarball", features = ["builder"] }
+insta = "=1.48.0"

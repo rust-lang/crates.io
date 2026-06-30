@@ -22,7 +22,7 @@ pub struct CrateBuilder<'a> {
 }
 
 impl<'a> CrateBuilder<'a> {
-    /// Create a new instance with the given crate name and owner. If the owner with the given ID
+    /// Creates a new instance with the given crate name and owner. If the owner with the given ID
     /// doesn't exist in the database, `expect_build` will fail.
     pub fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {

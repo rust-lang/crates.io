@@ -8,6 +8,7 @@ use axum_extra::headers::CacheControl;
 use http::request::Parts;
 use http::{StatusCode, header};
 use prometheus::TextEncoder;
+use secrecy::ExposeSecret;
 
 /// Handles the `GET /api/private/metrics/{kind}` endpoint.
 pub async fn prometheus(
@@ -15,14 +16,14 @@ pub async fn prometheus(
     Path(kind): Path<String>,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, String)> {
-    if let Some(expected_token) = &app.config.metrics_authorization_token {
+    if let Some(expected_token) = &app.config.metrics.authorization_token {
         let provided_token = req
             .headers
             .get(header::AUTHORIZATION)
             .and_then(|value| value.to_str().ok())
             .and_then(|value| value.strip_prefix("Bearer "));
 
-        if provided_token != Some(expected_token.as_str()) {
+        if provided_token != Some(expected_token.expose_secret()) {
             return Err(forbidden("invalid or missing authorization token"));
         }
     } else {

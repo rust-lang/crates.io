@@ -36,7 +36,7 @@ impl VisibilityConfig {
         toml::from_str(include_str!("dump-db.toml")).unwrap()
     }
 
-    /// Sort the tables in a way that dependencies come before dependent tables.
+    /// Sorts the tables in a way that dependencies come before dependent tables.
     ///
     /// Returns a vector of table names.
     pub fn topological_sort(&self) -> Vec<&str> {

@@ -5,13 +5,13 @@ use insta::assert_snapshot;
 use serde_json::json;
 
 pub trait YankRequestHelper {
-    /// Yank the specified version of the specified crate and run all pending background jobs
+    /// Yanks the specified version of the specified crate and runs all pending background jobs.
     async fn yank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
 
-    /// Unyank the specified version of the specified crate and run all pending background jobs
+    /// Unyanks the specified version of the specified crate and runs all pending background jobs.
     async fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
 
-    /// Update the yank status of the specified version of the specified crate with a patch request and run all pending background jobs
+    /// Updates the yank status of the specified version of the specified crate with a patch request and runs all pending background jobs.
     async fn update_yank_status(
         &self,
         krate_name: &str,

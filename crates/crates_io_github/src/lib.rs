@@ -7,9 +7,9 @@ mod slug;
 
 pub use crate::slug::{ParseSlugError, parse_github_slug};
 
-use oauth2::AccessToken;
 use reqwest::{self, RequestBuilder, header};
 
+use secrecy::{ExposeSecret, SecretString};
 use serde::de::DeserializeOwned;
 
 use std::str;
@@ -21,47 +21,108 @@ use url::Url;
 
 type Result<T> = std::result::Result<T, GitHubError>;
 
+/// Authentication mode for a request to the GitHub API.
+///
+/// Each [`GitHubClient`] method takes a `&GitHubAuth` so the
+/// authentication mode is decided at the call site rather than baked into
+/// the method signature.
+#[derive(Debug, Clone)]
+pub enum GitHubAuth {
+    /// Unauthenticated request. Used for reads against public
+    /// repositories where the unauthenticated rate limit is sufficient.
+    None,
+    /// OAuth/installation bearer token authentication.
+    Bearer { token: SecretString },
+    /// HTTP basic authentication, used for the secret-scanning public key
+    /// endpoint where the OAuth client id/secret act as the credentials.
+    Basic {
+        username: String,
+        password: SecretString,
+    },
+}
+
+impl GitHubAuth {
+    /// Creates a [`GitHubAuth::Bearer`] authentication mode from a bearer
+    /// token.
+    pub fn bearer(token: impl Into<SecretString>) -> Self {
+        GitHubAuth::Bearer {
+            token: token.into(),
+        }
+    }
+
+    /// Creates an [`GitHubAuth::Basic`] authentication mode from a username
+    /// and password.
+    pub fn basic(username: impl Into<String>, password: impl Into<SecretString>) -> Self {
+        GitHubAuth::Basic {
+            username: username.into(),
+            password: password.into(),
+        }
+    }
+
+    /// Applies this authentication mode to the given request builder.
+    fn apply(&self, request: RequestBuilder) -> RequestBuilder {
+        match self {
+            GitHubAuth::None => request,
+            GitHubAuth::Bearer { token } => request.bearer_auth(token.expose_secret()),
+            GitHubAuth::Basic { username, password } => {
+                request.basic_auth(username, Some(password.expose_secret()))
+            }
+        }
+    }
+}
+
 #[cfg_attr(feature = "mock", mockall::automock)]
 #[async_trait]
 pub trait GitHubClient: Send + Sync {
-    async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser>;
-    async fn get_user(&self, name: &str, auth: &AccessToken) -> Result<GitHubUser>;
-    async fn get_user_by_id(&self, account_id: i64, auth: &AccessToken) -> Result<GitHubUser>;
-    async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization>;
+    async fn current_user(&self, auth: &GitHubAuth) -> Result<GitHubUser>;
+    async fn get_user(&self, name: &str, auth: &GitHubAuth) -> Result<GitHubUser>;
+    async fn get_user_by_id(&self, account_id: i64, auth: &GitHubAuth) -> Result<GitHubUser>;
+    async fn org_by_name(&self, org_name: &str, auth: &GitHubAuth) -> Result<GitHubOrganization>;
     async fn team_by_name(
         &self,
         org_name: &str,
         team_name: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitHubTeam>;
     async fn team_membership(
         &self,
         org_id: i32,
         team_id: i32,
         username: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<Option<GitHubTeamMembership>>;
     async fn org_membership(
         &self,
         org_id: i32,
         username: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<Option<GitHubOrgMembership>>;
-    async fn public_keys(&self, username: &str, password: &str) -> Result<Vec<GitHubPublicKey>>;
+
+    /// Returns the list of public keys that can be used to verify GitHub
+    /// secret alert signatures.
+    async fn public_keys(&self, auth: &GitHubAuth) -> Result<Vec<GitHubPublicKey>>;
 
     /// Fetches a single git ref.
     ///
     /// `ref_name` may be given either fully qualified (e.g.
     /// `"refs/heads/master"`) or without the `refs/` prefix (e.g.
-    /// `"heads/master"`). The call is unauthenticated; the crates.io
-    /// index repositories are public and the 60/hour unauthenticated
-    /// rate limit is plenty for this use case.
-    async fn get_ref(&self, owner: &str, repo: &str, ref_name: &str) -> Result<GitRef>;
+    /// `"heads/master"`).
+    async fn get_ref(
+        &self,
+        owner: &str,
+        repo: &str,
+        ref_name: &str,
+        auth: &GitHubAuth,
+    ) -> Result<GitRef>;
 
     /// Fetches a single commit object by its SHA.
-    ///
-    /// Unauthenticated, same rationale as [`GitHubClient::get_ref`].
-    async fn get_commit(&self, owner: &str, repo: &str, sha: &str) -> Result<GitCommit>;
+    async fn get_commit(
+        &self,
+        owner: &str,
+        repo: &str,
+        sha: &str,
+        auth: &GitHubAuth,
+    ) -> Result<GitCommit>;
 
     /// Creates a new commit object in the given repository.
     ///
@@ -73,7 +134,7 @@ pub trait GitHubClient: Send + Sync {
         owner: &str,
         repo: &str,
         input: &CreateCommit<'a>,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitCommit>;
 
     /// Creates a new git ref.
@@ -86,7 +147,7 @@ pub trait GitHubClient: Send + Sync {
         repo: &str,
         ref_name: &str,
         sha: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitRef>;
 
     /// Updates an existing git ref to point at `sha`.
@@ -101,7 +162,7 @@ pub trait GitHubClient: Send + Sync {
         ref_name: &str,
         sha: &str,
         force: bool,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitRef>;
 }
 
@@ -122,10 +183,9 @@ impl RealGitHubClient {
     }
 
     /// Does all the nonsense for sending a GET to GitHub.
-    async fn _request<T, A>(&self, url: &str, apply_auth: A) -> Result<T>
+    async fn request<T>(&self, url: &str, auth: &GitHubAuth) -> Result<T>
     where
         T: DeserializeOwned,
-        A: Fn(RequestBuilder) -> RequestBuilder,
     {
         let url = self
             .base_url
@@ -139,7 +199,7 @@ impl RealGitHubClient {
             .header(header::ACCEPT, "application/vnd.github.v3+json")
             .header(header::USER_AGENT, "crates.io (https://crates.io)");
 
-        let response = apply_auth(request).send().await?.error_for_status()?;
+        let response = auth.apply(request).send().await?.error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
@@ -150,17 +210,16 @@ impl RealGitHubClient {
     }
 
     /// Sends a request with a JSON body to GitHub.
-    async fn _mutate<B, T, A>(
+    async fn _mutate<B, T>(
         &self,
         method: reqwest::Method,
         url: &str,
         body: &B,
-        apply_auth: A,
+        auth: &GitHubAuth,
     ) -> Result<T>
     where
         B: Serialize + ?Sized,
         T: DeserializeOwned,
-        A: Fn(RequestBuilder) -> RequestBuilder,
     {
         let url = self
             .base_url
@@ -175,7 +234,7 @@ impl RealGitHubClient {
             .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .json(body);
 
-        let response = apply_auth(request).send().await?.error_for_status()?;
+        let response = auth.apply(request).send().await?.error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
@@ -184,42 +243,25 @@ impl RealGitHubClient {
 
         response.json().await.map_err(Into::into)
     }
-
-    /// Sends a GET to GitHub using OAuth access token authentication
-    pub async fn request<T>(&self, url: &str, auth: &AccessToken) -> Result<T>
-    where
-        T: DeserializeOwned,
-    {
-        self._request(url, |r| r.bearer_auth(auth.secret())).await
-    }
-
-    /// Sends a GET to GitHub using basic authentication
-    pub async fn request_basic<T>(&self, url: &str, username: &str, password: &str) -> Result<T>
-    where
-        T: DeserializeOwned,
-    {
-        self._request(url, |r| r.basic_auth(username, Some(password)))
-            .await
-    }
 }
 
 #[async_trait]
 impl GitHubClient for RealGitHubClient {
-    async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser> {
+    async fn current_user(&self, auth: &GitHubAuth) -> Result<GitHubUser> {
         self.request("/user", auth).await
     }
 
-    async fn get_user(&self, name: &str, auth: &AccessToken) -> Result<GitHubUser> {
+    async fn get_user(&self, name: &str, auth: &GitHubAuth) -> Result<GitHubUser> {
         let url = format!("/users/{name}");
         self.request(&url, auth).await
     }
 
-    async fn get_user_by_id(&self, account_id: i64, auth: &AccessToken) -> Result<GitHubUser> {
+    async fn get_user_by_id(&self, account_id: i64, auth: &GitHubAuth) -> Result<GitHubUser> {
         let url = format!("/user/{account_id}");
         self.request(&url, auth).await
     }
 
-    async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization> {
+    async fn org_by_name(&self, org_name: &str, auth: &GitHubAuth) -> Result<GitHubOrganization> {
         let url = format!("/orgs/{org_name}");
         self.request(&url, auth).await
     }
@@ -228,7 +270,7 @@ impl GitHubClient for RealGitHubClient {
         &self,
         org_name: &str,
         team_name: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitHubTeam> {
         let url = format!("/orgs/{org_name}/teams/{team_name}");
         self.request(&url, auth).await
@@ -239,7 +281,7 @@ impl GitHubClient for RealGitHubClient {
         org_id: i32,
         team_id: i32,
         username: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<Option<GitHubTeamMembership>> {
         let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
         match self.request(&url, auth).await {
@@ -254,7 +296,7 @@ impl GitHubClient for RealGitHubClient {
         &self,
         org_id: i32,
         username: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<Option<GitHubOrgMembership>> {
         let url = format!("/organizations/{org_id}/memberships/{username}");
         match self.request(&url, auth).await {
@@ -264,27 +306,35 @@ impl GitHubClient for RealGitHubClient {
         }
     }
 
-    /// Returns the list of public keys that can be used to verify GitHub secret alert signatures
-    async fn public_keys(&self, username: &str, password: &str) -> Result<Vec<GitHubPublicKey>> {
+    async fn public_keys(&self, auth: &GitHubAuth) -> Result<Vec<GitHubPublicKey>> {
         let url = "/meta/public_keys/secret_scanning";
-        match self
-            .request_basic::<GitHubPublicKeyList>(url, username, password)
-            .await
-        {
+        match self.request::<GitHubPublicKeyList>(url, auth).await {
             Ok(v) => Ok(v.public_keys),
             Err(e) => Err(e),
         }
     }
 
-    async fn get_ref(&self, owner: &str, repo: &str, ref_name: &str) -> Result<GitRef> {
+    async fn get_ref(
+        &self,
+        owner: &str,
+        repo: &str,
+        ref_name: &str,
+        auth: &GitHubAuth,
+    ) -> Result<GitRef> {
         let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
         let path = format!("/repos/{owner}/{repo}/git/ref/{ref_path}");
-        self._request(&path, std::convert::identity).await
+        self.request(&path, auth).await
     }
 
-    async fn get_commit(&self, owner: &str, repo: &str, sha: &str) -> Result<GitCommit> {
+    async fn get_commit(
+        &self,
+        owner: &str,
+        repo: &str,
+        sha: &str,
+        auth: &GitHubAuth,
+    ) -> Result<GitCommit> {
         let path = format!("/repos/{owner}/{repo}/git/commits/{sha}");
-        self._request(&path, std::convert::identity).await
+        self.request(&path, auth).await
     }
 
     async fn create_commit<'a>(
@@ -292,13 +342,11 @@ impl GitHubClient for RealGitHubClient {
         owner: &str,
         repo: &str,
         input: &CreateCommit<'a>,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitCommit> {
         let path = format!("/repos/{owner}/{repo}/git/commits");
-        self._mutate(reqwest::Method::POST, &path, input, |r| {
-            r.bearer_auth(auth.secret())
-        })
-        .await
+        self._mutate(reqwest::Method::POST, &path, input, auth)
+            .await
     }
 
     async fn create_ref(
@@ -307,7 +355,7 @@ impl GitHubClient for RealGitHubClient {
         repo: &str,
         ref_name: &str,
         sha: &str,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitRef> {
         #[derive(Serialize)]
         struct Body<'a> {
@@ -318,10 +366,8 @@ impl GitHubClient for RealGitHubClient {
 
         let path = format!("/repos/{owner}/{repo}/git/refs");
         let body = Body { ref_name, sha };
-        self._mutate(reqwest::Method::POST, &path, &body, |r| {
-            r.bearer_auth(auth.secret())
-        })
-        .await
+        self._mutate(reqwest::Method::POST, &path, &body, auth)
+            .await
     }
 
     async fn update_ref(
@@ -331,7 +377,7 @@ impl GitHubClient for RealGitHubClient {
         ref_name: &str,
         sha: &str,
         force: bool,
-        auth: &AccessToken,
+        auth: &GitHubAuth,
     ) -> Result<GitRef> {
         #[derive(Serialize)]
         struct Body<'a> {
@@ -342,10 +388,8 @@ impl GitHubClient for RealGitHubClient {
         let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
         let path = format!("/repos/{owner}/{repo}/git/refs/{ref_path}");
         let body = Body { sha, force };
-        self._mutate(reqwest::Method::PATCH, &path, &body, |r| {
-            r.bearer_auth(auth.secret())
-        })
-        .await
+        self._mutate(reqwest::Method::PATCH, &path, &body, auth)
+            .await
     }
 }
 
@@ -529,7 +573,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = AccessToken::new("test-token".into());
+        let auth = GitHubAuth::bearer("test-token");
         let user = client.get_user("johnnydee", &auth).await.unwrap();
 
         assert_eq!(user.login, "johnnydee");
@@ -553,8 +597,9 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
+        let auth = GitHubAuth::None;
         let got = client
-            .get_ref("rust-lang", "crates.io-index", "refs/heads/master")
+            .get_ref("rust-lang", "crates.io-index", "refs/heads/master", &auth)
             .await
             .unwrap();
 
@@ -577,8 +622,9 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
+        let auth = GitHubAuth::None;
         let got = client
-            .get_ref("rust-lang", "crates.io-index", "heads/master")
+            .get_ref("rust-lang", "crates.io-index", "heads/master", &auth)
             .await
             .unwrap();
 
@@ -602,8 +648,9 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
+        let auth = GitHubAuth::None;
         let got = client
-            .get_commit("rust-lang", "crates.io-index", sha)
+            .get_commit("rust-lang", "crates.io-index", sha, &auth)
             .await
             .unwrap();
 
@@ -644,7 +691,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = AccessToken::new("test-token".into());
+        let auth = GitHubAuth::bearer("test-token");
         let parents = [parent];
         let input = CreateCommit {
             message: "collapse",
@@ -691,7 +738,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = AccessToken::new("test-token".into());
+        let auth = GitHubAuth::bearer("test-token");
 
         let got = client
             .create_ref("rust-lang", "crates.io-index", ref_name, sha, &auth)
@@ -734,7 +781,7 @@ mod tests {
             .await;
 
         let client = client_with_server(&server);
-        let auth = AccessToken::new("test-token".into());
+        let auth = GitHubAuth::bearer("test-token");
 
         let got = client
             .update_ref(
@@ -750,5 +797,66 @@ mod tests {
 
         assert_eq!(got.ref_name, "refs/heads/master");
         assert_eq!(got.object.sha, new_sha);
+    }
+
+    #[tokio::test]
+    async fn none_auth_sends_no_authorization_header() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("GET", "/users/johnnydee")
+            .match_header("authorization", Matcher::Missing)
+            .with_status(200)
+            .with_body(USER_BODY)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let user = client
+            .get_user("johnnydee", &GitHubAuth::None)
+            .await
+            .unwrap();
+
+        assert_eq!(user.login, "johnnydee");
+    }
+
+    #[tokio::test]
+    async fn token_auth_sends_bearer_header() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("GET", "/users/johnnydee")
+            .match_header("authorization", "Bearer test-token")
+            .with_status(200)
+            .with_body(USER_BODY)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let auth = GitHubAuth::bearer("test-token");
+        let user = client.get_user("johnnydee", &auth).await.unwrap();
+
+        assert_eq!(user.login, "johnnydee");
+    }
+
+    #[tokio::test]
+    async fn basic_auth_sends_basic_header() {
+        // base64("client-id:client-secret")
+        let expected = "Basic Y2xpZW50LWlkOmNsaWVudC1zZWNyZXQ=";
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("GET", "/users/johnnydee")
+            .match_header("authorization", expected)
+            .with_status(200)
+            .with_body(USER_BODY)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let auth = GitHubAuth::basic("client-id", "client-secret");
+        let user = client.get_user("johnnydee", &auth).await.unwrap();
+
+        assert_eq!(user.login, "johnnydee");
     }
 }

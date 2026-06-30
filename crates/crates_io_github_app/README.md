@@ -1,4 +1,4 @@
-# crates_io_github_app
+# `crates_io_github_app`
 
 Mints installation access tokens for a GitHub App, used by the
 background worker to:

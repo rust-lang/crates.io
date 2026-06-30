@@ -30,7 +30,7 @@ impl crate::util::MockCookieUser {
 
 /// Given a crates.io user, check to make sure that the user
 /// cannot add to the database an empty string or null as
-/// their email. If an attempt is made, update_user.rs will
+/// their email. If an attempt is made, `update_user.rs` will
 /// return an error indicating that an empty email cannot be
 /// added.
 ///
@@ -74,7 +74,7 @@ async fn test_ignore_nulls() {
 /// Check to make sure that neither other signed in users nor anonymous users can edit another
 /// user's email address.
 ///
-/// If an attempt is made, update_user.rs will return an error indicating that the current user
+/// If an attempt is made, the endpoint will return an error indicating that the current user
 /// does not match the requested user.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_other_users_cannot_change_my_email() {

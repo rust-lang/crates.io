@@ -19,7 +19,7 @@ use serde_json::json;
 use sha2::Sha256;
 use sha2::digest::Output;
 
-/// Test the full flow of publishing a crate with OIDC authentication
+/// Tests the full flow of publishing a crate with OIDC authentication
 /// (aka. "Trusted Publishing")
 ///
 /// This test will:

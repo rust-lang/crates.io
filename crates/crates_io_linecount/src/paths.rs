@@ -40,18 +40,18 @@ impl PathDetails {
         }
     }
 
-    /// Determine if the file should be ignored for line counting purposes
+    /// Determines if the file should be ignored for line counting purposes
     /// because it is a benchmark, example, hidden, or test file.
     pub fn should_ignore(&self) -> bool {
         self.is_benchmark || self.is_example || self.is_hidden || self.is_test
     }
 
-    /// Get the actual detected language type, even if it should be ignored.
+    /// Gets the actual detected language type, even if it should be ignored.
     pub fn actual_language_type(&self) -> Option<LanguageType> {
         self.language_type
     }
 
-    /// Get the detected language type, returning `None` if no language was
+    /// Gets the detected language type, returning `None` if no language was
     /// detected or if the language should be ignored (e.g., data files).
     pub fn language_type(&self) -> Option<LanguageType> {
         self.language_type.filter(|lt| !should_ignore_language(*lt))

@@ -2,6 +2,7 @@
   import type { components } from '@crates-io/api-client';
 
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
 
   import CrateFollowButton from '$lib/components/CrateFollowButton.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
@@ -46,6 +47,16 @@
       ? resolve('/crates/[crate_id]/[version_num]', { crate_id, version_num })
       : resolve('/crates/[crate_id]', { crate_id }),
   );
+
+  let codeHref = $derived(
+    version_num
+      ? resolve('/crates/[crate_id]/[version_num]/code/[...path]', { crate_id, version_num, path: '' })
+      : resolve('/crates/[crate_id]/code/[...path]', { crate_id, path: '' }),
+  );
+
+  // The selected file lives in the URL (e.g. `/code/src/lib.rs`), so match the
+  // Code tab as active for any path under the base `/code` route.
+  let codeActive = $derived(page.url.pathname === codeHref || page.url.pathname.startsWith(`${codeHref}/`));
 
   let versionsHref = $derived(resolve('/crates/[crate_id]/versions', { crate_id }));
 
@@ -110,6 +121,7 @@
 
 <NavTabs.Root aria-label="{crate.name} crate subpages" style="margin-bottom: var(--space-s)">
   <NavTabs.Tab href={readmeHref} data-test-readme-tab>Readme</NavTabs.Tab>
+  <NavTabs.Tab href={codeHref} active={codeActive} data-test-code-tab>Code</NavTabs.Tab>
   <NavTabs.Tab href={versionsHref} data-test-versions-tab>
     {crate.num_versions}
     {crate.num_versions === 1 ? 'Version' : 'Versions'}

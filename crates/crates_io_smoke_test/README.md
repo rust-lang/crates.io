@@ -1,4 +1,4 @@
-# crates_io_smoke_test
+# `crates_io_smoke_test`
 
 This package contains a basic smoke test for the <https://staging.crates.io>
 environment. It uses the API to fetch the metadata of a test crate, publishes

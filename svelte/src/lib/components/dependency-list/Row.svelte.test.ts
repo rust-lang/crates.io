@@ -10,6 +10,11 @@ type Dependency = components['schemas']['Dependency'];
 
 const HINT = 'This dependency might not be needed anymore.';
 
+const LAZY_STATIC_REPLACEMENT = {
+  description: 'Use `std::sync::LazyLock` instead.',
+  url: 'https://doc.rust-lang.org/std/sync/struct.LazyLock.html',
+};
+
 function createDependency(overrides: Partial<Dependency> = {}): Dependency {
   return {
     id: 1,
@@ -29,7 +34,11 @@ describe('dependency-list/Row', () => {
   it('shows the native-replacement marker for a superseded dependency', async () => {
     let dependency = createDependency({ crate_id: 'lazy_static' });
 
-    render(Row, { dependency, descriptionPromise: Promise.resolve(null) });
+    render(Row, {
+      dependency,
+      descriptionPromise: Promise.resolve(null),
+      nativeReplacement: LAZY_STATIC_REPLACEMENT,
+    });
 
     let link = page.getByRole('link', { name: HINT });
     await expect.element(link).toHaveAttribute('href', 'https://doc.rust-lang.org/std/sync/struct.LazyLock.html');

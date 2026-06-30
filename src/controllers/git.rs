@@ -85,11 +85,11 @@ pub async fn http_backend(
     .unwrap_or_else(|_| Err(StatusCode::INTERNAL_SERVER_ERROR))
 }
 
-/// Obtain the value of a header
+/// Obtains the value of a header.
 ///
 /// If multiple headers have the same name, only one will be returned.
 ///
-/// If there is no header, of if there is an error parsings it as utf8
+/// If there is no header, or if there is an error parsing it as utf8
 /// then an empty slice will be returned.
 fn header(req: &Parts, name: HeaderName) -> &str {
     req.headers

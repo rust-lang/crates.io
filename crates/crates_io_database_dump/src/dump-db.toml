@@ -40,6 +40,12 @@ last_retry = "private"
 created_at = "private"
 priority = "private"
 
+[cache_tags_backfills.columns]
+id = "private"
+crate_id = "private"
+crate_name = "private"
+completed_at = "private"
+
 [categories.columns]
 id = "public"
 category = "public"
@@ -165,11 +171,11 @@ created_at = "public"
 total_downloads = "public"
 
 [oauth_github.columns]
-user_id = "private"
-account_id = "private"
+user_id = "public"
+account_id = "public"
 encrypted_token = "private"
-login = "private"
-avatar = "private"
+login = "public"
+avatar = "public"
 last_sync = "private"
 [oauth_github.column_defaults]
 encrypted_token = "''"
@@ -196,6 +202,9 @@ rendered_at = "private"
 
 [reserved_crate_names.columns]
 name = "public"
+
+[reserved_usernames.columns]
+username = "public"
 
 # Derived cache table maintained from `default_versions`/`dependencies`; not
 # part of the public database dump.
@@ -263,9 +272,9 @@ id in (
 id = "public"
 gh_login = "public"
 name = "public"
-gh_avatar = "public"
 gh_id = "public"
 username = "public"
+created_at = "public"
 account_lock_reason = "private"
 account_lock_until = "private"
 is_admin = "private"
@@ -307,7 +316,7 @@ yanked = "public"
 license = "public"
 crate_size = "public"
 published_by = "public"
-checksum = "public"
+tar_sha256 = "public"
 links = "public"
 rust_version = "public"
 has_lib = "public"
@@ -326,6 +335,8 @@ keywords = "public"
 trustpub_data = "private"
 # The following column is private for now, until we can guarantee a stable data schema.
 linecounts = "private"
+zip_sha256 = "public"
+zip_json_sha256 = "public"
 
 [versions_published_by.columns]
 version_id = "private"

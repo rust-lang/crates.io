@@ -111,7 +111,7 @@ async fn admin_list_is_not_cached() {
 #[tokio::test(flavor = "multi_thread")]
 async fn metrics_is_not_cached() {
     let (_, anon) = TestApp::init()
-        .with_config(|config| config.metrics_authorization_token = Some("secret".into()))
+        .with_config(|config| config.metrics.authorization_token = Some("secret".into()))
         .empty()
         .await;
     let mut request = anon.get_request("/api/private/metrics/service");
@@ -178,5 +178,13 @@ async fn public_endpoint_is_cacheable() {
 async fn public_endpoint_is_cacheable_for_authenticated_users() {
     let (_, _, user) = TestApp::init().with_user().await;
     let response = user.get::<()>("/api/v1/categories").await;
+    response.assert_no_cache_control();
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn missing_immutable_asset_is_not_cached() {
+    let (_, anon) = TestApp::init().empty().await;
+    let response = anon.get::<()>("/_app/immutable/missing.js").await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
     response.assert_no_cache_control();
 }

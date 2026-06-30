@@ -1,4 +1,4 @@
-# crates_io_pagerduty
+# `crates_io_pagerduty`
 
 This package contains the code necessary to interact with the PagerDuty API.
 

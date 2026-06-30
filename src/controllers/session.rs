@@ -10,7 +10,7 @@ use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
 use chrono::Utc;
-use crates_io_github::GitHubUser;
+use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
@@ -126,7 +126,8 @@ pub async fn authorize_session(
     })?;
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = app.github.current_user(token).await?;
+    let auth = GitHubAuth::bearer(token.secret().clone());
+    let ghuser = app.github.current_user(&auth).await?;
 
     let mut conn = app.db_write().await?;
     let user_id = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
@@ -138,6 +139,27 @@ pub async fn authorize_session(
 }
 
 pub async fn save_user_to_database(
+    gh_user: &GitHubUser,
+    encrypted_token: &[u8],
+    emails: &Emails,
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<i32> {
+    match create_or_update_user(gh_user, encrypted_token, emails, conn).await {
+        Ok(id) => Ok(id),
+        Err(error) if is_read_only_error(&error) => {
+            // If we're in read only mode, we can't update their details or create new users.
+            // just look for an existing user
+            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
+        }
+        Err(error) => Err(error),
+    }
+}
+
+/// Inserts the user into the database, or updates an existing one.
+///
+/// This method also inserts the email address into the `emails` table
+/// and sends a confirmation email to the user.
+async fn create_or_update_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
@@ -170,7 +192,6 @@ pub async fn save_user_to_database(
                     users::gh_login.eq(&gh_user.login),
                     users::gh_id.eq(&gh_user.id),
                     users::gh_encrypted_token.eq(encrypted_token),
-                    users::gh_avatar.eq(gh_user.avatar_url.as_deref()),
                 ))
                 .execute(conn)
                 .await?;
@@ -180,112 +201,80 @@ pub async fn save_user_to_database(
         .await
     {
         Ok(user_id) => Ok(user_id),
-        Err(error) if is_read_only_error(&error) => {
-            // If we're in read only mode, we can't update their details or create new users.
-            // just look for an existing user
-            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
-        }
         Err(diesel::result::Error::NotFound) => {
             // If the update fails because the `oauth_github` record doesn't exist, this
             // currently means the `user` record doesn't exist either and we need to create
             // both. This assumption holds because crates.io and GitHub accounts currently have
             // a one-to-one relationship; this will need to be changed if/when we allow
             // crates.io users to link more than one GitHub account to their crates.io account.
-            let user_id = create_or_update_user(
-                gh_user,
-                encrypted_token,
-                gh_user.email.as_deref(),
-                emails,
-                conn,
-            )
-            .await?;
+            let new_user = NewUser::builder()
+                .gh_id(gh_user.id)
+                .gh_login(&gh_user.login)
+                .username(&gh_user.login)
+                .maybe_name(gh_user.name.as_deref())
+                .gh_encrypted_token(encrypted_token)
+                .build();
+
+            // This currently inserts or updates based on `users::gh_id` being unique. When we switch
+            // to using `users::username` for uniqueness instead, this logic will need to change.
+            // See note on `NewUser::insert_or_update`.
+            let user_id = new_user.insert_or_update(conn).await?;
+
+            // Do an upsert on a github ID conflict here in case a record for this github ID has been
+            // created between when the "update" transaction in `save_user_to_database` ran and now.
+            diesel::insert_into(oauth_github::table)
+                .values((
+                    oauth_github::user_id.eq(user_id),
+                    oauth_github::account_id.eq(gh_user.id as i64),
+                    oauth_github::encrypted_token.eq(encrypted_token),
+                    oauth_github::login.eq(&gh_user.login),
+                    oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+                    oauth_github::last_sync.eq(Utc::now()),
+                ))
+                .on_conflict(oauth_github::account_id)
+                .do_update()
+                .set((
+                    oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
+                    oauth_github::login.eq(excluded(oauth_github::login)),
+                    oauth_github::avatar.eq(excluded(oauth_github::avatar)),
+                    oauth_github::last_sync.eq(Utc::now()),
+                ))
+                .execute(conn)
+                .await?;
+
+            // To send the user an account verification email
+            if let Some(user_email) = gh_user.email.as_deref() {
+                let new_email = NewEmail::builder()
+                    .user_id(user_id)
+                    .email(user_email)
+                    .build();
+
+                if let Some(token) = new_email.insert_if_missing(conn).await? {
+                    let email = EmailMessage::from_template(
+                        "user_confirm",
+                        context! {
+                            user_name => new_user.gh_login,
+                            domain => emails.domain,
+                            token => token.expose_secret()
+                        },
+                    );
+
+                    match email {
+                        Ok(email) => {
+                            // Swallows any error. Some users might insert an invalid email address here.
+                            let _ = emails.send(user_email, email).await;
+                        }
+                        Err(error) => {
+                            warn!("Failed to render user confirmation email template: {error}");
+                        }
+                    };
+                }
+            }
 
             Ok(user_id)
         }
         Err(error) => Err(error),
     }
-}
-
-/// Inserts the user into the database, or updates an existing one.
-///
-/// This method also inserts the email address into the `emails` table
-/// and sends a confirmation email to the user.
-async fn create_or_update_user(
-    gh_user: &GitHubUser,
-    encrypted_token: &[u8],
-    email: Option<&str>,
-    emails: &Emails,
-    conn: &mut AsyncPgConnection,
-) -> QueryResult<i32> {
-    let new_user = NewUser::builder()
-        .gh_id(gh_user.id)
-        .gh_login(&gh_user.login)
-        .username(&gh_user.login)
-        .maybe_name(gh_user.name.as_deref())
-        .maybe_gh_avatar(gh_user.avatar_url.as_deref())
-        .gh_encrypted_token(encrypted_token)
-        .build();
-
-    conn.transaction(async |conn| {
-        // This currently inserts or updates based on `users::gh_id` being unique. When we switch
-        // to using `users::username` for uniqueness instead, this logic will need to change.
-        // See note on `NewUser::insert_or_update`.
-        let user_id = new_user.insert_or_update(conn).await?;
-
-        // Do an upsert on a github ID conflict here in case a record for this github ID has been
-        // created between when the "update" transaction in `save_user_to_database` ran and now.
-        diesel::insert_into(oauth_github::table)
-            .values((
-                oauth_github::user_id.eq(user_id),
-                oauth_github::account_id.eq(gh_user.id as i64),
-                oauth_github::encrypted_token.eq(encrypted_token),
-                oauth_github::login.eq(&gh_user.login),
-                oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .on_conflict(oauth_github::account_id)
-            .do_update()
-            .set((
-                oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
-                oauth_github::login.eq(excluded(oauth_github::login)),
-                oauth_github::avatar.eq(excluded(oauth_github::avatar)),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .execute(conn)
-            .await?;
-
-        // To send the user an account verification email
-        if let Some(user_email) = email {
-            let new_email = NewEmail::builder()
-                .user_id(user_id)
-                .email(user_email)
-                .build();
-
-            if let Some(token) = new_email.insert_if_missing(conn).await? {
-                let email = EmailMessage::from_template(
-                    "user_confirm",
-                    context! {
-                        user_name => new_user.gh_login,
-                        domain => emails.domain,
-                        token => token.expose_secret()
-                    },
-                );
-
-                match email {
-                    Ok(email) => {
-                        // Swallows any error. Some users might insert an invalid email address here.
-                        let _ = emails.send(user_email, email).await;
-                    }
-                    Err(error) => {
-                        warn!("Failed to render user confirmation email template: {error}");
-                    }
-                };
-            }
-        }
-
-        Ok(user_id)
-    })
-    .await
 }
 
 async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<i32>> {

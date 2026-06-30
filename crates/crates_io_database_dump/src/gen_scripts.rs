@@ -11,7 +11,7 @@ pub fn gen_scripts(export_script: &Path, import_script: &Path) -> anyhow::Result
     config.gen_psql_scripts(export_sql, import_sql)
 }
 
-/// Subset of the configuration data to be passed on to the Handlbars template.
+/// Subset of the configuration data to be passed on to the template.
 #[derive(Debug, Serialize)]
 struct HandlebarsTableContext<'a> {
     name: &'a str,
@@ -57,7 +57,7 @@ impl TableConfig {
     }
 }
 
-/// Subset of the configuration data to be passed on to the Handlbars template.
+/// Subset of the configuration data to be passed on to the template.
 #[derive(Debug, Serialize)]
 struct TemplateContext<'a> {
     tables: Vec<HandlebarsTableContext<'a>>,

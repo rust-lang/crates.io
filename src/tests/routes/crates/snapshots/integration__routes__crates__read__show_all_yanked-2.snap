@@ -53,7 +53,7 @@ expression: response.json()
     {
       "audit_actions": [],
       "bin_names": null,
-      "checksum": "                                                                ",
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo_show",
       "crate_size": 0,
       "created_at": "[datetime]",
@@ -77,6 +77,7 @@ expression: response.json()
       "num": "0.5.0",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,
@@ -93,7 +94,7 @@ expression: response.json()
     {
       "audit_actions": [],
       "bin_names": null,
-      "checksum": "                                                                ",
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo_show",
       "crate_size": 0,
       "created_at": "[datetime]",
@@ -117,6 +118,7 @@ expression: response.json()
       "num": "1.0.0",
       "published_by": {
         "avatar": null,
+        "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
         "name": null,

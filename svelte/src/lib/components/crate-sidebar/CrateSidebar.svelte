@@ -77,23 +77,6 @@
     // finally, we'll return the specified documentation link, whatever it is
     return documentation ?? null;
   }
-
-  /**
-   * Computes the "Browse source" link for a crate version.
-   *
-   * Returns a link to docs.rs if we get any successful response from docs.rs,
-   * so that we show the source link regardless of this crate being a library or
-   * binary, regardless of whether the docs built successfully, regardless of
-   * whether the build is queued or completed, and regardless of whether a
-   * documentation link is specified.
-   */
-  function computeSourceLink(docsRsStatus: DocsRsStatus | null): string | null {
-    if (docsRsStatus) {
-      return `https://docs.rs/crate/${crate.name}/${version.num}/source/`;
-    }
-
-    return null;
-  }
 </script>
 
 <section aria-label="Crate metadata" class="sidebar">
@@ -202,8 +185,7 @@
 
   {#snippet linksSection(docsRsStatus: DocsRsStatus | null)}
     {@const documentationLink = computeDocumentationLink(docsRsStatus)}
-    {@const sourceLink = computeSourceLink(docsRsStatus)}
-    {#if showHomepage || documentationLink || sourceLink || crate.repository}
+    {#if showHomepage || documentationLink || crate.repository}
       <div class="links">
         {#if showHomepage}
           <Link title="Homepage" url={crate.homepage!} data-test-homepage-link />
@@ -211,10 +193,6 @@
 
         {#if documentationLink}
           <Link title="Documentation" url={documentationLink} data-test-docs-link />
-        {/if}
-
-        {#if sourceLink}
-          <Link title="Browse source" url={sourceLink} data-test-source-link />
         {/if}
 
         {#if crate.repository}

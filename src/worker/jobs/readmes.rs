@@ -1,6 +1,7 @@
 //! Render README files to HTML.
 
 use crate::models::Version;
+use crate::storage::StorageKey;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_markdown::text_to_html;
@@ -106,8 +107,8 @@ impl BackgroundJob for RenderAndUploadReadme {
 
             tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
-            let bytes = rendered.into();
-            env.storage.upload_readme(&crate_name, &vers, bytes).await?;
+            let key = StorageKey::for_readme(&crate_name, &vers);
+            env.storage.upload(&key, rendered.into()).await?;
 
             Ok(())
         })

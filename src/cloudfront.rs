@@ -101,7 +101,7 @@ impl CloudFront {
         }
     }
 
-    /// Invalidate multiple paths on CloudFront for a specific distribution.
+    /// Invalidates multiple paths on CloudFront for a specific distribution.
     #[instrument(skip(self))]
     pub async fn invalidate_many(
         &self,

@@ -24,7 +24,7 @@ pub struct Version {
     pub license: Option<String>,
     pub crate_size: i32,
     pub published_by: Option<i32>,
-    pub checksum: String,
+    pub tar_sha256: Vec<u8>,
     pub links: Option<String>,
     pub rust_version: Option<String>,
     pub has_lib: Option<bool>,
@@ -38,6 +38,12 @@ pub struct Version {
     pub repository: Option<String>,
     pub trustpub_data: Option<TrustpubData>,
     pub linecounts: Option<serde_json::Value>,
+    /// SHA256 checksum of the zip source archive,
+    /// or `None` if it has not been built yet.
+    pub zip_sha256: Option<Vec<u8>>,
+    /// SHA256 checksum of the zip source archive manifest,
+    /// or `None` if it has not been built yet.
+    pub zip_json_sha256: Option<Vec<u8>>,
 }
 
 impl Version {
@@ -97,7 +103,7 @@ pub struct NewVersion<'a> {
     #[builder(default, name = "size")]
     crate_size: i32,
     published_by: Option<i32>,
-    checksum: &'a str,
+    tar_sha256: &'a [u8],
     links: Option<&'a str>,
     rust_version: Option<&'a str>,
     has_lib: Option<bool>,
@@ -132,6 +138,7 @@ fn strip_build_metadata(version: &str) -> &str {
 }
 
 /// The highest version (semver order) and the most recently updated version.
+///
 /// Typically used for a single crate.
 /// Note: `TopVersion` itself does not guarantee whether versions are yanked or not,
 /// this must be guaranteed by the input versions.
@@ -146,13 +153,13 @@ pub struct TopVersions {
 }
 
 impl TopVersions {
-    /// Return both the newest (most recently updated) and the
+    /// Returns both the newest (most recently updated) and the
     /// highest version (in semver order) for a list of `Version` instances.
     pub fn from_versions(versions: Vec<Version>) -> Self {
         Self::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
     }
 
-    /// Return both the newest (most recently updated) and the
+    /// Returns both the newest (most recently updated) and the
     /// highest version (in semver order) for a collection of date/version pairs.
     pub fn from_date_version_pairs<T>(pairs: T) -> Self
     where

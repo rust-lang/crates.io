@@ -1,0 +1,6 @@
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE NULL DEFAULT NULL,
+ALTER COLUMN created_at
+SET DEFAULT NOW();
+
+COMMENT ON COLUMN users.created_at IS 'The time the user was created.';

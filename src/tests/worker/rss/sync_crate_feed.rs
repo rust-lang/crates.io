@@ -73,7 +73,7 @@ async fn create_version(
             versions::num_no_build.eq(version),
             versions::created_at.eq(publish_time),
             versions::updated_at.eq(publish_time),
-            versions::checksum.eq("checksum"),
+            versions::tar_sha256.eq(vec![0u8; 32]),
             versions::crate_size.eq(0),
         ))
         .returning(versions::id)

@@ -23,7 +23,7 @@ pub struct VersionBuilder {
 
 #[allow(dead_code)]
 impl VersionBuilder {
-    /// Creates a VersionBuilder from a string slice `num` representing the version's number.
+    /// Creates a `VersionBuilder` from a string slice `num` representing the version's number.
     ///
     /// # Panics
     ///
@@ -42,7 +42,7 @@ impl VersionBuilder {
             num,
             size: 0,
             yanked: false,
-            checksum: String::new(),
+            checksum: "0".repeat(64),
             links: None,
             rust_version: None,
         }
@@ -99,12 +99,15 @@ impl VersionBuilder {
 
         let version = self.num.to_string();
 
+        let tar_sha256 = hex::decode(&self.checksum)
+            .expect("VersionBuilder checksum must be a valid hex string");
+
         let new_version = NewVersion::builder(crate_id, &version)
             .features(serde_json::to_value(&self.features)?)
             .maybe_license(self.license.as_deref())
             .size(self.size)
             .published_by(published_by)
-            .checksum(&self.checksum)
+            .tar_sha256(&tar_sha256)
             .maybe_links(self.links.as_deref())
             .maybe_rust_version(self.rust_version.as_deref())
             .yanked(self.yanked)

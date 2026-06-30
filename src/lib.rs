@@ -1,8 +1,7 @@
 //! This crate implements the backend server for <https://crates.io/>
 //!
-//! All implemented routes are defined in the [middleware](fn.middleware.html) function and
-//! implemented in the [category](category/index.html), [keyword](keyword/index.html),
-//! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
+//! All implemented routes are defined in the [`router`] module and implemented
+//! in the [`controllers`] module.
 
 pub use crate::{app::App, email::Emails};
 pub use crates_io_api_types as views;
@@ -45,9 +44,9 @@ pub mod worker;
 /// Used for setting different values depending on whether the app is being run in production,
 /// in development, or for testing.
 ///
-/// The app's `config.env` value is set in *src/bin/server.rs* to `Production` if the environment
-/// variable `HEROKU` is set and `Development` otherwise. `config.env` is set to `Test`
-/// unconditionally in *src/test/all.rs*.
+/// The app's `config.env` value is set by [`Base::from_environment()`](crate::config::Base::from_environment)
+/// to `Production` if the environment variable `HEROKU` is set and `Development` otherwise. It is
+/// set to `Test` unconditionally by the test harness.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,

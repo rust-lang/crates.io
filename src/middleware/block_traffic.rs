@@ -47,7 +47,7 @@ impl BlockCriteria {
 impl TryFrom<&str> for BlockCriteria {
     type Error = regex::Error;
 
-    /// Parse a string into a [`BlockCriteria`].
+    /// Parses a string into a [`BlockCriteria`].
     ///
     /// - If the specified string starts and ends with `/` and has at least one character between
     ///   the slashes, interpret the value as a [`Regex`].
@@ -79,7 +79,7 @@ impl TryFrom<&str> for BlockCriteria {
 /// Values of the headers must start and end with `/` to be interpreted as a regex. Values
 /// interpreted as strings must match exactly, in full.
 pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), impl IntoResponse> {
-    let blocked_traffic = &state.config.blocked_traffic;
+    let blocked_traffic = &state.config.block.traffic;
 
     for (header_name, blocked_values) in blocked_traffic {
         let has_blocked_value = req.headers().get_all(header_name).iter().any(|value| {
@@ -104,7 +104,7 @@ pub fn block_by_ip(
     state: &AppState,
     headers: &HeaderMap,
 ) -> Result<(), impl IntoResponse> {
-    if state.config.blocked_ips.contains(real_ip) {
+    if state.config.block.ips.contains(real_ip) {
         return Err(rejection_response_from(state, headers));
     }
 
@@ -130,14 +130,14 @@ fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> impl IntoRe
     (StatusCode::FORBIDDEN, body)
 }
 
-/// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
+/// Allows blocking individual routes by their pattern through the `BLOCKED_ROUTES`
 /// environment variable.
 pub fn block_routes(
     matched_path: Option<&MatchedPath>,
     state: &AppState,
 ) -> Result<(), BoxedAppError> {
     if let Some(matched_path) = matched_path
-        && state.config.blocked_routes.contains(matched_path.as_str())
+        && state.config.block.routes.contains(matched_path.as_str())
     {
         let body = "This route is temporarily blocked. See https://status.crates.io.";
         return Err(custom(StatusCode::SERVICE_UNAVAILABLE, body));

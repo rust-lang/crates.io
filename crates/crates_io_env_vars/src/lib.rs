@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 /// Reads an environment variable for the current process.
 ///
-/// Compared to [std::env::var] there are a couple of differences:
+/// Compared to [`std::env::var`] there are a couple of differences:
 ///
 /// - [var] uses [dotenvy] which loads the `.env` file from the current or
 ///   parent directories before returning the value.
@@ -25,7 +25,7 @@ pub fn var(key: &str) -> anyhow::Result<Option<String>> {
 /// Reads an environment variable for the current process, and fails if it was
 /// not found.
 ///
-/// Compared to [std::env::var] there are a couple of differences:
+/// Compared to [`std::env::var`] there are a couple of differences:
 ///
 /// - [var] uses [dotenvy] which loads the `.env` file from the current or
 ///   parent directories before returning the value.
@@ -37,7 +37,7 @@ pub fn required_var(key: &str) -> anyhow::Result<String> {
 /// Reads an environment variable for the current process, and parses it if
 /// it is set.
 ///
-/// Compared to [std::env::var] there are a couple of differences:
+/// Compared to [`std::env::var`] there are a couple of differences:
 ///
 /// - [var] uses [dotenvy] which loads the `.env` file from the current or
 ///   parent directories before returning the value.
@@ -64,7 +64,7 @@ where
 /// Reads an environment variable for the current process, and parses it if
 /// it is set or fails otherwise.
 ///
-/// Compared to [std::env::var] there are a couple of differences:
+/// Compared to [`std::env::var`] there are a couple of differences:
 ///
 /// - [var] uses [dotenvy] which loads the `.env` file from the current or
 ///   parent directories before returning the value.
@@ -99,7 +99,7 @@ pub fn list(key: &str) -> anyhow::Result<Vec<String>> {
 
 /// Reads an environment variable and parses it as a comma-separated list, or
 /// returns an empty list if the variable is not set. Each individual value is
-/// parsed using [FromStr].
+/// parsed using [`FromStr`].
 #[track_caller]
 pub fn list_parsed<T, E, F, C>(key: &str, f: F) -> anyhow::Result<Vec<T>>
 where

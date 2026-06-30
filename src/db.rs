@@ -47,8 +47,8 @@ fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
     }
 }
 
-/// Create a new [ManagerConfig] for the database connection pool, which can
-/// be used with [diesel_async::pooled_connection::AsyncDieselConnectionManager::new_with_config()].
+/// Creates a new [`ManagerConfig`] for the database connection pool, which can
+/// be used with [`diesel_async::pooled_connection::AsyncDieselConnectionManager::new_with_config()`].
 pub fn make_manager_config(enforce_tls: bool) -> ManagerConfig<AsyncPgConnection> {
     let mut manager_config = ManagerConfig::default();
     manager_config.custom_setup =
@@ -56,7 +56,7 @@ pub fn make_manager_config(enforce_tls: bool) -> ManagerConfig<AsyncPgConnection
     manager_config
 }
 
-/// Establish a new database connection with the given URL.
+/// Establishes a new database connection with the given URL.
 ///
 /// Adapted from <https://github.com/weiznich/diesel_async/blob/v0.5.0/examples/postgres/pooled-with-rustls/src/main.rs>.
 async fn establish_async_connection(

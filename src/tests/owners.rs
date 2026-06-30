@@ -11,8 +11,8 @@ use chrono::Utc;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use insta::assert_snapshot;
-use serde::Deserialize;
+use insta::{assert_json_snapshot, assert_snapshot};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Deserialize)]
@@ -23,7 +23,7 @@ struct TeamResponse {
 struct UserResponse {
     users: Vec<EncodableOwner>,
 }
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 struct InvitationListResponse {
     crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
     users: Vec<EncodablePublicUser>,
@@ -50,7 +50,7 @@ impl MockCookieUser {
         self.put(&url, body.to_string()).await
     }
 
-    /// As the currently logged in user, accept an invitation to become an owner of the named
+    /// As the currently logged in user, accepts an invitation to become an owner of the named
     /// crate.
     async fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
         #[derive(Deserialize)]
@@ -67,7 +67,7 @@ impl MockCookieUser {
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
 
-    /// As the currently logged in user, decline an invitation to become an owner of the named
+    /// As the currently logged in user, declines an invitation to become an owner of the named
     /// crate.
     async fn decline_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
         let body = json!({
@@ -92,7 +92,7 @@ impl MockCookieUser {
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
 
-    /// As the currently logged in user, list my pending invitations.
+    /// As the currently logged in user, lists my pending invitations.
     async fn list_invitations(&self) -> InvitationListResponse {
         self.get("/api/v1/me/crate_owner_invitations").await.good()
     }
@@ -174,7 +174,7 @@ async fn create_and_add_owner(
 }
 
 /// Ensures that so long as at least one owner remains associated with the crate,
-/// a user can still remove their own login as an owner
+/// a user can still remove their own login as an owner.
 #[tokio::test(flavor = "multi_thread")]
 async fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -209,7 +209,7 @@ async fn owners_can_remove_self() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
-/// Verify consistency when adidng or removing multiple owners in a single request.
+/// Verifies consistency when adding or removing multiple owners in a single request.
 #[tokio::test(flavor = "multi_thread")]
 async fn modify_multiple_owners() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -270,11 +270,11 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Testing the crate ownership between two crates and one team.
+/// Tests the crate ownership between two crates and one team.
 /// Given two crates, one crate owned by both a team and a user,
-/// one only owned by a user, check that the CrateList returned
-/// for the user_id contains only the crates owned by that user,
-/// and that the CrateList returned for the team_id contains
+/// one only owned by a user, check that the `CrateList` returned
+/// for the `user_id` contains only the crates owned by that user,
+/// and that the `CrateList` returned for the `team_id` contains
 /// only crates owned by that team.
 #[tokio::test(flavor = "multi_thread")]
 async fn check_ownership_two_crates() -> anyhow::Result<()> {
@@ -307,12 +307,12 @@ async fn check_ownership_two_crates() -> anyhow::Result<()> {
 }
 
 /// Given a crate owned by both a team and a user, check that the
-/// JSON returned by the /owner_team route and /owner_user route
+/// JSON returned by the `/owner_team` route and `/owner_user` route
 /// contains the correct kind of owner
 ///
-/// Note that in this case function new_team must take a team name
-/// of form github:org_name:team_name as that is the format
-/// EncodableOwner::encodable is expecting
+/// Note that in this case function `new_team` must take a team name
+/// of form `github:org_name:team_name` as that is the format
+/// `EncodableOwner::encodable` is expecting
 #[tokio::test(flavor = "multi_thread")]
 async fn check_ownership_one_crate() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
@@ -344,7 +344,7 @@ async fn check_ownership_one_crate() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Assert the error response when attempting to add a team as a crate owner
+/// Asserts the error response when attempting to add a team as a crate owner
 /// when that team is already a crate owner.
 #[tokio::test(flavor = "multi_thread")]
 async fn add_existing_team() {
@@ -431,7 +431,7 @@ async fn invitations_list_v1() {
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    let krate = CrateBuilder::new("invited_crate", owner.id)
+    let _krate = CrateBuilder::new("invited_crate", owner.id)
         .expect_build(&mut conn)
         .await;
 
@@ -445,23 +445,11 @@ async fn invitations_list_v1() {
     assert_snapshot!(response.status(), @"200 OK");
 
     let invitations = user.list_invitations().await;
-    assert_eq!(
-        invitations,
-        InvitationListResponse {
-            crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
-                crate_id: krate.id,
-                crate_name: krate.name,
-                invited_by_username: owner.gh_login.clone(),
-                invitee_id: user.as_model().id,
-                inviter_id: owner.id,
-                // This value changes with each test run so we can't use a fixed value here
-                created_at: invitations.crate_owner_invitations[0].created_at,
-                // This value changes with each test run so we can't use a fixed value here
-                expires_at: invitations.crate_owner_invitations[0].expires_at,
-            }],
-            users: vec![owner.clone().into(), user.as_model().clone().into()],
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".crate_owner_invitations[].created_at" => "[datetime]",
+        ".crate_owner_invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -475,7 +463,7 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
     let krate1 = CrateBuilder::new("invited_crate_1", owner.id)
         .expect_build(&mut conn)
         .await;
-    let krate2 = CrateBuilder::new("invited_crate_2", owner.id)
+    let _krate2 = CrateBuilder::new("invited_crate_2", owner.id)
         .expect_build(&mut conn)
         .await;
     token
@@ -491,23 +479,11 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
     expire_invitation(&app, krate1.id).await;
 
     let invitations = user.list_invitations().await;
-    assert_eq!(
-        invitations,
-        InvitationListResponse {
-            crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
-                crate_id: krate2.id,
-                crate_name: krate2.name,
-                invited_by_username: owner.gh_login.clone(),
-                invitee_id: user.as_model().id,
-                inviter_id: owner.id,
-                // This value changes with each test run so we can't use a fixed value here
-                created_at: invitations.crate_owner_invitations[0].created_at,
-                // This value changes with each test run so we can't use a fixed value here
-                expires_at: invitations.crate_owner_invitations[0].expires_at,
-            }],
-            users: vec![owner.clone().into(), user.as_model().clone().into()],
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".crate_owner_invitations[].created_at" => "[datetime]",
+        ".crate_owner_invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 /// Given a user inviting a different user to be a crate

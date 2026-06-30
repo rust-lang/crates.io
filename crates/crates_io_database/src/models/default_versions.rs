@@ -13,7 +13,7 @@ use tracing::{debug, instrument, warn};
 /// resolution.
 ///
 /// It implements [Ord] in a way that sorts versions by the criteria specified
-/// in the [update_default_version] function documentation. The default version
+/// in the [`update_default_version`] function documentation. The default version
 /// will be the "maximum" element in a sorted list of versions.
 #[derive(Clone, Debug, PartialEq, Eq, HasQuery)]
 #[diesel(table_name = versions)]
@@ -268,7 +268,7 @@ mod tests {
                 versions::crate_id.eq(crate_id),
                 versions::num.eq(num),
                 versions::num_no_build.eq(num),
-                versions::checksum.eq(""),
+                versions::tar_sha256.eq(vec![0u8; 32]),
                 versions::crate_size.eq(0),
             ))
             .execute(&mut conn)

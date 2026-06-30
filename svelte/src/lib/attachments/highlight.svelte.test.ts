@@ -12,15 +12,15 @@ function codeBlock(language: string | undefined, source: string): HTMLElement {
 }
 
 describe('highlightSyntax', () => {
-  it('highlights Rust synchronously', () => {
+  it('highlights Rust', async () => {
     let source = 'fn main() {\n    println!("hello");\n}';
     let code = codeBlock('rust', source);
 
     highlightSyntax()(code);
 
-    // Rust is bundled eagerly, so it is highlighted without awaiting anything.
     // shiki's `<pre><code>` wrapper is stripped and the tokens carry inline
     // `light-dark()` colors.
+    await expect.poll(() => code.innerHTML).toContain('light-dark(');
     expect(code.innerHTML).toMatchInlineSnapshot(`
       "<span class="line"><span style="color:light-dark(#D73A49, #F97583)">fn</span><span style="color:light-dark(#6F42C1, #B392F0)"> main</span><span style="color:light-dark(#24292E, #E1E4E8)">() {</span></span>
       <span class="line"><span style="color:light-dark(#6F42C1, #B392F0)">    println!</span><span style="color:light-dark(#24292E, #E1E4E8)">(</span><span style="color:light-dark(#032F62, #9ECBFF)">"hello"</span><span style="color:light-dark(#24292E, #E1E4E8)">);</span></span>
@@ -39,12 +39,22 @@ describe('highlightSyntax', () => {
     await expect.poll(() => code.innerHTML).toContain('light-dark(');
   });
 
-  it('resolves language aliases (protobuf)', async () => {
+  it('resolves shiki built-in aliases (protobuf)', async () => {
     let code = codeBlock('protobuf', 'message Foo { int32 id = 1; }');
 
     highlightSyntax()(code);
 
     await expect.poll(() => code.innerHTML).toContain('light-dark(');
+  });
+
+  it('resolves Prism aliases (clike, markup)', async () => {
+    let clike = codeBlock('clike', 'int main() { return 0; }');
+    highlightSyntax()(clike);
+    await expect.poll(() => clike.innerHTML).toContain('light-dark(');
+
+    let markup = codeBlock('markup', '<a href="example">link</a>');
+    highlightSyntax()(markup);
+    await expect.poll(() => markup.innerHTML).toContain('light-dark(');
   });
 
   it('leaves code blocks without a known language untouched', async () => {

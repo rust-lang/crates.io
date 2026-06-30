@@ -3,7 +3,9 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
+    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
+    DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
+    RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -28,7 +30,7 @@ use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
@@ -58,23 +60,29 @@ impl Drop for TestAppInner {
             return;
         }
 
-        // Lazily run any remaining jobs
-        if let Some(runner) = &self.runner {
-            block_in_place(move || {
-                Handle::current().block_on(async {
-                    let handle = runner.start();
-                    handle.wait_for_shutdown().await;
-                })
-            });
-        }
-
-        // Manually verify that all jobs have completed successfully
-        // This will catch any tests that enqueued a job but forgot to initialize the runner
         let mut conn = self.test_database.connect();
-        let job_count: i64 = background_jobs::table
+        let mut job_count: i64 = background_jobs::table
             .count()
             .get_result(&mut conn)
             .unwrap();
+
+        if job_count > 0 {
+            // Run any remaining jobs that a test enqueued but never ran.
+            if let Some(runner) = &self.runner {
+                block_in_place(move || {
+                    Handle::current().block_on(async {
+                        let handle = runner.start();
+                        handle.wait_for_shutdown().await;
+                    })
+                });
+            }
+
+            job_count = background_jobs::table
+                .count()
+                .get_result(&mut conn)
+                .unwrap();
+        }
+
         assert_eq!(
             0, job_count,
             "Unprocessed or failed jobs remain in the queue"
@@ -98,7 +106,7 @@ impl Drop for TestAppInner {
 pub struct TestApp(Rc<TestAppInner>);
 
 impl TestApp {
-    /// Initialize an application with an `Uploader` that panics
+    /// Initializes an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
         crates_io::util::tracing::init_for_test();
 
@@ -128,9 +136,9 @@ impl TestApp {
         }
     }
 
-    /// Initialize a full application, with a proxy, index, and background worker
+    /// Initializes a full application with a background worker.
     pub fn full() -> TestAppBuilder {
-        Self::init().with_git_index().with_job_runner()
+        Self::init().with_job_runner()
     }
 
     /// Obtain an async database connection from the primary database pool.
@@ -163,13 +171,14 @@ impl TestApp {
             name: new_user.name.map(str::to_string),
             gh_id: new_user.gh_id,
             gh_login: new_user.gh_login.to_string(),
-            gh_avatar: new_user.gh_avatar.map(str::to_string),
+            gh_avatar: None,
             gh_encrypted_token: new_user.gh_encrypted_token.to_vec(),
             account_lock_reason: None,
             account_lock_until: None,
             is_admin: false,
             publish_notifications: true,
             username: new_user.gh_login.to_string(),
+            created_at: None,
         };
 
         MockCookieUser {
@@ -178,12 +187,12 @@ impl TestApp {
         }
     }
 
-    /// Obtain a reference to the upstream repository ("the index")
+    /// Obtains a reference to the upstream repository ("the index")
     pub fn upstream_index(&self) -> &UpstreamIndex {
         assert_some!(self.0.index.as_ref())
     }
 
-    /// Obtain a list of crates from the index HEAD
+    /// Obtains a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<crates_io_index::Crate> {
         self.upstream_index()
             .crates_from_index_head(crate_name)
@@ -264,7 +273,7 @@ impl TestApp {
         runner.check_for_failed_jobs().await
     }
 
-    /// Obtain a reference to the inner `App` value
+    /// Obtains a reference to the inner `App` value
     pub fn as_inner(&self) -> &App {
         &self.0.app
     }
@@ -276,7 +285,7 @@ impl TestApp {
         self.0.test_database.schema()
     }
 
-    /// Obtain a reference to the axum Router
+    /// Obtains a reference to the axum Router
     pub fn router(&self) -> &axum::Router {
         &self.0.router
     }
@@ -312,7 +321,7 @@ pub struct TestAppBuilder {
 }
 
 impl TestAppBuilder {
-    /// Create a `TestApp` with an empty database
+    /// Creates a `TestApp` with an empty database
     pub async fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
@@ -359,7 +368,7 @@ impl TestAppBuilder {
                 .index_location
                 .clone()
                 .or_else(|| self.index.as_ref().map(|i| i.url()))
-                .expect("Index or `index_location` must be configured to build a job runner");
+                .unwrap_or_else(|| Url::parse("file:///nonexistent").unwrap());
 
             let repository_config = RepositoryConfig {
                 index_location,
@@ -412,7 +421,7 @@ impl TestAppBuilder {
         (app, anon, user)
     }
 
-    /// Create a `TestApp` with a database including a default user and its token
+    /// Creates a `TestApp` with a database including a default user and its token
     pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo").await;
@@ -441,13 +450,15 @@ impl TestAppBuilder {
     pub fn with_rate_limit(self, action: LimitedAction, rate: Duration, burst: i32) -> Self {
         self.with_config(|config| {
             config
-                .rate_limiter
+                .rate_limits
+                .actions
                 .insert(action, RateLimiterConfig { rate, burst });
         })
     }
 
     pub fn with_git_index(mut self) -> Self {
         self.index = Some(UpstreamIndex::new().unwrap());
+        self.config.sync_git_index = true;
         self
     }
 
@@ -480,7 +491,7 @@ impl TestAppBuilder {
         self
     }
 
-    /// Add a new OIDC keystore to the application
+    /// Adds a new OIDC keystore to the application
     pub fn with_oidc_keystore(
         mut self,
         issuer_url: impl Into<String>,
@@ -511,7 +522,9 @@ impl TestAppBuilder {
 
     pub fn with_og_image_generator(mut self) -> Self {
         let og_generator = OgImageGenerator::from_environment()
-            .expect("Failed to create OG image generator for tests");
+            .expect("Failed to create OG image generator for tests")
+            .with_oxipng();
+
         self.og_image_generator = Some(og_generator);
         self
     }
@@ -558,39 +571,38 @@ fn simple_config() -> config::Server {
 
     let mut storage = StorageConfig::in_memory();
     storage.cdn_prefix = Some("static.crates.io".to_string());
+    storage.cache_tags_enabled = true;
 
     config::Server {
         base,
-        ip: [127, 0, 0, 1].into(),
-        port: 8888,
+        bind: BindConfig {
+            ip: [127, 0, 0, 1].into(),
+            port: 8888,
+        },
         max_blocking_threads: None,
         db,
         storage,
         cdn_log_queue: CdnLogQueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
-        gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
-        gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        github_oauth: GitHubOAuthConfig {
+            client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
+            client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        },
         gh_token_encryption: GitHubTokenEncryption::for_testing(),
-        max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
-        max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
-        max_features: 10,
-        max_dependencies: 10,
-        rate_limiter: Default::default(),
-        new_version_rate_limit: Some(10),
-        blocked_traffic: Default::default(),
-        blocked_ips: Default::default(),
+        publish_limits: PublishLimitsConfig::for_testing(),
+        rate_limits: RateLimitsConfig {
+            new_versions_daily: Some(10),
+            ..Default::default()
+        },
+        block: Default::default(),
         max_allowed_page_offset: 200,
         excluded_crate_names: vec![],
         domain_name: "crates.io".into(),
         allowed_origins: Default::default(),
-        downloads_persist_interval: Duration::from_secs(1),
         ownership_invitations_expiration: chrono::Duration::days(30),
-        metrics_authorization_token: None,
-        instance_metrics_log_every_seconds: None,
-        blocked_routes: HashSet::new(),
-        version_id_cache_size: 10000,
-        version_id_cache_ttl: Duration::from_secs(5 * 60),
+        metrics: Default::default(),
+        datadog: DatadogConfig::default(),
         cdn_user_agent: "Amazon CloudFront".to_string(),
 
         // The middleware has its own unit tests to verify its functionality.
@@ -599,15 +611,20 @@ fn simple_config() -> config::Server {
         cargo_compat_status_code_config: StatusCodeConfig::Disabled,
 
         // The frontend code is not needed for the backend tests.
-        serve_dist: false,
-        serve_html: false,
-        og_image_base_url: None,
-        html_render_cache_max_capacity: 1024,
+        frontend: FrontendConfig {
+            serve_dist: false,
+            serve_html: false,
+            html_render_cache_max_capacity: 1024,
+        },
         trustpub_audience: AUDIENCE.to_string(),
         disable_token_creation: None,
         banner_message: None,
-        index_include_pubtime: false,
-        sparse_index_fastly_enabled: true,
+        features: FeaturesConfig {
+            index_include_pubtime: false,
+            zip_archives_enabled: true,
+            cache_tags_enabled: true,
+        },
+        sync_git_index: false,
         index_archive_url: None,
         postgres_bin_dir: None,
     }
@@ -629,7 +646,7 @@ fn build_app(
         .oidc_key_stores(oidc_key_stores)
         .emails(emails)
         .storage_from_config(&config.storage)
-        .rate_limiter_from_config(config.rate_limiter.clone())
+        .rate_limiter_from_config(config.rate_limits.actions.clone())
         .config(Arc::new(config))
         .build();
 

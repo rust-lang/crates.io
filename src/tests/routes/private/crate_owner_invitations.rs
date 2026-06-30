@@ -1,19 +1,20 @@
-//! Tests for the `GET /api/private/crate-owners-invitations` endpoint
+//! Tests for the `GET /api/private/crate_owner_invitations` endpoint
 
 use crate::builders::CrateBuilder;
 use crate::util::{MockCookieUser, RequestHelper, TestApp};
 use crates_io::views::{EncodableCrateOwnerInvitation, EncodablePublicUser};
 use http::StatusCode;
-use serde::Deserialize;
+use insta::assert_json_snapshot;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 struct CrateOwnerInvitationsResponse {
     invitations: Vec<EncodableCrateOwnerInvitation>,
     users: Vec<EncodablePublicUser>,
     meta: CrateOwnerInvitationsMeta,
 }
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 struct CrateOwnerInvitationsMeta {
     next_page: Option<String>,
 }
@@ -32,10 +33,10 @@ async fn invitation_list() {
     let (app, _, owner, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
 
-    let crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
+    let _crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
-    let crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
+    let _crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
 
@@ -47,125 +48,43 @@ async fn invitation_list() {
 
     // user1 has invites for both crates
     let invitations = get_invitations(&user1, &format!("invitee_id={}", user1.as_model().id)).await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![
-                EncodableCrateOwnerInvitation {
-                    crate_id: crate1.id,
-                    crate_name: crate1.name.clone(),
-                    invitee_id: user1.as_model().id,
-                    inviter_id: owner.as_model().id,
-                    // The timestamps depend on when the test is run.
-                    created_at: invitations.invitations[0].created_at,
-                    expires_at: invitations.invitations[0].expires_at,
-                },
-                EncodableCrateOwnerInvitation {
-                    crate_id: crate2.id,
-                    crate_name: crate2.name.clone(),
-                    invitee_id: user1.as_model().id,
-                    inviter_id: owner.as_model().id,
-                    // The timestamps depend on when the test is run.
-                    created_at: invitations.invitations[1].created_at,
-                    expires_at: invitations.invitations[1].expires_at,
-                },
-            ],
-            users: vec![
-                owner.as_model().clone().into(),
-                user1.as_model().clone().into()
-            ],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 
     // user2 is only invited to a single crate
     let invitations = get_invitations(&user2, &format!("invitee_id={}", user2.as_model().id)).await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![EncodableCrateOwnerInvitation {
-                crate_id: crate1.id,
-                crate_name: crate1.name.clone(),
-                invitee_id: user2.as_model().id,
-                inviter_id: owner.as_model().id,
-                // The timestamps depend on when the test is run.
-                created_at: invitations.invitations[0].created_at,
-                expires_at: invitations.invitations[0].expires_at,
-            }],
-            users: vec![
-                owner.as_model().clone().into(),
-                user2.as_model().clone().into(),
-            ],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 
     // owner has no invites
     let invitations = get_invitations(&owner, &format!("invitee_id={}", owner.as_model().id)).await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![],
-            users: vec![],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 
     // crate1 has two available invitations
     let invitations = get_invitations(&owner, "crate_name=crate_1").await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![
-                EncodableCrateOwnerInvitation {
-                    crate_id: crate1.id,
-                    crate_name: crate1.name.clone(),
-                    invitee_id: user1.as_model().id,
-                    inviter_id: owner.as_model().id,
-                    // The timestamps depend on when the test is run.
-                    created_at: invitations.invitations[0].created_at,
-                    expires_at: invitations.invitations[0].expires_at,
-                },
-                EncodableCrateOwnerInvitation {
-                    crate_id: crate1.id,
-                    crate_name: crate1.name,
-                    invitee_id: user2.as_model().id,
-                    inviter_id: owner.as_model().id,
-                    // The timestamps depend on when the test is run.
-                    created_at: invitations.invitations[1].created_at,
-                    expires_at: invitations.invitations[1].expires_at,
-                },
-            ],
-            users: vec![
-                owner.as_model().clone().into(),
-                user1.as_model().clone().into(),
-                user2.as_model().clone().into(),
-            ],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 
     // crate2 has one available invitation
     let invitations = get_invitations(&owner, "crate_name=crate_2").await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![EncodableCrateOwnerInvitation {
-                crate_id: crate2.id,
-                crate_name: crate2.name,
-                invitee_id: user1.as_model().id,
-                inviter_id: owner.as_model().id,
-                // The timestamps depend on when the test is run.
-                created_at: invitations.invitations[0].created_at,
-                expires_at: invitations.invitations[0].expires_at,
-            }],
-            users: vec![
-                owner.as_model().clone().into(),
-                user1.as_model().clone().into(),
-            ],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -177,7 +96,7 @@ async fn invitations_list_does_not_include_expired_invites() {
     let crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
-    let crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
+    let _crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
 
@@ -195,25 +114,11 @@ async fn invitations_list_does_not_include_expired_invites() {
 
     // user1 has an invite just for crate 2
     let invitations = get_invitations(&user, &format!("invitee_id={}", user.as_model().id)).await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![EncodableCrateOwnerInvitation {
-                crate_id: crate2.id,
-                crate_name: crate2.name,
-                invitee_id: user.as_model().id,
-                inviter_id: owner.as_model().id,
-                // The timestamps depend on when the test is run.
-                created_at: invitations.invitations[0].created_at,
-                expires_at: invitations.invitations[0].expires_at,
-            }],
-            users: vec![
-                owner.as_model().clone().into(),
-                user.as_model().clone().into(),
-            ],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -222,10 +127,10 @@ async fn invitations_list_paginated() {
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("invited_user").await;
 
-    let crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
+    let _crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
-    let crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
+    let _crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
 
@@ -244,28 +149,11 @@ async fn invitations_list_paginated() {
         &format!("per_page=1&invitee_id={}", user.as_model().id),
     )
     .await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![EncodableCrateOwnerInvitation {
-                crate_id: crate1.id,
-                crate_name: crate1.name,
-                invitee_id: user.as_model().id,
-                inviter_id: owner.as_model().id,
-                // The timestamps depend on when the test is run.
-                created_at: invitations.invitations[0].created_at,
-                expires_at: invitations.invitations[0].expires_at,
-            }],
-            users: vec![
-                owner.as_model().clone().into(),
-                user.as_model().clone().into(),
-            ],
-            meta: CrateOwnerInvitationsMeta {
-                // This unwraps and then wraps again in Some() to ensure it's not None
-                next_page: Some(invitations.meta.next_page.clone().unwrap()),
-            },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 
     // Fetch the second page of results
     let invitations = get_invitations(
@@ -273,25 +161,11 @@ async fn invitations_list_paginated() {
         invitations.meta.next_page.unwrap().trim_start_matches('?'),
     )
     .await;
-    assert_eq!(
-        invitations,
-        CrateOwnerInvitationsResponse {
-            invitations: vec![EncodableCrateOwnerInvitation {
-                crate_id: crate2.id,
-                crate_name: crate2.name,
-                invitee_id: user.as_model().id,
-                inviter_id: owner.as_model().id,
-                // The timestamps depend on when the test is run.
-                created_at: invitations.invitations[0].created_at,
-                expires_at: invitations.invitations[0].expires_at,
-            }],
-            users: vec![
-                owner.as_model().clone().into(),
-                user.as_model().clone().into(),
-            ],
-            meta: CrateOwnerInvitationsMeta { next_page: None },
-        }
-    );
+    assert_json_snapshot!(invitations, {
+        ".invitations[].created_at" => "[datetime]",
+        ".invitations[].expires_at" => "[datetime]",
+        ".users[].created_at" => "[datetime]",
+    });
 }
 
 #[tokio::test(flavor = "multi_thread")]

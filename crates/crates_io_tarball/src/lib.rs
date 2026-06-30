@@ -9,8 +9,8 @@ pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
-use cargo_manifest::AbstractFilesystem;
-pub use cargo_manifest::{Manifest, StringOrBool};
+use crates_io_cargo_toml::AbstractFilesystem;
+pub use crates_io_cargo_toml::{Manifest, StringOrBool};
 use futures_util::StreamExt;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
@@ -50,7 +50,7 @@ pub enum TarballError {
     #[error("Cargo.toml manifest is missing")]
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
-    InvalidManifest(#[from] cargo_manifest::Error),
+    InvalidManifest(#[from] crates_io_cargo_toml::Error),
     #[error("Cargo.toml manifest is incorrectly cased: {0:?}")]
     IncorrectlyCasedManifest(PathBuf),
     #[error("more than one Cargo.toml manifest in tarball: {0:?}")]
@@ -103,6 +103,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         };
 
+        // Reject any paths that are not UTF-8.
+        let Some(in_pkg_path_str) = in_pkg_path.to_str() else {
+            return Err(TarballError::InvalidPath(entry_path.display().to_string()));
+        };
+
         // Historical versions of the `tar` crate which Cargo uses internally
         // don't properly prevent hard links and symlinks from overwriting
         // arbitrary files on the filesystem. As a bit of a hammer we reject any
@@ -127,7 +132,6 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
-        let in_pkg_path_str = in_pkg_path.to_string_lossy();
         if in_pkg_path_str == ".cargo_vcs_info.json" {
             let mut contents = String::new();
             entry.read_to_string(&mut contents).await?;
@@ -227,7 +231,7 @@ impl AbstractFilesystem for PathsFileSystem {
             .iter()
             .filter_map(move |p| p.strip_prefix(rel_path).ok())
             .filter_map(|name| match name.components().next() {
-                // We can skip non-utf8 paths, since those are not checked by `cargo_manifest` anyway
+                // `process_tarball()` rejects non-utf8 paths before they reach here, so `to_str()` should always succeeds
                 Some(Component::Normal(p)) => p.to_str(),
                 _ => None,
             })
@@ -258,6 +262,28 @@ mod tests {
 
         let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn process_tarball_test_non_utf8_path() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
+
+        let mut header = tar::Header::new_gnu();
+        header
+            .set_path(OsStr::from_bytes(b"foo-0.0.1/\xff"))
+            .unwrap();
+        header.set_size(0);
+        header.set_cksum();
+        builder.as_mut().append(&header, b"".as_slice()).unwrap();
+
+        let tarball = builder.build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        assert_snapshot!(err, @"invalid path found: foo-0.0.1/�");
     }
 
     #[tokio::test]

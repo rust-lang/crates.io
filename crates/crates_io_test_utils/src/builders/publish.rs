@@ -1,6 +1,6 @@
 use bytes::{BufMut, Bytes, BytesMut};
-use cargo_manifest::{DependencyDetail, DepsSet, MaybeInherited};
 use crates_io_api_types::krate_publish;
+use crates_io_cargo_toml::{DependencyDetail, DepsSet, MaybeInherited};
 use crates_io_database::models::DependencyKind;
 use std::collections::BTreeMap;
 
@@ -8,9 +8,10 @@ use crates_io_tarball::TarballBuilder;
 
 use super::DependencyBuilder;
 
-/// A builder for constructing a crate for the purposes of testing publishing. If you only need
-/// a crate to exist and don't need to test behavior caused by the publish request, inserting
-/// a crate into the database directly by using CrateBuilder will be faster.
+/// A builder for constructing a crate for the purposes of testing publishing.
+///
+/// If you only need a crate to exist and don't need to test behavior caused by the publish
+/// request, inserting a crate into the database directly by using `CrateBuilder` will be faster.
 pub struct PublishBuilder {
     categories: Vec<String>,
     deps: Vec<krate_publish::EncodableCrateDependency>,
@@ -34,7 +35,7 @@ enum Manifest {
 }
 
 impl PublishBuilder {
-    /// Create a request to publish a crate with the given name and version, and no files
+    /// Creates a request to publish a crate with the given name and version, and no files
     /// in its tarball.
     pub fn new(krate_name: &str, version: &str) -> Self {
         PublishBuilder {
@@ -54,63 +55,63 @@ impl PublishBuilder {
         }
     }
 
-    /// Add a dependency to this crate. Make sure the dependency already exists in the
+    /// Adds a dependency to this crate. Make sure the dependency already exists in the
     /// database or publish will fail.
     pub fn dependency(mut self, dep: DependencyBuilder) -> Self {
         self.deps.push(dep.build());
         self
     }
 
-    /// Set the description of this crate
+    /// Sets the description of this crate.
     pub fn description(mut self, description: &str) -> Self {
         self.desc = Some(description.to_string());
         self
     }
 
-    /// Unset the description of this crate. Publish will fail unless description is reset.
+    /// Unsets the description of this crate. Publish will fail unless description is reset.
     pub fn unset_description(mut self) -> Self {
         self.desc = None;
         self
     }
 
-    /// Set the readme of this crate
+    /// Sets the readme of this crate.
     pub fn readme(mut self, readme: &str) -> Self {
         self.readme = Some(readme.to_string());
         self
     }
 
-    /// Set the documentation URL of this crate
+    /// Sets the documentation URL of this crate.
     pub fn documentation(mut self, documentation: &str) -> Self {
         self.doc_url = Some(documentation.to_string());
         self
     }
 
-    /// Add a keyword to this crate.
+    /// Adds a keyword to this crate.
     pub fn keyword(mut self, keyword: &str) -> Self {
         self.keywords.push(keyword.into());
         self
     }
 
-    /// Add a category to this crate. Make sure the category already exists in the
+    /// Adds a category to this crate. Make sure the category already exists in the
     /// database or it will be ignored.
     pub fn category(mut self, slug: &str) -> Self {
         self.categories.push(slug.into());
         self
     }
 
-    /// Set the license from this crate.
+    /// Sets the license from this crate.
     pub fn license<T: Into<String>>(mut self, license: T) -> Self {
         self.license = Some(license.into());
         self
     }
 
-    /// Remove the license from this crate. Publish will fail unless license or license file is set.
+    /// Removes the license from this crate. Publish will fail unless license or license file is set.
     pub fn unset_license(mut self) -> Self {
         self.license = None;
         self
     }
 
-    /// Set the license file for this crate
+    /// Sets the license file for this crate.
     pub fn license_file(mut self, license_file: &str) -> Self {
         self.license_file = Some(license_file.into());
         self
@@ -151,8 +152,10 @@ impl PublishBuilder {
         match self.manifest {
             Manifest::None => {}
             Manifest::Generated => {
-                let mut package =
-                    cargo_manifest::Package::new(self.krate_name.clone(), self.version.to_string());
+                let mut package = crates_io_cargo_toml::Package::new(
+                    self.krate_name.clone(),
+                    self.version.to_string(),
+                );
                 package.categories = self.categories.none_or_filled().map(MaybeInherited::Local);
                 package.description = self.desc.map(MaybeInherited::Local);
                 package.documentation = self.doc_url.map(MaybeInherited::Local);
@@ -173,7 +176,7 @@ impl PublishBuilder {
                     };
                 }
 
-                let manifest = cargo_manifest::Manifest::<(), ()> {
+                let manifest = crates_io_cargo_toml::Manifest {
                     package: Some(package),
                     build_dependencies: build_deps.none_or_filled(),
                     dependencies: deps.none_or_filled(),
@@ -203,7 +206,7 @@ impl PublishBuilder {
         (serde_json::to_string(&metadata).unwrap(), tarball)
     }
 
-    /// Consume this builder to make the Put request body
+    /// Consumes this builder to make the Put request body.
     pub fn body(self) -> Bytes {
         let (json, tarball) = self.build();
         PublishBuilder::create_publish_body(&json, &tarball)
@@ -231,7 +234,7 @@ impl From<PublishBuilder> for Bytes {
 
 fn convert_dependency(
     encoded: &krate_publish::EncodableCrateDependency,
-) -> (String, cargo_manifest::Dependency) {
+) -> (String, crates_io_cargo_toml::Dependency) {
     let (name, package) = match encoded.explicit_name_in_toml.as_ref() {
         None => (encoded.name.to_string(), None),
         Some(explicit_name_in_toml) => (
@@ -256,7 +259,7 @@ fn convert_dependency(
         ..Default::default()
     };
 
-    let dependency = cargo_manifest::Dependency::Detailed(dependency).simplify();
+    let dependency = crates_io_cargo_toml::Dependency::Detailed(dependency).simplify();
     (name, dependency)
 }
 

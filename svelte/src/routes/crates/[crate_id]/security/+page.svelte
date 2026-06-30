@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { micromark } from 'micromark';
+  import { gfm, gfmHtml } from 'micromark-extension-gfm';
+
   import CrateHeader from '$lib/components/CrateHeader.svelte';
 
   let { data } = $props();
@@ -18,6 +21,13 @@
       return `https://www.first.org/cvss/calculator/${match[1]}#${cvss}`;
     }
     return null;
+  }
+
+  function convertMarkdown(markdown: string): string {
+    return micromark(markdown, {
+      extensions: [gfm()],
+      htmlExtensions: [gfmHtml()],
+    });
   }
 </script>
 
@@ -58,7 +68,7 @@
           </div>
         {/if}
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        {@html data.convertMarkdown(advisory.details)}
+        {@html convertMarkdown(advisory.details)}
       </li>
     {/each}
   </ul>

@@ -3,9 +3,9 @@
  */
 export function dasherize(str) {
   return str
-    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+    .replaceAll(/([a-z\d])([A-Z])/g, '$1_$2')
     .toLowerCase()
-    .replace(/[ _]/g, '-');
+    .replaceAll(/[ _]/g, '-');
 }
 
 /**
@@ -13,7 +13,7 @@ export function dasherize(str) {
  */
 export function underscore(str) {
   return str
-    .replace(/([a-z\d])([A-Z]+)/g, '$1_$2')
-    .replace(/-|\s+/g, '_')
+    .replaceAll(/([a-z\d])([A-Z]+)/g, '$1_$2')
+    .replaceAll(/-|\s+/g, '_')
     .toLowerCase();
 }

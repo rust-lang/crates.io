@@ -88,6 +88,7 @@ impl<'a> MarkdownRenderer<'a> {
         let extension_options = options::Extension::builder()
             .alerts(true)
             .autolink(true)
+            .description_lists(true)
             .multiline_block_quotes(true)
             .strikethrough(true)
             .table(true)
@@ -124,7 +125,7 @@ impl<'a> MarkdownRenderer<'a> {
     }
 }
 
-/// Iterate the nodes in the CommonMark AST, used in comrak.
+/// Iterates the nodes in the CommonMark AST, used in comrak.
 fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
 where
     F: Fn(&'a AstNode<'a>),
@@ -135,7 +136,7 @@ where
     }
 }
 
-/// Add trailing slash and remove `.git` suffix of base URL.
+/// Adds trailing slash and removes `.git` suffix of base URL.
 fn canon_base_url(mut base_url: String) -> String {
     if !base_url.ends_with('/') {
         base_url.push('/');
@@ -170,14 +171,14 @@ impl SanitizeUrl {
     }
 }
 
-/// Groups media-related URL info
+/// Groups media-related URL info.
 struct MediaUrl {
     is_media: bool,
     add_sanitize_query: bool,
 }
 
-/// Determine whether the given URL has a media file extension.
-/// Also check if `sanitize=true` must be added to the query string,
+/// Determines whether the given URL has a media file extension.
+/// Also checks if `sanitize=true` must be added to the query string,
 /// which is required to load SVGs properly from GitHub.
 fn is_media_url(url: &str) -> MediaUrl {
     Path::new(url)
@@ -644,6 +645,19 @@ There can also be some text in between!
     fn tables_with_rowspan_and_colspan() {
         let text = "<table><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></table>\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r#"<table><tbody><tr><th rowspan="1" colspan="2">Target</th></tr></tbody></table>"#);
+    }
+
+    #[test]
+    fn definition_lists() {
+        let text = "First term\n: First definition\n\nSecond term\n: Second definition\n";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <dl>
+        <dt>First term</dt>
+        <dd>First definition</dd>
+        <dt>Second term</dt>
+        <dd>Second definition</dd>
+        </dl>
+        "#);
     }
 
     #[test]

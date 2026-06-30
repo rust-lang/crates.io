@@ -3,16 +3,17 @@
 use crate::app::AppState;
 use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::worker::jobs::{
-    self, AnalyzeCrateFile, CheckTyposquat, GenerateOgImage, SendPublishNotificationsJob,
-    UpdateDefaultVersion,
+    self, AnalyzeCrateFile, BuildCrateZip, CheckTyposquat, GenerateOgImage,
+    SendPublishNotificationsJob, UpdateDefaultVersion,
 };
 use axum::Json;
 use axum::body::{Body, Bytes};
-use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
+use crates_io_cargo_toml::{Dependency, DepsSet, TargetDepsSet};
 use crates_io_tarball::{TarballError, process_tarball};
 use crates_io_validation::{
-    validate_crate_name, validate_dependency_name, validate_feature, validate_feature_name,
+    MAX_VERSION_LENGTH, validate_crate_name, validate_dependency_name, validate_feature,
+    validate_feature_name,
 };
 use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, now, select};
@@ -20,7 +21,6 @@ use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryStreamExt;
-use hex::ToHex;
 use http::StatusCode;
 use http::request::Parts;
 use secrecy::ExposeSecret;
@@ -42,6 +42,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
+use crate::storage::StorageKey;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
@@ -82,7 +83,7 @@ impl AuthType {
     }
 }
 
-/// Publish a new crate/version.
+/// Publishes a new crate/version.
 ///
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
@@ -126,6 +127,12 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
     // Convert the version back to a string to deal with any inconsistencies
     let version_string = semver.to_string();
+
+    if version_string.chars().count() > MAX_VERSION_LENGTH {
+        return Err(bad_request(format_args!(
+            "the version number is too long (max {MAX_VERSION_LENGTH} characters)"
+        )));
+    }
 
     let request_log = req.request_log();
     request_log.add("crate_name", &*metadata.name);
@@ -248,13 +255,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let max_upload_size = existing_crate
         .as_ref()
         .and_then(|c| c.max_upload_size())
-        .unwrap_or(app.config.max_upload_size);
+        .unwrap_or(app.config.publish_limits.upload_size);
 
     let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
-    let max_unpack_size = std::cmp::max(app.config.max_unpack_size, max_upload_size as u64);
+    let max_unpack_size = std::cmp::max(
+        app.config.publish_limits.unpack_size,
+        max_upload_size as u64,
+    );
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, max_unpack_size).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
@@ -370,7 +380,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let max_features = existing_crate
         .as_ref()
         .and_then(|c| c.max_features.map(|mf| mf as usize))
-        .unwrap_or(app.config.max_features);
+        .unwrap_or(app.config.publish_limits.features);
 
     let features = tarball_info.manifest.features.unwrap_or_default();
     let num_features = features.len();
@@ -418,7 +428,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         tarball_info.manifest.target.as_ref(),
     );
 
-    let max_dependencies = app.config.max_dependencies;
+    let max_dependencies = app.config.publish_limits.dependencies;
     if deps.len() > max_dependencies {
         return Err(bad_request(format!(
             "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
@@ -481,7 +491,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             )));
         }
 
-        if let Some(daily_version_limit) = app.config.new_version_rate_limit {
+        if let Some(daily_version_limit) = app.config.rate_limits.new_versions_daily {
             let published_today = count_versions_published_today(krate.id, conn).await?;
             if published_today >= daily_version_limit as i64 {
                 return Err(custom(
@@ -507,8 +517,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let edition = edition.map(|edition| edition.as_str());
 
-        // Read tarball from request
-        let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
+        let tar_sha256 = Sha256::digest(&tarball_bytes);
 
         // Persist the new version of this crate
         let new_version = NewVersion::builder(krate.id, &version_string)
@@ -518,7 +527,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             // to get here, and max upload sizes are way less than i32 max
             .size(content_length as i32)
             .maybe_published_by(auth.user_id())
-            .checksum(&hex_cksum)
+            .tar_sha256(tar_sha256.as_slice())
             .maybe_links(package.links.as_deref())
             .maybe_rust_version(rust_version.as_deref())
             .has_lib(tarball_info.manifest.lib.is_some())
@@ -635,21 +644,38 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         }
 
         // Upload crate tarball
-        app.storage.upload_crate_file(&krate.name, &version_string, tarball_bytes)
+        let key = StorageKey::for_crate_file(&krate.name, &version_string);
+        app.storage.upload(&key, tarball_bytes.into())
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+        let sync_git_index = async {
+            if app.config.sync_git_index {
+                let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+                git_index_job.enqueue(&*conn).await?;
+            }
+            Ok(())
+        };
+
         let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
         let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
         let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
         let updates_feed_job = jobs::rss::SyncUpdatesFeed;
         let analyze_crate_file_job = AnalyzeCrateFile::new(version.id);
+        let build_crate_zip_job = BuildCrateZip::new(version.id);
+
+        let build_crate_zip = async {
+            if app.config.features.zip_archives_enabled {
+                build_crate_zip_job.enqueue(&*conn).await?;
+            }
+            Ok(())
+        };
 
         tokio::try_join!(
-            git_index_job.enqueue(&*conn),
+            sync_git_index,
             sparse_index_job.enqueue(&*conn),
             publish_notifications_job.enqueue(&*conn),
+            build_crate_zip,
             enqueue_or_log(&crate_feed_job, &*conn),
             enqueue_or_log(&updates_feed_job, &*conn),
             enqueue_or_log(&analyze_crate_file_job, &*conn),

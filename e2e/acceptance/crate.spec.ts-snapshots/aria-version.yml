@@ -46,9 +46,6 @@
     - button "cargo add nanomsg@=0.6.0"
     - paragraph: "Or add the following line to your Cargo.toml:"
     - button "nanomsg = \"=0.6.0\""
-    - heading "Browse source" [level=2]
-    - link "docs.rs/crate/nanomsg/0.6.0/source":
-      - /url: https://docs.rs/crate/nanomsg/0.6.0/source/
     - heading "Owners" [level=2]
     - list
     - link "Report crate":

@@ -32,7 +32,7 @@ impl BackgroundJob for SyncToGitIndex {
 
     type Context = Arc<Environment>;
 
-    /// Regenerates or removes an index file for a single crate
+    /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
@@ -40,9 +40,13 @@ impl BackgroundJob for SyncToGitIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let new = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
-            .await
-            .context("Failed to get index data")?;
+        let new = get_index_data(
+            &crate_name,
+            &mut conn,
+            env.config.features.index_include_pubtime,
+        )
+        .await
+        .context("Failed to get index data")?;
 
         spawn_blocking(move || {
             let repo = env.lock_index()?;
@@ -81,7 +85,7 @@ impl BackgroundJob for SyncToGitIndex {
     }
 }
 
-/// Syncs index files for multiple crates in a single commit
+/// Syncs index files for multiple crates in a single commit.
 #[derive(Serialize, Deserialize)]
 pub struct BulkSyncToGitIndex {
     crate_names: Vec<String>,
@@ -113,7 +117,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
         let handle = Handle::current();
         spawn_blocking(move || {
             let repo = env.lock_index()?;
-            let include_pubtime = env.config.index_include_pubtime;
+            let include_pubtime = env.config.features.index_include_pubtime;
 
             let mut builder = repo.commit_builder(commit_message)?;
             let mut num_changes = 0;
@@ -179,7 +183,7 @@ impl BackgroundJob for SyncToSparseIndex {
 
     type Context = Arc<Environment>;
 
-    /// Regenerates or removes an index file for a single crate
+    /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
@@ -187,18 +191,20 @@ impl BackgroundJob for SyncToSparseIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let content = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
-            .await
-            .context("Failed to get index data")?;
+        let content = get_index_data(
+            &crate_name,
+            &mut conn,
+            env.config.features.index_include_pubtime,
+        )
+        .await
+        .context("Failed to get index data")?;
 
         let future = env.storage.sync_index(&self.krate, content);
         future.await.context("Failed to sync index data")?;
 
         let path = Repository::relative_index_file_for_url(&self.krate);
 
-        if let Some(fastly) = env.fastly()
-            && env.config.sparse_index_fastly_enabled
-        {
+        if let Some(fastly) = env.fastly() {
             let domain_name = &env.config.domain_name;
             let domains = [
                 format!("index.{}", domain_name),

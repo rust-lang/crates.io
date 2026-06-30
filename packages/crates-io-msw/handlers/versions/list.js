@@ -21,7 +21,9 @@ export default http.get('/api/v1/crates/:name/versions', async ({ request, param
 
   let sort = url.searchParams.get('sort');
   versions =
-    sort == 'date' ? versions.sort((a, b) => b.id - a.id) : versions.sort((a, b) => compareSemver(b.num, a.num));
+    sort == 'date'
+      ? versions.toSorted((a, b) => b.id - a.id)
+      : versions.toSorted((a, b) => compareSemver(b.num, a.num));
 
   let total = versions.length;
 

@@ -2,6 +2,7 @@
 
 pub mod cloudfront;
 mod compression;
+mod date;
 mod download_map;
 pub mod fastly;
 mod paths;

@@ -96,7 +96,7 @@ impl RateLimiter {
         }
     }
 
-    /// Refill a user's bucket as needed, take a token from it,
+    /// Refills a user's bucket as needed, takes a token from it,
     /// and returns the result.
     ///
     /// The number of tokens remaining will always be between 0 and self.burst.

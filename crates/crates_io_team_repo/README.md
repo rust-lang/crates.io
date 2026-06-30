@@ -1,4 +1,4 @@
-# crates_io_team_repo
+# `crates_io_team_repo`
 
 The code in this package interacts with the
 <https://github.com/rust-lang/team/> repository.

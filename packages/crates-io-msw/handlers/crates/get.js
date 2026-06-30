@@ -51,5 +51,5 @@ export default http.get('/api/v1/crates/:name', async ({ request, params }) => {
 });
 
 function toCanonicalName(name) {
-  return name.toLowerCase().replace(/-/g, '_');
+  return name.toLowerCase().replaceAll('-', '_');
 }

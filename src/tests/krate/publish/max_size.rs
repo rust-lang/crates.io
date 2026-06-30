@@ -11,8 +11,8 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
     let max_upload_size = 5 * 1024 * 1024;
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = max_upload_size;
-            config.max_unpack_size = max_upload_size as u64;
+            config.publish_limits.upload_size = max_upload_size;
+            config.publish_limits.unpack_size = max_upload_size as u64;
         })
         .with_token()
         .await;
@@ -50,8 +50,10 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo/foo-1.1.0.crate
+    crates/foo/foo-1.1.0.zip
+    crates/foo/foo-1.1.0.zip.json
     index/3/f/foo
     rss/crates.xml
     rss/crates/foo.xml
@@ -64,8 +66,8 @@ async fn tarball_bigger_than_max_upload_size() {
     let max_upload_size = 5 * 1024 * 1024;
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = max_upload_size;
-            config.max_unpack_size = max_upload_size as u64;
+            config.publish_limits.upload_size = max_upload_size;
+            config.publish_limits.unpack_size = max_upload_size as u64;
         })
         .with_token()
         .await;
@@ -99,8 +101,8 @@ async fn tarball_bigger_than_max_upload_size() {
 async fn new_krate_gzip_bomb() {
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = 3000;
-            config.max_unpack_size = 2000;
+            config.publish_limits.upload_size = 3000;
+            config.publish_limits.unpack_size = 2000;
         })
         .with_token()
         .await;
@@ -118,8 +120,8 @@ async fn new_krate_gzip_bomb() {
 async fn new_krate_too_big() {
     let (app, _, user) = TestApp::full()
         .with_config(|config| {
-            config.max_upload_size = 3000;
-            config.max_unpack_size = 2000;
+            config.publish_limits.upload_size = 3000;
+            config.publish_limits.unpack_size = 2000;
         })
         .with_user()
         .await;
@@ -148,8 +150,10 @@ async fn new_krate_too_big_but_whitelisted() {
 
     token.publish_crate(crate_to_publish).await.good();
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_whitelist/foo_whitelist-1.1.0.crate
+    crates/foo_whitelist/foo_whitelist-1.1.0.zip
+    crates/foo_whitelist/foo_whitelist-1.1.0.zip.json
     index/fo/o_/foo_whitelist
     rss/crates/foo_whitelist.xml
     rss/updates.xml

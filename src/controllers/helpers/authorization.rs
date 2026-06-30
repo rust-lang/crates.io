@@ -1,7 +1,7 @@
 use crate::models::{Owner, User};
 use crate::util::errors::{BoxedAppError, custom};
 use crate::util::gh_token_encryption::GitHubTokenEncryption;
-use crates_io_github::{GitHubClient, GitHubError};
+use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use http::StatusCode;
 
 /// Access rights to the crate (publishing and ownership management)
@@ -32,6 +32,8 @@ impl Rights {
             .decrypt(&user.gh_encrypted_token)
             .map_err(GitHubError::Other)?;
 
+        let auth = GitHubAuth::bearer(token);
+
         let mut best = Self::None;
         for owner in owners {
             match *owner {
@@ -46,7 +48,7 @@ impl Rights {
                     // the answer. If this is not the case, then we could accidentally leak
                     // private membership information here.
                     let is_team_member = match gh_client
-                        .team_membership(team.org_id, team.github_id, &user.gh_login, &token)
+                        .team_membership(team.org_id, team.github_id, &user.gh_login, &auth)
                         .await
                     {
                         Ok(membership) => membership.is_some_and(|m| m.is_active()),

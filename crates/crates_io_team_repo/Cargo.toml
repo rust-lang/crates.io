@@ -11,9 +11,9 @@ workspace = true
 mock = ["mockall"]
 
 [dependencies]
-anyhow = "=1.0.102"
+anyhow = "=1.0.103"
 async-trait = "=0.1.89"
-mockall = { version = "=0.14.0", optional = true }
+mockall = { version = "=0.15.0", optional = true }
 reqwest = { version = "=0.13.4", features = ["gzip", "json"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 

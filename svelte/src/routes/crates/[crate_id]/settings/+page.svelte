@@ -57,7 +57,7 @@
   }
 
   function teamDisplayName(owner: Owner): string {
-    let orgName = owner.login.split(':')[1];
+    let orgName = owner.login.split(':', 2)[1];
     return owner.name ? `${orgName}/${owner.name}` : owner.login;
   }
 

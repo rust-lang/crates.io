@@ -51,7 +51,7 @@ export default function faviconIco({ source }) {
 
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (req.url?.split('?')[0] !== `/${FILE_NAME}`) return next();
+        if (req.url?.split('?', 1)[0] !== `/${FILE_NAME}`) return next();
         res.setHeader('Content-Type', 'image/x-icon');
         res.end(await build());
       });
