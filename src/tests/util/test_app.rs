@@ -60,23 +60,29 @@ impl Drop for TestAppInner {
             return;
         }
 
-        // Lazily run any remaining jobs
-        if let Some(runner) = &self.runner {
-            block_in_place(move || {
-                Handle::current().block_on(async {
-                    let handle = runner.start();
-                    handle.wait_for_shutdown().await;
-                })
-            });
-        }
-
-        // Manually verify that all jobs have completed successfully
-        // This will catch any tests that enqueued a job but forgot to initialize the runner
         let mut conn = self.test_database.connect();
-        let job_count: i64 = background_jobs::table
+        let mut job_count: i64 = background_jobs::table
             .count()
             .get_result(&mut conn)
             .unwrap();
+
+        if job_count > 0 {
+            // Run any remaining jobs that a test enqueued but never ran.
+            if let Some(runner) = &self.runner {
+                block_in_place(move || {
+                    Handle::current().block_on(async {
+                        let handle = runner.start();
+                        handle.wait_for_shutdown().await;
+                    })
+                });
+            }
+
+            job_count = background_jobs::table
+                .count()
+                .get_result(&mut conn)
+                .unwrap();
+        }
+
         assert_eq!(
             0, job_count,
             "Unprocessed or failed jobs remain in the queue"
