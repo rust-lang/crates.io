@@ -50,23 +50,11 @@ mod tests {
     use super::*;
     use chrono::Utc;
     use claims::assert_ok;
+    use crates_io_test_utils::builders::UserBuilder;
     use insta::assert_snapshot;
 
     fn test_user() -> User {
-        User {
-            id: 1,
-            gh_login: "octocat".into(),
-            name: Some("The Octocat".into()),
-            gh_id: 123,
-            gh_avatar: None,
-            gh_encrypted_token: vec![],
-            account_lock_reason: None,
-            account_lock_until: None,
-            is_admin: false,
-            publish_notifications: true,
-            username: "octocat".into(),
-            created_at: None,
-        }
+        UserBuilder::new().build()
     }
 
     fn test_crate() -> Crate {
