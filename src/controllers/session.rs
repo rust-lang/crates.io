@@ -217,10 +217,14 @@ async fn create_or_update_user(
             // This currently inserts or updates based on `users::gh_id` being unique. When we switch
             // to using `users::username` for uniqueness instead, this logic will need to change.
             // See note on `NewUser::insert_or_update`.
+            //
+            // Do an upsert rather than an insert in case there are two requests racing to log
+            // in the same user in case a record for this user has been created between when the
+            // "update" transaction in this `match` expression ran and now.
             let user_id = new_user.insert_or_update(conn).await?;
 
             // Do an upsert on a github ID conflict here in case a record for this github ID has been
-            // created between when the "update" transaction in `save_user_to_database` ran and now.
+            // created between when the "update" transaction in this `match` expression ran and now.
             diesel::insert_into(oauth_github::table)
                 .values((
                     oauth_github::user_id.eq(user_id),
