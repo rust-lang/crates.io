@@ -277,11 +277,22 @@ username = "public"
 created_at = "public"
 account_lock_reason = "private"
 account_lock_until = "private"
+current_username_adopted_at = "public"
 is_admin = "private"
 publish_notifications = "private"
 gh_encrypted_token = "private"
 [users.column_defaults]
 gh_encrypted_token = "''"
+
+[abandoned_usernames]
+dependencies = ["users"]
+[abandoned_usernames.columns]
+id = "private"
+username = "private"
+previous_user_id = "private"
+adopted_at = "private"
+abandoned_at = "private"
+available_at = "private"
 
 [version_downloads]
 dependencies = ["versions"]

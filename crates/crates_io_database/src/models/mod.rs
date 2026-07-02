@@ -1,3 +1,4 @@
+pub use self::abandoned_username::{AbandonedUsername, NewAbandonedUsername};
 pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
 pub use self::cache_tags_backfill::NewCacheTagsBackfillRow;
 pub use self::category::{Category, CrateCategory, NewCategory};
@@ -24,6 +25,7 @@ pub use self::version::{NewVersion, TopVersions, Version};
 
 pub mod helpers;
 
+mod abandoned_username;
 mod action;
 mod cache_tags_backfill;
 pub mod category;

@@ -179,6 +179,7 @@ impl TestApp {
             publish_notifications: true,
             username: new_user.gh_login.to_string(),
             created_at: None,
+            current_username_adopted_at: None,
         };
 
         MockCookieUser {
