@@ -12,7 +12,7 @@ use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
-use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
+use crates_io::util::gh_token_encryption::TokenEncryption;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
 use crates_io_docs_rs::MockDocsRsClient;
@@ -589,7 +589,7 @@ fn simple_config() -> config::Server {
             client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
             client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
         },
-        gh_token_encryption: GitHubTokenEncryption::for_testing(),
+        gh_token_encryption: TokenEncryption::for_testing(),
         publish_limits: PublishLimitsConfig::for_testing(),
         rate_limits: RateLimitsConfig {
             new_versions_daily: Some(10),

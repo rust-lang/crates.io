@@ -1,6 +1,6 @@
 use crate::models::{Owner, User};
 use crate::util::errors::{BoxedAppError, custom};
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
+use crate::util::gh_token_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use http::StatusCode;
 
@@ -26,7 +26,7 @@ impl Rights {
         user: &User,
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
-        encryption: &GitHubTokenEncryption,
+        encryption: &TokenEncryption,
     ) -> Result<Self, BoxedAppError> {
         let token = encryption
             .decrypt(&user.gh_encrypted_token)

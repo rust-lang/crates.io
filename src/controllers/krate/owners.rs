@@ -9,7 +9,7 @@ use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope,
 };
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
+use crate::util::gh_token_encryption::TokenEncryption;
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
@@ -368,7 +368,7 @@ async fn add_team_owner(
     req_user: &User,
     krate: &Crate,
     login: &str,
-    encryption: &GitHubTokenEncryption,
+    encryption: &TokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // github:rust-lang:owners
     let mut chunks = login.split(':');
@@ -421,7 +421,7 @@ pub async fn create_or_update_github_team(
     org_name: &str,
     team_name: &str,
     req_user: &User,
-    encryption: &GitHubTokenEncryption,
+    encryption: &TokenEncryption,
 ) -> AppResult<Team> {
     // GET orgs/:org/teams
     // check that `team` is the `slug` in results, and grab its data

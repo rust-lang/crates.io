@@ -1,7 +1,7 @@
 use url::Url;
 
 use crate::Env;
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
+use crate::util::gh_token_encryption::TokenEncryption;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
@@ -34,7 +34,7 @@ pub struct Server {
     pub cdn_log_queue: CdnLogQueueConfig,
     pub session_key: cookie::Key,
     pub github_oauth: GitHubOAuthConfig,
-    pub gh_token_encryption: GitHubTokenEncryption,
+    pub gh_token_encryption: TokenEncryption,
     pub publish_limits: PublishLimitsConfig,
     pub rate_limits: RateLimitsConfig,
     pub block: BlockConfig,
@@ -138,7 +138,7 @@ impl Server {
             max_blocking_threads,
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
             github_oauth: GitHubOAuthConfig::from_env()?,
-            gh_token_encryption: GitHubTokenEncryption::from_environment()?,
+            gh_token_encryption: TokenEncryption::from_environment()?,
             publish_limits: PublishLimitsConfig::default(),
             rate_limits: RateLimitsConfig::from_env()?,
             block: BlockConfig::from_env()?,
