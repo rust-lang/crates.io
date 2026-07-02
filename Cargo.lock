@@ -1988,6 +1988,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_encryption"
+version = "0.0.0"
+
+[[package]]
 name = "crates_io_env_vars"
 version = "0.0.0"
 dependencies = [
