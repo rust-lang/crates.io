@@ -12,10 +12,11 @@
   },
   "license": "(MIT OR Apache-2.0)",
   "type": "module",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "regenerate": "vitest --run --update",
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "tsc"
   },
   "devDependencies": {
     "@catppuccin/palette": "1.8.0",
