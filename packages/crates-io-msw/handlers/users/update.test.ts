@@ -15,7 +15,7 @@ test('updates the user with a new email address', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.email).toBe('new@email.com');
   expect(user.emailVerified).toBe(false);
   expect(user.emailVerificationToken).toBe('secret123');
@@ -35,7 +35,7 @@ test('updates the `publish_notifications` settings', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.publishNotifications).toBe(false);
 });
 
@@ -55,7 +55,7 @@ test('returns 403 when not logged in', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.email).toBe('old@email.com');
 });
 
@@ -76,7 +76,7 @@ test('returns 400 when requesting the wrong user id', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.email).toBe('old@email.com');
 });
 
@@ -97,7 +97,7 @@ test('returns 400 when sending an invalid payload', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.email).toBe('old@email.com');
 });
 
@@ -118,6 +118,6 @@ test('returns 400 when sending an empty email address', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.email).toBe('old@email.com');
 });

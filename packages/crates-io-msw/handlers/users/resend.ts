@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import { getSession } from '../../utils/session.js';
 
-export default http.put('/api/v1/users/:user_id/resend', ({ params }) => {
+export default http.put<{ user_id: string }>('/api/v1/users/:user_id/resend', ({ params }) => {
   let { user } = getSession();
   if (!user) {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });

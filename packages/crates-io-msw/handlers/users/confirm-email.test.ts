@@ -14,7 +14,7 @@ test('returns `ok: true` for a known token (unauthenticated)', async function ()
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.emailVerified).toBe(true);
 });
 
@@ -32,7 +32,7 @@ test('returns `ok: true` for a known token (authenticated)', async function () {
     }
   `);
 
-  user = db.user.findFirst(q => q.where({ id: user.id }));
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
   expect(user.emailVerified).toBe(true);
 });
 

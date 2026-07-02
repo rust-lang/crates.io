@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
 
-export default http.put('/api/v1/confirm/:token', async ({ params }) => {
+export default http.put<{ token: string }>('/api/v1/confirm/:token', async ({ params }) => {
   let { token } = params;
 
   let user = db.user.findFirst(q => q.where({ emailVerificationToken: token }));
