@@ -1,10 +1,9 @@
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
-import { notFound } from '../../utils/handlers.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get('/api/v1/crates/:name/following', async ({ params }) => {
+export default http.delete<{ name: string }>('/api/v1/crates/:name', async ({ params }) => {
   let { user } = getSession();
   if (!user) {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
@@ -12,10 +11,10 @@ export default http.get('/api/v1/crates/:name/following', async ({ params }) => 
 
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
-    return notFound();
+    return HttpResponse.json({ errors: [{ detail: `crate \`${params.name}\` does not exist` }] }, { status: 404 });
   }
 
-  let following = user.followedCrates.some(followedCrate => followedCrate.id === crate.id);
+  db.crate.delete(q => q.where({ id: crate.id }));
 
-  return HttpResponse.json({ following });
+  return new HttpResponse(null, { status: 204 });
 });

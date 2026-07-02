@@ -97,7 +97,7 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.crates.length).toBe(5);
-  expect(responsePayload.crates.map(it => it.id)).toMatchInlineSnapshot(`
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.id)).toMatchInlineSnapshot(`
     [
       "crate-06",
       "crate-07",
@@ -122,7 +122,7 @@ test('supports a `letter` parameter', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.crates.length).toBe(2);
-  expect(responsePayload.crates.map(it => it.id)).toMatchInlineSnapshot(`
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.id)).toMatchInlineSnapshot(`
     [
       "bar",
       "BAZ",
@@ -144,13 +144,14 @@ test('supports a `q` parameter', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.crates.length).toBe(2);
-  expect(responsePayload.crates.map(it => it.id)).toMatchInlineSnapshot(`
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.id)).toMatchInlineSnapshot(`
     [
       "123456",
       "123",
     ]
   `);
-  expect(responsePayload.crates.map(it => it.exact_match)).toMatchInlineSnapshot(`
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.exact_match))
+    .toMatchInlineSnapshot(`
     [
       false,
       true,
@@ -234,21 +235,29 @@ test('supports `include_yanked` parameter', async function () {
   let response = await fetch('/api/v1/crates');
   expect(response.status).toBe(200);
   let responsePayload = await response.json();
-  expect(responsePayload.crates.map(it => it.id)).toEqual(['foo', 'bar', 'baz']);
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.id)).toEqual([
+    'foo',
+    'bar',
+    'baz',
+  ]);
   expect(responsePayload.meta.total).toBe(3);
 
   // with `include_yanked=n`, crates with all versions yanked are excluded
   response = await fetch('/api/v1/crates?include_yanked=n');
   expect(response.status).toBe(200);
   responsePayload = await response.json();
-  expect(responsePayload.crates.map(it => it.id)).toEqual(['foo', 'baz']);
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.id)).toEqual(['foo', 'baz']);
   expect(responsePayload.meta.total).toBe(2);
 
   // with `include_yanked=yes`, all crates are returned
   response = await fetch('/api/v1/crates?include_yanked=yes');
   expect(response.status).toBe(200);
   responsePayload = await response.json();
-  expect(responsePayload.crates.map(it => it.id)).toEqual(['foo', 'bar', 'baz']);
+  expect(responsePayload.crates.map((it: { id: string; exact_match: boolean }) => it.id)).toEqual([
+    'foo',
+    'bar',
+    'baz',
+  ]);
   expect(responsePayload.meta.total).toBe(3);
 });
 

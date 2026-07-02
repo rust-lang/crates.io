@@ -9,7 +9,7 @@ import { notFound } from '../../utils/handlers.js';
 
 const DEFAULT_INCLUDES = ['versions', 'keywords', 'categories'];
 
-export default http.get('/api/v1/crates/:name', async ({ request, params }) => {
+export default http.get<{ name: string }>('/api/v1/crates/:name', async ({ request, params }) => {
   let { name } = params;
   let canonicalName = toCanonicalName(name);
   let crate = db.crate.findFirst(q => q.where(crate => toCanonicalName(crate.name) === canonicalName));
@@ -39,7 +39,7 @@ export default http.get('/api/v1/crates/:name', async ({ request, params }) => {
     serializedVersions = versions.map(v => serializeVersion(v));
   } else if (includeDefaultVersion) {
     let defaultVersion = versions.find(v => v.num === serializedCrate.default_version);
-    serializedVersions = [serializeVersion(defaultVersion)];
+    serializedVersions = [serializeVersion(defaultVersion!)];
   }
 
   return HttpResponse.json({
@@ -50,6 +50,6 @@ export default http.get('/api/v1/crates/:name', async ({ request, params }) => {
   });
 });
 
-function toCanonicalName(name) {
+function toCanonicalName(name: string) {
   return name.toLowerCase().replaceAll('-', '_');
 }

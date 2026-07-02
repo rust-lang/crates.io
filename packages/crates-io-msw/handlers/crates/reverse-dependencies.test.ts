@@ -201,7 +201,7 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.dependencies.length).toBe(5);
-  expect(responsePayload.versions.map(it => it.crate)).toMatchInlineSnapshot(`
+  expect(responsePayload.versions.map((it: { crate: string }) => it.crate)).toMatchInlineSnapshot(`
     [
       "crate-24",
       "crate-02",

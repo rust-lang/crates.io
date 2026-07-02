@@ -61,6 +61,6 @@ test('updates trustpub_only flag', async function () {
   let json = await response.json();
   expect(json.crate.trustpub_only).toBe(true);
 
-  let updatedCrate = db.crate.findFirst(q => q.where({ name: 'foo' }));
+  let updatedCrate = db.crate.findFirst(q => q.where({ name: 'foo' }))!;
   expect(updatedCrate.trustpubOnly).toBe(true);
 });

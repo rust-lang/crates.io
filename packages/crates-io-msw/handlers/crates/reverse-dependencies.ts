@@ -5,7 +5,7 @@ import { serializeDependency } from '../../serializers/dependency.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { notFound, pageParams } from '../../utils/handlers.js';
 
-export default http.get('/api/v1/crates/:name/reverse_dependencies', async ({ request, params }) => {
+export default http.get<{ name: string }>('/api/v1/crates/:name/reverse_dependencies', async ({ request, params }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 

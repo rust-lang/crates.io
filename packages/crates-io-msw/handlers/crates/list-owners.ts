@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
 
-export default http.get('/api/v1/crates/:name/owners', async ({ params }) => {
+export default http.get<{ name: string }>('/api/v1/crates/:name/owners', async ({ params }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
     return notFound();

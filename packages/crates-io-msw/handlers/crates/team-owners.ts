@@ -4,7 +4,7 @@ import { db } from '../../index.js';
 import { serializeTeam } from '../../serializers/team.js';
 import { notFound } from '../../utils/handlers.js';
 
-export default http.get('/api/v1/crates/:name/owner_team', async ({ params }) => {
+export default http.get<{ name: string }>('/api/v1/crates/:name/owner_team', async ({ params }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
     return notFound();

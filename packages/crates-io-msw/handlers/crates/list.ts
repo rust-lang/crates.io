@@ -30,25 +30,25 @@ export default http.get('/api/v1/crates', async ({ request }) => {
   let q = url.searchParams.get('q');
   if (q) {
     q = q.toLowerCase();
-    crates = crates.filter(crate => crate.name.toLowerCase().includes(q));
+    crates = crates.filter(crate => crate.name.toLowerCase().includes(q!));
   }
 
   let userId = url.searchParams.get('user_id');
   if (userId) {
-    userId = parseInt(userId, 10);
+    let userIdNum = parseInt(userId, 10);
     crates = crates.filter(crate =>
       db.crateOwnership.findFirst(q =>
-        q.where(ownership => ownership.crate.id === crate.id && ownership.user?.id === userId),
+        q.where(ownership => ownership.crate.id === crate.id && ownership.user?.id === userIdNum),
       ),
     );
   }
 
   let teamId = url.searchParams.get('team_id');
   if (teamId) {
-    teamId = parseInt(teamId, 10);
+    let teamIdNum = parseInt(teamId, 10);
     crates = crates.filter(crate =>
       db.crateOwnership.findFirst(q =>
-        q.where(ownership => ownership.crate.id === crate.id && ownership.team?.id === teamId),
+        q.where(ownership => ownership.crate.id === crate.id && ownership.team?.id === teamIdNum),
       ),
     );
   }
@@ -74,12 +74,13 @@ export default http.get('/api/v1/crates', async ({ request }) => {
   }
 
   let total = crates.length;
-  crates = crates.slice(start, end);
-  crates = crates.map(c => ({ ...serializeCrate(c), exact_match: c.name.toLowerCase() === q }));
+  let serialized = crates
+    .slice(start, end)
+    .map(c => ({ ...serializeCrate(c), exact_match: c.name.toLowerCase() === q }));
 
-  return HttpResponse.json({ crates, meta: { total } });
+  return HttpResponse.json({ crates: serialized, meta: { total } });
 });
 
-export function compare(a, b) {
+export function compare(a: string, b: string) {
   return a < b ? -1 : a > b ? 1 : 0;
 }

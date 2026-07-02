@@ -385,7 +385,7 @@ test('without versions included', async function () {
   await db.category.create({ category: 'cli' });
   await db.keyword.create({ keyword: 'no-std' });
   await db.keyword.create({ keyword: 'cli' });
-  let crate = await db.crate.create({ name: 'rand', categoryIds: ['no-std'], keywordIds: ['no-std'] });
+  let crate = await db.crate.create({ name: 'rand' });
   await db.version.create({ crate, num: '1.0.0' });
   await db.version.create({ crate, num: '1.1.0' });
   await db.version.create({ crate, num: '1.2.0' });
@@ -423,7 +423,9 @@ test('includes default_version', async function () {
   expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  let default_version = expected.versions.find(it => it.num === responsePayload.crate.default_version);
+  let default_version = expected.versions.find(
+    (it: { num: string }) => it.num === responsePayload.crate.default_version,
+  );
   expect(responsePayload).toEqual({
     ...expected,
     crate: {

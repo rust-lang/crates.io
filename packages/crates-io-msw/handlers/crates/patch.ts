@@ -4,7 +4,7 @@ import { db } from '../../index.js';
 import { serializeCrate } from '../../serializers/crate.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.patch('/api/v1/crates/:name', async ({ request, params }) => {
+export default http.patch<{ name: string }>('/api/v1/crates/:name', async ({ request, params }) => {
   let { user } = getSession();
   if (!user) {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
@@ -15,15 +15,17 @@ export default http.patch('/api/v1/crates/:name', async ({ request, params }) =>
     return HttpResponse.json({ errors: [{ detail: `crate \`${params.name}\` does not exist` }] }, { status: 404 });
   }
 
-  let body = await request.json();
+  let body = (await request.json()) as { crate?: { trustpub_only?: boolean } };
 
   if (body.crate?.trustpub_only != null) {
-    crate = await db.crate.update(q => q.where({ id: crate.id }), {
+    let trustpubOnly = body.crate.trustpub_only;
+    let crateId = crate.id;
+    crate = await db.crate.update(q => q.where({ id: crateId }), {
       data(crate) {
-        crate.trustpubOnly = body.crate.trustpub_only;
+        crate.trustpubOnly = trustpubOnly;
       },
     });
   }
 
-  return HttpResponse.json({ crate: serializeCrate(crate) });
+  return HttpResponse.json({ crate: serializeCrate(crate!) });
 });

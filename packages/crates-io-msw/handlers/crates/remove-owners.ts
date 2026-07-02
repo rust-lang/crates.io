@@ -4,7 +4,7 @@ import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.delete('/api/v1/crates/:name/owners', async ({ request, params }) => {
+export default http.delete<{ name: string }>('/api/v1/crates/:name/owners', async ({ request, params }) => {
   let { user } = getSession();
   if (!user) {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
@@ -15,7 +15,7 @@ export default http.delete('/api/v1/crates/:name/owners', async ({ request, para
     return notFound();
   }
 
-  let body = await request.json();
+  let body = (await request.json()) as { owners: string[] };
 
   for (let owner of body.owners) {
     let ownership = db.crateOwnership.findFirst(

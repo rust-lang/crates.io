@@ -4,7 +4,7 @@ import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.put('/api/v1/crates/:name/follow', async ({ params }) => {
+export default http.delete<{ name: string }>('/api/v1/crates/:name/follow', async ({ params }) => {
   let { user } = getSession();
   if (!user) {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
@@ -17,7 +17,7 @@ export default http.put('/api/v1/crates/:name/follow', async ({ params }) => {
 
   await db.user.update(q => q.where({ id: user.id }), {
     data(user) {
-      user.followedCrates = [...user.followedCrates.filter(c => c.id !== crate.id), crate];
+      user.followedCrates = user.followedCrates.filter(c => c.id !== crate.id);
     },
   });
 

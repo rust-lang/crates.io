@@ -4,12 +4,16 @@ import { db } from '../../index.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
 
-export default http.get('/api/v1/crates/:name/downloads', async ({ request, params }) => {
+export default http.get<{ name: string }>('/api/v1/crates/:name/downloads', async ({ request, params }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 
   let downloads = db.versionDownload.findMany(q => q.where(download => download.version.crate.id === crate.id));
-  let resp = {
+  let resp: {
+    version_downloads: Array<{ date: string; downloads: number; version: number }>;
+    meta: { extra_downloads: unknown };
+    versions?: Array<ReturnType<typeof serializeVersion>>;
+  } = {
     version_downloads: downloads.map(download => ({
       date: download.date,
       downloads: download.downloads,
