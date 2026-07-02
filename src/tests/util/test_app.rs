@@ -589,7 +589,7 @@ fn simple_config() -> config::Server {
             client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
             client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
         },
-        gh_token_encryption: TokenEncryption::for_testing(),
+        token_encryption: TokenEncryption::for_testing(),
         publish_limits: PublishLimitsConfig::for_testing(),
         rate_limits: RateLimitsConfig {
             new_versions_daily: Some(10),

@@ -89,7 +89,7 @@ pub async fn create_trustpub_github_config(
 
     let owner = &json_config.repository_owner;
 
-    let encryption = &state.config.gh_token_encryption;
+    let encryption = &state.config.token_encryption;
     let gh_auth = &auth_user.gh_encrypted_token;
     let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
         let login = &auth_user.gh_login;

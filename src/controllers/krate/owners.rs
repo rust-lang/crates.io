@@ -203,7 +203,7 @@ async fn modify_owners(
 
             let owners = krate.owners(conn).await?;
 
-            match Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? {
+            match Rights::get(user, &*app.github, &owners, &app.config.token_encryption).await? {
                 Rights::Full => {}
                 // Yes!
                 Rights::Publish => {
@@ -324,7 +324,7 @@ async fn add_owner(
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     if login.contains(':') {
-        let encryption = &app.config.gh_token_encryption;
+        let encryption = &app.config.token_encryption;
         add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
     } else {
         invite_user_owner(app, conn, req_user, krate, login).await

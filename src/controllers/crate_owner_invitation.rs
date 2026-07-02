@@ -174,7 +174,7 @@ async fn prepare_list(
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(&mut conn).await?;
                 let owners = krate.owners(conn).await?;
-                let encryption = &state.config.gh_token_encryption;
+                let encryption = &state.config.token_encryption;
                 if Rights::get(user, &*state.github, &owners, encryption).await? != Rights::Full {
                     let detail = "only crate owners can query pending invitations for their crate";
                     return Err(forbidden(detail));
