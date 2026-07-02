@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { db } from '../index.js';
 
-async function inflateRaw(data) {
+async function inflateRaw(data: Uint8Array<ArrayBuffer>) {
   let stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
@@ -123,7 +123,7 @@ describe('GET /crates/:name/:filename', () => {
 
     let manifestResponse = await fetch('https://static.crates.io/crates/rand/rand-1.0.0.zip.json');
     let manifest = await manifestResponse.json();
-    let entry = manifest.files.find(file => file.path === 'src/lib.rs');
+    let entry = manifest.files.find((file: { path: string }) => file.path === 'src/lib.rs');
 
     let start = entry.data_offset;
     let end = entry.data_offset + entry.compressed_size - 1;
@@ -145,7 +145,7 @@ describe('GET /crates/:name/:filename', () => {
 
     let manifestResponse = await fetch('https://static.crates.io/crates/rand/rand-1.0.0.zip.json');
     let manifest = await manifestResponse.json();
-    let entry = manifest.files.find(file => file.path === 'src/lib.rs');
+    let entry = manifest.files.find((file: { path: string }) => file.path === 'src/lib.rs');
 
     // Without a range header the whole archive comes back, and the client can slice
     // an entry out of it by its manifest offset.
