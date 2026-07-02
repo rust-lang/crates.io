@@ -14,7 +14,7 @@ export default http.get('/api/v1/me/tokens', async ({ request }) => {
 
   let expiredAfter = new Date();
   if (url.searchParams.has('expired_days')) {
-    expiredAfter.setUTCDate(expiredAfter.getUTCDate() - url.searchParams.get('expired_days'));
+    expiredAfter.setUTCDate(expiredAfter.getUTCDate() - Number(url.searchParams.get('expired_days')));
   }
 
   let apiTokens = db.apiToken

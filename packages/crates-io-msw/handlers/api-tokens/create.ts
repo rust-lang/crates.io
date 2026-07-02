@@ -10,7 +10,14 @@ export default http.put('/api/v1/me/tokens', async ({ request }) => {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let json = await request.json();
+  let json = (await request.json()) as {
+    api_token: {
+      name: string;
+      crate_scopes?: string[] | null;
+      endpoint_scopes?: string[] | null;
+      expired_at?: string | null;
+    };
+  };
 
   let token = await db.apiToken.create({
     user,

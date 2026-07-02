@@ -5,7 +5,7 @@ import { serializeApiToken } from '../../serializers/api-token.js';
 import { notFound } from '../../utils/handlers.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get('/api/v1/me/tokens/:tokenId', async ({ params }) => {
+export default http.get<{ tokenId: string }>('/api/v1/me/tokens/:tokenId', async ({ params }) => {
   let { user } = getSession();
   if (!user) {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
