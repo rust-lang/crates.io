@@ -68,7 +68,7 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.keywords.length).toBe(5);
-  expect(responsePayload.keywords.map(it => it.id)).toMatchInlineSnapshot(`
+  expect(responsePayload.keywords.map((it: { id: string }) => it.id)).toMatchInlineSnapshot(`
     [
       "k06",
       "k07",
