@@ -177,6 +177,7 @@ jobs:
 
       - run: pnpm lint:js
       - run: pnpm prettier:check
+      - run: pnpm --recursive --if-present run typecheck
 
   msw-test:
     name: Frontend / Test (@crates-io/msw)
