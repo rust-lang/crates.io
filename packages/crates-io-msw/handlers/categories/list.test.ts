@@ -84,7 +84,7 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.categories.length).toBe(5);
-  expect(responsePayload.categories.map(it => it.id)).toMatchInlineSnapshot(`
+  expect(responsePayload.categories.map((it: { id: string }) => it.id)).toMatchInlineSnapshot(`
     [
       "cat-06",
       "cat-07",
