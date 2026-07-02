@@ -4,9 +4,9 @@ use crates_io::{
     controllers::session,
     models::{OauthGithub, User},
     schema::{background_jobs, oauth_github},
-    util::gh_token_encryption::TokenEncryption,
     worker::jobs,
 };
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubError, GitHubUser, MockGitHubClient};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;

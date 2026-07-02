@@ -1,7 +1,6 @@
 use url::Url;
 
 use crate::Env;
-use crate::util::gh_token_encryption::TokenEncryption;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
@@ -18,6 +17,7 @@ use crate::config::publish_limits::PublishLimitsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
+use crates_io_encryption::TokenEncryption;
 use crates_io_env_vars::{list, required_var, var, var_parsed};
 use http::HeaderValue;
 use std::convert::Infallible;

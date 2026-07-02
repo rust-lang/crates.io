@@ -6,7 +6,7 @@ use crates_io::views::{
 };
 
 use crate::util::github::next_gh_id;
-use crates_io::util::gh_token_encryption::TokenEncryption;
+use crates_io_encryption::TokenEncryption;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 

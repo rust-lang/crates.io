@@ -1,6 +1,6 @@
 use crate::models::{Owner, User};
 use crate::util::errors::{BoxedAppError, custom};
-use crate::util::gh_token_encryption::TokenEncryption;
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use http::StatusCode;
 

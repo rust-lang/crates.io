@@ -9,12 +9,12 @@ use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope,
 };
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
-use crate::util::gh_token_encryption::TokenEncryption;
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
