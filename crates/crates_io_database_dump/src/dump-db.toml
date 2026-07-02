@@ -283,6 +283,16 @@ gh_encrypted_token = "private"
 [users.column_defaults]
 gh_encrypted_token = "''"
 
+[abandoned_usernames]
+dependencies = ["users"]
+[abandoned_usernames.columns]
+id = "private"
+username = "private"
+previous_user_id = "private"
+adopted_at = "private"
+abandoned_at = "private"
+available_at = "private"
+
 [version_downloads]
 dependencies = ["versions"]
 [version_downloads.columns]
