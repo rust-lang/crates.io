@@ -11,7 +11,15 @@ export default http.post('/api/v1/trusted_publishing/gitlab_configs', async ({ r
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let body = await request.json();
+  let body = (await request.json()) as {
+    gitlab_config?: {
+      crate?: string;
+      namespace?: string;
+      project?: string;
+      workflow_filepath?: string;
+      environment?: string | null;
+    };
+  };
 
   let { gitlab_config } = body;
   if (!gitlab_config) {

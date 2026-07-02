@@ -11,7 +11,15 @@ export default http.post('/api/v1/trusted_publishing/github_configs', async ({ r
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let body = await request.json();
+  let body = (await request.json()) as {
+    github_config?: {
+      crate?: string;
+      repository_owner?: string;
+      repository_name?: string;
+      workflow_filename?: string;
+      environment?: string | null;
+    };
+  };
 
   let { github_config } = body;
   if (!github_config) {
