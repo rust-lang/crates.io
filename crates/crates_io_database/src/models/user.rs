@@ -125,7 +125,6 @@ impl NewUser<'_> {
             .do_update()
             .set((
                 users::gh_login.eq(excluded(users::gh_login)),
-                users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
