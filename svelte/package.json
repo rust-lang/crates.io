@@ -26,7 +26,7 @@
     "@floating-ui/dom": "1.7.6",
     "@fontsource/fira-mono": "5.2.7",
     "@fontsource/fira-sans": "5.2.7",
-    "@pierre/diffs": "1.2.11",
+    "@pierre/diffs": "1.2.12",
     "@pierre/trees": "1.0.0-beta.4",
     "@shikijs/themes": "4.3.0",
     "chart.js": "4.5.1",
