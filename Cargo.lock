@@ -1736,7 +1736,6 @@ dependencies = [
 name = "crates_io"
 version = "0.0.0"
 dependencies = [
- "aes-gcm 0.11.0",
  "anyhow",
  "astral-tokio-tar",
  "async-compression",
@@ -1763,6 +1762,7 @@ dependencies = [
  "crates_io_database",
  "crates_io_database_dump",
  "crates_io_docs_rs",
+ "crates_io_encryption",
  "crates_io_env_vars",
  "crates_io_fastly",
  "crates_io_github",
@@ -1990,6 +1990,14 @@ dependencies = [
 [[package]]
 name = "crates_io_encryption"
 version = "0.0.0"
+dependencies = [
+ "aes-gcm 0.11.0",
+ "anyhow",
+ "claims",
+ "hex",
+ "insta",
+ "secrecy",
+]
 
 [[package]]
 name = "crates_io_env_vars"

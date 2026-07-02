@@ -4,7 +4,15 @@ version = "0.0.0"
 license = "MIT OR Apache-2.0"
 edition = "2024"
 
-[dependencies]
-
 [lints]
 workspace = true
+
+[dependencies]
+aes-gcm = "=0.11.0"
+anyhow = "=1.0.103"
+hex = "=0.4.3"
+secrecy = "=0.10.3"
+
+[dev-dependencies]
+claims = "=0.8.0"
+insta = { version = "=1.48.0", features = ["glob", "json", "redactions"] }
