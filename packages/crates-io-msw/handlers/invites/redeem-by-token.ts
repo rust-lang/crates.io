@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
 
-export default http.put('/api/v1/me/crate_owner_invitations/accept/:token', async ({ params }) => {
+export default http.put<{ token: string }>('/api/v1/me/crate_owner_invitations/accept/:token', async ({ params }) => {
   let { token } = params;
 
   let invite = db.crateOwnerInvitation.findFirst(q => q.where({ token }));

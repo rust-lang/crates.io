@@ -10,7 +10,7 @@ export default http.put('/api/v1/me/crate_owner_invitations/:crate_id', async ({
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let body = await request.json();
+  let body = (await request.json()) as { crate_owner_invite: { accepted: boolean; crate_id: string } };
   let { accepted, crate_id: crateId } = body.crate_owner_invite;
 
   let invite = db.crateOwnerInvitation.findFirst(q =>

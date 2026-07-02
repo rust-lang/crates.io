@@ -1,8 +1,10 @@
+import type { Crate } from '../../models/index.js';
+
 import { test as _test, expect } from 'vitest';
 
 import { db } from '../../index.js';
 
-let test = _test.extend({
+let test = _test.extend<{ serde: Crate }>({
   // eslint-disable-next-line no-empty-pattern
   serde: async ({}, use) => {
     let serde = await db.crate.create({ name: 'serde' });
