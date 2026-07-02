@@ -1,6 +1,8 @@
+import type { CrateOwnerInvitation } from '../models/index.js';
+
 import { serializeModel } from '../utils/serializers.js';
 
-export function serializeInvite(invite) {
+export function serializeInvite(invite: CrateOwnerInvitation) {
   let serialized = serializeModel(invite);
 
   serialized.crate_id = serialized.crate.id;

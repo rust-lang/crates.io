@@ -1,7 +1,9 @@
+import type { Version } from '../models/index.js';
+
 import { serializeModel } from '../utils/serializers.js';
 import { serializeUser } from './user.js';
 
-export function serializeVersion(version) {
+export function serializeVersion(version: Version) {
   let serialized = serializeModel(version);
 
   serialized.crate = version.crate.name;

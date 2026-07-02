@@ -1,6 +1,8 @@
+import type { Dependency } from '../models/index.js';
+
 import { serializeModel } from '../utils/serializers.js';
 
-export function serializeDependency(dependency) {
+export function serializeDependency(dependency: Dependency) {
   let serialized = serializeModel(dependency);
 
   serialized.crate_id = dependency.crate.name;

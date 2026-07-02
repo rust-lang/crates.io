@@ -1,6 +1,8 @@
+import type { User } from '../models/index.js';
+
 import { serializeModel } from '../utils/serializers.js';
 
-export function serializeUser(user, { removePrivateData = true } = {}) {
+export function serializeUser(user: User, { removePrivateData = true } = {}) {
   let serialized = serializeModel(user);
 
   if (removePrivateData) {

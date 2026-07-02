@@ -1,3 +1,5 @@
+import type { Crate } from '../models/index.js';
+
 import prerelease from 'semver/functions/prerelease.js';
 import semverSort from 'semver/functions/rsort.js';
 
@@ -6,7 +8,7 @@ import { compareDates } from '../utils/dates.js';
 import { serializeModel } from '../utils/serializers.js';
 
 export function serializeCrate(
-  crate,
+  crate: Crate,
   { calculateVersions = true, includeCategories = false, includeKeywords = false, includeVersions = false } = {},
 ) {
   let versions = db.version.findMany(q => q.where({ crate: { id: crate.id } }));
@@ -61,6 +63,6 @@ export function serializeCrate(
   return serialized;
 }
 
-export function compare(a, b) {
+export function compare(a: string, b: string) {
   return a < b ? -1 : a > b ? 1 : 0;
 }

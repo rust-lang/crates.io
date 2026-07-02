@@ -1,6 +1,8 @@
+import type { ApiToken } from '../models/index.js';
+
 import { serializeModel } from '../utils/serializers.js';
 
-export function serializeApiToken(token, { forCreate = false } = {}) {
+export function serializeApiToken(token: ApiToken, { forCreate = false } = {}) {
   let serialized = serializeModel(token);
 
   if (serialized.created_at) {
