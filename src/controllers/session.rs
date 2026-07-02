@@ -2,16 +2,18 @@ use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewOauthGithub, NewUser};
-use crate::schema::users;
+use crate::models::{NewEmail, NewUser, OauthGithub};
+use crate::schema::{oauth_github, users};
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
+use chrono::Utc;
 use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
+use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use minijinja::context;
@@ -137,17 +139,17 @@ pub async fn authorize_session(
 }
 
 pub async fn save_user_to_database(
-    user: &GitHubUser,
+    gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    match create_or_update_user(user, encrypted_token, emails, conn).await {
+    match create_or_update_user(gh_user, encrypted_token, emails, conn).await {
         Ok(id) => Ok(id),
         Err(error) if is_read_only_error(&error) => {
-            // If we're in read only mode, we can't update their details
+            // If we're in read only mode, we can't update their details or create new users.
             // just look for an existing user
-            find_user_by_gh_id(conn, user.id).await?.ok_or(error)
+            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
         }
         Err(error) => Err(error),
     }
@@ -158,73 +160,130 @@ pub async fn save_user_to_database(
 /// This method also inserts the email address into the `emails` table
 /// and sends a confirmation email to the user.
 async fn create_or_update_user(
-    user: &GitHubUser,
+    gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    conn.transaction(async |conn| {
-        let new_user = NewUser::builder()
-            .gh_id(user.id)
-            .gh_login(&user.login)
-            .username(&user.login)
-            .maybe_name(user.name.as_deref())
-            .gh_encrypted_token(encrypted_token)
-            .build();
+    // First, try to update an existing `oauth_github` record with the specified GitHub ID and the
+    // associated `users` record in a transaction so that either both `oauth_github` and `users`
+    // get updated or neither do.
+    //
+    // For now, update user display name, gh_login, and username. Eventually, we will
+    // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
+    match conn
+        .transaction(async |conn| {
+            let oauth_github = diesel::update(oauth_github::table)
+                .filter(oauth_github::account_id.eq(gh_user.id as i64))
+                .set((
+                    oauth_github::encrypted_token.eq(encrypted_token),
+                    oauth_github::login.eq(&gh_user.login),
+                    oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+                    oauth_github::last_sync.eq(Utc::now()),
+                ))
+                .get_result::<OauthGithub>(conn)
+                .await?;
+            diesel::update(users::table)
+                .filter(users::id.eq(oauth_github.user_id))
+                .set((
+                    users::name.eq(gh_user.name.as_ref()),
+                    users::username.eq(&gh_user.login),
+                    // These fields are soon to be deprecated.
+                    users::gh_login.eq(&gh_user.login),
+                    users::gh_encrypted_token.eq(encrypted_token),
+                ))
+                .execute(conn)
+                .await?;
 
-        let user_id = new_user.insert_or_update(conn).await?;
-
-        // To assist in eventually someday allowing OAuth with more than GitHub, also
-        // write the GitHub info to the `oauth_github` table. This table is read when
-        // loading user details (e.g. the avatar), so a failure to write must fail the
-        // request just like a failure to write to the `users` table.
-        let new_oauth_github = NewOauthGithub::builder()
-            .user_id(user_id)
-            .account_id(new_user.gh_id as i64)
-            .encrypted_token(new_user.gh_encrypted_token)
-            .login(new_user.gh_login)
-            .maybe_avatar(user.avatar_url.as_deref())
-            .build();
-
-        new_oauth_github.insert_or_update(conn).await?;
-
-        // To send the user an account verification email
-        if let Some(user_email) = user.email.as_deref() {
-            let new_email = NewEmail::builder()
-                .user_id(user_id)
-                .email(user_email)
+            Ok(oauth_github.user_id)
+        })
+        .await
+    {
+        Ok(user_id) => Ok(user_id),
+        Err(diesel::result::Error::NotFound) => {
+            // If the update fails because the `oauth_github` record doesn't exist, this
+            // currently means the `user` record doesn't exist either and we need to create
+            // both. This assumption holds because crates.io and GitHub accounts currently have
+            // a one-to-one relationship; this will need to be changed if/when we allow
+            // crates.io users to link more than one GitHub account to their crates.io account.
+            let new_user = NewUser::builder()
+                .gh_id(gh_user.id)
+                .gh_login(&gh_user.login)
+                .username(&gh_user.login)
+                .maybe_name(gh_user.name.as_deref())
+                .gh_encrypted_token(encrypted_token)
                 .build();
 
-            if let Some(token) = new_email.insert_if_missing(conn).await? {
-                let email = EmailMessage::from_template(
-                    "user_confirm",
-                    context! {
-                        user_name => new_user.gh_login,
-                        domain => emails.domain,
-                        token => token.expose_secret()
-                    },
-                );
+            // This currently inserts or updates based on `users::gh_id` being unique. When we switch
+            // to using `users::username` for uniqueness instead, this logic will need to change.
+            // See note on `NewUser::insert_or_update`.
+            //
+            // Do an upsert rather than an insert in case there are two requests racing to log
+            // in the same user in case a record for this user has been created between when the
+            // "update" transaction in this `match` expression ran and now.
+            let user_id = new_user.insert_or_update(conn).await?;
 
-                match email {
-                    Ok(email) => {
-                        // Swallows any error. Some users might insert an invalid email address here.
-                        let _ = emails.send(user_email, email).await;
-                    }
-                    Err(error) => {
-                        warn!("Failed to render user confirmation email template: {error}");
-                    }
-                };
+            // Do an upsert on a github ID conflict here in case a record for this github ID has been
+            // created between when the "update" transaction in this `match` expression ran and now.
+            diesel::insert_into(oauth_github::table)
+                .values((
+                    oauth_github::user_id.eq(user_id),
+                    oauth_github::account_id.eq(gh_user.id as i64),
+                    oauth_github::encrypted_token.eq(encrypted_token),
+                    oauth_github::login.eq(&gh_user.login),
+                    oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+                    oauth_github::last_sync.eq(Utc::now()),
+                ))
+                .on_conflict(oauth_github::account_id)
+                .do_update()
+                .set((
+                    oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
+                    oauth_github::login.eq(excluded(oauth_github::login)),
+                    oauth_github::avatar.eq(excluded(oauth_github::avatar)),
+                    oauth_github::last_sync.eq(Utc::now()),
+                ))
+                .execute(conn)
+                .await?;
+
+            // To send the user an account verification email
+            if let Some(user_email) = gh_user.email.as_deref() {
+                let new_email = NewEmail::builder()
+                    .user_id(user_id)
+                    .email(user_email)
+                    .build();
+
+                if let Some(token) = new_email.insert_if_missing(conn).await? {
+                    let email = EmailMessage::from_template(
+                        "user_confirm",
+                        context! {
+                            user_name => new_user.gh_login,
+                            domain => emails.domain,
+                            token => token.expose_secret()
+                        },
+                    );
+
+                    match email {
+                        Ok(email) => {
+                            // Swallows any error. Some users might insert an invalid email address here.
+                            let _ = emails.send(user_email, email).await;
+                        }
+                        Err(error) => {
+                            warn!("Failed to render user confirmation email template: {error}");
+                        }
+                    };
+                }
             }
-        }
 
-        Ok(user_id)
-    })
-    .await
+            Ok(user_id)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<i32>> {
     users::table
-        .filter(users::gh_id.eq(gh_id))
+        .inner_join(oauth_github::table)
+        .filter(oauth_github::account_id.eq(gh_id as i64))
         .select(users::id)
         .first(&mut conn)
         .await
