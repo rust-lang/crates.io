@@ -27,7 +27,7 @@ services:
       # `semver_ord` stores prerelease identifiers as JSONB strings and
       # relies on byte-wise ordering. Force `C` collation so JSONB string
       # comparison matches the SemVer spec's ASCII sort order.
-      POSTGRES_INITDB_ARGS: '--lc-collate=C --lc-ctype=C'
+      POSTGRES_INITDB_ARGS: '--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8'
       # Trust auth is fine because Postgres is only reachable on the
       # internal Docker network; no port is published to the host.
       POSTGRES_HOST_AUTH_METHOD: trust
