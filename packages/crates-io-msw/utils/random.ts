@@ -1,14 +1,8 @@
-/**
- * @param {number} seed
- */
-export function seededRandom(seed) {
+export function seededRandom(seed: number) {
   return mulberry32(seed)();
 }
 
-/**
- * @param {number} a
- */
-function mulberry32(a) {
+function mulberry32(a: number) {
   return function () {
     let t = (a += 0x6d_2b_79_f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);

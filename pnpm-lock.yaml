@@ -134,6 +134,9 @@ importers:
         specifier: 1.4.2
         version: 1.4.2(typescript@6.0.3)
     devDependencies:
+      '@types/semver':
+        specifier: 7.7.1
+        version: 7.7.1
       vite:
         specifier: 8.1.4
         version: 8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)

@@ -1,13 +1,12 @@
+import type { DefaultBodyType, StrictRequest } from 'msw';
+
 import { HttpResponse } from 'msw';
 
 export function notFound() {
   return HttpResponse.json({ errors: [{ detail: 'Not Found' }] }, { status: 404 });
 }
 
-/**
- * @param {import("msw").StrictRequest<import("msw").DefaultBodyType>} request
- */
-export function pageParams(request) {
+export function pageParams(request: StrictRequest<DefaultBodyType>) {
   let url = new URL(request.url);
 
   let page = parseInt(url.searchParams.get('page') || '1');
