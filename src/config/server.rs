@@ -95,7 +95,7 @@ impl Server {
     /// Pulls values from the following environment variables:
     ///
     /// - `SESSION_KEY`: The key used to sign and encrypt session cookies.
-    /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
+    /// - `TOKEN_ENCRYPTION_KEY`: Key for encrypting Oauth tokens (64 hex characters).
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation

@@ -26,21 +26,21 @@ impl TokenEncryption {
 
     /// Creates a new [`TokenEncryption`] instance from the environment
     ///
-    /// Reads the `GITHUB_TOKEN_ENCRYPTION_KEY` environment variable, which
+    /// Reads the `TOKEN_ENCRYPTION_KEY` environment variable, which
     /// should be a 64-character hex string (32 bytes when decoded).
     pub fn from_environment() -> Result<Self> {
-        let gh_token_key = std::env::var("GITHUB_TOKEN_ENCRYPTION_KEY")
-            .context("GITHUB_TOKEN_ENCRYPTION_KEY environment variable not set")?;
+        let token_key = std::env::var("TOKEN_ENCRYPTION_KEY")
+            .context("TOKEN_ENCRYPTION_KEY environment variable not set")?;
 
-        if gh_token_key.len() != 64 {
-            anyhow::bail!("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters");
+        if token_key.len() != 64 {
+            anyhow::bail!("TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters");
         }
 
-        let gh_token_key = hex::decode(gh_token_key.as_bytes())
-            .context("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
+        let token_key = hex::decode(token_key.as_bytes())
+            .context("TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
 
-        let cipher = Aes256Gcm::new_from_slice(&gh_token_key)
-            .context("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
+        let cipher = Aes256Gcm::new_from_slice(&token_key)
+            .context("TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
 
         Ok(Self::new(cipher))
     }
