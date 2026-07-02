@@ -68,6 +68,6 @@ test('yanks the version', async function () {
     }
   `);
 
-  version = db.version.findFirst(q => q.where({ id: version.id }));
+  version = db.version.findFirst(q => q.where({ id: version.id }))!;
   expect(version.yanked).toBe(true);
 });

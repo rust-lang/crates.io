@@ -1,9 +1,10 @@
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
+import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
 
-export default http.get('/api/v1/crates/:name/:version/downloads', async ({ params }) => {
+export default http.get<{ name: string; version: string }>('/api/v1/crates/:name/:version', async ({ params }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 
@@ -15,13 +16,7 @@ export default http.get('/api/v1/crates/:name/:version/downloads', async ({ para
     return HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 404 });
   }
 
-  let downloads = db.versionDownload.findMany(q => q.where(download => download.version.id === version.id));
-
   return HttpResponse.json({
-    version_downloads: downloads.map(download => ({
-      date: download.date,
-      downloads: download.downloads,
-      version: download.version.id,
-    })),
+    version: serializeVersion(version),
   });
 });

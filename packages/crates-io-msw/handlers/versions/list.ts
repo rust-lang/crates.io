@@ -6,7 +6,7 @@ import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
 import { calculateReleaseTracks } from '../../utils/release-tracks.js';
 
-export default http.get('/api/v1/crates/:name/versions', async ({ request, params }) => {
+export default http.get<{ name: string }>('/api/v1/crates/:name/versions', async ({ request, params }) => {
   let { name } = params;
   let crate = db.crate.findFirst(q => q.where({ name }));
   if (!crate) return notFound();
@@ -29,7 +29,10 @@ export default http.get('/api/v1/crates/:name/versions', async ({ request, param
 
   let include = url.searchParams.get('include') ?? '';
   let includes = include ? include.split(',') : [];
-  let meta = { total, next_page: null };
+  let meta: { total: number; next_page: string | null; release_tracks?: Record<string, { highest: string }> } = {
+    total,
+    next_page: null,
+  };
 
   if (includes.includes('release_tracks')) {
     meta.release_tracks = calculateReleaseTracks(versions);
@@ -38,7 +41,7 @@ export default http.get('/api/v1/crates/:name/versions', async ({ request, param
   // seek pagination
   // A simplified seek encoding is applied here for testing purposes only. It should be opaque in
   // real-world scenarios.
-  let next_seek = null;
+  let next_seek: string | null = null;
   let per_page = url.searchParams.get('per_page');
   if (per_page != null) {
     let seek = url.searchParams.get('seek');
@@ -48,8 +51,8 @@ export default http.get('/api/v1/crates/:name/versions', async ({ request, param
     }
     versions = versions.slice(0, parseInt(per_page));
 
-    if (versions.length == per_page) {
-      next_seek = versions.at(-1).num;
+    if (versions.length === parseInt(per_page)) {
+      next_seek = versions.at(-1)!.num;
     }
   }
   if (next_seek) {
@@ -58,6 +61,6 @@ export default http.get('/api/v1/crates/:name/versions', async ({ request, param
     meta.next_page = `?${next_params}`;
   }
 
-  let serializedVersions = versions.map(v => serializeVersion(v, { includePublishedBy: true }));
+  let serializedVersions = versions.map(v => serializeVersion(v));
   return HttpResponse.json({ versions: serializedVersions, meta });
 });

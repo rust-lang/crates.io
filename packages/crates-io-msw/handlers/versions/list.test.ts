@@ -185,7 +185,7 @@ test('supports `sort` parameters', async function () {
     let response = await fetch('/api/v1/crates/rand/versions');
     expect(response.status).toBe(200);
     let json = await response.json();
-    expect(json.versions.map(it => it.num)).toMatchInlineSnapshot(`
+    expect(json.versions.map((it: { num: string }) => it.num)).toMatchInlineSnapshot(`
       [
         "2.0.0-alpha",
         "1.1.0",
@@ -198,7 +198,7 @@ test('supports `sort` parameters', async function () {
     let response = await fetch('/api/v1/crates/rand/versions?sort=semver');
     expect(response.status).toBe(200);
     let json = await response.json();
-    expect(json.versions.map(it => it.num)).toMatchInlineSnapshot(`
+    expect(json.versions.map((it: { num: string }) => it.num)).toMatchInlineSnapshot(`
       [
         "2.0.0-alpha",
         "1.1.0",
@@ -211,7 +211,7 @@ test('supports `sort` parameters', async function () {
     let response = await fetch('/api/v1/crates/rand/versions?sort=date');
     expect(response.status).toBe(200);
     let json = await response.json();
-    expect(json.versions.map(it => it.num)).toMatchInlineSnapshot(`
+    expect(json.versions.map((it: { num: string }) => it.num)).toMatchInlineSnapshot(`
       [
         "1.1.0",
         "2.0.0-alpha",
@@ -230,7 +230,7 @@ test('supports multiple `ids[]` parameters', async function () {
   let response = await fetch('/api/v1/crates/rand/versions?nums[]=1.0.0&nums[]=1.2.0');
   expect(response.status).toBe(200);
   let json = await response.json();
-  expect(json.versions.map(v => v.num)).toMatchInlineSnapshot(`
+  expect(json.versions.map((v: { num: string }) => v.num)).toMatchInlineSnapshot(`
     [
       "1.2.0",
       "1.0.0",
@@ -245,12 +245,12 @@ test('supports seek pagination', async function () {
   await db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
   await db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
 
-  async function seek_forwards(queryParams) {
+  async function seek_forwards(queryParams: Record<string, string | number>) {
     let calls = 0;
     let next_page;
     let responses = [];
     let base_url = '/api/v1/crates/rand/versions';
-    let params = new URLSearchParams(queryParams);
+    let params = new URLSearchParams(queryParams as Record<string, string>);
     let url = `${base_url}?${params}`;
     while ((calls == 0 || next_page) && calls < 50) {
       if (next_page) {
@@ -272,7 +272,7 @@ test('supports seek pagination', async function () {
   // sort by `semver` by default
   {
     let responses = await seek_forwards({ per_page: 1 });
-    expect(responses.map(it => it.versions.map(v => v.num))).toMatchInlineSnapshot(`
+    expect(responses.map((it: { versions: { num: string }[] }) => it.versions.map(v => v.num))).toMatchInlineSnapshot(`
       [
         [
           "2.0.0-alpha",
@@ -298,7 +298,7 @@ test('supports seek pagination', async function () {
 
   {
     let responses = await seek_forwards({ per_page: 1, sort: 'semver' });
-    expect(responses.map(it => it.versions.map(v => v.num))).toMatchInlineSnapshot(`
+    expect(responses.map((it: { versions: { num: string }[] }) => it.versions.map(v => v.num))).toMatchInlineSnapshot(`
       [
         [
           "2.0.0-alpha",
@@ -324,7 +324,7 @@ test('supports seek pagination', async function () {
 
   {
     let responses = await seek_forwards({ per_page: 1, sort: 'date' });
-    expect(responses.map(it => it.versions.map(v => v.num))).toMatchInlineSnapshot(`
+    expect(responses.map((it: { versions: { num: string }[] }) => it.versions.map(v => v.num))).toMatchInlineSnapshot(`
       [
         [
           "1.1.0",

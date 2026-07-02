@@ -105,7 +105,7 @@ test('supports pagination', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.versions.length).toBe(10);
-  expect(responsePayload.versions.map(it => it.id)).toMatchInlineSnapshot(`
+  expect(responsePayload.versions.map((it: { id: number }) => it.id)).toMatchInlineSnapshot(`
     [
       15,
       14,

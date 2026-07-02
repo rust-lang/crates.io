@@ -1,3 +1,5 @@
+import type { Crate } from '../../models/index.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -11,7 +13,7 @@ export default http.get('/api/v1/me/updates', ({ request }) => {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let allVersions = user.followedCrates
+  let allVersions = (user.followedCrates as Crate[])
     .flatMap(crate => db.version.findMany(q => q.where(version => version.crate.id === crate.id)))
     .toSorted((a, b) => b.id - a.id);
 
