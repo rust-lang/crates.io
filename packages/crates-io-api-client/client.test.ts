@@ -42,7 +42,7 @@ test('GET /api/v1/crates/{name}', async () => {
   });
 
   expect(response.error).toBeUndefined();
-  expect(response.data.crate.name).toBe('serde');
+  expect(response.data?.crate.name).toBe('serde');
   expect(response.data).toMatchInlineSnapshot(`
     {
       "categories": null,
