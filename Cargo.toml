@@ -70,7 +70,7 @@ path = "src/tests/mod.rs"
 [dependencies]
 aes-gcm = "=0.11.0"
 anyhow = "=1.0.103"
-astral-tokio-tar = { version = "=0.6.2", default-features = false }
+astral-tokio-tar = { version = "=0.6.3", default-features = false }
 async-compression = { version = "=0.4.42", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
 aws-credential-types = { version = "=1.2.14", features = ["hardcoded-credentials"] }
