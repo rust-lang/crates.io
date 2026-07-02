@@ -49,13 +49,13 @@ const collection = new Collection({ schema });
 
 export default collection;
 
-function generateLinecounts(id) {
+function generateLinecounts(id: number) {
   // Some versions don't have linecount data (simulating older versions)
   if (id % 4 === 0) {
     return null;
   }
 
-  let languages = {};
+  let languages: Record<string, { code_lines: number; comment_lines: number; files: number }> = {};
   let totalCodeLines = 0;
   let totalCommentLines = 0;
 
@@ -70,7 +70,7 @@ function generateLinecounts(id) {
 
   for (let language of selectedLanguages) {
     // Generate pseudo-random but deterministic line counts based on id and language
-    let seed = id + language.codePointAt(0);
+    let seed = id + (language.codePointAt(0) ?? 0);
     let codeLines = ((seed * 137) % 500) + 50; // 50-550 lines
     let commentLines = ((seed * 73) % 100) + 5; // 5-105 lines
     let files = ((seed * 29) % 8) + 1; // 1-8 files

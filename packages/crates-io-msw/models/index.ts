@@ -1,3 +1,5 @@
+import { Collection } from '@msw/data';
+
 import * as counters from '../utils/counters.js';
 import apiTokens from './api-token.js';
 import categories from './category.js';
@@ -86,7 +88,9 @@ export const db = {
     counters.reset();
 
     for (let collection of Object.values(this)) {
-      collection.clear?.();
+      if (collection instanceof Collection) {
+        collection.clear();
+      }
     }
   },
 };
