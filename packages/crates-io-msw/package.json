@@ -13,8 +13,7 @@
   "license": "(MIT OR Apache-2.0)",
   "author": "",
   "type": "module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "index.ts",
   "scripts": {
     "test": "vitest",
     "typecheck": "tsc"

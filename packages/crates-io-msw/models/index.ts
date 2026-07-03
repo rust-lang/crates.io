@@ -95,6 +95,9 @@ export const db = {
   },
 };
 
+/** The shape of the {@link db} object, including all collections and `reset()`. */
+export type Db = typeof db;
+
 // Record types stored in each collection, derived from the valibot schemas.
 // These are the values returned by the collection query methods, e.g.
 // `db.crate.findFirst()` returns a `Crate`.

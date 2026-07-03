@@ -6,8 +6,6 @@
     "moduleResolution": "bundler",
     "target": "esnext",
     "types": ["node"],
-    "allowJs": true,
-    "checkJs": false,
     "noEmit": true
   }
 }

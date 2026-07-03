@@ -1,3 +1,8 @@
+// Fixture records are reshaped in place (foreign-key ids become relations)
+// before insertion, so the transformed items are handled as `any`.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Db } from './models/index.js';
+
 import CATEGORIES from './fixtures/categories.js';
 import CRATE_OWNERSHIPS from './fixtures/crate-ownerships.js';
 import CRATES from './fixtures/crates.js';
@@ -8,7 +13,7 @@ import USERS from './fixtures/users.js';
 import VERSION_DOWNLOADS from './fixtures/version-downloads.js';
 import VERSIONS from './fixtures/versions.js';
 
-export async function loadFixtures(db) {
+export async function loadFixtures(db: Db) {
   await Promise.all(structuredClone(CATEGORIES).map(it => db.category.create(it)));
   let keywords = await Promise.all(structuredClone(KEYWORDS).map(it => db.keyword.create(it)));
 
@@ -16,9 +21,9 @@ export async function loadFixtures(db) {
   let teams = await Promise.all(structuredClone(TEAMS).map(it => db.team.create(it)));
 
   let crates = await Promise.all(
-    structuredClone(CRATES).map(it => {
+    structuredClone(CRATES).map((it: any) => {
       if (it.keywordIds) {
-        it.keywords = it.keywordIds.map(id => keywords.find(k => k.id === id)).filter(Boolean);
+        it.keywords = it.keywordIds.map((id: string) => keywords.find(k => k.id === id)).filter(Boolean);
         delete it.keywordIds;
       }
 
@@ -27,7 +32,7 @@ export async function loadFixtures(db) {
   );
 
   await Promise.all(
-    structuredClone(CRATE_OWNERSHIPS).map(it => {
+    structuredClone(CRATE_OWNERSHIPS).map((it: any) => {
       if (it.crateId) {
         it.crate = crates.find(c => c.name === it.crateId);
         delete it.crateId;
@@ -46,7 +51,7 @@ export async function loadFixtures(db) {
   );
 
   let versions = await Promise.all(
-    structuredClone(VERSIONS).map(it => {
+    structuredClone(VERSIONS).map((it: any) => {
       if (it.crateId) {
         it.crate = crates.find(c => c.name === it.crateId);
         delete it.crateId;
@@ -57,7 +62,7 @@ export async function loadFixtures(db) {
   );
 
   await Promise.all(
-    structuredClone(DEPENDENCIES).map(it => {
+    structuredClone(DEPENDENCIES).map((it: any) => {
       if (it.crateId) {
         it.crate = crates.find(c => c.name === it.crateId);
         delete it.crateId;
@@ -72,7 +77,7 @@ export async function loadFixtures(db) {
   );
 
   await Promise.all(
-    structuredClone(VERSION_DOWNLOADS).map(it => {
+    structuredClone(VERSION_DOWNLOADS).map((it: any) => {
       if (it.versionId) {
         it.version = versions.find(v => v.id === it.versionId);
         delete it.versionId;
