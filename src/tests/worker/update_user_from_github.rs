@@ -82,6 +82,8 @@ impl UpdateTest {
         // For now, we want to update the `User` record too
         let user_after_update = User::find(&conn, user_id).await?;
         assert_eq!(user_after_update.gh_login, expected_username);
+        // The user's username should not be updated
+        assert_eq!(user_after_update.username, existing_gh_user.login);
 
         if job_result.is_err() {
             // The worker leaves failed rows in `background_jobs` so they can
