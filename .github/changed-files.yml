@@ -64,3 +64,4 @@ svelte:
 
 zizmor:
   - .github/workflows/**
+  - mise.toml
