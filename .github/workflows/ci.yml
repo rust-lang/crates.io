@@ -18,8 +18,6 @@ env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=github-releases depName=cargo-insta lookupName=mitsuhiko/insta versioning=semver
   CARGO_INSTA_VERSION: 1.48.0
-  # renovate: datasource=crate depName=diesel-guard versioning=semver
-  DIESEL_GUARD_VERSION: 0.12.0
   # renovate: datasource=pypi depName=zizmor
   ZIZMOR_VERSION: 1.26.1
 
@@ -108,11 +106,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
         with:
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          install_args: cargo:diesel-guard
 
-      - run: cargo install diesel-guard --vers ${DIESEL_GUARD_VERSION}
       - run: diesel-guard check migrations/
 
   backend-test:

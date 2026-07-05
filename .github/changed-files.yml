@@ -17,6 +17,7 @@ backend_migrations:
   - .github/workflows/**
   - migrations/**
   - diesel-guard.toml
+  - mise.toml
 
 backend_test:
   - .github/workflows/**
