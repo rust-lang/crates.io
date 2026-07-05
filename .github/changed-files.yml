@@ -10,6 +10,7 @@ backend_deps:
   - .github/workflows/**
   - Cargo.lock
   - deny.toml
+  - mise.toml
   - rust-toolchain.toml
 
 backend_migrations:

@@ -1,7 +1,8 @@
 # `mise.toml` file for the mise version manager (https://mise.jdx.dev)
 #
 # This file specifies the versions of various tools to be used in this project.
-# These versions are also used by our Heroku buildpack setup.
+# Some of these tools are also used by our Heroku buildpack setup.
 [tools]
+"cargo:cargo-deny" = "0.19.9"
 node = "24.18.0"
 pnpm = "11.9.0"
