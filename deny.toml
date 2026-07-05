@@ -72,6 +72,14 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 ignore = [
     # "paste is unmaintained"
     "RUSTSEC-2024-0436",
+
+    # `quick-xml` DoS advisories. Fixed in `quick-xml >= 0.41.0`, but we only
+    # pull it in transitively via `object_store` and the `typst` dependency
+    # tree, which still require older `quick-xml` versions. None of these code
+    # paths parse untrusted, attacker-controlled XML. Remove these once the
+    # upstream crates have been updated to `quick-xml >= 0.41.0`.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
