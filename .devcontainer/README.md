@@ -42,12 +42,13 @@ devcontainer exec bash
 
 The `postCreateCommand` runs once after the container is built and:
 
-1. Initializes the local git index in `tmp/index-bare/`
-2. Creates the `cargo_registry_test` database
-3. Runs Diesel migrations against `cargo_registry`
-4. Installs JavaScript dependencies with `pnpm install`
-5. Installs the Playwright Chromium headless shell
-6. Pre-fetches Rust dependencies with `cargo fetch`
+1. Installs the tool versions pinned in `mise.toml` with `mise install`
+2. Initializes the local git index in `tmp/index-bare/`
+3. Creates the `cargo_registry_test` database
+4. Runs Diesel migrations against `cargo_registry`
+5. Installs JavaScript dependencies with `pnpm install`
+6. Installs the Playwright Chromium headless shell
+7. Pre-fetches Rust dependencies with `cargo fetch`
 
 On every subsequent container start, `diesel migration run` is invoked to
 keep the development database schema current.
@@ -89,11 +90,12 @@ documents the callback URL to register with GitHub.
 
 ## Persistent volumes
 
-Four named volumes persist between container rebuilds:
+Five named volumes persist between container rebuilds:
 
 - `/workspaces/crates.io/target` (Cargo build output)
 - `/usr/local/cargo/registry` (downloaded crate sources)
 - `/home/vscode/.local/share/pnpm/store` (pnpm content-addressable store)
+- `/home/vscode/.local/share/mise` (mise-managed tools)
 - `/workspaces/crates.io/local_uploads` (files written by the backend
   when storage isn't configured for S3, e.g. when publishing crates to
   your local instance)
