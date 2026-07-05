@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@pierre/trees@1.0.0-beta.4': f3aaf425ac4002a27093f8656b58f4772393837580c3fb8e992917ae04c6282a
+  '@pierre/trees@1.0.0-beta.5': 1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4
 
 importers:
 
@@ -162,8 +162,8 @@ importers:
         specifier: 1.2.12
         version: 1.2.12(@shikijs/themes@4.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pierre/trees':
-        specifier: 1.0.0-beta.4
-        version: 1.0.0-beta.4(patch_hash=f3aaf425ac4002a27093f8656b58f4772393837580c3fb8e992917ae04c6282a)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.0.0-beta.5
+        version: 1.0.0-beta.5(patch_hash=1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4)(@pierre/theme@1.1.0)(@shikijs/themes@4.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(shiki@4.3.0)
       '@shikijs/themes':
         specifier: 4.3.0
         version: 4.3.0
@@ -1463,8 +1463,8 @@ packages:
       shiki:
         optional: true
 
-  '@pierre/trees@1.0.0-beta.4':
-    resolution: {integrity: sha512-OfT1yk9ne8Te5+GB5zUY8yqE6B8BqjBHQJleH4lu8ltwNpoocZl4vXt1AzlEExpxI/pp+AFX5QG+lR3JjtTEag==}
+  '@pierre/trees@1.0.0-beta.5':
+    resolution: {integrity: sha512-IzxkB9qv6GLbeEXObhlAD205LfYHiLeRwJdnaIdX0f5keTZF4X9EfiuEQ3QiyxOxouVVmUX3rX7m6a8zNMo/wA==}
     peerDependencies:
       react: ^18.3.1 || ^19.0.0
       react-dom: ^18.3.1 || ^19.0.0
@@ -5830,12 +5830,17 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       shiki: 4.3.0
 
-  '@pierre/trees@1.0.0-beta.4(patch_hash=f3aaf425ac4002a27093f8656b58f4772393837580c3fb8e992917ae04c6282a)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@pierre/trees@1.0.0-beta.5(patch_hash=1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4)(@pierre/theme@1.1.0)(@shikijs/themes@4.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(shiki@4.3.0)':
     dependencies:
+      '@pierre/theming': 0.0.2(@pierre/theme@1.1.0)(@shikijs/themes@4.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(shiki@4.3.0)
       preact: 11.0.0-beta.0
       preact-render-to-string: 6.6.5(preact@11.0.0-beta.0)
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
+    transitivePeerDependencies:
+      - '@pierre/theme'
+      - '@shikijs/themes'
+      - shiki
 
   '@playwright/test@1.61.1':
     dependencies:
