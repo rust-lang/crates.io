@@ -4,5 +4,6 @@
 # Some of these tools are also used by our Heroku buildpack setup.
 [tools]
 "cargo:cargo-deny" = "0.19.9"
+"cargo:cargo-machete" = "0.9.2"
 node = "24.18.0"
 pnpm = "11.9.0"
