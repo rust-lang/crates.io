@@ -3,6 +3,7 @@
 # This file specifies the versions of various tools to be used in this project.
 # Some of these tools are also used by our Heroku buildpack setup.
 [tools]
+cargo-insta = "1.48.0"
 "cargo:cargo-deny" = "0.19.9"
 "cargo:cargo-machete" = "0.9.2"
 "cargo:diesel-guard" = "0.12.0"

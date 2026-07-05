@@ -27,6 +27,7 @@ backend_test:
   - Cargo.lock
   - Cargo.toml
   - diesel.toml
+  - mise.toml
   - rust-toolchain.toml
 
 frontend_lint:
