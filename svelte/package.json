@@ -27,7 +27,7 @@
     "@fontsource/fira-mono": "5.2.7",
     "@fontsource/fira-sans": "5.2.7",
     "@pierre/diffs": "1.2.12",
-    "@pierre/trees": "1.0.0-beta.4",
+    "@pierre/trees": "1.0.0-beta.5",
     "@shikijs/themes": "4.3.0",
     "chart.js": "4.5.1",
     "date-fns": "4.4.0",
