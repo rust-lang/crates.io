@@ -6,8 +6,8 @@
 // for dark mode. The mapping is built from `@catppuccin/palette` by matching the
 // shared color name across both flavors.
 //
-// This module is only used at generation time (by `sprite.test.js`). The emitted
-// `sprite.gen.js` is plain data with no runtime dependencies.
+// This module is only used at generation time (by `sprite.test.ts`). The emitted
+// `sprite.gen.ts` is plain data with no runtime dependencies.
 
 import { flavors } from '@catppuccin/palette';
 import { icons as iconSet } from '@iconify-json/catppuccin';
@@ -20,12 +20,12 @@ const HEADER = `// This file is auto-generated. Do not edit manually.
 // Run \`pnpm --filter @crates-io/file-tree-icons regenerate\` to update it.`;
 
 /**
- * Generate the contents of `sprite.gen.js` for the given icon names.
+ * Generate the contents of `sprite.gen.ts` for the given icon names.
  *
- * @param {Iterable<string>} iconNames icon names from `@iconify-json/catppuccin`
- * @returns {string} the module source, exporting a `spriteSheet` string
+ * @param iconNames icon names from `@iconify-json/catppuccin`
+ * @returns the module source, exporting a `spriteSheet` string
  */
-export function generateSpriteModule(iconNames) {
+export function generateSpriteModule(iconNames: Iterable<string>): string {
   let replacements = buildColorReplacements();
 
   let symbols = [...new Set(iconNames)]
@@ -41,18 +41,18 @@ export function generateSpriteModule(iconNames) {
 /**
  * Build the macchiato → `light-dark(latte, macchiato)` replacement table.
  *
- * @returns {Record<string, string>} lower-cased macchiato hex → replacement value
+ * @returns lower-cased macchiato hex → replacement value
  */
-function buildColorReplacements() {
-  let table = {};
-  for (let [name, macchiato] of Object.entries(flavors.macchiato.colors)) {
+function buildColorReplacements(): Record<string, string> {
+  let table: Record<string, string> = {};
+  for (let [name, macchiato] of flavors.macchiato.colorEntries) {
     let latte = flavors.latte.colors[name];
     table[macchiato.hex.toLowerCase()] = `light-dark(${latte.hex}, ${macchiato.hex})`;
   }
   return table;
 }
 
-function renderSymbol(name, replacements) {
+function renderSymbol(name: string, replacements: Record<string, string>): string {
   let icon = iconSet.icons[name];
   if (!icon) {
     throw new Error(`Unknown catppuccin icon: "${name}"`);
@@ -67,13 +67,13 @@ function renderSymbol(name, replacements) {
   return `  <symbol id="${SYMBOL_PREFIX}-${name}" viewBox="${left} ${top} ${width} ${height}">${body}</symbol>`;
 }
 
-function recolor(body, replacements) {
+function recolor(body: string, replacements: Record<string, string>): string {
   let hexes = Object.keys(replacements);
   let pattern = new RegExp(`(${hexes.join('|')})(?![0-9a-fA-F])`, 'gi');
   return body.replace(pattern, match => replacements[match.toLowerCase()]);
 }
 
-function toTemplateLiteral(value) {
+function toTemplateLiteral(value: string): string {
   let escaped = value.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${');
   return `\`${escaped}\``;
 }
