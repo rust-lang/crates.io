@@ -68,7 +68,11 @@ expression: response.json()
       "id": 2,
       "lib_links": null,
       "license": null,
-      "linecounts": null,
+      "linecounts": {
+        "languages": {},
+        "total_code_lines": 9000,
+        "total_comment_lines": 0
+      },
       "links": {
         "authors": "/api/v1/crates/foo_show/0.5.0/authors",
         "dependencies": "/api/v1/crates/foo_show/0.5.0/dependencies",
@@ -109,7 +113,11 @@ expression: response.json()
       "id": 1,
       "lib_links": null,
       "license": null,
-      "linecounts": null,
+      "linecounts": {
+        "languages": {},
+        "total_code_lines": 9000,
+        "total_comment_lines": 0
+      },
       "links": {
         "authors": "/api/v1/crates/foo_show/1.0.0/authors",
         "dependencies": "/api/v1/crates/foo_show/1.0.0/dependencies",

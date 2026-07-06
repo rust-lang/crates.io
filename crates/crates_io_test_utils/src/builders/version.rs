@@ -19,6 +19,8 @@ pub struct VersionBuilder {
     checksum: String,
     links: Option<String>,
     rust_version: Option<String>,
+    keywords: Vec<String>,
+    description: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -45,6 +47,8 @@ impl VersionBuilder {
             checksum: "0".repeat(64),
             links: None,
             rust_version: None,
+            keywords: Vec::new(),
+            description: None,
         }
     }
 
@@ -89,6 +93,18 @@ impl VersionBuilder {
         self
     }
 
+    /// Sets the crate's `description` value.
+    pub fn description(mut self, description: &str) -> Self {
+        self.description = Some(description.to_owned());
+        self
+    }
+
+    /// Adds a keyword to the version.
+    pub fn keyword(mut self, keyword: &str) -> Self {
+        self.keywords.push(keyword.to_owned());
+        self
+    }
+
     pub async fn build(
         self,
         crate_id: i32,
@@ -102,6 +118,8 @@ impl VersionBuilder {
         let tar_sha256 = hex::decode(&self.checksum)
             .expect("VersionBuilder checksum must be a valid hex string");
 
+        let keywords = self.keywords.iter().map(|s| s.as_str()).collect::<Vec<_>>();
+
         let new_version = NewVersion::builder(crate_id, &version)
             .features(serde_json::to_value(&self.features)?)
             .maybe_license(self.license.as_deref())
@@ -112,6 +130,8 @@ impl VersionBuilder {
             .maybe_rust_version(self.rust_version.as_deref())
             .yanked(self.yanked)
             .maybe_created_at(self.created_at.as_ref())
+            .keywords(&keywords)
+            .maybe_description(self.description.as_deref())
             .build();
 
         let vers = new_version.save(connection).await?;
