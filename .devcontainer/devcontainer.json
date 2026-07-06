@@ -7,11 +7,6 @@
   // image (UID 1000, passwordless sudo). Avoids running as root and
   // the file-ownership annoyances that come with bind mounts.
   "remoteUser": "vscode",
-  "features": {
-    "ghcr.io/devcontainers/features/node:2": {
-      "version": "24.18.0"
-    }
-  },
   // Named volumes for state that should survive container rebuilds.
   // The `${devcontainerId}` suffix scopes them per workspace path so
   // different worktrees (or fresh clones) don't share volumes.
@@ -19,6 +14,7 @@
     "source=cratesio-target-${devcontainerId},target=/workspaces/crates.io/target,type=volume",
     "source=cratesio-cargo-registry-${devcontainerId},target=/usr/local/cargo/registry,type=volume",
     "source=cratesio-pnpm-store-${devcontainerId},target=/home/vscode/.local/share/pnpm/store,type=volume",
+    "source=cratesio-mise-${devcontainerId},target=/home/vscode/.local/share/mise,type=volume",
     "source=cratesio-local-uploads-${devcontainerId},target=/workspaces/crates.io/local_uploads,type=volume"
   ],
   // Metadata for the VS Code / Codespaces port-forwarding UI. Actual

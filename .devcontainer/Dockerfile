@@ -17,18 +17,12 @@ RUN install -d /usr/share/postgresql-common/pgdg \
         git \
     && rm -rf /var/lib/apt/lists/*
 
-# renovate: datasource=crate depName=diesel_cli versioning=semver
-ARG DIESEL_CLI_VERSION=2.3.10
-
-RUN cargo install --locked diesel_cli --version $DIESEL_CLI_VERSION \
-    --no-default-features --features postgres
-
-# Install pnpm under /home/vscode (its $PNPM_HOME) so the named pnpm
-# store volume can be mounted there. Switch back to root afterwards
-# so any downstream Feature install scripts run as expected.
+# Install the mise version manager (https://mise.jdx.dev) for the `vscode` user.
+# The tools themselves are installed by `post-create.sh` via `mise install`.
 USER vscode
+ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
 ENV PNPM_HOME=/home/vscode/.local/share/pnpm
-ENV PATH=$PNPM_HOME:$PATH
-RUN curl -fsSL https://get.pnpm.io/install.sh | env SHELL=/bin/bash sh -
+ENV PATH=/home/vscode/.local/bin:$MISE_DATA_DIR/shims:$PATH
+RUN curl -fsSL https://mise.run | sh
 
 USER root
