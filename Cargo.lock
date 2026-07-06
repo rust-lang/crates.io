@@ -2241,6 +2241,7 @@ dependencies = [
  "crates_io_api_types",
  "crates_io_cargo_toml",
  "crates_io_database",
+ "crates_io_encryption",
  "crates_io_tarball",
  "diesel",
  "diesel-async",

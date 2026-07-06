@@ -1,4 +1,15 @@
-use crates_io_database::models::User;
+use crate::github::next_gh_id;
+
+use crates_io_database::models::{NewUser, User};
+use crates_io_encryption::TokenEncryption;
+
+use std::sync::LazyLock;
+
+static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
+    TokenEncryption::for_testing()
+        .encrypt("some random token")
+        .unwrap()
+});
 
 /// A builder to create user instances for the purpose of not using the database or inserting
 /// directly into the database.
@@ -36,6 +47,15 @@ impl<'a> UserBuilder<'a> {
             username: self.username.into(),
             created_at: None,
         }
+    }
+
+    pub fn new_user(self) -> NewUser<'a> {
+        NewUser::builder()
+            .gh_id(next_gh_id())
+            .gh_login(self.username)
+            .username(self.username)
+            .gh_encrypted_token(&ENCRYPTED_TOKEN)
+            .build()
     }
 }
 

@@ -1,14 +1,11 @@
-use crate::util::{RequestHelper, TestApp};
+use crate::util::{RequestHelper, TestApp, github::next_gh_id};
 use crates_io::models::{NewCategory, NewTeam, NewUser};
 use crates_io::views::{
     EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
     GoodCrate,
 };
 
-use crate::util::github::next_gh_id;
-use crates_io_encryption::TokenEncryption;
 use serde::{Deserialize, Serialize};
-use std::sync::LazyLock;
 
 mod account_lock;
 mod authentication;
@@ -94,18 +91,7 @@ pub struct OwnerResp {
 }
 
 fn new_user(login: &str) -> NewUser<'_> {
-    static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
-        TokenEncryption::for_testing()
-            .encrypt("some random token")
-            .unwrap()
-    });
-
-    NewUser::builder()
-        .gh_id(next_gh_id())
-        .gh_login(login)
-        .username(login)
-        .gh_encrypted_token(&ENCRYPTED_TOKEN)
-        .build()
+    builders::UserBuilder::new().with_username(login).new_user()
 }
 
 fn new_team(login: &str) -> NewTeam<'_> {
