@@ -92,7 +92,7 @@ impl UpdateUserFromGithub {
         let github = ctx.github.as_ref();
         let token = ctx
             .config
-            .gh_token_encryption
+            .token_encryption
             .decrypt(&oauth_github.encrypted_token)?;
 
         let auth = GitHubAuth::bearer(token);

@@ -117,7 +117,7 @@ pub async fn authorize_session(
     let token = token.access_token();
 
     // Encrypt the GitHub access token
-    let encryption = &app.config.gh_token_encryption;
+    let encryption = &app.config.token_encryption;
     let encrypted_token = encryption.encrypt(token.secret()).map_err(|error| {
         error!("Failed to encrypt GitHub token: {error}");
         server_error("Internal server error")

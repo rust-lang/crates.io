@@ -68,7 +68,6 @@ name = "integration"
 path = "src/tests/mod.rs"
 
 [dependencies]
-aes-gcm = "=0.11.0"
 anyhow = "=1.0.103"
 astral-tokio-tar = { version = "=0.6.2", default-features = false }
 async-compression = { version = "=0.4.42", default-features = false, features = ["gzip", "tokio"] }
@@ -94,6 +93,7 @@ crates_io_crate_zip = { path = "crates/crates_io_crate_zip" }
 crates_io_database = { path = "crates/crates_io_database" }
 crates_io_database_dump = { path = "crates/crates_io_database_dump" }
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs" }
+crates_io_encryption = { path = "crates/crates_io_encryption" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_fastly = { path = "crates/crates_io_fastly" }
 crates_io_github = { path = "crates/crates_io_github" }

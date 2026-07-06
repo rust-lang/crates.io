@@ -1,7 +1,6 @@
 use url::Url;
 
 use crate::Env;
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
@@ -18,6 +17,7 @@ use crate::config::publish_limits::PublishLimitsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
+use crates_io_encryption::TokenEncryption;
 use crates_io_env_vars::{list, required_var, var, var_parsed};
 use http::HeaderValue;
 use std::convert::Infallible;
@@ -34,7 +34,7 @@ pub struct Server {
     pub cdn_log_queue: CdnLogQueueConfig,
     pub session_key: cookie::Key,
     pub github_oauth: GitHubOAuthConfig,
-    pub gh_token_encryption: GitHubTokenEncryption,
+    pub token_encryption: TokenEncryption,
     pub publish_limits: PublishLimitsConfig,
     pub rate_limits: RateLimitsConfig,
     pub block: BlockConfig,
@@ -95,7 +95,7 @@ impl Server {
     /// Pulls values from the following environment variables:
     ///
     /// - `SESSION_KEY`: The key used to sign and encrypt session cookies.
-    /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
+    /// - `TOKEN_ENCRYPTION_KEY`: Key for encrypting Oauth tokens (64 hex characters).
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
@@ -138,7 +138,7 @@ impl Server {
             max_blocking_threads,
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
             github_oauth: GitHubOAuthConfig::from_env()?,
-            gh_token_encryption: GitHubTokenEncryption::from_environment()?,
+            token_encryption: TokenEncryption::from_environment()?,
             publish_limits: PublishLimitsConfig::default(),
             rate_limits: RateLimitsConfig::from_env()?,
             block: BlockConfig::from_env()?,

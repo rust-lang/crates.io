@@ -125,7 +125,7 @@ pub async fn perform_version_yank_update(
 
     let yanked = yanked.unwrap_or(version.yanked);
 
-    let encryption = &state.config.gh_token_encryption;
+    let encryption = &state.config.token_encryption;
     if Rights::get(user, &*state.github, &owners, encryption).await? < Rights::Publish {
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };

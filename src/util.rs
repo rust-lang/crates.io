@@ -4,7 +4,6 @@ pub use crates_io_database::utils::token;
 
 pub mod diesel;
 pub mod errors;
-pub mod gh_token_encryption;
 mod io_util;
 pub mod oauth;
 mod request_helpers;
