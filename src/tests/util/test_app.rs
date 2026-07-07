@@ -166,20 +166,7 @@ impl TestApp {
 
         new_email.insert(&conn).await.unwrap();
 
-        let user = User {
-            id,
-            name: new_user.name.map(str::to_string),
-            gh_id: new_user.gh_id,
-            gh_login: new_user.gh_login.to_string(),
-            gh_avatar: None,
-            gh_encrypted_token: new_user.gh_encrypted_token.to_vec(),
-            account_lock_reason: None,
-            account_lock_until: None,
-            is_admin: false,
-            publish_notifications: true,
-            username: new_user.gh_login.to_string(),
-            created_at: None,
-        };
+        let user = User::find(&conn, id).await.unwrap();
 
         MockCookieUser {
             app: self.clone(),
