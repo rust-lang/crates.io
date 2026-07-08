@@ -165,14 +165,14 @@ async fn create_or_update_user(
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    // First, try to update an existing `oauth_github` record with the specified GitHub ID and the
-    // associated `users` record in a transaction so that either both `oauth_github` and `users`
-    // get updated or neither do.
-    //
-    // For now, update user display name, gh_login, and username. Eventually, we will
-    // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
     match conn
         .transaction(async |conn| {
+            // First, try to update an existing `oauth_github` record with the specified GitHub ID
+            // and the associated `users` record in a transaction so that either both
+            // `oauth_github` and `users` get updated or neither do.
+            //
+            // For now, update user display name, gh_login, and username. Eventually, we will
+            // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
             let oauth_github = diesel::update(oauth_github::table)
                 .filter(oauth_github::account_id.eq(gh_user.id as i64))
                 .set((
