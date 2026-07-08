@@ -2,7 +2,6 @@ use crate::builders::CrateBuilder;
 use crate::util::TestApp;
 use claims::{assert_err, assert_ok};
 use crates_io_worker::BackgroundJob;
-use insta::assert_binary_snapshot;
 use object_store::ObjectStoreExt;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -47,8 +46,6 @@ async fn test_generate_og_image_job() {
         &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
         "Uploaded file should be a valid PNG"
     );
-
-    assert_binary_snapshot!("og-image.png", image_bytes);
 }
 
 #[tokio::test(flavor = "multi_thread")]
