@@ -68,10 +68,8 @@ impl BackgroundJob for GenerateOgImage {
         // Fetch user owners
         let owners = fetch_user_owners(row._crate_id, &conn).await;
         let owners = owners.context("Failed to fetch crate owners")?;
-        let authors: Vec<OgImageAuthorData<'_>> = owners
-            .iter()
-            .map(|(login, avatar)| OgImageAuthorData::new(login, avatar.as_ref().map(Into::into)))
-            .collect();
+
+        let authors = build_og_author_data(&owners);
 
         // Build the OG image data
         let og_data = OgImageData {
@@ -197,10 +195,17 @@ async fn fetch_user_owners(
         .await
 }
 
+fn build_og_author_data<'a>(owners: &'a [(String, Option<String>)]) -> Vec<OgImageAuthorData<'a>> {
+    owners
+        .iter()
+        .map(|(login, avatar)| OgImageAuthorData::new(login, avatar.as_ref().map(Into::into)))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crates_io_database::models::User;
+    use crates_io_database::models::{OauthGithub, User};
     use crates_io_test_db::TestDatabase;
     use crates_io_test_utils::builders::{CrateBuilder, OauthGithubBuilder, UserBuilder};
 
@@ -213,6 +218,11 @@ mod tests {
         let user_id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, user_id).await.unwrap();
         OauthGithubBuilder::for_user(&user).insert(&mut conn).await;
+        let oauth_github = OauthGithub::belonging_to(&user)
+            .select(OauthGithub::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
 
         let crate_name = "test-crate";
         let crate_description = "A test crate for OG image generation";
@@ -241,13 +251,20 @@ mod tests {
         );
 
         let user_owners = fetch_user_owners(test_crate.id, &conn).await.unwrap();
-
         assert_eq!(
             user_owners,
             vec![(
                 "foo".to_string(),
                 Some("http://example.com/icon-the-first.png".to_string())
             )],
+        );
+
+        let authors = build_og_author_data(&user_owners);
+        assert_eq!(authors.len(), 1);
+        assert_eq!(authors[0].name, "foo");
+        assert_eq!(
+            authors[0].avatar.as_ref().unwrap(),
+            &oauth_github.avatar.unwrap()
         );
     }
 }
