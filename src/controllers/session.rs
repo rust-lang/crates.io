@@ -245,7 +245,7 @@ async fn create_or_update_user(
                 .execute(conn)
                 .await?;
 
-            // To send the user an account verification email
+            // Since this is a new user, send an account verification email
             if let Some(user_email) = gh_user.email.as_deref() {
                 let new_email = NewEmail::builder()
                     .user_id(user_id)
