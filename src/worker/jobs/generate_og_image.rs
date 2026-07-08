@@ -71,18 +71,7 @@ impl BackgroundJob for GenerateOgImage {
 
         let authors = build_og_author_data(&owners);
 
-        // Build the OG image data
-        let og_data = OgImageData {
-            name: &row.crate_name,
-            version: &row.version_num,
-            description: row.description.as_deref(),
-            license: row.license.as_deref(),
-            tags: &keywords,
-            authors: &authors,
-            lines_of_code: row.total_code_lines(),
-            crate_size: row.crate_size as u32,
-            releases: row.num_versions as u32,
-        };
+        let og_data = build_og_image_data(&row, &keywords, &authors);
 
         // Generate the OG image
         let image_bytes = option.generate(og_data).await?;
@@ -202,6 +191,24 @@ fn build_og_author_data<'a>(owners: &'a [(String, Option<String>)]) -> Vec<OgIma
         .collect()
 }
 
+fn build_og_image_data<'a>(
+    row: &'a QueryRow,
+    keywords: &'a [&'a str],
+    authors: &'a [OgImageAuthorData<'a>],
+) -> OgImageData<'a> {
+    OgImageData {
+        name: &row.crate_name,
+        version: &row.version_num,
+        description: row.description.as_deref(),
+        license: row.license.as_deref(),
+        tags: keywords,
+        authors,
+        lines_of_code: row.total_code_lines(),
+        crate_size: row.crate_size as u32,
+        releases: row.num_versions as u32,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,5 +273,16 @@ mod tests {
             authors[0].avatar.as_ref().unwrap(),
             &oauth_github.avatar.unwrap()
         );
+
+        let keywords = &["testing", "rust"];
+        let og_image_data = build_og_image_data(&row, keywords, &authors);
+
+        assert_eq!(og_image_data.name, crate_name);
+        assert_eq!(og_image_data.version, "0.99.0");
+        assert_eq!(og_image_data.description, Some(crate_description));
+        assert_eq!(og_image_data.license, Some("MIT"));
+        assert_eq!(og_image_data.tags, keywords);
+        assert_eq!(og_image_data.crate_size, 4242);
+        assert_eq!(og_image_data.releases, 1);
     }
 }
