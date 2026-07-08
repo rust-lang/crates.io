@@ -7,5 +7,5 @@ mod version;
 pub use self::dependency::DependencyBuilder;
 pub use self::krate::CrateBuilder;
 pub use self::publish::PublishBuilder;
-pub use self::user::UserBuilder;
+pub use self::user::{OauthGithubBuilder, UserBuilder};
 pub use self::version::VersionBuilder;

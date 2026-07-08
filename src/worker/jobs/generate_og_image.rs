@@ -200,8 +200,9 @@ async fn fetch_user_owners(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crates_io_database::models::User;
     use crates_io_test_db::TestDatabase;
-    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder};
+    use crates_io_test_utils::builders::{CrateBuilder, OauthGithubBuilder, UserBuilder};
 
     #[tokio::test]
     async fn fetch_crate_info() {
@@ -210,6 +211,8 @@ mod tests {
 
         let new_user = UserBuilder::new().with_username("foo").new_user();
         let user_id = new_user.insert(&conn).await.unwrap();
+        let user = User::find(&conn, user_id).await.unwrap();
+        OauthGithubBuilder::for_user(&user).insert(&mut conn).await;
 
         let crate_name = "test-crate";
         let crate_description = "A test crate for OG image generation";
@@ -235,6 +238,16 @@ mod tests {
                 total_code_lines: Some(serde_json::Value::Number(serde_json::Number::from(9000))),
                 num_versions: 1,
             }
+        );
+
+        let user_owners = fetch_user_owners(test_crate.id, &conn).await.unwrap();
+
+        assert_eq!(
+            user_owners,
+            vec![(
+                "foo".to_string(),
+                Some("http://example.com/icon-the-first.png".to_string())
+            )],
         );
     }
 }
