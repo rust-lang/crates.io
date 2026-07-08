@@ -132,7 +132,7 @@ impl BackgroundJob for GenerateOgImage {
     }
 }
 
-#[derive(HasQuery)]
+#[derive(HasQuery, PartialEq, Debug)]
 #[diesel(
     base_query = crates::table
         .inner_join(default_versions::table)
@@ -195,4 +195,46 @@ async fn fetch_user_owners(
         .select((users::gh_login, oauth_github::avatar.nullable()))
         .load(&mut conn)
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder};
+
+    #[tokio::test]
+    async fn fetch_crate_info() {
+        let db = TestDatabase::new();
+        let mut conn = db.async_connect().await;
+
+        let new_user = UserBuilder::new().with_username("foo").new_user();
+        let user_id = new_user.insert(&conn).await.unwrap();
+
+        let crate_name = "test-crate";
+        let crate_description = "A test crate for OG image generation";
+        let test_crate = CrateBuilder::new(crate_name, user_id)
+            .description(crate_description)
+            .keyword("testing")
+            .keyword("rust")
+            .expect_build(&mut conn)
+            .await;
+
+        let row = fetch_crate_data(crate_name, &conn).await.unwrap().unwrap();
+
+        assert_eq!(
+            row,
+            QueryRow {
+                _crate_id: test_crate.id,
+                crate_name: crate_name.to_string(),
+                version_num: "0.99.0".to_string(),
+                description: Some(crate_description.to_string()),
+                license: Some("MIT".to_string()),
+                crate_size: 4242,
+                keywords: vec![Some("testing".to_string()), Some("rust".to_string())],
+                total_code_lines: Some(serde_json::Value::Number(serde_json::Number::from(9000))),
+                num_versions: 1,
+            }
+        );
+    }
 }
