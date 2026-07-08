@@ -22,6 +22,7 @@ use crate::config::QueueConfig;
 #[async_trait]
 pub trait SqsQueue {
     async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput>;
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput>;
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()>;
 }
 
@@ -85,6 +86,19 @@ impl SqsQueue for SqsQueueImpl {
         Ok(response)
     }
 
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput> {
+        let response = self
+            .client
+            .send_message()
+            .message_body(message)
+            .queue_url(&self.queue_url)
+            .send()
+            .await
+            .context("Failed to send SQS queue message")?;
+
+        Ok(response)
+    }
+
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
         self.client
             .delete_message()
@@ -117,6 +131,10 @@ impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Arc<T> {
 impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Box<T> {
     async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput> {
         (**self).receive_messages(max_messages).await
+    }
+
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput> {
+        (**self).send_message(message).await
     }
 
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
