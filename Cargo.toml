@@ -173,6 +173,8 @@ utoipa = { version = "=5.5.0", features = ["chrono"] }
 utoipa-axum = "=0.2.0"
 
 [dev-dependencies]
+aws-sdk-sqs = { version = "=1.102.0", default-features = false, features = ["test-util"] }
+aws-smithy-mocks = "=0.3.0"
 bytes = "=1.12.1"
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs", features = ["mock"] }
 crates_io_github = { path = "crates/crates_io_github", features = ["mock"] }
