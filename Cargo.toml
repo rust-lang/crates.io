@@ -122,6 +122,7 @@ diesel = { version = "=2.3.10", features = ["postgres", "serde_json", "chrono", 
 diesel-async = { version = "=0.9.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 diesel_full_text_search = "=2.3.0"
 diesel_migrations = { version = "=2.3.2", features = ["postgres"] }
+docs_rs_crates_io = { git = "https://github.com/rust-lang/docs.rs.git", rev = "1604301c72411fbc63082434295fa45036d982b7", version = "0.1.0" }
 dotenvy = "=0.15.7"
 flate2 = "=1.1.9"
 futures-util = "=0.3.32"

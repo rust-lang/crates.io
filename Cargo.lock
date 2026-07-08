@@ -1861,6 +1861,7 @@ dependencies = [
  "diesel-async",
  "diesel_full_text_search",
  "diesel_migrations",
+ "docs_rs_crates_io",
  "dotenvy",
  "flate2",
  "futures-util",
@@ -2976,6 +2977,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "docs_rs_crates_io"
+version = "0.1.0"
+source = "git+https://github.com/rust-lang/docs.rs.git?rev=1604301c72411fbc63082434295fa45036d982b7#1604301c72411fbc63082434295fa45036d982b7"
+dependencies = [
+ "chrono",
+ "serde",
 ]
 
 [[package]]
