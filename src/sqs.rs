@@ -1,9 +1,14 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 use async_trait::async_trait;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::{BehaviorVersion, Region};
 use aws_sdk_sqs::operation::receive_message::ReceiveMessageOutput;
+use aws_sdk_sqs::operation::send_message::SendMessageOutput;
 use mockall::automock;
+
+use crate::config::QueueConfig;
 
 /// The [SqsQueue] trait defines a basic interface for interacting with an
 /// AWS SQS queue.
@@ -18,6 +23,28 @@ use mockall::automock;
 pub trait SqsQueue {
     async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput>;
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()>;
+}
+
+/// Builds an [`SqsQueue`] implementation based on the [`QueueConfig`].
+pub fn from_config(config: &QueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
+    match config {
+        QueueConfig::Mock => Box::new(MockSqsQueue::new()),
+        QueueConfig::SQS {
+            access_key,
+            secret_key,
+            region,
+            queue_url,
+        } => {
+            use secrecy::ExposeSecret;
+
+            let secret_key = secret_key.expose_secret();
+            let credentials = Credentials::from_keys(access_key, secret_key, None);
+
+            let region = Region::new(region.to_owned());
+
+            Box::new(SqsQueueImpl::new(queue_url, region, credentials))
+        }
+    }
 }
 
 /// The [`SqsQueueImpl`] struct is the actual implementation of the [`SqsQueue`]
@@ -68,6 +95,21 @@ impl SqsQueue for SqsQueueImpl {
             .context("Failed to delete SQS queue message")?;
 
         Ok(())
+    }
+}
+
+#[async_trait]
+impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Arc<T> {
+    async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput> {
+        (**self).receive_messages(max_messages).await
+    }
+
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput> {
+        (**self).send_message(message).await
+    }
+
+    async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
+        (**self).delete_message(receipt_handle).await
     }
 }
 

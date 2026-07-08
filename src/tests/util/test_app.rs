@@ -3,14 +3,15 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
-    DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
+    self, Base, BindConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
+    FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig, QueueConfig,
     RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crates_io::sqs::MockSqsQueue;
 use crates_io::storage::StorageConfig;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
@@ -362,6 +363,8 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
+            let cdn_log_queue = Arc::new(MockSqsQueue::new());
+
             let environment = Environment::builder()
                 .config(app.config.clone())
                 .repository_config(repository_config)
@@ -374,6 +377,7 @@ impl TestAppBuilder {
                 .maybe_sync_github_app(self.sync_github_app.map(|a| Arc::new(a) as _))
                 .github(github)
                 .maybe_og_image_generator(self.og_image_generator)
+                .cdn_log_queue(cdn_log_queue)
                 .build();
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
@@ -569,7 +573,7 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         db,
         storage,
-        cdn_log_queue: CdnLogQueueConfig::Mock,
+        cdn_log_queue: QueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         github_oauth: GitHubOAuthConfig {
