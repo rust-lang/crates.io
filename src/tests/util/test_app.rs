@@ -364,6 +364,7 @@ impl TestAppBuilder {
             };
 
             let cdn_log_queue = Arc::new(MockSqsQueue::new());
+            let docs_rs_queue = Arc::new(MockSqsQueue::new());
 
             let environment = Environment::builder()
                 .config(app.config.clone())
@@ -378,6 +379,7 @@ impl TestAppBuilder {
                 .github(github)
                 .maybe_og_image_generator(self.og_image_generator)
                 .cdn_log_queue(cdn_log_queue)
+                .docs_rs_queue(docs_rs_queue)
                 .build();
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
@@ -575,6 +577,7 @@ fn simple_config() -> config::Server {
         storage,
         cdn_log_queue: QueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
+        docs_rs_queue: QueueConfig::Mock,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         github_oauth: GitHubOAuthConfig {
             client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),

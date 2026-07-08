@@ -45,6 +45,7 @@ pub struct Environment {
     pub docs_rs: Option<Box<dyn DocsRsClient>>,
     pub og_image_generator: Option<OgImageGenerator>,
     pub cdn_log_queue: Arc<dyn SqsQueue + Send + Sync>,
+    pub docs_rs_queue: Arc<dyn SqsQueue + Send + Sync>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
     #[builder(skip)]

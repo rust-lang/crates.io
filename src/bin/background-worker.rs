@@ -107,6 +107,7 @@ fn main() -> anyhow::Result<()> {
     let deadpool = create_database_pool(&config.db.primary);
 
     let cdn_log_queue = sqs::from_config(&config.cdn_log_queue);
+    let docs_rs_queue = sqs::from_config(&config.docs_rs_queue);
 
     let environment = Environment::builder()
         .config(Arc::new(config))
@@ -124,6 +125,7 @@ fn main() -> anyhow::Result<()> {
         .github(github)
         .og_image_generator(OgImageGenerator::from_environment()?.with_oxipng())
         .cdn_log_queue(cdn_log_queue.into())
+        .docs_rs_queue(docs_rs_queue.into())
         .build();
 
     let environment = Arc::new(environment);
