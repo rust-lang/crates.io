@@ -93,7 +93,7 @@ impl VersionBuilder {
         self
     }
 
-    /// Sets the crate's `description` value.
+    /// Sets the version's `description` value.
     pub fn description(mut self, description: &str) -> Self {
         self.description = Some(description.to_owned());
         self
