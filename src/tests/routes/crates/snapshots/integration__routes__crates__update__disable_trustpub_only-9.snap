@@ -45,7 +45,7 @@ expression: json
       "bin_names": null,
       "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo",
-      "crate_size": 0,
+      "crate_size": 4242,
       "created_at": "[datetime]",
       "description": null,
       "dl_path": "/api/v1/crates/foo/0.99.0/download",
@@ -57,8 +57,12 @@ expression: json
       "homepage": null,
       "id": 1,
       "lib_links": null,
-      "license": null,
-      "linecounts": null,
+      "license": "MIT",
+      "linecounts": {
+        "languages": {},
+        "total_code_lines": 9000,
+        "total_comment_lines": 0
+      },
       "links": {
         "authors": "/api/v1/crates/foo/0.99.0/authors",
         "dependencies": "/api/v1/crates/foo/0.99.0/dependencies",

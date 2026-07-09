@@ -1,6 +1,0 @@
----
-source: src/tests/worker/generate_og_image.rs
-expression: image_bytes
-extension: png
-snapshot_kind: binary
----
