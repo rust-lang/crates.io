@@ -134,6 +134,7 @@ impl TestApp {
             docs_rs: None,
             oidc_key_stores: Default::default(),
             og_image_generator: None,
+            docs_rs_queue: None,
         }
     }
 
@@ -306,6 +307,7 @@ pub struct TestAppBuilder {
     docs_rs: Option<MockDocsRsClient>,
     oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
     og_image_generator: Option<OgImageGenerator>,
+    docs_rs_queue: Option<MockSqsQueue>,
 }
 
 impl TestAppBuilder {
@@ -364,7 +366,7 @@ impl TestAppBuilder {
             };
 
             let cdn_log_queue = Arc::new(MockSqsQueue::new());
-            let docs_rs_queue = Arc::new(MockSqsQueue::new());
+            let docs_rs_queue = Arc::new(self.docs_rs_queue.unwrap_or_default());
 
             let environment = Environment::builder()
                 .config(app.config.clone())
@@ -519,6 +521,11 @@ impl TestAppBuilder {
             .with_oxipng();
 
         self.og_image_generator = Some(og_generator);
+        self
+    }
+
+    pub fn with_docs_rs_queue(mut self, queue: Option<MockSqsQueue>) -> Self {
+        self.docs_rs_queue = queue;
         self
     }
 
