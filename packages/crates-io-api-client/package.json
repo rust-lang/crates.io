@@ -25,6 +25,6 @@
     "@crates-io/msw": "workspace:*",
     "msw": "2.14.6",
     "openapi-typescript": "7.13.0",
-    "vitest": "4.1.9"
+    "vitest": "4.1.10"
   }
 }
