@@ -651,7 +651,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let sync_git_index = async {
             if app.config.sync_git_index {
-                let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+                let git_index_job = jobs::SyncToGitIndex::new_publish(&krate.name, &version.num);
                 git_index_job.enqueue(&*conn).await?;
             }
             Ok(())

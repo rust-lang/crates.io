@@ -58,7 +58,11 @@ async fn index_smoke_test() {
             .await
     );
 
-    assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(&conn).await);
+    assert_ok!(
+        jobs::SyncToGitIndex::new_delete_crate("serde")
+            .enqueue(&conn)
+            .await
+    );
     assert_ok!(jobs::SyncToSparseIndex::new("serde").enqueue(&conn).await);
 
     app.run_pending_background_jobs().await;

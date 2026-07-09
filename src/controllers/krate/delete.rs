@@ -136,7 +136,7 @@ pub async fn delete_crate(
 
         let sync_git_index = async {
             if app.config.sync_git_index {
-                let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+                let git_index_job = jobs::SyncToGitIndex::new_delete_crate(&krate.name);
                 git_index_job.enqueue(&*conn).await?;
             }
             Ok(())
