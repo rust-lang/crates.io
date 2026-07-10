@@ -165,40 +165,9 @@ async fn create_or_update_user(
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    match conn
-        .transaction(async |conn| {
-            // First, try to update an existing `oauth_github` record with the specified GitHub ID
-            // and the associated `users` record in a transaction so that either both
-            // `oauth_github` and `users` get updated or neither do.
-            //
-            // For now, update user display name, gh_login, and username. Eventually, we will
-            // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
-            let oauth_github = diesel::update(oauth_github::table)
-                .filter(oauth_github::account_id.eq(gh_user.id as i64))
-                .set((
-                    oauth_github::encrypted_token.eq(encrypted_token),
-                    oauth_github::login.eq(&gh_user.login),
-                    oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
-                    oauth_github::last_sync.eq(Utc::now()),
-                ))
-                .get_result::<OauthGithub>(conn)
-                .await?;
-            diesel::update(users::table)
-                .filter(users::id.eq(oauth_github.user_id))
-                .set((
-                    users::name.eq(gh_user.name.as_ref()),
-                    users::username.eq(&gh_user.login),
-                    // These fields are soon to be deprecated.
-                    users::gh_login.eq(&gh_user.login),
-                    users::gh_encrypted_token.eq(encrypted_token),
-                ))
-                .execute(conn)
-                .await?;
+    let update_result = update_user(gh_user, encrypted_token, conn).await;
 
-            Ok(oauth_github.user_id)
-        })
-        .await
-    {
+    match update_result {
         Ok(user_id) => Ok(user_id),
         Err(diesel::result::Error::NotFound) => {
             // If the update fails because the `oauth_github` record doesn't exist, this
@@ -278,6 +247,48 @@ async fn create_or_update_user(
         }
         Err(error) => Err(error),
     }
+}
+
+/// Updates an existing user, using a transaction so both the `users` and `oauth_github` records
+/// are updated or neither are.
+///
+/// Returns an error if the `oauth_github` or `users` records don't exist.
+async fn update_user(
+    gh_user: &GitHubUser,
+    encrypted_token: &[u8],
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<i32> {
+    conn.transaction(async |conn| {
+        // First, try to update an existing `oauth_github` record with the specified GitHub ID
+        // and the associated `users` record.
+        //
+        // For now, update user display name, gh_login, and username. Eventually, we will
+        // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
+        let oauth_github = diesel::update(oauth_github::table)
+            .filter(oauth_github::account_id.eq(gh_user.id as i64))
+            .set((
+                oauth_github::encrypted_token.eq(encrypted_token),
+                oauth_github::login.eq(&gh_user.login),
+                oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+                oauth_github::last_sync.eq(Utc::now()),
+            ))
+            .get_result::<OauthGithub>(conn)
+            .await?;
+        diesel::update(users::table)
+            .filter(users::id.eq(oauth_github.user_id))
+            .set((
+                users::name.eq(gh_user.name.as_ref()),
+                users::username.eq(&gh_user.login),
+                // These fields are soon to be deprecated.
+                users::gh_login.eq(&gh_user.login),
+                users::gh_encrypted_token.eq(encrypted_token),
+            ))
+            .execute(conn)
+            .await?;
+
+        Ok(oauth_github.user_id)
+    })
+    .await
 }
 
 async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<i32>> {
