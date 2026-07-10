@@ -28,6 +28,7 @@ utoipa = { version = "=5.5.0", features = ["chrono"] }
 [dev-dependencies]
 claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
+crates_io_test_utils = { path = "../crates_io_test_utils" }
 googletest = "=0.14.3"
 insta = { version = "=1.48.0", features = ["filters", "json"] }
 tokio = { version = "=1.52.3", features = ["macros", "rt"] }

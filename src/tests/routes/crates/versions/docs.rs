@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper as _, TestApp};
-use crates_io_database::models::NewUser;
 use crates_io_docs_rs::MockDocsRsClient;
+use crates_io_test_utils::builders::UserBuilder;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -45,12 +45,9 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
 
     let mut conn = app.db_conn().await;
 
-    let other_user_id = NewUser::builder()
-        .gh_id(111)
-        .gh_login("other_user")
-        .username("other_user")
-        .gh_encrypted_token(&[])
-        .build()
+    let other_user_id = UserBuilder::new()
+        .with_username("other_user")
+        .new_user()
         .insert(&conn)
         .await?;
 

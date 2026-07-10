@@ -1927,6 +1927,7 @@ dependencies = [
  "claims",
  "crates_io_index",
  "crates_io_test_db",
+ "crates_io_test_utils",
  "crates_io_validation",
  "diesel",
  "diesel-async",

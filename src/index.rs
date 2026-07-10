@@ -142,10 +142,9 @@ pub async fn index_metadata(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::schema::users;
     use chrono::{Days, Utc};
     use crates_io_test_db::TestDatabase;
-    use crates_io_test_utils::builders::{CrateBuilder, VersionBuilder};
+    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder, VersionBuilder};
     use insta::assert_json_snapshot;
 
     #[tokio::test]
@@ -153,16 +152,10 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user_id = diesel::insert_into(users::table)
-            .values((
-                users::name.eq("user1"),
-                users::gh_login.eq("user1"),
-                users::username.eq("user1"),
-                users::gh_id.eq(42),
-                users::gh_encrypted_token.eq(&[]),
-            ))
-            .returning(users::id)
-            .get_result::<i32>(&mut conn)
+        let user_id = UserBuilder::new()
+            .with_username("user1")
+            .new_user()
+            .insert(&conn)
             .await
             .unwrap();
 
@@ -205,16 +198,10 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user_id = diesel::insert_into(users::table)
-            .values((
-                users::name.eq("user1"),
-                users::gh_login.eq("user1"),
-                users::username.eq("user1"),
-                users::gh_id.eq(42),
-                users::gh_encrypted_token.eq(&[]),
-            ))
-            .returning(users::id)
-            .get_result::<i32>(&mut conn)
+        let user_id = UserBuilder::new()
+            .with_username("user1")
+            .new_user()
+            .insert(&conn)
             .await
             .unwrap();
 

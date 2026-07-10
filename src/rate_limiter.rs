@@ -187,6 +187,7 @@ mod tests {
     use super::*;
     use chrono::NaiveDateTime;
     use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::builders::UserBuilder;
 
     #[tokio::test]
     async fn default_rate_limits() -> anyhow::Result<()> {
@@ -703,14 +704,9 @@ mod tests {
     }
 
     async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
-        use crate::models::NewUser;
-
-        NewUser::builder()
-            .gh_id(0)
-            .gh_login(gh_login)
-            .username(gh_login)
-            .gh_encrypted_token(&[])
-            .build()
+        UserBuilder::new()
+            .with_username(gh_login)
+            .new_user()
             .insert(conn)
             .await
     }

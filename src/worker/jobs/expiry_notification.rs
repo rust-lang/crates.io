@@ -142,9 +142,10 @@ pub async fn find_expiring_tokens(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{NewEmail, NewUser};
+    use crate::models::NewEmail;
     use crate::{models::token::ApiToken, schema::api_tokens, util::token::PlainToken};
     use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::builders::UserBuilder;
     use diesel::dsl::IntervalDsl;
     use lettre::Address;
 
@@ -154,14 +155,12 @@ mod tests {
         let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
-        let user_id = NewUser::builder()
-            .gh_id(0)
-            .gh_login("a")
-            .username("a")
-            .gh_encrypted_token(&[])
-            .build()
+        let user_id = UserBuilder::new()
+            .with_username("a")
+            .new_user()
             .insert(&conn)
-            .await?;
+            .await
+            .unwrap();
 
         NewEmail::builder()
             .user_id(user_id)
