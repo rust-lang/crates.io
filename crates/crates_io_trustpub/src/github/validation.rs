@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use regex::regex;
 
 const MAX_FIELD_LENGTH: usize = 255;
 
@@ -40,14 +40,13 @@ pub enum ValidationError {
 }
 
 pub fn validate_owner(owner: &str) -> Result<(), ValidationError> {
-    static RE_VALID_GITHUB_OWNER: LazyLock<regex::Regex> =
-        LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9][a-zA-Z0-9-]*$").unwrap());
+    let re_valid_github_owner = regex!(r"^[a-zA-Z0-9][a-zA-Z0-9-]*$");
 
     if owner.is_empty() {
         Err(ValidationError::OwnerEmpty)
     } else if owner.len() > MAX_FIELD_LENGTH {
         Err(ValidationError::OwnerTooLong)
-    } else if !RE_VALID_GITHUB_OWNER.is_match(owner) {
+    } else if !re_valid_github_owner.is_match(owner) {
         Err(ValidationError::OwnerInvalid)
     } else {
         Ok(())
@@ -55,14 +54,13 @@ pub fn validate_owner(owner: &str) -> Result<(), ValidationError> {
 }
 
 pub fn validate_repo(repo: &str) -> Result<(), ValidationError> {
-    static RE_VALID_GITHUB_REPO: LazyLock<regex::Regex> =
-        LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9-_.]+$").unwrap());
+    let re_valid_github_repo = regex!(r"^[a-zA-Z0-9-_.]+$");
 
     if repo.is_empty() {
         Err(ValidationError::RepoEmpty)
     } else if repo.len() > MAX_FIELD_LENGTH {
         Err(ValidationError::RepoTooLong)
-    } else if !RE_VALID_GITHUB_REPO.is_match(repo) {
+    } else if !re_valid_github_repo.is_match(repo) {
         Err(ValidationError::RepoInvalid)
     } else {
         Ok(())
@@ -84,8 +82,7 @@ pub fn validate_workflow_filename(filename: &str) -> Result<(), ValidationError>
 }
 
 pub fn validate_environment(env: &str) -> Result<(), ValidationError> {
-    static RE_INVALID_ENVIRONMENT_CHARS: LazyLock<regex::Regex> =
-        LazyLock::new(|| regex::Regex::new(r#"[\x00-\x1F\x7F'"`,;\\]"#).unwrap());
+    let re_invalid_environment_chars = regex!(r#"[\x00-\x1F\x7F'"`,;\\]"#);
 
     if env.is_empty() {
         Err(ValidationError::EnvironmentEmptyString)
@@ -95,7 +92,7 @@ pub fn validate_environment(env: &str) -> Result<(), ValidationError> {
         Err(ValidationError::EnvironmentStartsWithWhitespace)
     } else if env.ends_with(" ") {
         Err(ValidationError::EnvironmentEndsWithWhitespace)
-    } else if RE_INVALID_ENVIRONMENT_CHARS.is_match(env) {
+    } else if re_invalid_environment_chars.is_match(env) {
         Err(ValidationError::EnvironmentInvalidChars)
     } else {
         Ok(())

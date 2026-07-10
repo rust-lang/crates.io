@@ -6,13 +6,9 @@ use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};
 use object_store::ObjectStoreExt;
-use regex::Regex;
+use regex::regex;
 use std::io::{Cursor, Read};
-use std::sync::LazyLock;
 use tar::Archive;
-
-static PATH_DATE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump_db_job() -> anyhow::Result<()> {
@@ -109,10 +105,12 @@ async fn test_dump_db_job() -> anyhow::Result<()> {
 }
 
 fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {
+    let path_date_re = regex!(r"^\d{4}-\d{2}-\d{2}-\d{6}");
+
     archive
         .entries()
         .unwrap()
         .map(|entry| entry.unwrap().path().unwrap().display().to_string())
-        .map(|path| PATH_DATE_RE.replace(&path, "YYYY-MM-DD-HHMMSS").to_string())
+        .map(|path| path_date_re.replace(&path, "YYYY-MM-DD-HHMMSS").to_string())
         .collect()
 }
