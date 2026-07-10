@@ -25,7 +25,7 @@ impl Theme for CustomTheme {
         default: Option<bool>,
     ) -> std::fmt::Result {
         if !prompt.is_empty() {
-            write!(f, "{} ", &prompt)?;
+            write!(f, "{prompt} ")?;
         }
         match default {
             None => write!(f, "[y/n] ")?,
