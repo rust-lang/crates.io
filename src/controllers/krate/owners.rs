@@ -438,14 +438,18 @@ pub async fn create_or_update_github_team(
         )));
     }
 
-    let token = encryption
-        .decrypt(&req_user.gh_encrypted_token)
-        .map_err(|err| {
-            custom(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to decrypt GitHub token: {err}"),
-            )
-        })?;
+    let Some(token) = req_user.gh_encrypted_token.as_ref() else {
+        return Err(bad_request(
+            "Cannot add a GitHub team as an owner without a connected GitHub account",
+        ));
+    };
+
+    let token = encryption.decrypt(token).map_err(|err| {
+        custom(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to decrypt GitHub token: {err}"),
+        )
+    })?;
 
     let auth = GitHubAuth::bearer(token);
     let team = gh_client.team_by_name(org_name, team_name, &auth).await

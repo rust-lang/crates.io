@@ -51,7 +51,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let user = assert_ok!(User::find(&conn, api_token.user_id).await);
 
     assert_eq!(user.gh_login, "bar");
-    let decrypted_token = encryption.decrypt(&user.gh_encrypted_token)?;
+    let decrypted_token = encryption.decrypt(user.gh_encrypted_token.as_ref().unwrap())?;
     assert_eq!(decrypted_token.expose_secret(), "bar_token");
 
     Ok(())
@@ -334,7 +334,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     assert_eq!(u.gh_id, gh_id);
     assert_eq!(u.gh_login, gh_login);
     assert_eq!(u.gh_avatar.unwrap(), gh_avatar);
-    let decrypted_token = encryption.decrypt(&u.gh_encrypted_token)?;
+    let decrypted_token = encryption.decrypt(&u.gh_encrypted_token.unwrap())?;
     assert_eq!(decrypted_token.expose_secret(), gh_token);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
@@ -368,7 +368,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     assert_eq!(u.gh_id, gh_id);
     assert_eq!(u.gh_login, different_gh_login);
     assert_eq!(u.gh_avatar.unwrap(), different_gh_avatar);
-    let decrypted_token = encryption.decrypt(&u.gh_encrypted_token)?;
+    let decrypted_token = encryption.decrypt(&u.gh_encrypted_token.unwrap())?;
     assert_eq!(decrypted_token.expose_secret(), different_gh_token);
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();

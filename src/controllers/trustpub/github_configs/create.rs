@@ -90,7 +90,11 @@ pub async fn create_trustpub_github_config(
     let owner = &json_config.repository_owner;
 
     let encryption = &state.config.token_encryption;
-    let gh_auth = &auth_user.gh_encrypted_token;
+    let Some(gh_auth) = auth_user.gh_encrypted_token.as_ref() else {
+        return Err(bad_request(
+            "Must have a linked GitHub account to create a Trusted Publishing config",
+        ));
+    };
     let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
         let login = &auth_user.gh_login;
         warn!("Failed to decrypt GitHub token for user {login}: {err}");
