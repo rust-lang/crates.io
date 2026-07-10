@@ -90,7 +90,7 @@ impl<'a> OauthGithubBuilder<'a> {
         }
     }
 
-    pub async fn insert(self, conn: &mut AsyncPgConnection) {
+    pub async fn insert(self, mut conn: &AsyncPgConnection) {
         diesel::insert_into(oauth_github::table)
             .values((
                 oauth_github::user_id.eq(self.user_id),
@@ -108,7 +108,7 @@ impl<'a> OauthGithubBuilder<'a> {
                 oauth_github::avatar.eq(excluded(oauth_github::avatar)),
                 oauth_github::last_sync.eq(Utc::now()),
             ))
-            .execute(conn)
+            .execute(&mut conn)
             .await
             .unwrap();
     }

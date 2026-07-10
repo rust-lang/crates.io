@@ -224,7 +224,7 @@ mod tests {
         let new_user = UserBuilder::new().with_username("foo").new_user();
         let user_id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, user_id).await.unwrap();
-        OauthGithubBuilder::for_user(&user).insert(&mut conn).await;
+        OauthGithubBuilder::for_user(&user).insert(&conn).await;
         let oauth_github = OauthGithub::belonging_to(&user)
             .select(OauthGithub::as_select())
             .first(&mut conn)
