@@ -260,7 +260,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
-    let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
+    let pkg_name = format!("{}-{version_string}", &*metadata.name);
     let max_unpack_size = std::cmp::max(
         app.config.publish_limits.unpack_size,
         max_upload_size as u64,
