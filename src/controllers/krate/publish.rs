@@ -260,7 +260,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
-    let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
+    let pkg_name = format!("{}-{version_string}", &*metadata.name);
     let max_unpack_size = std::cmp::max(
         app.config.publish_limits.unpack_size,
         max_upload_size as u64,
@@ -474,7 +474,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             };
 
             let owners = krate.owners(conn).await?;
-            if Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? < Rights::Publish {
+            if Rights::get(user, &*app.github, &owners, &app.config.token_encryption).await? < Rights::Publish {
                 return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
             }
 

@@ -12,10 +12,10 @@ use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
-use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
 use crates_io_docs_rs::MockDocsRsClient;
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubClient, MockGitHubClient};
 use crates_io_github_app::MockGitHubApp;
 use crates_io_index::testing::UpstreamIndex;
@@ -29,9 +29,8 @@ use crates_io_worker::Runner;
 use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
-use regex::Regex;
+use regex::regex;
 use std::collections::HashMap;
-use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
 use tokio::task::block_in_place;
@@ -166,20 +165,7 @@ impl TestApp {
 
         new_email.insert(&conn).await.unwrap();
 
-        let user = User {
-            id,
-            name: new_user.name.map(str::to_string),
-            gh_id: new_user.gh_id,
-            gh_login: new_user.gh_login.to_string(),
-            gh_avatar: None,
-            gh_encrypted_token: new_user.gh_encrypted_token.to_vec(),
-            account_lock_reason: None,
-            account_lock_until: None,
-            is_admin: false,
-            publish_notifications: true,
-            username: new_user.gh_login.to_string(),
-            created_at: None,
-        };
+        let user = User::find(&conn, id).await.unwrap();
 
         MockCookieUser {
             app: self.clone(),
@@ -216,21 +202,13 @@ impl TestApp {
     }
 
     pub async fn emails_snapshot(&self) -> String {
-        static EMAIL_HEADER_REGEX: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap());
-
-        static DATE_TIME_REGEX: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z").unwrap());
-
-        static EMAIL_CONFIRM_REGEX: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"/confirm/\w+").unwrap());
-
-        static INVITE_TOKEN_REGEX: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"/accept-invite/\w+").unwrap());
+        let email_header_re = regex!(r"(Message-ID|Date): [^\r\n]+\r\n");
+        let date_time_re = regex!(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z");
+        let email_confirm_re = regex!(r"/confirm/\w+");
+        let invite_token_re = regex!(r"/accept-invite/\w+");
 
         // MIME boundary strings are randomly generated alphanumeric strings
-        static MIME_BOUNDARY_REGEX: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"[A-Za-z0-9]{32,}").unwrap());
+        let mime_boundary_re = regex!(r"[A-Za-z0-9]{32,}");
 
         static SEPARATOR: &str = "\n----------------------------------------\n\n";
 
@@ -243,11 +221,11 @@ impl TestApp {
                 let decoded_email = decode(&email, ParseMode::Robust).unwrap();
                 let email = String::from_utf8_lossy(&decoded_email);
 
-                let email = EMAIL_HEADER_REGEX.replace_all(&email, "");
-                let email = DATE_TIME_REGEX.replace_all(&email, "[0000-00-00T00:00:00Z]");
-                let email = EMAIL_CONFIRM_REGEX.replace_all(&email, "/confirm/[confirm-token]");
-                let email = INVITE_TOKEN_REGEX.replace_all(&email, "/accept-invite/[invite-token]");
-                let email = MIME_BOUNDARY_REGEX.replace_all(&email, "[boundary]");
+                let email = email_header_re.replace_all(&email, "");
+                let email = date_time_re.replace_all(&email, "[0000-00-00T00:00:00Z]");
+                let email = email_confirm_re.replace_all(&email, "/confirm/[confirm-token]");
+                let email = invite_token_re.replace_all(&email, "/accept-invite/[invite-token]");
+                let email = mime_boundary_re.replace_all(&email, "[boundary]");
                 email.to_string()
             })
             .collect::<Vec<_>>()
@@ -589,7 +567,7 @@ fn simple_config() -> config::Server {
             client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
             client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
         },
-        gh_token_encryption: GitHubTokenEncryption::for_testing(),
+        token_encryption: TokenEncryption::for_testing(),
         publish_limits: PublishLimitsConfig::for_testing(),
         rate_limits: RateLimitsConfig {
             new_versions_daily: Some(10),

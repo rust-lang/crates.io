@@ -4,9 +4,9 @@ use crates_io::{
     controllers::session,
     models::{OauthGithub, User},
     schema::{background_jobs, oauth_github},
-    util::gh_token_encryption::GitHubTokenEncryption,
     worker::jobs,
 };
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubError, GitHubUser, MockGitHubClient};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -16,7 +16,7 @@ use std::sync::LazyLock;
 const GITHUB_ID: i64 = 456789;
 const EXISTING_LOGIN: &str = "my-login";
 static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
-    GitHubTokenEncryption::for_testing()
+    TokenEncryption::for_testing()
         .encrypt("some random token")
         .unwrap()
 });

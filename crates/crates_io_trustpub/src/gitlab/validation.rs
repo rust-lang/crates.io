@@ -8,7 +8,7 @@
 //! See <https://docs.gitlab.com/user/reserved_names/#rules-for-usernames-project-and-group-names-and-slugs>
 //! and <https://docs.gitlab.com/ci/yaml/#environment>.
 
-use std::sync::LazyLock;
+use regex::regex;
 
 const MAX_FIELD_LENGTH: usize = 255;
 
@@ -52,9 +52,7 @@ pub enum ValidationError {
 }
 
 pub fn validate_namespace(namespace: &str) -> Result<(), ValidationError> {
-    static RE_VALID_NAMESPACE: LazyLock<regex::Regex> = LazyLock::new(|| {
-        regex::Regex::new(r"^[a-zA-Z0-9](?:[a-zA-Z0-9_.\-/]*[a-zA-Z0-9])?$").unwrap()
-    });
+    let re_valid_namespace = regex!(r"^[a-zA-Z0-9](?:[a-zA-Z0-9_.\-/]*[a-zA-Z0-9])?$");
 
     if namespace.is_empty() {
         Err(ValidationError::NamespaceEmpty)
@@ -62,7 +60,7 @@ pub fn validate_namespace(namespace: &str) -> Result<(), ValidationError> {
         Err(ValidationError::NamespaceTooLong)
     } else if namespace.ends_with(".atom") || namespace.ends_with(".git") {
         Err(ValidationError::NamespaceInvalidSuffix)
-    } else if !RE_VALID_NAMESPACE.is_match(namespace) {
+    } else if !re_valid_namespace.is_match(namespace) {
         Err(ValidationError::NamespaceInvalid)
     } else {
         Ok(())
@@ -70,9 +68,7 @@ pub fn validate_namespace(namespace: &str) -> Result<(), ValidationError> {
 }
 
 pub fn validate_project(project: &str) -> Result<(), ValidationError> {
-    static RE_VALID_PROJECT: LazyLock<regex::Regex> = LazyLock::new(|| {
-        regex::Regex::new(r"^[a-zA-Z0-9](?:[a-zA-Z0-9_.\-]*[a-zA-Z0-9])?$").unwrap()
-    });
+    let re_valid_project = regex!(r"^[a-zA-Z0-9](?:[a-zA-Z0-9_.\-]*[a-zA-Z0-9])?$");
 
     if project.is_empty() {
         Err(ValidationError::ProjectEmpty)
@@ -80,7 +76,7 @@ pub fn validate_project(project: &str) -> Result<(), ValidationError> {
         Err(ValidationError::ProjectTooLong)
     } else if project.ends_with(".atom") || project.ends_with(".git") {
         Err(ValidationError::ProjectInvalidSuffix)
-    } else if !RE_VALID_PROJECT.is_match(project) {
+    } else if !re_valid_project.is_match(project) {
         Err(ValidationError::ProjectInvalid)
     } else {
         Ok(())
@@ -106,14 +102,13 @@ pub fn validate_workflow_filepath(filepath: &str) -> Result<(), ValidationError>
 pub fn validate_environment(env: &str) -> Result<(), ValidationError> {
     // see https://docs.gitlab.com/ci/yaml/#environment
 
-    static RE_VALID_ENVIRONMENT: LazyLock<regex::Regex> =
-        LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9 \-_/${}]+$").unwrap());
+    let re_valid_environment = regex!(r"^[a-zA-Z0-9 \-_/${}]+$");
 
     if env.is_empty() {
         Err(ValidationError::EnvironmentEmptyString)
     } else if env.len() > MAX_FIELD_LENGTH {
         Err(ValidationError::EnvironmentTooLong)
-    } else if !RE_VALID_ENVIRONMENT.is_match(env) {
+    } else if !re_valid_environment.is_match(env) {
         Err(ValidationError::EnvironmentInvalidChars)
     } else {
         Ok(())

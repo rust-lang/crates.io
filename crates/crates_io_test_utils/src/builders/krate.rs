@@ -1,5 +1,6 @@
 use crates_io_database::models::{Category, Crate, Keyword, NewCrate, update_default_version};
-use crates_io_database::schema::{crate_downloads, crates, version_downloads};
+use crates_io_database::schema::{crate_downloads, crates, version_downloads, versions};
+use crates_io_linecount::LinecountStats;
 
 use super::VersionBuilder;
 use chrono::{DateTime, Utc};
@@ -137,15 +138,39 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if self.versions.is_empty() {
-            self.versions.push(VersionBuilder::new("0.99.0"));
+            let mut version = VersionBuilder::new("0.99.0").license("MIT").size(4242);
+
+            if let Some(description) = krate.description.as_ref() {
+                version = version.description(description);
+            }
+
+            for keyword in &self.keywords {
+                version = version.keyword(keyword);
+            }
+
+            self.versions.push(version);
         }
+
+        let arbitrary_linecount_stats = serde_json::to_value(LinecountStats {
+            total_code_lines: 9000,
+            ..Default::default()
+        })
+        .unwrap();
 
         let mut last_version_id = 0;
         for version_builder in self.versions {
-            last_version_id = version_builder
+            let version_id = version_builder
                 .build(krate.id, self.owner_id, connection)
                 .await?
                 .id;
+
+            diesel::update(versions::table.find(version_id))
+                .set(versions::linecounts.eq(&arbitrary_linecount_stats))
+                .execute(connection)
+                .await
+                .unwrap();
+
+            last_version_id = version_id;
         }
 
         if let Some(downloads) = self.recent_downloads {

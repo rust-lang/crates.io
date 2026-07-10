@@ -7,7 +7,11 @@ sudo chown -R vscode:vscode \
     /workspaces/crates.io/target \
     /workspaces/crates.io/local_uploads \
     /usr/local/cargo/registry \
-    /home/vscode/.local/share/pnpm
+    /home/vscode/.local/share/pnpm \
+    /home/vscode/.local/share/mise
+
+mise trust
+mise install
 
 if [ ! -f .env ]; then
     cp .env.sample .env

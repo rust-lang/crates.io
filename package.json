@@ -45,7 +45,7 @@
     "@sinonjs/fake-timers": "15.4.0",
     "@types/node": "24.13.2",
     "@types/sinonjs__fake-timers": "15.0.1",
-    "eslint": "10.5.0",
+    "eslint": "10.6.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-storybook": "10.4.6",
@@ -53,10 +53,10 @@
     "eslint-plugin-unicorn": "65.0.1",
     "globals": "17.7.0",
     "msw": "2.14.6",
-    "prettier": "3.8.5",
+    "prettier": "3.9.4",
     "prettier-plugin-svelte": "4.1.1",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.62.0"
+    "typescript-eslint": "8.63.0"
   },
   "engines": {
     "node": "^24",

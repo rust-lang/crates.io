@@ -1,5 +1,5 @@
 diff --git a/dist/builtInIcons.js b/dist/builtInIcons.js
-index 2a73695568237dc7ad2399075fe61a1bfef58779..8d79fef39535e1dd34c5f158416cf32fb121430b 100644
+index 994e2c8..8d79fef 100644
 --- a/dist/builtInIcons.js
 +++ b/dist/builtInIcons.js
 @@ -17,563 +17,24 @@ const MINIMAL_SVG_SPRITE_SHEET = `<svg data-icon-sprite aria-hidden="true" width
@@ -508,7 +508,7 @@ index 2a73695568237dc7ad2399075fe61a1bfef58779..8d79fef39535e1dd34c5f158416cf32f
 -	scss: "sass",
 -	tsx: "react"
 -};
--const STANDARD_TIER_TOKENS = new Set([
+-const STANDARD_TIER_TOKENS = /* @__PURE__ */ new Set([
 -	"bash",
 -	"c",
 -	"cpp",
@@ -533,7 +533,7 @@ index 2a73695568237dc7ad2399075fe61a1bfef58779..8d79fef39535e1dd34c5f158416cf32f
 -	"typescript",
 -	"zip"
 -]);
--const COLORED_SETS = new Set(["complete"]);
+-const COLORED_SETS = /* @__PURE__ */ new Set(["complete"]);
 +const BUILT_IN_SVG_SPRITE_SHEETS = { minimal: MINIMAL_SVG_SPRITE_SHEET };
 +// crates.io patch: the `standard` and `complete` icon sets bundle ~46 KB of SVG
 +// sprite data that cannot be tree-shaken, because callers index the sheet map and
@@ -571,7 +571,9 @@ index 2a73695568237dc7ad2399075fe61a1bfef58779..8d79fef39535e1dd34c5f158416cf32f
 -	return "default";
 +	return;
  }
- 
++
  //#endregion
  export { getBuiltInFileIconName, getBuiltInSpriteSheet, isColoredBuiltInIconSet, resolveBuiltInFileIconToken };
+-
 -//# sourceMappingURL=builtInIcons.js.map
+\ No newline at end of file

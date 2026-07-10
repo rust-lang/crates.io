@@ -10,12 +10,14 @@ backend_deps:
   - .github/workflows/**
   - Cargo.lock
   - deny.toml
+  - mise.toml
   - rust-toolchain.toml
 
 backend_migrations:
   - .github/workflows/**
   - migrations/**
   - diesel-guard.toml
+  - mise.toml
 
 backend_test:
   - .github/workflows/**
@@ -25,6 +27,7 @@ backend_test:
   - Cargo.lock
   - Cargo.toml
   - diesel.toml
+  - mise.toml
   - rust-toolchain.toml
 
 frontend_lint:
@@ -61,3 +64,4 @@ svelte:
 
 zizmor:
   - .github/workflows/**
+  - mise.toml

@@ -241,9 +241,8 @@ async fn enqueue_sync_jobs(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crates_io_database::models::NewUser;
     use crates_io_test_db::TestDatabase;
-    use crates_io_test_utils::builders::CrateBuilder;
+    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder};
     use insta::assert_json_snapshot;
     use serde::Serialize;
 
@@ -260,16 +259,12 @@ mod tests {
     }
 
     async fn create_user(conn: &AsyncPgConnection) -> i32 {
-        NewUser {
-            gh_id: 1,
-            gh_login: "testuser",
-            username: "testuser",
-            name: None,
-            gh_encrypted_token: b"token",
-        }
-        .insert(conn)
-        .await
-        .unwrap()
+        UserBuilder::new()
+            .with_username("testuser")
+            .new_user()
+            .insert(conn)
+            .await
+            .unwrap()
     }
 
     #[derive(HasQuery, Serialize)]

@@ -1,21 +1,22 @@
+#![doc = include_str!("../README.md")]
+
 use aes_gcm::aead::{Aead, Generate};
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use anyhow::{Context, Result};
 use secrecy::SecretString;
 
-/// A struct that encapsulates GitHub token encryption and decryption
-/// using AES-256-GCM.
-pub struct GitHubTokenEncryption {
+/// A struct that encapsulates token encryption and decryption using AES-256-GCM.
+pub struct TokenEncryption {
     cipher: Aes256Gcm,
 }
 
-impl GitHubTokenEncryption {
-    /// Creates a new [`GitHubTokenEncryption`] instance with the provided cipher
+impl TokenEncryption {
+    /// Creates a new [`TokenEncryption`] instance with the provided cipher
     pub fn new(cipher: Aes256Gcm) -> Self {
         Self { cipher }
     }
 
-    /// Creates a new [`GitHubTokenEncryption`] instance with a cipher for testing
+    /// Creates a new [`TokenEncryption`] instance with a cipher for testing
     /// purposes.
     #[cfg(any(test, debug_assertions))]
     pub fn for_testing() -> Self {
@@ -23,28 +24,28 @@ impl GitHubTokenEncryption {
         Self::new(Aes256Gcm::new_from_slice(test_key).unwrap())
     }
 
-    /// Creates a new [`GitHubTokenEncryption`] instance from the environment
+    /// Creates a new [`TokenEncryption`] instance from the environment
     ///
-    /// Reads the `GITHUB_TOKEN_ENCRYPTION_KEY` environment variable, which
+    /// Reads the `TOKEN_ENCRYPTION_KEY` environment variable, which
     /// should be a 64-character hex string (32 bytes when decoded).
     pub fn from_environment() -> Result<Self> {
-        let gh_token_key = std::env::var("GITHUB_TOKEN_ENCRYPTION_KEY")
-            .context("GITHUB_TOKEN_ENCRYPTION_KEY environment variable not set")?;
+        let token_key = std::env::var("TOKEN_ENCRYPTION_KEY")
+            .context("TOKEN_ENCRYPTION_KEY environment variable not set")?;
 
-        if gh_token_key.len() != 64 {
-            anyhow::bail!("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters");
+        if token_key.len() != 64 {
+            anyhow::bail!("TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters");
         }
 
-        let gh_token_key = hex::decode(gh_token_key.as_bytes())
-            .context("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
+        let token_key = hex::decode(token_key.as_bytes())
+            .context("TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
 
-        let cipher = Aes256Gcm::new_from_slice(&gh_token_key)
-            .context("GITHUB_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
+        let cipher = Aes256Gcm::new_from_slice(&token_key)
+            .context("TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters")?;
 
         Ok(Self::new(cipher))
     }
 
-    /// Encrypts a GitHub access token using AES-256-GCM
+    /// Encrypts a token using AES-256-GCM
     ///
     /// The encrypted data format is: `[12-byte nonce][encrypted data]`
     /// The nonce is randomly generated for each encryption to ensure uniqueness.
@@ -66,7 +67,7 @@ impl GitHubTokenEncryption {
         Ok(result)
     }
 
-    /// Decrypts a GitHub access token using AES-256-GCM
+    /// Decrypts a token using AES-256-GCM
     ///
     /// Expects the data format: `[12-byte nonce][encrypted data]`
     pub fn decrypt(&self, encrypted: &[u8]) -> Result<SecretString> {
@@ -99,9 +100,9 @@ mod tests {
     use insta::assert_snapshot;
     use secrecy::ExposeSecret;
 
-    fn create_test_encryption() -> GitHubTokenEncryption {
+    fn create_test_encryption() -> TokenEncryption {
         let cipher = Aes256Gcm::new_from_slice(b"test_master_key_32_bytes_long!!!").unwrap();
-        GitHubTokenEncryption { cipher }
+        TokenEncryption { cipher }
     }
 
     #[test]
@@ -158,7 +159,7 @@ mod tests {
 
         // Create a different encryption with a different key
         let cipher2 = Aes256Gcm::new_from_slice(b"different_key_32_bytes_long!!!!!").unwrap();
-        let encryption2 = GitHubTokenEncryption { cipher: cipher2 };
+        let encryption2 = TokenEncryption { cipher: cipher2 };
 
         let token = "ghs_test_token_123456789";
 

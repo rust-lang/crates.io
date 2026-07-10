@@ -10,8 +10,7 @@ use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_debug_snapshot, assert_json_snapshot, assert_snapshot};
-use regex::Regex;
-use std::sync::LazyLock;
+use regex::regex;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index() -> anyhow::Result<()> {
@@ -1381,12 +1380,9 @@ async fn crates_by_user_id_not_including_deleted_owners() -> anyhow::Result<()> 
     Ok(())
 }
 
-static PAGE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"((?:^page|&page|\?page)=\d+)").unwrap());
-
 // search with both offset-based (prepend with `page=1` query) and seek-based pagination
 async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateList; 2] {
-    if PAGE_RE.is_match(query) {
+    if regex!(r"((?:^page|&page|\?page)=\d+)").is_match(query) {
         panic!("url already contains page param");
     }
     let (offset, seek) = (

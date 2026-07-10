@@ -1,14 +1,13 @@
-use std::sync::LazyLock;
+use regex::regex;
 
 /// Extracts the workflow filename from a GitHub workflow reference.
 ///
 /// In other words, it turns e.g. `rust-lang/regex/.github/workflows/ci.yml@refs/heads/main`
 /// into `ci.yml`, or `None` if the reference is in an unexpected format.
 pub(crate) fn extract_workflow_filename(workflow_ref: &str) -> Option<&str> {
-    static WORKFLOW_REF_RE: LazyLock<regex::Regex> =
-        LazyLock::new(|| regex::Regex::new(r"([^/]+\.(yml|yaml))(@.+)").unwrap());
+    let workflow_ref_re = regex!(r"([^/]+\.(yml|yaml))(@.+)");
 
-    WORKFLOW_REF_RE
+    workflow_ref_re
         .captures(workflow_ref)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str())

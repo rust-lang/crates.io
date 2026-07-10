@@ -6,8 +6,8 @@ use claims::{assert_err, assert_ok, assert_ok_eq};
 use crates_io::controllers::session;
 use crates_io::models::{ApiToken, Email, OauthGithub, User};
 use crates_io::schema::oauth_github;
-use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
 use crates_io::util::token::HashedToken;
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -32,7 +32,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
-    let encryption = GitHubTokenEncryption::for_testing();
+    let encryption = TokenEncryption::for_testing();
 
     // Reuse gh_id but use new gh_login and gh_access_token
     let gh_user = GitHubUser {
@@ -279,7 +279,7 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
 async fn also_write_to_users_username() -> anyhow::Result<()> {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
-    let encryption = GitHubTokenEncryption::for_testing();
+    let encryption = TokenEncryption::for_testing();
     let gh_id = next_gh_id();
     let email = "potahto@example.com";
     let emails = &app.as_inner().emails;
@@ -308,7 +308,7 @@ async fn also_write_to_users_username() -> anyhow::Result<()> {
 async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
-    let encryption = GitHubTokenEncryption::for_testing();
+    let encryption = TokenEncryption::for_testing();
     let gh_id = next_gh_id();
     let gh_login = "arbitrary_username".to_string();
     let gh_display_name = "Arbitrary Username".to_string();

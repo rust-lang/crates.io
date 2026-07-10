@@ -68,23 +68,10 @@ impl BackgroundJob for GenerateOgImage {
         // Fetch user owners
         let owners = fetch_user_owners(row._crate_id, &conn).await;
         let owners = owners.context("Failed to fetch crate owners")?;
-        let authors: Vec<OgImageAuthorData<'_>> = owners
-            .iter()
-            .map(|(login, avatar)| OgImageAuthorData::new(login, avatar.as_ref().map(Into::into)))
-            .collect();
 
-        // Build the OG image data
-        let og_data = OgImageData {
-            name: &row.crate_name,
-            version: &row.version_num,
-            description: row.description.as_deref(),
-            license: row.license.as_deref(),
-            tags: &keywords,
-            authors: &authors,
-            lines_of_code: row.total_code_lines(),
-            crate_size: row.crate_size as u32,
-            releases: row.num_versions as u32,
-        };
+        let authors = build_og_author_data(&owners);
+
+        let og_data = build_og_image_data(&row, &keywords, &authors);
 
         // Generate the OG image
         let image_bytes = option.generate(og_data).await?;
@@ -132,7 +119,7 @@ impl BackgroundJob for GenerateOgImage {
     }
 }
 
-#[derive(HasQuery)]
+#[derive(HasQuery, PartialEq, Debug)]
 #[diesel(
     base_query = crates::table
         .inner_join(default_versions::table)
@@ -195,4 +182,107 @@ async fn fetch_user_owners(
         .select((users::gh_login, oauth_github::avatar.nullable()))
         .load(&mut conn)
         .await
+}
+
+fn build_og_author_data<'a>(owners: &'a [(String, Option<String>)]) -> Vec<OgImageAuthorData<'a>> {
+    owners
+        .iter()
+        .map(|(login, avatar)| OgImageAuthorData::new(login, avatar.as_ref().map(Into::into)))
+        .collect()
+}
+
+fn build_og_image_data<'a>(
+    row: &'a QueryRow,
+    keywords: &'a [&'a str],
+    authors: &'a [OgImageAuthorData<'a>],
+) -> OgImageData<'a> {
+    OgImageData {
+        name: &row.crate_name,
+        version: &row.version_num,
+        description: row.description.as_deref(),
+        license: row.license.as_deref(),
+        tags: keywords,
+        authors,
+        lines_of_code: row.total_code_lines(),
+        crate_size: row.crate_size as u32,
+        releases: row.num_versions as u32,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crates_io_database::models::{OauthGithub, User};
+    use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::builders::{CrateBuilder, OauthGithubBuilder, UserBuilder};
+
+    #[tokio::test]
+    async fn fetch_crate_info() {
+        let db = TestDatabase::new();
+        let mut conn = db.async_connect().await;
+
+        let new_user = UserBuilder::new().with_username("foo").new_user();
+        let user_id = new_user.insert(&conn).await.unwrap();
+        let user = User::find(&conn, user_id).await.unwrap();
+        OauthGithubBuilder::for_user(&user).insert(&mut conn).await;
+        let oauth_github = OauthGithub::belonging_to(&user)
+            .select(OauthGithub::as_select())
+            .first(&mut conn)
+            .await
+            .unwrap();
+
+        let crate_name = "test-crate";
+        let crate_description = "A test crate for OG image generation";
+        let test_crate = CrateBuilder::new(crate_name, user_id)
+            .description(crate_description)
+            .keyword("testing")
+            .keyword("rust")
+            .expect_build(&mut conn)
+            .await;
+
+        let row = fetch_crate_data(crate_name, &conn).await.unwrap().unwrap();
+
+        assert_eq!(
+            row,
+            QueryRow {
+                _crate_id: test_crate.id,
+                crate_name: crate_name.to_string(),
+                version_num: "0.99.0".to_string(),
+                description: Some(crate_description.to_string()),
+                license: Some("MIT".to_string()),
+                crate_size: 4242,
+                keywords: vec![Some("testing".to_string()), Some("rust".to_string())],
+                total_code_lines: Some(serde_json::Value::Number(serde_json::Number::from(9000))),
+                num_versions: 1,
+            }
+        );
+
+        let user_owners = fetch_user_owners(test_crate.id, &conn).await.unwrap();
+        assert_eq!(
+            user_owners,
+            vec![(
+                "foo".to_string(),
+                Some("http://example.com/icon-the-first.png".to_string())
+            )],
+        );
+
+        let authors = build_og_author_data(&user_owners);
+        assert_eq!(authors.len(), 1);
+        assert_eq!(authors[0].name, "foo");
+        assert_eq!(
+            authors[0].avatar.as_ref().unwrap(),
+            &oauth_github.avatar.unwrap()
+        );
+
+        let keywords = &["testing", "rust"];
+        let og_image_data = build_og_image_data(&row, keywords, &authors);
+
+        assert_eq!(og_image_data.name, crate_name);
+        assert_eq!(og_image_data.version, "0.99.0");
+        assert_eq!(og_image_data.description, Some(crate_description));
+        assert_eq!(og_image_data.license, Some("MIT"));
+        assert_eq!(og_image_data.tags, keywords);
+        assert_eq!(og_image_data.crate_size, 4242);
+        assert_eq!(og_image_data.releases, 1);
+    }
 }

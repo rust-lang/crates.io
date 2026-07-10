@@ -9,12 +9,12 @@ use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope,
 };
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
+use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -203,7 +203,7 @@ async fn modify_owners(
 
             let owners = krate.owners(conn).await?;
 
-            match Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? {
+            match Rights::get(user, &*app.github, &owners, &app.config.token_encryption).await? {
                 Rights::Full => {}
                 // Yes!
                 Rights::Publish => {
@@ -324,7 +324,7 @@ async fn add_owner(
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     if login.contains(':') {
-        let encryption = &app.config.gh_token_encryption;
+        let encryption = &app.config.token_encryption;
         add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
     } else {
         invite_user_owner(app, conn, req_user, krate, login).await
@@ -368,7 +368,7 @@ async fn add_team_owner(
     req_user: &User,
     krate: &Crate,
     login: &str,
-    encryption: &GitHubTokenEncryption,
+    encryption: &TokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // github:rust-lang:owners
     let mut chunks = login.split(':');
@@ -421,7 +421,7 @@ pub async fn create_or_update_github_team(
     org_name: &str,
     team_name: &str,
     req_user: &User,
-    encryption: &GitHubTokenEncryption,
+    encryption: &TokenEncryption,
 ) -> AppResult<Team> {
     // GET orgs/:org/teams
     // check that `team` is the `slug` in results, and grab its data
