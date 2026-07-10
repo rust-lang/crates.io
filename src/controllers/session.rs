@@ -289,7 +289,9 @@ async fn create_user(
 
                 match email {
                     Ok(email) => {
-                        // Swallows any error. Some users might insert an invalid email address here.
+                        // Swallows any error. Users might insert an invalid email address, but
+                        // they should still be allowed to create an account; they will need to
+                        // fix their email address later.
                         let _ = emails.send(user_email, email).await;
                     }
                     Err(error) => {
