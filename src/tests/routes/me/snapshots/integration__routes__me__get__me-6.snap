@@ -11,7 +11,7 @@ expression: response.json()
     }
   ],
   "user": {
-    "avatar": null,
+    "avatar": "http://example.com/icon-the-first.png",
     "created_at": "[datetime]",
     "email": "foo@example.com",
     "email_verification_sent": true,

@@ -23,6 +23,7 @@ use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
+use crates_io_test_utils::builders::OauthGithubBuilder;
 use crates_io_trustpub::github::test_helpers::AUDIENCE;
 use crates_io_trustpub::keystore::{MockOidcKeyStore, OidcKeyStore};
 use crates_io_worker::Runner;
@@ -156,6 +157,9 @@ impl TestApp {
 
         let new_user = crate::new_user(username);
         let id = new_user.insert(&conn).await.unwrap();
+        let user = User::find(&conn, id).await.unwrap();
+
+        OauthGithubBuilder::for_user(&user).insert(&conn).await;
 
         let new_email = NewEmail::builder()
             .user_id(id)
@@ -164,8 +168,6 @@ impl TestApp {
             .build();
 
         new_email.insert(&conn).await.unwrap();
-
-        let user = User::find(&conn, id).await.unwrap();
 
         MockCookieUser {
             app: self.clone(),

@@ -27,7 +27,7 @@ expression: json
       "id": 1,
       "login": "foo",
       "name": null,
-      "avatar": null,
+      "avatar": "http://example.com/icon-the-first.png",
       "url": "https://github.com/foo",
       "created_at": "[datetime]"
     },
@@ -38,7 +38,7 @@ expression: json
           "id": 1,
           "login": "foo",
           "name": null,
-          "avatar": null,
+          "avatar": "http://example.com/icon-the-first.png",
           "url": "https://github.com/foo",
           "created_at": "[datetime]"
         },
@@ -50,7 +50,7 @@ expression: json
           "id": 1,
           "login": "foo",
           "name": null,
-          "avatar": null,
+          "avatar": "http://example.com/icon-the-first.png",
           "url": "https://github.com/foo",
           "created_at": "[datetime]"
         },
@@ -62,7 +62,7 @@ expression: json
           "id": 1,
           "login": "foo",
           "name": null,
-          "avatar": null,
+          "avatar": "http://example.com/icon-the-first.png",
           "url": "https://github.com/foo",
           "created_at": "[datetime]"
         },
@@ -74,7 +74,7 @@ expression: json
           "id": 1,
           "login": "foo",
           "name": null,
-          "avatar": null,
+          "avatar": "http://example.com/icon-the-first.png",
           "url": "https://github.com/foo",
           "created_at": "[datetime]"
         },

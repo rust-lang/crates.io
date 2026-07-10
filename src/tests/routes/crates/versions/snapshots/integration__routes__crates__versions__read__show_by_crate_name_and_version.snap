@@ -29,7 +29,7 @@ expression: json
     },
     "num": "2.0.0",
     "published_by": {
-      "avatar": null,
+      "avatar": "http://example.com/icon-the-first.png",
       "created_at": "[datetime]",
       "id": "[id]",
       "login": "foo",

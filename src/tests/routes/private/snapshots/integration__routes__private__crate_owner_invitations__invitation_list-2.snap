@@ -18,7 +18,7 @@ expression: invitations
       "id": 1,
       "login": "foo",
       "name": null,
-      "avatar": null,
+      "avatar": "http://example.com/icon-the-first.png",
       "url": "https://github.com/foo",
       "created_at": "[datetime]"
     },
@@ -26,7 +26,7 @@ expression: invitations
       "id": 3,
       "login": "user_2",
       "name": null,
-      "avatar": null,
+      "avatar": "http://example.com/icon-the-first.png",
       "url": "https://github.com/user_2",
       "created_at": "[datetime]"
     }
