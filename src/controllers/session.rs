@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewUser, OauthGithub};
+use crate::models::{NewEmail, NewOauthGithub, NewUser, OauthGithub};
 use crate::schema::{oauth_github, users};
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
@@ -13,7 +13,6 @@ use chrono::Utc;
 use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
-use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use minijinja::context;
@@ -239,36 +238,17 @@ async fn create_user(
             .gh_encrypted_token(encrypted_token)
             .build();
 
-        // This currently inserts or updates based on `users::gh_id` being unique. When we switch
-        // to using `users::username` for uniqueness instead, this logic will need to change.
-        // See note on `NewUser::insert_or_update`.
-        //
-        // Do an upsert rather than an insert in case there are two requests racing to log
-        // in the same user in case a record for this user has been created between when the
-        // "update" transaction in this `match` expression ran and now.
-        let user_id = new_user.insert_or_update(conn).await?;
+        let user_id = new_user.insert(conn).await?;
 
-        // Do an upsert on a github ID conflict here in case a record for this github ID has been
-        // created between when the "update" transaction in this `match` expression ran and now.
-        diesel::insert_into(oauth_github::table)
-            .values((
-                oauth_github::user_id.eq(user_id),
-                oauth_github::account_id.eq(gh_user.id as i64),
-                oauth_github::encrypted_token.eq(encrypted_token),
-                oauth_github::login.eq(&gh_user.login),
-                oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .on_conflict(oauth_github::account_id)
-            .do_update()
-            .set((
-                oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
-                oauth_github::login.eq(excluded(oauth_github::login)),
-                oauth_github::avatar.eq(excluded(oauth_github::avatar)),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .execute(conn)
-            .await?;
+        let new_oauth_github = NewOauthGithub::builder()
+            .user_id(user_id)
+            .account_id(gh_user.id as i64)
+            .encrypted_token(encrypted_token)
+            .login(&gh_user.login)
+            .maybe_avatar(gh_user.avatar_url.as_deref())
+            .build();
+
+        new_oauth_github.insert(conn).await?;
 
         // Since this is a new user, send an account verification email
         if let Some(user_email) = gh_user.email.as_deref() {
