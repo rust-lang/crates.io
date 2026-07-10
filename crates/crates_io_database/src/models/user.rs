@@ -165,3 +165,33 @@ pub struct OauthGithub {
     /// Foreign key to the `users` table.
     pub user_id: i32,
 }
+
+/// Represents a new crates.io user to GitHub user OAuth link to be inserted into the
+/// `oauth_github` table.
+#[derive(Insertable, Debug, Builder)]
+#[diesel(
+    table_name = oauth_github,
+    check_for_backend(diesel::pg::Pg),
+    primary_key(account_id),
+    belongs_to(User),
+)]
+pub struct NewOauthGithub<'a> {
+    pub account_id: i64,           // corresponds to users.gh_id
+    pub avatar: Option<&'a str>,   // corresponds to users.gh_avatar
+    pub encrypted_token: &'a [u8], // corresponds to users.gh_encrypted_token
+    #[builder(default = Utc::now())]
+    pub last_sync: DateTime<Utc>,
+    pub login: &'a str, // corresponds to users.gh_login
+    pub user_id: i32,
+}
+
+impl NewOauthGithub<'_> {
+    pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<()> {
+        diesel::insert_into(oauth_github::table)
+            .values(self)
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+}
