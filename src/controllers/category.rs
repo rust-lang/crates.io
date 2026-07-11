@@ -2,7 +2,7 @@ use super::helpers::pagination::*;
 use crate::app::AppState;
 use crate::models::Category;
 use crate::schema::categories;
-use crate::util::errors::AppResult;
+use crate::util::errors::{AppResult, not_found};
 use crate::views::EncodableCategory;
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
@@ -93,6 +93,14 @@ pub async fn find_category(
     state: AppState,
     Path(slug): Path<String>,
 ) -> AppResult<Json<GetResponse>> {
+    // Category slugs can never contain null bytes, so we reject such requests
+    // early with a regular "not found" response instead of letting them reach
+    // the database layer, where PostgreSQL rejects the query with a confusing
+    // `invalid byte sequence for encoding "UTF8": 0x00` error.
+    if slug.contains('\0') {
+        return Err(not_found());
+    }
+
     let mut conn = state.db_read().await?;
 
     let cat: Category = Category::by_slug(&slug)

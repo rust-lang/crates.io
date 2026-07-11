@@ -117,6 +117,18 @@ async fn test_missing() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_null_byte_in_name() {
+    let (_, anon) = TestApp::init().empty().await;
+
+    // A crate name with a null byte can never exist, so instead of letting the
+    // request fail with a database encoding error it should be treated as a
+    // regular "not found" response.
+    let response = anon.get::<()>("/api/v1/crates/foo%00bar").await;
+    assert_snapshot!(response.status(), @"404 Not Found");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo\u0000bar` does not exist"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn version_size() {
     let (_, _, user) = TestApp::full().with_user().await;
 
