@@ -299,7 +299,7 @@ async fn modify_owners(
                 msgs.join(",")
             } else {
                 for login in &logins {
-                    krate.owner_remove(conn, login).await?;
+                    remove_owner(&krate, conn, login).await?
                 }
                 if User::owning(&krate, conn).await?.is_empty() {
                     return Err(bad_request(
@@ -341,6 +341,53 @@ async fn add_owner(
         add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
     } else {
         invite_user_owner(app, conn, req_user, krate, login).await
+    }
+}
+
+async fn remove_owner(
+    krate: &Crate,
+    conn: &mut AsyncPgConnection,
+    login: &str,
+) -> Result<(), OwnerRemoveError> {
+    // Check if this is a team login (e.g github:org:team). Regex matches strings with exactly two colons.
+    if Regex::new(r"^[^:]+:[^:]+:[^:]+$").is_ok_and(|r| r.is_match(login)) {
+        krate.owner_remove_with_username(conn, login).await
+    } else if login.contains(':') {
+        let mut chunks = login.split(':');
+        let prefix = chunks.next().unwrap();
+        if !["github", "cratesio"].contains(&prefix) {
+            let error =
+                "unsupported username prefix, only github and cratesio prefixes are supported";
+            return Err(OwnerRemoveError::AppError(error.to_string()));
+        }
+
+        let username = chunks.next().unwrap();
+
+        if prefix == "github" {
+            krate.owner_remove_with_gh_username(conn, username).await
+        } else {
+            krate.owner_remove_with_username(conn, username).await
+        }
+    } else {
+        let user = User::find_by_username(conn, login)
+            .await
+            .optional()?
+            .ok_or_else(|| OwnerRemoveError::not_found(login))?;
+
+        if user.gh_login != user.username {
+            let error = format!(
+                "error: username {} is possibly ambiguous.\n\n\
+                Caused by: \n  \
+                The crates.io account `{}` is associated with GitHub user `{}`.\n  \
+                To confirm this is the account you want to remove, please run one of the following:\n\n  \
+                $ cargo owner --remove cratesio:{}\n  \
+                $ cargo owner --remove github:{}\n\n  \
+                If this is not the account you want to remove, verify the crates.io username of the account you want.",
+                user.username, user.username, user.gh_login, user.username, user.gh_login
+            );
+            return Err(OwnerRemoveError::AppError(error));
+        }
+        krate.owner_remove_with_username(conn, login).await
     }
 }
 
@@ -604,6 +651,7 @@ impl From<OwnerRemoveError> for BoxedAppError {
             OwnerRemoveError::NotFound { login } => {
                 bad_request(format!("could not find owner with login `{login}`"))
             }
+            OwnerRemoveError::AppError(error) => bad_request(error),
         }
     }
 }
