@@ -1,4 +1,4 @@
-use crate::builders::CrateBuilder;
+use crate::builders::{CrateBuilder, OauthGithubBuilder};
 use crate::owners::expire_invitation;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -382,4 +382,134 @@ async fn no_invite_emails_for_txn_rollback() {
 
     // 9 emails to the good invitees should have been sent.
     assert_eq!(app.emails().await.len(), 9);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unsupported_disambiguation_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("cilantro").await;
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie
+        .add_named_owner("guacamole", "gitlab:cilantro")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unsupported username prefix, only github and cratesio prefixes are supported"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguated_github_username_not_found() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie
+        .add_named_owner("guacamole", "github:nonexistent")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username nonexistent"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguated_cratesio_username_not_found() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie
+        .add_named_owner("guacamole", "cratesio:nonexistent")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with cratesio username nonexistent"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_ambiguous_username_error() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user_with_gh_login("cilantro", "cilantro-gh")
+        .await;
+
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("guacamole", "cilantro").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"error: username cilantro is possibly ambiguous.\n\nCaused by: \n  The crates.io account `cilantro` is associated with GitHub user `cilantro-gh`.\n  To confirm this is the account you want to add, please run one of the following:\n\n  $ cargo owner --add cratesio:cilantro\n  $ cargo owner --add github:cilantro-gh\n\n  If this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguate_with_github_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let new_user = app
+        .db_new_user_with_gh_login("cilantro", "cilantro-gh")
+        .await;
+
+    // Create oauth_github entry with the GitHub login
+    OauthGithubBuilder::for_user(new_user.as_model())
+        .with_login("cilantro-gh")
+        .insert(&mut conn)
+        .await;
+
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Using github: prefix should resolve the ambiguity and invite the user
+    let response = cookie
+        .add_named_owner("guacamole", "github:cilantro-gh")
+        .await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user cilantro-gh has been invited to be an owner of crate guacamole","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguate_with_cratesio_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user_with_gh_login("cilantro", "cilantro-gh")
+        .await;
+
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Using cratesio: prefix should resolve the ambiguity and invite the user
+    let response = cookie
+        .add_named_owner("guacamole", "cratesio:cilantro")
+        .await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user cilantro has been invited to be an owner of crate guacamole","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_already_owner_error() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("guacamole", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // The cookie user is already the owner of the crate
+    let response = cookie
+        .add_named_owner("guacamole", &cookie.as_model().gh_login)
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
 }

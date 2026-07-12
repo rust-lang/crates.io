@@ -51,7 +51,7 @@ async fn weird_name() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
-/// Tests adding team without second `:`
+/// Tests that `github:foo` is treated as a disambiguated username lookup.
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -63,7 +63,7 @@ async fn one_colon() {
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username foo. If you meant to add a github team, format is github:org:team"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

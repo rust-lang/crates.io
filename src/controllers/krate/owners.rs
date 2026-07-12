@@ -250,10 +250,10 @@ async fn modify_owners(
                         // the invite, and a best-effort attempt should be made
                         // to email them the invite token for one-click
                         // acceptance.
-                        Ok(NewOwnerInvite::User(invitee, token)) => {
+                        Ok(NewOwnerInvite::User(invitee, token, username)) => {
                             msgs.push(format!(
                                 "user {} has been invited to be an owner of crate {}",
-                                invitee.gh_login, krate.name,
+                                username, krate.name,
                             ));
 
                             if let Some(recipient) =
@@ -262,7 +262,7 @@ async fn modify_owners(
                                 let email = EmailMessage::from_template(
                                     "owner_invite",
                                     context! {
-                                        inviter => user.gh_login,
+                                        inviter => user.username,
                                         domain => app.emails.domain,
                                         crate_name => krate.name,
                                         token => token.expose_secret()
@@ -288,7 +288,7 @@ async fn modify_owners(
                         // This user has a pending invite.
                         Err(OwnerAddError::AlreadyInvited(user)) => msgs.push(format!(
                             "user {} already has a pending invitation to be an owner of crate {}",
-                            user.gh_login, krate.name
+                            user.username, krate.name
                         )),
 
                         // An opaque error occurred.
@@ -361,19 +361,25 @@ async fn invite_user_owner(
             return Err(bad_request(error).into());
         }
 
+        let username = chunks.next().unwrap();
+
         let user = if prefix == "github" {
-            OauthGithub::find_by_username(conn, login)
+            OauthGithub::find_by_username(conn, username)
                 .await
                 .optional()?
+                .ok_or_else(|| bad_request(format_args!("could not find user with github username {username}. If you meant to add a github team, format is github:org:team")))?
         } else {
-            User::find_by_username(conn, login).await.optional()?
+            User::find_by_username(conn, username)
+                .await
+                .optional()?
+                .ok_or_else(|| {
+                    bad_request(format_args!(
+                        "could not find user with cratesio username {username}."
+                    ))
+                })?
         };
 
-        let Some(user) = user else {
-            return Err(bad_request("could not find user with {prefix} username {login}").into());
-        };
-
-        send_user_invite(app, conn, req_user, user, krate).await
+        send_user_invite(app, conn, req_user, user, username, krate).await
     } else {
         let user = User::find_by_username(conn, login)
             .await
@@ -381,11 +387,20 @@ async fn invite_user_owner(
             .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
 
         if user.gh_login != user.username {
-            let error = "error: username {user.username} is possibly ambiguous.\n\nCaused by: \n  The crates.io account `{user.username}` is associated with GitHub user `{user.gh_login}`.\n  To confirm this is the account you want to add, please run one of the following:\n\n  $ cargo owner --add cratesio:{user.username}\n  $ cargo owner --add github:{user.gh_login}\n\n  If this is not the account you want to add, verify the crates.io username of the account you want.";
+            let error = format!(
+                "error: username {} is possibly ambiguous.\n\n\
+                Caused by: \n  \
+                The crates.io account `{}` is associated with GitHub user `{}`.\n  \
+                To confirm this is the account you want to add, please run one of the following:\n\n  \
+                $ cargo owner --add cratesio:{}\n  \
+                $ cargo owner --add github:{}\n\n  \
+                If this is not the account you want to add, verify the crates.io username of the account you want.",
+                user.username, user.username, user.gh_login, user.username, user.gh_login
+            );
             return Err(bad_request(error).into());
         }
 
-        send_user_invite(app, conn, req_user, user, krate).await
+        send_user_invite(app, conn, req_user, user, login, krate).await
     }
 }
 
@@ -394,6 +409,7 @@ async fn send_user_invite(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     user: User,
+    username: &str,
     krate: &Crate,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // Users are invited and must accept before being added
@@ -406,9 +422,9 @@ async fn send_user_invite(
     };
 
     match invite.create(conn).await? {
-        NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-            Ok(NewOwnerInvite::User(user, plaintext_token))
-        }
+        NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => Ok(
+            NewOwnerInvite::User(user, plaintext_token, username.to_owned()),
+        ),
         NewCrateOwnerInvitationOutcome::AlreadyExists => {
             Err(OwnerAddError::AlreadyInvited(Box::new(user)))
         }
