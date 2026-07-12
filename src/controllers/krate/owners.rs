@@ -329,11 +329,11 @@ async fn modify_owners(
 enum Login<'a> {
     /// A team login e.g `github:org:team`
     Team,
-    /// A disambiguated `github:username` resolved via oauth_github.
+    /// A disambiguated `github:username` resolved via `oauth_github`.
     GitHub(&'a str),
     /// A disambiguated `cratesio:username` resolved via users table.
     CratesIo(&'a str),
-    /// A username that was unambiguous (username == gh_login).
+    /// A username that was unambiguous (username == `gh_login`).
     Username(User),
 }
 
@@ -346,44 +346,47 @@ async fn disambiguate_login<'a>(
     // Team login: exactly two colons (e.g. github:org:team)
     if Regex::new(r"^[^:]+:[^:]+:[^:]+$").is_ok_and(|r| r.is_match(login)) {
         return Ok(Login::Team);
-    } else if login.contains(':') {
-        // disambiguate user login
+    }
+
+    // disambiguate user login
+    if login.contains(':') {
         let mut chunks = login.split(':');
         let prefix = chunks.next().unwrap();
-        if !["github", "cratesio"].contains(&prefix) {
-            return Err(bad_request(
-                "unsupported username prefix, only github and cratesio prefixes are supported",
-            ));
-        }
 
         let username = chunks.next().unwrap();
         return match prefix {
             "github" => Ok(Login::GitHub(username)),
-            _ => Ok(Login::CratesIo(username)),
+            "cratesio" => Ok(Login::CratesIo(username)),
+            _ => Err(bad_request(
+                "unsupported username prefix, only github and cratesio prefixes are supported",
+            )),
         };
-    } else {
-        // check if login is ambiguous
-        let user = User::find_by_username(conn, login)
-            .await
-            .optional()?
-            .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
-
-        let command = if add { "add" } else { "remove" };
-        if user.gh_login != user.username {
-            let error = format!(
-                "error: username {} is possibly ambiguous.\n\n\
-            Caused by: \n  \
-            The crates.io account `{}` is associated with GitHub user `{}`.\n  \
-            To confirm this is the account you want to {command}, please run one of the following:\n\n  \
-            $ cargo owner --{command} cratesio:{}\n  \
-            $ cargo owner --{command} github:{}\n\n  \
-            If this is not the account you want to {command}, verify the crates.io username of the account you want.",
-                user.username, user.username, user.gh_login, user.username, user.gh_login
-            );
-            return Err(bad_request(error));
-        }
-        Ok(Login::Username(user))
     }
+
+    // check if login is ambiguous
+    let user = User::find_by_username(conn, login)
+        .await
+        .optional()?
+        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
+
+    let command = if add { "add" } else { "remove" };
+    let username = user.username.to_owned();
+    let gh_login = user.gh_login.to_owned();
+    let error = format_args!(
+        "error: username {username} is possibly ambiguous.\n\n\
+        Caused by: \n  \
+        The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
+        To confirm this is the account you want to {command}, please run one of the following:\n\n  \
+        $ cargo owner --{command} cratesio:{username}\n  \
+        $ cargo owner --{command} github:{gh_login}\n\n  \
+        If this is not the account you want to {command}, verify the crates.io username of the account you want.",
+    );
+
+    if user.username != user.gh_login {
+        return Err(bad_request(error));
+    }
+
+    Ok(Login::Username(user))
 }
 
 /// Invites `login` as an owner of this crate, returning the created
@@ -456,9 +459,9 @@ async fn send_user_invite(
     };
 
     match invite.create(conn).await? {
-        NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => Ok(
-            NewOwnerInvite::User(user, plaintext_token, username.to_owned()),
-        ),
+        NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
+            Ok(NewOwnerInvite::User(user, plaintext_token, username.into()))
+        }
         NewCrateOwnerInvitationOutcome::AlreadyExists => {
             Err(OwnerAddError::AlreadyInvited(Box::new(user)))
         }
@@ -631,8 +634,6 @@ impl From<BoxedAppError> for OwnerAddError {
     }
 }
 
-/// A [`BoxedAppError`] does not impl [`std::error::Error`] so it needs a manual
-/// [`From`] impl.
 impl From<BoxedAppError> for OwnerRemoveError {
     fn from(value: BoxedAppError) -> Self {
         Self::AppError(value.to_string())

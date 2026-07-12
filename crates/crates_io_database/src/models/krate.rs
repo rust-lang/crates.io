@@ -213,6 +213,7 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
+    /// Remove owner given a cratesio username
     pub async fn owner_remove_with_username(
         &self,
         mut conn: &AsyncPgConnection,
@@ -258,6 +259,8 @@ impl Crate {
 
         Ok(())
     }
+
+    /// Remove owner given a github username
     pub async fn owner_remove_with_gh_username(
         &self,
         mut conn: &AsyncPgConnection,

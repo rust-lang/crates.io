@@ -50,7 +50,7 @@ impl<'a> UserBuilder<'a> {
 
     pub fn with_gh_username(self, gh_login: &'a str) -> Self {
         Self {
-            gh_login: gh_login,
+            gh_login,
             ..self
         }
     }
@@ -59,6 +59,7 @@ impl<'a> UserBuilder<'a> {
         User {
             id: 1,
             name: self.display_name.map(ToString::to_string),
+            gh_login: self.gh_login.into(),
             gh_id: 123,
             gh_avatar: None,
             gh_encrypted_token: None,
@@ -67,7 +68,6 @@ impl<'a> UserBuilder<'a> {
             is_admin: false,
             publish_notifications: true,
             username: self.username.into(),
-            gh_login: self.gh_login.into(),
             created_at: None,
         }
     }

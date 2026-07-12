@@ -162,9 +162,7 @@ async fn test_remove_uppercase_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remove_ambiguous_user() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let user2 = app
-        .db_new_user_with_gh_login("user2", "user2-gh")
-        .await;
+    let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
     let mut conn = app.db_conn().await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -195,9 +193,7 @@ async fn test_unsupported_disambiguation_prefix() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie
-        .remove_named_owner("foo", "gitlab:user2")
-        .await;
+    let response = cookie.remove_named_owner("foo", "gitlab:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unsupported username prefix, only github and cratesio prefixes are supported"}]}"#);
 }
@@ -212,9 +208,7 @@ async fn test_disambiguated_github_username_not_found() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie
-        .remove_named_owner("foo", "github:nonexistent")
-        .await;
+    let response = cookie.remove_named_owner("foo", "github:nonexistent").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `nonexistent`"}]}"#);
 }
@@ -236,14 +230,11 @@ async fn test_disambiguated_cratesio_username_not_found() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `nonexistent`"}]}"#);
 }
 
-
 /// Test that removing an ambiguous user with github: prefix works.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguate_remove_with_github_prefix() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let user2 = app
-        .db_new_user_with_gh_login("user2", "user2-gh")
-        .await;
+    let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
     let mut conn = app.db_conn().await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -264,9 +255,7 @@ async fn test_disambiguate_remove_with_github_prefix() {
         .insert(&mut conn)
         .await;
 
-    let response = cookie
-        .remove_named_owner("foo", "github:user2-gh")
-        .await;
+    let response = cookie.remove_named_owner("foo", "github:user2-gh").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
@@ -275,9 +264,7 @@ async fn test_disambiguate_remove_with_github_prefix() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguate_remove_with_cratesio_prefix() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let user2 = app
-        .db_new_user_with_gh_login("user2", "user2-gh")
-        .await;
+    let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
     let mut conn = app.db_conn().await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -293,9 +280,7 @@ async fn test_disambiguate_remove_with_cratesio_prefix() {
         .await
         .unwrap();
 
-    let response = cookie
-        .remove_named_owner("foo", "cratesio:user2")
-        .await;
+    let response = cookie.remove_named_owner("foo", "cratesio:user2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
