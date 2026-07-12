@@ -132,7 +132,7 @@ pub async fn perform_version_yank_update(
             let action = if yanked { "yanking" } else { "unyanking" };
             warn!(
                 "Admin {} is {action} {}@{}",
-                user.gh_login, krate.name, version.num
+                user.username, krate.name, version.num
             );
         } else {
             return Err(custom(
