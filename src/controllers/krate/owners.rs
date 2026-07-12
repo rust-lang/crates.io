@@ -421,7 +421,7 @@ async fn invite_user_owner(
                 .optional()?
                 .ok_or_else(|| {
                     bad_request(format_args!(
-                        "could not find user with cratesio username {username}."
+                        "could not find user with cratesio username {username}"
                     ))
                 })?
         };

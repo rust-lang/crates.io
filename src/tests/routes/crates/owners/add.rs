@@ -414,7 +414,7 @@ async fn test_disambiguated_github_username_not_found() {
         .add_named_owner("guacamole", "github:nonexistent")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username nonexistent"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username nonexistent. If you meant to add a github team, format is github:org:team"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
