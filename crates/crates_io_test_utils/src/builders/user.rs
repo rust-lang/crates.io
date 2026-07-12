@@ -49,10 +49,7 @@ impl<'a> UserBuilder<'a> {
     }
 
     pub fn with_gh_username(self, gh_login: &'a str) -> Self {
-        Self {
-            gh_login,
-            ..self
-        }
+        Self { gh_login, ..self }
     }
 
     pub fn build(self) -> User {
