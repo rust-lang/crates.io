@@ -333,7 +333,7 @@ enum Login<'a> {
     GitHub(&'a str),
     /// A disambiguated `cratesio:username` resolved via users table.
     CratesIo(&'a str),
-    /// A username that was unambiguous (username == `gh_login`).
+    /// An unambigous username (`users.username` == `oauth_github.login`)
     Username(User),
 }
 
@@ -369,20 +369,29 @@ async fn disambiguate_login<'a>(
         .optional()?
         .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
 
+    let oauth_github = OauthGithub::belonging_to(&user)
+        .select(OauthGithub::as_select())
+        .first(conn)
+        .await
+        .optional()?;
+
     let command = if add { "add" } else { "remove" };
     let username = user.username.to_owned();
-    let gh_login = user.gh_login.to_owned();
-    let error = format_args!(
-        "error: username {username} is possibly ambiguous.\n\n\
-        Caused by: \n  \
-        The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
-        To confirm this is the account you want to {command}, please run one of the following:\n\n  \
-        $ cargo owner --{command} cratesio:{username}\n  \
-        $ cargo owner --{command} github:{gh_login}\n\n  \
-        If this is not the account you want to {command}, verify the crates.io username of the account you want.",
-    );
 
-    if user.username != user.gh_login {
+    if let Some(oauth_github) = oauth_github
+        && oauth_github.login != user.username
+    {
+        let gh_login = &oauth_github.login;
+        let error = format_args!(
+            "error: username {username} is possibly ambiguous.\n\n\
+                Caused by: \n  \
+                The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
+                To confirm this is the account you want to {command}, please run one of the following:\n\n  \
+                $ cargo owner --{command} cratesio:{username}\n  \
+                $ cargo owner --{command} github:{gh_login}\n\n  \
+                If this is not the account you want to {command}, verify the crates.io username of the account you want.",
+        );
+
         return Err(bad_request(error));
     }
 
@@ -403,12 +412,13 @@ async fn add_owner(
             let encryption = &app.config.token_encryption;
             add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
         }
-        Login::GitHub(username) => {
-            let user = OauthGithub::find_by_username(conn, username)
+        Login::GitHub(login) => {
+            let oauth = OauthGithub::find_by_login(conn, login)
                 .await
                 .optional()?
-                .ok_or_else(|| bad_request(format_args!("could not find user with github username {username}. If you meant to add a github team, format is github:org:team")))?;
-            send_user_invite(app, conn, req_user, user, username, krate).await
+                .ok_or_else(|| bad_request(format_args!("could not find user with github username {login}. If you meant to add a github team, format is github:org:team")))?;
+            let user = User::find(conn, oauth.user_id).await?;
+            send_user_invite(app, conn, req_user, user, login, krate).await
         }
         Login::CratesIo(username) => {
             let user = User::find_by_username(conn, username)
@@ -435,7 +445,7 @@ async fn remove_owner(
         .map_err(OwnerRemoveError::from)?
     {
         Login::Team => krate.owner_remove_with_username(conn, login).await,
-        Login::GitHub(username) => krate.owner_remove_with_gh_username(conn, username).await,
+        Login::GitHub(login) => krate.owner_remove_with_gh_login(conn, login).await,
         Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await,
         Login::Username(_) => krate.owner_remove_with_username(conn, login).await,
     }

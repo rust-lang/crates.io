@@ -432,7 +432,12 @@ async fn test_ambiguous_username_error() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
 
-    app.db_new_user_with_gh_login("user2", "user2-gh").await;
+    let new_user = app.db_new_user_with_gh_login("user2", "user2-gh").await;
+
+    OauthGithubBuilder::for_user(new_user.as_model())
+        .with_login("user2-gh")
+        .insert(&mut conn)
+        .await;
 
     CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)

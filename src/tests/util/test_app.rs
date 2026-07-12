@@ -191,7 +191,7 @@ impl TestApp {
 
         let new_user = crate::builders::UserBuilder::new()
             .with_username(username)
-            .with_gh_username(gh_login)
+            .with_gh_login(gh_login)
             .new_user();
         let id = new_user.insert(&conn).await.unwrap();
 

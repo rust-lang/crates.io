@@ -165,6 +165,11 @@ async fn test_remove_ambiguous_user() {
     let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
     let mut conn = app.db_conn().await;
 
+    OauthGithubBuilder::for_user(user2.as_model())
+        .with_login("user2-gh")
+        .insert(&mut conn)
+        .await;
+
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
         .await;
@@ -213,7 +218,7 @@ async fn test_disambiguated_github_username_not_found() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `nonexistent`"}]}"#);
 }
 
-/// Test that removing with nonexistent cratesio usrname returns an error.
+/// Test that removing with nonexistent cratesio username returns an error.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguated_cratesio_username_not_found() {
     let (app, _, cookie) = TestApp::full().with_user().await;

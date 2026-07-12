@@ -34,9 +34,13 @@ pub struct OauthGithub {
 }
 
 impl OauthGithub {
-    pub async fn find_by_username(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
-        User::query()
+    pub async fn find_by_login(
+        mut conn: &AsyncPgConnection,
+        login: &str,
+    ) -> QueryResult<OauthGithub> {
+        oauth_github::table
             .filter(lower(oauth_github::login).eq(login.to_lowercase()))
+            .select(OauthGithub::as_select())
             .first(&mut conn)
             .await
     }

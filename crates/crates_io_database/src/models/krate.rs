@@ -261,10 +261,10 @@ impl Crate {
     }
 
     /// Remove owner given a github username
-    pub async fn owner_remove_with_gh_username(
+    pub async fn owner_remove_with_gh_login(
         &self,
         mut conn: &AsyncPgConnection,
-        username: &str,
+        login: &str,
     ) -> Result<(), OwnerRemoveError> {
         let query = diesel::sql_query(
             r#"WITH crate_owners_with_gh_login AS (
@@ -289,12 +289,12 @@ impl Crate {
 
         let num_updated_rows = query
             .bind::<Integer, _>(self.id)
-            .bind::<Text, _>(username)
+            .bind::<Text, _>(login)
             .execute(&mut conn)
             .await?;
 
         if num_updated_rows == 0 {
-            return Err(OwnerRemoveError::not_found(username));
+            return Err(OwnerRemoveError::not_found(login));
         }
 
         Ok(())
