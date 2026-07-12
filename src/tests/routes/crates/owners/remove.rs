@@ -1,6 +1,5 @@
 use crate::builders::{CrateBuilder, OauthGithubBuilder};
 use crate::util::{RequestHelper, TestApp};
-use crate::{add_team_to_crate, new_team};
 use crates_io::models::CrateOwner;
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use insta::assert_snapshot;
@@ -61,7 +60,7 @@ async fn test_unknown_user() {
 
     let response = cookie.remove_named_owner("foo", "unknown").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
