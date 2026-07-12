@@ -59,7 +59,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .await
         .context("Failed to look up crate name from the database")?;
 
-    let deleted_by = User::find_by_login(&conn, &opts.deleted_by)
+    let deleted_by = User::find_by_username(&conn, &opts.deleted_by)
         .await
         .context("Failed to look up `--deleted-by` user from the database")?;
 

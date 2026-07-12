@@ -14,6 +14,7 @@ use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
+use crates_io_database::models::OauthGithub;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
@@ -21,6 +22,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
+use regex::Regex;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -333,7 +335,8 @@ async fn add_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    if login.contains(':') {
+    // Check if this is a team login (e.g github:org:team). Regex matches strings with exactly two colons.
+    if Regex::new(r"^[^:]+:[^:]+:[^:]+$").is_ok_and(|r| r.is_match(login)) {
         let encryption = &app.config.token_encryption;
         add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
     } else {
@@ -348,11 +351,51 @@ async fn invite_user_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    let user = User::find_by_login(conn, login)
-        .await
-        .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
+    // disambiguated username
+    if login.contains(':') {
+        let mut chunks = login.split(':');
+        let prefix = chunks.next().unwrap();
+        if !vec!["github", "cratesio"].contains(&prefix) {
+            let error =
+                "unsupported username prefix, only github and cratesio prefixes are supported";
+            return Err(bad_request(error).into());
+        }
 
+        let user = if prefix == "github" {
+            OauthGithub::find_by_username(conn, login)
+                .await
+                .optional()?
+        } else {
+            User::find_by_username(conn, login).await.optional()?
+        };
+
+        let Some(user) = user else {
+            return Err(bad_request("could not find user with {prefix} username {login}").into());
+        };
+
+        send_user_invite(app, conn, req_user, user, krate).await
+    } else {
+        let user = User::find_by_username(conn, login)
+            .await
+            .optional()?
+            .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
+
+        if user.gh_login != user.username {
+            let error = "error: username {user.username} is possibly ambiguous.\n\nCaused by: \n  The crates.io account `{user.username}` is associated with GitHub user `{user.gh_login}`.\n  To confirm this is the account you want to add, please run one of the following:\n\n  $ cargo owner --add cratesio:{user.username}\n  $ cargo owner --add github:{user.gh_login}\n\n  If this is not the account you want to add, verify the crates.io username of the account you want.";
+            return Err(bad_request(error).into());
+        }
+
+        send_user_invite(app, conn, req_user, user, krate).await
+    }
+}
+
+async fn send_user_invite(
+    app: &App,
+    conn: &mut AsyncPgConnection,
+    req_user: &User,
+    user: User,
+    krate: &Crate,
+) -> Result<NewOwnerInvite, OwnerAddError> {
     // Users are invited and must accept before being added
     let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
     let invite = NewCrateOwnerInvitation {

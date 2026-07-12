@@ -14,11 +14,12 @@ pub use self::email::{Email, NewEmail};
 pub use self::follow::Follow;
 pub use self::keyword::{CrateKeyword, Keyword};
 pub use self::krate::{Crate, CrateName, NewCrate};
+pub use self::oauth_github::{NewOauthGithub, OauthGithub};
 pub use self::owner::{CrateOwner, Owner, OwnerKind};
 pub use self::team::{NewTeam, Team};
 pub use self::token::ApiToken;
 pub use self::trustpub::TrustpubData;
-pub use self::user::{NewOauthGithub, NewUser, OauthGithub, PublicUser, User};
+pub use self::user::{NewUser, PublicUser, User};
 pub use self::version::{NewVersion, TopVersions, Version};
 
 pub mod helpers;
@@ -42,3 +43,4 @@ pub mod trustpub;
 pub mod user;
 pub mod version;
 pub mod versions_published_by;
+pub mod oauth_github;

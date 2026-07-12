@@ -70,9 +70,9 @@ impl User {
             .await
     }
 
-    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
+    pub async fn find_by_username(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
         User::query()
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
+            .filter(lower(users::username).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
             .order(users::gh_id.desc())
             .first(&mut conn)
