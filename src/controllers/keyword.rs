@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::controllers::helpers::{Paginate, pagination::Paginated};
 use crate::models::Keyword;
-use crate::util::errors::AppResult;
+use crate::util::errors::{AppResult, not_found};
 use crate::views::EncodableKeyword;
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
@@ -90,6 +90,16 @@ pub async fn find_keyword(
     Path(name): Path<String>,
     state: AppState,
 ) -> AppResult<Json<GetResponse>> {
+    // If the name is not a valid keyword it cannot exist in the database, so we
+    // skip the lookup and return a regular "not found" response. This also
+    // avoids passing invalid input (e.g. names containing null bytes) to the
+    // database layer, where PostgreSQL would reject the query with a confusing
+    // `invalid byte sequence for encoding "UTF8": 0x00` error and cause a 500
+    // response.
+    if !Keyword::valid_name(&name) {
+        return Err(not_found());
+    }
+
     let conn = state.db_read().await?;
     let kw = Keyword::find_by_keyword(&conn, &name).await?;
     let keyword = EncodableKeyword::from(kw);

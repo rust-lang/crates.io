@@ -3,6 +3,7 @@ use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use http::StatusCode;
 use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -95,4 +96,15 @@ async fn block_bad_version_urls() {
     assert_eq!(json["version"]["homepage"], Value::Null);
     assert_eq!(json["version"]["documentation"], Value::Null);
     assert_eq!(json["version"]["repository"], Value::Null);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_null_byte_in_crate_name() {
+    let (_, anon) = TestApp::init().empty().await;
+
+    // A crate name with a null byte can never exist, so instead of letting the
+    // request fail with a database encoding error it should be treated as a
+    // regular "not found" response.
+    let response = anon.get::<()>("/api/v1/crates/foo%00bar/1.0.0").await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

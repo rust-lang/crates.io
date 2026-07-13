@@ -9,19 +9,20 @@ pub mod yank;
 
 use axum::extract::{FromRequestParts, Path};
 use crates_io_database::fns::canon_crate_name;
+use crates_io_validation::validate_crate_name;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use http::request::Parts;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use utoipa::IntoParams;
 
 use crate::models::{Crate, Version};
 use crate::schema::{crates, versions};
-use crate::util::errors::{AppResult, crate_not_found, version_not_found};
+use crate::util::errors::{AppResult, BoxedAppError, crate_not_found, custom, version_not_found};
 
-#[derive(Deserialize, FromRequestParts, IntoParams)]
+#[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Path)]
-#[from_request(via(Path))]
 pub struct CrateVersionPath {
     /// Name of the crate
     pub name: String,
@@ -29,6 +30,29 @@ pub struct CrateVersionPath {
     #[param(example = "1.0.0")]
     #[serde(deserialize_with = "deserialize_version")]
     pub version: String,
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for CrateVersionPath {
+    type Rejection = BoxedAppError;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Path(path) = Path::<CrateVersionPath>::from_request_parts(parts, state)
+            .await
+            .map_err(|err| custom(err.status(), err.body_text()))?;
+
+        // If the name is not a valid crate name it cannot exist in the
+        // database, so we skip the lookup and return a regular "not found"
+        // response. This also avoids passing invalid input (e.g. names
+        // containing null bytes) to the database layer, where PostgreSQL would
+        // reject the query with a confusing `invalid byte sequence for encoding
+        // "UTF8": 0x00` error and cause a 500 response. (The version is already
+        // validated as valid semver during deserialization.)
+        if validate_crate_name("crate", &path.name).is_err() {
+            return Err(crate_not_found(&path.name));
+        }
+
+        Ok(path)
+    }
 }
 
 impl CrateVersionPath {

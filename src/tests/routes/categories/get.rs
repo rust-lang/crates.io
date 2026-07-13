@@ -41,6 +41,17 @@ async fn show() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn null_byte_in_slug() {
+    let (_app, anon) = TestApp::init().empty().await;
+
+    // A category slug with a null byte can never exist, so instead of letting
+    // the request fail with a database encoding error it should be treated as a
+    // regular "not found" response.
+    let response = anon.get::<()>("/api/v1/categories/foo%00bar").await;
+    assert_snapshot!(response.status(), @"404 Not Found");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
 async fn update_crate() -> anyhow::Result<()> {
     // Convenience function to get the number of crates in a category

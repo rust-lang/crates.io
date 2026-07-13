@@ -45,6 +45,17 @@ async fn uppercase() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn null_byte_in_name() {
+    let (_app, anon) = TestApp::init().empty().await;
+
+    // A keyword with a null byte can never exist, so instead of letting the
+    // request fail with a database encoding error it should be treated as a
+    // regular "not found" response.
+    let response = anon.get::<()>("/api/v1/keywords/foo%00bar").await;
+    assert_snapshot!(response.status(), @"404 Not Found");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn update_crate() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
