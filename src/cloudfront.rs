@@ -42,6 +42,15 @@ pub struct CloudFront {
     static_distribution_id: String,
 }
 
+/// Ensures CloudFront invalidation paths start with a slash.
+fn normalize_invalidation_paths(paths: &mut [String]) {
+    for path in paths {
+        if !path.starts_with('/') {
+            *path = format!("/{path}");
+        }
+    }
+}
+
 impl CloudFront {
     pub fn from_environment() -> Option<Self> {
         let access_key = match dotenvy::var("AWS_ACCESS_KEY") {
@@ -111,12 +120,7 @@ impl CloudFront {
         let distribution_id = self.distribution_id(distribution);
         let now = chrono::offset::Utc::now().timestamp_micros();
 
-        // We need to ensure that paths have a starting slash.
-        for path in paths.iter_mut() {
-            if !path.starts_with('/') {
-                *path = format!("/{path}");
-            }
-        }
+        normalize_invalidation_paths(&mut paths);
 
         let paths = Paths::builder()
             // It looks like you have to set quantity even if you provide a full blown Vec, because
@@ -144,5 +148,19 @@ impl CloudFront {
             .map(|_| ()) // We don't care about the result, just that it worked
             .inspect(|_| debug!("Invalidation request successful"))
             .inspect_err(|error| warn!("Invalidation request failed: {error}"))?)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalizes_invalidation_paths() {
+        let mut paths = vec!["index/config.json".into(), "/db-dump.tar.gz".into()];
+
+        normalize_invalidation_paths(&mut paths);
+
+        assert_eq!(paths, ["/index/config.json", "/db-dump.tar.gz"]);
     }
 }
