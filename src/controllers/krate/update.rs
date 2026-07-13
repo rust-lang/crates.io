@@ -121,9 +121,9 @@ async fn update_inner(
             krate.name = %krate.name,
             network.client.ip = %**real_ip,
             usr.id = user.id,
-            usr.name = %user.username,
+            usr.name = %user.gh_login,
             "User {} set trustpub_only={trustpub_only} for crate {}",
-            user.username,
+            user.gh_login,
             krate.name
         );
 

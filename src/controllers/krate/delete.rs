@@ -160,7 +160,7 @@ pub async fn delete_crate(
             let email = EmailMessage::from_template(
                 "crate_deletion",
                 context! {
-                    user => user.username,
+                    user => user.gh_login,
                     krate => crate_name
                 },
             )?;

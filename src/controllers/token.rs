@@ -154,7 +154,7 @@ pub async fn create_api_token(
             network.client.ip = client_ip,
             http.headers = ?headers,
             "Blocked token creation for user `{}` (id: {}) due to disabled flag (token name: `{}`)",
-            user.username, user.id, new.api_token.name
+            user.gh_login, user.id, new.api_token.name
         );
 
         let message = disable_message.clone();
@@ -212,7 +212,7 @@ pub async fn create_api_token(
     if let Some(recipient) = recipient {
         let context = context! {
             token_name => &new.api_token.name,
-            user_name => &user.username,
+            user_name => &user.gh_login,
             domain => app.emails.domain,
         };
 

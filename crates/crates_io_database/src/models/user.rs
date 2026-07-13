@@ -191,6 +191,19 @@ pub struct OauthGithub {
     pub user_id: i32,
 }
 
+impl OauthGithub {
+    pub async fn find_by_login(
+        mut conn: &AsyncPgConnection,
+        login: &str,
+    ) -> QueryResult<OauthGithub> {
+        oauth_github::table
+            .filter(lower(oauth_github::login).eq(login.to_lowercase()))
+            .select(OauthGithub::as_select())
+            .first(&mut conn)
+            .await
+    }
+}
+
 /// Represents a new crates.io user to GitHub user OAuth link to be inserted into the
 /// `oauth_github` table.
 #[derive(Insertable, Debug, Builder)]

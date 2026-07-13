@@ -12,13 +12,13 @@ async fn test_cargo_invite_owners() {
     let (app, _, owner) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let new_user = app.db_new_user("user2").await;
-    CrateBuilder::new("foo", owner.as_model().id)
+    let new_user = app.db_new_user("cilantro").await;
+    CrateBuilder::new("guacamole", owner.as_model().id)
         .expect_build(&mut conn)
         .await;
 
     let json = owner
-        .add_named_owner("foo", &new_user.as_model().gh_login)
+        .add_named_owner("guacamole", &new_user.as_model().gh_login)
         .await
         .good();
 
@@ -30,7 +30,7 @@ async fn test_cargo_invite_owners() {
     // version of cargo
     assert_eq!(
         json.msg,
-        "user user2 has been invited to be an owner of crate foo"
+        "user cilantro has been invited to be an owner of crate guacamole"
     )
 }
 
@@ -304,7 +304,7 @@ async fn test_unknown_user() {
 
     let response = cookie.add_named_owner("foo", "unknown").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -369,7 +369,7 @@ async fn no_invite_emails_for_txn_rollback() {
 
     let response = token.add_named_owners("crate_name", &usernames).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `bananas`"}]}"#);
 
     // No emails should have been sent.
     assert_eq!(app.emails().await.len(), 0);

@@ -170,6 +170,7 @@ async fn create_or_update_user(
     conn.transaction(async |conn| {
         let update_result = update_user(gh_user, encrypted_token, conn).await;
 
+<<<<<<< HEAD
         match update_result {
             Ok(user_id) => Ok(user_id),
             Err(diesel::result::Error::NotFound) => {
@@ -179,6 +180,50 @@ async fn create_or_update_user(
                 // a one-to-one relationship; this will need to be changed if/when we allow
                 // crates.io users to link more than one GitHub account to their crates.io account.
                 create_user(gh_user, encrypted_token, emails, conn).await
+=======
+        let user_id = new_user.insert_or_update(conn).await?;
+
+        // To assist in eventually someday allowing OAuth with more than GitHub, also
+        // write the GitHub info to the `oauth_github` table. This table is read when
+        // loading user details (e.g. the avatar), so a failure to write must fail the
+        // request just like a failure to write to the `users` table.
+        let new_oauth_github = NewOauthGithub::builder()
+            .user_id(user_id)
+            .account_id(new_user.gh_id as i64)
+            .encrypted_token(new_user.gh_encrypted_token)
+            .login(new_user.gh_login)
+            .maybe_avatar(user.avatar_url.as_deref())
+            .build();
+
+        new_oauth_github.insert_or_update(conn).await?;
+
+        // To send the user an account verification email
+        if let Some(user_email) = user.email.as_deref() {
+            let new_email = NewEmail::builder()
+                .user_id(user_id)
+                .email(user_email)
+                .build();
+
+            if let Some(token) = new_email.insert_if_missing(conn).await? {
+                let email = EmailMessage::from_template(
+                    "user_confirm",
+                    context! {
+                        user_name => new_user.gh_login,
+                        domain => emails.domain,
+                        token => token.expose_secret()
+                    },
+                );
+
+                match email {
+                    Ok(email) => {
+                        // Swallows any error. Some users might insert an invalid email address here.
+                        let _ = emails.send(user_email, email).await;
+                    }
+                    Err(error) => {
+                        warn!("Failed to render user confirmation email template: {error}");
+                    }
+                };
+>>>>>>> d2608c9e2 (split out refactoring changes)
             }
             Err(error) => Err(error),
         }

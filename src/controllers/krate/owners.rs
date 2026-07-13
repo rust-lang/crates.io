@@ -262,7 +262,7 @@ async fn modify_owners(
                                 let email = EmailMessage::from_template(
                                     "owner_invite",
                                     context! {
-                                        inviter => user.username,
+                                        inviter => user.gh_login,
                                         domain => app.emails.domain,
                                         crate_name => krate.name,
                                         token => token.expose_secret()
@@ -288,7 +288,7 @@ async fn modify_owners(
                         // This user has a pending invite.
                         Err(OwnerAddError::AlreadyInvited(user)) => msgs.push(format!(
                             "user {} already has a pending invitation to be an owner of crate {}",
-                            user.username, krate.name
+                            user.gh_login, krate.name
                         )),
 
                         // An opaque error occurred.
@@ -326,77 +326,6 @@ async fn modify_owners(
     Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
-enum Login<'a> {
-    /// A team login e.g `github:org:team`
-    Team,
-    /// A disambiguated `github:username` resolved via `oauth_github`.
-    GitHub(&'a str),
-    /// A disambiguated `cratesio:username` resolved via users table.
-    CratesIo(&'a str),
-    /// An unambigous username (`users.username` == `oauth_github.login`)
-    Username(User),
-}
-
-/// Disambiguate a login string
-async fn disambiguate_login<'a>(
-    conn: &mut AsyncPgConnection,
-    login: &'a str,
-    add: bool,
-) -> Result<Login<'a>, BoxedAppError> {
-    // Team login: exactly two colons (e.g. github:org:team)
-    if Regex::new(r"^[^:]+:[^:]+:[^:]+$").is_ok_and(|r| r.is_match(login)) {
-        return Ok(Login::Team);
-    }
-
-    // disambiguate user login
-    if login.contains(':') {
-        let mut chunks = login.split(':');
-        let prefix = chunks.next().unwrap();
-
-        let username = chunks.next().unwrap();
-        return match prefix {
-            "github" => Ok(Login::GitHub(username)),
-            "cratesio" => Ok(Login::CratesIo(username)),
-            _ => Err(bad_request(
-                "unsupported username prefix, only github and cratesio prefixes are supported",
-            )),
-        };
-    }
-
-    // check if login is ambiguous
-    let user = User::find_by_username(conn, login)
-        .await
-        .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
-
-    let oauth_github = OauthGithub::belonging_to(&user)
-        .select(OauthGithub::as_select())
-        .first(conn)
-        .await
-        .optional()?;
-
-    let command = if add { "add" } else { "remove" };
-    let username = user.username.to_owned();
-
-    if let Some(oauth_github) = oauth_github
-        && oauth_github.login != user.username
-    {
-        let gh_login = &oauth_github.login;
-        let error = format_args!(
-            "error: username {username} is possibly ambiguous.\n\n\
-                Caused by: \n  \
-                The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
-                To confirm this is the account you want to {command}, please run one of the following:\n\n  \
-                $ cargo owner --{command} cratesio:{username}\n  \
-                $ cargo owner --{command} github:{gh_login}\n\n  \
-                If this is not the account you want to {command}, verify the crates.io username of the account you want.",
-        );
-
-        return Err(bad_request(error));
-    }
-
-    Ok(Login::Username(user))
-}
 
 /// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
@@ -449,6 +378,78 @@ async fn remove_owner(
         Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await,
         Login::Username(_) => krate.owner_remove_with_username(conn, login).await,
     }
+}
+
+enum Login<'a> {
+    /// A team login e.g `github:org:team`
+    Team,
+    /// A disambiguated `github:username` resolved via `oauth_github`.
+    GitHub(&'a str),
+    /// A disambiguated `cratesio:username` resolved via users table.
+    CratesIo(&'a str),
+    /// An unambigous username (`users.username` == `oauth_github.login`)
+    Username(User),
+}
+
+/// Disambiguate a login string
+async fn disambiguate_login<'a>(
+    conn: &mut AsyncPgConnection,
+    login: &'a str,
+    add: bool,
+) -> Result<Login<'a>, BoxedAppError> {
+    // Team login: exactly two colons (e.g. github:org:team)
+    if Regex::new(r"^[^:]+:[^:]+:[^:]+$").is_ok_and(|r| r.is_match(login)) {
+        return Ok(Login::Team);
+    }
+
+    // disambiguate user login
+    if login.contains(':') {
+        let mut chunks = login.split(':');
+        let prefix = chunks.next().unwrap();
+
+        let username = chunks.next().unwrap();
+        return match prefix {
+            "github" => Ok(Login::GitHub(username)),
+            "cratesio" => Ok(Login::CratesIo(username)),
+            _ => Err(bad_request(
+                "unsupported username prefix, only github and cratesio prefixes are supported",
+            )),
+        };
+    }
+
+    // check if login is ambiguous
+    let user = User::find_by_username(conn, login)
+        .await
+        .optional()?
+        .ok_or_else(|| bad_request(format_args!("could not find owner with login `{login}`")))?;
+
+    let oauth_github = OauthGithub::belonging_to(&user)
+        .select(OauthGithub::as_select())
+        .first(conn)
+        .await
+        .optional()?;
+
+    let command = if add { "add" } else { "remove" };
+    let username = user.username.to_owned();
+
+    if let Some(oauth_github) = oauth_github
+        && oauth_github.login != user.username
+    {
+        let gh_login = &oauth_github.login;
+        let error = format_args!(
+            "error: username {username} is possibly ambiguous.\n\n\
+                Caused by: \n  \
+                The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
+                To confirm this is the account you want to {command}, please run one of the following:\n\n  \
+                $ cargo owner --{command} cratesio:{username}\n  \
+                $ cargo owner --{command} github:{gh_login}\n\n  \
+                If this is not the account you want to {command}, verify the crates.io username of the account you want.",
+        );
+
+        return Err(bad_request(error));
+    }
+
+    Ok(Login::Username(user))
 }
 
 async fn send_user_invite(
