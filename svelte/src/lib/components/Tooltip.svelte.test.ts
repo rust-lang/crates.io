@@ -7,7 +7,7 @@ import TooltipTestWrapper from './TooltipTestWrapper.svelte';
 
 describe('Tooltip', () => {
   it('shows the tooltip on hover', async () => {
-    render(TooltipTestWrapper, { text: 'short', width: '500px' });
+    await render(TooltipTestWrapper, { text: 'short', width: '500px' });
 
     await userEvent.hover(page.getByCSS('[data-test-anchor]'));
 
@@ -16,7 +16,7 @@ describe('Tooltip', () => {
 
   describe('delay', () => {
     it('waits for the configured delay before showing the tooltip', async () => {
-      render(TooltipTestWrapper, { text: 'short', width: '500px', delay: 200 });
+      await render(TooltipTestWrapper, { text: 'short', width: '500px', delay: 200 });
 
       await userEvent.hover(page.getByCSS('[data-test-anchor]'));
       await tick();
@@ -29,7 +29,7 @@ describe('Tooltip', () => {
 
   describe('onlyWhenTruncated', () => {
     it('shows the tooltip when the anchor content is truncated', async () => {
-      render(TooltipTestWrapper, {
+      await render(TooltipTestWrapper, {
         text: 'A very long string that does not fit into the narrow anchor element',
         width: '50px',
         onlyWhenTruncated: true,
@@ -41,7 +41,7 @@ describe('Tooltip', () => {
     });
 
     it('does not show the tooltip when the anchor content fits', async () => {
-      render(TooltipTestWrapper, { text: 'short', width: '500px', onlyWhenTruncated: true });
+      await render(TooltipTestWrapper, { text: 'short', width: '500px', onlyWhenTruncated: true });
 
       await userEvent.hover(page.getByCSS('[data-test-anchor]'));
       await tick();

@@ -42,12 +42,12 @@ describe('version-list/Row', () => {
     let firstVersion = createVersion({ num: '0.4.0-alpha.01' });
     let secondVersion = createVersion({ num: '0.3.0-alpha.01' });
 
-    let { unmount } = render(Row, { version: firstVersion, crateName: 'foo' });
+    let { unmount } = await render(Row, { version: firstVersion, crateName: 'foo' });
     await expect.element(page.getByCSS('[data-test-release-track]')).toHaveTextContent('0.4');
     await expect.element(page.getByCSS('[data-test-release-track-link]')).toHaveTextContent('0.4.0-alpha.01');
-    unmount();
+    await unmount();
 
-    render(Row, { version: secondVersion, crateName: 'foo' });
+    await render(Row, { version: secondVersion, crateName: 'foo' });
     await expect.element(page.getByCSS('[data-test-release-track]')).toHaveTextContent('0.3');
     await expect.element(page.getByCSS('[data-test-release-track-link]')).toHaveTextContent('0.3.0-alpha.01');
   });
@@ -56,7 +56,7 @@ describe('version-list/Row', () => {
     let num = '18446744073709551615.18446744073709551615.18446744073709551615';
     let version = createVersion({ num });
 
-    render(Row, { version, crateName: 'foo' });
+    await render(Row, { version, crateName: 'foo' });
     await expect.element(page.getByCSS('[data-test-release-track]')).toHaveTextContent('?');
     await expect.element(page.getByCSS('[data-test-release-track-link]')).toHaveTextContent(num);
   });
@@ -66,15 +66,15 @@ describe('version-list/Row', () => {
     let secondVersion = createVersion({ num: '0.2.0', features: { one: [] } });
     let thirdVersion = createVersion({ num: '0.3.0', features: { one: [], two: [] } });
 
-    let { unmount: unmount1 } = render(Row, { version: firstVersion, crateName: 'foo' });
+    let { unmount: unmount1 } = await render(Row, { version: firstVersion, crateName: 'foo' });
     expect(page.getByCSS('[data-test-feature-list]').query()).toBeNull();
-    unmount1();
+    await unmount1();
 
-    let { unmount: unmount2 } = render(Row, { version: secondVersion, crateName: 'foo' });
+    let { unmount: unmount2 } = await render(Row, { version: secondVersion, crateName: 'foo' });
     await expect.element(page.getByCSS('[data-test-feature-list]')).toHaveTextContent('1 Feature');
-    unmount2();
+    await unmount2();
 
-    render(Row, { version: thirdVersion, crateName: 'foo' });
+    await render(Row, { version: thirdVersion, crateName: 'foo' });
     await expect.element(page.getByCSS('[data-test-feature-list]')).toHaveTextContent('2 Features');
   });
 });

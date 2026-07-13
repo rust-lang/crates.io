@@ -15,7 +15,7 @@ const unmaintained: Unmaintained = {
 
 describe('UnmaintainedBanner', () => {
   it('renders the explanation and a link to the advisory', async () => {
-    render(UnmaintainedBanner, { unmaintained });
+    await render(UnmaintainedBanner, { unmaintained });
 
     let banner = page.getByCSS('[data-test-unmaintained-banner]');
     await expect.element(banner).toBeVisible();

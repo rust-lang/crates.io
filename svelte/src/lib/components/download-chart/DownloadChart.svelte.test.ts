@@ -58,7 +58,7 @@ describe('DownloadChart', () => {
   });
 
   it('happy path', async () => {
-    render(TestDownloadChart, { data: exampleData() });
+    await render(TestDownloadChart, { data: exampleData() });
     resolveChart(Chart);
 
     await expect.element(page.getByCSS('[data-test-download-graph]')).toBeVisible();
@@ -68,7 +68,7 @@ describe('DownloadChart', () => {
   });
 
   it('loading spinner', async () => {
-    render(TestDownloadChart, { data: exampleData() });
+    await render(TestDownloadChart, { data: exampleData() });
 
     await expect.element(page.getByCSS('[data-test-download-graph]')).toBeVisible();
     await expect.element(page.getByCSS('[data-test-download-graph] [data-test-spinner]')).toBeVisible();
@@ -85,7 +85,7 @@ describe('DownloadChart', () => {
 
   it('error behavior', async () => {
     let reloadFn = vi.fn();
-    render(TestDownloadChart, { data: exampleData(), onReload: reloadFn });
+    await render(TestDownloadChart, { data: exampleData(), onReload: reloadFn });
     rejectChart(new Error('nope'));
 
     await expect.element(page.getByCSS('[data-test-download-graph]')).toBeVisible();

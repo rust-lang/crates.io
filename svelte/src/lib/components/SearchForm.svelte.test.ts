@@ -20,7 +20,7 @@ describe('SearchForm', () => {
     // The large input carrying `data-test-search-input` is hidden below 820px,
     // so widen the viewport to make it focusable.
     await page.viewport(1280, 800);
-    render(SearchFormTestWrapper);
+    await render(SearchFormTestWrapper);
     let input = page.getByCSS('[data-test-search-input]').element() as HTMLInputElement;
     expect(document.activeElement).not.toBe(input);
 
@@ -29,8 +29,8 @@ describe('SearchForm', () => {
     expect(document.activeElement).toBe(input);
   });
 
-  it('does not steal focus while typing in an input inside a shadow root', () => {
-    render(SearchFormTestWrapper);
+  it('does not steal focus while typing in an input inside a shadow root', async () => {
+    await render(SearchFormTestWrapper);
     let searchInput = page.getByCSS('[data-test-search-input]').element() as HTMLInputElement;
 
     // An input inside a shadow root: a keydown from it is retargeted to the

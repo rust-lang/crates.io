@@ -28,7 +28,7 @@ function createUser(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUs
 
 test('happy path', async ({ worker }) => {
   let user = createUser();
-  render(EmailInputTestWrapper, { user });
+  await render(EmailInputTestWrapper, { user });
 
   worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.json({ ok: true })));
 
@@ -63,7 +63,7 @@ test('happy path', async ({ worker }) => {
 
 test('happy path with `email: null`', async ({ worker }) => {
   let user = createUser({ email: null, email_verified: false, email_verification_sent: false });
-  render(EmailInputTestWrapper, { user });
+  await render(EmailInputTestWrapper, { user });
 
   worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.json({ ok: true })));
 
@@ -94,7 +94,7 @@ test('happy path with `email: null`', async ({ worker }) => {
 
 test('cancel button', async () => {
   let user = createUser();
-  render(EmailInputTestWrapper, { user });
+  await render(EmailInputTestWrapper, { user });
 
   await page.getByCSS('[data-test-edit-button]').click();
   await userEvent.fill(page.getByCSS('[data-test-input]'), 'new@email.com');
@@ -108,7 +108,7 @@ test('cancel button', async () => {
 
 test('server error', async ({ worker }) => {
   let user = createUser();
-  render(EmailInputTestWrapper, { user });
+  await render(EmailInputTestWrapper, { user });
 
   worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.json({}, { status: 500 })));
 
@@ -126,7 +126,7 @@ test('server error', async ({ worker }) => {
 describe('Resend button', () => {
   test('happy path', async ({ worker }) => {
     let user = createUser({ email_verified: false, email_verification_sent: true });
-    render(EmailInputTestWrapper, { user });
+    await render(EmailInputTestWrapper, { user });
 
     worker.use(http.put('/api/v1/users/:user_id/resend', () => HttpResponse.json({ ok: true })));
 
@@ -145,7 +145,7 @@ describe('Resend button', () => {
 
   test('server error', async ({ worker }) => {
     let user = createUser({ email_verified: false, email_verification_sent: true });
-    render(EmailInputTestWrapper, { user });
+    await render(EmailInputTestWrapper, { user });
 
     worker.use(http.put('/api/v1/users/:user_id/resend', () => HttpResponse.json({}, { status: 500 })));
 
