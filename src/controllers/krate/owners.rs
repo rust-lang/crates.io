@@ -326,7 +326,6 @@ async fn modify_owners(
     Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
-
 /// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
 async fn add_owner(
@@ -347,7 +346,7 @@ async fn add_owner(
                 .optional()?
                 .ok_or_else(|| bad_request(format_args!("could not find user with github username {login}. If you meant to add a github team, format is github:org:team")))?;
             let user = User::find(conn, oauth.user_id).await?;
-            send_user_invite(app, conn, req_user, user, login, krate).await
+            invite_user_owner(app, conn, req_user, user, login, krate).await
         }
         Login::CratesIo(username) => {
             let user = User::find_by_username(conn, username)
@@ -358,9 +357,9 @@ async fn add_owner(
                         "could not find user with cratesio username {username}"
                     ))
                 })?;
-            send_user_invite(app, conn, req_user, user, username, krate).await
+            invite_user_owner(app, conn, req_user, user, username, krate).await
         }
-        Login::Username(user) => send_user_invite(app, conn, req_user, user, login, krate).await,
+        Login::Username(user) => invite_user_owner(app, conn, req_user, user, login, krate).await,
     }
 }
 
@@ -421,7 +420,7 @@ async fn disambiguate_login<'a>(
     let user = User::find_by_username(conn, login)
         .await
         .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find owner with login `{login}`")))?;
+        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
 
     let oauth_github = OauthGithub::belonging_to(&user)
         .select(OauthGithub::as_select())
@@ -452,7 +451,7 @@ async fn disambiguate_login<'a>(
     Ok(Login::Username(user))
 }
 
-async fn send_user_invite(
+async fn invite_user_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
     req_user: &User,

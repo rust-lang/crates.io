@@ -60,7 +60,7 @@ async fn test_unknown_user() {
 
     let response = cookie.remove_named_owner("foo", "unknown").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
