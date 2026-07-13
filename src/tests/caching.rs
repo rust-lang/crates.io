@@ -128,6 +128,13 @@ async fn search_without_following_is_cacheable() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn site_metadata_is_cached_for_15_seconds() {
+    let (_, anon) = TestApp::init().empty().await;
+    let response = anon.get::<()>("/api/v1/site_metadata").await;
+    response.assert_cache_control("public, max-age=15");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn download_varies_on_accept() {
     let (_, anon) = TestApp::init().empty().await;
 

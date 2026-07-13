@@ -1,8 +1,11 @@
 use crate::app::AppState;
 use axum::Json;
 use axum::response::IntoResponse;
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use crates_io_version::commit;
 use serde::Serialize;
+use std::time::Duration;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct MetadataResponse<'a> {
@@ -41,12 +44,19 @@ pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
     let deployed_sha = commit().ok().flatten();
     let deployed_sha = deployed_sha.as_deref().unwrap_or("unknown");
 
-    Json(MetadataResponse {
-        deployed_sha,
-        commit: deployed_sha,
-        read_only,
-        banner_message: state.config.banner_message.as_deref(),
-        cdn_base: state.storage.cdn_base(),
-    })
-    .into_response()
+    let cache_control = CacheControl::new()
+        .with_public()
+        .with_max_age(Duration::from_secs(15));
+
+    (
+        TypedHeader(cache_control),
+        Json(MetadataResponse {
+            deployed_sha,
+            commit: deployed_sha,
+            read_only,
+            banner_message: state.config.banner_message.as_deref(),
+            cdn_base: state.storage.cdn_base(),
+        }),
+    )
+        .into_response()
 }
