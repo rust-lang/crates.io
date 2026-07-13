@@ -49,7 +49,7 @@ describe('YankButton', () => {
 
       worker.use(http.delete('/api/v1/crates/:name/:version/yank', () => deferred.promise));
 
-      render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
+      await render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
 
       await expect.element(page.getByCSS('[data-test-version-yank-button="1.0.0"]')).toHaveTextContent('Yank');
       await expect.element(page.getByCSS('[data-test-version-unyank-button]')).not.toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('YankButton', () => {
 
       worker.use(http.delete('/api/v1/crates/:name/:version/yank', () => HttpResponse.json({}, { status: 500 })));
 
-      render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
+      await render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
 
       await page.getByCSS('[data-test-version-yank-button="1.0.0"]').click();
 
@@ -89,7 +89,7 @@ describe('YankButton', () => {
 
       worker.use(http.put('/api/v1/crates/:name/:version/unyank', () => deferred.promise));
 
-      render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
+      await render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
 
       await expect.element(page.getByCSS('[data-test-version-unyank-button="1.0.0"]')).toHaveTextContent('Unyank');
       await expect.element(page.getByCSS('[data-test-version-yank-button]')).not.toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('YankButton', () => {
 
       worker.use(http.put('/api/v1/crates/:name/:version/unyank', () => HttpResponse.json({}, { status: 500 })));
 
-      render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
+      await render(YankButtonTestWrapper, { crateName: 'foo', version, onChanged });
 
       await page.getByCSS('[data-test-version-unyank-button="1.0.0"]').click();
 

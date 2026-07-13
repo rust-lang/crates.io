@@ -34,7 +34,7 @@ describe('dependency-list/Row', () => {
   it('shows the native-replacement marker for a superseded dependency', async () => {
     let dependency = createDependency({ crate_id: 'lazy_static' });
 
-    render(Row, {
+    await render(Row, {
       dependency,
       descriptionPromise: Promise.resolve(null),
       nativeReplacement: LAZY_STATIC_REPLACEMENT,
@@ -51,7 +51,7 @@ describe('dependency-list/Row', () => {
   it('shows no marker for a dependency without a replacement', async () => {
     let dependency = createDependency({ crate_id: 'serde' });
 
-    render(Row, { dependency, descriptionPromise: Promise.resolve(null) });
+    await render(Row, { dependency, descriptionPromise: Promise.resolve(null) });
 
     await expect.element(page.getByCSS('[data-test-crate-name]')).toHaveTextContent('serde');
     expect(page.getByCSS('[data-test-native-replacement]').elements()).toHaveLength(0);

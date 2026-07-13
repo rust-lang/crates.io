@@ -6,7 +6,7 @@ import TestDropdown from './TestDropdown.svelte';
 
 describe('Dropdown', () => {
   it('toggles content visibility when trigger is clicked', async () => {
-    render(TestDropdown);
+    await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Open Menu' });
     let content = page.getByText('Menu content');
@@ -22,7 +22,7 @@ describe('Dropdown', () => {
   });
 
   it('closes when clicking outside', async () => {
-    render(TestDropdown);
+    await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Open Menu' });
     let content = page.getByText('Menu content');
@@ -35,7 +35,7 @@ describe('Dropdown', () => {
   });
 
   it('closes when Escape key is pressed', async () => {
-    render(TestDropdown);
+    await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Open Menu' });
     let content = page.getByText('Menu content');
@@ -48,7 +48,7 @@ describe('Dropdown', () => {
   });
 
   it('sets correct ARIA attributes on trigger', async () => {
-    render(TestDropdown);
+    await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Open Menu' });
 
@@ -61,7 +61,7 @@ describe('Dropdown', () => {
   });
 
   it('shows arrow indicator by default, hides when hideArrow is true', async () => {
-    render(TestDropdown);
+    await render(TestDropdown);
 
     let withArrow = page.getByRole('button', { name: 'Open Menu' });
     expect(withArrow.element().querySelector('.arrow')).not.toBeNull();
@@ -73,7 +73,7 @@ describe('Dropdown', () => {
 
 describe('Dropdown.Menu', () => {
   it('renders with correct ARIA roles and attributes', async () => {
-    render(TestDropdown);
+    await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Menu Dropdown' });
     await trigger.click();

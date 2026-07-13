@@ -36,7 +36,7 @@ describe('OwnersList', () => {
   it('single user', async () => {
     let owners: Owner[] = [createUser(1)];
 
-    render(OwnersList, { owners });
+    await render(OwnersList, { owners });
 
     await expect.element(page.getByCSS('[data-test-owners="detailed"]')).toBeVisible();
     await expect.element(page.getByCSS('ul > li')).toBeVisible();
@@ -56,7 +56,7 @@ describe('OwnersList', () => {
   it('user without `name`', async () => {
     let owners: Owner[] = [createUser(1, { name: null, login: 'anonymous' })];
 
-    render(OwnersList, { owners });
+    await render(OwnersList, { owners });
 
     await expect.element(page.getByCSS('[data-test-owners="detailed"]')).toBeVisible();
     await expect.element(page.getByCSS('ul > li')).toBeVisible();
@@ -76,7 +76,7 @@ describe('OwnersList', () => {
   it('five users', async () => {
     let owners: Owner[] = Array.from({ length: 5 }, (_, i) => createUser(i + 1));
 
-    render(OwnersList, { owners });
+    await render(OwnersList, { owners });
 
     await expect.element(page.getByCSS('[data-test-owners="detailed"]')).toBeVisible();
     expect(page.getByCSS('ul > li').elements()).toHaveLength(5);
@@ -92,7 +92,7 @@ describe('OwnersList', () => {
   it('six users', async () => {
     let owners: Owner[] = Array.from({ length: 6 }, (_, i) => createUser(i + 1));
 
-    render(OwnersList, { owners });
+    await render(OwnersList, { owners });
 
     await expect.element(page.getByCSS('[data-test-owners="basic"]')).toBeVisible();
     expect(page.getByCSS('ul > li').elements()).toHaveLength(6);
@@ -110,7 +110,7 @@ describe('OwnersList', () => {
     let users: Owner[] = [createUser(1), createUser(2), createUser(3)];
     let owners: Owner[] = [...teams, ...users];
 
-    render(OwnersList, { owners });
+    await render(OwnersList, { owners });
 
     await expect.element(page.getByCSS('[data-test-owners="detailed"]')).toBeVisible();
     expect(page.getByCSS('ul > li').elements()).toHaveLength(5);

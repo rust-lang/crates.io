@@ -32,7 +32,7 @@ describe('simplifyUrl', () => {
 
 describe('Link component', () => {
   it('renders title and link', async () => {
-    render(Link, { title: 'Homepage', url: 'https://www.rust-lang.org' });
+    await render(Link, { title: 'Homepage', url: 'https://www.rust-lang.org' });
 
     await expect.element(page.getByCSS('[data-test-title]')).toHaveTextContent('Homepage');
     await expect.element(page.getByCSS('[data-test-icon]')).toHaveAttribute('data-test-icon', 'link');
@@ -41,7 +41,7 @@ describe('Link component', () => {
   });
 
   it('renders GitHub icon for GitHub links', async () => {
-    render(Link, { title: 'Repository', url: 'https://github.com/rust-lang/crates.io' });
+    await render(Link, { title: 'Repository', url: 'https://github.com/rust-lang/crates.io' });
 
     await expect.element(page.getByCSS('[data-test-icon]')).toHaveAttribute('data-test-icon', 'github');
     await expect
@@ -51,7 +51,7 @@ describe('Link component', () => {
   });
 
   it('renders docs.rs icon for docs.rs links', async () => {
-    render(Link, { title: 'Documentation', url: 'https://docs.rs/tracing' });
+    await render(Link, { title: 'Documentation', url: 'https://docs.rs/tracing' });
 
     await expect.element(page.getByCSS('[data-test-icon]')).toHaveAttribute('data-test-icon', 'docs-rs');
     await expect.element(page.getByCSS('[data-test-link]')).toHaveAttribute('href', 'https://docs.rs/tracing');
@@ -59,33 +59,33 @@ describe('Link component', () => {
   });
 
   it('renders GitLab icon for GitLab links', async () => {
-    render(Link, { title: 'Repository', url: 'https://gitlab.com/example/project' });
+    await render(Link, { title: 'Repository', url: 'https://gitlab.com/example/project' });
 
     await expect.element(page.getByCSS('[data-test-icon]')).toHaveAttribute('data-test-icon', 'gitlab');
   });
 
   it('renders Codeberg icon for Codeberg links', async () => {
-    render(Link, { title: 'Repository', url: 'https://codeberg.org/example/project' });
+    await render(Link, { title: 'Repository', url: 'https://codeberg.org/example/project' });
 
     await expect.element(page.getByCSS('[data-test-icon]')).toHaveAttribute('data-test-icon', 'codeberg');
   });
 
   it('does not shorten HTTP links', async () => {
-    render(Link, { title: 'Homepage', url: 'http://www.rust-lang.org' });
+    await render(Link, { title: 'Homepage', url: 'http://www.rust-lang.org' });
 
     await expect.element(page.getByCSS('[data-test-link]')).toHaveAttribute('href', 'http://www.rust-lang.org');
     await expect.element(page.getByCSS('[data-test-link]')).toHaveTextContent('http://www.rust-lang.org');
   });
 
   it('strips trailing slashes', async () => {
-    render(Link, { title: 'Homepage', url: 'https://www.rust-lang.org/' });
+    await render(Link, { title: 'Homepage', url: 'https://www.rust-lang.org/' });
 
     await expect.element(page.getByCSS('[data-test-link]')).toHaveAttribute('href', 'https://www.rust-lang.org/');
     await expect.element(page.getByCSS('[data-test-link]')).toHaveTextContent('rust-lang.org');
   });
 
   it('strips trailing .git from GitHub project URLs', async () => {
-    render(Link, { title: 'Repository', url: 'https://github.com/rust-lang/crates.io.git' });
+    await render(Link, { title: 'Repository', url: 'https://github.com/rust-lang/crates.io.git' });
 
     await expect
       .element(page.getByCSS('[data-test-link]'))
@@ -94,7 +94,7 @@ describe('Link component', () => {
   });
 
   it('does not strip trailing .git from non-GitHub URLs', async () => {
-    render(Link, { title: 'Homepage', url: 'https://foo.git/' });
+    await render(Link, { title: 'Homepage', url: 'https://foo.git/' });
 
     await expect.element(page.getByCSS('[data-test-link]')).toHaveAttribute('href', 'https://foo.git/');
     await expect.element(page.getByCSS('[data-test-link]')).toHaveTextContent('foo.git');

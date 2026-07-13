@@ -15,7 +15,7 @@ const replacement: NativeReplacement = {
 
 describe('NativeReplacementBanner', () => {
   it('renders the description Markdown and a "Learn more" link', async () => {
-    render(NativeReplacementBanner, { replacement });
+    await render(NativeReplacementBanner, { replacement });
 
     let banner = page.getByCSS('[data-test-native-replacement-banner]');
     await expect.element(banner).toBeVisible();
