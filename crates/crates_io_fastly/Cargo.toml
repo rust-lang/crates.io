@@ -13,3 +13,7 @@ reqwest = { version = "=0.13.4", features = ["json"] }
 secrecy = "=0.10.3"
 thiserror = "=2.0.18"
 tracing = "=0.1.44"
+
+[dev-dependencies]
+mockito = "=1.7.2"
+tokio = { version = "=1.52.3", features = ["macros", "rt-multi-thread"] }

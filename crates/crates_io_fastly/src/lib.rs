@@ -7,6 +7,8 @@ use secrecy::{ExposeSecret, SecretString};
 use thiserror::Error;
 use tracing::{debug, instrument, trace};
 
+const API_BASE_URL: &str = "https://api.fastly.com";
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Wildcard invalidations are not supported for Fastly")]
@@ -28,16 +30,26 @@ pub enum Error {
 pub struct Fastly {
     client: Client,
     api_token: SecretString,
+    api_base_url: String,
 }
 
 impl Fastly {
     pub fn new(api_token: SecretString) -> Self {
+        Self::with_api_base_url(api_token, API_BASE_URL.into())
+    }
+
+    /// Creates a Fastly client using the given API base URL.
+    fn with_api_base_url(api_token: SecretString, api_base_url: String) -> Self {
         let client = ClientBuilder::new()
             .user_agent(user_agent())
             .build()
             .unwrap();
 
-        Self { client, api_token }
+        Self {
+            client,
+            api_token,
+            api_base_url,
+        }
     }
 
     /// Invalidates a path on Fastly
@@ -76,7 +88,7 @@ impl Fastly {
         }
 
         let path = path.trim_start_matches('/');
-        let url = format!("https://api.fastly.com/purge/{domain}/{path}");
+        let url = format!("{}/purge/{domain}/{path}", self.api_base_url);
 
         trace!(?url);
 
@@ -125,5 +137,103 @@ impl Fastly {
         let mut header_value = HeaderValue::try_from(api_token)?;
         header_value.set_sensitive(true);
         Ok(header_value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mockito::{Server, ServerOpts};
+
+    const TEST_TOKEN: &str = "test-token";
+
+    async fn mock_server() -> Server {
+        Server::new_with_opts_async(ServerOpts {
+            assert_on_drop: true,
+            ..Default::default()
+        })
+        .await
+    }
+
+    fn client_with_server(server: &Server) -> Fastly {
+        Fastly::with_api_base_url(TEST_TOKEN.to_string().into(), server.url())
+    }
+
+    #[tokio::test]
+    async fn purges_path() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock(
+                "POST",
+                "/purge/static.crates.io/crates/serde/serde-1.0.0.crate",
+            )
+            .match_header("fastly-key", TEST_TOKEN)
+            .with_status(200)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        client
+            .purge("static.crates.io", "/crates/serde/serde-1.0.0.crate")
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn purges_both_domains() {
+        let mut server = mock_server().await;
+        let _base_domain_mock = server
+            .mock("POST", "/purge/static.crates.io/readmes/serde.html")
+            .match_header("fastly-key", TEST_TOKEN)
+            .with_status(200)
+            .expect(1)
+            .create_async()
+            .await;
+        let _prefixed_domain_mock = server
+            .mock("POST", "/purge/fastly-static.crates.io/readmes/serde.html")
+            .match_header("fastly-key", TEST_TOKEN)
+            .with_status(200)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        client
+            .purge_both_domains("static.crates.io", "/readmes/serde.html")
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn rejects_wildcards() {
+        let server = mock_server().await;
+        let client = client_with_server(&server);
+
+        let result = client.purge("static.crates.io", "/crates/*").await;
+
+        std::assert_matches!(result, Err(Error::WildcardNotSupported));
+    }
+
+    #[tokio::test]
+    async fn reports_http_errors() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("POST", "/purge/static.crates.io/unavailable")
+            .with_status(503)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let result = client.purge("static.crates.io", "/unavailable").await;
+
+        std::assert_matches!(
+            result,
+            Err(Error::PurgeFailed {
+                status: Some(reqwest::StatusCode::SERVICE_UNAVAILABLE),
+                ..
+            })
+        );
     }
 }
