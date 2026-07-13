@@ -42,10 +42,13 @@ pub struct CloudFront {
     static_distribution_id: String,
 }
 
-/// Ensures CloudFront invalidation paths start with a slash.
+/// Normalizes CloudFront invalidation entries.
+///
+/// Path invalidations must start with `/`. Cache-tag invalidations already start with `#`
+/// and must remain unchanged so CloudFront recognizes them as cache tags.
 fn normalize_invalidation_paths(paths: &mut [String]) {
     for path in paths {
-        if !path.starts_with('/') {
+        if !path.starts_with('/') && !path.starts_with('#') {
             *path = format!("/{path}");
         }
     }
@@ -157,10 +160,17 @@ mod tests {
 
     #[test]
     fn normalizes_invalidation_paths() {
-        let mut paths = vec!["index/config.json".into(), "/db-dump.tar.gz".into()];
+        let mut paths = vec![
+            "index/config.json".into(),
+            "/db-dump.tar.gz".into(),
+            "#crate:serde".into(),
+        ];
 
         normalize_invalidation_paths(&mut paths);
 
-        assert_eq!(paths, ["/index/config.json", "/db-dump.tar.gz"]);
+        assert_eq!(
+            paths,
+            ["/index/config.json", "/db-dump.tar.gz", "#crate:serde"]
+        );
     }
 }
