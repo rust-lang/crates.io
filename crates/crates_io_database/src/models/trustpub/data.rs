@@ -6,7 +6,9 @@ use diesel::{AsExpression, FromSqlRow};
 use serde::{Deserialize, Serialize};
 
 /// Data structure containing trusted publisher information extracted from JWT claims
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, FromSqlRow, AsExpression)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, FromSqlRow, AsExpression, utoipa::ToSchema,
+)]
 #[diesel(sql_type = Jsonb)]
 #[serde(tag = "provider")]
 pub enum TrustpubData {

@@ -79,7 +79,7 @@
     return { list, more };
   });
 
-  let trustpubProvider = $derived((version.trustpub_data as { provider?: string } | null | undefined)?.provider);
+  let trustpubProvider = $derived(version.trustpub_data?.provider);
 
   let trustpubPublisher = $derived.by(() => {
     if (trustpubProvider === 'github') return 'GitHub';
@@ -88,14 +88,11 @@
   });
 
   let trustpubUrl = $derived.by(() => {
-    let data = version.trustpub_data as
-      | { provider?: string; repository?: string; run_id?: string; project_path?: string; job_id?: string }
-      | null
-      | undefined;
-    if (data?.provider === 'github' && data.repository && data.run_id) {
+    let data = version.trustpub_data;
+    if (data?.provider === 'github') {
       return `https://github.com/${data.repository}/actions/runs/${data.run_id}`;
     }
-    if (data?.provider === 'gitlab' && data.project_path && data.job_id) {
+    if (data?.provider === 'gitlab') {
       return `https://gitlab.com/${data.project_path}/-/jobs/${data.job_id}`;
     }
     return null;
