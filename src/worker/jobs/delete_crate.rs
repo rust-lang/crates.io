@@ -1,4 +1,4 @@
-use crate::storage::StorageKey;
+use crate::storage::{StorageKey, crate_cache_tag};
 use crate::worker::Environment;
 use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
@@ -59,15 +59,18 @@ impl BackgroundJob for DeleteCrateFromStorage {
         info!("{name}: Enqueuing CDN invalidations");
 
         let conn = ctx.deadpool.get().await?;
-        InvalidateCdns::new(
-            crate_file_paths
-                .into_iter()
-                .chain(readme_paths)
-                .chain(std::iter::once(og_image_key.path()))
-                .chain(std::iter::once(feed_key.path())),
-        )
-        .enqueue(&conn)
-        .await?;
+        let job = if ctx.config.features.cache_tag_invalidations_enabled {
+            InvalidateCdns::cache_tags([crate_cache_tag(name)])
+        } else {
+            InvalidateCdns::paths(
+                crate_file_paths
+                    .into_iter()
+                    .chain(readme_paths)
+                    .chain(std::iter::once(og_image_key.path()))
+                    .chain(std::iter::once(feed_key.path())),
+            )
+        };
+        job.enqueue(&conn).await?;
 
         info!("{name}: Successfully enqueued CDN invalidations.");
 

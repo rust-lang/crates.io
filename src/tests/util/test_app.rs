@@ -603,6 +603,7 @@ fn simple_config() -> config::Server {
             index_include_pubtime: false,
             zip_archives_enabled: true,
             cache_tags_enabled: true,
+            cache_tag_invalidations_enabled: true,
         },
         fastly: None,
         sync_git_index: false,

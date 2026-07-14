@@ -16,6 +16,11 @@ pub struct FeaturesConfig {
     ///
     /// Read from the `CACHE_TAGS_ENABLED` environment variable.
     pub cache_tags_enabled: bool,
+
+    /// Invalidate deleted crate objects using CDN cache tags instead of URLs.
+    ///
+    /// Read from the `CACHE_TAG_INVALIDATIONS_ENABLED` environment variable.
+    pub cache_tag_invalidations_enabled: bool,
 }
 
 impl FeaturesConfig {
@@ -23,11 +28,18 @@ impl FeaturesConfig {
         let index_include_pubtime = var_parsed("INDEX_INCLUDE_PUBTIME")?.unwrap_or(false);
         let zip_archives_enabled = var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false);
         let cache_tags_enabled = var_parsed("CACHE_TAGS_ENABLED")?.unwrap_or(false);
+        let cache_tag_invalidations_enabled =
+            var_parsed("CACHE_TAG_INVALIDATIONS_ENABLED")?.unwrap_or(false);
+
+        if cache_tag_invalidations_enabled && !cache_tags_enabled {
+            anyhow::bail!("CACHE_TAG_INVALIDATIONS_ENABLED requires CACHE_TAGS_ENABLED");
+        }
 
         Ok(Self {
             index_include_pubtime,
             zip_archives_enabled,
             cache_tags_enabled,
+            cache_tag_invalidations_enabled,
         })
     }
 }

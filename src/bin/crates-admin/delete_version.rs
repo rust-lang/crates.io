@@ -2,9 +2,9 @@ use crate::dialoguer;
 use anyhow::Context;
 use crates_io::models::update_default_version;
 use crates_io::schema::crates;
-use crates_io::storage::{Storage, StorageKey};
+use crates_io::storage::{Storage, StorageKey, release_cache_tag};
 use crates_io::worker::jobs;
-use crates_io::{db, schema::versions};
+use crates_io::{config::FeaturesConfig, db, schema::versions};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl};
@@ -29,6 +29,8 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    let features = FeaturesConfig::from_env().context("Failed to load features config")?;
+
     let mut conn = db::oneoff_connection()
         .await
         .context("Failed to establish database connection")?;
@@ -154,10 +156,17 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
     }
 
-    if let Err(e) = jobs::InvalidateCdns::new(paths.into_iter())
-        .enqueue(&conn)
-        .await
-    {
+    let job = if features.cache_tag_invalidations_enabled {
+        jobs::InvalidateCdns::cache_tags(
+            opts.versions
+                .iter()
+                .map(|version| release_cache_tag(crate_name, version)),
+        )
+    } else {
+        jobs::InvalidateCdns::paths(paths.into_iter())
+    };
+
+    if let Err(e) = job.enqueue(&conn).await {
         warn!("{crate_name}: Failed to enqueue CDN invalidation background job: {e}");
     }
 
