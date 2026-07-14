@@ -22,6 +22,7 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 /// If you want to test logic that happens as part of signing up or logging in,
 pub struct UserBuilder<'a> {
     username: &'a str,
+    display_name: Option<&'a str>,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -30,18 +31,26 @@ impl<'a> UserBuilder<'a> {
     pub fn new() -> Self {
         Self {
             username: "octocat",
+            display_name: None,
         }
     }
 
     pub fn with_username(self, username: &'a str) -> Self {
-        Self { username }
+        Self { username, ..self }
+    }
+
+    pub fn with_display_name(self, display_name: &'a str) -> Self {
+        Self {
+            display_name: Some(display_name),
+            ..self
+        }
     }
 
     pub fn build(self) -> User {
         User {
             id: 1,
             gh_login: self.username.into(),
-            name: Some("The Octocat".into()),
+            name: self.display_name.map(ToString::to_string),
             gh_id: 123,
             gh_avatar: None,
             gh_encrypted_token: vec![],
@@ -59,6 +68,7 @@ impl<'a> UserBuilder<'a> {
             .gh_id(next_gh_id())
             .gh_login(self.username)
             .username(self.username)
+            .maybe_name(self.display_name)
             .gh_encrypted_token(&ENCRYPTED_TOKEN)
             .build()
     }
