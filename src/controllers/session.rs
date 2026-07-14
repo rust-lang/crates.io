@@ -143,6 +143,11 @@ pub async fn save_user_to_database(
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
+    // There should not be one transaction around both the `create_or_update_user` call and the
+    // `find_user_by_gh_id` call. If they're in one transaction and we're in read only mode, the
+    // entire transaction will be poisoned and the `find_user_by_gh_id` will fail too, thus
+    // negating the purpose of the fallback. There _is_ a transaction around the body of
+    // `create_or_update_user`.
     match create_or_update_user(gh_user, encrypted_token, emails, conn).await {
         Ok(id) => Ok(id),
         Err(error) if is_read_only_error(&error) => {
@@ -154,31 +159,34 @@ pub async fn save_user_to_database(
     }
 }
 
-/// Updates an existing user or inserts a new user into the database.
+/// Updates an existing user or inserts a new user into the database within a transaction.
 async fn create_or_update_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    let update_result = update_user(gh_user, encrypted_token, conn).await;
+    conn.transaction(async |conn| {
+        let update_result = update_user(gh_user, encrypted_token, conn).await;
 
-    match update_result {
-        Ok(user_id) => Ok(user_id),
-        Err(diesel::result::Error::NotFound) => {
-            // If the update fails because the `oauth_github` record doesn't exist, this
-            // currently means the `user` record doesn't exist either and we need to create
-            // both. This assumption holds because crates.io and GitHub accounts currently have
-            // a one-to-one relationship; this will need to be changed if/when we allow
-            // crates.io users to link more than one GitHub account to their crates.io account.
-            create_user(gh_user, encrypted_token, emails, conn).await
+        match update_result {
+            Ok(user_id) => Ok(user_id),
+            Err(diesel::result::Error::NotFound) => {
+                // If the update fails because the `oauth_github` record doesn't exist, this
+                // currently means the `user` record doesn't exist either and we need to create
+                // both. This assumption holds because crates.io and GitHub accounts currently have
+                // a one-to-one relationship; this will need to be changed if/when we allow
+                // crates.io users to link more than one GitHub account to their crates.io account.
+                create_user(gh_user, encrypted_token, emails, conn).await
+            }
+            Err(error) => Err(error),
         }
-        Err(error) => Err(error),
-    }
+    })
+    .await
 }
 
-/// Updates an existing user, using a transaction so both the `users` and `oauth_github` records
-/// are updated or neither are.
+/// Updates an existing user. Should be called in a transaction, as `create_or_update_user` does,
+/// so both the `users` and `oauth_github` records are updated or neither are.
 ///
 /// Returns an error if the `oauth_github` or `users` records don't exist.
 async fn update_user(
@@ -186,104 +194,101 @@ async fn update_user(
     encrypted_token: &[u8],
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    conn.transaction(async |conn| {
-        // First, try to update an existing `oauth_github` record with the specified GitHub ID
-        // and the associated `users` record.
-        //
-        // For now, update user display name, gh_login, and username. Eventually, we will
-        // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
-        let oauth_github = diesel::update(oauth_github::table)
-            .filter(oauth_github::account_id.eq(gh_user.id as i64))
-            .set((
-                oauth_github::encrypted_token.eq(encrypted_token),
-                oauth_github::login.eq(&gh_user.login),
-                oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .get_result::<OauthGithub>(conn)
-            .await?;
-        diesel::update(users::table)
-            .filter(users::id.eq(oauth_github.user_id))
-            .set((
-                users::name.eq(gh_user.name.as_ref()),
-                users::username.eq(&gh_user.login),
-                // These fields are soon to be deprecated.
-                users::gh_login.eq(&gh_user.login),
-                users::gh_encrypted_token.eq(encrypted_token),
-            ))
-            .execute(conn)
-            .await?;
+    // First, try to update an existing `oauth_github` record with the specified GitHub ID
+    // and the associated `users` record.
+    //
+    // For now, update user display name, gh_login, and username. Eventually, we will
+    // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
+    let oauth_github = diesel::update(oauth_github::table)
+        .filter(oauth_github::account_id.eq(gh_user.id as i64))
+        .set((
+            oauth_github::encrypted_token.eq(encrypted_token),
+            oauth_github::login.eq(&gh_user.login),
+            oauth_github::avatar.eq(gh_user.avatar_url.as_deref()),
+            oauth_github::last_sync.eq(Utc::now()),
+        ))
+        .get_result::<OauthGithub>(conn)
+        .await?;
+    diesel::update(users::table)
+        .filter(users::id.eq(oauth_github.user_id))
+        .set((
+            users::name.eq(gh_user.name.as_ref()),
+            users::username.eq(&gh_user.login),
+            // These fields are soon to be deprecated.
+            users::gh_login.eq(&gh_user.login),
+            users::gh_encrypted_token.eq(encrypted_token),
+        ))
+        .execute(conn)
+        .await?;
 
-        Ok(oauth_github.user_id)
-    })
-    .await
+    Ok(oauth_github.user_id)
 }
 
 /// Inserts a new user into the database.
 ///
 /// This method also inserts the email address into the `emails` table
 /// and sends a confirmation email to the user.
+///
+/// Should be called in a transaction, as `create_or_update_user` does, so both the `users` and
+/// `emails` records are inserted or neither are.
 async fn create_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
-    conn.transaction(async |conn| {
-        let new_user = NewUser::builder()
-            .gh_id(gh_user.id)
-            .gh_login(&gh_user.login)
-            .username(&gh_user.login)
-            .maybe_name(gh_user.name.as_deref())
-            .gh_encrypted_token(encrypted_token)
-            .build();
+    let new_user = NewUser::builder()
+        .gh_id(gh_user.id)
+        .gh_login(&gh_user.login)
+        .username(&gh_user.login)
+        .maybe_name(gh_user.name.as_deref())
+        .gh_encrypted_token(encrypted_token)
+        .build();
 
-        let user_id = new_user.insert(conn).await?;
+    let user_id = new_user.insert(conn).await?;
 
-        let new_oauth_github = NewOauthGithub::builder()
+    let new_oauth_github = NewOauthGithub::builder()
+        .user_id(user_id)
+        .account_id(gh_user.id as i64)
+        .encrypted_token(encrypted_token)
+        .login(&gh_user.login)
+        .maybe_avatar(gh_user.avatar_url.as_deref())
+        .build();
+
+    new_oauth_github.insert(conn).await?;
+
+    // Since this is a new user, send an account verification email
+    if let Some(user_email) = gh_user.email.as_deref() {
+        let new_email = NewEmail::builder()
             .user_id(user_id)
-            .account_id(gh_user.id as i64)
-            .encrypted_token(encrypted_token)
-            .login(&gh_user.login)
-            .maybe_avatar(gh_user.avatar_url.as_deref())
+            .email(user_email)
             .build();
 
-        new_oauth_github.insert(conn).await?;
+        if let Some(token) = new_email.insert_if_missing(conn).await? {
+            let email = EmailMessage::from_template(
+                "user_confirm",
+                context! {
+                    user_name => new_user.gh_login,
+                    domain => emails.domain,
+                    token => token.expose_secret()
+                },
+            );
 
-        // Since this is a new user, send an account verification email
-        if let Some(user_email) = gh_user.email.as_deref() {
-            let new_email = NewEmail::builder()
-                .user_id(user_id)
-                .email(user_email)
-                .build();
-
-            if let Some(token) = new_email.insert_if_missing(conn).await? {
-                let email = EmailMessage::from_template(
-                    "user_confirm",
-                    context! {
-                        user_name => new_user.gh_login,
-                        domain => emails.domain,
-                        token => token.expose_secret()
-                    },
-                );
-
-                match email {
-                    Ok(email) => {
-                        // Swallows any error. Users might insert an invalid email address, but
-                        // they should still be allowed to create an account; they will need to
-                        // fix their email address later.
-                        let _ = emails.send(user_email, email).await;
-                    }
-                    Err(error) => {
-                        warn!("Failed to render user confirmation email template: {error}");
-                    }
-                };
-            }
+            match email {
+                Ok(email) => {
+                    // Swallows any error. Users might insert an invalid email address, but
+                    // they should still be allowed to create an account; they will need to
+                    // fix their email address later.
+                    let _ = emails.send(user_email, email).await;
+                }
+                Err(error) => {
+                    warn!("Failed to render user confirmation email template: {error}");
+                }
+            };
         }
+    }
 
-        Ok(user_id)
-    })
-    .await
+    Ok(user_id)
 }
 
 async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryResult<Option<i32>> {
