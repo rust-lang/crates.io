@@ -6,10 +6,13 @@ use crate::schema::{
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
+use axum_extra::TypedHeader;
+use axum_extra::headers::CacheControl;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use serde::Serialize;
+use std::time::Duration;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct SummaryResponse {
@@ -50,7 +53,9 @@ pub struct SummaryResponse {
     tag = "other",
     responses((status = 200, description = "Successful Response", body = inline(SummaryResponse))),
 )]
-pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
+pub async fn get_summary(
+    state: AppState,
+) -> AppResult<(TypedHeader<CacheControl>, Json<SummaryResponse>)> {
     let conn = state.db_read().await?;
 
     let config = &state.config;
@@ -112,16 +117,23 @@ pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
     let popular_categories = popular_categories.into_iter().map(Category::into).collect();
     let popular_keywords = popular_keywords.into_iter().map(Keyword::into).collect();
 
-    Ok(Json(SummaryResponse {
-        num_downloads,
-        num_crates,
-        new_crates,
-        most_downloaded,
-        most_recently_downloaded,
-        just_updated,
-        popular_keywords,
-        popular_categories,
-    }))
+    let cache_control = CacheControl::new()
+        .with_public()
+        .with_max_age(Duration::from_secs(15));
+
+    Ok((
+        TypedHeader(cache_control),
+        Json(SummaryResponse {
+            num_downloads,
+            num_crates,
+            new_crates,
+            most_downloaded,
+            most_recently_downloaded,
+            just_updated,
+            popular_keywords,
+            popular_categories,
+        }),
+    ))
 }
 
 #[derive(Debug, HasQuery)]
