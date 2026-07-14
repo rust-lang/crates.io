@@ -602,6 +602,7 @@ fn simple_config() -> config::Server {
             zip_archives_enabled: true,
             cache_tags_enabled: true,
         },
+        fastly: None,
         sync_git_index: false,
         index_archive_url: None,
         postgres_bin_dir: None,
