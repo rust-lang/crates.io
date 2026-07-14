@@ -103,6 +103,17 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         };
 
+        // Reject any paths that contain `..` components. This is a security
+        // measure to prevent directory traversal attacks, where an attacker
+        // could craft a tarball that extracts files outside the
+        // intended directory.
+        if in_pkg_path
+            .components()
+            .any(|component| component == Component::ParentDir)
+        {
+            return Err(TarballError::InvalidPath(entry_path.display().to_string()));
+        }
+
         // Reject any paths that are not UTF-8.
         let Some(in_pkg_path_str) = in_pkg_path.to_str() else {
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
@@ -262,6 +273,24 @@ mod tests {
 
         let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_parent_component() {
+        let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
+
+        let mut header = tar::Header::new_gnu();
+        let path = b"foo-0.0.1/../outside";
+        // `tar::Header::set_path()` rejects parent components, so construct the
+        // untrusted path from raw bytes.
+        header.as_mut_bytes()[..path.len()].copy_from_slice(path);
+        header.set_size(0);
+        header.set_cksum();
+        builder.as_mut().append(&header, b"".as_slice()).unwrap();
+
+        let tarball = builder.build();
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        assert_snapshot!(err, @"invalid path found: foo-0.0.1/../outside");
     }
 
     #[cfg(unix)]
