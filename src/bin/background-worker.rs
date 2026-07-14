@@ -92,8 +92,10 @@ fn main() -> anyhow::Result<()> {
 
     let emails = Emails::from_environment(&config);
 
-    let fastly_api_token = var("FASTLY_API_TOKEN")?.map(Into::into);
-    let fastly = fastly_api_token.map(Fastly::new);
+    let fastly = config
+        .fastly
+        .as_ref()
+        .map(|config| Fastly::new(config.api_token.clone()));
 
     let team_repo = TeamRepoImpl::default();
 

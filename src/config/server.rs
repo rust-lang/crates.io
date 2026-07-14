@@ -9,6 +9,7 @@ use crate::config::bind::BindConfig;
 use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::datadog::DatadogConfig;
+use crate::config::fastly::FastlyConfig;
 use crate::config::features::FeaturesConfig;
 use crate::config::frontend::FrontendConfig;
 use crate::config::github::GitHubOAuthConfig;
@@ -65,6 +66,7 @@ pub struct Server {
     pub banner_message: Option<String>,
 
     pub features: FeaturesConfig,
+    pub fastly: Option<FastlyConfig>,
 
     /// Whether to enqueue `SyncToGitIndex` jobs to update the
     /// git-based crate index.
@@ -158,6 +160,7 @@ impl Server {
             disable_token_creation,
             banner_message,
             features,
+            fastly: FastlyConfig::from_env()?,
             sync_git_index: true,
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
