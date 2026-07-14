@@ -27,6 +27,13 @@ mod vcs_info;
 
 const DEFAULT_BUF_SIZE: usize = 128 * 1024;
 
+/// Resource limits applied while processing a crate tarball.
+#[derive(Clone, Copy, Debug)]
+pub struct TarballLimits {
+    /// Maximum size in bytes of a crate tarball once decompressed.
+    pub unpack_size: u64,
+}
+
 #[derive(Debug)]
 pub struct TarballInfo {
     pub manifest: Manifest,
@@ -61,7 +68,7 @@ pub enum TarballError {
 pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     pkg_name: &str,
     tarball: R,
-    max_unpack: u64,
+    limits: TarballLimits,
 ) -> Result<TarballInfo, TarballError> {
     let tarball = BufReader::with_capacity(DEFAULT_BUF_SIZE, tarball);
     // All our data is currently encoded with gzip
@@ -69,7 +76,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
-    let decoder = LimitErrorReader::new(decoder, max_unpack);
+    let decoder = LimitErrorReader::new(decoder, limits.unpack_size);
 
     // Use this I/O object now to take a peek inside
     let mut archive = tokio_tar::Archive::new(decoder);
@@ -243,12 +250,14 @@ impl AbstractFilesystem for PathsFileSystem {
 
 #[cfg(test)]
 mod tests {
-    use super::process_tarball;
+    use super::{TarballLimits, process_tarball};
     use crate::TarballBuilder;
     use insta::{assert_debug_snapshot, assert_snapshot};
 
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
-    const MAX_SIZE: u64 = 512 * 1024 * 1024;
+    const LIMITS: TarballLimits = TarballLimits {
+        unpack_size: 512 * 1024 * 1024,
+    };
 
     fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
         let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
@@ -276,10 +285,10 @@ mod tests {
             .add_dir("foo-0.0.1")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
 
-        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE).await);
+        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
     }
 
@@ -331,7 +340,7 @@ mod tests {
         builder.as_mut().append(&header, b"".as_slice()).unwrap();
 
         let tarball = builder.build();
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/../outside");
     }
 
@@ -353,7 +362,7 @@ mod tests {
 
         let tarball = builder.build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/�");
     }
 
@@ -363,8 +372,10 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err =
-            assert_err!(process_tarball("foo-0.0.1", &*tarball, tarball.len() as u64 - 1).await);
+        let limits = TarballLimits {
+            unpack_size: tarball.len() as u64 - 1,
+        };
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
     }
 
@@ -375,7 +386,7 @@ mod tests {
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_some!(&tarball_info.vcs_info);
         assert_debug_snapshot!(tarball_info);
     }
@@ -388,7 +399,7 @@ mod tests {
             .add_file("foo-0.0.1/.cargo_vcs_info.json", vcs_info)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_some!(&tarball_info.vcs_info);
         assert_debug_snapshot!(tarball_info);
     }
@@ -407,7 +418,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -423,7 +434,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -433,7 +444,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -449,7 +460,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -465,7 +476,7 @@ mod tests {
             .add_file("foo-0.0.1/cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -476,7 +487,7 @@ mod tests {
                 .add_file(&format!("foo-0.0.1/{file}"), MANIFEST)
                 .build();
 
-            process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await
+            process_tarball("foo-0.0.1", &*tarball, LIMITS).await
         };
 
         let err = assert_err!(process("CARGO.TOML").await);
@@ -496,7 +507,7 @@ mod tests {
                 })
                 .build();
 
-            process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await
+            process_tarball("foo-0.0.1", &*tarball, LIMITS).await
         };
 
         let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]).await);
@@ -521,7 +532,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
 
         let tarball = TarballBuilder::new()
@@ -529,7 +540,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
     }
 
@@ -547,7 +558,7 @@ mod tests {
             .add_symlink("smuggled", "/etc/issue")
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"mismatched pax and tar header sizes");
     }
 
@@ -558,7 +569,7 @@ mod tests {
             .add_file("foo-0.0.1/src/lib.rs", b"pub fn foo() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -572,7 +583,7 @@ mod tests {
             .add_file("foo-0.0.1/src/bin/bar.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -583,7 +594,7 @@ mod tests {
             .add_file("foo-0.0.1/src/main.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
         assert_debug_snapshot!(tarball_info);
     }
 }

@@ -10,7 +10,7 @@ use axum::Json;
 use axum::body::{Body, Bytes};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_cargo_toml::{Dependency, DepsSet, TargetDepsSet};
-use crates_io_tarball::{TarballError, process_tarball};
+use crates_io_tarball::{TarballError, TarballLimits, process_tarball};
 use crates_io_validation::{
     MAX_VERSION_LENGTH, validate_crate_name, validate_dependency_name, validate_feature,
     validate_feature_name,
@@ -265,7 +265,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         app.config.publish_limits.unpack_size,
         max_upload_size as u64,
     );
-    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, max_unpack_size).await?;
+    let limits = TarballLimits {
+        unpack_size: max_unpack_size,
+    };
+    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
     // we only accept manifests with a `package` section and without
