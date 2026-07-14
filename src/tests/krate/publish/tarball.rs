@@ -20,8 +20,7 @@ async fn new_krate_wrong_files() {
     assert_that!(app.stored_files().await, is_empty());
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn new_krate_tarball_with_hard_links() {
+async fn publish_tarball_with_entry(entry_type: tar::EntryType) -> String {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
     let tarball = {
@@ -30,8 +29,13 @@ async fn new_krate_tarball_with_hard_links() {
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/bar"));
         header.set_size(0);
-        header.set_entry_type(tar::EntryType::hard_link());
-        assert_ok!(header.set_link_name("foo-1.1.0/another"));
+        header.set_entry_type(entry_type);
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
+            assert_ok!(header.set_link_name("foo-1.1.0/another"));
+        }
+        if entry_type.is_gnu_sparse() {
+            header.as_gnu_mut().unwrap().set_real_size(0);
+        }
         header.set_cksum();
         assert_ok!(builder.as_mut().append(&header, &[][..]));
 
@@ -42,9 +46,18 @@ async fn new_krate_tarball_with_hard_links() {
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
     let response = token.publish_crate(body).await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unexpected symlink or hard link found: foo-1.1.0/bar"}]}"#);
+    insta::allow_duplicates! {
+        assert_snapshot!(response.status(), @"400 Bad Request");
+    }
     assert_that!(app.stored_files().await, is_empty());
+
+    response.text()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_hard_link() {
+    let response = publish_tarball_with_entry(tar::EntryType::hard_link()).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Link found: foo-1.1.0/bar"}]}"#);
 }
 
 #[cfg(unix)]
@@ -76,46 +89,46 @@ async fn new_krate_tarball_with_non_utf8_path() {
     assert_that!(app.stored_files().await, is_empty());
 }
 
-async fn new_krate_tarball_with_device_entry(entry_type: tar::EntryType) {
-    let (app, _, _, token) = TestApp::full().with_token().await;
-
-    let tarball = {
-        let mut builder = TarballBuilder::new();
-
-        let mut header = tar::Header::new_gnu();
-        assert_ok!(header.set_path("foo-1.1.0/devfile"));
-        header.set_size(0);
-        header.set_entry_type(entry_type);
-        header.set_cksum();
-        assert_ok!(builder.as_mut().append(&header, &[][..]));
-
-        builder.build()
-    };
-
-    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
-    let body = PublishBuilder::create_publish_body(&json, &tarball);
-
-    let response = token.publish_crate(body).await;
-    insta::allow_duplicates! {
-        assert_snapshot!(response.status(), @"400 Bad Request");
-        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unexpected device file found: foo-1.1.0/devfile"}]}"#);
-    }
-    assert_that!(app.stored_files().await, is_empty());
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_symlink() {
+    let response = publish_tarball_with_entry(tar::EntryType::symlink()).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Symlink found: foo-1.1.0/bar"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_chardev() {
-    new_krate_tarball_with_device_entry(tar::EntryType::character_special()).await;
+    let response = publish_tarball_with_entry(tar::EntryType::character_special()).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Char found: foo-1.1.0/bar"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_blockdev() {
-    new_krate_tarball_with_device_entry(tar::EntryType::block_special()).await;
+    let response = publish_tarball_with_entry(tar::EntryType::block_special()).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Block found: foo-1.1.0/bar"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_fifo() {
-    new_krate_tarball_with_device_entry(tar::EntryType::fifo()).await;
+    let response = publish_tarball_with_entry(tar::EntryType::fifo()).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Fifo found: foo-1.1.0/bar"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_contiguous_file() {
+    let response = publish_tarball_with_entry(tar::EntryType::contiguous()).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Continuous found: foo-1.1.0/bar"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_gnu_sparse_file() {
+    let response = publish_tarball_with_entry(tar::EntryType::new(b'S')).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type GNUSparse found: foo-1.1.0/bar"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_unknown_entry_type() {
+    let response = publish_tarball_with_entry(tar::EntryType::new(b'Z')).await;
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Other(90) found: foo-1.1.0/bar"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
