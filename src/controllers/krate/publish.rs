@@ -267,6 +267,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     );
     let limits = TarballLimits {
         unpack_size: max_unpack_size,
+        entries: app.config.publish_limits.tarball_entries,
     };
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
 
@@ -1058,6 +1059,9 @@ impl From<TarballError> for BoxedAppError {
             }
             TarballError::MalformedPaxSize | TarballError::SizeMismatch => {
                 bad_request("uploaded tarball is malformed")
+            }
+            TarballError::TooManyEntries { max } => {
+                bad_request(format!("uploaded tarball contains more than {max} entries"))
             }
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
             error @ TarballError::UnexpectedEntry { .. } => bad_request(error.to_string()),

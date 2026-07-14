@@ -32,6 +32,11 @@ const DEFAULT_BUF_SIZE: usize = 128 * 1024;
 pub struct TarballLimits {
     /// Maximum size in bytes of a crate tarball once decompressed.
     pub unpack_size: u64,
+    /// Maximum number of archive entries, including directory entries.
+    ///
+    /// Metadata headers consumed by the tar parser are not counted. `None`
+    /// disables the limit.
+    pub entries: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -52,6 +57,8 @@ pub enum TarballError {
     SizeMismatch,
     #[error("unexpected tar entry type {entry_type:?} found: {path}")]
     UnexpectedEntry { path: String, entry_type: EntryType },
+    #[error("uploaded tarball contains more than {max} entries")]
+    TooManyEntries { max: usize },
     #[error("Cargo.toml manifest is missing")]
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
@@ -87,9 +94,17 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     let mut paths = Vec::new();
     let mut manifests = BTreeMap::new();
     let mut entries = archive.entries()?;
+    let mut num_entries = 0;
 
     while let Some(entry) = entries.next().await {
         let mut entry = entry.map_err(TarballError::Malformed)?;
+
+        if let Some(max) = limits.entries {
+            num_entries += 1;
+            if num_entries > max {
+                return Err(TarballError::TooManyEntries { max });
+            }
+        }
 
         // Check that the file size is consistent between the pax and tar
         // headers. We have to do this before anything else because iterating
@@ -257,6 +272,7 @@ mod tests {
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
     const LIMITS: TarballLimits = TarballLimits {
         unpack_size: 512 * 1024 * 1024,
+        entries: None,
     };
 
     fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
@@ -307,7 +323,7 @@ mod tests {
 
         for (entry_type, entry_type_name) in unexpected_entry_types {
             let tarball = tarball_with_entry_type(entry_type);
-            let error = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+            let error = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
             assert_eq!(
                 error.to_string(),
                 format!("unexpected tar entry type {entry_type_name} found: foo-0.0.1/bar")
@@ -323,7 +339,7 @@ mod tests {
             .add_file(&long_path, b"")
             .build();
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
     }
 
     #[tokio::test]
@@ -374,9 +390,34 @@ mod tests {
 
         let limits = TarballLimits {
             unpack_size: tarball.len() as u64 - 1,
+            entries: None,
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_entry_limit() {
+        let tarball = TarballBuilder::new()
+            .add_pax_extensions([("comment", b"metadata".as_slice())])
+            .add_dir("foo-0.0.1")
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_dir("foo-0.0.1/src")
+            .add_file("foo-0.0.1/src/lib.rs", b"pub fn foo() {}")
+            .build();
+
+        let limits = TarballLimits {
+            entries: Some(4),
+            ..LIMITS
+        };
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, limits).await);
+
+        let limits = TarballLimits {
+            entries: Some(3),
+            ..LIMITS
+        };
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
+        assert_snapshot!(err, @"uploaded tarball contains more than 3 entries");
     }
 
     #[tokio::test]

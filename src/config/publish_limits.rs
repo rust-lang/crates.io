@@ -1,3 +1,5 @@
+use crates_io_env_vars::var_parsed;
+
 #[derive(Debug)]
 pub struct PublishLimitsConfig {
     /// Maximum size in bytes of an uploaded crate file.
@@ -5,6 +7,12 @@ pub struct PublishLimitsConfig {
 
     /// Maximum size in bytes of a crate file once decompressed.
     pub unpack_size: u64,
+
+    /// Maximum number of entries in an uploaded crate tarball.
+    ///
+    /// Read from the `MAX_TARBALL_ENTRIES` environment variable. An unset
+    /// value disables the limit.
+    pub tarball_entries: Option<usize>,
 
     /// Maximum number of dependencies a crate can have.
     pub dependencies: usize,
@@ -19,6 +27,7 @@ impl Default for PublishLimitsConfig {
         Self {
             upload_size: 10 * 1024 * 1024,  // 10 MB
             unpack_size: 512 * 1024 * 1024, // 512 MB
+            tarball_entries: None,
             dependencies: 500,
             features: 300,
         }
@@ -26,12 +35,21 @@ impl Default for PublishLimitsConfig {
 }
 
 impl PublishLimitsConfig {
+    /// Returns the default publish limits with environment overrides applied.
+    pub fn from_env() -> anyhow::Result<Self> {
+        Ok(Self {
+            tarball_entries: var_parsed("MAX_TARBALL_ENTRIES")?,
+            ..Self::default()
+        })
+    }
+
     /// Returns smaller limits suitable for use in tests.
     #[cfg(any(test, debug_assertions))]
     pub fn for_testing() -> Self {
         Self {
             upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
             unpack_size: 128 * 1024,
+            tarball_entries: None,
             dependencies: 10,
             features: 10,
         }

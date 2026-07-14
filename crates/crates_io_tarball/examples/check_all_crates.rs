@@ -80,6 +80,7 @@ async fn process_path(path: &Path, pb: &ProgressBar) {
 
     let limits = TarballLimits {
         unpack_size: u64::MAX,
+        entries: None,
     };
     let result = process_tarball(&pkg_name, &mut file, limits).await;
     pb.suspend(|| match result {

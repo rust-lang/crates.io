@@ -33,6 +33,7 @@ async fn main() -> anyhow::Result<()> {
 
     let limits = TarballLimits {
         unpack_size: u64::MAX,
+        entries: None,
     };
     let result = process_tarball(&pkg_name, &mut file, limits)
         .await
