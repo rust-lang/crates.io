@@ -86,11 +86,18 @@ impl<'a> OauthGithubBuilder<'a> {
             account_id: user.gh_id as i64,
             encrypted_token: &user.gh_encrypted_token,
             login: &user.username,
-            avatar: Some("http://example.com/icon-the-first.png"),
+            avatar: None,
         }
     }
 
-    pub async fn insert(self, conn: &mut AsyncPgConnection) {
+    pub fn with_avatar(self, avatar: &'a str) -> Self {
+        Self {
+            avatar: Some(avatar),
+            ..self
+        }
+    }
+
+    pub async fn insert(self, mut conn: &AsyncPgConnection) {
         diesel::insert_into(oauth_github::table)
             .values((
                 oauth_github::user_id.eq(self.user_id),
@@ -108,7 +115,7 @@ impl<'a> OauthGithubBuilder<'a> {
                 oauth_github::avatar.eq(excluded(oauth_github::avatar)),
                 oauth_github::last_sync.eq(Utc::now()),
             ))
-            .execute(conn)
+            .execute(&mut conn)
             .await
             .unwrap();
     }
