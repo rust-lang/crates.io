@@ -86,7 +86,14 @@ impl<'a> OauthGithubBuilder<'a> {
             account_id: user.gh_id as i64,
             encrypted_token: &user.gh_encrypted_token,
             login: &user.username,
-            avatar: Some("http://example.com/icon-the-first.png"),
+            avatar: None,
+        }
+    }
+
+    pub fn with_avatar(self, avatar: &'a str) -> Self {
+        Self {
+            avatar: Some(avatar),
+            ..self
         }
     }
 

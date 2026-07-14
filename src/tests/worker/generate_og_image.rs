@@ -1,17 +1,26 @@
-use crate::builders::CrateBuilder;
+use crate::builders::{CrateBuilder, OauthGithubBuilder, UserBuilder};
 use crate::util::TestApp;
 use claims::{assert_err, assert_ok};
+use crates_io_database::models::User;
 use crates_io_worker::BackgroundJob;
 use object_store::ObjectStoreExt;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_generate_og_image_job() {
-    let (app, _, user) = TestApp::full().with_og_image_generator().with_user().await;
+    let (app, _) = TestApp::full().with_og_image_generator().empty().await;
 
     let mut conn = app.db_conn().await;
 
+    let user = UserBuilder::new().with_username("foo").new_user();
+    let user_id = user.insert(&conn).await.unwrap();
+    let user = User::find(&conn, user_id).await.unwrap();
+    OauthGithubBuilder::for_user(&user)
+        .with_avatar("http://example.com/icon-the-first.png")
+        .insert(&conn)
+        .await;
+
     // Create a test crate with keywords using CrateBuilder
-    CrateBuilder::new("test-crate", user.as_model().id)
+    CrateBuilder::new("test-crate", user_id)
         .description("A test crate for OG image generation")
         .keyword("testing")
         .keyword("rust")

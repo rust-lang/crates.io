@@ -9,7 +9,7 @@ expression: response.json()
         "action": "publish",
         "time": "[datetime]",
         "user": {
-          "avatar": "http://example.com/icon-the-first.png",
+          "avatar": null,
           "created_at": "[datetime]",
           "id": 1,
           "login": "foo",
@@ -46,7 +46,7 @@ expression: response.json()
     },
     "num": "1.0.0",
     "published_by": {
-      "avatar": "http://example.com/icon-the-first.png",
+      "avatar": null,
       "created_at": "[datetime]",
       "id": "[id]",
       "login": "foo",

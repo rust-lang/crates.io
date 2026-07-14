@@ -68,7 +68,7 @@ expression: response.json()
       },
       "num": "0.5.1",
       "published_by": {
-        "avatar": "http://example.com/icon-the-first.png",
+        "avatar": null,
         "created_at": "[datetime]",
         "id": 1,
         "login": "foo",
