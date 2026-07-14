@@ -2018,6 +2018,7 @@ dependencies = [
 name = "crates_io_fastly"
 version = "0.0.0"
 dependencies = [
+ "clap",
  "crates_io_version",
  "mockito",
  "reqwest",
