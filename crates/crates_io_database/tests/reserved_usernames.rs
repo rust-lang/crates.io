@@ -26,7 +26,6 @@ async fn insert_user(conn: &AsyncPgConnection, username: &str) -> QueryResult<i3
         .gh_id(NEXT_GH_ID.fetch_add(1, Ordering::SeqCst))
         .gh_login(username)
         .username(username)
-        .gh_encrypted_token(&[])
         .build()
         .insert(conn)
         .await

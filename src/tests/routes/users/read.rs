@@ -76,7 +76,6 @@ async fn user_without_github_account() {
         .gh_login("foobar")
         .username("foobar")
         .name("I deleted my github account")
-        .gh_encrypted_token(&[])
         .build();
     new_user.insert(&conn).await.unwrap();
     // This user doesn't have a linked record in `oauth_github`

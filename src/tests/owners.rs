@@ -795,7 +795,6 @@ async fn inactive_users_dont_get_invitations() {
         .gh_id(-1)
         .gh_login(invited_gh_login)
         .username(invited_gh_login)
-        .gh_encrypted_token(&[])
         .build()
         .insert(&conn)
         .await

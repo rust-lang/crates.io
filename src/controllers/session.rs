@@ -217,7 +217,6 @@ async fn update_user(
             users::username.eq(&gh_user.login),
             // These fields are soon to be deprecated.
             users::gh_login.eq(&gh_user.login),
-            users::gh_encrypted_token.eq(encrypted_token),
         ))
         .execute(conn)
         .await?;
@@ -243,7 +242,6 @@ async fn create_user(
         .gh_login(&gh_user.login)
         .username(&gh_user.login)
         .maybe_name(gh_user.name.as_deref())
-        .gh_encrypted_token(encrypted_token)
         .build();
 
     let user_id = new_user.insert(conn).await?;
