@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tokio::io::{AsyncReadExt, BufReader};
-use tokio_tar::Entry;
+use tokio_tar::{Entry, EntryType};
 use tracing::{instrument, warn};
 
 #[cfg(any(feature = "builder", test))]
@@ -43,10 +43,8 @@ pub enum TarballError {
     MalformedPaxSize,
     #[error("mismatched pax and tar header sizes")]
     SizeMismatch,
-    #[error("unexpected symlink or hard link found: {0}")]
-    UnexpectedSymlink(String),
-    #[error("unexpected device file found: {0}")]
-    UnexpectedDevice(String),
+    #[error("unexpected tar entry type {entry_type:?} found: {path}")]
+    UnexpectedEntry { path: String, entry_type: EntryType },
     #[error("Cargo.toml manifest is missing")]
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
@@ -119,24 +117,14 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         };
 
-        // Historical versions of the `tar` crate which Cargo uses internally
-        // don't properly prevent hard links and symlinks from overwriting
-        // arbitrary files on the filesystem. As a bit of a hammer we reject any
-        // tarball with these sorts of links. Cargo doesn't currently ever
-        // generate a tarball with these file types so this should work for now.
+        // Crate packages only need regular files and directories. Other entry
+        // types have special or implementation-dependent extraction behavior.
         let entry_type = entry.header().entry_type();
-        if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(TarballError::UnexpectedSymlink(
-                entry_path.display().to_string(),
-            ));
-        }
-        if entry_type.is_character_special()
-            || entry_type.is_block_special()
-            || entry_type.is_fifo()
-        {
-            return Err(TarballError::UnexpectedDevice(
-                entry_path.display().to_string(),
-            ));
+        if !entry_type.is_file() && !entry_type.is_dir() {
+            return Err(TarballError::UnexpectedEntry {
+                path: entry_path.display().to_string(),
+                entry_type,
+            });
         }
 
         paths.push(in_pkg_path.to_path_buf());
@@ -262,10 +250,30 @@ mod tests {
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
     const MAX_SIZE: u64 = 512 * 1024 * 1024;
 
+    fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
+        let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
+
+        let mut header = tar::Header::new_gnu();
+        header.set_path("foo-0.0.1/bar").unwrap();
+        header.set_size(0);
+        header.set_entry_type(entry_type);
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
+            header.set_link_name("foo-0.0.1/target").unwrap();
+        }
+        if entry_type.is_gnu_sparse() {
+            header.as_gnu_mut().unwrap().set_real_size(0);
+        }
+        header.set_cksum();
+        builder.as_mut().append(&header, &[][..]).unwrap();
+
+        builder.build()
+    }
+
     #[tokio::test]
     async fn process_tarball_test() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_dir("foo-0.0.1")
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
@@ -273,6 +281,40 @@ mod tests {
 
         let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_unexpected_entry_types() {
+        let unexpected_entry_types = [
+            (tar::EntryType::new(b'Z'), "Other(90)"),
+            (tar::EntryType::contiguous(), "Continuous"),
+            (tar::EntryType::new(b'S'), "GNUSparse"),
+            (tar::EntryType::hard_link(), "Link"),
+            (tar::EntryType::symlink(), "Symlink"),
+            (tar::EntryType::character_special(), "Char"),
+            (tar::EntryType::block_special(), "Block"),
+            (tar::EntryType::fifo(), "Fifo"),
+        ];
+
+        for (entry_type, entry_type_name) in unexpected_entry_types {
+            let tarball = tarball_with_entry_type(entry_type);
+            let error = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
+            assert_eq!(
+                error.to_string(),
+                format!("unexpected tar entry type {entry_type_name} found: foo-0.0.1/bar")
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_gnu_long_name() {
+        let long_path = format!("foo-0.0.1/{}", "a".repeat(100));
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file(&long_path, b"")
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
     }
 
     #[tokio::test]
