@@ -953,6 +953,69 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "TrustpubData": {
+        "description": "Data structure containing trusted publisher information extracted from JWT claims",
+        "oneOf": [
+          {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "github"
+                ],
+                "type": "string"
+              },
+              "repository": {
+                "description": "Repository (e.g. \"octo-org/octo-repo\")",
+                "type": "string"
+              },
+              "run_id": {
+                "description": "Workflow run ID",
+                "type": "string"
+              },
+              "sha": {
+                "description": "SHA of the commit",
+                "type": "string"
+              }
+            },
+            "required": [
+              "repository",
+              "run_id",
+              "sha",
+              "provider"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "job_id": {
+                "description": "Job ID",
+                "type": "string"
+              },
+              "project_path": {
+                "description": "Project path (e.g. \"rust-lang/cargo\")",
+                "type": "string"
+              },
+              "provider": {
+                "enum": [
+                  "gitlab"
+                ],
+                "type": "string"
+              },
+              "sha": {
+                "description": "SHA of the commit",
+                "type": "string"
+              }
+            },
+            "required": [
+              "project_path",
+              "job_id",
+              "sha",
+              "provider"
+            ],
+            "type": "object"
+          }
+        ]
+      },
       "User": {
         "properties": {
           "avatar": {
@@ -1209,14 +1272,14 @@ expression: response.json()
             ]
           },
           "trustpub_data": {
-            "additionalProperties": {},
-            "description": "Information about the trusted publisher that published this version, if any.\n\nStatus: **Unstable**\n\nThis field is filled if the version was published via trusted publishing\n(e.g., GitHub Actions) rather than a regular API token.\n\nThe exact structure of this field depends on the `provider` field\ninside it.",
-            "propertyNames": {
-              "type": "string"
-            },
-            "type": [
-              "object",
-              "null"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TrustpubData",
+                "description": "Information about the trusted publisher that published this version, if any.\n\nStatus: **Unstable**\n\nThis field is filled if the version was published via trusted publishing\n(e.g., GitHub Actions) rather than a regular API token.\n\nThe exact structure of this field depends on the `provider` field\ninside it."
+              }
             ]
           },
           "updated_at": {

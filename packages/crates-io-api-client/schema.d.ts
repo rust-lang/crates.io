@@ -1583,6 +1583,26 @@ export interface components {
              */
             url?: string | null;
         };
+        /** @description Data structure containing trusted publisher information extracted from JWT claims */
+        TrustpubData: {
+            /** @enum {string} */
+            provider: "github";
+            /** @description Repository (e.g. "octo-org/octo-repo") */
+            repository: string;
+            /** @description Workflow run ID */
+            run_id: string;
+            /** @description SHA of the commit */
+            sha: string;
+        } | {
+            /** @description Job ID */
+            job_id: string;
+            /** @description Project path (e.g. "rust-lang/cargo") */
+            project_path: string;
+            /** @enum {string} */
+            provider: "gitlab";
+            /** @description SHA of the commit */
+            sha: string;
+        };
         User: {
             /**
              * @description The user's avatar URL, if set.
@@ -1756,20 +1776,7 @@ export interface components {
              * @example 1.31
              */
             rust_version?: string | null;
-            /**
-             * @description Information about the trusted publisher that published this version, if any.
-             *
-             *     Status: **Unstable**
-             *
-             *     This field is filled if the version was published via trusted publishing
-             *     (e.g., GitHub Actions) rather than a regular API token.
-             *
-             *     The exact structure of this field depends on the `provider` field
-             *     inside it.
-             */
-            trustpub_data?: {
-                [key: string]: unknown;
-            } | null;
+            trustpub_data?: null | components["schemas"]["TrustpubData"];
             /**
              * Format: date-time
              * @description The date and time this version was last updated (i.e. yanked or unyanked).

@@ -79,7 +79,7 @@
   <Row
     version={createVersion({
       published_by: null,
-      trustpub_data: { provider: 'github', repository: 'serde-rs/serde', run_id: '12345678' },
+      trustpub_data: { provider: 'github', repository: 'serde-rs/serde', run_id: '12345678', sha: 'abc123' },
     })}
     crateName="serde"
     isHighestOfReleaseTrack={true}
@@ -89,7 +89,7 @@
   <Row
     version={createVersion({
       published_by: null,
-      trustpub_data: { provider: 'gitlab', project_path: 'serde-rs/serde', job_id: '87654321' },
+      trustpub_data: { provider: 'gitlab', project_path: 'serde-rs/serde', job_id: '87654321', sha: 'abc123' },
     })}
     crateName="serde"
     isHighestOfReleaseTrack={true}

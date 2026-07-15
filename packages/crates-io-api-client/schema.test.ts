@@ -1,10 +1,14 @@
+import type { components } from './schema';
+
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
 
 import openapiTS, { astToString } from 'openapi-typescript';
-import { expect, test } from 'vitest';
+import { expect, expectTypeOf, test } from 'vitest';
 
 const SNAPSHOT_PATH = '../../src/tests/snapshots/integration__openapi__openapi_internal_snapshot-2.snap';
+
+type TrustpubData = NonNullable<components['schemas']['Version']['trustpub_data']>;
 
 const HEADER = `/**
  * This file is auto-generated. Do not edit manually.
@@ -32,4 +36,20 @@ test('schema.d.ts is up to date', async () => {
   let generated = await generateSchema();
   let schemaPath = path.resolve(__dirname, 'schema.d.ts');
   await expect(generated).toMatchFileSnapshot(schemaPath);
+});
+
+test('trusted publishing data preserves provider-specific fields', () => {
+  type GitHubTrustpubData = Extract<TrustpubData, { provider: 'github' }>;
+  type GitLabTrustpubData = Extract<TrustpubData, { provider: 'gitlab' }>;
+
+  expectTypeOf<GitHubTrustpubData>().toMatchObjectType<{
+    repository: string;
+    run_id: string;
+    sha: string;
+  }>();
+  expectTypeOf<GitLabTrustpubData>().toMatchObjectType<{
+    project_path: string;
+    job_id: string;
+    sha: string;
+  }>();
 });
