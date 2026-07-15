@@ -67,6 +67,12 @@ impl<'a> MarkdownRenderer<'a> {
             .link_rel(Some("nofollow noopener noreferrer"))
             .add_generic_attributes(&["align"])
             .add_tag_attributes("a", &["id", "target"])
+            .add_tag_attributes("h1", &["id"])
+            .add_tag_attributes("h2", &["id"])
+            .add_tag_attributes("h3", &["id"])
+            .add_tag_attributes("h4", &["id"])
+            .add_tag_attributes("h5", &["id"])
+            .add_tag_attributes("h6", &["id"])
             .add_tag_attributes("input", &["checked", "disabled", "type"])
             .add_tag_attributes("li", &["id"])
             .add_tag_attributes("source", &["media", "srcset"])
@@ -95,6 +101,7 @@ impl<'a> MarkdownRenderer<'a> {
             .tagfilter(true)
             .tasklist(true)
             .header_id_prefix("user-content-".to_string())
+            .header_id_prefix_in_href(true)
             .footnotes(true)
             .build();
 
@@ -623,11 +630,24 @@ There can also be some text in between!
     }
 
     #[test]
-    fn header_has_tags() {
+    fn heading_anchor_resolves_to_prefixed_id() {
         let text = "# My crate\n\nHello, world!\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r##"
-        <h1><a href="#my-crate" id="user-content-my-crate" rel="nofollow noopener noreferrer"></a>My crate</h1>
+        <h1 id="user-content-my-crate">My crate<a href="#user-content-my-crate" rel="nofollow noopener noreferrer"></a></h1>
         <p>Hello, world!</p>
+        "##);
+    }
+
+    #[test]
+    fn all_heading_levels_keep_resolving_anchors() {
+        let text =
+            "## Heading 2\n### Heading 3\n#### Heading 4\n##### Heading 5\n###### Heading 6\n";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r##"
+        <h2 id="user-content-heading-2">Heading 2<a href="#user-content-heading-2" rel="nofollow noopener noreferrer"></a></h2>
+        <h3 id="user-content-heading-3">Heading 3<a href="#user-content-heading-3" rel="nofollow noopener noreferrer"></a></h3>
+        <h4 id="user-content-heading-4">Heading 4<a href="#user-content-heading-4" rel="nofollow noopener noreferrer"></a></h4>
+        <h5 id="user-content-heading-5">Heading 5<a href="#user-content-heading-5" rel="nofollow noopener noreferrer"></a></h5>
+        <h6 id="user-content-heading-6">Heading 6<a href="#user-content-heading-6" rel="nofollow noopener noreferrer"></a></h6>
         "##);
     }
 
