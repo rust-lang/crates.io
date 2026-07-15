@@ -66,7 +66,7 @@ impl<'a> MarkdownRenderer<'a> {
             .add_tags(&["input", "ol", "picture", "section", "source"])
             .link_rel(Some("nofollow noopener noreferrer"))
             .add_generic_attributes(&["align"])
-            .add_tag_attributes("a", &["id", "target"])
+            .add_tag_attributes("a", &["aria-label", "id", "target"])
             .add_tag_attributes("h1", &["id"])
             .add_tag_attributes("h2", &["id"])
             .add_tag_attributes("h3", &["id"])
@@ -456,7 +456,7 @@ mod tests {
         <section class="footnotes">
         <ol>
         <li id="user-content-fn-1">
-        <p>Hello Ferris, actually! <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+        <p>Hello Ferris, actually! <a href="#user-content-fnref-1" aria-label="Back to reference 1" rel="nofollow noopener noreferrer">↩</a></p>
         </li>
         </ol>
         </section>
@@ -485,13 +485,13 @@ There can also be some text in between!
         <section class="footnotes">
         <ol>
         <li id="user-content-fn-1">
-        <p>This is the first footnote. <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+        <p>This is the first footnote. <a href="#user-content-fnref-1" aria-label="Back to reference 1" rel="nofollow noopener noreferrer">↩</a></p>
         </li>
         <li id="user-content-fn-bignote">
         <p>Here's one with multiple paragraphs and code.</p>
         <p>Indent paragraphs to include them in the footnote.</p>
         <p><code>{ my code }</code></p>
-        <p>Add as many paragraphs as you like. <a href="#user-content-fnref-bignote" rel="nofollow noopener noreferrer">↩</a></p>
+        <p>Add as many paragraphs as you like. <a href="#user-content-fnref-bignote" aria-label="Back to reference 2" rel="nofollow noopener noreferrer">↩</a></p>
         </li>
         </ol>
         </section>
@@ -630,24 +630,24 @@ There can also be some text in between!
     }
 
     #[test]
-    fn heading_anchor_resolves_to_prefixed_id() {
+    fn heading_anchor_is_accessible_and_resolves() {
         let text = "# My crate\n\nHello, world!\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r##"
-        <h1 id="user-content-my-crate">My crate<a href="#user-content-my-crate" rel="nofollow noopener noreferrer"></a></h1>
+        <h1 id="user-content-my-crate">My crate<a href="#user-content-my-crate" aria-label="Link to heading 'My crate'" rel="nofollow noopener noreferrer"></a></h1>
         <p>Hello, world!</p>
         "##);
     }
 
     #[test]
-    fn all_heading_levels_keep_resolving_anchors() {
+    fn all_heading_levels_keep_accessible_anchors() {
         let text =
             "## Heading 2\n### Heading 3\n#### Heading 4\n##### Heading 5\n###### Heading 6\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r##"
-        <h2 id="user-content-heading-2">Heading 2<a href="#user-content-heading-2" rel="nofollow noopener noreferrer"></a></h2>
-        <h3 id="user-content-heading-3">Heading 3<a href="#user-content-heading-3" rel="nofollow noopener noreferrer"></a></h3>
-        <h4 id="user-content-heading-4">Heading 4<a href="#user-content-heading-4" rel="nofollow noopener noreferrer"></a></h4>
-        <h5 id="user-content-heading-5">Heading 5<a href="#user-content-heading-5" rel="nofollow noopener noreferrer"></a></h5>
-        <h6 id="user-content-heading-6">Heading 6<a href="#user-content-heading-6" rel="nofollow noopener noreferrer"></a></h6>
+        <h2 id="user-content-heading-2">Heading 2<a href="#user-content-heading-2" aria-label="Link to heading 'Heading 2'" rel="nofollow noopener noreferrer"></a></h2>
+        <h3 id="user-content-heading-3">Heading 3<a href="#user-content-heading-3" aria-label="Link to heading 'Heading 3'" rel="nofollow noopener noreferrer"></a></h3>
+        <h4 id="user-content-heading-4">Heading 4<a href="#user-content-heading-4" aria-label="Link to heading 'Heading 4'" rel="nofollow noopener noreferrer"></a></h4>
+        <h5 id="user-content-heading-5">Heading 5<a href="#user-content-heading-5" aria-label="Link to heading 'Heading 5'" rel="nofollow noopener noreferrer"></a></h5>
+        <h6 id="user-content-heading-6">Heading 6<a href="#user-content-heading-6" aria-label="Link to heading 'Heading 6'" rel="nofollow noopener noreferrer"></a></h6>
         "##);
     }
 
