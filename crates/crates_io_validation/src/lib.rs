@@ -102,7 +102,7 @@ pub fn validate_crate_name(for_what: &str, name: &str) -> Result<(), InvalidCrat
 
 // Checks that the name is a valid crate name.
 // 1. The name must be non-empty.
-// 2. The first character must be an ASCII character.
+// 2. The first character must be an ASCII alphabetic character.
 // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
 // Note: This differs from `valid_dependency_name`, which allows `_` as the first character.
 fn validate_create_ident(for_what: &str, name: &str) -> Result<(), InvalidCrateName> {
@@ -150,7 +150,7 @@ pub fn validate_dependency_name(name: &str) -> Result<(), InvalidDependencyName>
 
 // Checks that the name is a valid dependency name.
 // 1. The name must be non-empty.
-// 2. The first character must be an ASCII character or `_`.
+// 2. The first character must be an ASCII alphabetic character or `_`.
 // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
 fn validate_dependency_ident(name: &str) -> Result<(), InvalidDependencyName> {
     if name.is_empty() {
@@ -165,7 +165,6 @@ fn validate_dependency_ident(name: &str) -> Result<(), InvalidDependencyName> {
             return Err(InvalidDependencyName::Start(ch, name.into()));
         }
     }
-
     for ch in chars {
         if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
             return Err(InvalidDependencyName::Char(ch, name.into()));
@@ -178,7 +177,7 @@ fn validate_dependency_ident(name: &str) -> Result<(), InvalidDependencyName> {
 /// Validates the THIS parts of `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
 /// 1. The name must be non-empty.
 /// 2. The first character must be a Unicode XID start character, `_`, or a digit.
-/// 3. The remaining characters must be Unicode XID characters, `_`, `+`, `-`, or `.`.
+/// 3. The remaining characters must be Unicode XID continue characters (including `_`), `+`, `-`, or `.`.
 pub fn validate_feature_name(name: &str) -> Result<(), InvalidFeature> {
     if name.is_empty() {
         return Err(InvalidFeature::Empty);
