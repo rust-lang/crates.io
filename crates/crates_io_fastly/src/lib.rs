@@ -73,6 +73,18 @@ impl Fastly {
         Ok(())
     }
 
+    /// Invalidates all objects associated with a surrogate key on a Fastly service.
+    ///
+    /// The key uses Fastly's native representation without CloudFront's leading `#` marker.
+    ///
+    /// More information on Fastly's APIs for cache invalidations can be found here:
+    /// <https://developer.fastly.com/reference/api/purging/>
+    #[instrument(skip(self))]
+    pub async fn purge_surrogate_key(&self, service_id: &str, key: &str) -> Result<(), Error> {
+        let url = format!("{}/service/{service_id}/purge/{key}", self.api_base_url);
+        self.send_purge_request(url).await
+    }
+
     /// Invalidates a path on Fastly
     ///
     /// This method takes a domain and path and invalidates the cached content
@@ -89,7 +101,11 @@ impl Fastly {
 
         let path = path.trim_start_matches('/');
         let url = format!("{}/purge/{domain}/{path}", self.api_base_url);
+        self.send_purge_request(url).await
+    }
 
+    /// Sends an authenticated purge request to Fastly.
+    async fn send_purge_request(&self, url: String) -> Result<(), Error> {
         trace!(?url);
 
         debug!("sending invalidation request to Fastly");
@@ -201,6 +217,27 @@ mod tests {
         let client = client_with_server(&server);
         client
             .purge_both_domains("static.crates.io", "/readmes/serde.html")
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn purges_surrogate_key() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock(
+                "POST",
+                "/service/static-service-id/purge/release:serde@1.0.0+metadata",
+            )
+            .match_header("fastly-key", TEST_TOKEN)
+            .with_status(200)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        client
+            .purge_surrogate_key("static-service-id", "release:serde@1.0.0+metadata")
             .await
             .unwrap();
     }
