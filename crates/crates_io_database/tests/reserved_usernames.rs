@@ -3,12 +3,15 @@
 //! directly, asserting the trigger rejects the conflicting writes.
 
 use claims::assert_err;
+use crates_io_database::models::NewUser;
 use crates_io_database::schema::{reserved_usernames, users};
 use crates_io_test_db::TestDatabase;
-use crates_io_test_utils::builders::UserBuilder;
 use diesel::prelude::*;
 use diesel::result::QueryResult;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use std::sync::atomic::{AtomicI32, Ordering};
+
+static NEXT_GH_ID: AtomicI32 = AtomicI32::new(1);
 
 async fn reserve_username(conn: &mut AsyncPgConnection, username: &str) {
     diesel::insert_into(reserved_usernames::table)
@@ -19,9 +22,12 @@ async fn reserve_username(conn: &mut AsyncPgConnection, username: &str) {
 }
 
 async fn insert_user(conn: &AsyncPgConnection, username: &str) -> QueryResult<i32> {
-    UserBuilder::new()
-        .with_username(username)
-        .new_user()
+    NewUser::builder()
+        .gh_id(NEXT_GH_ID.fetch_add(1, Ordering::SeqCst))
+        .gh_login(username)
+        .username(username)
+        .gh_encrypted_token(&[])
+        .build()
         .insert(conn)
         .await
 }
