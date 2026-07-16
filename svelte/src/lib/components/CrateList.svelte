@@ -30,7 +30,7 @@
     padding: 0;
     list-style: none;
 
-    > :global(* + *) {
+    > li + li {
       margin-top: var(--space-s);
     }
   }

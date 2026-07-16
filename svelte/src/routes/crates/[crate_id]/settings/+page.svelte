@@ -511,12 +511,12 @@
     width: 100%;
     border-spacing: 0;
 
-    :global(tbody) > :global(tr) > :global(td) {
+    tbody > tr > td {
       border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
     }
 
-    :global(th),
-    :global(td) {
+    th,
+    td {
       text-align: left;
       padding: var(--space-s) var(--space-m);
     }
