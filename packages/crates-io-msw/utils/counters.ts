@@ -1,9 +1,6 @@
-const COUNTERS = new Map();
+const COUNTERS = new Map<string, number>();
 
-/**
- * @param {string} counterName
- */
-export function increment(counterName) {
+export function increment(counterName: string) {
   let value = (COUNTERS.get(counterName) || 0) + 1;
   COUNTERS.set(counterName, value);
   return value;

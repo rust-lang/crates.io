@@ -1,11 +1,7 @@
 import { underscore } from './strings.js';
 
-/**
- * @param {{ [s: string]: any; }} model
- */
-export function serializeModel(model) {
-  /** @type {{ [s: string]: any; }} */
-  let json = {};
+export function serializeModel(model: Record<string, unknown>) {
+  let json: Record<string, unknown> = {};
   for (let [key, value] of Object.entries(model)) {
     json[underscore(key)] = value;
   }

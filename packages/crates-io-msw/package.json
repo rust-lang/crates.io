@@ -16,7 +16,8 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@msw/data": "1.1.7",
@@ -25,6 +26,7 @@
     "valibot": "1.4.2"
   },
   "devDependencies": {
+    "@types/semver": "7.7.1",
     "vite": "8.1.4",
     "vitest": "4.1.10"
   }

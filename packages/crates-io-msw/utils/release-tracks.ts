@@ -1,15 +1,11 @@
 import semverParse from 'semver/functions/parse.js';
 import semverSort from 'semver/functions/rsort.js';
 
-/**
- * @param {{ yanked: boolean, num: string }[]} versions
- */
-export function calculateReleaseTracks(versions) {
+export function calculateReleaseTracks(versions: { yanked: boolean; num: string }[]) {
   let versionNums = versions.filter(it => !it.yanked).map(it => it.num);
   semverSort(versionNums, { loose: true });
 
-  /** @type {Record<string, { highest: string }>} */
-  let tracks = {};
+  let tracks: Record<string, { highest: string }> = {};
   for (let num of versionNums) {
     let semver = semverParse(num, { loose: true });
     if (!semver || semver.prerelease.length !== 0) continue;

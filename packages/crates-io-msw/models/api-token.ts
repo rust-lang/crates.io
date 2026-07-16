@@ -28,7 +28,7 @@ const schema = v.pipe(
   }),
 );
 
-function generateToken(seed) {
+function generateToken(seed: number) {
   return seededRandom(seed).toString().slice(2);
 }
 

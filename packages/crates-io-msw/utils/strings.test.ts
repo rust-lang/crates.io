@@ -3,7 +3,7 @@ import { describe, test } from 'vitest';
 import { dasherize, underscore } from './strings.js';
 
 describe('dasherize', () => {
-  function assert(input, expected) {
+  function assert(input: string, expected: string) {
     test(input, ({ expect }) => {
       expect(dasherize(input)).toBe(expected);
     });
@@ -20,7 +20,7 @@ describe('dasherize', () => {
 });
 
 describe('underscore', () => {
-  function assert(input, expected) {
+  function assert(input: string, expected: string) {
     test(input, ({ expect }) => {
       expect(underscore(input)).toBe(expected);
     });
