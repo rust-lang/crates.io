@@ -69,6 +69,7 @@ pub async fn list_reverse_dependencies(
         .inner_join(crates::table)
         .left_outer_join(users::table.left_join(oauth_github::table))
         .select(<(Version, CrateName, Option<User>)>::as_select())
+        .order(versions::id)
         .load(&mut conn)
         .await?;
 
