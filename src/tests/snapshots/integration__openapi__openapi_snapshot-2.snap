@@ -884,6 +884,17 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "ReleaseTrackDetails": {
+        "properties": {
+          "highest": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "highest"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {
@@ -2770,7 +2781,13 @@ expression: response.json()
                           ]
                         },
                         "release_tracks": {
+                          "additionalProperties": {
+                            "$ref": "#/components/schemas/ReleaseTrackDetails"
+                          },
                           "description": "Additional data about the crate's release tracks,\nif `?include=release_tracks` is used.",
+                          "propertyNames": {
+                            "type": "string"
+                          },
                           "type": [
                             "object",
                             "null"

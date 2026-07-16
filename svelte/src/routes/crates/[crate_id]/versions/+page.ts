@@ -31,7 +31,7 @@ export async function load({ fetch, params, url, depends }) {
   }
 
   let { versions, meta } = response.data;
-  let releaseTracks: Record<string, { highest: string }> = meta.release_tracks ?? {};
+  let releaseTracks = meta.release_tracks ?? {};
 
   return {
     sort,

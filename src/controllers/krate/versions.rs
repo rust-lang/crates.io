@@ -11,7 +11,7 @@ use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::util::string_excl_null::StringExclNull;
 use crate::views::EncodableVersion;
-use crate::views::release_tracks::ReleaseTracks;
+use crate::views::release_tracks::{ReleaseTrackDetails, ReleaseTracks};
 use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
@@ -334,7 +334,7 @@ struct ResponseMeta {
     /// Additional data about the crate's release tracks,
     /// if `?include=release_tracks` is used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(value_type = Option<Object>)]
+    #[schema(value_type = Option<std::collections::HashMap<String, ReleaseTrackDetails>>)]
     release_tracks: Option<ReleaseTracks>,
 }
 

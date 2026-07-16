@@ -1536,6 +1536,9 @@ export interface components {
             /** @example [] */
             other: string[];
         };
+        ReleaseTrackDetails: {
+            highest: string;
+        };
         Slug: {
             /**
              * @description A description of the category.
@@ -2859,7 +2862,9 @@ export interface operations {
                              * @description Additional data about the crate's release tracks,
                              *     if `?include=release_tracks` is used.
                              */
-                            release_tracks?: Record<string, never> | null;
+                            release_tracks?: {
+                                [key: string]: components["schemas"]["ReleaseTrackDetails"];
+                            } | null;
                             /**
                              * Format: int64
                              * @description The total number of versions belonging to the crate.

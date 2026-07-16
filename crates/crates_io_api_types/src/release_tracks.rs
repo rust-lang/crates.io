@@ -64,8 +64,9 @@ impl serde::Serialize for ReleaseTrackName {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, utoipa::ToSchema)]
 pub struct ReleaseTrackDetails {
+    #[schema(value_type = String)]
     pub highest: semver::Version,
 }
 
