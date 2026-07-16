@@ -440,7 +440,7 @@
       border-color: red;
     }
 
-    > :global(* + *) {
+    > li + li {
       border-top: inherit;
     }
 
@@ -472,7 +472,7 @@
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
-    > :global(* + *) {
+    > li + li {
       border-top: inherit;
     }
   }
