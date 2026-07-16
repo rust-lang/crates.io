@@ -23,6 +23,7 @@ export function serializeCrate(
   let serialized = serializeModel(crate);
 
   serialized.id = crate.name;
+  serialized.exact_match = false;
 
   serialized.default_version =
     versionNums.find(it => !prerelease(it, { loose: true }) && !versionsByNum[it].yanked) ??
