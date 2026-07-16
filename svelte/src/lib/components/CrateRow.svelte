@@ -183,7 +183,7 @@
     padding: 0;
     margin: 0;
 
-    > :global(* + *) {
+    > li + li {
       margin-top: var(--space-xs);
     }
   }
@@ -216,7 +216,7 @@
     margin: var(--space-xs) 0 0 0;
     padding: 0;
 
-    > :global(* + *) {
+    > li + li {
       margin-left: var(--space-xs);
     }
   }
