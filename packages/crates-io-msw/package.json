@@ -19,6 +19,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@crates-io/api-client": "workspace:*",
     "@msw/data": "1.1.7",
     "msw": "2.15.0",
     "semver": "7.8.5",

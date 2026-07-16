@@ -1,18 +1,9 @@
-import { db, handlers } from '@crates-io/msw';
-import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
+import { createClient } from '@crates-io/api-client';
+import { expect, test } from 'vitest';
 
-import { createClient } from './index.js';
+import { db } from './index.js';
 
 const baseUrl = 'https://crates.io/';
-globalThis.location = { href: baseUrl } as Location;
-
-const server = setupServer(...handlers);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterEach(() => db.reset());
-afterAll(() => server.close());
 
 test('GET /api/v1/site_metadata', async () => {
   let client = createClient({ baseUrl });
