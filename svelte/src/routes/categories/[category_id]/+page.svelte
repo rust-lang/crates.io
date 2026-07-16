@@ -125,11 +125,11 @@
     margin-bottom: var(--space-s);
   }
 
-  .subcategories > :global(*) {
+  .subcategories > .subcategory {
     padding: var(--space-s);
   }
 
-  .subcategories > :global(* + *) {
+  .subcategories > .subcategory + .subcategory {
     border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #424242);
   }
 
