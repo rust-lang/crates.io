@@ -215,7 +215,7 @@
 
     /* see: https://github.com/rust-lang/crates.io/issues/14133 */
     :global(img) {
-      height: auto; 
+      height: auto;
     }
 
     @media only screen and (max-width: 550px) {
