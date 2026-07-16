@@ -137,17 +137,14 @@ impl NewBackgroundJob {
 mod tests {
     use super::*;
     use crates_io::schema::cache_tags_backfills;
-    use crates_io_database::models::{NewCacheTagsBackfillRow, NewUser};
+    use crates_io_database::models::NewCacheTagsBackfillRow;
     use crates_io_test_db::TestDatabase;
-    use crates_io_test_utils::builders::CrateBuilder;
+    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder};
 
     async fn create_user(conn: &AsyncPgConnection) -> i32 {
-        NewUser::builder()
-            .gh_id(1)
-            .gh_login("testuser")
-            .username("testuser")
-            .gh_encrypted_token(&[])
-            .build()
+        UserBuilder::new()
+            .with_username("testuser")
+            .new_user()
             .insert(conn)
             .await
             .unwrap()

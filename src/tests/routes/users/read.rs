@@ -1,9 +1,7 @@
 use crate::util::{RequestHelper, TestApp};
-use claims::assert_ok;
-use crates_io::models::NewUser;
-use crates_io::schema::users;
+use crates_io::models::{NewUser, User};
 use crates_io::views::EncodablePublicUser;
-use diesel_async::RunQueryDsl;
+use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
 use insta::assert_snapshot;
 use serde::Deserialize;
 
@@ -33,7 +31,7 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_latest_user_case_insensitively() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn().await;
+    let conn = app.db_conn().await;
 
     // Please do not delete or modify the setup of this test in order to get it to pass.
     // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
@@ -43,28 +41,21 @@ async fn show_latest_user_case_insensitively() {
     // crates.io/user/{username} pages, the best we can do is show the last crates.io account
     // created with that username.
 
-    let user1 = NewUser::builder()
-        .gh_id(1)
-        .gh_login("foobar")
-        .username("foobar")
-        .name("I was first then deleted my github account")
-        .gh_encrypted_token(&[])
-        .build();
+    let user1 = UserBuilder::new()
+        .with_username("foobar")
+        .with_display_name("I was first then deleted my github account")
+        .new_user();
+    let user1_id = user1.insert(&conn).await.unwrap();
+    let user1 = User::find(&conn, user1_id).await.unwrap();
+    OauthGithubBuilder::for_user(&user1).insert(&conn).await;
 
-    let user2 = NewUser::builder()
-        .gh_id(2)
-        .gh_login("FOOBAR")
-        .username("FOOBAR")
-        .name("I was second, I took the foobar username on github")
-        .gh_encrypted_token(&[])
-        .build();
-
-    assert_ok!(
-        diesel::insert_into(users::table)
-            .values(&vec![user1, user2])
-            .execute(&mut conn)
-            .await
-    );
+    let user2 = UserBuilder::new()
+        .with_username("FOOBAR")
+        .with_display_name("I was second, I took the foobar username on github")
+        .new_user();
+    let user2_id = user2.insert(&conn).await.unwrap();
+    let user2 = User::find(&conn, user2_id).await.unwrap();
+    OauthGithubBuilder::for_user(&user2).insert(&conn).await;
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(
