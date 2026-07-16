@@ -171,7 +171,7 @@
       margin-top: 0.5em;
     }
 
-    :global(ol ol) {
+    ol ol {
       list-style-type: sub;
       padding-left: 1.5em;
     }
@@ -186,7 +186,7 @@
   }
 
   .confirmation {
-    :global(input) {
+    input {
       margin-right: var(--space-3xs);
     }
   }
