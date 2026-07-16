@@ -37,8 +37,8 @@ importers:
         specifier: 1.32.2
         version: 1.32.2(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
       '@percy/playwright':
-        specifier: 1.1.0
-        version: 1.1.0(playwright-core@1.61.1)
+        specifier: 1.1.1
+        version: 1.1.1(playwright-core@1.61.1)
       '@playwright/test':
         specifier: 1.61.1
         version: 1.61.1
@@ -1419,8 +1419,8 @@ packages:
     resolution: {integrity: sha512-s2AXzZx2w59Y7WWJcmZx7q7UipVCQD0glnRCHjQbtzKbdkB8Yw179IPwbKJuAMvZnxASzp90CFe2ThClX91jgQ==}
     engines: {node: '>=14'}
 
-  '@percy/playwright@1.1.0':
-    resolution: {integrity: sha512-4js7xbz5RqEv/Fee3kypmiwsPsHrXGwGPWR7HWS5iNywh2qfK8O8mI/XfZb+FTFR6Ebi2Cy2vNNiaaoYKCsCPQ==}
+  '@percy/playwright@1.1.1':
+    resolution: {integrity: sha512-aEzMgvlNV9ork/hvCcQamEa9Xi00GYJhtO01xic000LBv6lvveie91n9Scpysfueaf2RFF5goBRf2IoI0wKTFA==}
     engines: {node: '>=14'}
     peerDependencies:
       playwright-core: '>=1'
@@ -5738,7 +5738,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@percy/playwright@1.1.0(playwright-core@1.61.1)':
+  '@percy/playwright@1.1.1(playwright-core@1.61.1)':
     dependencies:
       playwright-core: 1.61.1
 
