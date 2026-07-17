@@ -213,11 +213,6 @@
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
 
-    /* see: https://github.com/rust-lang/crates.io/issues/14133 */
-    :global(img) {
-      height: auto;
-    }
-
     @media only screen and (max-width: 550px) {
       margin-left: calc(var(--main-layout-padding) * -1);
       margin-right: calc(var(--main-layout-padding) * -1);
