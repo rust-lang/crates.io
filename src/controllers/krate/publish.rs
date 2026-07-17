@@ -10,7 +10,7 @@ use axum::Json;
 use axum::body::{Body, Bytes};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_cargo_toml::{Dependency, DepsSet, TargetDepsSet};
-use crates_io_tarball::{TarballError, process_tarball};
+use crates_io_tarball::{TarballError, TarballLimits, process_tarball};
 use crates_io_validation::{
     MAX_VERSION_LENGTH, validate_crate_name, validate_dependency_name, validate_feature,
     validate_feature_name,
@@ -265,7 +265,11 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         app.config.publish_limits.unpack_size,
         max_upload_size as u64,
     );
-    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, max_unpack_size).await?;
+    let limits = TarballLimits {
+        unpack_size: max_unpack_size,
+        entries: app.config.publish_limits.tarball_entries,
+    };
+    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
     // we only accept manifests with a `package` section and without
@@ -1055,6 +1059,9 @@ impl From<TarballError> for BoxedAppError {
             }
             TarballError::MalformedPaxSize | TarballError::SizeMismatch => {
                 bad_request("uploaded tarball is malformed")
+            }
+            TarballError::TooManyEntries { max } => {
+                bad_request(format!("uploaded tarball contains more than {max} entries"))
             }
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
             error @ TarballError::UnexpectedEntry { .. } => bad_request(error.to_string()),

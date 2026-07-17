@@ -1,6 +1,6 @@
 use anyhow::{Context, anyhow};
 use clap::Parser;
-use crates_io_tarball::process_tarball;
+use crates_io_tarball::{TarballLimits, process_tarball};
 use std::path::PathBuf;
 use tokio::fs::File;
 use tracing_subscriber::EnvFilter;
@@ -31,7 +31,11 @@ async fn main() -> anyhow::Result<()> {
     let path_no_ext = path.with_extension("");
     let pkg_name = path_no_ext.file_name().unwrap().to_string_lossy();
 
-    let result = process_tarball(&pkg_name, &mut file, u64::MAX)
+    let limits = TarballLimits {
+        unpack_size: u64::MAX,
+        entries: None,
+    };
+    let result = process_tarball(&pkg_name, &mut file, limits)
         .await
         .context("Failed to process tarball")?;
 

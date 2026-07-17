@@ -20,6 +20,26 @@ async fn new_krate_wrong_files() {
     assert_that!(app.stored_files().await, is_empty());
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn tarball_entry_limit_applies_to_new_versions() {
+    let (_app, _, _, token) = TestApp::full()
+        .with_config(|config| config.publish_limits.tarball_entries = Some(2))
+        .with_token()
+        .await;
+
+    let version = PublishBuilder::new("foo", "1.0.0").add_file("foo-1.0.0/src/lib.rs", "");
+    let response = token.publish_crate(version).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let version = PublishBuilder::new("foo", "1.1.0")
+        .add_file("foo-1.1.0/src/lib.rs", "")
+        .add_file("foo-1.1.0/README.md", "");
+
+    let response = token.publish_crate(version).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball contains more than 2 entries"}]}"#);
+}
+
 async fn publish_tarball_with_entry(entry_type: tar::EntryType) -> String {
     let (app, _, _, token) = TestApp::full().with_token().await;
 

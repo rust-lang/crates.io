@@ -141,7 +141,7 @@ impl Server {
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
             github_oauth: GitHubOAuthConfig::from_env()?,
             token_encryption: TokenEncryption::from_environment()?,
-            publish_limits: PublishLimitsConfig::default(),
+            publish_limits: PublishLimitsConfig::from_env()?,
             rate_limits: RateLimitsConfig::from_env()?,
             block: BlockConfig::from_env()?,
             max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),
