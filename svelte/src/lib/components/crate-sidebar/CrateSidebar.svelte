@@ -371,9 +371,9 @@
   }
 
   .links {
-    > :global(* + *) {
-      margin-top: var(--space-m);
-    }
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
   }
 
   .categories {
