@@ -165,10 +165,6 @@
       margin: 0;
       --icon-size: 1.25em;
 
-      > :global(*) {
-        flex-shrink: 0;
-      }
-
       :global(.icon) {
         margin-top: -0.125em;
         margin-bottom: -0.125em;
