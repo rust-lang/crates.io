@@ -127,17 +127,15 @@
   }
 
   .code {
+    --diffs-font-family: var(--font-monospace);
+    --diffs-header-font-family: var(--font-body);
+    --diffs-light-bg: white;
+    --diffs-dark-bg: #141413;
+
     flex: 1;
     min-height: 0;
     overflow: auto;
     font-size: calc(0.85 * var(--space-s));
     background-color: light-dark(white, #141413);
-  }
-
-  .code :global(diffs-container) {
-    --diffs-font-family: var(--font-monospace);
-    --diffs-header-font-family: var(--font-body);
-    --diffs-light-bg: white;
-    --diffs-dark-bg: #141413;
   }
 </style>
