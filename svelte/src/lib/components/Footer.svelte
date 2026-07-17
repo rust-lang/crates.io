@@ -64,8 +64,7 @@
 </footer>
 
 <style>
-  :root,
-  :global([data-theme='classic']) {
+  :root {
     --footer-bg-color: var(--header-bg-color);
     --footer-header-color: var(--yellow500);
     --footer-header-shadow-color: var(--green900);
