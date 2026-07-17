@@ -17,4 +17,4 @@ tracing = "=0.1.44"
 [dev-dependencies]
 clap = { version = "=4.6.2", features = ["derive", "env"] }
 mockito = "=1.7.2"
-tokio = { version = "=1.52.4", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.53.0", features = ["macros", "rt-multi-thread"] }
