@@ -15,12 +15,11 @@
 
 <style>
   .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
     list-style: none;
     margin: 0;
     padding: 0;
-
-    > :global(* + *) {
-      margin-top: var(--space-3xs);
-    }
   }
 </style>
