@@ -119,7 +119,6 @@ impl Stack {
 <h3 align="center">
   <a>
     <img width="1000" height="200" alt="Banner with Logo" src="https://static.rerun.io/d0f5443d4803cac65c73fcc064936c09f5e7f208_rerun_banner.png" />
-
   </a>
 </h3>
 `;
