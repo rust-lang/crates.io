@@ -68,7 +68,7 @@ name = "integration"
 path = "src/tests/mod.rs"
 
 [dependencies]
-anyhow = "=1.0.103"
+anyhow = "=1.0.104"
 astral-tokio-tar = { version = "=0.6.2", default-features = false }
 async-compression = { version = "=0.4.42", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
