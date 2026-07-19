@@ -424,11 +424,11 @@ async fn remove_owner(
     conn: &mut AsyncPgConnection,
     login: Login<'_>,
     owners: &Vec<Owner>,
-) -> Result<(), OwnerRemoveError> {
+) -> Result<(), BoxedAppError> {
     match login {
-        Login::GitHubTeam { login, .. } => krate.owner_remove_with_username(conn, login).await,
-        Login::GitHub(username) => krate.owner_remove_with_gh_login(conn, username).await,
-        Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await,
+        Login::GitHubTeam { login, .. } => krate.owner_remove_with_username(conn, login).await?,
+        Login::GitHub(username) => krate.owner_remove_with_gh_login(conn, username).await?,
+        Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await?,
         Login::Unprefixed(username) => {
             let cratesio_owner_to_remove = owners
                 .iter()
@@ -452,20 +452,19 @@ async fn remove_owner(
                         If this is not the account you want to remove, verify the crates.io username of the account you want.",
                 );
 
-                return Err(OwnerRemoveError::AppError(bad_request(error)));
+                return Err(bad_request(error));
             }
 
             if cratesio_owner_to_remove.is_some() {
-                krate.owner_remove_with_username(conn, username).await
+                krate.owner_remove_with_username(conn, username).await?
             } else if github_owner_to_remove.is_some() {
-                krate.owner_remove_with_gh_login(conn, username).await
+                krate.owner_remove_with_gh_login(conn, username).await?
             } else {
-                Err(OwnerRemoveError::NotFound {
-                    login: username.into(),
-                })
+                return Err(OwnerRemoveError::not_found(username).into());
             }
         }
-    }
+    };
+    Ok(())
 }
 
 /// Parsed login string representation
