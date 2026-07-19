@@ -15,7 +15,7 @@ anyhow = "=1.0.103"
 async-trait = "=0.1.89"
 mockall = { version = "=0.15.0", optional = true }
 reqwest = { version = "=0.13.4", features = ["gzip", "json"] }
-serde = { version = "=1.0.228", features = ["derive"] }
+serde = { version = "=1.0.229", features = ["derive"] }
 
 [dev-dependencies]
 tokio = { version = "=1.53.0", features = ["macros", "rt-multi-thread"] }

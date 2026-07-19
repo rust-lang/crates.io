@@ -12,7 +12,7 @@ anyhow = "=1.0.103"
 crates_io_version = { path = "../crates_io_version" }
 reqwest = { version = "=0.13.4", features = ["gzip", "json"] }
 secrecy = "=0.10.3"
-serde = { version = "=1.0.228", features = ["derive"] }
+serde = { version = "=1.0.229", features = ["derive"] }
 
 [dev-dependencies]
 clap = { version = "=4.6.2", features = ["derive", "env", "unicode", "wrap_help"] }
