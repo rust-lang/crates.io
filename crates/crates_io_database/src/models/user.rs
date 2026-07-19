@@ -198,7 +198,8 @@ impl OauthGithub {
     ) -> QueryResult<OauthGithub> {
         oauth_github::table
             .filter(lower(oauth_github::login).eq(login.to_lowercase()))
-            .select(OauthGithub::as_select())
+            .filter(oauth_github::account_id.ne(-1))
+            .order(oauth_github::account_id.desc())
             .first(&mut conn)
             .await
     }

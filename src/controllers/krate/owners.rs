@@ -22,7 +22,6 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
-use regex::Regex;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -174,7 +173,10 @@ pub struct ChangeOwnersRequest {
     ///
     /// For users, use just the username (e.g., `"octocat"`).
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
-    #[schema(example = json!(["octocat", "github:rust-lang:owners"]))]
+    ///
+    /// To disambiguate between crates.io and GitHub usernames, use
+    /// the `cratesio:username` or `github:username` prefix.
+    #[schema(example = json!(["octocat", "github:rust-lang:owners", "cratesio:some_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
@@ -239,13 +241,20 @@ async fn modify_owners(
             let comma_sep_msg = if add {
                 let mut msgs = Vec::with_capacity(logins.len());
                 for login in &logins {
-                    let login_test =
-                        |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+                    let parsed_login = parse_login(login)?;
+                    let login_test = |owner: &Owner| -> bool {
+                        let username = match parsed_login {
+                            Login::GitHubTeam { .. } => login,
+                            Login::GitHub(u) | Login::CratesIo(u) | Login::Unprefixed(u) => u,
+                        };
+
+                        owner.username().eq_ignore_ascii_case(username)
+                    };
                     if owners.iter().any(login_test) {
                         return Err(bad_request(format_args!("`{login}` is already an owner")));
                     }
 
-                    match add_owner(&app, conn, user, &krate, login).await {
+                    match add_owner(&app, conn, user, &krate, parsed_login).await {
                         // A user was successfully invited, and they must accept
                         // the invite, and a best-effort attempt should be made
                         // to email them the invite token for one-click
@@ -299,7 +308,8 @@ async fn modify_owners(
                 msgs.join(",")
             } else {
                 for login in &logins {
-                    remove_owner(&krate, conn, login).await?
+                    let parsed_login = parse_login(login)?;
+                    remove_owner(&krate, conn, parsed_login, &owners).await?
                 }
                 if User::owning(&krate, conn).await?.is_empty() {
                     return Err(bad_request(
@@ -333,20 +343,34 @@ async fn add_owner(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
-    login: &str,
+    login: Login<'_>,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    match disambiguate_login(conn, login, true).await? {
-        Login::Team => {
+    match login {
+        Login::GitHubTeam { login, org, team } => {
             let encryption = &app.config.token_encryption;
-            add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
+            add_github_team_owner(
+                &*app.github,
+                conn,
+                req_user,
+                krate,
+                login,
+                org,
+                team,
+                encryption,
+            )
+            .await
         }
-        Login::GitHub(login) => {
-            let oauth = OauthGithub::find_by_login(conn, login)
+        Login::GitHub(username) => {
+            let oauth = OauthGithub::find_by_login(conn, username)
                 .await
                 .optional()?
-                .ok_or_else(|| bad_request(format_args!("could not find user with github username {login}. If you meant to add a github team, format is github:org:team")))?;
+                .ok_or_else(|| {
+                    bad_request(format_args!(
+                        "could not find user with github username {username}"
+                    ))
+                })?;
             let user = User::find(conn, oauth.user_id).await?;
-            invite_user_owner(app, conn, req_user, user, login, krate).await
+            invite_user_owner(app, conn, req_user, user, username, krate).await
         }
         Login::CratesIo(username) => {
             let user = User::find_by_username(conn, username)
@@ -359,96 +383,132 @@ async fn add_owner(
                 })?;
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
-        Login::Username(user) => invite_user_owner(app, conn, req_user, user, login, krate).await,
+        Login::Unprefixed(username) => {
+            // check if login is ambiguous
+            let user = User::find_by_username(conn, username)
+                .await
+                .optional()?
+                .ok_or_else(|| {
+                    bad_request(format_args!("could not find user with login `{username}`"))
+                })?;
+
+            let oauth_github = OauthGithub::belonging_to(&user)
+                .select(OauthGithub::as_select())
+                .first(conn)
+                .await
+                .optional()?;
+
+            if let Some(oauth_github) = oauth_github
+                && oauth_github.login.to_lowercase() != user.username.to_lowercase()
+            {
+                let gh_login = &oauth_github.login;
+                let error = format_args!(
+                    "username {username} is possibly ambiguous.\n\n\
+                        Caused by: \n  \
+                        The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
+                        To confirm this is the account you want to add, please run one of the following:\n\n  \
+                        $ cargo owner --add cratesio:{username}\n  \
+                        $ cargo owner --add github:{gh_login}\n\n  \
+                        If this is not the account you want to add, verify the crates.io username of the account you want.",
+                );
+
+                return Err(OwnerAddError::AppError(bad_request(error)));
+            }
+            invite_user_owner(app, conn, req_user, user, username, krate).await
+        }
     }
 }
 
 async fn remove_owner(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
-    login: &str,
+    login: Login<'_>,
+    owners: &Vec<Owner>,
 ) -> Result<(), OwnerRemoveError> {
-    match disambiguate_login(conn, login, false)
-        .await
-        .map_err(OwnerRemoveError::from)?
-    {
-        Login::Team => krate.owner_remove_with_username(conn, login).await,
-        Login::GitHub(login) => krate.owner_remove_with_gh_login(conn, login).await,
+    match login {
+        Login::GitHubTeam { login, .. } => krate.owner_remove_with_username(conn, login).await,
+        Login::GitHub(username) => krate.owner_remove_with_gh_login(conn, username).await,
         Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await,
-        Login::Username(_) => krate.owner_remove_with_username(conn, login).await,
+        Login::Unprefixed(username) => {
+            let cratesio_owner_to_remove = owners
+                .iter()
+                .find(|o| o.username().to_lowercase() == username.to_lowercase());
+            let github_owner_to_remove = owners
+                .iter()
+                .find(|o| o.gh_login().to_lowercase() == username.to_lowercase());
+
+            // check if ambiguous. assumes usernames are unique on separate services.
+            if let Some(cratesio_owner) = cratesio_owner_to_remove
+                && let Some(github_owner) = github_owner_to_remove
+                && cratesio_owner.id() != github_owner.id()
+            {
+                let error = format_args!(
+                    "username {username} is ambiguous.\n\n\
+                        Caused by: \n  \
+                        There are two owners of this crate with the username `{username}` on different services.\n  \
+                        To confirm which owner you want to remove, please run one of the following:\n\n  \
+                        $ cargo owner --remove cratesio:{username}\n  \
+                        $ cargo owner --remove github:{username}\n\n  \
+                        If this is not the account you want to remove, verify the crates.io username of the account you want.",
+                );
+
+                return Err(OwnerRemoveError::AppError(bad_request(error)));
+            }
+
+            if cratesio_owner_to_remove.is_some() {
+                krate.owner_remove_with_username(conn, username).await
+            } else if github_owner_to_remove.is_some() {
+                krate.owner_remove_with_gh_login(conn, username).await
+            } else {
+                Err(OwnerRemoveError::NotFound {
+                    login: username.into(),
+                })
+            }
+        }
     }
 }
 
+/// Parsed login string representation
 enum Login<'a> {
-    /// A team login e.g `github:org:team`
-    Team,
-    /// A disambiguated `github:username` resolved via `oauth_github`.
+    /// GitHub organization team (e.g `github:org:team`). the original login is preserved as a convenience to avoid rebuilding it.
+    GitHubTeam {
+        login: &'a str,
+        org: &'a str,
+        team: &'a str,
+    },
+    /// GitHub user (e.g. `github:username`).
     GitHub(&'a str),
-    /// A disambiguated `cratesio:username` resolved via users table.
+    /// crates.io user (`crates.io:username`).
     CratesIo(&'a str),
-    /// An unambigous username (`users.username` == `oauth_github.login`)
-    Username(User),
+    /// Unprefixed username (`username` without any prefix)
+    Unprefixed(&'a str),
 }
 
-/// Disambiguate a login string
-async fn disambiguate_login<'a>(
-    conn: &mut AsyncPgConnection,
-    login: &'a str,
-    add: bool,
-) -> Result<Login<'a>, BoxedAppError> {
-    // Team login: exactly two colons (e.g. github:org:team)
-    if Regex::new(r"^[^:]+:[^:]+:[^:]+$").is_ok_and(|r| r.is_match(login)) {
-        return Ok(Login::Team);
+fn parse_login<'a>(login: &'a str) -> Result<Login<'a>, BoxedAppError> {
+    // sanitization
+    fn is_valid(s: &str, label: &str) -> Result<bool, BoxedAppError> {
+        if let Some(c) = s
+            .chars()
+            .find(|c| !matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'))
+        {
+            return Err(bad_request(format_args!(
+                "{label} cannot contain special characters like {c}"
+            )));
+        }
+        Ok(true)
     }
 
-    // disambiguate user login
-    if login.contains(':') {
-        let mut chunks = login.split(':');
-        let prefix = chunks.next().unwrap();
-
-        let username = chunks.next().unwrap();
-        return match prefix {
-            "github" => Ok(Login::GitHub(username)),
-            "cratesio" => Ok(Login::CratesIo(username)),
-            _ => Err(bad_request(
-                "unsupported username prefix, only github and cratesio prefixes are supported",
-            )),
-        };
+    match login.split(':').collect::<Vec<_>>().as_slice() {
+        ["github", org, team] if is_valid(org, "organization")? && is_valid(team, "team")? => {
+            Ok(Login::GitHubTeam { login, org, team })
+        }
+        ["github", username] if is_valid(username, "username")? => Ok(Login::GitHub(username)),
+        ["cratesio", username] if is_valid(username, "username")? => Ok(Login::CratesIo(username)),
+        [username] if is_valid(username, "username")? => Ok(Login::Unprefixed(username)),
+        _ => Err(bad_request(
+            "invalid username format. only github:org:team, github:username, cratesio:username and username are supported.",
+        )),
     }
-
-    // check if login is ambiguous
-    let user = User::find_by_username(conn, login)
-        .await
-        .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
-
-    let oauth_github = OauthGithub::belonging_to(&user)
-        .select(OauthGithub::as_select())
-        .first(conn)
-        .await
-        .optional()?;
-
-    let command = if add { "add" } else { "remove" };
-    let username = user.username.to_owned();
-
-    if let Some(oauth_github) = oauth_github
-        && oauth_github.login != user.username
-    {
-        let gh_login = &oauth_github.login;
-        let error = format_args!(
-            "error: username {username} is possibly ambiguous.\n\n\
-                Caused by: \n  \
-                The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
-                To confirm this is the account you want to {command}, please run one of the following:\n\n  \
-                $ cargo owner --{command} cratesio:{username}\n  \
-                $ cargo owner --{command} github:{gh_login}\n\n  \
-                If this is not the account you want to {command}, verify the crates.io username of the account you want.",
-        );
-
-        return Err(bad_request(error));
-    }
-
-    Ok(Login::Username(user))
 }
 
 async fn invite_user_owner(
@@ -478,41 +538,23 @@ async fn invite_user_owner(
     }
 }
 
-async fn add_team_owner(
+/// Tries to add a github team owner. Assumes `org` and `team` are
+/// correctly parsed out of the full `login`. `login` is passed as a
+/// convenience to avoid rebuilding it.
+async fn add_github_team_owner(
     gh_client: &dyn GitHubClient,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
     login: &str,
+    org: &str,
+    team: &str,
     encryption: &TokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    // github:rust-lang:owners
-    let mut chunks = login.split(':');
-
-    let team_system = chunks.next().unwrap();
-    if team_system != "github" {
-        let error = "unknown organization handler, only 'github:org:team' is supported";
-        return Err(bad_request(error).into());
-    }
-
-    // unwrap is documented above as part of the calling contract
-    let org = chunks.next().unwrap();
-    let team = chunks.next().ok_or_else(|| {
-        let error = "missing github team argument; format is github:org:team";
-        bad_request(error)
-    })?;
-
     // Always recreate teams to get the most up-to-date GitHub ID
-    let team = create_or_update_github_team(
-        gh_client,
-        conn,
-        &login.to_lowercase(),
-        org,
-        team,
-        req_user,
-        encryption,
-    )
-    .await?;
+    let team =
+        create_or_update_github_team(gh_client, conn, login, org, team, req_user, encryption)
+            .await?;
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.
@@ -528,7 +570,7 @@ async fn add_team_owner(
 }
 
 /// Tries to create or update a GitHub Team. Assumes `org` and `team` are
-/// correctly parsed out of the full `name`. `name` is passed as a
+/// correctly parsed out of the full `login`. `login` is passed as a
 /// convenience to avoid rebuilding it.
 pub async fn create_or_update_github_team(
     gh_client: &dyn GitHubClient,
@@ -539,21 +581,6 @@ pub async fn create_or_update_github_team(
     req_user: &User,
     encryption: &TokenEncryption,
 ) -> AppResult<Team> {
-    // GET orgs/:org/teams
-    // check that `team` is the `slug` in results, and grab its data
-
-    // "sanitization"
-    fn is_allowed_char(c: char) -> bool {
-        matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
-    }
-
-    if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
-        return Err(bad_request(format_args!(
-            "organization cannot contain special \
-                 characters like {c}"
-        )));
-    }
-
     let Some(token) = req_user.gh_encrypted_token.as_ref() else {
         return Err(bad_request(
             "Cannot add a GitHub team as an owner without a connected GitHub account",
@@ -644,12 +671,6 @@ impl From<BoxedAppError> for OwnerAddError {
     }
 }
 
-impl From<BoxedAppError> for OwnerRemoveError {
-    fn from(value: BoxedAppError) -> Self {
-        Self::AppError(value.to_string())
-    }
-}
-
 impl From<OwnerRemoveError> for BoxedAppError {
     fn from(error: OwnerRemoveError) -> Self {
         match error {
@@ -657,7 +678,6 @@ impl From<OwnerRemoveError> for BoxedAppError {
             OwnerRemoveError::NotFound { login } => {
                 bad_request(format!("could not find owner with login `{login}`"))
             }
-            OwnerRemoveError::AppError(error) => bad_request(error),
         }
     }
 }

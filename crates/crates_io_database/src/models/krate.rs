@@ -318,8 +318,6 @@ pub enum OwnerRemoveError {
     Diesel(#[from] diesel::result::Error),
     #[error("Could not find owner with login `{login}`")]
     NotFound { login: String },
-    #[error("{0}")]
-    AppError(String),
 }
 
 impl OwnerRemoveError {
