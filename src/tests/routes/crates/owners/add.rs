@@ -668,8 +668,6 @@ async fn test_already_owner_github_mismatched_username() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"github:user2-gh is already an owner"}]}"#);
 }
 
-// A login is rejected before any database lookup when it has the wrong number
-// of colons, empty components, or invalid characters.
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_reject_team_with_extra_component() {

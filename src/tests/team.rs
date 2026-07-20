@@ -51,6 +51,7 @@ async fn weird_name() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
+/// Resolved as a disambiguated username
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -59,9 +60,9 @@ async fn one_colon() {
         .expect_build(&mut conn)
         .await;
 
-    let response = token.add_named_owner("foo_one_colon", "github:foo").await;
+    let response = token.add_named_owner("foo_one_colon", "github:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username foo"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username user2"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
