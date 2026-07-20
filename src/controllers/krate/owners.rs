@@ -176,7 +176,7 @@ pub struct ChangeOwnersRequest {
     ///
     /// To disambiguate between crates.io and GitHub usernames, use
     /// the `cratesio:username` or `github:username` prefix.
-    #[schema(example = json!(["octocat", "github:rust-lang:owners", "cratesio:some_user"]))]
+    #[schema(example = json!(["octocat", "github:rust-lang:owners", "cratesio:some_user", "github:other_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
@@ -248,7 +248,7 @@ async fn modify_owners(
                             Login::GitHub(u) | Login::CratesIo(u) | Login::Unprefixed(u) => u,
                         };
 
-                        owner.username().eq_ignore_ascii_case(username)
+                        owner.username().to_lowercase() == username.to_lowercase()
                     };
                     if owners.iter().any(login_test) {
                         return Err(bad_request(format_args!("`{login}` is already an owner")));
@@ -412,6 +412,7 @@ async fn add_owner(
 
                 return Err(OwnerAddError::AppError(bad_request(error)));
             }
+            
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
     }
@@ -482,6 +483,10 @@ enum Login<'a> {
 fn parse_login<'a>(login: &'a str) -> Result<Login<'a>, BoxedAppError> {
     // sanitization
     fn is_valid(s: &str, label: &str) -> Result<bool, BoxedAppError> {
+        if s.is_empty() {
+            return Err(bad_request(format_args!("{label} cannot be empty")));
+        }
+
         if let Some(c) = s
             .chars()
             .find(|c| !matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'))
@@ -490,6 +495,7 @@ fn parse_login<'a>(login: &'a str) -> Result<Login<'a>, BoxedAppError> {
                 "{label} cannot contain special characters like {c}"
             )));
         }
+
         Ok(true)
     }
 
@@ -501,7 +507,7 @@ fn parse_login<'a>(login: &'a str) -> Result<Login<'a>, BoxedAppError> {
         ["cratesio", username] if is_valid(username, "username")? => Ok(Login::CratesIo(username)),
         [username] if is_valid(username, "username")? => Ok(Login::Unprefixed(username)),
         _ => Err(bad_request(
-            "invalid username format. only github:org:team, github:username, cratesio:username and username are supported.",
+            "invalid argument. only github:org:team, github:username, cratesio:username and username are supported.",
         )),
     }
 }

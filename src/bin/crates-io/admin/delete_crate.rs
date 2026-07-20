@@ -31,7 +31,7 @@ pub struct Opts {
     #[arg(short, long)]
     yes: bool,
 
-    /// Your crates.io username
+    /// Your crates.io username.
     #[arg(long)]
     deleted_by: String,
 
