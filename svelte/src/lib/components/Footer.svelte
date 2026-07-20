@@ -64,19 +64,10 @@
 </footer>
 
 <style>
-  :root {
-    --footer-bg-color: var(--header-bg-color);
-    --footer-header-color: var(--yellow500);
-    --footer-header-shadow-color: var(--green900);
-    --footer-link-color: #fff;
-    --footer-link-hover-color: var(--yellow500);
-    --footer-link-hover-shadow-color: var(--green900);
-  }
-
   .footer {
     display: grid;
     justify-items: center;
-    background: var(--footer-bg-color);
+    background: var(--header-bg-color);
   }
 
   .content {
@@ -98,8 +89,8 @@
       margin: 0 0 var(--space-s);
       font-size: 20px;
       font-weight: 500;
-      color: var(--footer-header-color);
-      text-shadow: 1px 1px 1px var(--footer-header-shadow-color);
+      color: var(--yellow500);
+      text-shadow: 1px 1px 1px var(--green900);
     }
 
     & ul {
@@ -128,13 +119,13 @@
       transition: var(--transition-medium);
 
       &:hover {
-        color: var(--footer-link-hover-color);
-        text-shadow: 1px 1px 1px var(--footer-link-hover-shadow-color);
+        color: var(--yellow500);
+        text-shadow: 1px 1px 1px var(--green900);
         /* apply color fade only on mouse-out */
         transition: var(--transition-instant);
 
         & :global(.icon) {
-          filter: drop-shadow(1px 1px 1px var(--footer-link-hover-shadow-color));
+          filter: drop-shadow(1px 1px 1px var(--green900));
         }
       }
     }
