@@ -1,4 +1,6 @@
+use crates_io_datadog::DatadogClient;
 use crates_io_env_vars::var;
+use reqwest::Client;
 use secrecy::SecretString;
 
 const DEFAULT_SITE: &str = "datadoghq.com";
@@ -26,6 +28,19 @@ impl Default for DatadogConfig {
 }
 
 impl DatadogConfig {
+    /// Creates a Datadog client when an API key is configured.
+    pub fn client(&self, http_client: Client) -> Option<DatadogClient> {
+        let api_key = self.api_key.clone()?;
+
+        let client = DatadogClient::builder()
+            .http_client(http_client)
+            .api_key(api_key)
+            .site(self.site.clone())
+            .build();
+
+        Some(client)
+    }
+
     pub fn from_env() -> anyhow::Result<Self> {
         let api_key = var("DD_API_KEY")?.map(SecretString::from);
         let site = var("DD_SITE")?.unwrap_or_else(|| DEFAULT_SITE.into());

@@ -83,6 +83,7 @@ fn main() -> anyhow::Result<()> {
 
     let user_agent = crates_io_version::user_agent();
     let http_client = Client::builder().user_agent(user_agent).build()?;
+    let datadog = config.datadog.client(http_client.clone());
 
     let cloudfront = CloudFront::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));
@@ -101,7 +102,7 @@ fn main() -> anyhow::Result<()> {
 
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
 
-    let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client.clone()));
+    let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client));
     let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
     let sync_github_app = build_sync_github_app()?;
 
@@ -153,7 +154,7 @@ fn main() -> anyhow::Result<()> {
         crates_io::metrics::datadog::spawn(
             &environment.config,
             environment.deadpool.clone(),
-            http_client,
+            datadog,
         );
 
         info!("Runner booted, running jobs");

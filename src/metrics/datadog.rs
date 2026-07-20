@@ -10,20 +10,15 @@
 use crate::config::Server;
 use crate::metrics::ServiceMetrics;
 use anyhow::{Context, anyhow};
+use crates_io_datadog::{DatadogClient, MetricType as DatadogMetricType, Point, Resource, Series};
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use prometheus::proto::{MetricFamily, MetricType};
-use reqwest::Client;
-use secrecy::{ExposeSecret, SecretString};
-use serde::Serialize;
 use std::time::Duration;
 use tracing::{info, warn};
 
 /// Interval between metric submissions.
 const SUBMIT_INTERVAL: Duration = Duration::from_secs(5);
-
-/// Per-request timeout for a single submission.
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// Spawns a background task that periodically submits the service metrics to
 /// Datadog.
@@ -32,23 +27,18 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 /// `background_worker` dyno; scaling the worker horizontally would make every
 /// instance submit the same series (identical host and tags per environment),
 /// causing last-write-wins collisions.
-pub fn spawn(config: &Server, deadpool: Pool<AsyncPgConnection>, http_client: Client) {
-    let Some(api_key) = config.datadog.api_key.clone() else {
+pub fn spawn(config: &Server, deadpool: Pool<AsyncPgConnection>, datadog: Option<DatadogClient>) {
+    let Some(datadog) = datadog else {
         info!("Datadog API key not configured, skipping Datadog metrics submission");
         return;
     };
-
-    let url = format!("https://api.{}/api/v2/series", config.datadog.site);
 
     let domain = config.domain_name.clone();
     let env = match domain.as_str() {
         "staging.crates.io" => "staging",
         _ => "prod",
     };
-    let resources = vec![Resource {
-        kind: "host".into(),
-        name: domain,
-    }];
+    let resources = vec![Resource::builder().kind("host").name(domain).build()];
 
     let mut common_tags = vec![format!("env:{env}"), "service:crates_io".into()];
     if let Ok(Some(commit)) = crates_io_version::commit() {
@@ -68,9 +58,7 @@ pub fn spawn(config: &Server, deadpool: Pool<AsyncPgConnection>, http_client: Cl
             let result = submit(
                 &deadpool,
                 &service_metrics,
-                &http_client,
-                &url,
-                &api_key,
+                &datadog,
                 &resources,
                 &common_tags,
             )
@@ -89,9 +77,7 @@ pub fn spawn(config: &Server, deadpool: Pool<AsyncPgConnection>, http_client: Cl
 async fn submit(
     deadpool: &Pool<AsyncPgConnection>,
     service_metrics: &ServiceMetrics,
-    http_client: &Client,
-    url: &str,
-    api_key: &SecretString,
+    datadog: &DatadogClient,
     resources: &[Resource],
     common_tags: &[String],
 ) -> anyhow::Result<()> {
@@ -108,50 +94,10 @@ async fn submit(
 
     let timestamp = chrono::Utc::now().timestamp();
     let series = families_to_series(&families, timestamp, resources, common_tags);
-    let body = Body { series };
 
-    let response = http_client
-        .post(url)
-        .header("DD-API-KEY", api_key.expose_secret())
-        .timeout(REQUEST_TIMEOUT)
-        .json(&body)
-        .send()
-        .await
-        .context("Failed to send request to Datadog")?;
-
-    response
-        .error_for_status()
-        .context("Datadog returned an error response")?;
+    datadog.submit_metrics(&series).await?;
 
     Ok(())
-}
-
-#[derive(Serialize, Debug, PartialEq)]
-struct Body {
-    series: Vec<Series>,
-}
-
-#[derive(Serialize, Debug, PartialEq)]
-struct Series {
-    metric: String,
-    #[serde(rename = "type")]
-    kind: u32,
-    points: Vec<Point>,
-    resources: Vec<Resource>,
-    tags: Vec<String>,
-}
-
-#[derive(Serialize, Debug, PartialEq)]
-struct Point {
-    timestamp: i64,
-    value: f64,
-}
-
-#[derive(Serialize, Debug, PartialEq, Clone)]
-struct Resource {
-    #[serde(rename = "type")]
-    kind: String,
-    name: String,
 }
 
 /// Builds one Datadog [`Series`] per metric in the gathered families.
@@ -180,8 +126,8 @@ fn families_to_series(
 
         for proto in family.get_metric() {
             let (kind, value) = match family.get_field_type() {
-                MetricType::GAUGE => (3, proto.get_gauge().get_value()),
-                MetricType::COUNTER => (1, proto.get_counter().get_value()),
+                MetricType::GAUGE => (DatadogMetricType::Gauge, proto.get_gauge().get_value()),
+                MetricType::COUNTER => (DatadogMetricType::Count, proto.get_counter().get_value()),
                 other => {
                     warn!("unsupported metric type: {other:?}");
                     continue;
@@ -196,13 +142,15 @@ fn families_to_series(
 
             tags.extend_from_slice(common_tags);
 
-            series.push(Series {
-                metric: metric.clone(),
-                kind,
-                points: vec![Point { timestamp, value }],
-                resources: resources.to_vec(),
-                tags,
-            });
+            let point = Point::builder().timestamp(timestamp).value(value).build();
+            let series_item = Series::builder()
+                .metric(metric.clone())
+                .kind(kind)
+                .points(vec![point])
+                .resources(resources.to_vec())
+                .tags(tags)
+                .build();
+            series.push(series_item);
         }
     }
 
@@ -216,10 +164,7 @@ mod tests {
     use prometheus::{Histogram, HistogramOpts, IntCounter, IntGaugeVec, Opts, Registry};
 
     fn host() -> Resource {
-        Resource {
-            kind: "host".into(),
-            name: "crates.io".into(),
-        }
+        Resource::builder().kind("host").name("crates.io").build()
     }
 
     #[test]

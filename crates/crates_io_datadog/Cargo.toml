@@ -1,0 +1,15 @@
+[package]
+name = "crates_io_datadog"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = "=1.0.104"
+bon = "=3.9.3"
+reqwest = { version = "=0.13.4", features = ["json"] }
+secrecy = "=0.10.3"
+serde = { version = "=1.0.229", features = ["derive"] }
