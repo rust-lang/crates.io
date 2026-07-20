@@ -13,3 +13,9 @@ bon = "=3.9.3"
 reqwest = { version = "=0.13.4", features = ["json"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.229", features = ["derive"] }
+
+[dev-dependencies]
+claims = "=0.8.0"
+insta = "=1.48.0"
+mockito = "=1.7.2"
+tokio = { version = "=1.53.0", features = ["macros", "rt-multi-thread"] }

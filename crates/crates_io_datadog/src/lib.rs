@@ -128,8 +128,47 @@ pub struct Resource {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::{assert_err, assert_ok, assert_some, assert_some_eq};
+    use insta::assert_snapshot;
+    use mockito::{Matcher, Server, ServerOpts};
 
     const TEST_API_KEY: &str = "test-api-key";
+
+    async fn mock_server() -> Server {
+        Server::new_with_opts_async(ServerOpts {
+            assert_on_drop: true,
+            ..Default::default()
+        })
+        .await
+    }
+
+    fn client_with_server(server: &Server) -> DatadogClient {
+        DatadogClient::builder()
+            .http_client(Client::new())
+            .api_key(TEST_API_KEY.to_string().into())
+            .base_url(server.url())
+            .build()
+    }
+
+    fn metric_series() -> Series {
+        let point = Point::builder()
+            .timestamp(1_753_000_000)
+            .value(42.0)
+            .build();
+
+        let resource = Resource::builder().kind("host").name("crates.io").build();
+
+        Series::builder()
+            .metric("crates_io.background_jobs")
+            .kind(MetricType::Gauge)
+            .points(vec![point])
+            .resources(vec![resource])
+            .tags(vec![
+                "env:test".to_string(),
+                "service:crates_io".to_string(),
+            ])
+            .build()
+    }
 
     #[test]
     fn uses_site_for_default_base_url() {
@@ -157,5 +196,56 @@ mod tests {
             client.api_url("/api/v2/series"),
             "http://localhost/api/v2/series"
         );
+    }
+
+    #[tokio::test]
+    async fn submits_metric_series() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("POST", "/api/v2/series")
+            .match_header("dd-api-key", TEST_API_KEY)
+            .match_body(Matcher::JsonString(
+                r#"{
+                    "series": [{
+                        "metric": "crates_io.background_jobs",
+                        "type": 3,
+                        "points": [{
+                            "timestamp": 1753000000,
+                            "value": 42.0
+                        }],
+                        "resources": [{
+                            "type": "host",
+                            "name": "crates.io"
+                        }],
+                        "tags": ["env:test", "service:crates_io"]
+                    }]
+                }"#
+                .to_string(),
+            ))
+            .with_status(202)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        assert_ok!(client.submit_metrics(&[metric_series()]).await);
+    }
+
+    #[tokio::test]
+    async fn reports_rejected_metric_submissions() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("POST", "/api/v2/series")
+            .with_status(403)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let error = assert_err!(client.submit_metrics(&[metric_series()]).await);
+        assert_snapshot!(error, @"Datadog returned an error response");
+
+        let http_error = assert_some!(error.downcast_ref::<reqwest::Error>());
+        assert_some_eq!(http_error.status(), reqwest::StatusCode::FORBIDDEN);
     }
 }
