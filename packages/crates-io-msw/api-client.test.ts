@@ -45,6 +45,7 @@ test('GET /api/v1/crates/{name}', async () => {
         "description": "This is the description for the crate called "serde"",
         "documentation": null,
         "downloads": 37035,
+        "exact_match": false,
         "homepage": null,
         "id": "serde",
         "keywords": null,
