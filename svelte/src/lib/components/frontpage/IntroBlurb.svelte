@@ -57,9 +57,6 @@
     flex: 4;
     display: flex;
     flex-direction: column;
-
-    > :global(* + *) {
-      margin-top: var(--space-s);
-    }
+    gap: var(--space-s);
   }
 </style>
