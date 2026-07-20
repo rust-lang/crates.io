@@ -403,12 +403,10 @@ async fn add_owner(
             {
                 let gh_login = &oauth_github.login;
                 let error = format_args!(
-                    "username {username} is possibly ambiguous.\n\n\
-                        Caused by: \n  \
-                        The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n  \
-                        To confirm this is the account you want to add, please run one of the following:\n\n  \
-                        $ cargo owner --add cratesio:{username}\n  \
-                        $ cargo owner --add github:{gh_login}\n\n  \
+                    "username {username} is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n
+                        To confirm this is the account you want to add, please run one of the following:\n\n
+                        $ cargo owner --add cratesio:{username}\n
+                        $ cargo owner --add github:{gh_login}\n\n
                         If this is not the account you want to add, verify the crates.io username of the account you want.",
                 );
 
@@ -443,12 +441,10 @@ async fn remove_owner(
                 && cratesio_owner.id() != github_owner.id()
             {
                 let error = format_args!(
-                    "username {username} is ambiguous.\n\n\
-                        Caused by: \n  \
-                        There are two owners of this crate with the username `{username}` on different services.\n  \
-                        To confirm which owner you want to remove, please run one of the following:\n\n  \
-                        $ cargo owner --remove cratesio:{username}\n  \
-                        $ cargo owner --remove github:{username}\n\n  \
+                    "username {username} is ambiguous. There are two owners of this crate with the username `{username}` on different services.\n
+                        To confirm which owner you want to remove, please run one of the following:\n\n
+                        $ cargo owner --remove cratesio:{username}\n
+                        $ cargo owner --remove github:{username}\n\n
                         If this is not the account you want to remove, verify the crates.io username of the account you want.",
                 );
 
