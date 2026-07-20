@@ -1,6 +1,5 @@
 ---
 source: src/tests/openapi.rs
-assertion_line: 10
 expression: response.json()
 ---
 {

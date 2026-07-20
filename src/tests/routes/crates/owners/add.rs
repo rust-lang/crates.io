@@ -437,7 +437,7 @@ async fn test_ambiguous_username_error() {
 
     OauthGithubBuilder::for_user(new_user.as_model())
         .with_login("user2-gh")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     CrateBuilder::new("foo", cookie.as_model().id)
@@ -459,7 +459,7 @@ async fn test_disambiguate_with_github_prefix() {
     // Create oauth_github entry with the GitHub login
     OauthGithubBuilder::for_user(new_user.as_model())
         .with_login("user2-gh")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     CrateBuilder::new("foo", cookie.as_model().id)
@@ -544,7 +544,7 @@ async fn test_add_mixed_case_github_login() {
     let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
     OauthGithubBuilder::for_user(user2.as_model())
         .with_login("user2-gh")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
     CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -614,7 +614,7 @@ async fn test_already_owner_github() {
     let user2 = app.db_new_user("user2").await;
     OauthGithubBuilder::for_user(user2.as_model())
         .with_login("user2")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -647,7 +647,7 @@ async fn test_already_owner_github_mismatched_username() {
     let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
     OauthGithubBuilder::for_user(user2.as_model())
         .with_login("user2-gh")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -667,7 +667,6 @@ async fn test_already_owner_github_mismatched_username() {
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"github:user2-gh is already an owner"}]}"#);
 }
-
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_reject_team_with_extra_component() {

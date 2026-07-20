@@ -168,7 +168,7 @@ async fn test_remove_ambiguous_user() {
     let github_alice = app.db_new_user_with_gh_login("bob", "alice").await;
     OauthGithubBuilder::for_user(github_alice.as_model())
         .with_login("alice")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -200,7 +200,7 @@ async fn test_remove_ambiguous_user_with_cratesio_prefix() {
     let github_alice = app.db_new_user_with_gh_login("bob", "alice").await;
     OauthGithubBuilder::for_user(github_alice.as_model())
         .with_login("alice")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -232,7 +232,7 @@ async fn test_remove_ambiguous_user_with_github_prefix() {
     let github_alice = app.db_new_user_with_gh_login("bob", "alice").await;
     OauthGithubBuilder::for_user(github_alice.as_model())
         .with_login("alice")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -263,7 +263,7 @@ async fn test_remove_unprefixed_non_ambiguous() {
 
     OauthGithubBuilder::for_user(user2.as_model())
         .with_login("user2")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -337,7 +337,7 @@ async fn test_remove_mixed_case_github() {
 
     OauthGithubBuilder::for_user(user2.as_model())
         .with_login("user2-gh")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -512,7 +512,7 @@ async fn test_disambiguate_remove_with_github_prefix() {
 
     OauthGithubBuilder::for_user(user2.as_model())
         .with_login("user2-gh")
-        .insert(&mut conn)
+        .insert(&conn)
         .await;
 
     let response = cookie.remove_named_owner("foo", "github:user2-gh").await;
