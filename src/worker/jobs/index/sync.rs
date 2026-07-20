@@ -1,4 +1,6 @@
+use self::trigger::Trigger;
 use crate::index::get_index_data;
+use crate::sqs::SqsQueue;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
@@ -10,17 +12,93 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::runtime::Handle;
-use tracing::{debug, info, instrument, warn};
+use tracing::{debug, error, info, instrument, warn};
+
+mod trigger;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {
     krate: String,
+
+    /// The triggering event that led to the sync.
+    ///
+    /// Once the index has been synced, this event will be sent to docs.rs via
+    /// SQS.
+    #[serde(default)]
+    trigger: Option<Trigger>,
 }
 
 impl SyncToGitIndex {
+    /// Instantiate a new sync to git index job that won't trigger any actions
+    /// in docs.rs.
+    ///
+    /// This probably isn't what you want unless you're explicitly just trying
+    /// to sync the index in response to something other than a crate event.
     pub fn new(krate: impl Into<String>) -> Self {
-        let krate = krate.into();
-        Self { krate }
+        Self {
+            krate: krate.into(),
+            trigger: None,
+        }
+    }
+
+    pub fn new_publish(krate: impl Into<String>, version: impl Into<String>) -> Self {
+        Self {
+            krate: krate.into(),
+            trigger: Some(Trigger::Added {
+                version: version.into(),
+            }),
+        }
+    }
+
+    pub fn new_unyank(krate: impl Into<String>, version: impl Into<String>) -> Self {
+        Self {
+            krate: krate.into(),
+            trigger: Some(Trigger::Unyanked {
+                version: version.into(),
+            }),
+        }
+    }
+
+    pub fn new_yank(krate: impl Into<String>, version: impl Into<String>) -> Self {
+        Self {
+            krate: krate.into(),
+            trigger: Some(Trigger::Yanked {
+                version: version.into(),
+            }),
+        }
+    }
+
+    pub fn new_delete_crate(krate: impl Into<String>) -> Self {
+        Self {
+            krate: krate.into(),
+            trigger: Some(Trigger::CrateDeleted),
+        }
+    }
+
+    pub fn new_delete_versions<Crate, VersionIter>(krate: Crate, versions: VersionIter) -> Self
+    where
+        Crate: Into<String>,
+        VersionIter: Iterator,
+        VersionIter::Item: Into<String>,
+    {
+        Self {
+            krate: krate.into(),
+            trigger: Some(Trigger::VersionsDeleted {
+                versions: versions.map(|version| version.into()).collect(),
+            }),
+        }
+    }
+
+    #[instrument(skip_all)]
+    async fn notify_docs_rs(&self, queue: impl SqsQueue) -> anyhow::Result<()> {
+        if let Some(trigger) = self.trigger.clone() {
+            for change in trigger.into_iter(&self.krate) {
+                let json = serde_json::to_string(&change)?;
+                queue.send_message(json).await?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -39,6 +117,7 @@ impl BackgroundJob for SyncToGitIndex {
 
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
+        let queue = env.docs_rs_queue.clone();
 
         let new = get_index_data(
             &crate_name,
@@ -79,9 +158,27 @@ impl BackgroundJob for SyncToGitIndex {
                 "Committed and pushed"
             );
 
-            Ok(())
+            anyhow::Ok(())
         })
-        .await?
+        .await??;
+
+        // This is implemented inline for now, but we may want to enqueue
+        // another job to handle sending the actual messages.
+        if let Err(e) = self.notify_docs_rs(queue).await {
+            // We won't consider this fatal right now, but we do need to know
+            // what failed so we can tell docs.rs.
+            //
+            // TODO: is this alertable? How can we notify docs.rs that rebuilds
+            // may be required?
+            error!(
+                krate.name = &self.krate,
+                trigger = ?self.trigger,
+                error = %e,
+                "error notifying docs.rs",
+            );
+        }
+
+        Ok(())
     }
 }
 

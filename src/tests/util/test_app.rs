@@ -3,14 +3,15 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
-    DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
+    self, Base, BindConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
+    FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig, QueueConfig,
     RateLimitsConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crates_io::sqs::MockSqsQueue;
 use crates_io::storage::StorageConfig;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
@@ -133,6 +134,7 @@ impl TestApp {
             docs_rs: None,
             oidc_key_stores: Default::default(),
             og_image_generator: None,
+            docs_rs_queue: None,
         }
     }
 
@@ -298,6 +300,7 @@ pub struct TestAppBuilder {
     docs_rs: Option<MockDocsRsClient>,
     oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
     og_image_generator: Option<OgImageGenerator>,
+    docs_rs_queue: Option<MockSqsQueue>,
 }
 
 impl TestAppBuilder {
@@ -355,6 +358,9 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
+            let cdn_log_queue = Arc::new(MockSqsQueue::new());
+            let docs_rs_queue = Arc::new(self.docs_rs_queue.unwrap_or_default());
+
             let environment = Environment::builder()
                 .config(app.config.clone())
                 .repository_config(repository_config)
@@ -367,6 +373,8 @@ impl TestAppBuilder {
                 .maybe_sync_github_app(self.sync_github_app.map(|a| Arc::new(a) as _))
                 .github(github)
                 .maybe_og_image_generator(self.og_image_generator)
+                .cdn_log_queue(cdn_log_queue)
+                .docs_rs_queue(docs_rs_queue)
                 .build();
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
@@ -509,6 +517,11 @@ impl TestAppBuilder {
         self
     }
 
+    pub fn with_docs_rs_queue(mut self, queue: Option<MockSqsQueue>) -> Self {
+        self.docs_rs_queue = queue;
+        self
+    }
+
     pub fn with_replica(mut self) -> Self {
         let primary = &self.config.db.primary;
 
@@ -562,8 +575,9 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         db,
         storage,
-        cdn_log_queue: CdnLogQueueConfig::Mock,
+        cdn_log_queue: QueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
+        docs_rs_queue: QueueConfig::Mock,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         github_oauth: GitHubOAuthConfig {
             client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),

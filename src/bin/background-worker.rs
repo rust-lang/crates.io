@@ -17,6 +17,7 @@ extern crate tracing;
 use anyhow::{Context, anyhow};
 use crates_io::app::create_database_pool;
 use crates_io::cloudfront::CloudFront;
+use crates_io::sqs;
 use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::jobs::BackfillCacheTags;
@@ -107,6 +108,9 @@ fn main() -> anyhow::Result<()> {
 
     let deadpool = create_database_pool(&config.db.primary);
 
+    let cdn_log_queue = sqs::from_config(&config.cdn_log_queue);
+    let docs_rs_queue = sqs::from_config(&config.docs_rs_queue);
+
     let environment = Environment::builder()
         .config(Arc::new(config))
         .repository_config(repository_config)
@@ -122,6 +126,8 @@ fn main() -> anyhow::Result<()> {
         .maybe_sync_github_app(sync_github_app)
         .github(github)
         .og_image_generator(OgImageGenerator::from_environment()?.with_oxipng())
+        .cdn_log_queue(cdn_log_queue.into())
+        .docs_rs_queue(docs_rs_queue.into())
         .build();
 
     let environment = Arc::new(environment);

@@ -1,9 +1,14 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 use async_trait::async_trait;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::{BehaviorVersion, Region};
 use aws_sdk_sqs::operation::receive_message::ReceiveMessageOutput;
+use aws_sdk_sqs::operation::send_message::SendMessageOutput;
 use mockall::automock;
+
+use crate::config::QueueConfig;
 
 /// The [SqsQueue] trait defines a basic interface for interacting with an
 /// AWS SQS queue.
@@ -17,7 +22,30 @@ use mockall::automock;
 #[async_trait]
 pub trait SqsQueue {
     async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput>;
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput>;
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()>;
+}
+
+/// Builds an [`SqsQueue`] implementation based on the [`QueueConfig`].
+pub fn from_config(config: &QueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
+    match config {
+        QueueConfig::Mock => Box::new(MockSqsQueue::new()),
+        QueueConfig::SQS {
+            access_key,
+            secret_key,
+            region,
+            queue_url,
+        } => {
+            use secrecy::ExposeSecret;
+
+            let secret_key = secret_key.expose_secret();
+            let credentials = Credentials::from_keys(access_key, secret_key, None);
+
+            let region = Region::new(region.to_owned());
+
+            Box::new(SqsQueueImpl::new(queue_url, region, credentials))
+        }
+    }
 }
 
 /// The [`SqsQueueImpl`] struct is the actual implementation of the [`SqsQueue`]
@@ -58,6 +86,19 @@ impl SqsQueue for SqsQueueImpl {
         Ok(response)
     }
 
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput> {
+        let response = self
+            .client
+            .send_message()
+            .message_body(message)
+            .queue_url(&self.queue_url)
+            .send()
+            .await
+            .context("Failed to send SQS queue message")?;
+
+        Ok(response)
+    }
+
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
         self.client
             .delete_message()
@@ -72,9 +113,28 @@ impl SqsQueue for SqsQueueImpl {
 }
 
 #[async_trait]
+impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Arc<T> {
+    async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput> {
+        (**self).receive_messages(max_messages).await
+    }
+
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput> {
+        (**self).send_message(message).await
+    }
+
+    async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
+        (**self).delete_message(receipt_handle).await
+    }
+}
+
+#[async_trait]
 impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Box<T> {
     async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput> {
         (**self).receive_messages(max_messages).await
+    }
+
+    async fn send_message(&self, message: String) -> anyhow::Result<SendMessageOutput> {
+        (**self).send_message(message).await
     }
 
     async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
@@ -86,20 +146,106 @@ impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Box<T> {
 mod tests {
     use super::*;
 
+    use aws_sdk_sqs::{operation::delete_message::DeleteMessageOutput, types::Message};
+    use aws_smithy_mocks::{mock, mock_client};
+    use claims::assert_ok;
+
+    const REGION: &str = "us-west-1";
+    const ACCESS_KEY_ID: &str = "ANOTREAL";
+    const SECRET_ACCESS_KEY: &str = "notrealrnrELgWzOk3IfjzDKtFBhDby";
+    const QUEUE_URL: &str = "https://sqs.us-west-1.amazonaws.com/359172468976/cdn-log-event-queue";
+
     #[test]
     fn test_constructor() {
-        let credentials = Credentials::new(
-            "ANOTREAL",
-            "notrealrnrELgWzOk3IfjzDKtFBhDby",
-            None,
-            None,
-            "test",
-        );
+        let credentials = Credentials::new(ACCESS_KEY_ID, SECRET_ACCESS_KEY, None, None, "test");
 
-        let queue_url = "https://sqs.us-west-1.amazonaws.com/359172468976/cdn-log-event-queue";
-        let region = Region::new("us-west-1");
+        let region = Region::new(REGION);
 
         // Check that `SqsQueueImpl::new()` does not panic.
-        let _queue = SqsQueueImpl::new(queue_url, region, credentials);
+        let _queue = SqsQueueImpl::new(QUEUE_URL, region, credentials);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn receive_messages() {
+        const CONTENT: &str = r#"{"foo": "bar"}"#;
+        const MAX_NUMBER: i32 = 10;
+        const RECEIPT_HANDLE: &str = "receipt";
+
+        let message = Message::builder()
+            .receipt_handle(RECEIPT_HANDLE)
+            .body(CONTENT)
+            .build();
+
+        let mock_message = message.clone();
+        let receive_message = mock!(aws_sdk_sqs::Client::receive_message)
+            .match_requests(|req| {
+                req.queue_url() == Some(QUEUE_URL)
+                    && req.max_number_of_messages() == Some(MAX_NUMBER)
+            })
+            .then_output(move || {
+                ReceiveMessageOutput::builder()
+                    .messages(mock_message.clone())
+                    .build()
+            });
+
+        let client = mock_client!(aws_sdk_sqs, [&receive_message]);
+
+        let queue = SqsQueueImpl {
+            client,
+            queue_url: QUEUE_URL.into(),
+        };
+
+        let output = assert_ok!(queue.receive_messages(MAX_NUMBER).await);
+        assert_eq!(output.messages().len(), 1);
+        assert_eq!(output.messages()[0], message);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn send_message() {
+        const CONTENT: &str = r#"{"foo": "bar"}"#;
+        const MESSAGE_ID: &str = "message-id";
+        const SEQUENCE_NUMBER: &str = "12345";
+
+        let send_message = mock!(aws_sdk_sqs::Client::send_message)
+            .match_requests(|req| {
+                req.queue_url() == Some(QUEUE_URL) && req.message_body() == Some(CONTENT)
+            })
+            .then_output(|| {
+                SendMessageOutput::builder()
+                    .message_id(MESSAGE_ID)
+                    .sequence_number(SEQUENCE_NUMBER)
+                    .build()
+            });
+
+        let client = mock_client!(aws_sdk_sqs, [&send_message]);
+
+        let queue = SqsQueueImpl {
+            client,
+            queue_url: QUEUE_URL.into(),
+        };
+
+        let output = assert_ok!(queue.send_message(CONTENT.into()).await);
+        assert_eq!(output.message_id(), Some(MESSAGE_ID));
+        assert_eq!(output.sequence_number(), Some(SEQUENCE_NUMBER));
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn delete_message() {
+        const RECEIPT_HANDLE: &str = "receipt";
+
+        let delete_message = mock!(aws_sdk_sqs::Client::delete_message)
+            .match_requests(|req| {
+                req.queue_url() == Some(QUEUE_URL) && req.receipt_handle() == Some(RECEIPT_HANDLE)
+            })
+            .then_output(|| DeleteMessageOutput::builder().build());
+
+        let client = mock_client!(aws_sdk_sqs, [&delete_message]);
+
+        let queue = SqsQueueImpl {
+            client,
+            queue_url: QUEUE_URL.into(),
+        };
+
+        assert_ok!(queue.delete_message(RECEIPT_HANDLE).await);
     }
 }

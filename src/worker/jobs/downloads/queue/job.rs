@@ -1,10 +1,7 @@
-use crate::config::CdnLogQueueConfig;
-use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
+use crate::sqs::SqsQueue;
 use crate::worker::Environment;
 use crate::worker::jobs::ProcessCdnLog;
 use anyhow::Context;
-use aws_credential_types::Credentials;
-use aws_sdk_sqs::config::Region;
 use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
@@ -34,30 +31,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Processing messages from the CDN log queue…");
 
-        let queue = build_queue(&ctx.config.cdn_log_queue);
-        run(&queue, self.max_messages, &ctx.deadpool).await
-    }
-}
-
-/// Builds an [`SqsQueue`] implementation based on the [`CdnLogQueueConfig`].
-fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
-    match config {
-        CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
-        CdnLogQueueConfig::SQS {
-            access_key,
-            secret_key,
-            region,
-            queue_url,
-        } => {
-            use secrecy::ExposeSecret;
-
-            let secret_key = secret_key.expose_secret();
-            let credentials = Credentials::from_keys(access_key, secret_key, None);
-
-            let region = Region::new(region.to_owned());
-
-            Box::new(SqsQueueImpl::new(queue_url, region, credentials))
-        }
+        run(ctx.cdn_log_queue.clone(), self.max_messages, &ctx.deadpool).await
     }
 }
 
@@ -66,7 +40,7 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
 /// This function is separate from the [`BackgroundJob`] implementation so that it
 /// can be tested without needing to construct a full [Environment] struct.
 async fn run(
-    queue: &impl SqsQueue,
+    queue: impl SqsQueue,
     max_messages: usize,
     connection_pool: &Pool<AsyncPgConnection>,
 ) -> anyhow::Result<()> {
@@ -91,7 +65,7 @@ async fn run(
         }
 
         for message in messages {
-            process_message(message, queue, connection_pool).await?;
+            process_message(message, &queue, connection_pool).await?;
         }
     }
 
@@ -221,6 +195,8 @@ async fn enqueue_jobs(jobs: Vec<ProcessCdnLog>, conn: &AsyncPgConnection) -> any
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use crate::sqs::MockSqsQueue;
     use aws_sdk_sqs::operation::receive_message::builders::ReceiveMessageOutputBuilder;
     use aws_sdk_sqs::types::Message;
     use aws_sdk_sqs::types::builders::MessageBuilder;
@@ -258,7 +234,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(&queue, 100, &connection_pool).await);
+        assert_ok!(run(queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"123");
         assert_snapshot!(open_jobs(&connection_pool.get().await.unwrap()).await, @"us-west-1 | bucket | path");
@@ -306,7 +282,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(&queue, 100, &connection_pool).await);
+        assert_ok!(run(queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
         assert_snapshot!(open_jobs(&connection_pool.get().await.unwrap()).await, @r"
@@ -354,7 +330,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(&queue, 100, &connection_pool).await);
+        assert_ok!(run(queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1");
         assert_snapshot!(open_jobs(&connection_pool.get().await.unwrap()).await, @"");

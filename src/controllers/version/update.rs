@@ -181,7 +181,11 @@ pub async fn perform_version_yank_update(
 
     let sync_git_index = async {
         if state.config.sync_git_index {
-            let git_index_job = SyncToGitIndex::new(&krate.name);
+            let git_index_job = if yanked {
+                SyncToGitIndex::new_yank(&krate.name, &version.num)
+            } else {
+                SyncToGitIndex::new_unyank(&krate.name, &version.num)
+            };
             git_index_job.enqueue(&*conn).await?;
         }
         Ok(())

@@ -105,7 +105,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         };
 
         info!("{name}: Enqueuing background jobs…");
-        let git_index_job = jobs::SyncToGitIndex::new(name);
+        let git_index_job = jobs::SyncToGitIndex::new_delete_crate(name);
         let sparse_index_job = jobs::SyncToSparseIndex::new(name);
         let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(name.into());
 

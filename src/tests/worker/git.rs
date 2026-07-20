@@ -1,16 +1,68 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
+use aws_sdk_sqs::operation::send_message::SendMessageOutput;
 use claims::{assert_ok, assert_ok_eq};
 use crates_io::models::Crate;
+use crates_io::sqs::MockSqsQueue;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use docs_rs_crates_io::events::{CrateVersion, IndexChangeV1};
 use insta::assert_snapshot;
+use mockall::Sequence;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
-    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
+    // Set up the mock docs.rs queue along with our expectations: we should see
+    // a message for each of the crate publish, crate yank, and crate deletion.
+
+    let mut queue = MockSqsQueue::new();
+    let mut seq = Sequence::new();
+
+    fn expect_change(queue: &mut MockSqsQueue, seq: &mut Sequence, change: IndexChangeV1) {
+        queue
+            .expect_send_message()
+            .once()
+            .in_sequence(seq)
+            .withf(move |message| change == assert_ok!(serde_json::from_str(message)))
+            .returning(|_| Ok(SendMessageOutput::builder().build()));
+    }
+
+    expect_change(
+        &mut queue,
+        &mut seq,
+        IndexChangeV1::Added(CrateVersion {
+            name: "serde".into(),
+            version: "1.0.0".into(),
+        }),
+    );
+
+    expect_change(
+        &mut queue,
+        &mut seq,
+        IndexChangeV1::Yanked(CrateVersion {
+            name: "serde".into(),
+            version: "1.0.0".into(),
+        }),
+    );
+
+    expect_change(
+        &mut queue,
+        &mut seq,
+        IndexChangeV1::CrateDeleted {
+            name: "serde".into(),
+        },
+    );
+
+    // Now actually instantiate the app and prepare to perform the crate
+    // actions.
+
+    let (app, _, _, token) = TestApp::full()
+        .with_docs_rs_queue(Some(queue))
+        .with_git_index()
+        .with_token()
+        .await;
     let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
@@ -58,7 +110,11 @@ async fn index_smoke_test() {
             .await
     );
 
-    assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(&conn).await);
+    assert_ok!(
+        jobs::SyncToGitIndex::new_delete_crate("serde")
+            .enqueue(&conn)
+            .await
+    );
     assert_ok!(jobs::SyncToSparseIndex::new("serde").enqueue(&conn).await);
 
     app.run_pending_background_jobs().await;

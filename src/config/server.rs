@@ -4,7 +4,6 @@ use crate::Env;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
-use crate::config::CdnLogQueueConfig;
 use crate::config::bind::BindConfig;
 use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
@@ -15,6 +14,7 @@ use crate::config::frontend::FrontendConfig;
 use crate::config::github::GitHubOAuthConfig;
 use crate::config::metrics::MetricsConfig;
 use crate::config::publish_limits::PublishLimitsConfig;
+use crate::config::queue::QueueConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
@@ -32,7 +32,8 @@ pub struct Server {
     pub db: DatabasePools,
     pub storage: StorageConfig,
     pub cdn_log_storage: CdnLogStorageConfig,
-    pub cdn_log_queue: CdnLogQueueConfig,
+    pub cdn_log_queue: QueueConfig,
+    pub docs_rs_queue: QueueConfig,
     pub session_key: cookie::Key,
     pub github_oauth: GitHubOAuthConfig,
     pub token_encryption: TokenEncryption,
@@ -134,7 +135,8 @@ impl Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
-            cdn_log_queue: CdnLogQueueConfig::from_env()?,
+            cdn_log_queue: QueueConfig::from_env("CDN_LOG_QUEUE")?,
+            docs_rs_queue: QueueConfig::from_env("DOCS_RS_QUEUE")?,
             base,
             bind: BindConfig::from_env()?,
             max_blocking_threads,

@@ -122,6 +122,7 @@ diesel = { version = "=2.3.11", features = ["postgres", "serde_json", "chrono", 
 diesel-async = { version = "=0.9.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 diesel_full_text_search = "=2.3.0"
 diesel_migrations = { version = "=2.3.2", features = ["postgres"] }
+docs_rs_crates_io = { git = "https://github.com/rust-lang/docs.rs.git", rev = "1604301c72411fbc63082434295fa45036d982b7", version = "0.1.0" }
 dotenvy = "=0.15.7"
 flate2 = "=1.1.9"
 futures-util = "=0.3.32"
@@ -173,6 +174,8 @@ utoipa = { version = "=5.5.0", features = ["chrono"] }
 utoipa-axum = "=0.2.0"
 
 [dev-dependencies]
+aws-sdk-sqs = { version = "=1.102.0", default-features = false, features = ["test-util"] }
+aws-smithy-mocks = "=0.3.0"
 bytes = "=1.12.1"
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs", features = ["mock"] }
 crates_io_github = { path = "crates/crates_io_github", features = ["mock"] }
