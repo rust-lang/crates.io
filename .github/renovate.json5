@@ -35,18 +35,6 @@
       minimumReleaseAge: '24 hours',
     },
     {
-      matchCategories: ['js'],
-      matchUpdateTypes: ['lockFileMaintenance'],
-      additionalBranchPrefix: 'js-',
-      commitMessageSuffix: '(JS)',
-    },
-    {
-      matchCategories: ['rust'],
-      matchUpdateTypes: ['lockFileMaintenance'],
-      additionalBranchPrefix: 'rust-',
-      commitMessageSuffix: '(Rust)',
-    },
-    {
       matchManagers: ['custom.regex'],
       matchDepNames: ['rust'],
       commitMessageTopic: 'Rust',
