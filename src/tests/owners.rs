@@ -242,7 +242,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
         .add_named_owners("owners_multiple", &["user2", username])
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"foo is already an owner"}]}"#);
     assert_eq!(krate.owners(&conn).await?.len(), 1);
 
     // Adding multiple users at once succeeds.
@@ -380,7 +380,7 @@ async fn add_existing_team() {
     assert_eq!(ret.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         ret.text(),
-        r#"{"errors":[{"detail":"`github:test_org:bananas` is already an owner"}]}"#
+        r#"{"errors":[{"detail":"github:test_org:bananas is already an owner"}]}"#
     );
 }
 

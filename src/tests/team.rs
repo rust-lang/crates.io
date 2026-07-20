@@ -51,7 +51,6 @@ async fn weird_name() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
-/// Tests adding team without second `:`
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
@@ -62,7 +61,101 @@ async fn one_colon() {
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username foo"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn too_many_colons() {
+    let (app, _, user, token) = TestApp::init().with_token().await;
+    let mut conn = app.db_conn().await;
+    CrateBuilder::new("foo_too_many_colons", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = token
+        .add_named_owner("foo_too_many_colons", "github:test:core:extra")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn empty_org() {
+    let (app, _, user, token) = TestApp::init().with_token().await;
+    let mut conn = app.db_conn().await;
+    CrateBuilder::new("foo_empty_org", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = token.add_named_owner("foo_empty_org", "github::core").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn empty_team() {
+    let (app, _, user, token) = TestApp::init().with_token().await;
+    let mut conn = app.db_conn().await;
+    CrateBuilder::new("foo_empty_team", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = token
+        .add_named_owner("foo_empty_team", "github:test-org:")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team cannot be empty"}]}"#);
+}
+
+/// Re-adding a team that is already an owner is rejected.
+#[tokio::test(flavor = "multi_thread")]
+async fn already_owner_team() {
+    let (app, _) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let user = app.db_new_user("user-all-teams").await;
+    let token = user.db_new_token("arbitrary token name").await;
+
+    CrateBuilder::new("foo_already_team", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    token
+        .add_named_owner("foo_already_team", "github:test-org:core")
+        .await
+        .good();
+
+    let response = token
+        .add_named_owner("foo_already_team", "github:test-org:core")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"github:test-org:core is already an owner"}]}"#);
+}
+
+/// Removing a team owner works and is case-insensitive in the team name.
+#[tokio::test(flavor = "multi_thread")]
+async fn remove_team_case_insensitive() {
+    let (app, anon) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let user = app.db_new_user("user-all-teams").await;
+    let token = user.db_new_token("arbitrary token name").await;
+
+    CrateBuilder::new("foo_remove_team_case", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    token
+        .add_named_owner("foo_remove_team_case", "github:test-org:core")
+        .await
+        .good();
+
+    let response = token
+        .remove_named_owner("foo_remove_team_case", "github:test-ORG:COre")
+        .await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+
+    let json = anon.crate_owner_teams("foo_remove_team_case").await.good();
+    assert_eq!(json.teams.len(), 0);
 }
 
 #[tokio::test(flavor = "multi_thread")]

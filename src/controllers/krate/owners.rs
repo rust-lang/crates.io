@@ -243,15 +243,23 @@ async fn modify_owners(
                 for login in &logins {
                     let parsed_login = parse_login(login)?;
                     let login_test = |owner: &Owner| -> bool {
-                        let username = match parsed_login {
-                            Login::GitHubTeam { .. } => login,
-                            Login::GitHub(u) | Login::CratesIo(u) | Login::Unprefixed(u) => u,
-                        };
-
-                        owner.username().to_lowercase() == username.to_lowercase()
+                        match parsed_login {
+                            // match against the team's github:org:team username
+                            Login::GitHubTeam { .. } => {
+                                owner.username().to_lowercase() == login.to_lowercase()
+                            }
+                            // match against the owner's github username
+                            Login::GitHub(username) => owner
+                                .gh_login()
+                                .is_some_and(|u| u.to_lowercase() == username.to_lowercase()),
+                            // match against the owner's cratesio username
+                            Login::CratesIo(u) | Login::Unprefixed(u) => {
+                                owner.username().to_lowercase() == u.to_lowercase()
+                            }
+                        }
                     };
                     if owners.iter().any(login_test) {
-                        return Err(bad_request(format_args!("`{login}` is already an owner")));
+                        return Err(bad_request(format_args!("{login} is already an owner")));
                     }
 
                     match add_owner(&app, conn, user, &krate, parsed_login).await {
@@ -347,18 +355,7 @@ async fn add_owner(
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     match login {
         Login::GitHubTeam { login, org, team } => {
-            let encryption = &app.config.token_encryption;
-            add_github_team_owner(
-                &*app.github,
-                conn,
-                req_user,
-                krate,
-                login,
-                org,
-                team,
-                encryption,
-            )
-            .await
+            add_github_team_owner(app, conn, req_user, krate, login, org, team).await
         }
         Login::GitHub(username) => {
             let oauth = OauthGithub::find_by_login(conn, username)
@@ -403,16 +400,16 @@ async fn add_owner(
             {
                 let gh_login = &oauth_github.login;
                 let error = format_args!(
-                    "username {username} is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n
-                        To confirm this is the account you want to add, please run one of the following:\n\n
-                        $ cargo owner --add cratesio:{username}\n
-                        $ cargo owner --add github:{gh_login}\n\n
-                        If this is not the account you want to add, verify the crates.io username of the account you want.",
+                    "username `{username}` is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n\n\
+                     To confirm this is the account you want to add, please run one of the following:\n\n\
+                     $ cargo owner --add cratesio:{username}\n\
+                     $ cargo owner --add github:{gh_login}\n\n\
+                     If this is not the account you want to add, verify the crates.io username of the account you want.",
                 );
 
                 return Err(OwnerAddError::AppError(bad_request(error)));
             }
-            
+
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
     }
@@ -422,7 +419,7 @@ async fn remove_owner(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
     login: Login<'_>,
-    owners: &Vec<Owner>,
+    owners: &[Owner],
 ) -> Result<(), BoxedAppError> {
     match login {
         Login::GitHubTeam { login, .. } => krate.owner_remove_with_username(conn, login).await?,
@@ -432,9 +429,10 @@ async fn remove_owner(
             let cratesio_owner_to_remove = owners
                 .iter()
                 .find(|o| o.username().to_lowercase() == username.to_lowercase());
-            let github_owner_to_remove = owners
-                .iter()
-                .find(|o| o.gh_login().to_lowercase() == username.to_lowercase());
+            let github_owner_to_remove = owners.iter().find(|o| {
+                o.gh_login()
+                    .is_some_and(|u| u.to_lowercase() == username.to_lowercase())
+            });
 
             // check if ambiguous. assumes usernames are unique on separate services.
             if let Some(cratesio_owner) = cratesio_owner_to_remove
@@ -442,11 +440,11 @@ async fn remove_owner(
                 && cratesio_owner.id() != github_owner.id()
             {
                 let error = format_args!(
-                    "username {username} is ambiguous. There are two owners of this crate with the username `{username}` on different services.\n
-                        To confirm which owner you want to remove, please run one of the following:\n\n
-                        $ cargo owner --remove cratesio:{username}\n
-                        $ cargo owner --remove github:{username}\n\n
-                        If this is not the account you want to remove, verify the crates.io username of the account you want.",
+                    "username `{username}` is ambiguous. There are two owners of this crate with the username `{username}` on different services.\n\n\
+                     To confirm which owner you want to remove, please run one of the following:\n\n\
+                     $ cargo owner --remove cratesio:{username}\n\
+                     $ cargo owner --remove github:{username}\n\n\
+                     If this is not the account you want to remove, verify the crates.io username of the account you want.",
                 );
 
                 return Err(bad_request(error));
@@ -543,15 +541,17 @@ async fn invite_user_owner(
 /// correctly parsed out of the full `login`. `login` is passed as a
 /// convenience to avoid rebuilding it.
 async fn add_github_team_owner(
-    gh_client: &dyn GitHubClient,
+    app: &App,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
     login: &str,
     org: &str,
     team: &str,
-    encryption: &TokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
+    let gh_client = &*app.github;
+    let encryption = &app.config.token_encryption;
+
     // Always recreate teams to get the most up-to-date GitHub ID
     let team =
         create_or_update_github_team(gh_client, conn, login, org, team, req_user, encryption)

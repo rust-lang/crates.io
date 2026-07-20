@@ -49,6 +49,9 @@ pub struct User {
     pub name: Option<String>,
     pub gh_id: i32,
     pub gh_login: String,
+    // Rename this field to gh_login when gh_login is removed from the user table.
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_username: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = oauth_github::encrypted_token.nullable())]
