@@ -17,14 +17,27 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 pub struct DatadogClient {
     http_client: Client,
     api_key: SecretString,
-    #[builder(default = DEFAULT_SITE.to_string())]
-    site: String,
+    #[builder(default = format!("https://api.{DEFAULT_SITE}"))]
+    base_url: String,
+}
+
+impl<S: datadog_client_builder::State> DatadogClientBuilder<S> {
+    /// Uses the API endpoint for the given Datadog site.
+    pub fn site(
+        self,
+        site: impl AsRef<str>,
+    ) -> DatadogClientBuilder<datadog_client_builder::SetBaseUrl<S>>
+    where
+        S::BaseUrl: datadog_client_builder::IsUnset,
+    {
+        self.base_url(format!("https://api.{}", site.as_ref()))
+    }
 }
 
 impl DatadogClient {
     /// Submits a batch of metric series to Datadog.
     pub async fn submit_metrics(&self, series: &[Series]) -> anyhow::Result<()> {
-        let url = format!("https://api.{}/api/v2/series", self.site);
+        let url = self.api_url("/api/v2/series");
         let body = MetricsBody { series };
 
         let response = self
@@ -42,6 +55,11 @@ impl DatadogClient {
             .context("Datadog returned an error response")?;
 
         Ok(())
+    }
+
+    /// Builds a URL for a Datadog API endpoint.
+    fn api_url(&self, path: &str) -> String {
+        format!("{}{path}", self.base_url)
     }
 }
 
@@ -105,4 +123,39 @@ pub struct Resource {
     kind: String,
     #[builder(into)]
     name: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TEST_API_KEY: &str = "test-api-key";
+
+    #[test]
+    fn uses_site_for_default_base_url() {
+        let client = DatadogClient::builder()
+            .http_client(Client::new())
+            .api_key(TEST_API_KEY.to_string().into())
+            .site("datadoghq.eu")
+            .build();
+
+        assert_eq!(
+            client.api_url("/api/v2/series"),
+            "https://api.datadoghq.eu/api/v2/series"
+        );
+    }
+
+    #[test]
+    fn uses_explicit_base_url() {
+        let client = DatadogClient::builder()
+            .http_client(Client::new())
+            .api_key(TEST_API_KEY.to_string().into())
+            .base_url("http://localhost".to_string())
+            .build();
+
+        assert_eq!(
+            client.api_url("/api/v2/series"),
+            "http://localhost/api/v2/series"
+        );
+    }
 }
