@@ -37,8 +37,21 @@ impl<S: datadog_client_builder::State> DatadogClientBuilder<S> {
 impl DatadogClient {
     /// Submits a batch of metric series to Datadog.
     pub async fn submit_metrics(&self, series: &[Series]) -> anyhow::Result<()> {
-        let url = self.api_url("/api/v2/series");
         let body = MetricsBody { series };
+
+        self.submit("/api/v2/series", &body).await
+    }
+
+    /// Submits a batch of service checks to Datadog.
+    pub async fn submit_service_checks(&self, checks: &[ServiceCheck]) -> anyhow::Result<()> {
+        self.submit("/api/v1/check_run", checks).await
+    }
+
+    async fn submit<T>(&self, path: &str, body: &T) -> anyhow::Result<()>
+    where
+        T: Serialize + ?Sized,
+    {
+        let url = self.api_url(path);
 
         let response = self
             .http_client
@@ -66,6 +79,48 @@ impl DatadogClient {
 #[derive(Serialize)]
 struct MetricsBody<'a> {
     series: &'a [Series],
+}
+
+/// A service check submitted to Datadog.
+#[derive(Builder, Debug, PartialEq, Serialize)]
+pub struct ServiceCheck {
+    #[builder(into)]
+    check: String,
+    #[builder(into)]
+    host_name: String,
+    status: ServiceCheckStatus,
+    #[builder(into)]
+    message: String,
+    tags: Vec<String>,
+}
+
+/// The status of a Datadog service check.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ServiceCheckStatus {
+    /// The service is operating normally.
+    Ok,
+    /// The service may require attention.
+    Warning,
+    /// The service is not operating normally.
+    Critical,
+    /// The service status could not be determined.
+    Unknown,
+}
+
+impl Serialize for ServiceCheckStatus {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let value = match self {
+            Self::Ok => 0,
+            Self::Warning => 1,
+            Self::Critical => 2,
+            Self::Unknown => 3,
+        };
+
+        serializer.serialize_u8(value)
+    }
 }
 
 /// A metric series submitted to Datadog.
@@ -170,6 +225,19 @@ mod tests {
             .build()
     }
 
+    fn service_check(check: &str, status: ServiceCheckStatus, message: &str) -> ServiceCheck {
+        ServiceCheck::builder()
+            .check(check)
+            .host_name("crates.io")
+            .status(status)
+            .message(message)
+            .tags(vec![
+                "env:test".to_string(),
+                "service:crates_io".to_string(),
+            ])
+            .build()
+    }
+
     #[test]
     fn uses_site_for_default_base_url() {
         let client = DatadogClient::builder()
@@ -243,6 +311,75 @@ mod tests {
 
         let client = client_with_server(&server);
         let error = assert_err!(client.submit_metrics(&[metric_series()]).await);
+        assert_snapshot!(error, @"Datadog returned an error response");
+
+        let http_error = assert_some!(error.downcast_ref::<reqwest::Error>());
+        assert_some_eq!(http_error.status(), reqwest::StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn submits_service_checks() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("POST", "/api/v1/check_run")
+            .match_header("dd-api-key", TEST_API_KEY)
+            .match_body(Matcher::JsonString(
+                r#"[
+                    {
+                        "check": "crates_io.background_jobs.healthy",
+                        "host_name": "crates.io",
+                        "status": 0,
+                        "message": "No stalled background jobs",
+                        "tags": ["env:test", "service:crates_io"]
+                    },
+                    {
+                        "check": "crates_io.spam_attack.detected",
+                        "host_name": "crates.io",
+                        "status": 2,
+                        "message": "Spam crate published",
+                        "tags": ["env:test", "service:crates_io"]
+                    }
+                ]"#
+                .to_string(),
+            ))
+            .with_status(202)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let checks = [
+            service_check(
+                "crates_io.background_jobs.healthy",
+                ServiceCheckStatus::Ok,
+                "No stalled background jobs",
+            ),
+            service_check(
+                "crates_io.spam_attack.detected",
+                ServiceCheckStatus::Critical,
+                "Spam crate published",
+            ),
+        ];
+        let client = client_with_server(&server);
+        assert_ok!(client.submit_service_checks(&checks).await);
+    }
+
+    #[tokio::test]
+    async fn reports_rejected_service_check_submissions() {
+        let mut server = mock_server().await;
+        let _mock = server
+            .mock("POST", "/api/v1/check_run")
+            .with_status(403)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let check = service_check(
+            "crates_io.background_jobs.healthy",
+            ServiceCheckStatus::Critical,
+            "Stalled background jobs",
+        );
+        let client = client_with_server(&server);
+        let error = assert_err!(client.submit_service_checks(&[check]).await);
         assert_snapshot!(error, @"Datadog returned an error response");
 
         let http_error = assert_some!(error.downcast_ref::<reqwest::Error>());
