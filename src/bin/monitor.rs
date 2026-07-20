@@ -1,13 +1,16 @@
-//! Checks for any invariants we expect to be true, and pages whoever is on call
-//! if they are not.
+//! Checks application invariants, pages whoever is on call when they fail, and
+//! optionally submits the results to Datadog as service checks.
 //!
 //! Usage:
 //!     cargo run --bin monitor
 
 use anyhow::Result;
+use crates_io::config::DatadogConfig;
+use crates_io::datadog::common_tags;
 use crates_io::worker::jobs;
 use crates_io::{db, schema::*};
 use crates_io_database::fns::canon_crate_name;
+use crates_io_datadog::{DatadogClient, ServiceCheck, ServiceCheckStatus};
 use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_pagerduty as pagerduty;
 use crates_io_pagerduty::PagerdutyClient;
@@ -15,6 +18,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use reqwest::Client;
 
 /// Identifies an invariant evaluated by the monitor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -44,18 +48,46 @@ async fn main() -> Result<()> {
     let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
     let pagerduty = PagerdutyClient::new(service_key);
 
+    let datadog_service_checks_enabled = var_parsed("DD_SERVICE_CHECKS_ENABLED")?.unwrap_or(false);
+    let datadog_client = if datadog_service_checks_enabled {
+        let http_client = Client::builder()
+            .user_agent(crates_io_version::user_agent())
+            .build()?;
+        let client = DatadogConfig::from_env()?.client(http_client);
+
+        if client.is_none() {
+            eprintln!("Failed to configure Datadog service checks: `DD_API_KEY` is not configured");
+        }
+
+        client
+    } else {
+        None
+    };
+
     let conn = &mut db::oneoff_connection().await?;
 
-    let result = check_failing_background_jobs(conn).await?;
-    report_to_pagerduty(&pagerduty, &result).await?;
+    let results = [
+        check_failing_background_jobs(conn).await?,
+        check_stalled_update_downloads(conn).await?,
+        check_spam_attack(conn).await?,
+    ];
 
-    let result = check_stalled_update_downloads(conn).await?;
-    report_to_pagerduty(&pagerduty, &result).await?;
+    let datadog_reporting = async {
+        if let Some(datadog) = datadog_client {
+            let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
+            let datadog_tags = common_tags(&domain_name);
+            if let Err(error) =
+                report_to_datadog(&datadog, &results, &domain_name, &datadog_tags).await
+            {
+                eprintln!("Failed to submit Datadog service checks: {error:#}");
+            }
+        }
+    };
 
-    let result = check_spam_attack(conn).await?;
-    report_to_pagerduty(&pagerduty, &result).await?;
+    let pagerduty_reporting = report_to_pagerduty(&pagerduty, &results);
+    let (_, pagerduty_result) = tokio::join!(datadog_reporting, pagerduty_reporting);
 
-    Ok(())
+    pagerduty_result
 }
 
 /// Checks for old background jobs that are not currently running.
@@ -201,15 +233,55 @@ fn pagerduty_event(result: &CheckResult) -> pagerduty::Event {
     }
 }
 
-/// Reports a monitor result to PagerDuty.
-async fn report_to_pagerduty(pagerduty: &PagerdutyClient, result: &CheckResult) -> Result<()> {
-    match result.status {
-        CheckStatus::Healthy => println!("{}", result.message),
-        CheckStatus::Unhealthy => println!("Paging on-call: {}", result.message),
+/// Converts a provider-independent result into a Datadog service check.
+fn datadog_service_check(result: &CheckResult, host_name: &str, tags: &[String]) -> ServiceCheck {
+    let check = match result.id {
+        CheckId::BackgroundJobs => "crates_io.background_jobs.healthy",
+        CheckId::UpdateDownloads => "crates_io.update_downloads.healthy",
+        CheckId::SpamAttack => "crates_io.spam_attack.detected",
+    };
+    let status = match result.status {
+        CheckStatus::Healthy => ServiceCheckStatus::Ok,
+        CheckStatus::Unhealthy => ServiceCheckStatus::Critical,
+    };
+
+    ServiceCheck::builder()
+        .check(check)
+        .host_name(host_name)
+        .status(status)
+        .message(result.message.clone())
+        .tags(tags.to_vec())
+        .build()
+}
+
+/// Reports monitor results to Datadog.
+async fn report_to_datadog(
+    datadog: &DatadogClient,
+    results: &[CheckResult],
+    host_name: &str,
+    tags: &[String],
+) -> Result<()> {
+    let checks = results
+        .iter()
+        .map(|result| datadog_service_check(result, host_name, tags))
+        .collect::<Vec<_>>();
+
+    datadog.submit_service_checks(&checks).await
+}
+
+/// Reports monitor results to PagerDuty.
+async fn report_to_pagerduty(pagerduty: &PagerdutyClient, results: &[CheckResult]) -> Result<()> {
+    for result in results {
+        match result.status {
+            CheckStatus::Healthy => println!("{}", result.message),
+            CheckStatus::Unhealthy => println!("Paging on-call: {}", result.message),
+        }
+
+        let event = pagerduty_event(result);
+        pagerduty.send(&event).await?;
     }
 
-    let event = pagerduty_event(result);
-    pagerduty.send(&event).await
+    Ok(())
 }
 
 #[cfg(test)]
@@ -217,9 +289,8 @@ mod tests {
     use super::*;
     use insta::assert_json_snapshot;
 
-    #[test]
-    fn maps_results_to_pagerduty_events() {
-        let results = [
+    fn check_results() -> [CheckResult; 6] {
+        [
             CheckResult {
                 id: CheckId::BackgroundJobs,
                 status: CheckStatus::Unhealthy,
@@ -250,7 +321,12 @@ mod tests {
                 status: CheckStatus::Healthy,
                 message: "no spam attack detected".into(),
             },
-        ];
+        ]
+    }
+
+    #[test]
+    fn maps_results_to_pagerduty_events() {
+        let results = check_results();
         let events: Vec<_> = results.iter().map(pagerduty_event).collect();
 
         assert_json_snapshot!(events, @r#"
@@ -284,6 +360,80 @@ mod tests {
             "event_type": "resolve",
             "incident_key": "spam_attack",
             "description": "no spam attack detected"
+          }
+        ]
+        "#);
+    }
+
+    #[test]
+    fn maps_results_to_datadog_service_checks() {
+        let tags = ["env:test".to_string(), "service:crates_io".to_string()];
+        let checks: Vec<_> = check_results()
+            .iter()
+            .map(|result| datadog_service_check(result, "crates.io", &tags))
+            .collect();
+
+        assert_json_snapshot!(checks, @r#"
+        [
+          {
+            "check": "crates_io.background_jobs.healthy",
+            "host_name": "crates.io",
+            "status": 2,
+            "message": "background jobs unhealthy",
+            "tags": [
+              "env:test",
+              "service:crates_io"
+            ]
+          },
+          {
+            "check": "crates_io.background_jobs.healthy",
+            "host_name": "crates.io",
+            "status": 0,
+            "message": "background jobs healthy",
+            "tags": [
+              "env:test",
+              "service:crates_io"
+            ]
+          },
+          {
+            "check": "crates_io.update_downloads.healthy",
+            "host_name": "crates.io",
+            "status": 2,
+            "message": "update downloads unhealthy",
+            "tags": [
+              "env:test",
+              "service:crates_io"
+            ]
+          },
+          {
+            "check": "crates_io.update_downloads.healthy",
+            "host_name": "crates.io",
+            "status": 0,
+            "message": "update downloads healthy",
+            "tags": [
+              "env:test",
+              "service:crates_io"
+            ]
+          },
+          {
+            "check": "crates_io.spam_attack.detected",
+            "host_name": "crates.io",
+            "status": 2,
+            "message": "spam attack detected",
+            "tags": [
+              "env:test",
+              "service:crates_io"
+            ]
+          },
+          {
+            "check": "crates_io.spam_attack.detected",
+            "host_name": "crates.io",
+            "status": 0,
+            "message": "no spam attack detected",
+            "tags": [
+              "env:test",
+              "service:crates_io"
+            ]
           }
         ]
         "#);

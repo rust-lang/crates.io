@@ -6,13 +6,13 @@ use secrecy::SecretString;
 const DEFAULT_SITE: &str = "datadoghq.com";
 
 pub struct DatadogConfig {
-    /// Datadog API key used to submit service metrics. If missing, the
-    /// background worker does not push metrics to Datadog.
+    /// Datadog API key used to submit data. If missing, Datadog submissions
+    /// are disabled.
     ///
     /// Read from the `DD_API_KEY` environment variable.
     pub api_key: Option<SecretString>,
 
-    /// Datadog site to submit metrics to. Defaults to `datadoghq.com`.
+    /// Datadog site to submit data to. Defaults to `datadoghq.com`.
     ///
     /// Read from the `DD_SITE` environment variable.
     pub site: String,
