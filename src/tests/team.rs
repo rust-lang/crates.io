@@ -32,7 +32,7 @@ async fn not_github() {
         .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -51,19 +51,18 @@ async fn weird_name() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
-/// Tests that `github:foo` is treated as a disambiguated username lookup.
+/// Tests adding team without second `:`
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
-
     CrateBuilder::new("foo_one_colon", user.as_model().id)
         .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username foo. If you meant to add a github team, format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -145,7 +144,7 @@ async fn add_team_mixed_case() -> anyhow::Result<()> {
     let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
-    assert_eq!(owner.login(), owner.login().to_lowercase());
+    assert_eq!(owner.username(), owner.username().to_lowercase());
 
     let json = anon.crate_owner_teams("foo_mixed_case").await.good();
     assert_eq!(json.teams.len(), 1);
@@ -174,7 +173,7 @@ async fn add_team_as_org_owner() -> anyhow::Result<()> {
     let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
-    assert_eq!(owner.login(), owner.login().to_lowercase());
+    assert_eq!(owner.username(), owner.username().to_lowercase());
 
     let json = anon.crate_owner_teams("foo_org_owner").await.good();
     assert_eq!(json.teams.len(), 1);

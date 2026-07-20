@@ -396,7 +396,7 @@ async fn test_unsupported_disambiguation_prefix() {
 
     let response = cookie.add_named_owner("foo", "gitlab:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unsupported username prefix, only github and cratesio prefixes are supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -410,7 +410,7 @@ async fn test_disambiguated_github_username_not_found() {
 
     let response = cookie.add_named_owner("foo", "github:nonexistent").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username nonexistent. If you meant to add a github team, format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username nonexistent"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -445,7 +445,11 @@ async fn test_ambiguous_username_error() {
 
     let response = cookie.add_named_owner("foo", "user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"error: username user2 is possibly ambiguous.\n\nCaused by: \n  The crates.io account `user2` is associated with GitHub user `user2-gh`.\n  To confirm this is the account you want to add, please run one of the following:\n\n  $ cargo owner --add cratesio:user2\n  $ cargo owner --add github:user2-gh\n\n  If this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username user2 is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n
+        To confirm this is the account you want to add, please run one of the following:\n\n
+        $ cargo owner --add cratesio:{username}\n
+        $ cargo owner --add github:{gh_login}\n\n
+        If this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -60,7 +60,7 @@ async fn test_unknown_user() {
 
     let response = cookie.remove_named_owner("foo", "unknown").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -185,7 +185,11 @@ async fn test_remove_ambiguous_user() {
 
     let response = cookie.remove_named_owner("foo", "user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"error: username user2 is possibly ambiguous.\n\nCaused by: \n  The crates.io account `user2` is associated with GitHub user `user2-gh`.\n  To confirm this is the account you want to remove, please run one of the following:\n\n  $ cargo owner --remove cratesio:user2\n  $ cargo owner --remove github:user2-gh\n\n  If this is not the account you want to remove, verify the crates.io username of the account you want."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username {username} is ambiguous. There are two owners of this crate with the username `{username}` on different services.\n
+        To confirm which owner you want to remove, please run one of the following:\n\n
+        $ cargo owner --remove cratesio:{username}\n
+        $ cargo owner --remove github:{username}\n\n
+        If this is not the account you want to remove, verify the crates.io username of the account you want."}]}"#);
 }
 
 /// Test that an unsupported prefix (e.g. gitlab:) returns an error.
@@ -200,7 +204,7 @@ async fn test_unsupported_disambiguation_prefix() {
 
     let response = cookie.remove_named_owner("foo", "gitlab:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unsupported username prefix, only github and cratesio prefixes are supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
 }
 
 /// Test that removing with nonexistent github username returns an error.
