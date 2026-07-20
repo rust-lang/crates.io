@@ -27,6 +27,16 @@ const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
 
+/// Builds the cache tag shared by every object belonging to a crate.
+pub fn crate_cache_tag(name: &str) -> String {
+    format!("crate:{name}")
+}
+
+/// Builds the cache tag shared by every object belonging to a crate release.
+pub fn release_cache_tag(name: &str, version: &str) -> String {
+    format!("release:{name}@{version}")
+}
+
 #[derive(Debug)]
 pub struct StorageConfig {
     backend: StorageBackend,
@@ -467,11 +477,13 @@ impl<'a> StorageKey<'a> {
             StorageKey::CrateFile { name, version }
             | StorageKey::CrateZip { name, version }
             | StorageKey::CrateZipManifest { name, version }
-            | StorageKey::Readme { name, version } => {
-                Some(format!("crate:{name},release:{name}@{version}"))
-            }
+            | StorageKey::Readme { name, version } => Some(format!(
+                "{},{}",
+                crate_cache_tag(name),
+                release_cache_tag(name, version)
+            )),
             StorageKey::OgImage { name } | StorageKey::CrateFeed { name } => {
-                Some(format!("crate:{name}"))
+                Some(crate_cache_tag(name))
             }
             StorageKey::CratesFeed
             | StorageKey::UpdatesFeed
