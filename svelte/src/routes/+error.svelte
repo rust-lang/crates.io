@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
 
   import Ferris from '$lib/components/Ferris.svelte';
   import { getSession } from '$lib/utils/session.svelte';
@@ -16,7 +17,7 @@
 
   function goBack() {
     if (history.length <= 1) {
-      goto('/');
+      goto(resolve('/'));
       return;
     }
     history.back();
