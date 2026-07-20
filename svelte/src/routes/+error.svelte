@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
 
   import Ferris from '$lib/components/Ferris.svelte';
   import { getSession } from '$lib/utils/session.svelte';
