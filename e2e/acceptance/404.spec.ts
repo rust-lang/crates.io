@@ -13,7 +13,8 @@ test.describe('Acceptance | 404', { tag: '@acceptance' }, () => {
   });
 
   test('go back navigates to index when there is no previous page', async ({ page }) => {
-    await page.goto('/unknown-route');
+    // Can't use page.goto which adds a history entry
+    await page.evaluate(() => location.replace('/unknown-route'));
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
     await page.click('[data-test-go-back]');
     await expect(page).toHaveURL('/');
