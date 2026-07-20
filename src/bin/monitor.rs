@@ -16,16 +16,45 @@ use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
+/// Identifies an invariant evaluated by the monitor.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum CheckId {
+    BackgroundJobs,
+    UpdateDownloads,
+    SpamAttack,
+}
+
+/// The outcome of evaluating a monitor invariant.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum CheckStatus {
+    Healthy,
+    Unhealthy,
+}
+
+/// A provider-independent monitor result.
+#[derive(Debug, Eq, PartialEq)]
+struct CheckResult {
+    id: CheckId,
+    status: CheckStatus,
+    message: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
-    let client = PagerdutyClient::new(service_key);
+    let pagerduty = PagerdutyClient::new(service_key);
 
     let conn = &mut db::oneoff_connection().await?;
 
-    check_failing_background_jobs(conn, &client).await?;
-    check_stalled_update_downloads(conn, &client).await?;
-    check_spam_attack(conn, &client).await?;
+    let result = check_failing_background_jobs(conn).await?;
+    report_to_pagerduty(&pagerduty, &result).await?;
+
+    let result = check_stalled_update_downloads(conn).await?;
+    report_to_pagerduty(&pagerduty, &result).await?;
+
+    let result = check_spam_attack(conn).await?;
+    report_to_pagerduty(&pagerduty, &result).await?;
+
     Ok(())
 }
 
@@ -37,14 +66,9 @@ async fn main() -> Result<()> {
 ///
 /// Within the default 15 minute time, a job should have already had several
 /// failed retry attempts.
-async fn check_failing_background_jobs(
-    conn: &mut AsyncPgConnection,
-    pagerduty: &PagerdutyClient,
-) -> Result<()> {
+async fn check_failing_background_jobs(conn: &mut AsyncPgConnection) -> Result<CheckResult> {
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
-
-    const EVENT_KEY: &str = "background_jobs";
 
     println!("Checking for failed background jobs");
 
@@ -64,33 +88,28 @@ async fn check_failing_background_jobs(
 
     let stalled_job_count = stalled_jobs.len();
 
-    let event = if stalled_job_count > 0 {
-        pagerduty::Event::Trigger {
-            incident_key: Some(EVENT_KEY.into()),
-            description: format!(
+    let result = if stalled_job_count > 0 {
+        CheckResult {
+            id: CheckId::BackgroundJobs,
+            status: CheckStatus::Unhealthy,
+            message: format!(
                 "{stalled_job_count} jobs have been in the queue for more than {max_job_time} minutes"
             ),
         }
     } else {
-        pagerduty::Event::Resolve {
-            incident_key: EVENT_KEY.into(),
-            description: Some("No stalled background jobs".into()),
+        CheckResult {
+            id: CheckId::BackgroundJobs,
+            status: CheckStatus::Healthy,
+            message: "No stalled background jobs".into(),
         }
     };
 
-    log_and_trigger_event(pagerduty, event).await?;
-
-    Ok(())
+    Ok(result)
 }
 
 /// Checks for an `update_downloads` job that has run longer than expected
-async fn check_stalled_update_downloads(
-    mut conn: &AsyncPgConnection,
-    pagerduty: &PagerdutyClient,
-) -> Result<()> {
+async fn check_stalled_update_downloads(conn: &mut AsyncPgConnection) -> Result<CheckResult> {
     use chrono::{DateTime, Utc};
-
-    const EVENT_KEY: &str = "update_downloads_stalled";
 
     println!("Checking for stalled background jobs");
 
@@ -100,41 +119,30 @@ async fn check_stalled_update_downloads(
     let start_time: Result<DateTime<Utc>, _> = background_jobs::table
         .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
         .select(background_jobs::created_at)
-        .first(&mut conn)
+        .first(conn)
         .await;
 
     if let Ok(start_time) = start_time {
         let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
 
         if minutes > max_job_time {
-            return log_and_trigger_event(
-                pagerduty,
-                pagerduty::Event::Trigger {
-                    incident_key: Some(EVENT_KEY.into()),
-                    description: format!("update_downloads job running for {minutes} minutes"),
-                },
-            )
-            .await;
+            return Ok(CheckResult {
+                id: CheckId::UpdateDownloads,
+                status: CheckStatus::Unhealthy,
+                message: format!("update_downloads job running for {minutes} minutes"),
+            });
         }
     };
 
-    log_and_trigger_event(
-        pagerduty,
-        pagerduty::Event::Resolve {
-            incident_key: EVENT_KEY.into(),
-            description: Some("No stalled update_downloads job".into()),
-        },
-    )
-    .await
+    Ok(CheckResult {
+        id: CheckId::UpdateDownloads,
+        status: CheckStatus::Healthy,
+        message: "No stalled update_downloads job".into(),
+    })
 }
 
 /// Checks for known spam patterns
-async fn check_spam_attack(
-    mut conn: &AsyncPgConnection,
-    pagerduty: &PagerdutyClient,
-) -> Result<()> {
-    const EVENT_KEY: &str = "spam_attack";
-
+async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<CheckResult> {
     println!("Checking for crates indicating someone is spamming us");
 
     let bad_crate_names = var("SPAM_CRATE_NAMES")?;
@@ -148,7 +156,7 @@ async fn check_spam_attack(
     let bad_crate: Option<String> = crates::table
         .filter(canon_crate_name(crates::name).eq_any(bad_crate_names))
         .select(crates::name)
-        .first(&mut conn)
+        .first(conn)
         .await
         .optional()?;
 
@@ -156,32 +164,128 @@ async fn check_spam_attack(
         event_description = Some(format!("Crate named {bad_crate} published"));
     }
 
-    let event = if let Some(event_description) = event_description {
-        pagerduty::Event::Trigger {
-            incident_key: Some(EVENT_KEY.into()),
-            description: format!("{event_description}, possible spam attack underway"),
+    let result = if let Some(event_description) = event_description {
+        CheckResult {
+            id: CheckId::SpamAttack,
+            status: CheckStatus::Unhealthy,
+            message: format!("{event_description}, possible spam attack underway"),
         }
     } else {
-        pagerduty::Event::Resolve {
-            incident_key: EVENT_KEY.into(),
-            description: Some("No spam crates detected".into()),
+        CheckResult {
+            id: CheckId::SpamAttack,
+            status: CheckStatus::Healthy,
+            message: "No spam crates detected".into(),
         }
     };
 
-    log_and_trigger_event(pagerduty, event).await?;
-    Ok(())
+    Ok(result)
 }
 
-async fn log_and_trigger_event(pagerduty: &PagerdutyClient, event: pagerduty::Event) -> Result<()> {
-    match event {
-        pagerduty::Event::Trigger {
-            ref description, ..
-        } => println!("Paging on-call: {description}"),
-        pagerduty::Event::Resolve {
-            description: Some(ref description),
-            ..
-        } => println!("{description}"),
-        _ => {} // noop
+/// Converts a provider-independent result into a PagerDuty event.
+fn pagerduty_event(result: &CheckResult) -> pagerduty::Event {
+    let incident_key = match result.id {
+        CheckId::BackgroundJobs => "background_jobs",
+        CheckId::UpdateDownloads => "update_downloads_stalled",
+        CheckId::SpamAttack => "spam_attack",
+    };
+
+    match result.status {
+        CheckStatus::Healthy => pagerduty::Event::Resolve {
+            incident_key: incident_key.into(),
+            description: Some(result.message.clone()),
+        },
+        CheckStatus::Unhealthy => pagerduty::Event::Trigger {
+            incident_key: Some(incident_key.into()),
+            description: result.message.clone(),
+        },
     }
+}
+
+/// Reports a monitor result to PagerDuty.
+async fn report_to_pagerduty(pagerduty: &PagerdutyClient, result: &CheckResult) -> Result<()> {
+    match result.status {
+        CheckStatus::Healthy => println!("{}", result.message),
+        CheckStatus::Unhealthy => println!("Paging on-call: {}", result.message),
+    }
+
+    let event = pagerduty_event(result);
     pagerduty.send(&event).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use insta::assert_json_snapshot;
+
+    #[test]
+    fn maps_results_to_pagerduty_events() {
+        let results = [
+            CheckResult {
+                id: CheckId::BackgroundJobs,
+                status: CheckStatus::Unhealthy,
+                message: "background jobs unhealthy".into(),
+            },
+            CheckResult {
+                id: CheckId::BackgroundJobs,
+                status: CheckStatus::Healthy,
+                message: "background jobs healthy".into(),
+            },
+            CheckResult {
+                id: CheckId::UpdateDownloads,
+                status: CheckStatus::Unhealthy,
+                message: "update downloads unhealthy".into(),
+            },
+            CheckResult {
+                id: CheckId::UpdateDownloads,
+                status: CheckStatus::Healthy,
+                message: "update downloads healthy".into(),
+            },
+            CheckResult {
+                id: CheckId::SpamAttack,
+                status: CheckStatus::Unhealthy,
+                message: "spam attack detected".into(),
+            },
+            CheckResult {
+                id: CheckId::SpamAttack,
+                status: CheckStatus::Healthy,
+                message: "no spam attack detected".into(),
+            },
+        ];
+        let events: Vec<_> = results.iter().map(pagerduty_event).collect();
+
+        assert_json_snapshot!(events, @r#"
+        [
+          {
+            "event_type": "trigger",
+            "incident_key": "background_jobs",
+            "description": "background jobs unhealthy"
+          },
+          {
+            "event_type": "resolve",
+            "incident_key": "background_jobs",
+            "description": "background jobs healthy"
+          },
+          {
+            "event_type": "trigger",
+            "incident_key": "update_downloads_stalled",
+            "description": "update downloads unhealthy"
+          },
+          {
+            "event_type": "resolve",
+            "incident_key": "update_downloads_stalled",
+            "description": "update downloads healthy"
+          },
+          {
+            "event_type": "trigger",
+            "incident_key": "spam_attack",
+            "description": "spam attack detected"
+          },
+          {
+            "event_type": "resolve",
+            "incident_key": "spam_attack",
+            "description": "no spam attack detected"
+          }
+        ]
+        "#);
+    }
 }
