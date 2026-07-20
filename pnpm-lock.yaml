@@ -94,9 +94,6 @@ importers:
         specifier: 0.17.0
         version: 0.17.0
     devDependencies:
-      '@crates-io/msw':
-        specifier: workspace:*
-        version: link:../crates-io-msw
       msw:
         specifier: 2.15.0
         version: 2.15.0(@types/node@24.13.3)(typescript@6.0.3)
@@ -121,6 +118,9 @@ importers:
 
   packages/crates-io-msw:
     dependencies:
+      '@crates-io/api-client':
+        specifier: workspace:*
+        version: link:../crates-io-api-client
       '@msw/data':
         specifier: 1.1.7
         version: 1.1.7
