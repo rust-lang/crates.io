@@ -51,7 +51,7 @@ async fn weird_name() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
-/// Resolved as a disambiguated username
+/// Resolved as a disambiguated username.
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
