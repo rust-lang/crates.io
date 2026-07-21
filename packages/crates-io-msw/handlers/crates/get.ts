@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -42,7 +44,7 @@ export default http.get<{ name: string }>('/api/v1/crates/:name', async ({ reque
     serializedVersions = [serializeVersion(defaultVersion!)];
   }
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'find_crate'>>({
     crate: serializedCrate,
     categories: includeCategories ? crate.categories.map(c => serializeCategory(c)) : null,
     keywords: includeKeywords ? crate.keywords.map(k => serializeKeyword(k)) : null,

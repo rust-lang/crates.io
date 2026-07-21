@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -78,7 +80,7 @@ export default http.get('/api/v1/crates', async ({ request }) => {
     .slice(start, end)
     .map(c => ({ ...serializeCrate(c), exact_match: c.name.toLowerCase() === q }));
 
-  return HttpResponse.json({ crates: serialized, meta: { total } });
+  return HttpResponse.json<SuccessBody<'list_crates'>>({ crates: serialized, meta: { total } });
 });
 
 export function compare(a: string, b: string) {
