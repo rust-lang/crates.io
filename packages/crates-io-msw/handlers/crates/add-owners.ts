@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -50,5 +52,5 @@ export default http.put<{ name: string }>('/api/v1/crates/:name/owners', async (
     await db.crateOwnerInvitation.create({ crate, inviter: user, invitee });
   }
 
-  return HttpResponse.json({ ok: true, msg: msgs.join(',') });
+  return HttpResponse.json<SuccessBody<'add_owners'>>({ ok: true, msg: msgs.join(',') });
 });

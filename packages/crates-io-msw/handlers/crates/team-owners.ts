@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -12,7 +14,7 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/owner_team', asy
 
   let ownerships = db.crateOwnership.findMany(q => q.where(ownership => ownership.crate.id === crate.id));
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'get_team_owners'>>({
     teams: ownerships.filter(o => o.team).map(o => ({ ...serializeTeam(o.team), kind: 'team' })),
   });
 });
