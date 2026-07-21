@@ -89,10 +89,11 @@ pub async fn list_crate_owner_invitations_for_user(
     ))
 }
 
+/// Query parameters for listing crate owner invitations.
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
-pub struct ListQueryParams {
+pub struct CrateOwnerInvitationListQueryParams {
     /// Filter crate owner invitations by crate name.
     ///
     /// Only crate owners can query pending invitations for their crate.
@@ -108,7 +109,7 @@ pub struct ListQueryParams {
 #[utoipa::path(
     get,
     path = "/api/private/crate_owner_invitations",
-    params(ListQueryParams, PaginationQueryParams),
+    params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
     security(("cookie" = [])),
     tag = "owners",
     extensions(("x-internal" = json!(true))),
@@ -116,7 +117,7 @@ pub struct ListQueryParams {
 )]
 pub async fn list_crate_owner_invitations(
     app: AppState,
-    params: ListQueryParams,
+    params: CrateOwnerInvitationListQueryParams,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
     let mut conn = app.db_read().await?;
@@ -132,10 +133,10 @@ enum ListFilter {
     InviteeId(i32),
 }
 
-impl TryFrom<ListQueryParams> for ListFilter {
+impl TryFrom<CrateOwnerInvitationListQueryParams> for ListFilter {
     type Error = BoxedAppError;
 
-    fn try_from(params: ListQueryParams) -> Result<Self, Self::Error> {
+    fn try_from(params: CrateOwnerInvitationListQueryParams) -> Result<Self, Self::Error> {
         let filter = if let Some(crate_name) = params.crate_name {
             ListFilter::CrateName(crate_name.clone())
         } else if let Some(id) = params.invitee_id {
