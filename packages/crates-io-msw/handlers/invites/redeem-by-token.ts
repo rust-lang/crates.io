@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -12,5 +14,7 @@ export default http.put<{ token: string }>('/api/v1/me/crate_owner_invitations/a
   await db.crateOwnership.create({ crate: invite.crate, user: invite.invitee });
   db.crateOwnerInvitation.delete(q => q.where({ id: invite.id }));
 
-  return HttpResponse.json({ crate_owner_invitation: { crate_id: invite.crate.id, accepted: true } });
+  return HttpResponse.json<SuccessBody<'accept_crate_owner_invitation_with_token'>>({
+    crate_owner_invitation: { crate_id: invite.crate.id, accepted: true },
+  });
 });
