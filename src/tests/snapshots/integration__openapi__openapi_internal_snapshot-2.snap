@@ -1741,6 +1741,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing categories.",
                   "properties": {
                     "categories": {
                       "description": "The list of categories.",
@@ -1750,6 +1751,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a category list response.",
                       "properties": {
                         "total": {
                           "description": "The total number of categories.",

@@ -11,10 +11,11 @@ use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use serde::{Deserialize, Serialize};
 
+/// Query parameters for listing categories.
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
-pub struct ListQueryParams {
+pub struct CategoryListQueryParams {
     /// The sort order of the categories.
     ///
     /// Valid values: `alpha`, and `crates`.
@@ -23,17 +24,19 @@ pub struct ListQueryParams {
     sort: Option<String>,
 }
 
+/// Response returned when listing categories.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct CategoryListResponse {
     /// The list of categories.
     pub categories: Vec<EncodableCategory>,
 
     #[schema(inline)]
-    pub meta: ListMeta,
+    pub meta: CategoryListMeta,
 }
 
+/// Pagination metadata for a category list response.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListMeta {
+pub struct CategoryListMeta {
     /// The total number of categories.
     #[schema(example = 123)]
     pub total: i64,
@@ -43,15 +46,15 @@ pub struct ListMeta {
 #[utoipa::path(
     get,
     path = "/api/v1/categories",
-    params(ListQueryParams, PaginationQueryParams),
+    params(CategoryListQueryParams, PaginationQueryParams),
     tag = "categories",
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(CategoryListResponse))),
 )]
 pub async fn list_categories(
     app: AppState,
-    params: ListQueryParams,
+    params: CategoryListQueryParams,
     req: Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<Json<CategoryListResponse>> {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
     // to paginate this.
@@ -70,8 +73,8 @@ pub async fn list_categories(
 
     let categories = categories.into_iter().map(Category::into).collect();
 
-    let meta = ListMeta { total };
-    Ok(Json(ListResponse { categories, meta }))
+    let meta = CategoryListMeta { total };
+    Ok(Json(CategoryListResponse { categories, meta }))
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]

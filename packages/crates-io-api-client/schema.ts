@@ -2055,6 +2055,7 @@ export interface operations {
                     "application/json": {
                         /** @description The list of categories. */
                         categories: components["schemas"]["Category"][];
+                        /** @description Pagination metadata for a category list response. */
                         meta: {
                             /**
                              * Format: int64
