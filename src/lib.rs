@@ -22,6 +22,7 @@ pub mod certs;
 pub mod cloudfront;
 pub mod config;
 pub mod controllers;
+pub mod datadog;
 pub mod db;
 pub mod email;
 pub mod headers;

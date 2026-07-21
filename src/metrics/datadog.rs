@@ -8,6 +8,7 @@
 //! [api]: https://docs.datadoghq.com/api/latest/metrics/
 
 use crate::config::Server;
+use crate::datadog::common_tags;
 use crate::metrics::ServiceMetrics;
 use anyhow::{Context, anyhow};
 use crates_io_datadog::{DatadogClient, MetricType as DatadogMetricType, Point, Resource, Series};
@@ -33,17 +34,12 @@ pub fn spawn(config: &Server, deadpool: Pool<AsyncPgConnection>, datadog: Option
         return;
     };
 
-    let domain = config.domain_name.clone();
-    let env = match domain.as_str() {
-        "staging.crates.io" => "staging",
-        _ => "prod",
-    };
-    let resources = vec![Resource::builder().kind("host").name(domain).build()];
-
-    let mut common_tags = vec![format!("env:{env}"), "service:crates_io".into()];
+    let domain_name = config.domain_name.clone();
+    let mut common_tags = common_tags(&domain_name);
     if let Ok(Some(commit)) = crates_io_version::commit() {
         common_tags.push(format!("version:{commit}"));
     }
+    let resources = vec![Resource::builder().kind("host").name(domain_name).build()];
 
     let service_metrics = match ServiceMetrics::new() {
         Ok(metrics) => metrics,
