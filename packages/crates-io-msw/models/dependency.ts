@@ -10,7 +10,7 @@ const schema = v.pipe(
     id: v.optional(v.number()),
 
     default_features: v.optional(v.boolean()),
-    features: v.optional(v.array(v.any()), []),
+    features: v.optional(v.array(v.string()), []),
     kind: v.optional(v.string()),
     optional: v.optional(v.boolean()),
     req: v.optional(v.string()),
