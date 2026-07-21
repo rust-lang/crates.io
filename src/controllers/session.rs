@@ -1,4 +1,5 @@
 use crate::app::AppState;
+use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
@@ -308,11 +309,11 @@ async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryRe
     security(("cookie" = [])),
     tag = "session",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
-pub async fn end_session(session: SessionExtension) -> Json<bool> {
+pub async fn end_session(session: SessionExtension) -> OkResponse {
     session.remove("user_id");
-    Json(true)
+    OkResponse::new()
 }
 
 #[cfg(test)]
