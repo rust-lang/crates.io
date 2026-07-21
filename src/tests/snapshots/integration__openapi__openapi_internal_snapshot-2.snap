@@ -1675,6 +1675,90 @@ expression: response.json()
         ]
       }
     },
+    "/api/private/session/confirm": {
+      "post": {
+        "description": "This route is called from the frontend after the user confirmed or modified the information\nfrom GitHub. The unmodified GitHub information should be in the session cookie; if it isn't,\nthe authentication flow must be restarted.\n\nIf account creation is successful, the user is logged in and their information is returned.",
+        "operationId": "complete_signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "owned_crates": {
+                      "description": "The crates that the authenticated user owns.",
+                      "items": {
+                        "properties": {
+                          "email_notifications": {
+                            "deprecated": true,
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "The opaque identifier of the crate.",
+                            "example": 123,
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "name": {
+                            "description": "The name of the crate.",
+                            "example": "serde",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "email_notifications"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/AuthenticatedUser",
+                      "description": "The authenticated user."
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "owned_crates"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Complete account creation.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
     "/api/v1/categories": {
       "get": {
         "operationId": "list_categories",

@@ -418,7 +418,7 @@ impl From<reqwest::Error> for GitHubError {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct GitHubUser {
     pub avatar_url: Option<String>,
     pub email: Option<String>,

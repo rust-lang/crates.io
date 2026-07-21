@@ -52,7 +52,7 @@ impl UpdateTest {
         let mut conn = app.db_conn().await;
 
         let user_id =
-            session::save_user_to_database(&existing_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
+            session::sign_up_new_user(&existing_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
                 .await?;
 
         let oauth_github_before_update = oauth_github::table

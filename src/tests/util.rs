@@ -59,21 +59,36 @@ pub use test_app::TestApp;
 /// include cookie-based authentication.
 ///
 /// ```
-/// let cookie = encode_session_header(session_key, user_id);
+/// let cookie = encode_session_user_id_header(session_key, user_id);
 /// request.header(header::COOKIE, &cookie);
 /// ```
 ///
 /// The implementation matches roughly what is happening inside of our
 /// session middleware.
-pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String {
-    let cookie_name = "cargo_session";
-
-    // build session data map
+pub fn encode_session_user_id_header(session_key: &cookie::Key, user_id: i32) -> String {
+    // build session data map with the user ID
     let mut map = HashMap::new();
     map.insert("user_id".into(), user_id.to_string());
 
+    encode_session_data_header(session_key, &map)
+}
+
+/// This function can be used to create a `Cookie` header for mock requests that include
+/// arbitrary cookie information.
+///
+/// ```
+/// let data = HashMap::from([(String::from("name"), String::from("Bob"))]);
+/// let cookie = encode_session_data_header(session_key, &data);
+/// request.header(header::COOKIE, &cookie);
+/// ```
+pub fn encode_session_data_header(
+    session_key: &cookie::Key,
+    data: &HashMap<String, String>,
+) -> String {
+    let cookie_name = "cargo_session";
+
     // encode the map into a cookie value string
-    let encoded = crates_io_session::encode(&map);
+    let encoded = crates_io_session::encode(data);
 
     // put the cookie into a signed cookie jar
     let cookie = Cookie::build((cookie_name, encoded));
@@ -290,7 +305,7 @@ pub struct MockCookieUser {
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let session_key = &self.app.as_inner().session_key();
-        let cookie = encode_session_header(session_key, self.user.id);
+        let cookie = encode_session_user_id_header(session_key, self.user.id);
 
         let mut request = req(method, path);
         request.header(header::COOKIE, &cookie);

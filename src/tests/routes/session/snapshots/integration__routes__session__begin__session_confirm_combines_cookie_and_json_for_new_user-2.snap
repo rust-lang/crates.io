@@ -1,0 +1,20 @@
+---
+source: src/tests/routes/session/begin.rs
+expression: json
+---
+{
+  "owned_crates": [],
+  "user": {
+    "avatar": "http://example.com/avatar.png",
+    "created_at": "[datetime]",
+    "email": "cratesio_email@example.com",
+    "email_verification_sent": true,
+    "email_verified": false,
+    "id": 1,
+    "is_admin": false,
+    "login": "github_user",
+    "name": "My Name",
+    "publish_notifications": true,
+    "url": "https://github.com/github_user"
+  }
+}

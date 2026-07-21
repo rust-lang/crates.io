@@ -2,15 +2,18 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
+use crate::controllers::util::RequestPartsExt;
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, oauth_github, users, versions};
-use crate::util::errors::AppResult;
+use crate::util::errors::{AppResult, bad_request};
 use crate::util::no_store;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 use axum::Json;
 use axum_extra::TypedHeader;
 use axum_extra::headers::CacheControl;
+use crates_io_session::SessionExtension;
+use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
@@ -31,12 +34,49 @@ pub async fn get_authenticated_user(
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<EncodableMe>)> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let user_id = AuthCheck::only_cookie()
-        .check(&req, &mut conn)
-        .await?
-        .user_id();
 
-    Ok((no_store(), authenticated_user(&mut conn, user_id).await?))
+    match AuthCheck::only_cookie().check(&req, &mut conn).await {
+        Ok(auth) => {
+            let user_id = auth.user_id();
+            Ok((no_store(), authenticated_user(&mut conn, user_id).await?))
+        }
+        Err(e) => {
+            // look for partially created user
+            let session = req
+                .extensions()
+                .get::<SessionExtension>()
+                .expect("missing cookie session");
+
+            let gh_user_json = session
+                .get("github_user")
+                .ok_or_else(|| bad_request("missing github_user session value"))?;
+
+            let mut gh_user: GitHubUser = serde_json::from_str(&gh_user_json)
+                .map_err(|_| bad_request("invalid github_user session value"))?;
+
+            Ok((
+                no_store(),
+                Json(EncodableMe {
+                    user: EncodablePrivateUser {
+                        // Send an invalid crates.io ID because we haven't saved this user in the
+                        // database yet. The frontend will show the "complete signup" form.
+                        id: -1,
+                        login: gh_user.login.clone(),
+                        email_verified: false,
+                        email_verification_sent: false,
+                        name: gh_user.name,
+                        email: gh_user.email,
+                        avatar: gh_user.avatar_url,
+                        url: Some(format!("https://github.com/{}", gh_user.login)),
+                        is_admin: false,
+                        publish_notifications: false,
+                        created_at: None,
+                    },
+                    owned_crates: Default::default(),
+                })
+            ))
+        }
+    }
 }
 
 /// Loads the profile of the user with the given id.

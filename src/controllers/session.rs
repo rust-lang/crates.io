@@ -7,7 +7,7 @@ use crate::schema::{oauth_github, users};
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::util::oauth::ReqwestClient;
-use crate::views::EncodableMe;
+use crate::views::{EncodableMe, EncodablePrivateUser};
 use axum::Json;
 use chrono::Utc;
 use crates_io_github::{GitHubAuth, GitHubUser};
@@ -124,68 +124,80 @@ pub async fn authorize_session(
         server_error("Internal server error")
     })?;
 
-    // Fetch the user info from GitHub using the access token we just got and create a user record
+    // Fetch the user info from GitHub using the access token we just got
     let auth = GitHubAuth::bearer(token.secret().clone());
-    let ghuser = app.github.current_user(&auth).await?;
+    let gh_user = app.github.current_user(&auth).await?;
 
     let mut conn = app.db_write().await?;
-    let user_id = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
+    // Try to log in an existing user
+    match sign_in_existing_user(&gh_user, &encrypted_token, &mut conn).await? {
+        Some(user_id) => {
+            // Log in by setting a cookie and the middleware authentication
+            session.insert("user_id".to_string(), user_id.to_string());
+            super::user::me::authenticated_user(&mut conn, user_id).await
+        }
+        None => {
+            // If the user doesn't exist in the database yet, confirm their information before
+            // creating their account. Carry the GitHub user info and the encrypted GitHub token
+            // along in the session cookie.
+            session.insert("github_user".to_string(), serde_json::to_string(&gh_user)?);
+            session.insert("encrypted_token".to_string(), hex::encode(&encrypted_token));
 
-    // Log in by setting a cookie and the middleware authentication
-    session.insert("user_id".to_string(), user_id.to_string());
-
-    super::user::me::authenticated_user(&mut conn, user_id).await
+            Ok(Json(EncodableMe {
+                user: EncodablePrivateUser {
+                    // Send an invalid crates.io ID because we haven't saved this user in the
+                    // database yet. The frontend will show the "complete signup" form.
+                    id: -1,
+                    login: gh_user.login.clone(),
+                    email_verified: false,
+                    email_verification_sent: false,
+                    name: gh_user.name,
+                    email: gh_user.email,
+                    avatar: gh_user.avatar_url,
+                    url: Some(format!("https://github.com/{}", gh_user.login)),
+                    is_admin: false,
+                    publish_notifications: false,
+                    created_at: None,
+                },
+                owned_crates: Default::default(),
+            }))
+        }
+    }
 }
 
-pub async fn save_user_to_database(
+pub async fn sign_in_existing_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
-    emails: &Emails,
     conn: &mut AsyncPgConnection,
-) -> QueryResult<i32> {
-    // There should not be one transaction around both the `create_or_update_user` call and the
+) -> QueryResult<Option<i32>> {
+    // There should not be one transaction around both the `update_user` call and the
     // `find_user_by_gh_id` call. If they're in one transaction and we're in read only mode, the
     // entire transaction will be poisoned and the `find_user_by_gh_id` will fail too, thus
-    // negating the purpose of the fallback. There _is_ a transaction around the body of
-    // `create_or_update_user`.
-    match create_or_update_user(gh_user, encrypted_token, emails, conn).await {
-        Ok(id) => Ok(id),
+    // negating the purpose of the fallback.
+    match conn
+        .transaction(async |conn| update_user(gh_user, encrypted_token, conn).await)
+        .await
+    {
+        Ok(id) => Ok(Some(id)),
         Err(error) if is_read_only_error(&error) => {
-            // If we're in read only mode, we can't update their details or create new users.
+            // If we're in read only mode, we can't update their details.
             // just look for an existing user
-            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
+            find_user_by_gh_id(conn, gh_user.id).await
+        }
+        Err(diesel::result::Error::NotFound) => {
+            // If the update fails because the `oauth_github` record doesn't exist, this
+            // currently means the `user` record doesn't exist either and we need to create
+            // both. This assumption holds because crates.io and GitHub accounts currently have
+            // a one-to-one relationship; this will need to be changed if/when we allow
+            // crates.io users to link more than one GitHub account to their crates.io account.
+            // Return `None` to signify that this user needs to sign up.
+            Ok(None)
         }
         Err(error) => Err(error),
     }
 }
 
-/// Updates an existing user or inserts a new user into the database within a transaction.
-async fn create_or_update_user(
-    gh_user: &GitHubUser,
-    encrypted_token: &[u8],
-    emails: &Emails,
-    conn: &mut AsyncPgConnection,
-) -> QueryResult<i32> {
-    conn.transaction(async |conn| {
-        let update_result = update_user(gh_user, encrypted_token, conn).await;
-
-        match update_result {
-            Ok(user_id) => Ok(user_id),
-            Err(diesel::result::Error::NotFound) => {
-                // If the update fails because the `oauth_github` record doesn't exist, this
-                // currently means the `user` record doesn't exist either and we need to create
-                // both. This assumption holds because crates.io and GitHub accounts currently have
-                // a one-to-one relationship; this will need to be changed if/when we allow
-                // crates.io users to link more than one GitHub account to their crates.io account.
-                create_user(gh_user, encrypted_token, emails, conn).await
-            }
-            Err(error) => Err(error),
-        }
-    })
-    .await
-}
-
-/// Updates an existing user. Should be called in a transaction, as `create_or_update_user` does,
+/// Updates an existing user. Should be called in a transaction, as `sign_in_existing_user` does,
 /// so both the `users` and `oauth_github` records are updated or neither are.
 ///
 /// Returns an error if the `oauth_github` or `users` records don't exist.
@@ -224,6 +236,57 @@ async fn update_user(
     Ok(oauth_github.user_id)
 }
 
+#[derive(Deserialize, utoipa::ToSchema)]
+pub struct ConfirmedUserInfo {
+    email: Option<String>,
+}
+
+/// Complete account creation.
+///
+/// This route is called from the frontend after the user confirmed or modified the information
+/// from GitHub. The unmodified GitHub information should be in the session cookie; if it isn't,
+/// the authentication flow must be restarted.
+///
+/// If account creation is successful, the user is logged in and their information is returned.
+#[utoipa::path(
+    post,
+    path = "/api/private/session/confirm",
+    security(("cookie" = [])),
+    tag = "session",
+    request_body = inline(ConfirmedUserInfo),
+    extensions(("x-internal" = json!(true))),
+    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
+)]
+pub async fn complete_signup(
+    app: AppState,
+    session: SessionExtension,
+    Json(confirmed_user_info): Json<ConfirmedUserInfo>,
+) -> AppResult<Json<EncodableMe>> {
+    let gh_user_json = session
+        .remove("github_user")
+        .ok_or_else(|| bad_request("missing github_user session value"))?;
+    let mut gh_user: GitHubUser = serde_json::from_str(&gh_user_json)
+        .map_err(|_| bad_request("invalid github_user session value"))?;
+
+    let encrypted_token_hex = session
+        .remove("encrypted_token")
+        .ok_or_else(|| bad_request("missing encrypted_token session value"))?;
+    let encrypted_token: Vec<u8> = hex::decode(&encrypted_token_hex)
+        .map_err(|_| bad_request("invalid encrypted_token session value"))?;
+
+    let ConfirmedUserInfo { email } = confirmed_user_info;
+
+    gh_user.email = email;
+
+    let mut conn = app.db_write().await?;
+    let user_id = sign_up_new_user(&gh_user, &encrypted_token, &app.emails, &mut conn).await?;
+
+    // Log in by setting a cookie and the middleware authentication
+    session.insert("user_id".to_string(), user_id.to_string());
+
+    super::user::me::authenticated_user(&mut conn, user_id).await
+}
+
 /// Inserts a new user into the database.
 ///
 /// This method also inserts the email address into the `emails` table
@@ -231,7 +294,7 @@ async fn update_user(
 ///
 /// Should be called in a transaction, as `create_or_update_user` does, so both the `users` and
 /// `emails` records are inserted or neither are.
-async fn create_user(
+pub async fn sign_up_new_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
@@ -335,7 +398,7 @@ mod tests {
             avatar_url: None,
         };
 
-        let result = save_user_to_database(&gh_user, &[], &emails, &mut conn).await;
+        let result = sign_up_new_user(&gh_user, &[], &emails, &mut conn).await;
 
         assert!(
             result.is_ok(),

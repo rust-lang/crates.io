@@ -2,7 +2,7 @@ use crate::TestApp;
 use crate::util::{MockRequestExt, MockTokenUser, RequestHelper, Response};
 
 use crate::builders::PublishBuilder;
-use crate::util::encode_session_header;
+use crate::util::encode_session_user_id_header;
 use http::{Method, StatusCode, header};
 use insta::assert_snapshot;
 
@@ -36,7 +36,7 @@ async fn cookie_auth_cannot_find_user() {
     let (app, anon) = TestApp::init().empty().await;
 
     let session_key = app.as_inner().session_key();
-    let cookie = encode_session_header(session_key, -1);
+    let cookie = encode_session_user_id_header(session_key, -1);
 
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
