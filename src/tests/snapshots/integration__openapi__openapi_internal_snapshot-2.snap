@@ -3129,6 +3129,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing versions of a crate.",
                   "properties": {
                     "meta": {
                       "properties": {
