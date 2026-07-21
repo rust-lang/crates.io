@@ -189,6 +189,7 @@ test('returns the data for the front page', async function () {
   expect(responsePayload.popular_keywords[0]).toMatchInlineSnapshot(`
     {
       "crates_cnt": 0,
+      "created_at": "2010-06-16T21:30:45Z",
       "id": "keyword-1",
       "keyword": "keyword-1",
     }

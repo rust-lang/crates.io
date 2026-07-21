@@ -375,6 +375,7 @@ test('includes related keywords', async function () {
     [
       {
         "crates_cnt": 1,
+        "created_at": "2010-06-16T21:30:45Z",
         "id": "no-std",
         "keyword": "no-std",
       },
