@@ -19,6 +19,8 @@ test('happy path', async ({ expect }) => {
       "downloads": 7035,
       "id": 1,
       "version": {
+        "audit_actions": [],
+        "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
         "crate": {
           "_extra_downloads": [],
           "badges": [],

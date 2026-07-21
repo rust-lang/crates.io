@@ -14,6 +14,8 @@ test('happy path', async ({ expect }) => {
   let version = await db.version.create({ crate });
   expect(version).toMatchInlineSnapshot(`
     {
+      "audit_actions": [],
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": {
         "_extra_downloads": [],
         "badges": [],

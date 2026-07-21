@@ -49,6 +49,8 @@ test('returns all versions belonging to the specified crate', async function () 
       },
       "versions": [
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "rand",
           "crate_size": 488889,
           "created_at": "2010-06-16T21:30:45Z",
@@ -69,6 +71,7 @@ test('returns all versions belonging to the specified crate', async function () 
             "total_comment_lines": 64,
           },
           "links": {
+            "authors": "/api/v1/crates/rand/1.2.0/authors",
             "dependencies": "/api/v1/crates/rand/1.2.0/dependencies",
             "version_downloads": "/api/v1/crates/rand/1.2.0/downloads",
           },
@@ -82,6 +85,8 @@ test('returns all versions belonging to the specified crate', async function () 
           "yanked": false,
         },
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "rand",
           "crate_size": 325926,
           "created_at": "2010-06-16T21:30:45Z",
@@ -112,6 +117,7 @@ test('returns all versions belonging to the specified crate', async function () 
             "total_comment_lines": 216,
           },
           "links": {
+            "authors": "/api/v1/crates/rand/1.1.0/authors",
             "dependencies": "/api/v1/crates/rand/1.1.0/dependencies",
             "version_downloads": "/api/v1/crates/rand/1.1.0/downloads",
           },
@@ -131,6 +137,8 @@ test('returns all versions belonging to the specified crate', async function () 
           "yanked": false,
         },
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "rand",
           "crate_size": 162963,
           "created_at": "2010-06-16T21:30:45Z",
@@ -156,6 +164,7 @@ test('returns all versions belonging to the specified crate', async function () 
             "total_comment_lines": 90,
           },
           "links": {
+            "authors": "/api/v1/crates/rand/1.0.0/authors",
             "dependencies": "/api/v1/crates/rand/1.0.0/dependencies",
             "version_downloads": "/api/v1/crates/rand/1.0.0/downloads",
           },

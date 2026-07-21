@@ -41,6 +41,8 @@ test('returns a version object for known version', async function () {
   expect(await response.json()).toMatchInlineSnapshot(`
     {
       "version": {
+        "audit_actions": [],
+        "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
         "crate": "rand",
         "crate_size": 162963,
         "created_at": "2010-06-16T21:30:45Z",
@@ -66,6 +68,7 @@ test('returns a version object for known version', async function () {
           "total_comment_lines": 90,
         },
         "links": {
+          "authors": "/api/v1/crates/rand/1.0.0-beta.1/authors",
           "dependencies": "/api/v1/crates/rand/1.0.0-beta.1/dependencies",
           "version_downloads": "/api/v1/crates/rand/1.0.0-beta.1/downloads",
         },

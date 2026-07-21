@@ -16,6 +16,17 @@ const schema = v.pipe(
     updated_at: v.optional(v.string(), '2017-02-24T12:34:56Z'),
     yanked: v.optional(v.boolean(), false),
     yank_message: v.optional(v.nullable(v.string()), null),
+    audit_actions: v.optional(
+      v.array(
+        v.object({
+          action: v.string(),
+          time: v.string(),
+          user: v.any(),
+        }),
+      ),
+      [],
+    ),
+    checksum: v.optional(v.string(), '0000000000000000000000000000000000000000000000000000000000000000'),
     license: v.optional(v.string()),
     downloads: v.optional(v.number()),
     features: v.optional(v.record(v.string(), v.any()), {}),
