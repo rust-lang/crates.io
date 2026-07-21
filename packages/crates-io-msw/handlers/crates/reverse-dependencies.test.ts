@@ -57,6 +57,7 @@ test('returns a paginated list of crate versions depending to the specified crat
         {
           "crate_id": "foo",
           "default_features": false,
+          "downloads": 37035,
           "features": [],
           "id": 2,
           "kind": "normal",
@@ -68,6 +69,7 @@ test('returns a paginated list of crate versions depending to the specified crat
         {
           "crate_id": "foo",
           "default_features": false,
+          "downloads": 37035,
           "features": [],
           "id": 1,
           "kind": "normal",
