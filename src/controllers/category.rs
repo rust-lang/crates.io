@@ -77,8 +77,9 @@ pub async fn list_categories(
     Ok(Json(CategoryListResponse { categories, meta }))
 }
 
+/// Response returned when getting category metadata.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct CategoryGetResponse {
     pub category: EncodableCategory,
 }
 
@@ -90,12 +91,12 @@ pub struct GetResponse {
         ("category" = String, Path, description = "Name of the category"),
     ),
     tag = "categories",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(CategoryGetResponse))),
 )]
 pub async fn find_category(
     state: AppState,
     Path(slug): Path<String>,
-) -> AppResult<Json<GetResponse>> {
+) -> AppResult<Json<CategoryGetResponse>> {
     // Category slugs can never contain null bytes, so we reject such requests
     // early with a regular "not found" response instead of letting them reach
     // the database layer, where PostgreSQL rejects the query with a confusing
@@ -120,7 +121,7 @@ pub async fn find_category(
     category.subcategories = Some(subcats);
     category.parent_categories = Some(parents);
 
-    Ok(Json(GetResponse { category }))
+    Ok(Json(CategoryGetResponse { category }))
 }
 
 #[derive(Debug, Serialize, Queryable, utoipa::ToSchema)]

@@ -1532,6 +1532,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting category metadata.",
                   "properties": {
                     "category": {
                       "$ref": "#/components/schemas/Category"
