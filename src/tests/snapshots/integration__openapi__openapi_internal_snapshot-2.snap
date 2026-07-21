@@ -2052,6 +2052,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing crates.",
                   "properties": {
                     "crates": {
                       "items": {
@@ -2060,6 +2061,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a crate list response.",
                       "properties": {
                         "next_page": {
                           "description": "Query string to the next page of results, if any.",

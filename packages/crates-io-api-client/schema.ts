@@ -2242,6 +2242,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         crates: components["schemas"]["Crate"][];
+                        /** @description Pagination metadata for a crate list response. */
                         meta: {
                             /**
                              * @description Query string to the next page of results, if any.
