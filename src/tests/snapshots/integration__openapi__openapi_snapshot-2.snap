@@ -2863,6 +2863,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting crate version metadata.",
                   "properties": {
                     "version": {
                       "$ref": "#/components/schemas/Version"
