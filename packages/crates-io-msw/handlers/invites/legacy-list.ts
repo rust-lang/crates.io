@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
-import { serializeInvite } from '../../serializers/invite.js';
+import { serializeLegacyInvite } from '../../serializers/invite.js';
 import { serializeUser } from '../../serializers/user.js';
 import { getSession } from '../../utils/session.js';
 
@@ -18,7 +18,7 @@ export default http.get('/api/v1/me/crate_owner_invitations', () => {
   let users = [...new Set([...inviters, ...invitees])].toSorted((a, b) => a.id - b.id);
 
   return HttpResponse.json({
-    crate_owner_invitations: invites.map(invite => serializeInvite(invite)),
+    crate_owner_invitations: invites.map(invite => serializeLegacyInvite(invite)),
     users: users.map(user => serializeUser(user)),
   });
 });
