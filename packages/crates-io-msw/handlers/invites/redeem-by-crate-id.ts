@@ -24,5 +24,5 @@ export default http.put('/api/v1/me/crate_owner_invitations/:crate_id', async ({
 
   db.crateOwnerInvitation.delete(q => q.where({ id: invite.id }));
 
-  return HttpResponse.json({ crate_owner_invitation: { crate_id: crateId, accepted } });
+  return HttpResponse.json({ crate_owner_invitation: { crate_id: invite.crate.id, accepted } });
 });
