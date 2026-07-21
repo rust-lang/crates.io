@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -11,5 +13,5 @@ export default http.get<{ team_id: string }>('/api/v1/teams/:team_id', ({ params
     return notFound();
   }
 
-  return HttpResponse.json({ team: serializeTeam(team) });
+  return HttpResponse.json<SuccessBody<'find_team'>>({ team: serializeTeam(team) });
 });
