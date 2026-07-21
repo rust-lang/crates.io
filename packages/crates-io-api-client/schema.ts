@@ -3256,6 +3256,7 @@ export interface operations {
                     "application/json": {
                         /** @description The list of keywords. */
                         keywords: components["schemas"]["Keyword"][];
+                        /** @description Pagination metadata for a keyword list response. */
                         meta: {
                             /**
                              * Format: int64

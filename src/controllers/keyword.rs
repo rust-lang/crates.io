@@ -10,10 +10,11 @@ use diesel::prelude::*;
 use http::request::Parts;
 use serde::{Deserialize, Serialize};
 
+/// Query parameters for listing keywords.
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
-pub struct ListQueryParams {
+pub struct KeywordListQueryParams {
     /// The sort order of the keywords.
     ///
     /// Valid values: `alpha`, and `crates`.
@@ -22,17 +23,19 @@ pub struct ListQueryParams {
     sort: Option<String>,
 }
 
+/// Response returned when listing keywords.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct KeywordListResponse {
     /// The list of keywords.
     pub keywords: Vec<EncodableKeyword>,
 
     #[schema(inline)]
-    pub meta: ListMeta,
+    pub meta: KeywordListMeta,
 }
 
+/// Pagination metadata for a keyword list response.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListMeta {
+pub struct KeywordListMeta {
     /// The total number of keywords.
     #[schema(example = 123)]
     pub total: i64,
@@ -42,15 +45,15 @@ pub struct ListMeta {
 #[utoipa::path(
     get,
     path = "/api/v1/keywords",
-    params(ListQueryParams, PaginationQueryParams),
+    params(KeywordListQueryParams, PaginationQueryParams),
     tag = "keywords",
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(KeywordListResponse))),
 )]
 pub async fn list_keywords(
     state: AppState,
-    params: ListQueryParams,
+    params: KeywordListQueryParams,
     req: Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<Json<KeywordListResponse>> {
     use crate::schema::keywords;
 
     let mut query = Keyword::query().into_boxed();
@@ -67,8 +70,8 @@ pub async fn list_keywords(
     let total = data.total();
     let keywords = data.into_iter().map(Keyword::into).collect();
 
-    let meta = ListMeta { total };
-    Ok(Json(ListResponse { keywords, meta }))
+    let meta = KeywordListMeta { total };
+    Ok(Json(KeywordListResponse { keywords, meta }))
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]

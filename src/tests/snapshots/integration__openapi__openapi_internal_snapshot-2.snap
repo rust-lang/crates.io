@@ -3784,6 +3784,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing keywords.",
                   "properties": {
                     "keywords": {
                       "description": "The list of keywords.",
@@ -3793,6 +3794,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a keyword list response.",
                       "properties": {
                         "total": {
                           "description": "The total number of keywords.",
