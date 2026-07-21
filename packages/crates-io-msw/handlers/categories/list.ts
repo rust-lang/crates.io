@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -10,5 +12,8 @@ export default http.get('/api/v1/categories', ({ request }) => {
   let categories = db.category.findMany(undefined, { skip, take, orderBy: { category: 'asc' } });
   let total = db.category.count();
 
-  return HttpResponse.json({ categories: categories.map(c => serializeCategory(c)), meta: { total } });
+  return HttpResponse.json<SuccessBody<'list_categories'>>({
+    categories: categories.map(c => serializeCategory(c)),
+    meta: { total },
+  });
 });
