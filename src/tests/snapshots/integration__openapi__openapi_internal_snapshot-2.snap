@@ -4723,6 +4723,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing GitHub trusted publishing configurations.",
                   "properties": {
                     "github_configs": {
                       "items": {
@@ -4731,6 +4732,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a GitHub configuration list response.",
                       "properties": {
                         "next_page": {
                           "description": "Query string to the next page of results, if any.",

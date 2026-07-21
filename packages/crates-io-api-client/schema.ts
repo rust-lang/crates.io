@@ -3786,6 +3786,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         github_configs: components["schemas"]["GitHubConfig"][];
+                        /** @description Pagination metadata for a GitHub configuration list response. */
                         meta: {
                             /**
                              * @description Query string to the next page of results, if any.
