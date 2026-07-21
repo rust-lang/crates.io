@@ -16,8 +16,7 @@
   }
 
   function goBack() {
-    // window.navigation is only available in modern browsers
-    let canGoBack = window.navigation?.canGoBack ?? history.length > 1;
+    let canGoBack = history.length > 1;
     if (!canGoBack) {
       goto(resolve('/'));
       return;
