@@ -4615,6 +4615,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting a team by login.",
                   "properties": {
                     "team": {
                       "$ref": "#/components/schemas/Team"
