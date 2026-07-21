@@ -4614,6 +4614,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting a user by login.",
                   "properties": {
                     "user": {
                       "$ref": "#/components/schemas/User"
