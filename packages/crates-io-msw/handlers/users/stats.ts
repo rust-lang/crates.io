@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -11,5 +13,5 @@ export default http.get<{ user_id: string }>('/api/v1/users/:user_id/stats', ({ 
   let ownerships = db.crateOwnership.findMany(q => q.where(o => o.user?.id === userId));
   let total_downloads = ownerships.reduce((sum, o) => sum + o.crate.downloads, 0);
 
-  return HttpResponse.json({ total_downloads });
+  return HttpResponse.json<SuccessBody<'get_user_stats'>>({ total_downloads });
 });

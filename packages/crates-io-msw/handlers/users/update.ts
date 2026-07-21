@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -43,5 +45,5 @@ export default http.put<{ user_id: string }>('/api/v1/users/:user_id', async ({ 
     });
   }
 
-  return HttpResponse.json({ ok: true });
+  return HttpResponse.json<SuccessBody<'update_user'>>({ ok: true });
 });
