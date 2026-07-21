@@ -13,15 +13,16 @@ test.describe('Acceptance | 404', { tag: '@acceptance' }, () => {
   });
 
   test('go back navigates to index when there is no previous page', async ({ page }) => {
-    await page.goto('/unknown-route');
-    await expect(page.locator('[data-test-go-back]')).toBeVisible();
-    await page.click('[data-test-go-back]');
-    // Svelte doesn't update URL during tests for some reason, so the following assertion only works in actual browsers
-    // await expect(page).toHaveURL('/');
-    // Instead, assert we are no longer on 404 page...
-    await expect(page.locator('[data-test-404-page]')).toBeHidden();
-    // ...but on index page instead
-    await expect(page).toHaveTitle('crates.io: Rust Package Registry');
+    // Pre-warm index page
+    await page.goto('/');
+
+    // Open popup to get a fresh history
+    let [popup] = await Promise.all([page.waitForEvent('popup'), page.evaluate(() => window.open('/unknown-route'))]);
+    await popup.waitForLoadState('domcontentloaded');
+
+    await expect(popup.locator('[data-test-go-back]')).toBeVisible();
+    await popup.click('[data-test-go-back]');
+    await expect(popup).toHaveURL('/');
   });
 
   test('go back navigates to previous page when history exists', async ({ page }) => {
