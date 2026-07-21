@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -26,6 +28,6 @@ export default http.delete<{ name: string; version: string }>(
       },
     });
 
-    return HttpResponse.json({ ok: true });
+    return HttpResponse.json<SuccessBody<'yank_version'>>({ ok: true });
   },
 );

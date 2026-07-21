@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -27,6 +29,6 @@ export default http.put<{ name: string; version: string }>(
       },
     });
 
-    return HttpResponse.json({ ok: true });
+    return HttpResponse.json<SuccessBody<'unyank_version'>>({ ok: true });
   },
 );

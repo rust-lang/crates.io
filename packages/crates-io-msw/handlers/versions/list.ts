@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 import compareSemver from 'semver/functions/compare-loose.js';
 
@@ -62,5 +64,5 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/versions', async
   }
 
   let serializedVersions = versions.map(v => serializeVersion(v));
-  return HttpResponse.json({ versions: serializedVersions, meta });
+  return HttpResponse.json<SuccessBody<'list_versions'>>({ versions: serializedVersions, meta });
 });
