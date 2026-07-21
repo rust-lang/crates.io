@@ -39,8 +39,9 @@ pub struct FindQueryParams {
     include: Option<String>,
 }
 
+/// Response returned when getting crate metadata.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct CrateGetResponse {
     /// The crate metadata.
     #[serde(rename = "crate")]
     krate: EncodableCrate,
@@ -66,12 +67,12 @@ pub struct GetResponse {
     get,
     path = "/api/v1/crates/new",
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(CrateGetResponse))),
 )]
 pub async fn find_new_crate(
     app: AppState,
     params: FindQueryParams,
-) -> AppResult<Json<GetResponse>> {
+) -> AppResult<Json<CrateGetResponse>> {
     let name = "new".to_string();
     find_crate(app, CratePath { name }, params).await
 }
@@ -82,13 +83,13 @@ pub async fn find_new_crate(
     path = "/api/v1/crates/{name}",
     params(CratePath, FindQueryParams),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(CrateGetResponse))),
 )]
 pub async fn find_crate(
     app: AppState,
     path: CratePath,
     params: FindQueryParams,
-) -> AppResult<Json<GetResponse>> {
+) -> AppResult<Json<CrateGetResponse>> {
     let mut conn = app.db_read().await?;
 
     let include = params
@@ -206,7 +207,7 @@ pub async fn find_crate(
             .collect::<Vec<EncodableCategory>>()
     });
 
-    Ok(Json(GetResponse {
+    Ok(Json(CrateGetResponse {
         krate: encodable_crate,
         versions: encodable_versions,
         keywords: encodable_keywords,

@@ -2127,6 +2127,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting crate metadata.",
                   "properties": {
                     "categories": {
                       "description": "The categories of the crate.",
@@ -2290,6 +2291,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting crate metadata.",
                   "properties": {
                     "categories": {
                       "description": "The categories of the crate.",
