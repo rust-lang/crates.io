@@ -16,16 +16,18 @@ pub struct CreateResponse {
     pub gitlab_config: GitLabConfig,
 }
 
+/// Response returned when listing GitLab trusted publishing configurations.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct GitLabConfigListResponse {
     pub gitlab_configs: Vec<GitLabConfig>,
 
     #[schema(inline)]
-    pub meta: ListResponseMeta,
+    pub meta: GitLabConfigListMeta,
 }
 
+/// Pagination metadata for a GitLab configuration list response.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponseMeta {
+pub struct GitLabConfigListMeta {
     /// The total number of GitLab configs belonging to the crate.
     #[schema(example = 42)]
     pub total: i64,

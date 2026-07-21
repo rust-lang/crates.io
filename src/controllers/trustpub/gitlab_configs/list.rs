@@ -4,7 +4,9 @@ use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::load_crate;
-use crate::controllers::trustpub::gitlab_configs::json::{self, ListResponse, ListResponseMeta};
+use crate::controllers::trustpub::gitlab_configs::json::{
+    self, GitLabConfigListMeta, GitLabConfigListResponse,
+};
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, bad_request, forbidden};
 use crate::util::no_store;
@@ -23,10 +25,11 @@ use http::request::Parts;
 use indexmap::IndexMap;
 use serde::Deserialize;
 
+/// Query parameters for listing GitLab trusted publishing configurations.
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
-pub struct ListQueryParams {
+pub struct GitLabConfigListQueryParams {
     /// Name of the crate to list Trusted Publishing configurations for.
     #[serde(rename = "crate")]
     pub krate: Option<String>,
@@ -39,16 +42,16 @@ pub struct ListQueryParams {
 #[utoipa::path(
     get,
     path = "/api/v1/trusted_publishing/gitlab_configs",
-    params(ListQueryParams, PaginationQueryParams),
+    params(GitLabConfigListQueryParams, PaginationQueryParams),
     security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(GitLabConfigListResponse))),
 )]
 pub async fn list_trustpub_gitlab_configs(
     state: AppState,
-    params: ListQueryParams,
+    params: GitLabConfigListQueryParams,
     parts: Parts,
-) -> AppResult<(TypedHeader<CacheControl>, Json<ListResponse>)> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<GitLabConfigListResponse>)> {
     let configs = match (&params.krate, params.user_id) {
         (Some(krate), None) => list_by_crate(state, krate, parts).await,
         (None, Some(user_id)) => list_by_user(state, user_id, parts).await,
@@ -67,7 +70,7 @@ async fn list_by_crate(
     state: AppState,
     krate_name: &str,
     parts: Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<Json<GitLabConfigListResponse>> {
     let mut conn = state.db_read().await?;
 
     let auth = AuthCheck::default()
@@ -101,7 +104,7 @@ async fn list_by_user(
     state: AppState,
     user_id: i32,
     parts: Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<Json<GitLabConfigListResponse>> {
     let mut conn = state.db_read().await?;
 
     let auth = AuthCheck::default()
@@ -151,7 +154,7 @@ async fn paginated_response(
     conn: &mut diesel_async::AsyncPgConnection,
     crate_ids: &[i32],
     parts: &Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<Json<GitLabConfigListResponse>> {
     let pagination = PaginationOptions::builder()
         .enable_seek(true)
         .enable_pages(false)
@@ -161,9 +164,9 @@ async fn paginated_response(
 
     let gitlab_configs = configs.into_iter().map(to_json_config).collect();
 
-    Ok(Json(ListResponse {
+    Ok(Json(GitLabConfigListResponse {
         gitlab_configs,
-        meta: ListResponseMeta { total, next_page },
+        meta: GitLabConfigListMeta { total, next_page },
     }))
 }
 

@@ -4958,6 +4958,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing GitLab trusted publishing configurations.",
                   "properties": {
                     "gitlab_configs": {
                       "items": {
@@ -4966,6 +4967,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a GitLab configuration list response.",
                       "properties": {
                         "next_page": {
                           "description": "Query string to the next page of results, if any.",

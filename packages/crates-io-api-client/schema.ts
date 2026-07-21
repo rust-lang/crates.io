@@ -3906,6 +3906,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         gitlab_configs: components["schemas"]["GitLabConfig"][];
+                        /** @description Pagination metadata for a GitLab configuration list response. */
                         meta: {
                             /**
                              * @description Query string to the next page of results, if any.
