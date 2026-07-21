@@ -33,5 +33,6 @@ export default http.get('/api/v1/trusted_publishing/gitlab_configs', ({ request 
 
   return HttpResponse.json({
     gitlab_configs: configs.map(config => serializeGitLabConfig(config)),
+    meta: { total: configs.length, next_page: null },
   });
 });

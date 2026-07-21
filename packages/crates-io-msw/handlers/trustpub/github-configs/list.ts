@@ -33,5 +33,6 @@ export default http.get('/api/v1/trusted_publishing/github_configs', ({ request 
 
   return HttpResponse.json({
     github_configs: configs.map(config => serializeGitHubConfig(config)),
+    meta: { total: configs.length, next_page: null },
   });
 });
