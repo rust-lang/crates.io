@@ -1,14 +1,17 @@
+import type { components } from '@crates-io/api-client';
 import type { Keyword } from '../models/index.js';
 
 import { db } from '../index.js';
-import { serializeModel } from '../utils/serializers.js';
 
-export function serializeKeyword(keyword: Keyword) {
-  let serialized = serializeModel(keyword);
+type ApiKeyword = components['schemas']['Keyword'];
 
-  serialized.crates_cnt = db.crate.findMany(q =>
-    q.where(crate => crate.keywords.some(k => k.id === keyword.id)),
-  ).length;
+export function serializeKeyword(keyword: Keyword): ApiKeyword {
+  let crateCount = db.crate.findMany(q => q.where(crate => crate.keywords.some(k => k.id === keyword.id))).length;
 
-  return serialized;
+  return {
+    id: keyword.id,
+    keyword: keyword.keyword,
+    created_at: keyword.created_at,
+    crates_cnt: crateCount,
+  };
 }
