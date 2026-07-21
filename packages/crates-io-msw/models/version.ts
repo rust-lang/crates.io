@@ -29,7 +29,7 @@ const schema = v.pipe(
     checksum: v.optional(v.string(), '0000000000000000000000000000000000000000000000000000000000000000'),
     license: v.optional(v.string()),
     downloads: v.optional(v.number()),
-    features: v.optional(v.record(v.string(), v.any()), {}),
+    features: v.optional(v.record(v.string(), v.array(v.string())), {}),
     crate_size: v.optional(v.number()),
     readme: v.optional(v.nullable(v.string()), null),
     rust_version: v.optional(v.nullable(v.string()), null),
