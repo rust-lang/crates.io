@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -11,5 +13,5 @@ export default http.get<{ keyword_id: string }>('/api/v1/keywords/:keyword_id', 
     return notFound();
   }
 
-  return HttpResponse.json({ keyword: serializeKeyword(keyword) });
+  return HttpResponse.json<SuccessBody<'find_keyword'>>({ keyword: serializeKeyword(keyword) });
 });
