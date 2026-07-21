@@ -32,7 +32,6 @@ test('creates a new API token', async function () {
         "id": 1,
         "last_used_at": null,
         "name": "foooo",
-        "revoked": false,
         "token": "6270739405881613",
       },
     }
@@ -71,7 +70,6 @@ test('creates a new API token with scopes', async function () {
         "id": 1,
         "last_used_at": null,
         "name": "foooo",
-        "revoked": false,
         "token": "6270739405881613",
       },
     }
@@ -104,7 +102,6 @@ test('creates a new API token with expiry date', async function () {
         "id": 1,
         "last_used_at": null,
         "name": "foooo",
-        "revoked": false,
         "token": "6270739405881613",
       },
     }
