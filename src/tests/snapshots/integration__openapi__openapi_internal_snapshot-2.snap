@@ -4196,6 +4196,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing API tokens for the authenticated user.",
                   "properties": {
                     "api_tokens": {
                       "items": {

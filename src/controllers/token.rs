@@ -50,8 +50,9 @@ impl GetParams {
     }
 }
 
+/// Response returned when listing API tokens for the authenticated user.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct ApiTokenListResponse {
     pub api_tokens: Vec<ApiToken>,
 }
 
@@ -63,7 +64,7 @@ pub struct ListResponse {
     security(("cookie" = [])),
     tag = "api_tokens",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(ApiTokenListResponse))),
 )]
 pub async fn list_api_tokens(
     app: AppState,
