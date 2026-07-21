@@ -74,8 +74,9 @@ pub async fn list_keywords(
     Ok(Json(KeywordListResponse { keywords, meta }))
 }
 
+/// Response returned when getting keyword metadata.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct KeywordGetResponse {
     pub keyword: EncodableKeyword,
 }
 
@@ -87,12 +88,12 @@ pub struct GetResponse {
         ("keyword" = String, Path, description = "The keyword to find"),
     ),
     tag = "keywords",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(KeywordGetResponse))),
 )]
 pub async fn find_keyword(
     Path(name): Path<String>,
     state: AppState,
-) -> AppResult<Json<GetResponse>> {
+) -> AppResult<Json<KeywordGetResponse>> {
     // If the name is not a valid keyword it cannot exist in the database, so we
     // skip the lookup and return a regular "not found" response. This also
     // avoids passing invalid input (e.g. names containing null bytes) to the
@@ -106,5 +107,5 @@ pub async fn find_keyword(
     let conn = state.db_read().await?;
     let kw = Keyword::find_by_keyword(&conn, &name).await?;
     let keyword = EncodableKeyword::from(kw);
-    Ok(Json(GetResponse { keyword }))
+    Ok(Json(KeywordGetResponse { keyword }))
 }

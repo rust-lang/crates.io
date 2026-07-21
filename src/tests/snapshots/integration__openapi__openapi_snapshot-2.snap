@@ -3452,6 +3452,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting keyword metadata.",
                   "properties": {
                     "keyword": {
                       "$ref": "#/components/schemas/Keyword"
