@@ -4370,6 +4370,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting an API token by ID.",
                   "properties": {
                     "api_token": {
                       "$ref": "#/components/schemas/ApiToken"
