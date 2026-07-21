@@ -1,21 +1,34 @@
+import type { components } from '@crates-io/api-client';
 import type { User } from '../models/index.js';
 
-import { serializeModel } from '../utils/serializers.js';
+type ApiUser = components['schemas']['User'];
+type ApiAuthenticatedUser = components['schemas']['AuthenticatedUser'];
 
-export function serializeUser(user: User, { removePrivateData = true } = {}) {
-  let serialized = serializeModel(user);
+export function serializeUser(user: User): ApiUser;
+export function serializeUser(user: User, options: { removePrivateData?: true }): ApiUser;
+export function serializeUser(user: User, options: { removePrivateData: false }): ApiAuthenticatedUser;
+export function serializeUser(
+  user: User,
+  { removePrivateData = true }: { removePrivateData?: boolean } = {},
+): ApiUser | ApiAuthenticatedUser {
+  let serialized: ApiUser = {
+    id: user.id,
+    login: user.login,
+    name: user.name,
+    url: user.url,
+    avatar: user.avatar,
+  };
 
-  if (removePrivateData) {
-    delete serialized.email;
-    delete serialized.email_verified;
-    delete serialized.is_admin;
-    delete serialized.publish_notifications;
-  } else {
-    serialized.email_verification_sent = serialized.email_verified || Boolean(serialized.email_verification_token);
+  if (!removePrivateData) {
+    return {
+      ...serialized,
+      email: user.email,
+      email_verified: user.emailVerified,
+      email_verification_sent: user.emailVerified || Boolean(user.emailVerificationToken),
+      is_admin: user.isAdmin,
+      publish_notifications: user.publishNotifications,
+    };
   }
-
-  delete serialized.email_verification_token;
-  delete serialized.followed_crates;
 
   return serialized;
 }
