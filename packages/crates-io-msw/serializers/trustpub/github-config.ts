@@ -1,12 +1,17 @@
+import type { components } from '@crates-io/api-client';
 import type { TrustpubGithubConfig } from '../../models/index.js';
 
-import { serializeModel } from '../../utils/serializers.js';
+type ApiGitHubConfig = components['schemas']['GitHubConfig'];
 
-export function serializeGitHubConfig(config: TrustpubGithubConfig) {
-  let serialized = serializeModel(config);
-
-  // Extract crate name from the crate relationship
-  serialized.crate = serialized.crate.name;
-
-  return serialized;
+export function serializeGitHubConfig(config: TrustpubGithubConfig): ApiGitHubConfig {
+  return {
+    id: config.id,
+    crate: config.crate.name,
+    repository_owner: config.repository_owner,
+    repository_owner_id: config.repository_owner_id,
+    repository_name: config.repository_name,
+    workflow_filename: config.workflow_filename,
+    environment: config.environment,
+    created_at: config.created_at,
+  };
 }

@@ -17,7 +17,7 @@ const schema = v.pipe(
     created_at: v.optional(v.string(), '2010-06-16T21:30:45Z'),
     updated_at: v.optional(v.string(), '2017-02-24T12:34:56Z'),
     badges: v.optional(v.array(v.any()), []),
-    _extra_downloads: v.optional(v.array(v.any()), []),
+    _extra_downloads: v.optional(v.array(v.object({ date: v.string(), downloads: v.number() })), []),
     trustpubOnly: v.optional(v.boolean(), false),
 
     categories: v.optional(v.array(v.any()), []),

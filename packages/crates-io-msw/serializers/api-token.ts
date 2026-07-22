@@ -1,25 +1,25 @@
-import type { ApiToken } from '../models/index.js';
+import type { components } from '@crates-io/api-client';
+import type { ApiToken as MswApiToken } from '../models/index.js';
 
-import { serializeModel } from '../utils/serializers.js';
+type ApiToken = components['schemas']['ApiToken'];
+type ApiTokenWithToken = components['schemas']['ApiTokenWithToken'];
 
-export function serializeApiToken(token: ApiToken, { forCreate = false } = {}) {
-  let serialized = serializeModel(token);
+export function serializeApiToken(token: MswApiToken): ApiToken;
+export function serializeApiToken(token: MswApiToken, options: { forCreate?: false }): ApiToken;
+export function serializeApiToken(token: MswApiToken, options: { forCreate: true }): ApiTokenWithToken;
+export function serializeApiToken(token: MswApiToken, { forCreate = false } = {}): ApiToken | ApiTokenWithToken {
+  let serialized: ApiToken = {
+    id: token.id,
+    name: token.name,
+    created_at: new Date(token.createdAt).toISOString(),
+    crate_scopes: token.crateScopes,
+    endpoint_scopes: token.endpointScopes,
+    expired_at: token.expiredAt ? new Date(token.expiredAt).toISOString() : null,
+    last_used_at: token.lastUsedAt ? new Date(token.lastUsedAt).toISOString() : null,
+  };
 
-  if (serialized.created_at) {
-    serialized.created_at = new Date(serialized.created_at).toISOString();
-  }
-  if (serialized.expired_at) {
-    serialized.expired_at = new Date(serialized.expired_at).toISOString();
-  }
-  if (serialized.last_used_at) {
-    serialized.last_used_at = new Date(serialized.last_used_at).toISOString();
-  }
-
-  delete serialized.user;
-  delete serialized.revoked;
-
-  if (!forCreate) {
-    delete serialized.token;
+  if (forCreate) {
+    return { ...serialized, token: token.token };
   }
 
   return serialized;
