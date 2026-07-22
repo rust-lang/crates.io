@@ -32,9 +32,9 @@ async function generateSchema() {
   return HEADER + astToString(ast);
 }
 
-test('schema.d.ts is up to date', async () => {
+test('schema.ts is up to date', async () => {
   let generated = await generateSchema();
-  let schemaPath = path.resolve(__dirname, 'schema.d.ts');
+  let schemaPath = path.resolve(__dirname, 'schema.ts');
   await expect(generated).toMatchFileSnapshot(schemaPath);
 });
 
