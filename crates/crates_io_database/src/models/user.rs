@@ -24,8 +24,9 @@ pub struct User {
     pub gh_login: String,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
+    #[diesel(select_expression = oauth_github::encrypted_token.nullable())]
     #[serde(skip)]
-    pub gh_encrypted_token: Vec<u8>,
+    pub gh_encrypted_token: Option<Vec<u8>>,
     pub account_lock_reason: Option<String>,
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,

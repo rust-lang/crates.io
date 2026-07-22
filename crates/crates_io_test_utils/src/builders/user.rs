@@ -53,7 +53,7 @@ impl<'a> UserBuilder<'a> {
             name: self.display_name.map(ToString::to_string),
             gh_id: 123,
             gh_avatar: None,
-            gh_encrypted_token: vec![],
+            gh_encrypted_token: None,
             account_lock_reason: None,
             account_lock_until: None,
             is_admin: false,
@@ -94,7 +94,7 @@ impl<'a> OauthGithubBuilder<'a> {
         Self {
             user_id: user.id,
             account_id: user.gh_id as i64,
-            encrypted_token: &user.gh_encrypted_token,
+            encrypted_token: &ENCRYPTED_TOKEN,
             login: &user.username,
             avatar: None,
         }
