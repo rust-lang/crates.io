@@ -28,13 +28,13 @@ async function generateSchema() {
 
   // Parse and generate TypeScript
   let schema = JSON.parse(json);
-  let ast = await openapiTS(schema);
+  let ast = await openapiTS(schema, { enumValues: true });
   return HEADER + astToString(ast);
 }
 
-test('schema.d.ts is up to date', async () => {
+test('schema.ts is up to date', async () => {
   let generated = await generateSchema();
-  let schemaPath = path.resolve(__dirname, 'schema.d.ts');
+  let schemaPath = path.resolve(__dirname, 'schema.ts');
   await expect(generated).toMatchFileSnapshot(schemaPath);
 });
 
