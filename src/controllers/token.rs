@@ -50,8 +50,9 @@ impl GetParams {
     }
 }
 
+/// Response returned when listing API tokens for the authenticated user.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct ApiTokenListResponse {
     pub api_tokens: Vec<ApiToken>,
 }
 
@@ -63,7 +64,7 @@ pub struct ListResponse {
     security(("cookie" = [])),
     tag = "api_tokens",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(ApiTokenListResponse))),
 )]
 pub async fn list_api_tokens(
     app: AppState,
@@ -231,8 +232,9 @@ pub async fn create_api_token(
     Ok(Json(CreateResponse { api_token }))
 }
 
+/// Response returned when getting an API token by ID.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct ApiTokenGetResponse {
     pub api_token: ApiToken,
 }
 
@@ -248,13 +250,13 @@ pub struct GetResponse {
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(ApiTokenGetResponse))),
 )]
 pub async fn find_api_token(
     app: AppState,
     Path(id): Path<i32>,
     req: Parts,
-) -> AppResult<(TypedHeader<CacheControl>, Json<GetResponse>)> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<ApiTokenGetResponse>)> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -264,7 +266,7 @@ pub async fn find_api_token(
         .first(&mut conn)
         .await?;
 
-    Ok((no_store(), Json(GetResponse { api_token })))
+    Ok((no_store(), Json(ApiTokenGetResponse { api_token })))
 }
 
 /// Revoke API token.

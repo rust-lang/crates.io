@@ -1741,6 +1741,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing categories.",
                   "properties": {
                     "categories": {
                       "description": "The list of categories.",
@@ -1750,6 +1751,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a category list response.",
                       "properties": {
                         "total": {
                           "description": "The total number of categories.",
@@ -1800,6 +1802,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting category metadata.",
                   "properties": {
                     "category": {
                       "$ref": "#/components/schemas/Category"
@@ -2049,6 +2052,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing crates.",
                   "properties": {
                     "crates": {
                       "items": {
@@ -2057,6 +2061,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a crate list response.",
                       "properties": {
                         "next_page": {
                           "description": "Query string to the next page of results, if any.",
@@ -2122,6 +2127,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting crate metadata.",
                   "properties": {
                     "categories": {
                       "description": "The categories of the crate.",
@@ -2285,6 +2291,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting crate metadata.",
                   "properties": {
                     "categories": {
                       "description": "The categories of the crate.",
@@ -3122,6 +3129,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing versions of a crate.",
                   "properties": {
                     "meta": {
                       "properties": {
@@ -3211,6 +3219,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting crate version metadata.",
                   "properties": {
                     "version": {
                       "$ref": "#/components/schemas/Version"
@@ -3781,6 +3790,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing keywords.",
                   "properties": {
                     "keywords": {
                       "description": "The list of keywords.",
@@ -3790,6 +3800,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a keyword list response.",
                       "properties": {
                         "total": {
                           "description": "The total number of keywords.",
@@ -3840,6 +3851,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting keyword metadata.",
                   "properties": {
                     "keyword": {
                       "$ref": "#/components/schemas/Keyword"
@@ -4190,6 +4202,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing API tokens for the authenticated user.",
                   "properties": {
                     "api_tokens": {
                       "items": {
@@ -4363,6 +4376,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting an API token by ID.",
                   "properties": {
                     "api_token": {
                       "$ref": "#/components/schemas/ApiToken"
@@ -4607,6 +4621,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting a team by login.",
                   "properties": {
                     "team": {
                       "$ref": "#/components/schemas/Team"
@@ -4708,6 +4723,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing GitHub trusted publishing configurations.",
                   "properties": {
                     "github_configs": {
                       "items": {
@@ -4716,6 +4732,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a GitHub configuration list response.",
                       "properties": {
                         "next_page": {
                           "description": "Query string to the next page of results, if any.",
@@ -4941,6 +4958,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when listing GitLab trusted publishing configurations.",
                   "properties": {
                     "gitlab_configs": {
                       "items": {
@@ -4949,6 +4967,7 @@ expression: response.json()
                       "type": "array"
                     },
                     "meta": {
+                      "description": "Pagination metadata for a GitLab configuration list response.",
                       "properties": {
                         "next_page": {
                           "description": "Query string to the next page of results, if any.",
@@ -5293,6 +5312,7 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Response returned when getting a user by login.",
                   "properties": {
                     "user": {
                       "$ref": "#/components/schemas/User"

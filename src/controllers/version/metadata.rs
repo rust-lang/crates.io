@@ -13,8 +13,9 @@ use serde::Serialize;
 
 use super::CrateVersionPath;
 
+/// Response returned when getting crate version metadata.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct VersionGetResponse {
     pub version: EncodableVersion,
 }
 
@@ -24,9 +25,12 @@ pub struct GetResponse {
     path = "/api/v1/crates/{name}/{version}",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(VersionGetResponse))),
 )]
-pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<Json<GetResponse>> {
+pub async fn find_version(
+    state: AppState,
+    path: CrateVersionPath,
+) -> AppResult<Json<VersionGetResponse>> {
     let conn = state.db_read().await?;
     let (version, krate) = path.load_version_and_crate(&conn).await?;
     let (actions, published_by) = tokio::try_join!(
@@ -35,5 +39,5 @@ pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<
     )?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-    Ok(Json(GetResponse { version }))
+    Ok(Json(VersionGetResponse { version }))
 }

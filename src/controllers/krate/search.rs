@@ -36,16 +36,18 @@ use crates_io_database::fns::{array_agg, canon_crate_name, lower};
 /// query (see [`FilterParams::relevance_candidate_ids`]).
 const RELEVANCE_CANDIDATE_LIMIT: i64 = 1000;
 
+/// Response returned when listing crates.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct CrateListResponse {
     crates: Vec<EncodableCrate>,
 
     #[schema(inline)]
-    meta: ListMeta,
+    meta: CrateListMeta,
 }
 
+/// Pagination metadata for a crate list response.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListMeta {
+pub struct CrateListMeta {
     /// The total number of crates that match the query.
     #[schema(example = 123)]
     total: i64,
@@ -71,20 +73,20 @@ pub struct ListMeta {
 #[utoipa::path(
     get,
     path = "/api/v1/crates",
-    params(ListQueryParams, PaginationQueryParams),
+    params(CrateListQueryParams, PaginationQueryParams),
     security(
         (),
         ("api_token" = []),
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(CrateListResponse))),
 )]
 pub async fn list_crates(
     app: AppState,
-    params: ListQueryParams,
+    params: CrateListQueryParams,
     req: Parts,
-) -> AppResult<(Option<TypedHeader<CacheControl>>, Json<ListResponse>)> {
+) -> AppResult<(Option<TypedHeader<CacheControl>>, Json<CrateListResponse>)> {
     // Notes:
     // The different use cases this function covers is handled through passing
     // in parameters in the GET request.
@@ -307,9 +309,9 @@ pub async fn list_crates(
 
     Ok((
         cache_control,
-        Json(ListResponse {
+        Json(CrateListResponse {
             crates,
-            meta: ListMeta {
+            meta: CrateListMeta {
                 total,
                 next_page,
                 prev_page,
@@ -318,10 +320,11 @@ pub async fn list_crates(
     ))
 }
 
+/// Query parameters for listing and filtering crates.
 #[derive(Debug, Deserialize, FromRequestParts, IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
-pub struct ListQueryParams {
+pub struct CrateListQueryParams {
     /// The sort order of the crates.
     ///
     /// Valid values: `alphabetical`, `relevance`, `downloads`,
@@ -384,7 +387,7 @@ pub struct ListQueryParams {
     ids: Vec<StringExclNull>,
 }
 
-impl ListQueryParams {
+impl CrateListQueryParams {
     pub fn include_yanked(&self) -> bool {
         let include_yanked = self.include_yanked.as_ref();
         include_yanked.map(|s| s == "yes").unwrap_or(true)
@@ -394,14 +397,14 @@ impl ListQueryParams {
 #[derive(Deref)]
 struct FilterParams {
     #[deref]
-    search_params: ListQueryParams,
+    search_params: CrateListQueryParams,
     letter: Option<char>,
     auth_user_id: Option<i32>,
 }
 
 impl FilterParams {
     async fn from(
-        search_params: ListQueryParams,
+        search_params: CrateListQueryParams,
         parts: &Parts,
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Self> {

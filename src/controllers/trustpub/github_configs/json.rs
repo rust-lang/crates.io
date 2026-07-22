@@ -16,16 +16,18 @@ pub struct CreateResponse {
     pub github_config: GitHubConfig,
 }
 
+/// Response returned when listing GitHub trusted publishing configurations.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct GitHubConfigListResponse {
     pub github_configs: Vec<GitHubConfig>,
 
     #[schema(inline)]
-    pub meta: ListResponseMeta,
+    pub meta: GitHubConfigListMeta,
 }
 
+/// Pagination metadata for a GitHub configuration list response.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponseMeta {
+pub struct GitHubConfigListMeta {
     /// The total number of GitHub configs belonging to the crate.
     #[schema(example = 42)]
     pub total: i64,

@@ -25,10 +25,11 @@ use indexmap::{IndexMap, IndexSet};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
+/// Query parameters for listing versions of a crate.
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]
-pub struct ListQueryParams {
+pub struct VersionListQueryParams {
     /// Additional data to include in the response.
     ///
     /// Valid values: `release_tracks`.
@@ -51,7 +52,7 @@ pub struct ListQueryParams {
     nums: Vec<StringExclNull>,
 }
 
-impl ListQueryParams {
+impl VersionListQueryParams {
     fn include(&self) -> AppResult<ShowIncludeMode> {
         let include = self
             .include
@@ -63,8 +64,9 @@ impl ListQueryParams {
     }
 }
 
+/// Response returned when listing versions of a crate.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct ListResponse {
+pub struct VersionListResponse {
     versions: Vec<EncodableVersion>,
 
     #[schema(inline)]
@@ -75,17 +77,17 @@ pub struct ListResponse {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/versions",
-    params(CratePath, ListQueryParams, PaginationQueryParams),
+    params(CratePath, VersionListQueryParams, PaginationQueryParams),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(VersionListResponse))),
 )]
 pub async fn list_versions(
     state: AppState,
     path: CratePath,
-    params: ListQueryParams,
+    params: VersionListQueryParams,
     pagination: PaginationQueryParams,
     req: Parts,
-) -> AppResult<Json<ListResponse>> {
+) -> AppResult<Json<VersionListResponse>> {
     let conn = state.db_read().await?;
 
     let crate_id = path.load_crate_id(&conn).await?;
@@ -116,7 +118,7 @@ pub async fn list_versions(
         .map(|((v, pb), aas)| EncodableVersion::from(v, &path.name, pb, aas))
         .collect::<Vec<_>>();
 
-    Ok(Json(ListResponse {
+    Ok(Json(VersionListResponse {
         versions,
         meta: versions_and_publishers.meta,
     }))
@@ -130,7 +132,7 @@ pub async fn list_versions(
 async fn list(
     crate_id: i32,
     options: Option<&PaginationOptions>,
-    params: &ListQueryParams,
+    params: &VersionListQueryParams,
     req: &Parts,
     mut conn: &AsyncPgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {

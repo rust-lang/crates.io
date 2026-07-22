@@ -11,8 +11,9 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Serialize;
 
+/// Response returned when getting a user by login.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct UserGetResponse {
     pub user: EncodablePublicUser,
 }
 
@@ -24,12 +25,12 @@ pub struct GetResponse {
         ("user" = String, Path, description = "Login name of the user"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(UserGetResponse))),
 )]
 pub async fn find_user(
     state: AppState,
     Path(user_name): Path<String>,
-) -> AppResult<Json<GetResponse>> {
+) -> AppResult<Json<UserGetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use crate::schema::users::dsl::{gh_login, id};
@@ -41,7 +42,7 @@ pub async fn find_user(
         .first(&mut conn)
         .await?;
 
-    Ok(Json(GetResponse { user: user.into() }))
+    Ok(Json(UserGetResponse { user: user.into() }))
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]

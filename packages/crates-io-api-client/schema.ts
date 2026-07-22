@@ -2055,6 +2055,7 @@ export interface operations {
                     "application/json": {
                         /** @description The list of categories. */
                         categories: components["schemas"]["Category"][];
+                        /** @description Pagination metadata for a category list response. */
                         meta: {
                             /**
                              * Format: int64
@@ -2241,6 +2242,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         crates: components["schemas"]["Crate"][];
+                        /** @description Pagination metadata for a crate list response. */
                         meta: {
                             /**
                              * @description Query string to the next page of results, if any.
@@ -3255,6 +3257,7 @@ export interface operations {
                     "application/json": {
                         /** @description The list of keywords. */
                         keywords: components["schemas"]["Keyword"][];
+                        /** @description Pagination metadata for a keyword list response. */
                         meta: {
                             /**
                              * Format: int64
@@ -3783,6 +3786,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         github_configs: components["schemas"]["GitHubConfig"][];
+                        /** @description Pagination metadata for a GitHub configuration list response. */
                         meta: {
                             /**
                              * @description Query string to the next page of results, if any.
@@ -3902,6 +3906,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         gitlab_configs: components["schemas"]["GitLabConfig"][];
+                        /** @description Pagination metadata for a GitLab configuration list response. */
                         meta: {
                             /**
                              * @description Query string to the next page of results, if any.

@@ -8,8 +8,9 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Serialize;
 
+/// Response returned when getting a team by login.
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct GetResponse {
+pub struct TeamGetResponse {
     team: EncodableTeam,
 }
 
@@ -21,9 +22,12 @@ pub struct GetResponse {
         ("team" = String, Path, description = "Name of the team", example = "github:rust-lang:crates-io"),
     ),
     tag = "teams",
-    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(TeamGetResponse))),
 )]
-pub async fn find_team(state: AppState, Path(name): Path<String>) -> AppResult<Json<GetResponse>> {
+pub async fn find_team(
+    state: AppState,
+    Path(name): Path<String>,
+) -> AppResult<Json<TeamGetResponse>> {
     use crate::schema::teams::dsl::login;
 
     let mut conn = state.db_read().await?;
@@ -32,5 +36,5 @@ pub async fn find_team(state: AppState, Path(name): Path<String>) -> AppResult<J
         .first(&mut conn)
         .await?;
     let team = EncodableTeam::from(team);
-    Ok(Json(GetResponse { team }))
+    Ok(Json(TeamGetResponse { team }))
 }
