@@ -4143,3 +4143,18 @@ export interface operations {
         };
     };
 }
+type FlattenedDeepRequired<T> = {
+    [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
+};
+type ReadonlyArray<T> = [
+    Exclude<T, undefined>
+] extends [
+    unknown[]
+] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
+export const trustpubDataOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["TrustpubData"], {
+    provider: unknown;
+}>["provider"]> = ["github"];
+export const trustpubDataOneOf1ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["TrustpubData"], {
+    provider: unknown;
+}>["provider"]> = ["gitlab"];

@@ -28,7 +28,7 @@ async function generateSchema() {
 
   // Parse and generate TypeScript
   let schema = JSON.parse(json);
-  let ast = await openapiTS(schema);
+  let ast = await openapiTS(schema, { enumValues: true });
   return HEADER + astToString(ast);
 }
 
