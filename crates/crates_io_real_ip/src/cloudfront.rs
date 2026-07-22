@@ -6,6 +6,7 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 /// CloudFront IP ranges from AWS.
 #[rustfmt::skip]
 pub const CLOUDFRONT_NETWORKS: &[IpNetwork] = &[
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(1, 178, 168, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(3, 10, 17, 128), 25).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(3, 11, 53, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(3, 29, 40, 64), 26).unwrap()),
