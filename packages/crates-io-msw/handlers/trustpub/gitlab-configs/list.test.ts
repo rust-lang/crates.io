@@ -61,6 +61,10 @@ test('happy path', async function () {
           "workflow_filepath": ".gitlab/ci.yml",
         },
       ],
+      "meta": {
+        "next_page": null,
+        "total": 2,
+      },
     }
   `);
 });
@@ -83,6 +87,10 @@ test('happy path with no configs', async function () {
   expect(await response.json()).toMatchInlineSnapshot(`
     {
       "gitlab_configs": [],
+      "meta": {
+        "next_page": null,
+        "total": 0,
+      },
     }
   `);
 });
