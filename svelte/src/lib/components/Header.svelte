@@ -3,6 +3,7 @@
   import { format } from 'date-fns/format';
 
   import { getSession } from '$lib/utils/session.svelte';
+  import EmailInput from '$lib/components/EmailInput.svelte';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import * as Dropdown from './dropdown';
   import Icon from './Icon.svelte';
@@ -41,6 +42,17 @@
       <enhanced:img src="$lib/assets/cargo.png?w=38;76;114" role="none" alt="" class="logo" sizes="38px" />
       crates.io
     </a>
+
+    {#if currentUser && currentUser.id === -1 }
+      <div>
+        <h1>Finish creating your account</h1>
+        <div class="me-email">
+          <h2>User Email</h2>
+          <EmailInput bind:currentUser data-test-email-input />
+        </div>
+
+      </div>
+    {:else}
 
     <div class="search-form">
       <h1 class="hero-title">The Rust community&rsquo;s crate registry</h1>
@@ -179,6 +191,7 @@
         </Dropdown.Menu>
       </Dropdown.Root>
     </div>
+    {/if}
   </div>
 </header>
 
