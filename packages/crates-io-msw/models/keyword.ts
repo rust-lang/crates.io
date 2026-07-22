@@ -7,6 +7,7 @@ const schema = v.pipe(
   v.object({
     id: v.optional(v.string()),
     keyword: v.optional(v.string()),
+    created_at: v.optional(v.string(), '2010-06-16T21:30:45Z'),
   }),
   v.transform(function (input) {
     let counter = counters.increment('keyword');

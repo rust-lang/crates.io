@@ -58,10 +58,12 @@ test('attributes can be set', async ({ expect }) => {
       "id": 1,
       "keywords": [
         {
+          "created_at": "2010-06-16T21:30:45Z",
           "id": "keyword-1",
           "keyword": "keyword-1",
         },
         {
+          "created_at": "2010-06-16T21:30:45Z",
           "id": "keyword-2",
           "keyword": "keyword-2",
         },

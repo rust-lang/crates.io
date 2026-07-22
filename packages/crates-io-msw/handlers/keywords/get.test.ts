@@ -25,6 +25,7 @@ test('returns a keyword object for known keywords', async function () {
     {
       "keyword": {
         "crates_cnt": 0,
+        "created_at": "2010-06-16T21:30:45Z",
         "id": "cli",
         "keyword": "cli",
       },
@@ -44,6 +45,7 @@ test('calculates `crates_cnt` correctly', async function () {
     {
       "keyword": {
         "crates_cnt": 7,
+        "created_at": "2010-06-16T21:30:45Z",
         "id": "test-cli-keyword",
         "keyword": "test-cli-keyword",
       },

@@ -26,16 +26,19 @@ test('returns a paginated keywords list', async function () {
       "keywords": [
         {
           "crates_cnt": 0,
+          "created_at": "2010-06-16T21:30:45Z",
           "id": "api",
           "keyword": "api",
         },
         {
           "crates_cnt": 0,
+          "created_at": "2010-06-16T21:30:45Z",
           "id": "keyword-2",
           "keyword": "keyword-2",
         },
         {
           "crates_cnt": 0,
+          "created_at": "2010-06-16T21:30:45Z",
           "id": "keyword-3",
           "keyword": "keyword-3",
         },
