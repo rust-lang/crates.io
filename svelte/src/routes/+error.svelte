@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
   import Ferris from '$lib/components/Ferris.svelte';
@@ -14,6 +16,11 @@
   }
 
   function goBack() {
+    let canGoBack = history.length > 1;
+    if (!canGoBack) {
+      goto(resolve('/'));
+      return;
+    }
     history.back();
   }
 

@@ -11,4 +11,25 @@ test.describe('Acceptance | 404', { tag: '@acceptance' }, () => {
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
   });
+
+  test('go back navigates to index when there is no previous page', async ({ page }) => {
+    // Pre-warm index page
+    await page.goto('/');
+
+    // Open popup to get a fresh history
+    let [popup] = await Promise.all([page.waitForEvent('popup'), page.evaluate(() => window.open('/unknown-route'))]);
+    await popup.waitForLoadState('domcontentloaded');
+
+    await expect(popup.locator('[data-test-go-back]')).toBeVisible();
+    await popup.click('[data-test-go-back]');
+    await expect(popup).toHaveURL('/');
+  });
+
+  test('go back navigates to previous page when history exists', async ({ page }) => {
+    await page.goto('/policies');
+    await page.goto('/unknown-route');
+    await expect(page.locator('[data-test-go-back]')).toBeVisible();
+    await page.click('[data-test-go-back]');
+    await expect(page).toHaveURL('/policies');
+  });
 });
