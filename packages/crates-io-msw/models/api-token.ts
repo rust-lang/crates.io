@@ -1,3 +1,4 @@
+import { endpointScopeValues } from '@crates-io/api-client';
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
@@ -10,7 +11,7 @@ const schema = v.pipe(
 
     crateScopes: v.optional(v.nullable(v.array(v.string())), null),
     createdAt: v.optional(v.string(), '2017-11-19T17:59:22Z'),
-    endpointScopes: v.optional(v.nullable(v.array(v.string())), null),
+    endpointScopes: v.optional(v.nullable(v.array(v.picklist(endpointScopeValues))), null),
     expiredAt: v.optional(v.nullable(v.string()), null),
     lastUsedAt: v.optional(v.nullable(v.string()), null),
     name: v.optional(v.string()),

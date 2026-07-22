@@ -9,6 +9,20 @@ test('throws if `user` is not set', async ({ expect }) => {
   );
 });
 
+test('throws if an endpoint scope is invalid', async ({ expect }) => {
+  let user = await db.user.create({});
+
+  await expect(() =>
+    db.apiToken.create({
+      user,
+      // @ts-expect-error: invalid endpoint scope
+      endpointScopes: ['invalid'],
+    }),
+  ).rejects.toThrowErrorMatchingInlineSnapshot(
+    `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
+  );
+});
+
 test('happy path', async ({ expect }) => {
   let user = await db.user.create({});
   let session = await db.apiToken.create({ user });

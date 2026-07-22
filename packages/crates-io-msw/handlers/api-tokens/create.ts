@@ -1,8 +1,12 @@
+import type { components } from '@crates-io/api-client';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
 import { serializeApiToken } from '../../serializers/api-token.js';
 import { getSession } from '../../utils/session.js';
+
+type EndpointScope = components['schemas']['EndpointScope'];
 
 export default http.put('/api/v1/me/tokens', async ({ request }) => {
   let { user } = getSession();
@@ -14,7 +18,7 @@ export default http.put('/api/v1/me/tokens', async ({ request }) => {
     api_token: {
       name: string;
       crate_scopes?: string[] | null;
-      endpoint_scopes?: string[] | null;
+      endpoint_scopes?: EndpointScope[] | null;
       expired_at?: string | null;
     };
   };
