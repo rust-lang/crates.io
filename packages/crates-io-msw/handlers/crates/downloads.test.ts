@@ -99,6 +99,8 @@ test('includes related versions', async function () {
       ],
       "versions": [
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "rand",
           "crate_size": 162963,
           "created_at": "2010-06-16T21:30:45Z",
@@ -124,6 +126,7 @@ test('includes related versions', async function () {
             "total_comment_lines": 90,
           },
           "links": {
+            "authors": "/api/v1/crates/rand/1.0.0/authors",
             "dependencies": "/api/v1/crates/rand/1.0.0/dependencies",
             "version_downloads": "/api/v1/crates/rand/1.0.0/downloads",
           },
@@ -137,6 +140,8 @@ test('includes related versions', async function () {
           "yanked": false,
         },
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "rand",
           "crate_size": 325926,
           "created_at": "2010-06-16T21:30:45Z",
@@ -167,6 +172,7 @@ test('includes related versions', async function () {
             "total_comment_lines": 216,
           },
           "links": {
+            "authors": "/api/v1/crates/rand/1.0.1/authors",
             "dependencies": "/api/v1/crates/rand/1.0.1/dependencies",
             "version_downloads": "/api/v1/crates/rand/1.0.1/downloads",
           },

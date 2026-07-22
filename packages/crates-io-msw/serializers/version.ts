@@ -11,6 +11,7 @@ export function serializeVersion(version: Version) {
   serialized.readme_path = `/api/v1/crates/${version.crate.name}/${version.num}/readme`;
 
   serialized.links = {
+    authors: `/api/v1/crates/${version.crate.name}/${version.num}/authors`,
     dependencies: `/api/v1/crates/${version.crate.name}/${version.num}/dependencies`,
     version_downloads: `/api/v1/crates/${version.crate.name}/${version.num}/downloads`,
   };

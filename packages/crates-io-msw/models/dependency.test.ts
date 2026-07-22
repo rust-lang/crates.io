@@ -49,6 +49,8 @@ test('happy path', async ({ expect }) => {
       "req": "^2.1.3",
       "target": null,
       "version": {
+        "audit_actions": [],
+        "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
         "crate": {
           "_extra_downloads": [],
           "badges": [],

@@ -35,6 +35,8 @@ test('returns latest versions of followed crates', async function () {
       },
       "versions": [
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "foo",
           "crate_size": 162963,
           "created_at": "2010-06-16T21:30:45Z",
@@ -60,6 +62,7 @@ test('returns latest versions of followed crates', async function () {
             "total_comment_lines": 90,
           },
           "links": {
+            "authors": "/api/v1/crates/foo/1.2.3/authors",
             "dependencies": "/api/v1/crates/foo/1.2.3/dependencies",
             "version_downloads": "/api/v1/crates/foo/1.2.3/downloads",
           },

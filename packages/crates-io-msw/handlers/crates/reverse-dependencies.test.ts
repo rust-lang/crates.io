@@ -82,6 +82,8 @@ test('returns a paginated list of crate versions depending to the specified crat
       },
       "versions": [
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "baz",
           "crate_size": 325926,
           "created_at": "2010-06-16T21:30:45Z",
@@ -112,6 +114,7 @@ test('returns a paginated list of crate versions depending to the specified crat
             "total_comment_lines": 216,
           },
           "links": {
+            "authors": "/api/v1/crates/baz/1.0.1/authors",
             "dependencies": "/api/v1/crates/baz/1.0.1/dependencies",
             "version_downloads": "/api/v1/crates/baz/1.0.1/downloads",
           },
@@ -125,6 +128,8 @@ test('returns a paginated list of crate versions depending to the specified crat
           "yanked": false,
         },
         {
+          "audit_actions": [],
+          "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "bar",
           "crate_size": 162963,
           "created_at": "2010-06-16T21:30:45Z",
@@ -150,6 +155,7 @@ test('returns a paginated list of crate versions depending to the specified crat
             "total_comment_lines": 90,
           },
           "links": {
+            "authors": "/api/v1/crates/bar/1.0.0/authors",
             "dependencies": "/api/v1/crates/bar/1.0.0/dependencies",
             "version_downloads": "/api/v1/crates/bar/1.0.0/downloads",
           },
