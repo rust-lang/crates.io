@@ -167,10 +167,7 @@ impl UpdateUserFromGithub {
                 if oauth_github.login != github_user.login {
                     diesel::update(users::table)
                         .filter(users::id.eq(oauth_github.user_id))
-                        .set((
-                            users::gh_login.eq(&github_user.login),
-                            users::username.eq(&github_user.login),
-                        ))
+                        .set(users::gh_login.eq(&github_user.login))
                         .execute(conn)
                         .await?;
                 }
