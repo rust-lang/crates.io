@@ -16,9 +16,9 @@ export function serializeApiToken(token: ApiToken, { forCreate = false } = {}) {
   }
 
   delete serialized.user;
+  delete serialized.revoked;
 
   if (!forCreate) {
-    delete serialized.revoked;
     delete serialized.token;
   }
 
