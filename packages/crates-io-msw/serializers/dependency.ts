@@ -7,6 +7,7 @@ export function serializeDependency(dependency: Dependency) {
 
   serialized.crate_id = dependency.crate.name;
   serialized.version_id = dependency.version.id;
+  serialized.downloads = dependency.crate.downloads;
 
   delete serialized.crate;
   delete serialized.version;
