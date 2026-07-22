@@ -18,3 +18,10 @@ export function serializeInvite(invite: CrateOwnerInvitation) {
 
   return serialized;
 }
+
+export function serializeLegacyInvite(invite: CrateOwnerInvitation) {
+  return {
+    ...serializeInvite(invite),
+    invited_by_username: invite.inviter.login,
+  };
+}
