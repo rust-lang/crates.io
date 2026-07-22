@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -21,5 +23,5 @@ export default http.delete<{ name: string }>('/api/v1/crates/:name/follow', asyn
     },
   });
 
-  return HttpResponse.json({ ok: true });
+  return HttpResponse.json<SuccessBody<'unfollow_crate'>>({ ok: true });
 });

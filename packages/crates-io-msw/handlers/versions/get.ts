@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -16,7 +18,7 @@ export default http.get<{ name: string; version: string }>('/api/v1/crates/:name
     return HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 404 });
   }
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'find_version'>>({
     version: serializeVersion(version),
   });
 });

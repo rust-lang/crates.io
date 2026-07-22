@@ -1,4 +1,5 @@
 import type { Crate } from '../../models/index.js';
+import type { SuccessBody } from '../../utils/api-types.js';
 
 import { http, HttpResponse } from 'msw';
 
@@ -19,5 +20,5 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/following', asyn
 
   let following = (user.followedCrates as Crate[]).some(followedCrate => followedCrate.id === crate.id);
 
-  return HttpResponse.json({ following });
+  return HttpResponse.json<SuccessBody<'get_following_crate'>>({ following });
 });

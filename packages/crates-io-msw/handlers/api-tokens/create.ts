@@ -1,4 +1,5 @@
 import type { components } from '@crates-io/api-client';
+import type { SuccessBody } from '../../utils/api-types.js';
 
 import { http, HttpResponse } from 'msw';
 
@@ -32,7 +33,7 @@ export default http.put('/api/v1/me/tokens', async ({ request }) => {
     createdAt: new Date().toISOString(),
   });
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'create_api_token'>>({
     api_token: serializeApiToken(token, { forCreate: true }),
   });
 });

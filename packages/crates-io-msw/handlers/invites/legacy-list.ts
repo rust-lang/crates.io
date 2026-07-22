@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -17,7 +19,7 @@ export default http.get('/api/v1/me/crate_owner_invitations', () => {
   let invitees = invites.map(invite => invite.invitee);
   let users = [...new Set([...inviters, ...invitees])].toSorted((a, b) => a.id - b.id);
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'list_crate_owner_invitations_for_user'>>({
     crate_owner_invitations: invites.map(invite => serializeLegacyInvite(invite)),
     users: users.map(user => serializeUser(user)),
   });

@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -34,6 +36,6 @@ export default http.patch<{ name: string; version: string }>(
       },
     });
 
-    return HttpResponse.json({ version: serializeVersion(version!) });
+    return HttpResponse.json<SuccessBody<'update_version'>>({ version: serializeVersion(version!) });
   },
 );

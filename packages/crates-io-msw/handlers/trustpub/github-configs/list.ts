@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../../index.js';
@@ -31,7 +33,7 @@ export default http.get('/api/v1/trusted_publishing/github_configs', ({ request 
 
   let configs = db.trustpubGithubConfig.findMany(q => q.where(config => config.crate.id === crate.id));
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'list_trustpub_github_configs'>>({
     github_configs: configs.map(config => serializeGitHubConfig(config)),
     meta: { total: configs.length, next_page: null },
   });

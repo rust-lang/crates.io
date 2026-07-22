@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -19,7 +21,7 @@ export default http.get<{ name: string; version: string }>(
 
     let downloads = db.versionDownload.findMany(q => q.where(download => download.version.id === version.id));
 
-    return HttpResponse.json({
+    return HttpResponse.json<SuccessBody<'get_version_downloads'>>({
       version_downloads: downloads.map(download => ({
         date: download.date,
         downloads: download.downloads,

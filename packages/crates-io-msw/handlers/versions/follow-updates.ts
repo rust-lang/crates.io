@@ -1,4 +1,5 @@
 import type { Crate } from '../../models/index.js';
+import type { SuccessBody } from '../../utils/api-types.js';
 
 import { http, HttpResponse } from 'msw';
 
@@ -23,7 +24,7 @@ export default http.get('/api/v1/me/updates', ({ request }) => {
   let totalCount = allVersions.length;
   let totalPages = Math.ceil(totalCount / perPage);
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'get_authenticated_user_updates'>>({
     versions: versions.map(v => serializeVersion(v)),
     meta: { more: page < totalPages },
   });

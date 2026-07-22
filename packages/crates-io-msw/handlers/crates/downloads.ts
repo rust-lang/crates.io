@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -9,11 +11,7 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/downloads', asyn
   if (!crate) return notFound();
 
   let downloads = db.versionDownload.findMany(q => q.where(download => download.version.crate.id === crate.id));
-  let resp: {
-    version_downloads: Array<{ date: string; downloads: number; version: number }>;
-    meta: { extra_downloads: unknown };
-    versions?: Array<ReturnType<typeof serializeVersion>>;
-  } = {
+  let resp: SuccessBody<'get_crate_downloads'> = {
     version_downloads: downloads.map(download => ({
       date: download.date,
       downloads: download.downloads,
@@ -29,5 +27,5 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/downloads', asyn
     let versions = [...new Set(downloads.map(it => it.version))];
     resp.versions = versions.map(it => serializeVersion(it));
   }
-  return HttpResponse.json(resp);
+  return HttpResponse.json<SuccessBody<'get_crate_downloads'>>(resp);
 });

@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -11,5 +13,5 @@ export default http.get<{ category_id: string }>('/api/v1/categories/:category_i
     return notFound();
   }
 
-  return HttpResponse.json({ category: serializeCategory(category) });
+  return HttpResponse.json<SuccessBody<'find_category'>>({ category: serializeCategory(category) });
 });

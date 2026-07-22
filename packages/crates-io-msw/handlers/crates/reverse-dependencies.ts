@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -20,7 +22,7 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/reverse_dependen
 
   let versions = dependencies.map(d => d.version);
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'list_reverse_dependencies'>>({
     dependencies: dependencies.map(d => serializeDependency(d)),
     versions: versions.map(v => serializeVersion(v)),
     meta: { total },

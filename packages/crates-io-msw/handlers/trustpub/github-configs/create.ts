@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../../index.js';
@@ -59,7 +61,7 @@ export default http.post('/api/v1/trusted_publishing/github_configs', async ({ r
     created_at: new Date().toISOString(),
   });
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'create_trustpub_github_config'>>({
     github_config: serializeGitHubConfig(config),
   });
 });

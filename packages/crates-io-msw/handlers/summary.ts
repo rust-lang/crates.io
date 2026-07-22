@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../index.js';
@@ -21,7 +23,7 @@ export default [
     let popularCategories = db.category.findMany(undefined, { take: 10 });
     let popularKeywords = db.keyword.findMany(undefined, { take: 10 });
 
-    return HttpResponse.json({
+    return HttpResponse.json<SuccessBody<'get_summary'>>({
       just_updated: just_updated.map(c => serializeCrate(c)),
       most_downloaded: most_downloaded.map(c => serializeCrate(c)),
       new_crates: new_crates.map(c => serializeCrate(c)),

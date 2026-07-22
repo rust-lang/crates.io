@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { getSession } from '../../utils/session.js';
@@ -14,5 +16,5 @@ export default http.put<{ user_id: string }>('/api/v1/users/:user_id/resend', ({
 
   // let's pretend that we're sending an email here... :D
 
-  return HttpResponse.json({ ok: true });
+  return HttpResponse.json<SuccessBody<'resend_email_verification'>>({ ok: true });
 });

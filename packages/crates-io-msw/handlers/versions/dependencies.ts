@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -20,7 +22,7 @@ export default http.get<{ name: string; version: string }>(
 
     let dependencies = db.dependency.findMany(q => q.where(dep => dep.version.id === version.id));
 
-    return HttpResponse.json({
+    return HttpResponse.json<SuccessBody<'get_version_dependencies'>>({
       dependencies: dependencies.map(d => serializeDependency(d)),
     });
   },

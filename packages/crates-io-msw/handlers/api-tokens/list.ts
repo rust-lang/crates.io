@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -21,7 +23,7 @@ export default http.get('/api/v1/me/tokens', async ({ request }) => {
     .findMany(q => q.where(token => token.user.id === user.id), { orderBy: { id: 'desc' } })
     .filter(token => !token.expiredAt || new Date(token.expiredAt) > expiredAfter);
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'list_api_tokens'>>({
     api_tokens: apiTokens.map(token => serializeApiToken(token)),
   });
 });

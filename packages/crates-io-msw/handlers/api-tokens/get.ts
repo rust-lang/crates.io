@@ -1,3 +1,5 @@
+import type { SuccessBody } from '../../utils/api-types.js';
+
 import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
@@ -15,7 +17,7 @@ export default http.get<{ tokenId: string }>('/api/v1/me/tokens/:tokenId', async
   let token = db.apiToken.findFirst(q => q.where(token => token.id === parseInt(tokenId) && token.user.id === user.id));
   if (!token) return notFound();
 
-  return HttpResponse.json({
+  return HttpResponse.json<SuccessBody<'find_api_token'>>({
     api_token: serializeApiToken(token),
   });
 });
