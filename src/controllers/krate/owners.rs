@@ -389,16 +389,10 @@ async fn add_owner(
                     bad_request(format_args!("could not find user with login `{username}`"))
                 })?;
 
-            let oauth_github = OauthGithub::belonging_to(&user)
-                .select(OauthGithub::as_select())
-                .first(conn)
-                .await
-                .optional()?;
 
-            if let Some(oauth_github) = oauth_github
-                && oauth_github.login.to_lowercase() != user.username.to_lowercase()
+            if let Some(gh_login) = user.gh_username.to_owned()
+                && gh_login.to_lowercase() != user.username.to_lowercase()
             {
-                let gh_login = &oauth_github.login;
                 let error = format_args!(
                     "username `{username}` is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n\n\
                      To confirm this is the account you want to add, please run one of the following:\n\n\
