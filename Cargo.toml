@@ -82,7 +82,7 @@ aws-sdk-s3 = { version = "=1.139.0", default-features = false, features = ["defa
 aws-sdk-sqs = { version = "=1.104.0", default-features = false, features = ["default-https-client", "rt-tokio"] }
 axum = { version = "=0.8.9", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.12.6", features = ["erased-json", "middleware", "query", "typed-header"] }
-base64 = "=0.22.1"
+base64 = "=0.23.0"
 bigdecimal = { version = "=0.4.10", features = ["serde"] }
 bon = "=3.9.3"
 colored = "=3.1.1"
