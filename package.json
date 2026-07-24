@@ -53,7 +53,7 @@
     "eslint-plugin-unicorn": "65.0.1",
     "globals": "17.7.0",
     "msw": "2.15.0",
-    "prettier": "3.9.5",
+    "prettier": "3.9.6",
     "prettier-plugin-svelte": "4.1.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.65.0"
