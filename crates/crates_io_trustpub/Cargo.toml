@@ -16,7 +16,7 @@ async-trait = "=0.1.91"
 bon = { version = "=3.9.3", optional = true }
 chrono = { version = "=0.4.45", features = ["serde"] }
 crates_io_version = { path = "../crates_io_version" }
-jsonwebtoken = { version = "=10.4.0", features = ["aws_lc_rs"] }
+jsonwebtoken = { version = "=11.0.0", features = ["aws_lc_rs"] }
 mockall = { version = "=0.15.0", optional = true }
 rand = "=0.10.2"
 reqwest = { version = "=0.13.4", features = ["gzip", "json"] }
