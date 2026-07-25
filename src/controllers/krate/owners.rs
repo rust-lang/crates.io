@@ -389,7 +389,6 @@ async fn add_owner(
                     bad_request(format_args!("could not find user with login `{username}`"))
                 })?;
 
-
             if let Some(gh_login) = user.gh_username.to_owned()
                 && gh_login.to_lowercase() != user.username.to_lowercase()
             {

@@ -61,7 +61,6 @@ impl<'a> UserBuilder<'a> {
             id: 1,
             name: self.display_name.map(ToString::to_string),
             gh_login: self.gh_login.into(),
-            // rename to gh_login once gh_login is removed from the User struct
             gh_username: Some(self.gh_login.into()),
             gh_id: 123,
             gh_avatar: None,
