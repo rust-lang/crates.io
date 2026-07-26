@@ -2,7 +2,6 @@
 extern crate tracing;
 
 mod analyze_crates;
-mod backfill_cache_tags;
 mod build_crate_zips;
 mod default_versions;
 mod delete_crate;
@@ -24,7 +23,6 @@ mod yank_version;
 #[command(name = "crates-admin")]
 enum Command {
     AnalyzeCrates(analyze_crates::Options),
-    BackfillCacheTags(backfill_cache_tags::Options),
     BuildCrateZips(build_crate_zips::Options),
     RenderOgImages(render_og_images::Opts),
     DeleteCrate(delete_crate::Opts),
@@ -60,7 +58,6 @@ async fn main() -> anyhow::Result<()> {
 
     match command {
         Command::AnalyzeCrates(opts) => analyze_crates::run(opts).await,
-        Command::BackfillCacheTags(opts) => backfill_cache_tags::run(opts).await,
         Command::BuildCrateZips(opts) => build_crate_zips::run(opts).await,
         Command::RenderOgImages(opts) => render_og_images::run(opts).await,
         Command::DeleteCrate(opts) => delete_crate::run(opts).await,
