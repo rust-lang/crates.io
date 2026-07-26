@@ -27,6 +27,17 @@ const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
 
+/// Renders a storage path for use with an external HTTP system, percent-encoding
+/// `+` as `%2B`.
+///
+/// A literal `+` in a URL path is ambiguous (see #4891), so the CDNs cache and
+/// serve objects under the `%2B` form. Any path handed to a CDN — whether in a
+/// redirect URL or a cache invalidation — has to use the same form to refer to
+/// the same object.
+pub fn encode_cdn_path(path: &str) -> String {
+    path.replace('+', "%2B")
+}
+
 /// Builds the cache tag shared by every object belonging to a crate.
 pub fn crate_cache_tag(name: &str) -> String {
     format!("crate:{name}")
@@ -428,7 +439,7 @@ impl<'a> StorageKey<'a> {
     /// [`Self::path()`] rendered for a public URL, with `+` percent-encoded as
     /// `%2B`.
     pub fn cdn_path(&self) -> String {
-        self.path().as_ref().replace('+', "%2B")
+        encode_cdn_path(self.path().as_ref())
     }
 
     /// The content-type the file should be stored with, or `None` to rely on
