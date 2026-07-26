@@ -5,6 +5,7 @@ use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQ
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 
+use crate::storage::encode_cdn_path;
 use crate::worker::Environment;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 
@@ -24,7 +25,12 @@ impl InvalidateCdns {
         I::Item: ToString,
     {
         Self {
-            paths: paths.map(|path| path.to_string()).collect(),
+            // `object_store::Path` does not percent-encode `+`, but the CDNs cache objects
+            // under `%2B` (see `encode_cdn_path()`). Without this the purge request targets a
+            // path that was never cached, so it succeeds while invalidating nothing.
+            paths: paths
+                .map(|path| encode_cdn_path(&path.to_string()))
+                .collect(),
             cache_tags: Vec::new(),
         }
     }
@@ -126,5 +132,34 @@ mod tests {
         .unwrap();
 
         assert_eq!(job.cloudfront_items(), ["/path", "#crate:foo"]);
+    }
+
+    #[test]
+    fn paths_percent_encode_plus() {
+        let paths = [
+            object_store::path::Path::from("crates/foo/foo-1.0.0+foo.crate"),
+            object_store::path::Path::from("readmes/foo/foo-1.0.0+foo.html"),
+        ];
+
+        // `object_store::Path` renders `+` literally, which is what made the paths diverge
+        // from the `%2B` form the CDNs cache under.
+        assert!(paths[0].to_string().contains('+'));
+
+        let job = InvalidateCdns::paths(paths.into_iter());
+
+        assert_eq!(
+            job.paths,
+            [
+                "crates/foo/foo-1.0.0%2Bfoo.crate",
+                "readmes/foo/foo-1.0.0%2Bfoo.html",
+            ]
+        );
+    }
+
+    #[test]
+    fn cache_tags_are_not_path_encoded() {
+        let job = InvalidateCdns::cache_tags(["crate:foo+bar"]);
+
+        assert_eq!(job.cache_tags, ["crate:foo+bar"]);
     }
 }
