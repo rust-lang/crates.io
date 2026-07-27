@@ -42,6 +42,9 @@ ignored = ["astral-tokio-tar"]
 [lints]
 workspace = true
 
+[profile.dev]
+incremental = false
+
 [profile.dev.package]
 insta.opt-level = 3
 similar.opt-level = 3
