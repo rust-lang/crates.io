@@ -3,7 +3,7 @@
 ## Repository Layout
 
 - `/src/` - Backend Rust application code
-  - `/src/bin/` - Binary entry points: `server.rs` (main API server), `background-worker.rs` (async job processor), `monitor.rs` (monitoring tool), `crates-admin/` (admin CLI tools)
+  - `/src/bin/crates-io/` - Combined backend entry point for the server, background worker, monitor, and administrative commands
   - `/src/controllers/` - API controllers organized by domain (`krate/`, `user/`, `version/`, `trustpub/`, `github/`, `admin/`)
   - `/src/worker/jobs/` - Background job implementations (crate analysis, README rendering, OG image generation, database dumps)
   - `/src/middleware/` - Request processing middleware (auth, rate limiting, logging, error handling)
@@ -43,13 +43,25 @@
 Run the API server:
 
 ```bash
-cargo run
+cargo run -- server
 ```
 
 Run the background worker:
 
 ```bash
-cargo run --bin background-worker
+cargo run -- background-worker
+```
+
+Run the monitor:
+
+```bash
+cargo run -- monitor
+```
+
+Run an administrative command, such as database migrations:
+
+```bash
+cargo run -- migrate
 ```
 
 Database migrations:
@@ -59,12 +71,6 @@ diesel migration run              # Apply pending migrations
 diesel migration revert           # Revert last migration
 diesel migration redo             # Revert and reapply last migration
 diesel migration generate <name>  # Create new migration
-```
-
-Admin CLI (check crate ownership, manage users, etc.):
-
-```bash
-cargo run --bin crates-admin -- <subcommand>
 ```
 
 ### Testing

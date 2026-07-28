@@ -16,12 +16,12 @@ Because rendering happens entirely in the browser, the frontend talks to the bac
 
 ## Backend processes
 
-The backend is written in Rust and builds into a handful of separate binaries, all sharing the same codebase under `src/` and the workspace crates under `crates/`.
+The backend is written in Rust and builds one `crates-io` executable from the codebase under `src/` and the workspace crates under `crates/`. Its commands run each operational role and flattened administrative operations:
 
-- **`server`** is the API server. It handles every HTTP request to `crates.io`, serves the frontend assets, and uses the [axum](https://crates.io/crates/axum) web framework. This is the only process users talk to directly.
-- **`background-worker`** runs asynchronous jobs pulled from the job queue. Anything that is slow, fallible, or shouldn't block an API response happens here.
-- **`monitor`** is a small process that periodically checks the health of the system and pages the on-call team through PagerDuty when something looks wrong, such as a backlog of stalled jobs, download counts that have stopped updating, or a spam attack.
-- **`crates-admin`** is a command-line tool for operational tasks like deleting a crate, re-rendering READMEs, or enqueueing a job by hand. It also runs database migrations during deployment.
+- **`crates-io server`** is the API server. It handles every HTTP request to `crates.io`, serves the frontend assets, and uses the [axum](https://crates.io/crates/axum) web framework. This is the only process users talk to directly.
+- **`crates-io background-worker`** runs asynchronous jobs pulled from the job queue. Anything that is slow, fallible, or shouldn't block an API response happens here.
+- **`crates-io monitor`** is a small process that periodically checks the health of the system and pages the on-call team through PagerDuty when something looks wrong, such as a backlog of stalled jobs, download counts that have stopped updating, or a spam attack.
+- **Administrative commands**, such as **`crates-io migrate`**, handle operational tasks like deleting a crate, re-rendering READMEs, or enqueueing a job by hand. The release phase runs database migrations with `crates-io migrate`.
 
 ## PostgreSQL and migrations
 
@@ -53,7 +53,7 @@ Because the CDNs cache aggressively, the backend has to actively invalidate cach
 
 Work that shouldn't happen inside a request is run asynchronously by the `background-worker` process. The job queue is stored in PostgreSQL: enqueueing a job inserts a row, and workers claim jobs by locking rows so that multiple workers never run the same job. Failed jobs are retried with an exponential backoff, so jobs are written to be idempotent and safe to run more than once. Jobs cover things like syncing the index, invalidating CDN caches, rendering READMEs and OG images, sending emails, and producing the database dumps.
 
-Jobs are enqueued either by the API in the course of handling a request, such as a publish enqueueing an index sync, or on a schedule. Periodic jobs are triggered by the Heroku Scheduler addon, which runs the `crates-admin` CLI to enqueue them at fixed intervals.
+Jobs are enqueued either by the API in the course of handling a request, such as a publish enqueueing an index sync, or on a schedule. Periodic jobs are triggered by the Heroku Scheduler addon, which invokes `crates-io` administrative commands to enqueue them at fixed intervals.
 
 Separately from this queue, we use an Amazon SQS queue to ingest CDN access logs, which is how downloads are counted. The download-count walkthrough below describes that flow.
 
@@ -85,7 +85,7 @@ On top of all this, the `monitor` process watches for specific failure condition
 
 ## Deployment
 
-crates.io runs on Heroku. The `main` branch is automatically deployed to the staging environment at `staging.crates.io`. Production deployment is a manual process: after smoke tests pass in GitHub Actions, a team member with Heroku access can promote the staging release to production. Processes are defined in the `Procfile`: a `web` dyno (`server`), a `background_worker` dyno, and a `release` phase that runs database migrations via `crates-admin`.
+crates.io runs on Heroku. The `main` branch is automatically deployed to the staging environment at `staging.crates.io`. Production deployment is a manual process: after smoke tests pass in GitHub Actions, a team member with Heroku access can promote the staging release to production. The `Procfile` uses `crates-io` for the `web` dyno (`crates-io server`), the `background_worker` dyno (`crates-io background-worker`), and the `release` phase (`crates-io migrate`).
 
 ## Walkthroughs
 
