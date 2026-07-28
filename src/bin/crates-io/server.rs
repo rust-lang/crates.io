@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate tracing;
-
 use crates_io::middleware::normalize_path::normalize_path;
 use crates_io::{App, Emails, metrics::LogEncoder};
 use std::{sync::Arc, time::Duration};
@@ -18,7 +15,7 @@ use tower::Layer;
 
 const CORE_THREADS: usize = 4;
 
-fn main() -> anyhow::Result<()> {
+pub fn run() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging

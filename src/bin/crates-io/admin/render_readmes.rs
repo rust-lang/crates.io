@@ -21,7 +21,7 @@ use reqwest::{Client, header};
 use std::str::FromStr;
 use tokio_tar::{self, Archive};
 
-const USER_AGENT: &str = "crates-admin";
+const USER_AGENT: &str = "crates-io";
 
 #[derive(clap::Parser, Debug)]
 #[command(

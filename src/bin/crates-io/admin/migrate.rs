@@ -6,7 +6,7 @@ use diesel_migrations::{
     EmbeddedMigrations, HarnessWithOutput, MigrationHarness, embed_migrations,
 };
 
-static CATEGORIES_TOML: &str = include_str!("../../boot/categories.toml");
+static CATEGORIES_TOML: &str = include_str!("../../../boot/categories.toml");
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 

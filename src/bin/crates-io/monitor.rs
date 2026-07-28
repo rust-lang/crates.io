@@ -2,7 +2,7 @@
 //! optionally submits the results to Datadog as service checks.
 //!
 //! Usage:
-//!     cargo run --bin monitor
+//!     cargo run -- monitor
 
 use anyhow::Result;
 use crates_io::config::DatadogConfig;
@@ -44,7 +44,7 @@ struct CheckResult {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+pub async fn run() -> Result<()> {
     let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
     let pagerduty = PagerdutyClient::new(service_key);
 

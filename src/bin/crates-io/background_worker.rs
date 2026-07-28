@@ -9,10 +9,7 @@
 //! After the 5th occurrence, we will panic.
 //!
 //! Usage:
-//!      cargo run --bin background-worker
-
-#[macro_use]
-extern crate tracing;
+//!      cargo run -- background-worker
 
 use anyhow::{Context, anyhow};
 use crates_io::app::create_database_pool;
@@ -39,7 +36,7 @@ use url::Url;
 
 const DEFAULT_POOL_SIZE: usize = 10;
 
-fn main() -> anyhow::Result<()> {
+pub fn run() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging

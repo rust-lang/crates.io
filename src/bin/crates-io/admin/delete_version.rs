@@ -1,4 +1,4 @@
-use crate::dialoguer;
+use super::dialoguer;
 use anyhow::Context;
 use crates_io::models::update_default_version;
 use crates_io::schema::crates;
