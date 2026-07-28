@@ -1002,7 +1002,7 @@ diesel::table! {
         /// The time the user was created.
         created_at -> Nullable<Timestamptz>,
         /// Encrypted GitHub access token
-        gh_encrypted_token -> Bytea,
+        gh_encrypted_token -> Nullable<Bytea>,
         /// The `gh_id` column of the `users` table.
         ///
         /// Its SQL type is `Int4`.
