@@ -20,7 +20,7 @@ tar = { version = "=0.4.46", optional = true, default-features = false }
 thiserror = "=2.0.19"
 tracing = "=0.1.44"
 tokio = { version = "=1.53.1", features = ["io-util", "macros", "rt-multi-thread"] }
-async-compression = { version = "=0.4.42", default-features = false, features = ["gzip", "tokio"] }
+async-compression = { version = "=0.4.43", default-features = false, features = ["gzip", "tokio"] }
 futures-util = "=0.3.33"
 
 [dev-dependencies]
