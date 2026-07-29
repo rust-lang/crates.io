@@ -70,7 +70,7 @@ path = "src/tests/mod.rs"
 [dependencies]
 anyhow = "=1.0.104"
 astral-tokio-tar = { version = "=0.6.2", default-features = false }
-async-compression = { version = "=0.4.42", default-features = false, features = ["gzip", "tokio"] }
+async-compression = { version = "=0.4.43", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.91"
 aws-credential-types = { version = "=1.3.0", features = ["hardcoded-credentials"] }
 # The default `rustls` feature pulls in the legacy hyper 0.14 + rustls 0.21
