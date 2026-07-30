@@ -732,7 +732,7 @@ pub struct EncodablePrivateUser {
     pub avatar: Option<String>,
 
     /// The user's GitHub profile URL.
-    #[schema(example = "https://github.com/ghost")]
+    #[schema(example = "https://github.com/ghost", deprecated)]
     pub url: String,
 
     /// Whether the user is a crates.io administrator.
@@ -812,7 +812,7 @@ pub struct EncodablePublicUser {
     pub avatar: Option<String>,
 
     /// The user's GitHub profile URL.
-    #[schema(example = "https://github.com/ghost")]
+    #[schema(example = "https://github.com/ghost", deprecated)]
     pub url: String,
 
     /// Whether a linked GitHub username exactly matches the crates.io username.
