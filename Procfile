@@ -1,3 +1,3 @@
-release: ./target/release/crates-admin migrate
-web: ./target/release/server
-background_worker: ./target/release/background-worker
+release: ./target/release/crates-io migrate
+web: ./target/release/crates-io server
+background_worker: ./target/release/crates-io background-worker

@@ -1,4 +1,4 @@
-use crate::dialoguer;
+use super::dialoguer;
 use anyhow::{Context, anyhow};
 use crates_io::storage::Storage;
 use crates_io::tasks::spawn_blocking;

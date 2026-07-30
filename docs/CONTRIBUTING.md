@@ -440,13 +440,13 @@ Build and start the server by running this command (you'll need to stop this
 with `CTRL-C` and rerun this command every time you change the backend code):
 
 ```console
-cargo run
+cargo run -- server
 ```
 
 Then start the background worker (which will process uploaded READMEs):
 
 ```console
-cargo run --bin background-worker
+cargo run -- background-worker
 ```
 
 Since crates.io is using the `tracing` crate, you can enable debug logging by
@@ -454,7 +454,7 @@ setting the `RUST_LOG` environment variable to `debug` before running them, for
 example:
 
 ```console
-RUST_LOG=debug cargo run --bin background-worker
+RUST_LOG=debug cargo run -- background-worker
 ```
 Then start a frontend that uses this backend by running this command in another
 terminal session (the dev server picks up frontend changes via Vite HMR

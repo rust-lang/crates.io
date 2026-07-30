@@ -1,4 +1,4 @@
-use crate::dialoguer;
+use super::dialoguer;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;

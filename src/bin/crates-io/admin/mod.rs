@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate tracing;
-
 mod analyze_crates;
 mod build_crate_zips;
 mod default_versions;
@@ -19,9 +16,8 @@ mod upload_index;
 mod verify_token;
 mod yank_version;
 
-#[derive(clap::Parser, Debug)]
-#[command(name = "crates-admin")]
-enum Command {
+#[derive(clap::Subcommand, Debug)]
+pub enum Command {
     AnalyzeCrates(analyze_crates::Options),
     BuildCrateZips(build_crate_zips::Options),
     RenderOgImages(render_og_images::Opts),
@@ -44,16 +40,13 @@ enum Command {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+pub async fn run(command: Command) -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
     crates_io::util::tracing::init();
 
-    use clap::Parser;
-
     let span = info_span!("admin.command", command = tracing::field::Empty);
-    let command = Command::parse();
     span.record("command", tracing::field::debug(&command));
 
     match command {
@@ -71,13 +64,7 @@ async fn main() -> anyhow::Result<()> {
         Command::UploadIndex(opts) => upload_index::run(opts).await,
         Command::YankVersion(opts) => yank_version::run(opts).await,
         Command::EnqueueJob(command) => enqueue_job::run(command).await,
-        Command::DefaultVersions(opts) => default_versions::run(opts).await,
-        Command::ReverseDependencies(opts) => reverse_dependencies::run(opts).await,
+        Command::DefaultVersions(command) => default_versions::run(command).await,
+        Command::ReverseDependencies(command) => reverse_dependencies::run(command).await,
     }
-}
-
-#[test]
-fn verify_cli() {
-    use clap::CommandFactory;
-    Command::command().debug_assert();
 }

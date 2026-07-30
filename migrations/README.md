@@ -4,7 +4,7 @@ This directory contains the database migrations for crates.io, managed by [Diese
 
 ## How migrations run in production
 
-Migrations are applied during the Heroku release phase, which runs `crates-admin migrate` (see [`Procfile`](../Procfile)) before any new code goes live. The release phase runs while the old dynos are still serving requests, and only after it succeeds are those dynos replaced with new ones running the new code.
+Migrations are applied during the Heroku release phase, which runs `crates-io migrate` (see [`Procfile`](../Procfile)) before any new code goes live. The release phase runs while the old dynos are still serving requests, and only after it succeeds are those dynos replaced with new ones running the new code.
 
 This leaves a window in which the old codebase talks to an already-migrated database, so a migration has to work against both the old and the new code.
 

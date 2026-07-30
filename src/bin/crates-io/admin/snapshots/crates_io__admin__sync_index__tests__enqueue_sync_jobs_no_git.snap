@@ -1,5 +1,5 @@
 ---
-source: src/bin/crates-admin/sync_index.rs
+source: src/bin/crates-io/admin/sync_index.rs
 expression: all_jobs(&mut conn).await
 ---
 [
