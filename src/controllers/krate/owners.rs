@@ -3,7 +3,7 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Owner, Team, User};
+use crate::models::{Crate, Owner, PublicUser, Team, User};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
@@ -44,16 +44,18 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<Use
 
     let krate = path.load_crate(&conn).await?;
 
-    let mut owners = krate.owners(&conn).await?;
-    owners.sort_by_key(|owner| match owner {
-        Owner::User(user) => (0, user.id),
-        Owner::Team(team) => (1, team.id),
-    });
+    let (mut users, mut teams) = tokio::try_join!(
+        PublicUser::owning(&krate, &conn),
+        Team::owning(&krate, &conn),
+    )?;
+    users.sort_by_key(|user| user.id);
+    teams.sort_by_key(|team| team.id);
 
-    let users = owners
+    let users = users
         .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+        .map(EncodableOwner::from_user)
+        .chain(teams.into_iter().map(EncodableOwner::from_team))
+        .collect::<Vec<_>>();
 
     Ok(Json(UsersResponse { users }))
 }
@@ -99,7 +101,7 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
 
     let krate = path.load_crate(&conn).await?;
 
-    let mut users = User::owning(&krate, &conn).await?;
+    let mut users = PublicUser::owning(&krate, &conn).await?;
     users.sort_by_key(|user| user.id);
 
     let users = users

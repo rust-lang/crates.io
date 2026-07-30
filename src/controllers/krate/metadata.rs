@@ -7,7 +7,7 @@
 use crate::app::AppState;
 use crate::controllers::krate::CratePath;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, Keyword, TopVersions, User, Version,
+    Category, Crate, CrateCategory, CrateKeyword, Keyword, PublicUser, TopVersions, Version,
     VersionOwnerAction,
 };
 use crate::schema::*;
@@ -215,7 +215,7 @@ pub async fn find_crate(
     }))
 }
 
-type VersionsAndPublishers = (Version, Option<User>);
+type VersionsAndPublishers = (Version, Option<PublicUser>);
 
 async fn load_versions_and_publishers(
     conn: &AsyncPgConnection,
@@ -309,7 +309,7 @@ async fn _load_versions_and_publishers(
 ) -> AppResult<Option<Vec<VersionsAndPublishers>>> {
     let mut query = Version::belonging_to(krate)
         .left_outer_join(users::table.left_join(oauth_github::table))
-        .select(<(Version, Option<User>)>::as_select())
+        .select(<(Version, Option<PublicUser>)>::as_select())
         .order_by(versions::id.desc())
         .into_boxed();
 

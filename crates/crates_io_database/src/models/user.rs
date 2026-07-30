@@ -11,6 +11,33 @@ use crate::fns::lower;
 use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
+/// Public data for a crates.io user.
+#[derive(Clone, Debug, HasQuery, Serialize)]
+#[diesel(
+    table_name = users,
+    base_query = users::table.left_join(oauth_github::table),
+)]
+pub struct PublicUser {
+    pub id: i32,
+    pub name: Option<String>,
+    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::avatar.nullable())]
+    pub gh_avatar: Option<String>,
+    pub username: String,
+    pub created_at: Option<DateTime<Utc>>,
+}
+
+impl PublicUser {
+    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
+        CrateOwner::by_owner_kind(OwnerKind::User)
+            .inner_join(users::table.left_join(oauth_github::table))
+            .select(PublicUser::as_select())
+            .filter(crate_owners::crate_id.eq(krate.id))
+            .load(&mut conn)
+            .await
+    }
+}
+
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, HasQuery, Identifiable, Serialize)]
 #[diesel(

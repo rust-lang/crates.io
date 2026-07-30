@@ -5,7 +5,7 @@ use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::CratePath;
-use crate::models::{User, Version, VersionOwnerAction};
+use crate::models::{PublicUser, Version, VersionOwnerAction};
 use crate::schema::{oauth_github, users, versions};
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
@@ -147,7 +147,7 @@ async fn list(
         let mut query = versions::table
             .filter(versions::crate_id.eq(crate_id))
             .left_outer_join(users::table.left_join(oauth_github::table))
-            .select(<(Version, Option<User>)>::as_select())
+            .select(<(Version, Option<PublicUser>)>::as_select())
             .into_boxed();
 
         if !params.nums.is_empty() {
@@ -194,7 +194,7 @@ async fn list(
         query = query.order((versions::semver_ord_v2.desc(), versions::id.desc()));
     }
 
-    let data: Vec<(Version, Option<User>)> = query.load(&mut conn).await?;
+    let data: Vec<(Version, Option<PublicUser>)> = query.load(&mut conn).await?;
     let mut next_page = None;
     if let Some(options) = options {
         next_page = next_seek_params(&data, options, |last| seek.to_payload(last))?
@@ -259,7 +259,7 @@ async fn list(
 
 mod seek {
     use crate::controllers::helpers::pagination::seek;
-    use crate::models::{User, Version};
+    use crate::models::{PublicUser, Version};
     use chrono::Utc;
     use chrono::serde::ts_microseconds;
 
@@ -281,7 +281,7 @@ mod seek {
     );
 
     impl Seek {
-        pub(crate) fn to_payload(&self, record: &(Version, Option<User>)) -> SeekPayload {
+        pub(crate) fn to_payload(&self, record: &(Version, Option<PublicUser>)) -> SeekPayload {
             let (Version { id, created_at, .. }, _) = *record;
             match *self {
                 Seek::Semver => SeekPayload::Semver(Semver {
@@ -319,7 +319,7 @@ where
 }
 
 struct PaginatedVersionsAndPublishers {
-    data: Vec<(Version, Option<User>)>,
+    data: Vec<(Version, Option<PublicUser>)>,
     meta: ResponseMeta,
 }
 
