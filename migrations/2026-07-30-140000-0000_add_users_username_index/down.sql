@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS index_users_canon_username
