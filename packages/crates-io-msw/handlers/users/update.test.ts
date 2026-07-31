@@ -39,6 +39,30 @@ test('updates the `publish_notifications` settings', async function () {
   expect(user.publishNotifications).toBe(false);
 });
 
+test('ignores a null `publish_notifications` setting', async function () {
+  let user = await db.user.create({ publishNotifications: true });
+  await db.mswSession.create({ user });
+
+  let body = JSON.stringify({ user: { publish_notifications: null } });
+  let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
+  expect(response.status).toBe(200);
+
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
+  expect(user.publishNotifications).toBe(true);
+});
+
+test('ignores a null email setting', async function () {
+  let user = await db.user.create({ email: 'old@email.com' });
+  await db.mswSession.create({ user });
+
+  let body = JSON.stringify({ user: { email: null } });
+  let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
+  expect(response.status).toBe(200);
+
+  user = db.user.findFirst(q => q.where({ id: user.id }))!;
+  expect(user.email).toBe('old@email.com');
+});
+
 test('returns 403 when not logged in', async function () {
   let user = await db.user.create({ email: 'old@email.com' });
 

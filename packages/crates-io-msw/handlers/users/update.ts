@@ -15,13 +15,15 @@ export default http.put<{ user_id: string }>('/api/v1/users/:user_id', async ({ 
     return HttpResponse.json({ errors: [{ detail: 'current user does not match requested user' }] }, { status: 400 });
   }
 
-  let json = (await request.json()) as { user?: { publish_notifications?: boolean; email?: string | null } } | null;
+  let json = (await request.json()) as {
+    user?: { publish_notifications?: boolean | null; email?: string | null };
+  } | null;
   if (!json || !json.user) {
     return HttpResponse.json({ errors: [{ detail: 'invalid json request' }] }, { status: 400 });
   }
   let userUpdate = json.user;
 
-  if (userUpdate.publish_notifications !== undefined) {
+  if (userUpdate.publish_notifications != null) {
     let publishNotifications = userUpdate.publish_notifications;
     await db.user.update(q => q.where({ id: user.id }), {
       data(user) {
@@ -30,7 +32,7 @@ export default http.put<{ user_id: string }>('/api/v1/users/:user_id', async ({ 
     });
   }
 
-  if (userUpdate.email !== undefined) {
+  if (userUpdate.email != null) {
     if (!userUpdate.email) {
       return HttpResponse.json({ errors: [{ detail: 'empty email rejected' }] }, { status: 400 });
     }
