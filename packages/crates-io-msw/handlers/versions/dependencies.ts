@@ -1,29 +1,23 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeDependency } from '../../serializers/dependency.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.get<{ name: string; version: string }>(
-  '/api/v1/crates/:name/:version/dependencies',
-  async ({ params }) => {
-    let crate = db.crate.findFirst(q => q.where({ name: params.name }));
-    if (!crate) return notFound();
+export default http.get('/api/v1/crates/{name}/{version}/dependencies', ({ params, response }) => {
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
+  if (!crate) return response.untyped(notFound());
 
-    let version = db.version.findFirst(q =>
-      q.where(version => version.crate.id === crate.id && version.num === params.version),
-    );
-    if (!version) {
-      let errorMessage = `crate \`${crate.name}\` does not have a version \`${params.version}\``;
-      return HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 404 });
-    }
+  let version = db.version.findFirst(q =>
+    q.where(version => version.crate.id === crate.id && version.num === params.version),
+  );
+  if (!version) {
+    let errorMessage = `crate \`${crate.name}\` does not have a version \`${params.version}\``;
+    return response.untyped(Response.json({ errors: [{ detail: errorMessage }] }, { status: 404 }));
+  }
 
-    let dependencies = db.dependency.findMany(q => q.where(dep => dep.version.id === version.id));
+  let dependencies = db.dependency.findMany(q => q.where(dep => dep.version.id === version.id));
 
-    return HttpResponse.json<SuccessBody<'get_version_dependencies'>>({
-      dependencies: dependencies.map(d => serializeDependency(d)),
-    });
-  },
-);
+  return response(200).json({
+    dependencies: dependencies.map(d => serializeDependency(d)),
+  });
+});
