@@ -1,16 +1,15 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeLegacyInvite } from '../../serializers/invite.js';
 import { serializeUser } from '../../serializers/user.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get('/api/v1/me/crate_owner_invitations', () => {
+export default http.get('/api/v1/me/crate_owner_invitations', ({ response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
   let invites = db.crateOwnerInvitation.findMany(q => q.where(invite => invite.invitee.id === user.id));
@@ -19,7 +18,7 @@ export default http.get('/api/v1/me/crate_owner_invitations', () => {
   let invitees = invites.map(invite => invite.invitee);
   let users = [...new Set([...inviters, ...invitees])].toSorted((a, b) => a.id - b.id);
 
-  return HttpResponse.json<SuccessBody<'list_crate_owner_invitations_for_user'>>({
+  return response(200).json({
     crate_owner_invitations: invites.map(invite => serializeLegacyInvite(invite)),
     users: users.map(user => serializeUser(user)),
   });
