@@ -1,43 +1,37 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.patch<{ name: string; version: string }>(
-  '/api/v1/crates/:name/:version',
-  async ({ request, params }) => {
-    let { user } = getSession();
-    if (!user) {
-      return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
-    }
-
-    let crate = db.crate.findFirst(q => q.where({ name: params.name }));
-    if (!crate) return notFound();
-
-    let version = db.version.findFirst(q =>
-      q.where(version => version.crate.id === crate.id && version.num === params.version),
+export default http.patch('/api/v1/crates/{name}/{version}', async ({ request, params, response }) => {
+  let { user } = getSession();
+  if (!user) {
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
     );
-    if (!version) return notFound();
+  }
 
-    let body = (await request.json()) as {
-      version: { yanked?: boolean | null; yank_message?: string | null };
-    };
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
+  if (!crate) return response.untyped(notFound());
 
-    let yanked = body.version.yanked ?? version.yanked;
-    let yankMessage = body.version.yank_message;
+  let version = db.version.findFirst(q =>
+    q.where(version => version.crate.id === crate.id && version.num === params.version),
+  );
+  if (!version) return response.untyped(notFound());
 
-    let versionId = version.id;
-    version = await db.version.update(q => q.where({ id: versionId }), {
-      data(version) {
-        version.yanked = yanked;
-        version.yank_message = yanked ? yankMessage || null : null;
-      },
-    });
+  let body = await request.json();
 
-    return HttpResponse.json<SuccessBody<'update_version'>>({ version: serializeVersion(version!) });
-  },
-);
+  let yanked = body.version.yanked ?? version.yanked;
+  let yankMessage = body.version.yank_message;
+
+  let versionId = version.id;
+  version = await db.version.update(q => q.where({ id: versionId }), {
+    data(version) {
+      version.yanked = yanked;
+      version.yank_message = yanked ? yankMessage || null : null;
+    },
+  });
+
+  return response(200).json({ version: serializeVersion(version!) });
+});
