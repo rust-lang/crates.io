@@ -9,6 +9,7 @@ import crates from './crate.js';
 import dependencies from './dependency.js';
 import keywords from './keyword.js';
 import mswSessions from './msw-session.js';
+import pendingSignups from './pending-signup.js';
 import teams from './team.js';
 import trustpubGithubConfigs from './trustpub/github-config.js';
 import trustpubGitlabConfigs from './trustpub/gitlab-config.js';
@@ -77,6 +78,7 @@ export const db = {
   dependency: dependencies,
   keyword: keywords,
   mswSession: mswSessions,
+  pendingSignup: pendingSignups,
   team: teams,
   trustpubGithubConfig: trustpubGithubConfigs,
   trustpubGitlabConfig: trustpubGitlabConfigs,
@@ -109,6 +111,7 @@ export type CrateOwnership = ReturnType<typeof crateOwnerships.all>[number];
 export type Dependency = ReturnType<typeof dependencies.all>[number];
 export type Keyword = ReturnType<typeof keywords.all>[number];
 export type MswSession = ReturnType<typeof mswSessions.all>[number];
+export type PendingSignup = ReturnType<typeof pendingSignups.all>[number];
 export type Team = ReturnType<typeof teams.all>[number];
 export type TrustpubGithubConfig = ReturnType<typeof trustpubGithubConfigs.all>[number];
 export type TrustpubGitlabConfig = ReturnType<typeof trustpubGitlabConfigs.all>[number];

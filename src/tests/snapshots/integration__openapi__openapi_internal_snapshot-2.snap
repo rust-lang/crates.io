@@ -921,6 +921,26 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "SignupDetails": {
+        "description": "Public GitHub account details displayed while a user completes signup.",
+        "properties": {
+          "email": {
+            "description": "The email address suggested by GitHub, if one is available.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "login": {
+            "description": "The GitHub account login.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {
@@ -1853,6 +1873,57 @@ expression: response.json()
           }
         },
         "summary": "Begin authentication flow.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
+    "/api/private/session/signup": {
+      "get": {
+        "description": "The encrypted GitHub token remains in the signed session cookie and is never returned to the\nfrontend. Missing, malformed, and expired signup state require restarting GitHub\nauthentication.",
+        "operationId": "get_pending_signup",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Response containing details for a pending signup.",
+                  "properties": {
+                    "signup": {
+                      "$ref": "#/components/schemas/SignupDetails"
+                    }
+                  },
+                  "required": [
+                    "signup"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Load the GitHub account details for a pending signup.",
         "tags": [
           "session"
         ]

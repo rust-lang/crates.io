@@ -89,6 +89,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // Session management
         .routes(routes!(session::begin_session))
         .routes(routes!(session::authorize_session))
+        .routes(routes!(session::get_pending_signup))
         .routes(routes!(session::end_session))
         // OIDC / Trusted Publishing
         .routes(routes!(
