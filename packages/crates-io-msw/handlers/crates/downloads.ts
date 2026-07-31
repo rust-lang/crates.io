@@ -1,31 +1,24 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.get<{ name: string }>('/api/v1/crates/:name/downloads', async ({ request, params }) => {
+export default http.get('/api/v1/crates/{name}/downloads', ({ params, query, response }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
-  if (!crate) return notFound();
+  if (!crate) return response.untyped(notFound());
 
   let downloads = db.versionDownload.findMany(q => q.where(download => download.version.crate.id === crate.id));
-  let resp: SuccessBody<'get_crate_downloads'> = {
+  let include = query.get('include') ?? '';
+  let includes = include ? include.split(',') : [];
+  let versions = includes.includes('versions') ? [...new Set(downloads.map(it => it.version))] : undefined;
+
+  return response(200).json({
     version_downloads: downloads.map(download => ({
       date: download.date,
       downloads: download.downloads,
       version: download.version.id,
     })),
     meta: { extra_downloads: crate._extra_downloads },
-  };
-
-  let url = new URL(request.url);
-  let include = url.searchParams.get('include') ?? '';
-  let includes = include ? include.split(',') : [];
-  if (includes.includes('versions')) {
-    let versions = [...new Set(downloads.map(it => it.version))];
-    resp.versions = versions.map(it => serializeVersion(it));
-  }
-  return HttpResponse.json<SuccessBody<'get_crate_downloads'>>(resp);
+    ...(versions && { versions: versions.map(it => serializeVersion(it)) }),
+  });
 });
