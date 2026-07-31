@@ -51,9 +51,15 @@ impl UpdateTest {
         let emails = &app.as_inner().emails;
         let mut conn = app.db_conn().await;
 
-        let user_id =
-            session::save_user_to_database(&existing_gh_user, &ENCRYPTED_TOKEN, emails, &mut conn)
-                .await?;
+        let user_id = session::save_user_to_database(
+            false,
+            &existing_gh_user,
+            &ENCRYPTED_TOKEN,
+            emails,
+            &mut conn,
+        )
+        .await?
+        .unwrap();
 
         let oauth_github_before_update = oauth_github::table
             .filter(oauth_github::user_id.eq(user_id))

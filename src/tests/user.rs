@@ -43,7 +43,9 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
         avatar_url: None,
     };
     let encrypted_token = encryption.encrypt("bar_token")?;
-    assert_ok!(session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await);
+    assert_ok!(
+        session::save_user_to_database(false, &gh_user, &encrypted_token, emails, &mut conn).await
+    );
 
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token));
@@ -85,7 +87,9 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(false, &gh_user, &[], emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, user_id).await?;
 
     let user_without_github_email = MockCookieUser::new(&app, u);
@@ -109,7 +113,9 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(false, &gh_user, &[], emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, user_id).await?;
 
     let again_user_without_github_email = MockCookieUser::new(&app, u);
@@ -151,7 +157,9 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let user_id = session::save_user_to_database(&gh_user, &[], &emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(false, &gh_user, &[], &emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, user_id).await?;
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
@@ -208,7 +216,9 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(false, &gh_user, &[], emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, user_id).await?;
 
     let user = MockCookieUser::new(&app, u);
@@ -254,7 +264,9 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let user_id = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(false, &gh_user, &[], emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, user_id).await?;
 
     update(Email::belonging_to(&u))
@@ -294,7 +306,9 @@ async fn also_write_to_users_username() -> anyhow::Result<()> {
         avatar_url: None,
     };
     let encrypted_token = encryption.encrypt("some random token")?;
-    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(false, &gh_user, &encrypted_token, emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, uid).await?;
 
     assert_eq!(u.username, "arbitrary_username");
@@ -327,7 +341,9 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
         avatar_url: Some(gh_avatar.clone()),
     };
     let encrypted_token = encryption.encrypt(gh_token)?;
-    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(false, &gh_user, &encrypted_token, emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, uid).await?;
     assert_eq!(u.username, gh_login);
     assert_eq!(u.name.unwrap(), gh_display_name);
@@ -361,7 +377,9 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
         avatar_url: Some(different_gh_avatar.clone()),
     };
     let encrypted_token = encryption.encrypt(different_gh_token)?;
-    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(false, &gh_user, &encrypted_token, emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, uid).await?;
     assert_eq!(u.username, different_gh_login);
     assert_eq!(u.name.unwrap(), different_gh_display_name);
@@ -393,7 +411,9 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     };
     let another_gh_token = "a different random token";
     let encrypted_token = encryption.encrypt(another_gh_token)?;
-    let uid = session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await?;
+    let uid = session::save_user_to_database(false, &gh_user, &encrypted_token, emails, &mut conn)
+        .await?
+        .unwrap();
     let u = User::find(&conn, uid).await?;
 
     assert_eq!(u.gh_login, gh_login);
@@ -431,7 +451,9 @@ async fn existing_user_can_log_in_during_read_only_mode() -> anyhow::Result<()> 
     };
 
     // Create the user and its `oauth_github` record while the database is writable.
-    let user_id = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await?;
+    let user_id = session::save_user_to_database(false, &gh_user, b"token", emails, &mut conn)
+        .await?
+        .unwrap();
 
     // Switch the connection into read-only mode, mirroring how the app configures
     // read-only connections in `ConnectionConfig::apply()`.
@@ -441,9 +463,9 @@ async fn existing_user_can_log_in_during_read_only_mode() -> anyhow::Result<()> 
 
     // Logging in again as an existing user must still succeed by falling back to a lookup, even
     // though the write attempts fail in read-only mode.
-    let result = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await;
+    let result = session::save_user_to_database(false, &gh_user, b"token", emails, &mut conn).await;
 
-    assert_ok_eq!(result, user_id);
+    assert_ok_eq!(result, Some(user_id));
 
     Ok(())
 }
@@ -469,7 +491,7 @@ async fn new_user_cannot_log_in_during_read_only_mode() -> anyhow::Result<()> {
         .await?;
 
     // Logging in as a new user can't work in read-only mode.
-    let result = session::save_user_to_database(&gh_user, b"token", emails, &mut conn).await;
+    let result = session::save_user_to_database(false, &gh_user, b"token", emails, &mut conn).await;
 
     let error = assert_err!(result);
     assert_snapshot!(error, @"cannot execute UPDATE in a read-only transaction");

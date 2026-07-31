@@ -52,8 +52,9 @@ export interface paths {
          * Complete authentication flow.
          * @description This route is called from the GitHub API OAuth flow after the user accepted or rejected
          *     the data access permissions. It will check the `state` parameter and then call the GitHub API
-         *     to exchange the temporary `code` for an API token. The response indicates whether the
-         *     corresponding user was signed in or needs to complete signup.
+         *     to exchange the temporary `code` for an API token. Existing crates.io users are signed in.
+         *     New users must complete signup when explicit signup is enabled and are created immediately
+         *     otherwise.
          *
          *     see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
          */
