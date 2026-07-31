@@ -1,17 +1,14 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeCategory } from '../../serializers/category.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.get<{ category_id: string }>('/api/v1/categories/:category_id', ({ params }) => {
-  let catId = params.category_id;
+export default http.get('/api/v1/categories/{category}', ({ params, response }) => {
+  let catId = params.category;
   let category = db.category.findFirst(q => q.where({ id: catId }));
   if (!category) {
-    return notFound();
+    return response.untyped(notFound());
   }
 
-  return HttpResponse.json<SuccessBody<'find_category'>>({ category: serializeCategory(category) });
+  return response(200).json({ category: serializeCategory(category) });
 });
