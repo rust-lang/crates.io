@@ -1,15 +1,12 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.put<{ token: string }>('/api/v1/confirm/:token', async ({ params }) => {
-  let { token } = params;
-
-  let user = db.user.findFirst(q => q.where({ emailVerificationToken: token }));
+export default http.put('/api/v1/confirm/{email_token}', async ({ params, response }) => {
+  let user = db.user.findFirst(q => q.where({ emailVerificationToken: params.email_token }));
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'Email belonging to token not found.' }] }, { status: 400 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'Email belonging to token not found.' }] }, { status: 400 }),
+    );
   }
 
   await db.user.update(q => q.where({ id: user.id }), {
@@ -19,5 +16,5 @@ export default http.put<{ token: string }>('/api/v1/confirm/:token', async ({ pa
     },
   });
 
-  return HttpResponse.json<SuccessBody<'confirm_user_email'>>({ ok: true });
+  return response(200).json({ ok: true });
 });
