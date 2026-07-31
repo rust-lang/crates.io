@@ -1383,6 +1383,23 @@ expression: response.json()
           "authors"
         ],
         "type": "object"
+      },
+      "VersionUpdate": {
+        "properties": {
+          "yank_message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "yanked": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -3264,6 +3281,24 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "version": {
+                    "$ref": "#/components/schemas/VersionUpdate"
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
