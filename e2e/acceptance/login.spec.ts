@@ -1,9 +1,8 @@
-import type { SuccessBody } from '@crates-io/msw/utils/api-types';
 import type { Page } from '@playwright/test';
 
 import { expect, test } from '@/e2e/helper';
 import { serializeUser } from '@crates-io/msw/serializers/user';
-import { http, HttpResponse } from 'msw';
+import { http } from '@crates-io/msw/utils/openapi-http';
 
 const MOCK_CODE = '901dd10e07c7e9fa1cd5';
 const MOCK_STATE = 'fYcUY3FMdUUz00FC7vLT7A';
@@ -37,14 +36,15 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     let user = await msw.db.user.create({ name: 'John Doe' });
 
     msw.worker.use(
-      http.post('/api/private/session/authorize', async ({ request }) => {
+      http.post('/api/private/session/authorize', async ({ request, response }) => {
         let body = await request.json();
         expect(Object.keys(body)).toEqual(['code', 'state']);
         expect(body.code).toBe(MOCK_CODE);
         expect(body.state).toBe(MOCK_STATE);
 
         await msw.db.mswSession.create({ user });
-        return HttpResponse.json<SuccessBody<'authorize_session'>>({
+        return response(200).json({
+          status: 'signed_in',
           user: serializeUser(user, { removePrivateData: false }),
           owned_crates: [],
         });
@@ -56,12 +56,27 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-user-menu] [data-test-toggle]')).toHaveText('John Doe');
   });
 
+  test('shows an error when signup is required', async ({ page, msw }) => {
+    await setupGitHubOAuthRoutes(page);
+
+    msw.worker.use(
+      http.post('/api/private/session/authorize', ({ response }) => response(200).json({ status: 'signup_required' })),
+    );
+
+    await page.goto('/');
+    await page.click('[data-test-login-button]');
+    await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
+      'Signup is currently not possible.',
+    );
+    expect(await page.evaluate(() => localStorage.getItem('isLoggedIn'))).toBeNull();
+  });
+
   test('failed login', async ({ page, msw }) => {
     await setupGitHubOAuthRoutes(page);
 
     msw.worker.use(
-      http.post('/api/private/session/authorize', () =>
-        HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),
+      http.post('/api/private/session/authorize', ({ response }) =>
+        response.untyped(Response.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 })),
       ),
     );
 
@@ -76,14 +91,15 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     let user = await msw.db.user.create({ name: 'John Doe' });
 
     msw.worker.use(
-      http.post('/api/private/session/authorize', async ({ request }) => {
+      http.post('/api/private/session/authorize', async ({ request, response }) => {
         let body = await request.json();
         expect(Object.keys(body)).toEqual(['code', 'state']);
         expect(body.code).toBe(MOCK_CODE);
         expect(body.state).toBe(MOCK_STATE);
 
         await msw.db.mswSession.create({ user });
-        return HttpResponse.json<SuccessBody<'authorize_session'>>({
+        return response(200).json({
+          status: 'signed_in',
           user: serializeUser(user, { removePrivateData: false }),
           owned_crates: [],
         });

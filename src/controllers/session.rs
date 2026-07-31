@@ -74,12 +74,22 @@ pub struct AuthorizeBody {
     state: CsrfToken,
 }
 
+/// The result of completing the GitHub OAuth flow.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum AuthorizeResponse {
+    /// The GitHub OAuth flow signed in a crates.io user.
+    SignedIn(#[schema(inline)] EncodableMe),
+    /// The GitHub account needs a crates.io account.
+    SignupRequired,
+}
+
 /// Complete authentication flow.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
 /// the data access permissions. It will check the `state` parameter and then call the GitHub API
-/// to exchange the temporary `code` for an API token. The API token is returned together with
-/// the corresponding user information.
+/// to exchange the temporary `code` for an API token. The response indicates whether the
+/// corresponding user was signed in or needs to complete signup.
 ///
 /// see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
 #[utoipa::path(
@@ -89,7 +99,7 @@ pub struct AuthorizeBody {
     request_body = inline(AuthorizeBody),
     extensions(("x-internal" = json!(true))),
     responses(
-        (status = 200, description = "Successful Response", body = inline(EncodableMe)),
+        (status = 200, description = "Successful Response", body = inline(AuthorizeResponse)),
         (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
@@ -99,7 +109,7 @@ pub async fn authorize_session(
     session: SessionExtension,
     req: Parts,
     Json(body): Json<AuthorizeBody>,
-) -> AppResult<Json<EncodableMe>> {
+) -> AppResult<Json<AuthorizeResponse>> {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
@@ -143,7 +153,8 @@ pub async fn authorize_session(
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user_id.to_string());
 
-    super::user::me::authenticated_user(&mut conn, user_id).await
+    let Json(user) = super::user::me::authenticated_user(&mut conn, user_id).await?;
+    Ok(Json(AuthorizeResponse::SignedIn(user)))
 }
 
 pub async fn save_user_to_database(
@@ -329,7 +340,68 @@ pub async fn end_session(session: SessionExtension) -> OkResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::views::{EncodablePrivateUser, OwnedCrate};
     use crates_io_test_db::TestDatabase;
+    use insta::assert_json_snapshot;
+
+    #[test]
+    fn authorize_response_serializes_signed_in() {
+        let response = AuthorizeResponse::SignedIn(EncodableMe {
+            user: EncodablePrivateUser {
+                id: 42,
+                login: "ghost".into(),
+                email_verified: true,
+                email_verification_sent: true,
+                name: Some("Kate Morgan".into()),
+                email: Some("kate@morgan.dev".into()),
+                avatar: Some("https://avatars2.githubusercontent.com/u/1234567?v=4".into()),
+                url: Some("https://github.com/ghost".into()),
+                is_admin: false,
+                publish_notifications: true,
+                created_at: None,
+            },
+            owned_crates: vec![OwnedCrate {
+                id: 123,
+                name: "serde".into(),
+                email_notifications: true,
+            }],
+        });
+
+        assert_json_snapshot!(response, @r#"
+        {
+          "status": "signed_in",
+          "user": {
+            "id": 42,
+            "login": "ghost",
+            "email_verified": true,
+            "email_verification_sent": true,
+            "name": "Kate Morgan",
+            "email": "kate@morgan.dev",
+            "avatar": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "url": "https://github.com/ghost",
+            "is_admin": false,
+            "publish_notifications": true,
+            "created_at": null
+          },
+          "owned_crates": [
+            {
+              "id": 123,
+              "name": "serde",
+              "email_notifications": true
+            }
+          ]
+        }
+        "#);
+    }
+
+    #[test]
+    fn authorize_response_serializes_signup_required() {
+        assert_json_snapshot!(AuthorizeResponse::SignupRequired, @r#"
+        {
+          "status": "signup_required"
+        }
+        "#);
+    }
 
     #[tokio::test]
     async fn gh_user_with_invalid_email_doesnt_fail() {
