@@ -1,20 +1,19 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeUser } from '../../serializers/user.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get('/api/v1/me', () => {
+export default http.get('/api/v1/me', ({ response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
   let ownerships = db.crateOwnership.findMany(q => q.where(ownership => ownership.user?.id === user.id));
 
-  return HttpResponse.json<SuccessBody<'get_authenticated_user'>>({
+  return response(200).json({
     user: serializeUser(user, { removePrivateData: false }),
     owned_crates: ownerships.map(ownership => ({
       id: ownership.crate.id,
