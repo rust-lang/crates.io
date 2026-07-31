@@ -88,6 +88,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/private/session/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Load the GitHub account details for a pending signup.
+         * @description The encrypted GitHub token remains in the signed session cookie and is never returned to the
+         *     frontend. Missing, malformed, and expired signup state require restarting GitHub
+         *     authentication.
+         */
+        get: operations["get_pending_signup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -1548,6 +1570,13 @@ export interface components {
         ReleaseTrackDetails: {
             highest: string;
         };
+        /** @description Public GitHub account details displayed while a user completes signup. */
+        SignupDetails: {
+            /** @description The email address suggested by GitHub, if one is available. */
+            email?: string | null;
+            /** @description The GitHub account login. */
+            login: string;
+        };
         Slug: {
             /**
              * @description A description of the category.
@@ -2077,6 +2106,46 @@ export interface operations {
                         state: string;
                         /** @example https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg */
                         url: string;
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_pending_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        signup: components["schemas"]["SignupDetails"];
                     };
                 };
             };

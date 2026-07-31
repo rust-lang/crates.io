@@ -921,6 +921,26 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "SignupDetails": {
+        "description": "Public GitHub account details displayed while a user completes signup.",
+        "properties": {
+          "email": {
+            "description": "The email address suggested by GitHub, if one is available.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "login": {
+            "description": "The GitHub account login.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {

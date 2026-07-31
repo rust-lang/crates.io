@@ -6,10 +6,12 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewOauthGithub, NewUser, OauthGithub};
 use crate::schema::{oauth_github, users};
 use crate::util::diesel::is_read_only_error;
-use crate::util::errors::{AppResult, bad_request, server_error};
+use crate::util::errors::{AppResult, bad_request, not_found, server_error};
+use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
+use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
 use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
@@ -22,7 +24,11 @@ use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 
-const PENDING_SIGNUP_KEY: &str = "pending_signup";
+/// Session key containing serialized pending-signup state.
+pub const PENDING_SIGNUP_KEY: &str = "pending_signup";
+const PENDING_SIGNUP_LIFETIME: chrono::TimeDelta = chrono::TimeDelta::minutes(30);
+const PENDING_SIGNUP_ERROR: &str =
+    "Your signup session is missing or has expired. Please authenticate with GitHub again.";
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BeginResponse {
@@ -108,6 +114,84 @@ impl PendingSignup {
             created_at: Utc::now(),
         }
     }
+
+    /// Returns whether this pending signup has reached its absolute expiry.
+    fn is_expired(&self, now: DateTime<Utc>) -> bool {
+        now.signed_duration_since(self.created_at) >= PENDING_SIGNUP_LIFETIME
+    }
+}
+
+/// Public GitHub account details displayed while a user completes signup.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct SignupDetails {
+    /// The GitHub account login.
+    login: String,
+    /// The email address suggested by GitHub, if one is available.
+    email: Option<String>,
+}
+
+/// Response containing details for a pending signup.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct SignupResponse {
+    signup: SignupDetails,
+}
+
+/// Loads valid pending-signup state from the signed session cookie.
+fn load_pending_signup(session: &SessionExtension) -> AppResult<PendingSignup> {
+    let Some(value) = session.get(PENDING_SIGNUP_KEY) else {
+        return Err(bad_request(PENDING_SIGNUP_ERROR));
+    };
+
+    let pending_signup: PendingSignup = serde_json::from_str(&value).map_err(|_| {
+        session.remove(PENDING_SIGNUP_KEY);
+        bad_request(PENDING_SIGNUP_ERROR)
+    })?;
+
+    if pending_signup.is_expired(Utc::now()) {
+        session.remove(PENDING_SIGNUP_KEY);
+        return Err(bad_request(PENDING_SIGNUP_ERROR));
+    }
+
+    Ok(pending_signup)
+}
+
+/// Load the GitHub account details for a pending signup.
+///
+/// The encrypted GitHub token remains in the signed session cookie and is never returned to the
+/// frontend. Missing, malformed, and expired signup state require restarting GitHub
+/// authentication.
+#[utoipa::path(
+    get,
+    path = "/api/private/session/signup",
+    tag = "session",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(SignupResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn get_pending_signup(
+    app: AppState,
+    session: SessionExtension,
+) -> AppResult<impl IntoResponse> {
+    if !app.config.features.explicit_signup_enabled {
+        return Err(not_found());
+    }
+    if session.get("user_id").is_some() {
+        return Err(bad_request("You are already signed in."));
+    }
+
+    let pending_signup = load_pending_signup(&session)?;
+
+    let json = Json(SignupResponse {
+        signup: SignupDetails {
+            login: pending_signup.github_user.login,
+            email: pending_signup.github_user.email,
+        },
+    });
+
+    Ok((no_store(), json))
 }
 
 /// Complete authentication flow.
@@ -422,6 +506,30 @@ mod tests {
             login: "ghost".into(),
             name: Some("Ghost".into()),
         }
+    }
+
+    #[test]
+    fn pending_signup_expires_after_thirty_minutes() {
+        let now = Utc::now();
+        let pending_signup = PendingSignup {
+            github_user: github_user(),
+            encrypted_token: vec![1, 2, 3],
+            created_at: now - chrono::TimeDelta::minutes(30),
+        };
+
+        assert!(pending_signup.is_expired(now));
+    }
+
+    #[test]
+    fn pending_signup_is_valid_before_thirty_minutes() {
+        let now = Utc::now();
+        let pending_signup = PendingSignup {
+            github_user: github_user(),
+            encrypted_token: vec![1, 2, 3],
+            created_at: now - chrono::TimeDelta::minutes(29),
+        };
+
+        assert!(!pending_signup.is_expired(now));
     }
 
     async fn count_users(conn: &mut AsyncPgConnection) -> i64 {
