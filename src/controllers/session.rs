@@ -6,7 +6,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewOauthGithub, NewUser, OauthGithub};
 use crate::schema::{oauth_github, users};
 use crate::util::diesel::is_read_only_error;
-use crate::util::errors::{AppResult, bad_request, not_found, server_error};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, not_found, server_error};
 use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
@@ -18,6 +18,7 @@ use crates_io_session::SessionExtension;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
+use lettre::Address;
 use minijinja::context;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use secrecy::ExposeSecret;
@@ -136,6 +137,22 @@ pub struct SignupResponse {
     signup: SignupDetails,
 }
 
+/// Request to complete a pending signup.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct CompletePendingSignupRequest {
+    /// User-controlled signup details.
+    #[schema(inline)]
+    signup: CompletePendingSignupData,
+}
+
+/// User-controlled details for a pending signup.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct CompletePendingSignupData {
+    /// The email address to associate with the new account.
+    #[schema(value_type = String, format = Email, example = "new-user@example.com")]
+    email: Address,
+}
+
 /// Loads valid pending-signup state from the signed session cookie.
 fn load_pending_signup(session: &SessionExtension) -> AppResult<PendingSignup> {
     let Some(value) = session.get(PENDING_SIGNUP_KEY) else {
@@ -192,6 +209,55 @@ pub async fn get_pending_signup(
     });
 
     Ok((no_store(), json))
+}
+
+/// Complete a pending signup.
+#[utoipa::path(
+    post,
+    path = "/api/private/session/signup",
+    request_body = inline(CompletePendingSignupRequest),
+    tag = "session",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(EncodableMe)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn complete_pending_signup(
+    app: AppState,
+    session: SessionExtension,
+    Json(body): Json<CompletePendingSignupRequest>,
+) -> AppResult<Json<EncodableMe>> {
+    if !app.config.features.explicit_signup_enabled {
+        return Err(not_found());
+    }
+    if session.get("user_id").is_some() {
+        return Err(bad_request("You are already signed in."));
+    }
+
+    let pending_signup = load_pending_signup(&session)?;
+    let mut github_user = pending_signup.github_user;
+    github_user.email = Some(body.signup.email.to_string());
+
+    let mut conn = app.db_write().await?;
+    let (user_id, user) = conn
+        .transaction(async |conn| {
+            let user_id = create_user(
+                &github_user,
+                &pending_signup.encrypted_token,
+                &app.emails,
+                conn,
+            )
+            .await?;
+            let user = super::user::me::authenticated_user(conn, user_id).await?;
+            Ok::<_, BoxedAppError>((user_id, user))
+        })
+        .await?;
+
+    session.remove(PENDING_SIGNUP_KEY);
+    session.insert("user_id".to_string(), user_id.to_string());
+    Ok(user)
 }
 
 /// Cancel a pending signup.
@@ -416,8 +482,8 @@ async fn update_user(
 /// This method also inserts the email address into the `emails` table
 /// and sends a confirmation email to the user.
 ///
-/// Should be called in a transaction, as `create_or_update_user` does, so both the `users` and
-/// `emails` records are inserted or neither are.
+/// Should be called in a transaction so the `users`, `oauth_github`, and `emails` records are
+/// inserted together.
 async fn create_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
