@@ -97,7 +97,6 @@ pub struct NewUser<'a> {
     pub gh_login: &'a str,
     pub username: &'a str,
     pub name: Option<&'a str>,
-    pub gh_encrypted_token: &'a [u8],
 }
 
 impl NewUser<'_> {
@@ -133,7 +132,6 @@ impl NewUser<'_> {
                 users::gh_login.eq(excluded(users::gh_login)),
                 users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
-                users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
             .returning(users::id)
             .get_result(&mut conn)

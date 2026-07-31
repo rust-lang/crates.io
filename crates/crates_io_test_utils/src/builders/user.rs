@@ -69,7 +69,6 @@ impl<'a> UserBuilder<'a> {
             .gh_login(self.username)
             .username(self.username)
             .maybe_name(self.display_name)
-            .gh_encrypted_token(&ENCRYPTED_TOKEN)
             .build()
     }
 }
