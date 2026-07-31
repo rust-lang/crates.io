@@ -1,14 +1,11 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.get<{ name: string }>('/api/v1/crates/:name/owners', async ({ params }) => {
+export default http.get('/api/v1/crates/{name}/owners', ({ params, response }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
-    return notFound();
+    return response.untyped(notFound());
   }
 
   let ownerships = db.crateOwnership.findMany(q => q.where(ownership => ownership.crate.id === crate.id));
@@ -36,5 +33,5 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/owners', async (
       })),
   ];
 
-  return HttpResponse.json<SuccessBody<'list_owners'>>({ users });
+  return response(200).json({ users });
 });
