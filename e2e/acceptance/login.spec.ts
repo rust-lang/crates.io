@@ -1,6 +1,8 @@
+import type { SuccessBody } from '@crates-io/msw/utils/api-types';
 import type { Page } from '@playwright/test';
 
 import { expect, test } from '@/e2e/helper';
+import { serializeUser } from '@crates-io/msw/serializers/user';
 import { http, HttpResponse } from 'msw';
 
 const MOCK_CODE = '901dd10e07c7e9fa1cd5';
@@ -42,7 +44,10 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
         expect(body.state).toBe(MOCK_STATE);
 
         await msw.db.mswSession.create({ user });
-        return HttpResponse.json({ ok: true });
+        return HttpResponse.json<SuccessBody<'authorize_session'>>({
+          user: serializeUser(user, { removePrivateData: false }),
+          owned_crates: [],
+        });
       }),
     );
 
@@ -78,7 +83,10 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
         expect(body.state).toBe(MOCK_STATE);
 
         await msw.db.mswSession.create({ user });
-        return HttpResponse.json({ ok: true });
+        return HttpResponse.json<SuccessBody<'authorize_session'>>({
+          user: serializeUser(user, { removePrivateData: false }),
+          owned_crates: [],
+        });
       }),
     );
 
