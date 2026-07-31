@@ -600,6 +600,7 @@ fn simple_config() -> config::Server {
         disable_token_creation: None,
         banner_message: None,
         features: FeaturesConfig {
+            explicit_signup_enabled: true,
             index_include_pubtime: false,
             zip_archives_enabled: true,
             cache_tags_enabled: true,
