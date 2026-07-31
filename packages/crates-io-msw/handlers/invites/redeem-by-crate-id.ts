@@ -1,24 +1,23 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.put('/api/v1/me/crate_owner_invitations/:crate_id', async ({ request }) => {
+export default http.put('/api/v1/me/crate_owner_invitations/{crate_id}', async ({ request, response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
-  let body = (await request.json()) as { crate_owner_invite: { accepted: boolean; crate_id: number } };
+  let body = await request.json();
   let { accepted, crate_id: crateId } = body.crate_owner_invite;
 
   let invite = db.crateOwnerInvitation.findFirst(q =>
     q.where(invite => invite.crate.id === crateId && invite.invitee.id === user.id),
   );
-  if (!invite) return notFound();
+  if (!invite) return response.untyped(notFound());
 
   if (accepted) {
     await db.crateOwnership.create({ crate: invite.crate, user });
@@ -26,7 +25,7 @@ export default http.put('/api/v1/me/crate_owner_invitations/:crate_id', async ({
 
   db.crateOwnerInvitation.delete(q => q.where({ id: invite.id }));
 
-  return HttpResponse.json<SuccessBody<'handle_crate_owner_invitation'>>({
+  return response(200).json({
     crate_owner_invitation: { crate_id: invite.crate.id, accepted },
   });
 });
