@@ -103,7 +103,8 @@ export interface paths {
          */
         get: operations["get_pending_signup"];
         put?: never;
-        post?: never;
+        /** Complete a pending signup. */
+        post: operations["complete_pending_signup"];
         /** Cancel a pending signup. */
         delete: operations["delete_pending_signup"];
         options?: never;
@@ -2147,6 +2148,77 @@ export interface operations {
                 content: {
                     "application/json": {
                         signup: components["schemas"]["SignupDetails"];
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    complete_pending_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description User-controlled signup details. */
+                    signup: {
+                        /**
+                         * Format: email
+                         * @description The email address to associate with the new account.
+                         * @example new-user@example.com
+                         */
+                        email: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The crates that the authenticated user owns. */
+                        owned_crates: {
+                            /** @deprecated */
+                            email_notifications: boolean;
+                            /**
+                             * Format: int32
+                             * @description The opaque identifier of the crate.
+                             * @example 123
+                             */
+                            id: number;
+                            /**
+                             * @description The name of the crate.
+                             * @example serde
+                             */
+                            name: string;
+                        }[];
+                        /** @description The authenticated user. */
+                        user: components["schemas"]["AuthenticatedUser"];
                     };
                 };
             };

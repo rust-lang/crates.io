@@ -1975,6 +1975,120 @@ expression: response.json()
         "tags": [
           "session"
         ]
+      },
+      "post": {
+        "operationId": "complete_pending_signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request to complete a pending signup.",
+                "properties": {
+                  "signup": {
+                    "description": "User-controlled signup details.",
+                    "oneOf": [
+                      {
+                        "description": "User-controlled details for a pending signup.",
+                        "properties": {
+                          "email": {
+                            "description": "The email address to associate with the new account.",
+                            "example": "new-user@example.com",
+                            "format": "email",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "email"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "signup"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "owned_crates": {
+                      "description": "The crates that the authenticated user owns.",
+                      "items": {
+                        "properties": {
+                          "email_notifications": {
+                            "deprecated": true,
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "The opaque identifier of the crate.",
+                            "example": 123,
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "name": {
+                            "description": "The name of the crate.",
+                            "example": "serde",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "email_notifications"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/AuthenticatedUser",
+                      "description": "The authenticated user."
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "owned_crates"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Complete a pending signup.",
+        "tags": [
+          "session"
+        ]
       }
     },
     "/api/v1/categories": {

@@ -91,6 +91,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(session::authorize_session))
         .routes(routes!(
             session::get_pending_signup,
+            session::complete_pending_signup,
             session::delete_pending_signup
         ))
         .routes(routes!(session::end_session))
