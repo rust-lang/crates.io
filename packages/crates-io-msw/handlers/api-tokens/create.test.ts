@@ -108,6 +108,24 @@ test('creates a new API token with expiry date', async function () {
   `);
 });
 
+test('returns an error for an invalid endpoint scope', async function () {
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
+
+  let body = JSON.stringify({ api_token: { name: 'foooo', endpoint_scopes: ['invalid'] } });
+  let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
+  expect(response.status).toBe(400);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "invalid endpoint scope",
+        },
+      ],
+    }
+  `);
+});
+
 test('returns an error if unauthenticated', async function () {
   let body = JSON.stringify({ api_token: {} });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
