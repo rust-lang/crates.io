@@ -23,9 +23,11 @@ export default http.patch<{ name: string; version: string }>(
     );
     if (!version) return notFound();
 
-    let body = (await request.json()) as { version: { yanked: boolean; yank_message?: string | null } };
+    let body = (await request.json()) as {
+      version: { yanked?: boolean | null; yank_message?: string | null };
+    };
 
-    let yanked = body.version.yanked;
+    let yanked = body.version.yanked ?? version.yanked;
     let yankMessage = body.version.yank_message;
 
     let versionId = version.id;
