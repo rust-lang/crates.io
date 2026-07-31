@@ -52,8 +52,8 @@ export interface paths {
          * Complete authentication flow.
          * @description This route is called from the GitHub API OAuth flow after the user accepted or rejected
          *     the data access permissions. It will check the `state` parameter and then call the GitHub API
-         *     to exchange the temporary `code` for an API token. The API token is returned together with
-         *     the corresponding user information.
+         *     to exchange the temporary `code` for an API token. The response indicates whether the
+         *     corresponding user was signed in or needs to complete signup.
          *
          *     see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
          */
@@ -2008,7 +2008,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
+                    "application/json": ({
                         /** @description The crates that the authenticated user owns. */
                         owned_crates: {
                             /** @deprecated */
@@ -2027,6 +2027,12 @@ export interface operations {
                         }[];
                         /** @description The authenticated user. */
                         user: components["schemas"]["AuthenticatedUser"];
+                    } & {
+                        /** @enum {string} */
+                        status: "signed_in";
+                    }) | {
+                        /** @enum {string} */
+                        status: "signup_required";
                     };
                 };
             };
@@ -5308,6 +5314,12 @@ type ReadonlyArray<T> = [
 ] extends [
     unknown[]
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJsonOneOf0StatusValues: ReadonlyArray<Extract<FlattenedDeepRequired<paths>["/api/private/session/authorize"]["post"]["responses"]["200"]["content"]["application/json"], {
+    status: unknown;
+}>["status"]> = ["signed_in"];
+export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJsonOneOf1StatusValues: ReadonlyArray<Extract<FlattenedDeepRequired<paths>["/api/private/session/authorize"]["post"]["responses"]["200"]["content"]["application/json"], {
+    status: unknown;
+}>["status"]> = ["signup_required"];
 export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
 export const trustpubDataOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["TrustpubData"], {
     provider: unknown;
