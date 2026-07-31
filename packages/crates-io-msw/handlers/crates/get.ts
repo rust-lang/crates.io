@@ -1,21 +1,18 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeCategory } from '../../serializers/category.js';
 import { serializeCrate } from '../../serializers/crate.js';
 import { serializeKeyword } from '../../serializers/keyword.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
 const DEFAULT_INCLUDES = ['versions', 'keywords', 'categories'];
 
-export default http.get<{ name: string }>('/api/v1/crates/:name', async ({ request, params }) => {
+export default http.get('/api/v1/crates/{name}', ({ request, params, response }) => {
   let { name } = params;
   let canonicalName = toCanonicalName(name);
   let crate = db.crate.findFirst(q => q.where(crate => toCanonicalName(crate.name) === canonicalName));
-  if (!crate) return notFound();
+  if (!crate) return response.untyped(notFound());
 
   let versions = db.version.findMany(q => q.where(version => version.crate?.id === crate.id));
   versions.sort((a, b) => b.id - a.id);
@@ -44,7 +41,7 @@ export default http.get<{ name: string }>('/api/v1/crates/:name', async ({ reque
     serializedVersions = [serializeVersion(defaultVersion!)];
   }
 
-  return HttpResponse.json<SuccessBody<'find_crate'>>({
+  return response(200).json({
     crate: serializedCrate,
     categories: includeCategories ? crate.categories.map(c => serializeCategory(c)) : null,
     keywords: includeKeywords ? crate.keywords.map(k => serializeKeyword(k)) : null,
