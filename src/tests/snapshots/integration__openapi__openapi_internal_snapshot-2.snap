@@ -1879,6 +1879,54 @@ expression: response.json()
       }
     },
     "/api/private/session/signup": {
+      "delete": {
+        "operationId": "delete_pending_signup",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Cancel a pending signup.",
+        "tags": [
+          "session"
+        ]
+      },
       "get": {
         "description": "The encrypted GitHub token remains in the signed session cookie and is never returned to the\nfrontend. Missing, malformed, and expired signup state require restarting GitHub\nauthentication.",
         "operationId": "get_pending_signup",

@@ -127,3 +127,43 @@ async fn get_rejects_and_clears_expired_signup() {
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert!(response.headers().get(header::SET_COOKIE).is_none());
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn delete_clears_pending_signup_and_leaves_user_logged_out() {
+    let (app, anon) = TestApp::init().empty().await;
+    let cookie = pending_signup_header(&app, Utc::now());
+    let mut request = anon.request_builder(Method::DELETE, "/api/private/session/signup");
+    request.header(header::COOKIE, &cookie);
+
+    let response = anon.run::<Value>(request).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.json(), @r#"{"ok":true}"#);
+
+    let set_cookie = response.headers().get(header::SET_COOKIE).unwrap();
+    let cookie = set_cookie.to_str().unwrap();
+    let cookie = cookie.split(';').next().unwrap();
+    let mut request = anon.request_builder(Method::GET, "/api/private/session/signup");
+    request.header(header::COOKIE, cookie);
+
+    let response = anon.run::<Value>(request).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+
+    let mut request = anon.request_builder(Method::GET, "/api/v1/me");
+    request.header(header::COOKIE, cookie);
+
+    let response = anon.run::<Value>(request).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn delete_without_pending_signup_returns_ok_when_explicit_signup_is_disabled() {
+    let (_, anon) = TestApp::init()
+        .with_config(|config| config.features.explicit_signup_enabled = false)
+        .empty()
+        .await;
+
+    let request = anon.request_builder(Method::DELETE, "/api/private/session/signup");
+    let response = anon.run::<Value>(request).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.json(), @r#"{"ok":true}"#);
+}

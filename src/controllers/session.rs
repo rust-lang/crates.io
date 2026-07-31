@@ -194,6 +194,23 @@ pub async fn get_pending_signup(
     Ok((no_store(), json))
 }
 
+/// Cancel a pending signup.
+#[utoipa::path(
+    delete,
+    path = "/api/private/session/signup",
+    tag = "session",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn delete_pending_signup(session: SessionExtension) -> OkResponse {
+    session.remove(PENDING_SIGNUP_KEY);
+    OkResponse::new()
+}
+
 /// Complete authentication flow.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
