@@ -1,54 +1,47 @@
-import type { SuccessBody } from '../../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../../index.js';
 import { serializeGitLabConfig } from '../../../serializers/trustpub/gitlab-config.js';
 import { notFound } from '../../../utils/handlers.js';
+import { http } from '../../../utils/openapi-http.js';
 import { getSession } from '../../../utils/session.js';
 
-export default http.post('/api/v1/trusted_publishing/gitlab_configs', async ({ request }) => {
+export default http.post('/api/v1/trusted_publishing/gitlab_configs', async ({ request, response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
-  let body = (await request.json()) as {
-    gitlab_config?: {
-      crate?: string;
-      namespace?: string;
-      project?: string;
-      workflow_filepath?: string;
-      environment?: string | null;
-    };
-  };
+  let body = await request.json();
 
   let { gitlab_config } = body;
   if (!gitlab_config) {
-    return HttpResponse.json({ errors: [{ detail: 'invalid request body' }] }, { status: 400 });
+    return response.untyped(Response.json({ errors: [{ detail: 'invalid request body' }] }, { status: 400 }));
   }
 
   let { crate: crateName, namespace, project, workflow_filepath, environment } = gitlab_config;
   if (!crateName || !namespace || !project || !workflow_filepath) {
-    return HttpResponse.json({ errors: [{ detail: 'missing required fields' }] }, { status: 400 });
+    return response.untyped(Response.json({ errors: [{ detail: 'missing required fields' }] }, { status: 400 }));
   }
 
   let crate = db.crate.findFirst(q => q.where({ name: crateName }));
-  if (!crate) return notFound();
+  if (!crate) return response.untyped(notFound());
 
   // Check if the user is an owner of the crate
   let isOwner = db.crateOwnership.findFirst(q =>
     q.where(ownership => ownership.crate.id === crate.id && ownership.user?.id === user.id),
   );
   if (!isOwner) {
-    return HttpResponse.json({ errors: [{ detail: 'You are not an owner of this crate' }] }, { status: 400 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'You are not an owner of this crate' }] }, { status: 400 }),
+    );
   }
 
   // Check if the user has a verified email
   let hasVerifiedEmail = user.emailVerified;
   if (!hasVerifiedEmail) {
     let detail = 'You must verify your email address to create a Trusted Publishing config';
-    return HttpResponse.json({ errors: [{ detail }] }, { status: 403 });
+    return response.untyped(Response.json({ errors: [{ detail }] }, { status: 403 }));
   }
 
   // Create a new GitLab config
@@ -62,7 +55,7 @@ export default http.post('/api/v1/trusted_publishing/gitlab_configs', async ({ r
     created_at: new Date().toISOString(),
   });
 
-  return HttpResponse.json<SuccessBody<'create_trustpub_gitlab_config'>>({
+  return response(200).json({
     gitlab_config: serializeGitLabConfig(config),
   });
 });
