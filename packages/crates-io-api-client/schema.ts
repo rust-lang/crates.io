@@ -1834,6 +1834,10 @@ export interface components {
              */
             version_downloads: string;
         };
+        VersionUpdate: {
+            yank_message?: string | null;
+            yanked?: boolean | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -2930,7 +2934,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: components["schemas"]["VersionUpdate"];
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -18,12 +18,12 @@ use http::request::Parts;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct VersionUpdate {
     yanked: Option<bool>,
     yank_message: Option<String>,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct VersionUpdateRequest {
     version: VersionUpdate,
 }
@@ -40,6 +40,7 @@ pub struct UpdateResponse {
     patch,
     path = "/api/v1/crates/{name}/{version}",
     params(CrateVersionPath),
+    request_body = inline(VersionUpdateRequest),
     security(
         ("api_token" = []),
         ("cookie" = []),
