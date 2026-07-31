@@ -104,7 +104,8 @@ export interface paths {
         get: operations["get_pending_signup"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Cancel a pending signup. */
+        delete: operations["delete_pending_signup"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2146,6 +2147,47 @@ export interface operations {
                 content: {
                     "application/json": {
                         signup: components["schemas"]["SignupDetails"];
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_pending_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example true */
+                        ok: boolean;
                     };
                 };
             };
