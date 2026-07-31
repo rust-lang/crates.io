@@ -1653,7 +1653,7 @@ expression: response.json()
     },
     "/api/private/session/authorize": {
       "post": {
-        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The response indicates whether the\ncorresponding user was signed in or needs to complete signup.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>",
+        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. Existing crates.io users are signed in.\nNew users must complete signup when explicit signup is enabled and are created immediately\notherwise.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>",
         "operationId": "authorize_session",
         "requestBody": {
           "content": {
