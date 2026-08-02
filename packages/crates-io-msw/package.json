@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/semver": "7.7.1",
-    "vite": "8.1.5",
+    "vite": "8.2.0",
     "vitest": "4.1.10"
   }
 }
