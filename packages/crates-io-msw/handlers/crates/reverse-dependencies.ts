@@ -1,15 +1,12 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeDependency } from '../../serializers/dependency.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { notFound, pageParams } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.get<{ name: string }>('/api/v1/crates/:name/reverse_dependencies', async ({ request, params }) => {
+export default http.get('/api/v1/crates/{name}/reverse_dependencies', ({ request, params, response }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
-  if (!crate) return notFound();
+  if (!crate) return response.untyped(notFound());
 
   let { start, end } = pageParams(request);
 
@@ -22,7 +19,7 @@ export default http.get<{ name: string }>('/api/v1/crates/:name/reverse_dependen
 
   let versions = dependencies.map(d => d.version);
 
-  return HttpResponse.json<SuccessBody<'list_reverse_dependencies'>>({
+  return response(200).json({
     dependencies: dependencies.map(d => serializeDependency(d)),
     versions: versions.map(v => serializeVersion(v)),
     meta: { total },

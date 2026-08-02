@@ -1,24 +1,24 @@
 import type { Crate } from '../../models/index.js';
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get<{ name: string }>('/api/v1/crates/:name/following', async ({ params }) => {
+export default http.get('/api/v1/crates/{name}/following', ({ params, response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
-    return notFound();
+    return response.untyped(notFound());
   }
 
   let following = (user.followedCrates as Crate[]).some(followedCrate => followedCrate.id === crate.id);
 
-  return HttpResponse.json<SuccessBody<'get_following_crate'>>({ following });
+  return response(200).json({ following });
 });

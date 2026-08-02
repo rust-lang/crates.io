@@ -1,15 +1,12 @@
-import type { SuccessBody } from '../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../index.js';
 import { serializeCategory } from '../serializers/category.js';
 import { serializeCrate } from '../serializers/crate.js';
 import { serializeKeyword } from '../serializers/keyword.js';
 import { compareDates } from '../utils/dates.js';
+import { http } from '../utils/openapi-http.js';
 
 export default [
-  http.get('/api/v1/summary', () => {
+  http.get('/api/v1/summary', ({ response }) => {
     let crates = db.crate.findMany();
 
     let just_updated = crates.toSorted((a, b) => compareDates(b.updated_at, a.updated_at)).slice(0, 10);
@@ -23,7 +20,7 @@ export default [
     let popularCategories = db.category.findMany(undefined, { take: 10 });
     let popularKeywords = db.keyword.findMany(undefined, { take: 10 });
 
-    return HttpResponse.json<SuccessBody<'get_summary'>>({
+    return response(200).json({
       just_updated: just_updated.map(c => serializeCrate(c)),
       most_downloaded: most_downloaded.map(c => serializeCrate(c)),
       new_crates: new_crates.map(c => serializeCrate(c)),

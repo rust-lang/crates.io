@@ -1,17 +1,13 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { serializeTeam } from '../../serializers/team.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 
-export default http.get<{ team_id: string }>('/api/v1/teams/:team_id', ({ params }) => {
-  let login = params.team_id;
-  let team = db.team.findFirst(q => q.where({ login }));
+export default http.get('/api/v1/teams/{team}', ({ params, response }) => {
+  let team = db.team.findFirst(q => q.where({ login: params.team }));
   if (!team) {
-    return notFound();
+    return response.untyped(notFound());
   }
 
-  return HttpResponse.json<SuccessBody<'find_team'>>({ team: serializeTeam(team) });
+  return response(200).json({ team: serializeTeam(team) });
 });

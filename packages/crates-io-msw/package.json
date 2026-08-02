@@ -22,6 +22,7 @@
     "@crates-io/api-client": "workspace:*",
     "@msw/data": "1.1.7",
     "msw": "2.15.0",
+    "openapi-msw": "2.0.0",
     "semver": "7.8.5",
     "valibot": "1.4.2"
   },

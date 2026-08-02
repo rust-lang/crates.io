@@ -1,23 +1,22 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
 import { notFound } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.delete<{ name: string }>('/api/v1/crates/:name/owners', async ({ request, params }) => {
+export default http.delete('/api/v1/crates/{name}/owners', async ({ request, params, response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
-    return notFound();
+    return response.untyped(notFound());
   }
 
-  let body = (await request.json()) as { owners: string[] };
+  let body = await request.json();
 
   for (let owner of body.owners) {
     let ownership = db.crateOwnership.findFirst(
@@ -25,9 +24,9 @@ export default http.delete<{ name: string }>('/api/v1/crates/:name/owners', asyn
         ? q => q.where(ownership => ownership.team?.login === owner)
         : q => q.where(ownership => ownership.user?.login === owner),
     );
-    if (!ownership) return notFound();
+    if (!ownership) return response.untyped(notFound());
     db.crateOwnership.delete(q => q.where({ id: ownership.id }));
   }
 
-  return HttpResponse.json<SuccessBody<'remove_owners'>>({ ok: true, msg: 'owners successfully removed' });
+  return response(200).json({ ok: true, msg: 'owners successfully removed' });
 });

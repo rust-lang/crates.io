@@ -1,18 +1,16 @@
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
-
 import { db } from '../../index.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.delete<{ tokenId: string }>('/api/v1/me/tokens/:tokenId', async ({ params }) => {
+export default http.delete('/api/v1/me/tokens/{id}', ({ params, response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
-  let { tokenId } = params;
-  db.apiToken.delete(q => q.where(token => token.id === parseInt(tokenId) && token.user.id === user.id));
+  db.apiToken.delete(q => q.where(token => token.id === parseInt(params.id) && token.user.id === user.id));
 
-  return HttpResponse.json<SuccessBody<'revoke_api_token'>>({});
+  return response(200).json({});
 });

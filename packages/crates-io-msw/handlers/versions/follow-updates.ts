@@ -1,17 +1,17 @@
 import type { Crate } from '../../models/index.js';
-import type { SuccessBody } from '../../utils/api-types.js';
-
-import { http, HttpResponse } from 'msw';
 
 import { db } from '../../index.js';
 import { serializeVersion } from '../../serializers/version.js';
 import { pageParams } from '../../utils/handlers.js';
+import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get('/api/v1/me/updates', ({ request }) => {
+export default http.get('/api/v1/me/updates', ({ request, response }) => {
   let { user } = getSession();
   if (!user) {
-    return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
+    return response.untyped(
+      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+    );
   }
 
   let allVersions = (user.followedCrates as Crate[])
@@ -24,7 +24,7 @@ export default http.get('/api/v1/me/updates', ({ request }) => {
   let totalCount = allVersions.length;
   let totalPages = Math.ceil(totalCount / perPage);
 
-  return HttpResponse.json<SuccessBody<'get_authenticated_user_updates'>>({
+  return response(200).json({
     versions: versions.map(v => serializeVersion(v)),
     meta: { more: page < totalPages },
   });

@@ -178,3 +178,19 @@ test('yanks the version', async function () {
   expect(version.yanked).toBe(false);
   expect(version.yank_message).toBe(null);
 });
+
+test('updates the yank message without changing the yanked state', async function () {
+  let crate = await db.crate.create({ name: 'foo' });
+  let version = await db.version.create({ crate, num: '1.0.0', yanked: true, yank_message: 'old reason' });
+
+  let user = await db.user.create({});
+  await db.mswSession.create({ user });
+
+  let body = JSON.stringify({ version: { yank_message: 'new reason' } });
+  let response = await fetch('/api/v1/crates/foo/1.0.0', { method: 'PATCH', body });
+  expect(response.status).toBe(200);
+
+  version = db.version.findFirst(q => q.where({ id: version.id }))!;
+  expect(version.yanked).toBe(true);
+  expect(version.yank_message).toBe('new reason');
+});
