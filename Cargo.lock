@@ -1248,6 +1248,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "chapter-tgz"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71d3b546f2d916ddf609e8f8e271c93c9dcd66d7500a87ee8d81d4c159839d7c"
+dependencies = [
+ "flate2",
+ "tar",
+]
+
+[[package]]
 name = "chinese-number"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1876,6 +1886,7 @@ name = "crates_io_database_dump"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "chapter-tgz",
  "chrono",
  "crates_io_env_vars",
  "crates_io_test_db",

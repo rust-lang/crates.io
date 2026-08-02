@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 use anyhow::{Context, anyhow};
+use chapter_tgz::TgzWriter;
 use serde::Serialize;
 use std::fs;
 use std::fs::File;
@@ -194,16 +195,18 @@ pub struct Archives {
 pub fn create_archives(export_dir: &Path, tarball_prefix: &Path) -> anyhow::Result<Archives> {
     debug!("Creating tarball file…");
     let tar_tempfile = tempfile::NamedTempFile::new()?;
-    let encoder =
-        flate2::write::GzEncoder::new(tar_tempfile.as_file(), flate2::Compression::default());
-    let mut tar = tar::Builder::new(encoder);
+    let mut tar = TgzWriter::new(tar_tempfile.as_file(), flate2::Compression::default());
 
     debug!("Creating zip file…");
     let zip_tempfile = tempfile::NamedTempFile::new()?;
     let mut zip = zip::ZipWriter::new(zip_tempfile.as_file());
 
+    // Everything other than data files go in a single chapter. These files are
+    // small.
+    let mut nondata_chapter = tar.create_chapter();
+
     debug!("Appending `{tarball_prefix:?}` directory to tarball…");
-    tar.append_dir(tarball_prefix, export_dir)?;
+    nondata_chapter.append_dir(tarball_prefix, export_dir)?;
 
     // Append readme, metadata, schemas.
     let mut paths = Vec::new();
@@ -219,7 +222,7 @@ pub fn create_archives(export_dir: &Path, tarball_prefix: &Path) -> anyhow::Resu
     for (path, file_name) in paths {
         let name = tarball_prefix.join(&file_name);
         debug!("Appending `{name:?}` file to tarball…");
-        tar.append_path_with_name(&path, name)?;
+        nondata_chapter.append_path_with_name(&path, name)?;
 
         debug!("Appending `{file_name:?}` file to zip file…");
         zip.start_file_from_path(&file_name, SimpleFileOptions::default())?;
@@ -235,7 +238,8 @@ pub fn create_archives(export_dir: &Path, tarball_prefix: &Path) -> anyhow::Resu
 
     let path = tarball_prefix.join("data");
     debug!("Appending `data` directory to tarball…");
-    tar.append_dir(path, export_dir.join("data"))?;
+    nondata_chapter.append_dir(path, export_dir.join("data"))?;
+    drop(nondata_chapter);
 
     debug!("Appending `data` directory to zip file…");
     zip.add_directory("data", SimpleFileOptions::default())?;
@@ -243,12 +247,18 @@ pub fn create_archives(export_dir: &Path, tarball_prefix: &Path) -> anyhow::Resu
     for table in sorted_tables {
         let csv_path = export_dir.join("data").join(table).with_extension("csv");
         if csv_path.exists() {
+            // Data files each get a dedicated chapter. This supports extracting
+            // single files without performing gzip decompression for everything
+            // in front of it, and it supports extracting different data files
+            // in parallel on separate threads.
+            let mut data_chapter = tar.create_chapter();
+
             let name = tarball_prefix
                 .join("data")
                 .join(table)
                 .with_extension("csv");
             debug!("Appending `{name:?}` file to tarball…");
-            tar.append_path_with_name(&csv_path, name)?;
+            data_chapter.append_path_with_name(&csv_path, name)?;
 
             let name = PathBuf::from("data").join(table).with_extension("csv");
             debug!("Appending `{name:?}` file to zip file…");
