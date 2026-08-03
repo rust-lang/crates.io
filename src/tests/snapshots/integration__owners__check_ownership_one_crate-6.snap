@@ -11,6 +11,14 @@ expression: response.json()
       "login": "foo",
       "name": null,
       "url": "https://github.com/foo"
+    },
+    {
+      "avatar": null,
+      "id": 2,
+      "kind": "user",
+      "login": "bar",
+      "name": null,
+      "url": "https://github.com/bar"
     }
   ]
 }

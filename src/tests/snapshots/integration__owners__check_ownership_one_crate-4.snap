@@ -11,6 +11,14 @@ expression: response.json()
       "login": "github:test_org:team_sloth",
       "name": null,
       "url": "https://github.com/test_org"
+    },
+    {
+      "avatar": null,
+      "id": 2,
+      "kind": "team",
+      "login": "github:test_org:team_ferret",
+      "name": null,
+      "url": "https://github.com/test_org"
     }
   ]
 }
