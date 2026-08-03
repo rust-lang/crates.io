@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response};
 use crate::{TestApp, add_team_to_crate, new_team};
-use crates_io::models::Crate;
+use crates_io::models::{Crate, CrateOwner};
 use crates_io::schema::emails;
 use crates_io::views::{
     EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
@@ -15,10 +15,6 @@ use insta::{assert_json_snapshot, assert_snapshot};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Deserialize)]
-struct TeamResponse {
-    teams: Vec<EncodableOwner>,
-}
 #[derive(Deserialize)]
 struct UserResponse {
     users: Vec<EncodableOwner>,
@@ -306,9 +302,9 @@ async fn check_ownership_two_crates() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Given a crate owned by both a team and a user, check that the
-/// JSON returned by the `/owner_team` route and `/owner_user` route
-/// contains the correct kind of owner
+/// Given a crate owned by two teams and two users, check that the JSON
+/// returned by `/owners`, `/owner_team`, and `/owner_user` contains all
+/// owners of the expected kind.
 ///
 /// Note that in this case function `new_team` must take a team name
 /// of form `github:org_name:team_name` as that is the format
@@ -317,29 +313,44 @@ async fn check_ownership_two_crates() -> anyhow::Result<()> {
 async fn check_ownership_one_crate() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
+
     let user = user.as_model();
+    let user2 = app.db_new_user("bar").await;
 
     let team = new_team("github:test_org:team_sloth")
         .create_or_update(&conn)
         .await?;
+
+    let team2 = new_team("github:test_org:team_ferret")
+        .create_or_update(&conn)
+        .await?;
+
     let krate = CrateBuilder::new("best_crate", user.id)
         .expect_build(&mut conn)
         .await;
+
+    add_team_to_crate(&team2, &krate, user.id, &mut conn).await?;
     add_team_to_crate(&team, &krate, user.id, &mut conn).await?;
 
-    let json: TeamResponse = anon
-        .get("/api/v1/crates/best_crate/owner_team")
-        .await
-        .good();
-    assert_eq!(json.teams[0].kind, "team");
-    assert_eq!(json.teams[0].name, team.name);
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(user2.as_model().id)
+        .created_by(user.id)
+        .build()
+        .insert(&conn)
+        .await?;
 
-    let json: UserResponse = anon
-        .get("/api/v1/crates/best_crate/owner_user")
-        .await
-        .good();
-    assert_eq!(json.users[0].kind, "user");
-    assert_eq!(json.users[0].name, user.name);
+    let response = anon.get::<()>("/api/v1/crates/best_crate/owners").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json());
+
+    let response = anon.get::<()>("/api/v1/crates/best_crate/owner_team").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json());
+
+    let response = anon.get::<()>("/api/v1/crates/best_crate/owner_user").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json());
 
     Ok(())
 }

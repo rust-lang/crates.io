@@ -1,0 +1,24 @@
+---
+source: src/tests/owners.rs
+expression: response.json()
+---
+{
+  "users": [
+    {
+      "avatar": null,
+      "id": 1,
+      "kind": "user",
+      "login": "foo",
+      "name": null,
+      "url": "https://github.com/foo"
+    },
+    {
+      "avatar": null,
+      "id": 2,
+      "kind": "user",
+      "login": "bar",
+      "name": null,
+      "url": "https://github.com/bar"
+    }
+  ]
+}

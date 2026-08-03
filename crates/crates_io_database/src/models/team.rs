@@ -2,7 +2,7 @@ use bon::Builder;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
-use crate::models::{Crate, CrateOwner, Owner, OwnerKind};
+use crate::models::{Crate, CrateOwner, OwnerKind};
 use crate::schema::{crate_owners, teams};
 
 /// For now, just a GitHub Team. Can be upgraded to other teams
@@ -52,18 +52,13 @@ impl NewTeam<'_> {
 }
 
 impl Team {
-    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
-        let teams = base_query
+    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
+        CrateOwner::by_owner_kind(OwnerKind::Team)
             .inner_join(teams::table)
             .select(Team::as_select())
-            .filter(crate_owners::owner_kind.eq(OwnerKind::Team))
+            .filter(crate_owners::crate_id.eq(krate.id))
             .load(&mut conn)
-            .await?
-            .into_iter()
-            .map(Owner::Team);
-
-        Ok(teams.collect())
+            .await
     }
 
     /// Splits the login into provider, organization, and team name.

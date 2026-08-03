@@ -551,44 +551,35 @@ pub struct EncodableOwner {
     pub avatar: Option<String>,
 }
 
+impl EncodableOwner {
+    pub fn from_user(user: User) -> Self {
+        Self {
+            id: user.id,
+            url: Some(format!("https://github.com/{}", user.gh_login)),
+            login: user.gh_login,
+            avatar: user.gh_avatar,
+            name: user.name,
+            kind: String::from("user"),
+        }
+    }
+
+    pub fn from_team(team: Team) -> Self {
+        Self {
+            id: team.id,
+            url: team.url(),
+            login: team.login,
+            avatar: team.avatar,
+            name: team.name,
+            kind: String::from("team"),
+        }
+    }
+}
+
 impl From<Owner> for EncodableOwner {
     fn from(owner: Owner) -> Self {
         match owner {
-            Owner::User(User {
-                id,
-                name,
-                gh_login,
-                gh_avatar,
-                ..
-            }) => {
-                let url = format!("https://github.com/{gh_login}");
-                Self {
-                    id,
-                    login: gh_login,
-                    avatar: gh_avatar,
-                    url: Some(url),
-                    name,
-                    kind: String::from("user"),
-                }
-            }
-            Owner::Team(team) => {
-                let url = team.url();
-                let Team {
-                    id,
-                    name,
-                    login,
-                    avatar,
-                    ..
-                } = team;
-                Self {
-                    id,
-                    login,
-                    url,
-                    avatar,
-                    name,
-                    kind: String::from("team"),
-                }
-            }
+            Owner::User(user) => Self::from_user(user),
+            Owner::Team(team) => Self::from_team(team),
         }
     }
 }
