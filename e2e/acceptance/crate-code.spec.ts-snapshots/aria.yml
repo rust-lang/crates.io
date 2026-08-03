@@ -17,6 +17,9 @@
         - link "Readme":
           - /url: /crates/serde/1.0.0
       - listitem:
+        - link "Code":
+          - /url: /crates/serde/1.0.0/code
+      - listitem:
         - link "1 Version":
           - /url: /crates/serde/versions
       - listitem:
@@ -40,7 +43,7 @@
   - region "File contents":
     - img
     - text: /src\/lib\.rs \d+ B/
-    - code: "/1 2 \\/\\/ serde crate root pub fn answer\\(\\) -> u32 \\{ \\d+ \\}/"
+    - code: "/1 2 3 \\/\\/ serde crate root pub fn answer\\(\\) -> u32 \\{ \\d+ \\}/"
 - contentinfo:
   - heading "Rust" [level=2]
   - list:
