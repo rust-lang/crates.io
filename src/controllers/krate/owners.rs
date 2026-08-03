@@ -75,8 +75,10 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
     let conn = state.db_read().await?;
     let krate = path.load_crate(&conn).await?;
 
-    let teams = Team::owning(&krate, &conn)
-        .await?
+    let mut teams = Team::owning(&krate, &conn).await?;
+    teams.sort_by_key(|team| team.id);
+
+    let teams = teams
         .into_iter()
         .map(EncodableOwner::from_team)
         .collect::<Vec<_>>();
@@ -97,8 +99,10 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
 
     let krate = path.load_crate(&conn).await?;
 
-    let users = User::owning(&krate, &conn)
-        .await?
+    let mut users = User::owning(&krate, &conn).await?;
+    users.sort_by_key(|user| user.id);
+
+    let users = users
         .into_iter()
         .map(EncodableOwner::from_user)
         .collect::<Vec<_>>();
