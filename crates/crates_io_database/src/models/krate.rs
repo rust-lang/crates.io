@@ -205,8 +205,10 @@ impl Crate {
     }
 
     pub async fn owners(&self, conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        let users = User::owning(self, conn).await?.into_iter().map(Owner::User);
-        let teams = Team::owning(self, conn).await?.into_iter().map(Owner::Team);
+        let (users, teams) = tokio::try_join!(User::owning(self, conn), Team::owning(self, conn))?;
+
+        let users = users.into_iter().map(Owner::User);
+        let teams = teams.into_iter().map(Owner::Team);
 
         Ok(users.chain(teams).collect())
     }
