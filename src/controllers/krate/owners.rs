@@ -96,8 +96,8 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
     let users = User::owning(&krate, &conn)
         .await?
         .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+        .map(EncodableOwner::from_user)
+        .collect::<Vec<_>>();
 
     Ok(Json(UsersResponse { users }))
 }

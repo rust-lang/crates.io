@@ -8,7 +8,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
 use crate::fns::lower;
-use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
+use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
 /// The model representing a row in the `users` database table.
@@ -52,17 +52,13 @@ impl User {
             .await
     }
 
-    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        let users = CrateOwner::by_owner_kind(OwnerKind::User)
+    pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
+        CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table.left_join(oauth_github::table))
             .select(User::as_select())
             .filter(crate_owners::crate_id.eq(krate.id))
             .load(&mut conn)
-            .await?
-            .into_iter()
-            .map(Owner::User);
-
-        Ok(users.collect())
+            .await
     }
 
     /// Queries the database for the verified emails
