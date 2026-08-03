@@ -303,7 +303,7 @@ async fn check_ownership_two_crates() -> anyhow::Result<()> {
 }
 
 /// Given a crate owned by both a team and a user, check that the
-/// JSON returned by the `/owner_team` route and `/owner_user` route
+/// JSON returned by the `/owners`, `/owner_team` and `/owner_user`
 /// contains the correct kind of owner
 ///
 /// Note that in this case function `new_team` must take a team name
@@ -322,6 +322,10 @@ async fn check_ownership_one_crate() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
     add_team_to_crate(&team, &krate, user.id, &mut conn).await?;
+
+    let response = anon.get::<()>("/api/v1/crates/best_crate/owners").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json());
 
     let response = anon.get::<()>("/api/v1/crates/best_crate/owner_team").await;
     assert_snapshot!(response.status(), @"200 OK");
