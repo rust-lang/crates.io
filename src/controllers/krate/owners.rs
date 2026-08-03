@@ -74,8 +74,8 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
     let teams = Team::owning(&krate, &conn)
         .await?
         .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+        .map(EncodableOwner::from_team)
+        .collect::<Vec<_>>();
 
     Ok(Json(TeamsResponse { teams }))
 }
