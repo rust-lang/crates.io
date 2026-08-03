@@ -16,10 +16,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Deserialize)]
-struct TeamResponse {
-    teams: Vec<EncodableOwner>,
-}
-#[derive(Deserialize)]
 struct UserResponse {
     users: Vec<EncodableOwner>,
 }
@@ -327,19 +323,13 @@ async fn check_ownership_one_crate() -> anyhow::Result<()> {
         .await;
     add_team_to_crate(&team, &krate, user.id, &mut conn).await?;
 
-    let json: TeamResponse = anon
-        .get("/api/v1/crates/best_crate/owner_team")
-        .await
-        .good();
-    assert_eq!(json.teams[0].kind, "team");
-    assert_eq!(json.teams[0].name, team.name);
+    let response = anon.get::<()>("/api/v1/crates/best_crate/owner_team").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json());
 
-    let json: UserResponse = anon
-        .get("/api/v1/crates/best_crate/owner_user")
-        .await
-        .good();
-    assert_eq!(json.users[0].kind, "user");
-    assert_eq!(json.users[0].name, user.name);
+    let response = anon.get::<()>("/api/v1/crates/best_crate/owner_user").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json());
 
     Ok(())
 }
