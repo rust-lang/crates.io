@@ -1,6 +1,6 @@
 use crate::fns::canon_crate_name;
 use crate::models::version::TopVersions;
-use crate::models::{CrateOwner, Owner, OwnerKind, User, Version};
+use crate::models::{CrateOwner, Owner, User, Version};
 use crate::schema::*;
 use chrono::{DateTime, Utc};
 use diesel::associations::Identifiable;
@@ -204,24 +204,9 @@ impl Crate {
         ))
     }
 
-    pub async fn owners(&self, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        let users = CrateOwner::by_owner_kind(OwnerKind::User)
-            .filter(crate_owners::crate_id.eq(self.id))
-            .inner_join(users::table.left_join(oauth_github::table))
-            .select(User::as_select())
-            .load(&mut conn)
-            .await?
-            .into_iter()
-            .map(Owner::User);
-
-        let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
-            .filter(crate_owners::crate_id.eq(self.id))
-            .inner_join(teams::table)
-            .select(Team::as_select())
-            .load(&mut conn)
-            .await?
-            .into_iter()
-            .map(Owner::Team);
+    pub async fn owners(&self, conn: &AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+        let users = User::owning(self, conn).await?.into_iter().map(Owner::User);
+        let teams = Team::owning(self, conn).await?.into_iter().map(Owner::Team);
 
         Ok(users.chain(teams).collect())
     }
