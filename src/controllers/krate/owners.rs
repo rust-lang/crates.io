@@ -44,13 +44,13 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<Use
 
     let krate = path.load_crate(&conn).await?;
 
-    let mut users = krate.owners(&conn).await?;
-    users.sort_by_key(|owner| match owner {
+    let mut owners = krate.owners(&conn).await?;
+    owners.sort_by_key(|owner| match owner {
         Owner::User(user) => (0, user.id),
         Owner::Team(team) => (1, team.id),
     });
 
-    let users = users
+    let users = owners
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
