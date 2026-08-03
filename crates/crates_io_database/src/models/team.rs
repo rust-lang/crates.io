@@ -53,11 +53,10 @@ impl NewTeam<'_> {
 
 impl Team {
     pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
-        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
-        base_query
+        CrateOwner::by_owner_kind(OwnerKind::Team)
             .inner_join(teams::table)
             .select(Team::as_select())
-            .filter(crate_owners::owner_kind.eq(OwnerKind::Team))
+            .filter(crate_owners::crate_id.eq(krate.id))
             .load(&mut conn)
             .await
     }
