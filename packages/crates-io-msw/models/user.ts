@@ -10,6 +10,7 @@ const schema = v.pipe(
 
     name: v.optional(v.nullable(v.string())),
     login: v.optional(v.string()),
+    githubLogin: v.optional(v.string()),
     url: v.optional(v.string()),
     avatar: v.optional(v.string(), 'https://avatars1.githubusercontent.com/u/14631425?v=4'),
     email: v.optional(v.nullable(v.string())),
@@ -26,9 +27,10 @@ const schema = v.pipe(
     let name = input.name === undefined ? `User ${id}` : input.name;
     let login = input.login ?? (name ? dasherize(name) : `user-${id}`);
     let email = input.email === undefined ? `${login}@crates.io` : input.email;
-    let url = input.url ?? `https://github.com/${login}`;
+    let githubLogin = input.githubLogin ?? login;
+    let url = input.url ?? `https://github.com/${githubLogin}`;
     let emailVerified = input.emailVerified ?? Boolean(email && !input.emailVerificationToken);
-    return { ...input, id, name, login, email, url, emailVerified };
+    return { ...input, id, name, login, githubLogin, email, url, emailVerified };
   }),
 );
 
