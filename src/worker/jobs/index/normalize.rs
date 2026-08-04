@@ -71,12 +71,8 @@ impl BackgroundJob for NormalizeIndex {
 /// deps), and returns the rewritten bytes.
 fn normalize_entry(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     let mut versions = Vec::new();
-    for line in bytes.split(|&b| b == b'\n') {
-        if line.is_empty() {
-            continue;
-        }
-
-        let mut krate: Crate = serde_json::from_slice(line)?;
+    for krate in serde_json::Deserializer::from_slice(bytes).into_iter::<Crate>() {
+        let mut krate = krate?;
         for dep in &mut krate.deps {
             // Remove deps with empty features
             dep.features.retain(|d| !d.is_empty());
