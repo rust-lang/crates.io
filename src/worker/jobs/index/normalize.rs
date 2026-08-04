@@ -83,10 +83,7 @@ fn normalize_entry(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         versions.push(krate);
     }
 
-    let mut body: Vec<u8> = Vec::new();
-    for version in versions {
-        serde_json::to_writer(&mut body, &version)?;
-        body.push(b'\n');
-    }
+    let mut body = Vec::new();
+    crates_io_index::write_crates(&versions, &mut body)?;
     Ok(body)
 }
