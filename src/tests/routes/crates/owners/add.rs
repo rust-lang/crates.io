@@ -450,6 +450,88 @@ async fn test_ambiguous_username_error() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_separator_variant_gh_login_is_not_ambiguous() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let new_user = app.db_new_user_with_gh_login("user-2", "user_2").await;
+
+    OauthGithubBuilder::for_user(new_user.as_model())
+        .with_login("user_2")
+        .insert(&conn)
+        .await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "user-2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_add_separator_variant_unprefixed_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("user-2").await;
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "user_2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user user_2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+/// Test that ambiguity is resolved before comparing against existing owners
+#[tokio::test(flavor = "multi_thread")]
+async fn test_shared_login_is_ambiguous_even_when_one_account_is_already_an_owner() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let cratesio_alice = app.db_new_user_with_gh_login("alice", "alice-gh").await;
+    OauthGithubBuilder::for_user(cratesio_alice.as_model())
+        .with_login("alice-gh")
+        .insert(&conn)
+        .await;
+
+    let github_alice = app.db_new_user_with_gh_login("bob", "alice").await;
+    OauthGithubBuilder::for_user(github_alice.as_model())
+        .with_login("alice")
+        .insert(&conn)
+        .await;
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // The crates.io `alice` is already an owner, the GitHub `alice` is not.
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(cratesio_alice.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "alice").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice` is possibly ambiguous. The crates.io account `alice` is associated with GitHub user `alice-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add cratesio:alice\n$ cargo owner --add github:alice-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+
+    let response = cookie.add_named_owner("foo", "cratesio:alice").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cratesio:alice is already an owner"}]}"#);
+
+    // …while disambiguating to the GitHub `alice` invites the other account.
+    let response = cookie.add_named_owner("foo", "github:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user alice has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguate_with_github_prefix() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;

@@ -8,6 +8,7 @@ use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
+use crate::util::canon_username::canon_username;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
@@ -242,27 +243,31 @@ async fn modify_owners(
                 let mut msgs = Vec::with_capacity(logins.len());
                 for login in &logins {
                     let parsed_login = parse_login(login)?;
+                    let owner = resolve_unprefixed_login(conn, &parsed_login).await?;
+
                     let login_test = |owner: &Owner| -> bool {
+                        // assume a case where there is a user with username alice, and a different username with the github username alice. does this currently work?
                         match parsed_login {
                             // match against the team's github:org:team username
                             Login::GitHubTeam { .. } => {
-                                owner.username().to_lowercase() == login.to_lowercase()
+                                canon_username(owner.username()) == canon_username(login)
                             }
                             // match against the owner's github username
                             Login::GitHub(username) => owner
                                 .gh_login()
-                                .is_some_and(|u| u.to_lowercase() == username.to_lowercase()),
+                                .is_some_and(|u| canon_username(u) == canon_username(username)),
                             // match against the owner's cratesio username
                             Login::CratesIo(u) | Login::Unprefixed(u) => {
-                                owner.username().to_lowercase() == u.to_lowercase()
+                                canon_username(owner.username()) == canon_username(u)
                             }
                         }
                     };
+
                     if owners.iter().any(login_test) {
                         return Err(bad_request(format_args!("{login} is already an owner")));
                     }
 
-                    match add_owner(&app, conn, user, &krate, parsed_login).await {
+                    match add_owner(&app, conn, user, &krate, parsed_login, owner).await {
                         // A user was successfully invited, and they must accept
                         // the invite, and a best-effort attempt should be made
                         // to email them the invite token for one-click
@@ -344,14 +349,51 @@ async fn modify_owners(
     Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
+/// Check if an unprefixed login is ambiguous.
+///
+/// Returns `Ok(None)` for prefixed logins, and Ok(user) for a resolved unprefixed login.
+async fn resolve_unprefixed_login(
+    conn: &mut AsyncPgConnection,
+    login: &Login<'_>,
+) -> Result<Option<User>, BoxedAppError> {
+    let Login::Unprefixed(username) = login else {
+        return Ok(None);
+    };
+
+    let Some(user) = User::find_by_username(conn, username).await.optional()? else {
+        return Err(bad_request(format_args!(
+            "could not find user with login `{username}`"
+        )));
+    };
+
+    if let Some(gh_login) = &user.gh_username
+        && canon_username(gh_login) != canon_username(&user.username)
+    {
+        let error = format_args!(
+            "username `{username}` is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n\n\
+             To confirm this is the account you want to add, please run one of the following:\n\n\
+             $ cargo owner --add cratesio:{username}\n\
+             $ cargo owner --add github:{gh_login}\n\n\
+             If this is not the account you want to add, verify the crates.io username of the account you want.",
+        );
+
+        return Err(bad_request(error));
+    }
+
+    Ok(Some(user))
+}
+
 /// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
+///
+/// `owner` is the resolved login if the supplied login was unprefixed. passing it here to avoid a duplicate `find_by_username()` request to the database.
 async fn add_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
     login: Login<'_>,
+    owner: Option<User>,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     match login {
         Login::GitHubTeam { login, org, team } => {
@@ -381,28 +423,9 @@ async fn add_owner(
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
         Login::Unprefixed(username) => {
-            // check if login is ambiguous
-            let user = User::find_by_username(conn, username)
-                .await
-                .optional()?
-                .ok_or_else(|| {
-                    bad_request(format_args!("could not find user with login `{username}`"))
-                })?;
-
-            if let Some(gh_login) = user.gh_username.to_owned()
-                && gh_login.to_lowercase() != user.username.to_lowercase()
-            {
-                let error = format_args!(
-                    "username `{username}` is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n\n\
-                     To confirm this is the account you want to add, please run one of the following:\n\n\
-                     $ cargo owner --add cratesio:{username}\n\
-                     $ cargo owner --add github:{gh_login}\n\n\
-                     If this is not the account you want to add, verify the crates.io username of the account you want.",
-                );
-
-                return Err(OwnerAddError::AppError(bad_request(error)));
-            }
-
+            let user = owner.ok_or_else(|| {
+                bad_request(format_args!("could not find user with login `{username}`"))
+            })?;
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
     }
@@ -421,10 +444,10 @@ async fn remove_owner(
         Login::Unprefixed(username) => {
             let cratesio_owner_to_remove = owners
                 .iter()
-                .find(|o| o.username().to_lowercase() == username.to_lowercase());
+                .find(|o| canon_username(o.username()) == canon_username(username));
             let github_owner_to_remove = owners.iter().find(|o| {
                 o.gh_login()
-                    .is_some_and(|u| u.to_lowercase() == username.to_lowercase())
+                    .is_some_and(|u| canon_username(u) == canon_username(username))
             });
 
             // check if ambiguous. assumes usernames are unique on separate services.
@@ -465,7 +488,7 @@ enum Login<'a> {
     },
     /// GitHub user (e.g. `github:username`).
     GitHub(&'a str),
-    /// crates.io user (`crates.io:username`).
+    /// crates.io user (`cratesio:username`).
     CratesIo(&'a str),
     /// Unprefixed username (`username` without any prefix)
     Unprefixed(&'a str),

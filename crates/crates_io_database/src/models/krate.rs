@@ -213,7 +213,7 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    /// Remove owner given a cratesio username
+    /// Remove owner given a cratesio username.
     pub async fn owner_remove_with_username(
         &self,
         mut conn: &AsyncPgConnection,
@@ -244,7 +244,7 @@ impl Crate {
             WHERE crate_owners.crate_id = crate_owners_with_login.crate_id
                 AND crate_owners.owner_id = crate_owners_with_login.owner_id
                 AND crate_owners.owner_kind = crate_owners_with_login.owner_kind
-                AND lower(crate_owners_with_login.login) = lower($2);"#,
+                AND canon_username(crate_owners_with_login.login) = canon_username($2);"#,
         );
 
         let num_updated_rows = query
@@ -260,7 +260,7 @@ impl Crate {
         Ok(())
     }
 
-    /// Remove owner given a github username
+    /// Remove owner given a github username.
     pub async fn owner_remove_with_gh_login(
         &self,
         mut conn: &AsyncPgConnection,
@@ -284,7 +284,7 @@ impl Crate {
             WHERE crate_owners.crate_id = crate_owners_with_gh_login.crate_id
                 AND crate_owners.owner_id = crate_owners_with_gh_login.owner_id
                 AND crate_owners.owner_kind = crate_owners_with_gh_login.owner_kind
-                AND lower(crate_owners_with_gh_login.login) = lower($2);"#,
+                AND canon_username(crate_owners_with_gh_login.login) = canon_username($2);"#,
         );
 
         let num_updated_rows = query

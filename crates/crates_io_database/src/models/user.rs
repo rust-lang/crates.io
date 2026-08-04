@@ -7,8 +7,8 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-use crate::fns::lower;
 use crate::models::{Crate, CrateOwner, Email, OwnerKind};
+use crate::fns::canon_username;
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
 /// Public data for a crates.io user.
@@ -79,7 +79,7 @@ impl User {
         username: &str,
     ) -> QueryResult<User> {
         User::query()
-            .filter(lower(users::username).eq(username.to_lowercase()))
+            .filter(canon_username(users::username).eq(canon_username(username)))
             .filter(users::gh_id.ne(-1))
             .order(users::gh_id.desc())
             .first(&mut conn)
@@ -201,7 +201,7 @@ impl OauthGithub {
         login: &str,
     ) -> QueryResult<OauthGithub> {
         oauth_github::table
-            .filter(lower(oauth_github::login).eq(login.to_lowercase()))
+            .filter(canon_username(oauth_github::login).eq(canon_username(login)))
             .filter(oauth_github::account_id.ne(-1))
             .order(oauth_github::account_id.desc())
             .first(&mut conn)
@@ -236,5 +236,55 @@ impl NewOauthGithub<'_> {
             .await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crates_io_test_db::TestDatabase;
+
+    async fn insert_user(
+        conn: &AsyncPgConnection,
+        username: &str,
+        gh_login: &str,
+        account_id: i32,
+    ) -> QueryResult<i32> {
+        let user_id = NewUser::builder()
+            .gh_id(account_id)
+            .gh_login(gh_login)
+            .username(username)
+            .gh_encrypted_token(&[])
+            .build()
+            .insert(conn)
+            .await?;
+
+        NewOauthGithub::builder()
+            .account_id(account_id as i64)
+            .encrypted_token(&[])
+            .login(gh_login)
+            .user_id(user_id)
+            .build()
+            .insert(conn)
+            .await?;
+
+        Ok(user_id)
+    }
+
+    #[tokio::test]
+    async fn find_by_login_returns_highest_account_id_among_duplicate_case_insensitive_logins() {
+        let test_db = TestDatabase::new();
+        let conn = test_db.async_connect().await;
+
+        insert_user(&conn, "alice", "alice", 100).await.unwrap();
+        let user_id = insert_user(&conn, "alice", "ALICE", 200).await.unwrap();
+
+        for login in ["alice", "ALICE", "Alice"] {
+            let found = OauthGithub::find_by_login(&conn, login).await.unwrap();
+
+            assert_eq!(found.account_id, 200, "find_by_login({login:?})");
+            assert_eq!(found.user_id, user_id, "find_by_login({login:?})");
+            assert_eq!(found.login, "ALICE", "find_by_login({login:?})");
+        }
     }
 }
