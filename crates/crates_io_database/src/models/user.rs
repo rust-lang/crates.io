@@ -254,7 +254,6 @@ mod tests {
             .gh_id(account_id)
             .gh_login(gh_login)
             .username(username)
-            .gh_encrypted_token(&[])
             .build()
             .insert(conn)
             .await?;
