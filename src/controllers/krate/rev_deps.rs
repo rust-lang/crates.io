@@ -35,7 +35,11 @@ pub struct RevDepsMeta {
     path = "/api/v1/crates/{name}/reverse_dependencies",
     params(CratePath, PaginationQueryParams),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(RevDepsResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(RevDepsResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_reverse_dependencies(
     app: AppState,

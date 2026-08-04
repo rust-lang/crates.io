@@ -39,6 +39,8 @@ pub struct UrlResponse {
     responses(
         (status = 302, description = "Successful Response (default)", headers(("location" = String, description = "The URL to the crate file."))),
         (status = 200, description = "Successful Response (for `content-type: application/json`)", body = inline(UrlResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
 pub async fn download_version(
@@ -85,7 +87,11 @@ pub struct DownloadsResponse {
     path = "/api/v1/crates/{name}/{version}/downloads",
     params(CrateVersionPath, DownloadsQueryParams),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(DownloadsResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(DownloadsResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_version_downloads(
     app: AppState,

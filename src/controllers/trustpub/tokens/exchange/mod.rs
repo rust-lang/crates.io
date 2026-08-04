@@ -27,7 +27,11 @@ use tracing::warn;
     path = "/api/v1/trusted_publishing/tokens",
     request_body = inline(json::ExchangeRequest),
     tag = "trusted_publishing",
-    responses((status = 200, description = "Successful Response", body = inline(json::ExchangeResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(json::ExchangeResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn exchange_trustpub_token(
     state: AppState,

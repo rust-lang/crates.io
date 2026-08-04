@@ -21,7 +21,11 @@ use tracing::error;
     ),
     tag = "versions",
     extensions(("x-internal" = json!(true))),
-    responses((status = 201, description = "Successful Response")),
+    responses(
+        (status = 201, description = "Successful Response"),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn rebuild_version_docs(
     app: AppState,

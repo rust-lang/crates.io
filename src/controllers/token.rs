@@ -64,7 +64,11 @@ pub struct ApiTokenListResponse {
     security(("cookie" = [])),
     tag = "api_tokens",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(ApiTokenListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(ApiTokenListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_api_tokens(
     app: AppState,
@@ -119,7 +123,11 @@ pub struct CreateResponse {
     security(("cookie" = [])),
     tag = "api_tokens",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(CreateResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(CreateResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn create_api_token(
     app: AppState,
@@ -250,7 +258,11 @@ pub struct ApiTokenGetResponse {
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response", body = inline(ApiTokenGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(ApiTokenGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_api_token(
     app: AppState,
@@ -281,7 +293,11 @@ pub async fn find_api_token(
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response", body = Object)),
+    responses(
+        (status = 200, description = "Successful Response", body = Object),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn revoke_api_token(
     app: AppState,
@@ -308,7 +324,11 @@ pub async fn revoke_api_token(
     path = "/api/v1/tokens/current",
     security(("api_token" = [])),
     tag = "api_tokens",
-    responses((status = 204, description = "Successful Response")),
+    responses(
+        (status = 204, description = "Successful Response"),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;

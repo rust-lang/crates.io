@@ -48,7 +48,11 @@ pub struct CategoryListMeta {
     path = "/api/v1/categories",
     params(CategoryListQueryParams, PaginationQueryParams),
     tag = "categories",
-    responses((status = 200, description = "Successful Response", body = inline(CategoryListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(CategoryListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_categories(
     app: AppState,
@@ -91,7 +95,11 @@ pub struct CategoryGetResponse {
         ("category" = String, Path, description = "Name of the category"),
     ),
     tag = "categories",
-    responses((status = 200, description = "Successful Response", body = inline(CategoryGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(CategoryGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_category(
     state: AppState,
@@ -152,7 +160,11 @@ pub struct ListSlugsResponse {
     get,
     path = "/api/v1/category_slugs",
     tag = "categories",
-    responses((status = 200, description = "Successful Response", body = inline(ListSlugsResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(ListSlugsResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_category_slugs(state: AppState) -> AppResult<Json<ListSlugsResponse>> {
     let mut conn = state.db_read().await?;

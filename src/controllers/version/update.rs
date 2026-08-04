@@ -46,7 +46,11 @@ pub struct UpdateResponse {
         ("cookie" = []),
     ),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(UpdateResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(UpdateResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn update_version(
     state: AppState,

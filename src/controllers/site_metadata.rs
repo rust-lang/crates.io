@@ -36,7 +36,11 @@ pub struct MetadataResponse<'a> {
     get,
     path = "/api/v1/site_metadata",
     tag = "other",
-    responses((status = 200, description = "Successful Response", body = inline(MetadataResponse<'_>))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(MetadataResponse<'_>)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
     let read_only = state.config.db.are_all_read_only();

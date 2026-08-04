@@ -37,7 +37,11 @@ pub struct UsersResponse {
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(UsersResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(UsersResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
     let conn = state.db_read().await?;
@@ -71,7 +75,11 @@ pub struct TeamsResponse {
     path = "/api/v1/crates/{name}/owner_team",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(TeamsResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(TeamsResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json<TeamsResponse>> {
     let conn = state.db_read().await?;
@@ -94,7 +102,11 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
     path = "/api/v1/crates/{name}/owner_user",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(UsersResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(UsersResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
     let conn = state.db_read().await?;
@@ -133,7 +145,11 @@ pub struct ModifyResponse {
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(ModifyResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(ModifyResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn add_owners(
     app: AppState,
@@ -155,7 +171,11 @@ pub async fn add_owners(
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(ModifyResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(ModifyResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn remove_owners(
     app: AppState,

@@ -18,14 +18,15 @@ fn json_error(detail: &str, status: StatusCode) -> Response {
 }
 
 /// The JSON envelope returned for API errors.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ApiErrorResponse<'a> {
     /// The errors that prevented the request from succeeding.
+    #[schema(inline)]
     errors: [ApiErrorDetail<'a>; 1],
 }
 
 /// A human-readable API error.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 struct ApiErrorDetail<'a> {
     /// A description of the error.
     detail: &'a str,

@@ -28,7 +28,11 @@ const MAX_CONFIGS_PER_CRATE: usize = 5;
     security(("cookie" = []), ("api_token" = [])),
     request_body = inline(json::CreateRequest),
     tag = "trusted_publishing",
-    responses((status = 200, description = "Successful Response", body = inline(json::CreateResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(json::CreateResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn create_trustpub_github_config(
     state: AppState,

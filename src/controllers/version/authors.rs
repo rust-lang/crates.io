@@ -11,7 +11,11 @@ use axum_extra::response::ErasedJson;
     path = "/api/v1/crates/{name}/{version}/authors",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses(
+        (status = 200, description = "Successful Response"),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 #[deprecated]
 pub async fn get_version_authors() -> ErasedJson {

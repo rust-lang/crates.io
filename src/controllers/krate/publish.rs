@@ -96,7 +96,11 @@ impl AuthType {
         ("cookie" = []),
     ),
     tag = "publish",
-    responses((status = 200, description = "Successful Response", body = inline(GoodCrate))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(GoodCrate)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();

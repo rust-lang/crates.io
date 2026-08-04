@@ -24,6 +24,8 @@ pub struct UrlResponse {
     responses(
         (status = 302, description = "Successful Response (default)", headers(("location" = String, description = "The URL to the readme file."))),
         (status = 200, description = "Successful Response (for `content-type: application/json`)", body = inline(UrlResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
 pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
