@@ -7,8 +7,8 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::fns::canon_username;
+use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
 /// Public data for a crates.io user.
