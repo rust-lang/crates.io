@@ -11,16 +11,14 @@ const endpointScopesSchema = v.nullish(v.array(v.picklist(endpointScopeValues)))
 export default http.put('/api/v1/me/tokens', async ({ request, response }) => {
   let { user } = getSession();
   if (!user) {
-    return response.untyped(
-      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
-    );
+    return response('4XX').json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
   let json = await request.json();
 
   let endpointScopes = v.safeParse(endpointScopesSchema, json.api_token.endpoint_scopes);
   if (!endpointScopes.success) {
-    return response.untyped(Response.json({ errors: [{ detail: 'invalid endpoint scope' }] }, { status: 400 }));
+    return response('4XX').json({ errors: [{ detail: 'invalid endpoint scope' }] }, { status: 400 });
   }
 
   let token = await db.apiToken.create({

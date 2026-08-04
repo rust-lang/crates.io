@@ -1,12 +1,12 @@
 import { db } from '../../index.js';
 import { serializeDependency } from '../../serializers/dependency.js';
 import { serializeVersion } from '../../serializers/version.js';
-import { notFound, pageParams } from '../../utils/handlers.js';
+import { notFoundError, pageParams } from '../../utils/handlers.js';
 import { http } from '../../utils/openapi-http.js';
 
 export default http.get('/api/v1/crates/{name}/reverse_dependencies', ({ request, params, response }) => {
   let crate = db.crate.findFirst(q => q.where({ name: params.name }));
-  if (!crate) return response.untyped(notFound());
+  if (!crate) return response('4XX').json(notFoundError(), { status: 404 });
 
   let { start, end } = pageParams(request);
 

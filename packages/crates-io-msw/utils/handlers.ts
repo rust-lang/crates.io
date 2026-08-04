@@ -1,9 +1,8 @@
 import type { DefaultBodyType, StrictRequest } from 'msw';
 
-import { HttpResponse } from 'msw';
-
-export function notFound() {
-  return HttpResponse.json({ errors: [{ detail: 'Not Found' }] }, { status: 404 });
+/** The standard JSON body for a 404 API error. */
+export function notFoundError() {
+  return { errors: [{ detail: 'Not Found' }] };
 }
 
 export function pageParams(request: StrictRequest<DefaultBodyType>) {
