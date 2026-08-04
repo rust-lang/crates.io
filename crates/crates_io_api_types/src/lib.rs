@@ -556,7 +556,7 @@ impl EncodableOwner {
         Self {
             id: user.id,
             url: Some(format!("https://github.com/{}", user.gh_login)),
-            login: user.gh_login,
+            login: user.username,
             avatar: user.gh_avatar,
             name: user.name,
             kind: String::from("user"),
@@ -722,6 +722,7 @@ impl EncodablePrivateUser {
             name,
             gh_login,
             gh_avatar,
+            username,
             is_admin,
             publish_notifications,
             created_at,
@@ -735,7 +736,7 @@ impl EncodablePrivateUser {
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
-            login: gh_login,
+            login: username,
             name,
             url: Some(url),
             is_admin,
@@ -784,6 +785,7 @@ impl From<PublicUser> for EncodablePublicUser {
             name,
             gh_login,
             gh_avatar,
+            username,
             created_at,
             ..
         } = user;
@@ -791,7 +793,7 @@ impl From<PublicUser> for EncodablePublicUser {
         EncodablePublicUser {
             id,
             avatar: gh_avatar,
-            login: gh_login,
+            login: username,
             name,
             url,
             created_at,

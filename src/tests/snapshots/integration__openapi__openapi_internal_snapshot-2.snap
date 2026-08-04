@@ -6579,7 +6579,7 @@ expression: response.json()
         "operationId": "find_user",
         "parameters": [
           {
-            "description": "Login name of the user",
+            "description": "crates.io username",
             "in": "path",
             "name": "user",
             "required": true,

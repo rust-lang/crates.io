@@ -1,7 +1,10 @@
 use crate::util::{RequestHelper, TestApp};
 use crates_io::models::{NewUser, User};
+use crates_io::schema::users;
 use crates_io::views::EncodablePublicUser;
 use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
 use serde::Deserialize;
 
@@ -13,15 +16,26 @@ pub struct UserShowPublicResponse {
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
     let (app, anon, _) = TestApp::init().with_user().await;
-    app.db_new_user("Bar").await;
+    let mut conn = app.db_conn().await;
+
+    let bar = app.db_new_user("github-Bar").await;
+    diesel::update(users::table.find(bar.as_model().id))
+        .set(users::username.eq("crates-Bar"))
+        .execute(&mut conn)
+        .await
+        .unwrap();
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
 
     // Lookup by username is case insensitive; returned data uses capitalization in database
-    let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").await.good();
-    assert_eq!(json.user.login, "Bar");
-    assert_eq!(json.user.url, "https://github.com/Bar");
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/crates_bar").await.good();
+    assert_eq!(json.user.login, "crates-Bar");
+    assert_eq!(json.user.url, "https://github.com/github-Bar");
+
+    // GitHub logins are not used to resolve crates.io users
+    let response = anon.get::<()>("/api/v1/users/github-Bar").await;
+    assert_snapshot!(response.status(), @"404 Not Found");
 
     // Username not in database results in 404
     let response = anon.get::<()>("/api/v1/users/not_a_user").await;
