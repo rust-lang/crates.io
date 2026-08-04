@@ -4,7 +4,7 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
-use crate::models::{Crate, CrateOwnerInvitation, User};
+use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
@@ -166,8 +166,6 @@ async fn prepare_list(
     let config = &state.config;
 
     let mut crate_names = HashMap::new();
-    let mut users = IndexMap::new();
-    users.insert(user.id, user.clone());
 
     let sql_filter: Box<dyn BoxableExpression<crate_owner_invitations::table, Pg, SqlType = Bool>> =
         match filter {
@@ -271,10 +269,11 @@ async fn prepare_list(
             std::iter::once(invite.invited_user_id)
                 .chain(std::iter::once(invite.invited_by_user_id))
         })
-        .filter(|id| !users.contains_key(id))
         .collect::<Vec<_>>();
+
+    let mut users = IndexMap::new();
     if !missing_users.is_empty() {
-        let new_users: Vec<User> = User::query()
+        let new_users: Vec<PublicUser> = PublicUser::query()
             .filter(users::id.eq_any(missing_users))
             .load(&mut conn)
             .await?;

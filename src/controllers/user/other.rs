@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::models::{CrateOwner, OwnerKind, User};
+use crate::models::{CrateOwner, OwnerKind, PublicUser};
 use crate::schema::{crate_downloads, crate_owners, crates};
 use crate::util::errors::AppResult;
 use crate::views::EncodablePublicUser;
@@ -36,7 +36,7 @@ pub async fn find_user(
     use crate::schema::users::dsl::{gh_login, id};
 
     let name = lower(&user_name);
-    let user: User = User::query()
+    let user: PublicUser = PublicUser::query()
         .filter(lower(gh_login).eq(name))
         .order(id.desc())
         .first(&mut conn)

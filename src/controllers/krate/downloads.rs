@@ -6,15 +6,14 @@
 use crate::app::AppState;
 use crate::controllers::krate::CratePath;
 use crate::models::download::Version;
-use crate::models::{User, Version as FullVersion, VersionDownload, VersionOwnerAction};
-use crate::schema::{version_downloads, version_owner_actions, versions};
+use crate::models::{PublicUser, Version as FullVersion, VersionDownload, VersionOwnerAction};
+use crate::schema::{oauth_github, users, version_downloads, version_owner_actions, versions};
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::views::{EncodableVersion, EncodableVersionDownload};
 use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
 use crates_io_database::fns::to_char;
-use crates_io_database::schema::{oauth_github, users};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
@@ -160,7 +159,7 @@ pub async fn get_crate_downloads(
     }))
 }
 
-type VersionsAndPublishers = (FullVersion, Option<User>);
+type VersionsAndPublishers = (FullVersion, Option<PublicUser>);
 
 async fn load_versions_and_publishers(
     mut conn: &AsyncPgConnection,
@@ -181,13 +180,13 @@ async fn load_actions(
     mut conn: &AsyncPgConnection,
     versions: &[Version],
     includes: bool,
-) -> QueryResult<Vec<(VersionOwnerAction, User)>> {
+) -> QueryResult<Vec<(VersionOwnerAction, PublicUser)>> {
     if !includes {
         return Ok(vec![]);
     }
     VersionOwnerAction::belonging_to(versions)
         .inner_join(users::table.left_join(oauth_github::table))
-        .select((VersionOwnerAction::as_select(), User::as_select()))
+        .select((VersionOwnerAction::as_select(), PublicUser::as_select()))
         .order(version_owner_actions::id)
         .load(&mut conn)
         .await

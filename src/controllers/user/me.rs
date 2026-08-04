@@ -3,7 +3,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
-use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
+use crate::models::{CrateOwner, Follow, OwnerKind, PublicUser, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, oauth_github, users, versions};
 use crate::util::errors::AppResult;
 use crate::util::no_store;
@@ -122,10 +122,10 @@ pub async fn get_authenticated_user_updates(
         .left_outer_join(users::table.left_join(oauth_github::table))
         .filter(crates::id.eq_any(followed_crates))
         .order(versions::created_at.desc())
-        .select(<(Version, CrateName, Option<User>)>::as_select())
+        .select(<(Version, CrateName, Option<PublicUser>)>::as_select())
         .pages_pagination(PaginationOptions::builder().gather(&req)?);
 
-    let data: Paginated<(Version, CrateName, Option<User>)> = query.load(&mut conn).await?;
+    let data: Paginated<(Version, CrateName, Option<PublicUser>)> = query.load(&mut conn).await?;
 
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();

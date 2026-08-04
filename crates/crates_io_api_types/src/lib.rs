@@ -8,8 +8,8 @@ pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
 use chrono::{DateTime, Utc};
 use crates_io_database::models::{
-    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
-    TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
+    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, PublicUser, ReverseDependency,
+    Team, TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
 };
 use serde::{Deserialize, Serialize};
 
@@ -552,7 +552,7 @@ pub struct EncodableOwner {
 }
 
 impl EncodableOwner {
-    pub fn from_user(user: User) -> Self {
+    pub fn from_user(user: PublicUser) -> Self {
         Self {
             id: user.id,
             url: Some(format!("https://github.com/{}", user.gh_login)),
@@ -571,15 +571,6 @@ impl EncodableOwner {
             avatar: team.avatar,
             name: team.name,
             kind: String::from("team"),
-        }
-    }
-}
-
-impl From<Owner> for EncodableOwner {
-    fn from(owner: Owner) -> Self {
-        match owner {
-            Owner::User(user) => Self::from_user(user),
-            Owner::Team(team) => Self::from_team(team),
         }
     }
 }
@@ -785,10 +776,10 @@ pub struct EncodablePublicUser {
     pub created_at: Option<DateTime<Utc>>,
 }
 
-/// Converts a `User` model into an `EncodablePublicUser` for JSON serialization.
-impl From<User> for EncodablePublicUser {
-    fn from(user: User) -> Self {
-        let User {
+/// Converts a `PublicUser` model into an `EncodablePublicUser` for JSON serialization.
+impl From<PublicUser> for EncodablePublicUser {
+    fn from(user: PublicUser) -> Self {
+        let PublicUser {
             id,
             name,
             gh_login,
@@ -958,8 +949,8 @@ impl EncodableVersion {
     pub fn from(
         version: Version,
         crate_name: &str,
-        published_by: Option<User>,
-        audit_actions: Vec<(VersionOwnerAction, User)>,
+        published_by: Option<PublicUser>,
+        audit_actions: Vec<(VersionOwnerAction, PublicUser)>,
     ) -> Self {
         let Version {
             id,
@@ -1024,7 +1015,7 @@ impl EncodableVersion {
             repository,
             trustpub_data,
             linecounts,
-            published_by: published_by.map(User::into),
+            published_by: published_by.map(PublicUser::into),
             audit_actions: audit_actions
                 .into_iter()
                 .map(|(audit_action, user)| EncodableAuditAction {

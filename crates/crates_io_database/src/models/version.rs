@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
-use crate::models::{Crate, TrustpubData, User};
+use crate::models::{Crate, PublicUser, TrustpubData};
 use crate::schema::{readme_renderings, users, versions};
 
 #[derive(Clone, Identifiable, Associations, Debug, HasQuery)]
@@ -64,9 +64,12 @@ impl Version {
 
     /// Gets the User who ran `cargo publish` for this version, if recorded.
     /// Not for use when you have a group of versions you need the publishers for.
-    pub async fn published_by(&self, mut conn: &AsyncPgConnection) -> QueryResult<Option<User>> {
+    pub async fn published_by(
+        &self,
+        mut conn: &AsyncPgConnection,
+    ) -> QueryResult<Option<PublicUser>> {
         match self.published_by {
-            Some(pb) => User::query()
+            Some(pb) => PublicUser::query()
                 .filter(users::id.eq(pb))
                 .first(&mut conn)
                 .await

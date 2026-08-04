@@ -1,4 +1,4 @@
-use crate::models::{ApiToken, User, Version};
+use crate::models::{ApiToken, PublicUser, User, Version};
 use crate::pg_enum;
 use crate::schema::*;
 use bon::Builder;
@@ -57,13 +57,13 @@ impl VersionOwnerAction {
     pub async fn by_version(
         mut conn: &AsyncPgConnection,
         version: &Version,
-    ) -> QueryResult<Vec<(Self, User)>> {
+    ) -> QueryResult<Vec<(Self, PublicUser)>> {
         use version_owner_actions::dsl::version_id;
 
         version_owner_actions::table
             .filter(version_id.eq(version.id))
             .inner_join(users::table.left_join(oauth_github::table))
-            .select((VersionOwnerAction::as_select(), User::as_select()))
+            .select((VersionOwnerAction::as_select(), PublicUser::as_select()))
             .order(version_owner_actions::dsl::id)
             .load(&mut conn)
             .await
@@ -72,10 +72,10 @@ impl VersionOwnerAction {
     pub async fn for_versions(
         mut conn: &AsyncPgConnection,
         versions: &[&Version],
-    ) -> QueryResult<Vec<Vec<(Self, User)>>> {
+    ) -> QueryResult<Vec<Vec<(Self, PublicUser)>>> {
         Ok(Self::belonging_to(versions)
             .inner_join(users::table.left_join(oauth_github::table))
-            .select((VersionOwnerAction::as_select(), User::as_select()))
+            .select((VersionOwnerAction::as_select(), PublicUser::as_select()))
             .order(version_owner_actions::dsl::id)
             .load(&mut conn)
             .await?
