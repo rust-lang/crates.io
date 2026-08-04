@@ -101,8 +101,9 @@ impl UpstreamIndex {
 
         // The index format consists of one JSON object per line
         // It is not a JSON array
-        let lines = std::str::from_utf8(content)?.lines();
-        let versions = lines.map(serde_json::from_str).collect::<Result<_, _>>()?;
+        let versions = serde_json::Deserializer::from_slice(content)
+            .into_iter::<crate::Crate>()
+            .collect::<Result<_, _>>()?;
 
         Ok(versions)
     }

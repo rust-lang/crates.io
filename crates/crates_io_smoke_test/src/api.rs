@@ -72,9 +72,10 @@ impl ApiClient {
         let response = response.error_for_status()?;
         let text = response.text().await?;
 
-        text.lines()
-            .map(|line| serde_json::from_str(line).map_err(Into::into))
-            .collect()
+        serde_json::Deserializer::from_str(&text)
+            .into_iter::<crates_io_index::Crate>()
+            .collect::<Result<_, _>>()
+            .map_err(Into::into)
     }
 
     pub async fn load_from_git_index(
@@ -91,9 +92,10 @@ impl ApiClient {
         let response = response.error_for_status()?;
         let text = response.text().await?;
 
-        text.lines()
-            .map(|line| serde_json::from_str(line).map_err(Into::into))
-            .collect()
+        serde_json::Deserializer::from_str(&text)
+            .into_iter::<crates_io_index::Crate>()
+            .collect::<Result<_, _>>()
+            .map_err(Into::into)
     }
 }
 
