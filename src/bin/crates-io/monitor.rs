@@ -1,5 +1,6 @@
-//! Checks application invariants, pages whoever is on call when they fail, and
-//! optionally submits the results to Datadog as service checks.
+//! Checks application invariants and reports the results to configured monitoring providers.
+//!
+//! PagerDuty reporting can be disabled with `PAGERDUTY_ENABLED=false`.
 //!
 //! Usage:
 //!     cargo run -- monitor
@@ -45,8 +46,12 @@ struct CheckResult {
 
 #[tokio::main]
 pub async fn run() -> Result<()> {
-    let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
-    let pagerduty = PagerdutyClient::new(service_key);
+    let pagerduty = if var_parsed("PAGERDUTY_ENABLED")?.unwrap_or(true) {
+        let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
+        Some(PagerdutyClient::new(service_key))
+    } else {
+        None
+    };
 
     let datadog_service_checks_enabled = var_parsed("DD_SERVICE_CHECKS_ENABLED")?.unwrap_or(false);
     let datadog_client = if datadog_service_checks_enabled {
@@ -88,10 +93,14 @@ pub async fn run() -> Result<()> {
         }
     };
 
-    let pagerduty_reporting = report_to_pagerduty(&pagerduty, &results);
-    let (_, pagerduty_result) = tokio::join!(datadog_reporting, pagerduty_reporting);
-
-    pagerduty_result
+    if let Some(pagerduty) = pagerduty {
+        let pagerduty_reporting = report_to_pagerduty(&pagerduty, &results);
+        let (_, pagerduty_result) = tokio::join!(datadog_reporting, pagerduty_reporting);
+        pagerduty_result
+    } else {
+        datadog_reporting.await;
+        Ok(())
+    }
 }
 
 /// Checks for old background jobs that are not currently running.
