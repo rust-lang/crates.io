@@ -72,6 +72,10 @@ pub async fn run() -> Result<()> {
         check_spam_attack(conn).await?,
     ];
 
+    for result in &results {
+        println!("{}", format_check_result(result));
+    }
+
     let datadog_reporting = async {
         if let Some(datadog) = datadog_client {
             let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
@@ -254,6 +258,14 @@ fn datadog_service_check(result: &CheckResult, host_name: &str, tags: &[String])
         .build()
 }
 
+/// Formats a provider-independent monitor result for command output.
+fn format_check_result(result: &CheckResult) -> String {
+    match result.status {
+        CheckStatus::Healthy => result.message.clone(),
+        CheckStatus::Unhealthy => format!("Monitor check failed: {}", result.message),
+    }
+}
+
 /// Reports monitor results to Datadog.
 async fn report_to_datadog(
     datadog: &DatadogClient,
@@ -272,11 +284,6 @@ async fn report_to_datadog(
 /// Reports monitor results to PagerDuty.
 async fn report_to_pagerduty(pagerduty: &PagerdutyClient, results: &[CheckResult]) -> Result<()> {
     for result in results {
-        match result.status {
-            CheckStatus::Healthy => println!("{}", result.message),
-            CheckStatus::Unhealthy => println!("Paging on-call: {}", result.message),
-        }
-
         let event = pagerduty_event(result);
         pagerduty.send(&event).await?;
     }
