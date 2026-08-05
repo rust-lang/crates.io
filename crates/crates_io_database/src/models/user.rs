@@ -248,10 +248,10 @@ mod tests {
         conn: &AsyncPgConnection,
         username: &str,
         gh_login: &str,
-        account_id: i32,
+        gh_id: i32,
     ) -> QueryResult<i32> {
         let user_id = NewUser::builder()
-            .gh_id(account_id)
+            .gh_id(gh_id)
             .gh_login(gh_login)
             .username(username)
             .build()
@@ -259,7 +259,7 @@ mod tests {
             .await?;
 
         NewOauthGithub::builder()
-            .account_id(account_id as i64)
+            .account_id(gh_id as i64)
             .encrypted_token(&[])
             .login(gh_login)
             .user_id(user_id)
@@ -271,19 +271,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn find_by_login_returns_highest_account_id_among_duplicate_case_insensitive_logins() {
+    async fn test_find_by_login_returns_highest_account_id_account() {
         let test_db = TestDatabase::new();
         let conn = test_db.async_connect().await;
 
         insert_user(&conn, "alice", "alice", 100).await.unwrap();
-        let user_id = insert_user(&conn, "alice", "ALICE", 200).await.unwrap();
+        let user_id = insert_user(&conn, "alice", "Alice", 200).await.unwrap();
 
-        for login in ["alice", "ALICE", "Alice"] {
-            let found = OauthGithub::find_by_login(&conn, login).await.unwrap();
+        // case-insensitive checks
+        for login in ["alice", "Alice", "ALICE"] {
+            let user = OauthGithub::find_by_login(&conn, login).await.unwrap();
 
-            assert_eq!(found.account_id, 200, "find_by_login({login:?})");
-            assert_eq!(found.user_id, user_id, "find_by_login({login:?})");
-            assert_eq!(found.login, "ALICE", "find_by_login({login:?})");
+            assert_eq!(user.account_id, 200);
+            assert_eq!(user.user_id, user_id);
+            assert_eq!(user.login, "Alice");
         }
     }
 }

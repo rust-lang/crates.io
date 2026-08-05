@@ -246,17 +246,13 @@ async fn modify_owners(
                     let owner = resolve_unprefixed_login(conn, &parsed_login).await?;
 
                     let login_test = |owner: &Owner| -> bool {
-                        // assume a case where there is a user with username alice, and a different username with the github username alice. does this currently work?
                         match parsed_login {
-                            // match against the team's github:org:team username
                             Login::GitHubTeam { .. } => {
                                 canon_username(owner.username()) == canon_username(login)
                             }
-                            // match against the owner's github username
                             Login::GitHub(username) => owner
                                 .gh_login()
                                 .is_some_and(|u| canon_username(u) == canon_username(username)),
-                            // match against the owner's cratesio username
                             Login::CratesIo(u) | Login::Unprefixed(u) => {
                                 canon_username(owner.username()) == canon_username(u)
                             }
