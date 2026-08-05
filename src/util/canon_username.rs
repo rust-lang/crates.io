@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn normalizes_case_and_separators() {
         for &(input, expected) in USERNAMES {
-            assert_eq!(canon_username(input), expected, "canon_username({input:?})");
+            assert_eq!(canon_username(input), expected);
         }
     }
 
@@ -59,7 +59,7 @@ mod tests {
                 .await
                 .unwrap();
 
-            assert_eq!(canon_username(input), from_sql, "canon_username({input:?})");
+            assert_eq!(canon_username(input), from_sql);
         }
     }
 }
