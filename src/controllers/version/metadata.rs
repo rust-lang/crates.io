@@ -25,7 +25,11 @@ pub struct VersionGetResponse {
     path = "/api/v1/crates/{name}/{version}",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(VersionGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(VersionGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_version(
     state: AppState,

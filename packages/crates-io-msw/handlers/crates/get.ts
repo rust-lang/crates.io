@@ -3,7 +3,7 @@ import { serializeCategory } from '../../serializers/category.js';
 import { serializeCrate } from '../../serializers/crate.js';
 import { serializeKeyword } from '../../serializers/keyword.js';
 import { serializeVersion } from '../../serializers/version.js';
-import { notFound } from '../../utils/handlers.js';
+import { notFoundError } from '../../utils/handlers.js';
 import { http } from '../../utils/openapi-http.js';
 
 const DEFAULT_INCLUDES = ['versions', 'keywords', 'categories'];
@@ -12,7 +12,7 @@ export default http.get('/api/v1/crates/{name}', ({ request, params, response })
   let { name } = params;
   let canonicalName = toCanonicalName(name);
   let crate = db.crate.findFirst(q => q.where(crate => toCanonicalName(crate.name) === canonicalName));
-  if (!crate) return response.untyped(notFound());
+  if (!crate) return response('4XX').json(notFoundError(), { status: 404 });
 
   let versions = db.version.findMany(q => q.where(version => version.crate?.id === crate.id));
   versions.sort((a, b) => b.id - a.id);

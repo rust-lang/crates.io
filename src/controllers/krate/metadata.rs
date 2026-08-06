@@ -67,7 +67,11 @@ pub struct CrateGetResponse {
     get,
     path = "/api/v1/crates/new",
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(CrateGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(CrateGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_new_crate(
     app: AppState,
@@ -83,7 +87,11 @@ pub async fn find_new_crate(
     path = "/api/v1/crates/{name}",
     params(CratePath, FindQueryParams),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(CrateGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(CrateGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_crate(
     app: AppState,

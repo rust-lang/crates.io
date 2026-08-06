@@ -41,7 +41,11 @@ async fn follow_target(
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
@@ -66,7 +70,11 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
@@ -91,7 +99,11 @@ pub struct FollowingResponse {
     security(("cookie" = [])),
     tag = "crates",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(FollowingResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(FollowingResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_following_crate(
     app: AppState,

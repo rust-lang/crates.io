@@ -49,7 +49,11 @@ pub struct PatchResponse {
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(PatchResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(PatchResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn update_crate(
     app: AppState,

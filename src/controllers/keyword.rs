@@ -47,7 +47,11 @@ pub struct KeywordListMeta {
     path = "/api/v1/keywords",
     params(KeywordListQueryParams, PaginationQueryParams),
     tag = "keywords",
-    responses((status = 200, description = "Successful Response", body = inline(KeywordListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(KeywordListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_keywords(
     state: AppState,
@@ -88,7 +92,11 @@ pub struct KeywordGetResponse {
         ("keyword" = String, Path, description = "The keyword to find"),
     ),
     tag = "keywords",
-    responses((status = 200, description = "Successful Response", body = inline(KeywordGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(KeywordGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_keyword(
     Path(name): Path<String>,

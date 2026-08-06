@@ -24,7 +24,11 @@ use serde::Serialize;
     security(("cookie" = [])),
     tag = "users",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(EncodableMe)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_authenticated_user(
     app: AppState,
@@ -105,7 +109,11 @@ pub struct UpdatesResponseMeta {
     security(("cookie" = [])),
     tag = "versions",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(UpdatesResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(UpdatesResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_authenticated_user_updates(
     app: AppState,

@@ -44,7 +44,11 @@ pub struct LegacyListResponse {
     security(("cookie" = [])),
     tag = "owners",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(LegacyListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(LegacyListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_crate_owner_invitations_for_user(
     app: AppState,
@@ -113,7 +117,11 @@ pub struct CrateOwnerInvitationListQueryParams {
     security(("cookie" = [])),
     tag = "owners",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(PrivateListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(PrivateListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_crate_owner_invitations(
     app: AppState,
@@ -357,7 +365,11 @@ pub struct HandleResponse {
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(HandleResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(HandleResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn handle_crate_owner_invitation(
     state: AppState,
@@ -393,7 +405,11 @@ pub async fn handle_crate_owner_invitation(
         ("token" = String, Path, description = "Secret token sent to the user's email address"),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response", body = inline(HandleResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(HandleResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn accept_crate_owner_invitation_with_token(
     state: AppState,

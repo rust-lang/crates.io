@@ -28,7 +28,11 @@ use http::request::Parts;
         ("cookie" = []),
     ),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn yank_version(
     app: AppState,
@@ -48,7 +52,11 @@ pub async fn yank_version(
         ("cookie" = []),
     ),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn unyank_version(
     app: AppState,

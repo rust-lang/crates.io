@@ -14,8 +14,9 @@ export default http.get('/api/v1/crates', ({ request, response }) => {
   if (url.searchParams.get('following') === '1') {
     let { user } = getSession();
     if (!user) {
-      return response.untyped(
-        Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
+      return response('4XX').json(
+        { errors: [{ detail: 'must be logged in to perform that action' }] },
+        { status: 403 },
       );
     }
 

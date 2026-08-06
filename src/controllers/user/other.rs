@@ -25,7 +25,11 @@ pub struct UserGetResponse {
         ("user" = String, Path, description = "Login name of the user"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response", body = inline(UserGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(UserGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_user(
     state: AppState,
@@ -63,7 +67,11 @@ pub struct StatsResponse {
         ("id" = i32, Path, description = "ID of the user"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response", body = inline(StatsResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(StatsResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_user_stats(
     state: AppState,

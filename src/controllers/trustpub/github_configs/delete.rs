@@ -23,7 +23,11 @@ use tracing::warn;
     ),
     security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
-    responses((status = 204, description = "Successful Response")),
+    responses(
+        (status = 204, description = "Successful Response"),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn delete_trustpub_github_config(
     state: AppState,

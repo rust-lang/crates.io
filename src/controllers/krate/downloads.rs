@@ -75,7 +75,11 @@ pub struct ExtraDownload {
     path = "/api/v1/crates/{name}/downloads",
     params(CratePath, DownloadsQueryParams),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(DownloadsResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(DownloadsResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_crate_downloads(
     state: AppState,

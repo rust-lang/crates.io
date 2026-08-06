@@ -79,7 +79,11 @@ pub struct VersionListResponse {
     path = "/api/v1/crates/{name}/versions",
     params(CratePath, VersionListQueryParams, PaginationQueryParams),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(VersionListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(VersionListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_versions(
     state: AppState,

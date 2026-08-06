@@ -26,7 +26,11 @@ pub struct Response {
     path = "/api/v1/crates/{name}/{version}/dependencies",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response", body = inline(Response))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(Response)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_version_dependencies(
     state: AppState,

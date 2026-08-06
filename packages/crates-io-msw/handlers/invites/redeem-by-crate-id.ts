@@ -1,14 +1,12 @@
 import { db } from '../../index.js';
-import { notFound } from '../../utils/handlers.js';
+import { notFoundError } from '../../utils/handlers.js';
 import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
 export default http.put('/api/v1/me/crate_owner_invitations/{crate_id}', async ({ request, response }) => {
   let { user } = getSession();
   if (!user) {
-    return response.untyped(
-      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
-    );
+    return response('4XX').json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
   let body = await request.json();
@@ -17,7 +15,7 @@ export default http.put('/api/v1/me/crate_owner_invitations/{crate_id}', async (
   let invite = db.crateOwnerInvitation.findFirst(q =>
     q.where(invite => invite.crate.id === crateId && invite.invitee.id === user.id),
   );
-  if (!invite) return response.untyped(notFound());
+  if (!invite) return response('4XX').json(notFoundError(), { status: 404 });
 
   if (accepted) {
     await db.crateOwnership.create({ crate: invite.crate, user });

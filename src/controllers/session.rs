@@ -44,7 +44,11 @@ pub struct BeginResponse {
     path = "/api/private/session/begin",
     tag = "session",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(BeginResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
     let (url, state) = app
@@ -84,7 +88,11 @@ pub struct AuthorizeBody {
     tag = "session",
     request_body = inline(AuthorizeBody),
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(EncodableMe)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn authorize_session(
     app: AppState,
@@ -307,7 +315,11 @@ async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryRe
     security(("cookie" = [])),
     tag = "session",
     extensions(("x-internal" = json!(true))),
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn end_session(session: SessionExtension) -> OkResponse {
     session.remove("user_id");

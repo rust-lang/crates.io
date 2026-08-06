@@ -1,6 +1,6 @@
-use axum::Extension;
 use axum::response::{IntoResponse, Response};
-use axum_extra::json;
+use axum::{Extension, Json};
+use serde::Serialize;
 use std::borrow::Cow;
 use std::fmt;
 
@@ -13,8 +13,35 @@ use http::{StatusCode, header};
 
 /// Generates a response with the provided status and description as JSON
 fn json_error(detail: &str, status: StatusCode) -> Response {
-    let json = json!({ "errors": [{ "detail": detail }] });
+    let json = Json(ApiErrorDetail::from(detail).into_response());
     (status, json).into_response()
+}
+
+/// The JSON envelope returned for API errors.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ApiErrorResponse<'a> {
+    /// The errors that prevented the request from succeeding.
+    #[schema(inline)]
+    errors: [ApiErrorDetail<'a>; 1],
+}
+
+/// A human-readable API error.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+struct ApiErrorDetail<'a> {
+    /// A description of the error.
+    detail: &'a str,
+}
+
+impl<'a> ApiErrorDetail<'a> {
+    fn into_response(self) -> ApiErrorResponse<'a> {
+        ApiErrorResponse { errors: [self] }
+    }
+}
+
+impl<'a> From<&'a str> for ApiErrorDetail<'a> {
+    fn from(detail: &'a str) -> Self {
+        Self { detail }
+    }
 }
 
 // The following structs wrap owned data and provide a custom message to the user

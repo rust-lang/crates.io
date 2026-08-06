@@ -45,7 +45,11 @@ pub struct GitLabConfigListQueryParams {
     params(GitLabConfigListQueryParams, PaginationQueryParams),
     security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
-    responses((status = 200, description = "Successful Response", body = inline(GitLabConfigListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(GitLabConfigListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_trustpub_gitlab_configs(
     state: AppState,

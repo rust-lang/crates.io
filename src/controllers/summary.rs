@@ -51,7 +51,11 @@ pub struct SummaryResponse {
     get,
     path = "/api/v1/summary",
     tag = "other",
-    responses((status = 200, description = "Successful Response", body = inline(SummaryResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(SummaryResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn get_summary(
     state: AppState,

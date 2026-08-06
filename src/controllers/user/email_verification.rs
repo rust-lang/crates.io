@@ -22,7 +22,11 @@ use secrecy::ExposeSecret;
         ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn confirm_user_email(
     state: AppState,
@@ -54,7 +58,11 @@ pub async fn confirm_user_email(
         ("cookie" = []),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn resend_email_verification(
     state: AppState,

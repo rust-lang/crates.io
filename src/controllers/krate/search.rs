@@ -80,7 +80,11 @@ pub struct CrateListMeta {
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response", body = inline(CrateListResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(CrateListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn list_crates(
     app: AppState,

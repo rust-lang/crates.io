@@ -6,9 +6,7 @@ import { getSession } from '../../utils/session.js';
 export default http.get('/api/v1/me/tokens', ({ query, response }) => {
   let { user } = getSession();
   if (!user) {
-    return response.untyped(
-      Response.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 }),
-    );
+    return response('4XX').json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
   let expiredAfter = new Date();

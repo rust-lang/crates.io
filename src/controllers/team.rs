@@ -22,7 +22,11 @@ pub struct TeamGetResponse {
         ("team" = String, Path, description = "Name of the team", example = "github:rust-lang:crates-io"),
     ),
     tag = "teams",
-    responses((status = 200, description = "Successful Response", body = inline(TeamGetResponse))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(TeamGetResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
 )]
 pub async fn find_team(
     state: AppState,
