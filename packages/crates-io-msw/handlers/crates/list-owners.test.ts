@@ -32,7 +32,7 @@ test('returns user owners', async function () {
   let user = await db.user.create({
     name: 'John Doe',
     login: 'crates-user',
-    githubLogin: 'github-user',
+    githubAccounts: [{ accountId: '10', login: 'github-user', avatar: null }],
   });
   let crate = await db.crate.create({ name: 'rand' });
   await db.crateOwnership.create({ crate, user });

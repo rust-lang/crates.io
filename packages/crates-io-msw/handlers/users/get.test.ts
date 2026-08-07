@@ -19,7 +19,7 @@ test('returns 404 for unknown users', async function () {
 test('returns a user object for known users', async function () {
   await db.user.create({
     login: 'crates-user',
-    githubLogin: 'github-user',
+    githubAccounts: [{ accountId: '10', login: 'github-user', avatar: null }],
   });
 
   let response = await fetch('/api/v1/users/Crates_User');

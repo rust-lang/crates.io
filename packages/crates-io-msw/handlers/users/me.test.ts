@@ -5,7 +5,7 @@ import { db } from '../../index.js';
 test('returns the `user` resource including the private fields', async function () {
   let user = await db.user.create({
     login: 'crates-user',
-    githubLogin: 'github-user',
+    githubAccounts: [{ accountId: '10', login: 'github-user', avatar: null }],
   });
   await db.mswSession.create({ user });
 
