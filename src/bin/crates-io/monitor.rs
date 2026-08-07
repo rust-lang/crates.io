@@ -1,5 +1,6 @@
-//! Checks application invariants, pages whoever is on call when they fail, and
-//! optionally submits the results to Datadog as service checks.
+//! Checks application invariants and reports the results to configured monitoring providers.
+//!
+//! PagerDuty reporting can be disabled with `PAGERDUTY_ENABLED=false`.
 //!
 //! Usage:
 //!     cargo run -- monitor
@@ -45,8 +46,12 @@ struct CheckResult {
 
 #[tokio::main]
 pub async fn run() -> Result<()> {
-    let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
-    let pagerduty = PagerdutyClient::new(service_key);
+    let pagerduty = if var_parsed("PAGERDUTY_ENABLED")?.unwrap_or(true) {
+        let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
+        Some(PagerdutyClient::new(service_key))
+    } else {
+        None
+    };
 
     let datadog_service_checks_enabled = var_parsed("DD_SERVICE_CHECKS_ENABLED")?.unwrap_or(false);
     let datadog_client = if datadog_service_checks_enabled {
@@ -72,6 +77,10 @@ pub async fn run() -> Result<()> {
         check_spam_attack(conn).await?,
     ];
 
+    for result in &results {
+        println!("{}", format_check_result(result));
+    }
+
     let datadog_reporting = async {
         if let Some(datadog) = datadog_client {
             let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
@@ -84,10 +93,14 @@ pub async fn run() -> Result<()> {
         }
     };
 
-    let pagerduty_reporting = report_to_pagerduty(&pagerduty, &results);
-    let (_, pagerduty_result) = tokio::join!(datadog_reporting, pagerduty_reporting);
-
-    pagerduty_result
+    if let Some(pagerduty) = pagerduty {
+        let pagerduty_reporting = report_to_pagerduty(&pagerduty, &results);
+        let (_, pagerduty_result) = tokio::join!(datadog_reporting, pagerduty_reporting);
+        pagerduty_result
+    } else {
+        datadog_reporting.await;
+        Ok(())
+    }
 }
 
 /// Checks for old background jobs that are not currently running.
@@ -254,6 +267,14 @@ fn datadog_service_check(result: &CheckResult, host_name: &str, tags: &[String])
         .build()
 }
 
+/// Formats a provider-independent monitor result for command output.
+fn format_check_result(result: &CheckResult) -> String {
+    match result.status {
+        CheckStatus::Healthy => result.message.clone(),
+        CheckStatus::Unhealthy => format!("Monitor check failed: {}", result.message),
+    }
+}
+
 /// Reports monitor results to Datadog.
 async fn report_to_datadog(
     datadog: &DatadogClient,
@@ -272,11 +293,6 @@ async fn report_to_datadog(
 /// Reports monitor results to PagerDuty.
 async fn report_to_pagerduty(pagerduty: &PagerdutyClient, results: &[CheckResult]) -> Result<()> {
     for result in results {
-        match result.status {
-            CheckStatus::Healthy => println!("{}", result.message),
-            CheckStatus::Unhealthy => println!("Paging on-call: {}", result.message),
-        }
-
         let event = pagerduty_event(result);
         pagerduty.send(&event).await?;
     }
