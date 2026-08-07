@@ -6,21 +6,30 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewOauthGithub, NewUser, OauthGithub};
 use crate::schema::{oauth_github, users};
 use crate::util::diesel::is_read_only_error;
-use crate::util::errors::{AppResult, bad_request, server_error};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, not_found, server_error};
+use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
 use axum::Json;
-use chrono::Utc;
+use axum::response::IntoResponse;
+use chrono::{DateTime, Utc};
 use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
+use lettre::Address;
 use minijinja::context;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
+
+/// Session key containing serialized pending-signup state.
+pub const PENDING_SIGNUP_KEY: &str = "pending_signup";
+const PENDING_SIGNUP_LIFETIME: chrono::TimeDelta = chrono::TimeDelta::minutes(30);
+const PENDING_SIGNUP_ERROR: &str =
+    "Your signup session is missing or has expired. Please authenticate with GitHub again.";
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BeginResponse {
@@ -51,6 +60,8 @@ pub struct BeginResponse {
     ),
 )]
 pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
+    session.remove(PENDING_SIGNUP_KEY);
+
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
@@ -74,12 +85,205 @@ pub struct AuthorizeBody {
     state: CsrfToken,
 }
 
+/// The result of completing the GitHub OAuth flow.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum AuthorizeResponse {
+    /// The GitHub OAuth flow signed in a crates.io user.
+    SignedIn(#[schema(inline)] EncodableMe),
+    /// The GitHub account needs a crates.io account.
+    SignupRequired,
+}
+
+/// GitHub account details retained while a user completes signup.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PendingSignup {
+    /// GitHub-controlled account details captured during OAuth authorization.
+    pub github_user: GitHubUser,
+    /// Encrypted GitHub access token used when the account is created.
+    pub encrypted_token: Vec<u8>,
+    /// Creation time used to determine when this pending signup expires.
+    pub created_at: DateTime<Utc>,
+}
+
+impl PendingSignup {
+    /// Creates pending signup state with the current time.
+    fn new(github_user: GitHubUser, encrypted_token: Vec<u8>) -> Self {
+        Self {
+            github_user,
+            encrypted_token,
+            created_at: Utc::now(),
+        }
+    }
+
+    /// Returns whether this pending signup has reached its absolute expiry.
+    fn is_expired(&self, now: DateTime<Utc>) -> bool {
+        now.signed_duration_since(self.created_at) >= PENDING_SIGNUP_LIFETIME
+    }
+}
+
+/// Public GitHub account details displayed while a user completes signup.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct SignupDetails {
+    /// The GitHub account login.
+    login: String,
+    /// The email address suggested by GitHub, if one is available.
+    email: Option<String>,
+}
+
+/// Response containing details for a pending signup.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct SignupResponse {
+    signup: SignupDetails,
+}
+
+/// Request to complete a pending signup.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct CompletePendingSignupRequest {
+    /// User-controlled signup details.
+    #[schema(inline)]
+    signup: CompletePendingSignupData,
+}
+
+/// User-controlled details for a pending signup.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct CompletePendingSignupData {
+    /// The email address to associate with the new account.
+    #[schema(value_type = String, format = Email, example = "new-user@example.com")]
+    email: Address,
+}
+
+/// Loads valid pending-signup state from the signed session cookie.
+fn load_pending_signup(session: &SessionExtension) -> AppResult<PendingSignup> {
+    let Some(value) = session.get(PENDING_SIGNUP_KEY) else {
+        return Err(bad_request(PENDING_SIGNUP_ERROR));
+    };
+
+    let pending_signup: PendingSignup = serde_json::from_str(&value).map_err(|_| {
+        session.remove(PENDING_SIGNUP_KEY);
+        bad_request(PENDING_SIGNUP_ERROR)
+    })?;
+
+    if pending_signup.is_expired(Utc::now()) {
+        session.remove(PENDING_SIGNUP_KEY);
+        return Err(bad_request(PENDING_SIGNUP_ERROR));
+    }
+
+    Ok(pending_signup)
+}
+
+/// Load the GitHub account details for a pending signup.
+///
+/// The encrypted GitHub token remains in the signed session cookie and is never returned to the
+/// frontend. Missing, malformed, and expired signup state require restarting GitHub
+/// authentication.
+#[utoipa::path(
+    get,
+    path = "/api/private/session/signup",
+    tag = "session",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(SignupResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn get_pending_signup(
+    app: AppState,
+    session: SessionExtension,
+) -> AppResult<impl IntoResponse> {
+    if !app.config.features.explicit_signup_enabled {
+        return Err(not_found());
+    }
+    if session.get("user_id").is_some() {
+        return Err(bad_request("You are already signed in."));
+    }
+
+    let pending_signup = load_pending_signup(&session)?;
+
+    let json = Json(SignupResponse {
+        signup: SignupDetails {
+            login: pending_signup.github_user.login,
+            email: pending_signup.github_user.email,
+        },
+    });
+
+    Ok((no_store(), json))
+}
+
+/// Complete a pending signup.
+#[utoipa::path(
+    post,
+    path = "/api/private/session/signup",
+    request_body = inline(CompletePendingSignupRequest),
+    tag = "session",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(EncodableMe)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn complete_pending_signup(
+    app: AppState,
+    session: SessionExtension,
+    Json(body): Json<CompletePendingSignupRequest>,
+) -> AppResult<Json<EncodableMe>> {
+    if !app.config.features.explicit_signup_enabled {
+        return Err(not_found());
+    }
+    if session.get("user_id").is_some() {
+        return Err(bad_request("You are already signed in."));
+    }
+
+    let pending_signup = load_pending_signup(&session)?;
+    let mut github_user = pending_signup.github_user;
+    github_user.email = Some(body.signup.email.to_string());
+
+    let mut conn = app.db_write().await?;
+    let (user_id, user) = conn
+        .transaction(async |conn| {
+            let user_id = create_user(
+                &github_user,
+                &pending_signup.encrypted_token,
+                &app.emails,
+                conn,
+            )
+            .await?;
+            let user = super::user::me::authenticated_user(conn, user_id).await?;
+            Ok::<_, BoxedAppError>((user_id, user))
+        })
+        .await?;
+
+    session.remove(PENDING_SIGNUP_KEY);
+    session.insert("user_id".to_string(), user_id.to_string());
+    Ok(user)
+}
+
+/// Cancel a pending signup.
+#[utoipa::path(
+    delete,
+    path = "/api/private/session/signup",
+    tag = "session",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(OkResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn delete_pending_signup(session: SessionExtension) -> OkResponse {
+    session.remove(PENDING_SIGNUP_KEY);
+    OkResponse::new()
+}
+
 /// Complete authentication flow.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
 /// the data access permissions. It will check the `state` parameter and then call the GitHub API
-/// to exchange the temporary `code` for an API token. The API token is returned together with
-/// the corresponding user information.
+/// to exchange the temporary `code` for an API token. Existing crates.io users are signed in.
+/// New users must complete signup when explicit signup is enabled and are created immediately
+/// otherwise.
 ///
 /// see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
 #[utoipa::path(
@@ -89,7 +293,7 @@ pub struct AuthorizeBody {
     request_body = inline(AuthorizeBody),
     extensions(("x-internal" = json!(true))),
     responses(
-        (status = 200, description = "Successful Response", body = inline(EncodableMe)),
+        (status = 200, description = "Successful Response", body = inline(AuthorizeResponse)),
         (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
@@ -99,7 +303,7 @@ pub async fn authorize_session(
     session: SessionExtension,
     req: Parts,
     Json(body): Json<AuthorizeBody>,
-) -> AppResult<Json<EncodableMe>> {
+) -> AppResult<Json<AuthorizeResponse>> {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
@@ -138,55 +342,96 @@ pub async fn authorize_session(
     let ghuser = app.github.current_user(&auth).await?;
 
     let mut conn = app.db_write().await?;
-    let user_id = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
+    let user_id = save_user_to_database(
+        app.config.features.explicit_signup_enabled,
+        &ghuser,
+        &encrypted_token,
+        &app.emails,
+        &mut conn,
+    )
+    .await?;
 
-    // Log in by setting a cookie and the middleware authentication
-    session.insert("user_id".to_string(), user_id.to_string());
+    match user_id {
+        Some(user_id) => {
+            session.remove(PENDING_SIGNUP_KEY);
+            session.insert("user_id".to_string(), user_id.to_string());
 
-    super::user::me::authenticated_user(&mut conn, user_id).await
+            let Json(user) = super::user::me::authenticated_user(&mut conn, user_id).await?;
+            Ok(Json(AuthorizeResponse::SignedIn(user)))
+        }
+        None => {
+            let pending_signup = PendingSignup::new(ghuser, encrypted_token);
+            let pending_signup = serde_json::to_string(&pending_signup)?;
+            session.remove("user_id");
+            session.insert(PENDING_SIGNUP_KEY.to_string(), pending_signup);
+            Ok(Json(AuthorizeResponse::SignupRequired))
+        }
+    }
 }
 
+/// Updates a GitHub-linked user or creates one when explicit signup is disabled.
+///
+/// Returns `None` when explicit signup is enabled and no existing user was found.
 pub async fn save_user_to_database(
+    explicit_signup_enabled: bool,
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
-) -> QueryResult<i32> {
+) -> QueryResult<Option<i32>> {
     // There should not be one transaction around both the `create_or_update_user` call and the
     // `find_user_by_gh_id` call. If they're in one transaction and we're in read only mode, the
     // entire transaction will be poisoned and the `find_user_by_gh_id` will fail too, thus
     // negating the purpose of the fallback. There _is_ a transaction around the body of
     // `create_or_update_user`.
-    match create_or_update_user(gh_user, encrypted_token, emails, conn).await {
-        Ok(id) => Ok(id),
+    match create_or_update_user(
+        explicit_signup_enabled,
+        gh_user,
+        encrypted_token,
+        emails,
+        conn,
+    )
+    .await
+    {
+        Ok(user_id) => Ok(user_id),
         Err(error) if is_read_only_error(&error) => {
-            // If we're in read only mode, we can't update their details or create new users.
-            // just look for an existing user
-            find_user_by_gh_id(conn, gh_user.id).await?.ok_or(error)
+            // In read-only mode, we can't update users or create new ones.
+            // Look up the GitHub account to distinguish an existing user from a new signup.
+            match find_user_by_gh_id(conn, gh_user.id).await? {
+                Some(user_id) => Ok(Some(user_id)),
+                None if explicit_signup_enabled => Ok(None),
+                None => Err(error),
+            }
         }
         Err(error) => Err(error),
     }
 }
 
-/// Updates an existing user or inserts a new user into the database within a transaction.
+/// Updates an existing user or optionally inserts a new user within a transaction.
+///
+/// Returns `None` when explicit signup is enabled and no existing user was found.
 async fn create_or_update_user(
+    explicit_signup_enabled: bool,
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
-) -> QueryResult<i32> {
+) -> QueryResult<Option<i32>> {
     conn.transaction(async |conn| {
         let update_result = update_user(gh_user, encrypted_token, conn).await;
 
         match update_result {
-            Ok(user_id) => Ok(user_id),
+            Ok(user_id) => Ok(Some(user_id)),
+            Err(diesel::result::Error::NotFound) if explicit_signup_enabled => Ok(None),
             Err(diesel::result::Error::NotFound) => {
                 // If the update fails because the `oauth_github` record doesn't exist, this
                 // currently means the `user` record doesn't exist either and we need to create
                 // both. This assumption holds because crates.io and GitHub accounts currently have
                 // a one-to-one relationship; this will need to be changed if/when we allow
                 // crates.io users to link more than one GitHub account to their crates.io account.
-                create_user(gh_user, encrypted_token, emails, conn).await
+                create_user(gh_user, encrypted_token, emails, conn)
+                    .await
+                    .map(Some)
             }
             Err(error) => Err(error),
         }
@@ -237,8 +482,8 @@ async fn update_user(
 /// This method also inserts the email address into the `emails` table
 /// and sends a confirmation email to the user.
 ///
-/// Should be called in a transaction, as `create_or_update_user` does, so both the `users` and
-/// `emails` records are inserted or neither are.
+/// Should be called in a transaction so the `users`, `oauth_github`, and `emails` records are
+/// inserted together.
 async fn create_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
@@ -323,13 +568,205 @@ async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryRe
 )]
 pub async fn end_session(session: SessionExtension) -> OkResponse {
     session.remove("user_id");
+    session.remove(PENDING_SIGNUP_KEY);
     OkResponse::new()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::views::{EncodablePrivateUser, OwnedCrate};
+    use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
     use crates_io_test_db::TestDatabase;
+    use diesel_async::RunQueryDsl;
+    use insta::assert_json_snapshot;
+
+    fn github_user() -> GitHubUser {
+        GitHubUser {
+            avatar_url: Some("https://avatars.example.com/42".into()),
+            email: Some("ghost@example.com".into()),
+            id: 42,
+            login: "ghost".into(),
+            name: Some("Ghost".into()),
+        }
+    }
+
+    #[test]
+    fn pending_signup_expires_after_thirty_minutes() {
+        let now = Utc::now();
+        let pending_signup = PendingSignup {
+            github_user: github_user(),
+            encrypted_token: vec![1, 2, 3],
+            created_at: now - chrono::TimeDelta::minutes(30),
+        };
+
+        assert!(pending_signup.is_expired(now));
+    }
+
+    #[test]
+    fn pending_signup_is_valid_before_thirty_minutes() {
+        let now = Utc::now();
+        let pending_signup = PendingSignup {
+            github_user: github_user(),
+            encrypted_token: vec![1, 2, 3],
+            created_at: now - chrono::TimeDelta::minutes(29),
+        };
+
+        assert!(!pending_signup.is_expired(now));
+    }
+
+    async fn count_users(conn: &mut AsyncPgConnection) -> i64 {
+        users::table.count().get_result(conn).await.unwrap()
+    }
+
+    async fn count_oauth_github(conn: &mut AsyncPgConnection) -> i64 {
+        oauth_github::table.count().get_result(conn).await.unwrap()
+    }
+
+    #[tokio::test]
+    async fn explicit_signup_does_not_create_new_user() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let user_id = assert_ok!(
+            save_user_to_database(true, &github_user(), &[1, 2, 3], &emails, &mut conn).await
+        );
+
+        assert_none!(user_id);
+        assert_eq!(count_users(&mut conn).await, 0);
+        assert_eq!(count_oauth_github(&mut conn).await, 0);
+    }
+
+    #[tokio::test]
+    async fn explicit_signup_signs_in_existing_user() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let user = github_user();
+        let user_id = assert_some!(assert_ok!(
+            save_user_to_database(false, &user, &[1], &emails, &mut conn).await
+        ));
+
+        let actual_user_id =
+            assert_ok!(save_user_to_database(true, &user, &[2], &emails, &mut conn).await);
+
+        assert_some_eq!(actual_user_id, user_id);
+        assert_eq!(count_users(&mut conn).await, 1);
+    }
+
+    #[tokio::test]
+    async fn legacy_signup_creates_and_signs_in_new_user() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let user_id = assert_ok!(
+            save_user_to_database(false, &github_user(), &[1, 2, 3], &emails, &mut conn).await
+        );
+
+        assert_some!(user_id);
+        assert_eq!(count_users(&mut conn).await, 1);
+        assert_eq!(count_oauth_github(&mut conn).await, 1);
+    }
+
+    #[tokio::test]
+    async fn explicit_signup_detects_new_user_during_read_only_mode() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        assert_ok!(
+            diesel::sql_query("SET default_transaction_read_only = 't'")
+                .execute(&mut conn)
+                .await
+        );
+
+        let user_id = assert_ok!(
+            save_user_to_database(true, &github_user(), &[1, 2, 3], &emails, &mut conn).await
+        );
+
+        assert_none!(user_id);
+    }
+
+    #[tokio::test]
+    async fn explicit_signup_signs_in_existing_user_during_read_only_mode() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let user = github_user();
+        let user_id = assert_some!(assert_ok!(
+            save_user_to_database(false, &user, &[1], &emails, &mut conn).await
+        ));
+        assert_ok!(
+            diesel::sql_query("SET default_transaction_read_only = 't'")
+                .execute(&mut conn)
+                .await
+        );
+
+        let actual_user_id =
+            assert_ok!(save_user_to_database(true, &user, &[2], &emails, &mut conn).await);
+
+        assert_some_eq!(actual_user_id, user_id);
+    }
+
+    #[test]
+    fn authorize_response_serializes_signed_in() {
+        let response = AuthorizeResponse::SignedIn(EncodableMe {
+            user: EncodablePrivateUser {
+                id: 42,
+                login: "ghost".into(),
+                email_verified: true,
+                email_verification_sent: true,
+                name: Some("Kate Morgan".into()),
+                email: Some("kate@morgan.dev".into()),
+                avatar: Some("https://avatars2.githubusercontent.com/u/1234567?v=4".into()),
+                url: Some("https://github.com/ghost".into()),
+                is_admin: false,
+                publish_notifications: true,
+                created_at: None,
+            },
+            owned_crates: vec![OwnedCrate {
+                id: 123,
+                name: "serde".into(),
+                email_notifications: true,
+            }],
+        });
+
+        assert_json_snapshot!(response, @r#"
+        {
+          "status": "signed_in",
+          "user": {
+            "id": 42,
+            "login": "ghost",
+            "email_verified": true,
+            "email_verification_sent": true,
+            "name": "Kate Morgan",
+            "email": "kate@morgan.dev",
+            "avatar": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "url": "https://github.com/ghost",
+            "is_admin": false,
+            "publish_notifications": true,
+            "created_at": null
+          },
+          "owned_crates": [
+            {
+              "id": 123,
+              "name": "serde",
+              "email_notifications": true
+            }
+          ]
+        }
+        "#);
+    }
+
+    #[test]
+    fn authorize_response_serializes_signup_required() {
+        assert_json_snapshot!(AuthorizeResponse::SignupRequired, @r#"
+        {
+          "status": "signup_required"
+        }
+        "#);
+    }
 
     #[tokio::test]
     async fn gh_user_with_invalid_email_doesnt_fail() {
@@ -346,7 +783,7 @@ mod tests {
             avatar_url: None,
         };
 
-        let result = save_user_to_database(&gh_user, &[], &emails, &mut conn).await;
+        let result = save_user_to_database(false, &gh_user, &[], &emails, &mut conn).await;
 
         assert!(
             result.is_ok(),

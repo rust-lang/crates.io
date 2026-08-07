@@ -52,8 +52,9 @@ export interface paths {
          * Complete authentication flow.
          * @description This route is called from the GitHub API OAuth flow after the user accepted or rejected
          *     the data access permissions. It will check the `state` parameter and then call the GitHub API
-         *     to exchange the temporary `code` for an API token. The API token is returned together with
-         *     the corresponding user information.
+         *     to exchange the temporary `code` for an API token. Existing crates.io users are signed in.
+         *     New users must complete signup when explicit signup is enabled and are created immediately
+         *     otherwise.
          *
          *     see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
          */
@@ -82,6 +83,30 @@ export interface paths {
          */
         post: operations["begin_session"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/private/session/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Load the GitHub account details for a pending signup.
+         * @description The encrypted GitHub token remains in the signed session cookie and is never returned to the
+         *     frontend. Missing, malformed, and expired signup state require restarting GitHub
+         *     authentication.
+         */
+        get: operations["get_pending_signup"];
+        put?: never;
+        /** Complete a pending signup. */
+        post: operations["complete_pending_signup"];
+        /** Cancel a pending signup. */
+        delete: operations["delete_pending_signup"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1547,6 +1572,13 @@ export interface components {
         ReleaseTrackDetails: {
             highest: string;
         };
+        /** @description Public GitHub account details displayed while a user completes signup. */
+        SignupDetails: {
+            /** @description The email address suggested by GitHub, if one is available. */
+            email?: string | null;
+            /** @description The GitHub account login. */
+            login: string;
+        };
         Slug: {
             /**
              * @description A description of the category.
@@ -2008,7 +2040,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
+                    "application/json": ({
                         /** @description The crates that the authenticated user owns. */
                         owned_crates: {
                             /** @deprecated */
@@ -2027,6 +2059,12 @@ export interface operations {
                         }[];
                         /** @description The authenticated user. */
                         user: components["schemas"]["AuthenticatedUser"];
+                    } & {
+                        /** @enum {string} */
+                        status: "signed_in";
+                    }) | {
+                        /** @enum {string} */
+                        status: "signup_required";
                     };
                 };
             };
@@ -2070,6 +2108,158 @@ export interface operations {
                         state: string;
                         /** @example https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg */
                         url: string;
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_pending_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        signup: components["schemas"]["SignupDetails"];
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    complete_pending_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description User-controlled signup details. */
+                    signup: {
+                        /**
+                         * Format: email
+                         * @description The email address to associate with the new account.
+                         * @example new-user@example.com
+                         */
+                        email: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The crates that the authenticated user owns. */
+                        owned_crates: {
+                            /** @deprecated */
+                            email_notifications: boolean;
+                            /**
+                             * Format: int32
+                             * @description The opaque identifier of the crate.
+                             * @example 123
+                             */
+                            id: number;
+                            /**
+                             * @description The name of the crate.
+                             * @example serde
+                             */
+                            name: string;
+                        }[];
+                        /** @description The authenticated user. */
+                        user: components["schemas"]["AuthenticatedUser"];
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_pending_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example true */
+                        ok: boolean;
                     };
                 };
             };
@@ -5308,6 +5498,12 @@ type ReadonlyArray<T> = [
 ] extends [
     unknown[]
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJsonOneOf0StatusValues: ReadonlyArray<Extract<FlattenedDeepRequired<paths>["/api/private/session/authorize"]["post"]["responses"]["200"]["content"]["application/json"], {
+    status: unknown;
+}>["status"]> = ["signed_in"];
+export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJsonOneOf1StatusValues: ReadonlyArray<Extract<FlattenedDeepRequired<paths>["/api/private/session/authorize"]["post"]["responses"]["200"]["content"]["application/json"], {
+    status: unknown;
+}>["status"]> = ["signup_required"];
 export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
 export const trustpubDataOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["TrustpubData"], {
     provider: unknown;
