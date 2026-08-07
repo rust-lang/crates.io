@@ -121,6 +121,13 @@ impl Stack {
     <img width="1000" height="200" alt="Banner with Logo" src="https://static.rerun.io/d0f5443d4803cac65c73fcc064936c09f5e7f208_rerun_banner.png" />
   </a>
 </h3>
+
+<a href="https://www.jetbrains.com/?from=rust-base64"><img src="/icon_CLion.svg" height="40px"/></a>
+
+<img src="https://github.com/scylladb/scylla-rust-driver/raw/main/assets/monster+rust.png" height="150" align="right">
+
+This is a client-side driver for [ScyllaDB] written in pure Rust with a fully async API using [Tokio].
+Although optimized for ScyllaDB, the driver is also compatible with [Apache Cassandra®].
 `;
 
 test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
