@@ -1,6 +1,6 @@
 use bon::Builder;
 use chrono::{DateTime, Utc};
-use diesel::dsl::sql;
+use diesel::dsl::{exists, sql};
 use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
@@ -10,6 +10,24 @@ use serde::Serialize;
 use crate::fns::lower;
 use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
+
+// Diesel validates a correlated subquery against the outer query source. `PublicUser` already
+// joins `oauth_github`, so reusing that table in this `EXISTS` expression would make it appear
+// twice and fail `AppearsInFromClause` validation. This alias gives the subquery a distinct
+// query-source identity.
+diesel::alias!(
+    pub const MATCHING_GITHUB_ACCOUNT: Alias<MatchingGithubAccount> =
+        oauth_github as matching_github_account;
+);
+
+#[diesel::dsl::auto_type]
+pub fn github_username_matches() -> _ {
+    let account = MATCHING_GITHUB_ACCOUNT;
+    let belongs_to_user = account.field(oauth_github::user_id).eq(users::id);
+    let username_matches = account.field(oauth_github::login).eq(users::username);
+
+    exists(account.filter(belongs_to_user).filter(username_matches))
+}
 
 /// Public data for a crates.io user.
 #[derive(Clone, Debug, HasQuery, Serialize)]
@@ -23,6 +41,8 @@ pub struct PublicUser {
     pub gh_login: String,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
+    #[diesel(select_expression = github_username_matches())]
+    pub github_username_matches: bool,
     pub username: String,
     pub created_at: Option<DateTime<Utc>>,
 }
