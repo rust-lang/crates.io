@@ -177,7 +177,7 @@ pub struct OauthGithub {
     pub account_id: i64,
     /// In the process of being migrated from `users.gh_avatar`.
     pub avatar: Option<String>,
-    /// In the process of being migrated from `users.gh_encrypted_token`.
+    /// The OAuth access token from GitHub for this user, encrypted at rest in our database
     pub encrypted_token: Vec<u8>,
     /// The last time we verified with GitHub what the GitHub username for this user was, and
     /// whether the account was valid.
@@ -198,9 +198,9 @@ pub struct OauthGithub {
     belongs_to(User),
 )]
 pub struct NewOauthGithub<'a> {
-    pub account_id: i64,           // corresponds to users.gh_id
-    pub avatar: Option<&'a str>,   // corresponds to users.gh_avatar
-    pub encrypted_token: &'a [u8], // corresponds to users.gh_encrypted_token
+    pub account_id: i64,         // corresponds to users.gh_id
+    pub avatar: Option<&'a str>, // corresponds to users.gh_avatar
+    pub encrypted_token: &'a [u8],
     #[builder(default = Utc::now())]
     pub last_sync: DateTime<Utc>,
     pub login: &'a str, // corresponds to users.gh_login
