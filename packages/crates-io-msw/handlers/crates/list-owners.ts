@@ -17,7 +17,7 @@ export default http.get('/api/v1/crates/{name}/owners', ({ params, response }) =
         id: o.user.id,
         login: o.user.login,
         kind: 'user',
-        url: `https://github.com/${o.user.login}`,
+        url: o.user.url,
         name: o.user.name,
         avatar: o.user.avatar,
       })),

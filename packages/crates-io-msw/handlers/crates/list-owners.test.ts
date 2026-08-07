@@ -29,7 +29,11 @@ test('empty case', async function () {
 });
 
 test('returns user owners', async function () {
-  let user = await db.user.create({ name: 'John Doe' });
+  let user = await db.user.create({
+    name: 'John Doe',
+    login: 'crates-user',
+    githubLogin: 'github-user',
+  });
   let crate = await db.crate.create({ name: 'rand' });
   await db.crateOwnership.create({ crate, user });
 
@@ -42,9 +46,9 @@ test('returns user owners', async function () {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
           "id": 1,
           "kind": "user",
-          "login": "john-doe",
+          "login": "crates-user",
           "name": "John Doe",
-          "url": "https://github.com/john-doe",
+          "url": "https://github.com/github-user",
         },
       ],
     }
