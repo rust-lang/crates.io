@@ -62,7 +62,13 @@ test('happy path', async ({ expect }) => {
         "emailVerificationToken": null,
         "emailVerified": true,
         "followedCrates": [],
-        "githubLogin": "user-2",
+        "githubAccounts": [
+          {
+            "accountId": "2",
+            "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+            "login": "user-2",
+          },
+        ],
         "id": 2,
         "isAdmin": false,
         "login": "user-2",
@@ -76,7 +82,13 @@ test('happy path', async ({ expect }) => {
         "emailVerificationToken": null,
         "emailVerified": true,
         "followedCrates": [],
-        "githubLogin": "user-1",
+        "githubAccounts": [
+          {
+            "accountId": "1",
+            "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+            "login": "user-1",
+          },
+        ],
         "id": 1,
         "isAdmin": false,
         "login": "user-1",

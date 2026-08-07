@@ -106,6 +106,10 @@ impl<'a> OauthGithubBuilder<'a> {
         }
     }
 
+    pub fn with_login(self, login: &'a str) -> Self {
+        Self { login, ..self }
+    }
+
     pub async fn insert(self, mut conn: &AsyncPgConnection) {
         diesel::insert_into(oauth_github::table)
             .values((

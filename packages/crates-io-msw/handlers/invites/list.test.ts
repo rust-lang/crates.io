@@ -56,6 +56,7 @@ test('happy path (invitee_id)', async function () {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 1,
           "login": "user-1",
           "name": "User 1",
@@ -63,6 +64,7 @@ test('happy path (invitee_id)', async function () {
         },
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 2,
           "login": "janed",
           "name": "janed",
@@ -70,6 +72,7 @@ test('happy path (invitee_id)', async function () {
         },
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 3,
           "login": "wycats",
           "name": "wycats",
@@ -168,6 +171,7 @@ test('happy path (crate_name)', async function () {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 1,
           "login": "user-1",
           "name": "User 1",
@@ -175,6 +179,7 @@ test('happy path (crate_name)', async function () {
         },
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 3,
           "login": "wycats",
           "name": "wycats",
