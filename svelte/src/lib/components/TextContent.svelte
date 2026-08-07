@@ -42,8 +42,7 @@
 
     :global(img) {
       max-width: 100%;
-      /* see: https://github.com/rust-lang/crates.io/issues/14133 */
-      height: auto;
+      object-fit: contain;
     }
 
     :global(pre) {
