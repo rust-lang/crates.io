@@ -124,7 +124,7 @@ impl Stack {
 
 <a href="https://www.jetbrains.com/?from=rust-base64"><img src="/icon_CLion.svg" height="40px"/></a>
 
-<img src="https://github.com/scylladb/scylla-rust-driver/raw/main/assets/monster+rust.png" height="150" align="right">
+<img src="https://raw.githubusercontent.com/scylladb/scylla-rust-driver/ff6415dcb3f2cb52bd5312c2ae99b063895a5f28/assets/monster%2Brust.png" height="150" align="right">
 
 This is a client-side driver for [ScyllaDB] written in pure Rust with a fully async API using [Tokio].
 Although optimized for ScyllaDB, the driver is also compatible with [Apache Cassandra®].
