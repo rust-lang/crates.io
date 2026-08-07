@@ -47,7 +47,20 @@ expression: response.json()
       "yanked": false
     },
     {
-      "audit_actions": [],
+      "audit_actions": [
+        {
+          "action": "publish",
+          "time": "[datetime]",
+          "user": {
+            "avatar": null,
+            "created_at": "[datetime]",
+            "id": 1,
+            "login": "foo",
+            "name": null,
+            "url": "https://github.com/foo"
+          }
+        }
+      ],
       "bin_names": null,
       "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
       "crate": "foo_versions",

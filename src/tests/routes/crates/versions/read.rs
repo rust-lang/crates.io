@@ -1,6 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
+use crates_io::models::{NewVersionOwnerAction, VersionAction};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -21,6 +22,14 @@ async fn show_by_crate_name_and_version() {
         .rust_version("1.64")
         .expect_build(krate.id, user.id, &mut conn)
         .await;
+    NewVersionOwnerAction::builder()
+        .version_id(v.id)
+        .user_id(user.id)
+        .action(VersionAction::Publish)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
     let json: Value = anon.get(url).await.good();
@@ -30,6 +39,9 @@ async fn show_by_crate_name_and_version() {
         ".version.updated_at" => "[datetime]",
         ".version.published_by.id" => insta::id_redaction(user.id),
         ".version.published_by.created_at" => "[datetime]",
+        ".version.audit_actions[].time" => "[datetime]",
+        ".version.audit_actions[].user.id" => insta::id_redaction(user.id),
+        ".version.audit_actions[].user.created_at" => "[datetime]",
     });
 }
 
