@@ -1,4 +1,5 @@
 import { db } from '../../index.js';
+import { serializeUser } from '../../serializers/user.js';
 import { notFoundError } from '../../utils/handlers.js';
 import { http } from '../../utils/openapi-http.js';
 
@@ -11,16 +12,7 @@ export default http.get('/api/v1/crates/{name}/owners', ({ params, response }) =
   let ownerships = db.crateOwnership.findMany(q => q.where(ownership => ownership.crate.id === crate.id));
 
   let users = [
-    ...ownerships
-      .filter(o => o.user)
-      .map(o => ({
-        id: o.user.id,
-        login: o.user.login,
-        kind: 'user',
-        url: o.user.url,
-        name: o.user.name,
-        avatar: o.user.avatar,
-      })),
+    ...ownerships.filter(o => o.user).map(o => ({ ...serializeUser(o.user), kind: 'user' })),
     ...ownerships
       .filter(o => o.team)
       .map(o => ({

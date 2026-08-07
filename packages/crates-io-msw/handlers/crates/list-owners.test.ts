@@ -32,18 +32,24 @@ test('returns user owners', async function () {
   let user = await db.user.create({
     name: 'John Doe',
     login: 'crates-user',
-    githubAccounts: [{ accountId: '10', login: 'github-user', avatar: null }],
+    githubAccounts: [
+      { accountId: '10', login: 'github-user', avatar: null },
+      { accountId: '11', login: 'crates-user', avatar: null },
+    ],
   });
   let crate = await db.crate.create({ name: 'rand' });
   await db.crateOwnership.create({ crate, user });
 
   let response = await fetch('/api/v1/crates/rand/owners');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.users[0].github_username_matches).toBe(true);
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 1,
           "kind": "user",
           "login": "crates-user",
@@ -62,7 +68,9 @@ test('returns team owners', async function () {
 
   let response = await fetch('/api/v1/crates/rand/owners');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.users[0]).not.toHaveProperty('github_username_matches');
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "users": [
         {
@@ -87,11 +95,15 @@ test('returns user owners before team owners', async function () {
 
   let response = await fetch('/api/v1/crates/rand/owners');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.users[0].github_username_matches).toBe(true);
+  expect(responsePayload.users[1]).not.toHaveProperty('github_username_matches');
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 1,
           "kind": "user",
           "login": "john-doe",

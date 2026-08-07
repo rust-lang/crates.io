@@ -11,6 +11,7 @@ expression: response.json()
         "user": {
           "avatar": null,
           "created_at": "[datetime]",
+          "github_username_matches": true,
           "id": 1,
           "login": "foo",
           "name": null,
@@ -48,6 +49,7 @@ expression: response.json()
     "published_by": {
       "avatar": null,
       "created_at": "[datetime]",
+      "github_username_matches": true,
       "id": "[id]",
       "login": "foo",
       "name": null,

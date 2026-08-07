@@ -549,13 +549,20 @@ pub struct EncodableOwner {
     /// The avatar URL of the team or user.
     #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
     pub avatar: Option<String>,
+
+    /// Whether a linked GitHub username exactly matches the crates.io username.
+    ///
+    /// This field is present only for user owners.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_username_matches: Option<bool>,
 }
 
 impl EncodableOwner {
     pub fn from_user(user: PublicUser) -> Self {
         Self {
-            id: user.id,
+            github_username_matches: Some(user.github_username_matches),
             url: Some(format!("https://github.com/{}", user.gh_login)),
+            id: user.id,
             login: user.username,
             avatar: user.gh_avatar,
             name: user.name,
@@ -571,6 +578,7 @@ impl EncodableOwner {
             avatar: team.avatar,
             name: team.name,
             kind: String::from("team"),
+            github_username_matches: None,
         }
     }
 }
@@ -769,6 +777,9 @@ pub struct EncodablePublicUser {
     #[schema(example = "https://github.com/ghost")]
     pub url: String,
 
+    /// Whether a linked GitHub username exactly matches the crates.io username.
+    pub github_username_matches: bool,
+
     /// The date and time the user was created.
     ///
     /// For users created before June 19, 2026, the creation time will be the
@@ -785,6 +796,7 @@ impl From<PublicUser> for EncodablePublicUser {
             name,
             gh_login,
             gh_avatar,
+            github_username_matches,
             username,
             created_at,
             ..
@@ -796,6 +808,7 @@ impl From<PublicUser> for EncodablePublicUser {
             login: username,
             name,
             url,
+            github_username_matches,
             created_at,
         }
     }
@@ -1153,6 +1166,7 @@ mod tests {
                     name: None,
                     avatar: None,
                     url: String::new(),
+                    github_username_matches: false,
                     created_at: None,
                 },
                 time: NaiveDate::from_ymd_opt(2017, 1, 6)

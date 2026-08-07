@@ -24,14 +24,21 @@ async fn show() {
         .execute(&mut conn)
         .await
         .unwrap();
+    let bar_model = bar.as_model();
+    OauthGithubBuilder::for_user(bar_model)
+        .with_login("CRATES-BAR")
+        .insert(&conn)
+        .await;
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
+    assert!(json.user.github_username_matches);
 
     // Lookup by username is case insensitive; returned data uses capitalization in database
     let json: UserShowPublicResponse = anon.get("/api/v1/users/crates_bar").await.good();
     assert_eq!(json.user.login, "crates-Bar");
     assert_eq!(json.user.url, "https://github.com/github-Bar");
+    assert!(!json.user.github_username_matches);
 
     // GitHub logins are not used to resolve crates.io users
     let response = anon.get::<()>("/api/v1/users/github-Bar").await;
@@ -69,13 +76,17 @@ async fn show_latest_user_case_insensitively() {
         .new_user();
     let user2_id = user2.insert(&conn).await.unwrap();
     let user2 = User::find(&conn, user2_id).await.unwrap();
-    OauthGithubBuilder::for_user(&user2).insert(&conn).await;
+    OauthGithubBuilder::for_user(&user2)
+        .with_login("FOO-BAR")
+        .insert(&conn)
+        .await;
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(
         "I was second, I took the foobar username on github",
         json.user.name.unwrap()
     );
+    assert!(!json.user.github_username_matches);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -97,4 +108,5 @@ async fn user_without_github_account() {
     // The crates.io username still exists
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!("I deleted my github account", json.user.name.unwrap());
+    assert!(!json.user.github_username_matches);
 }

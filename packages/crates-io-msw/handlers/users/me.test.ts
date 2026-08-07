@@ -11,7 +11,9 @@ test('returns the `user` resource including the private fields', async function 
 
   let response = await fetch('/api/v1/me');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.user).not.toHaveProperty('github_username_matches');
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "owned_crates": [],
       "user": {

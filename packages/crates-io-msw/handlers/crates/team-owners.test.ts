@@ -35,7 +35,9 @@ test('returns the list of teams that own the specified crate', async function ()
 
   let response = await fetch('/api/v1/crates/rand/owner_team');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.teams[0]).not.toHaveProperty('github_username_matches');
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "teams": [
         {

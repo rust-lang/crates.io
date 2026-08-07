@@ -69,6 +69,7 @@ test('returns the list of invitations for the authenticated user', async functio
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 1,
           "login": "user-1",
           "name": "User 1",
@@ -76,6 +77,7 @@ test('returns the list of invitations for the authenticated user', async functio
         },
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 2,
           "login": "janed",
           "name": "janed",
@@ -83,6 +85,7 @@ test('returns the list of invitations for the authenticated user', async functio
         },
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 3,
           "login": "wycats",
           "name": "wycats",
