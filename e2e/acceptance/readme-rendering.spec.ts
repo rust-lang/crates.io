@@ -122,7 +122,7 @@ impl Stack {
   </a>
 </h3>
 
-<a href="https://www.jetbrains.com/?from=rust-base64"><img src="/icon_CLion.svg" height="40px"/></a>
+<a href="https://www.jetbrains.com/?from=rust-base64"><img src="https://raw.githubusercontent.com/marshallpierce/rust-base64/069bf7067b949f5c0a92b6ceb82492920502f2c2/icon_CLion.svg" height="40px"/></a>
 
 <img src="https://raw.githubusercontent.com/scylladb/scylla-rust-driver/ff6415dcb3f2cb52bd5312c2ae99b063895a5f28/assets/monster%2Brust.png" height="150" align="right">
 
