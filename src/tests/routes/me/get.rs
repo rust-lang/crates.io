@@ -1,6 +1,9 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
+use crates_io::schema::users;
 use crates_io::views::{EncodablePrivateUser, OwnedCrate};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde::Deserialize;
 
@@ -21,6 +24,12 @@ pub struct UserShowPrivateResponse {
 async fn me() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
+
+    diesel::update(users::table.find(user.as_model().id))
+        .set(users::username.eq("crates-user"))
+        .execute(&mut conn)
+        .await
+        .unwrap();
 
     let response = anon.get::<()>("/api/v1/me").await;
     assert_snapshot!(response.status(), @"403 Forbidden");

@@ -5208,7 +5208,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Login name of the user */
+                /** @description crates.io username */
                 user: string;
             };
             cookie?: never;

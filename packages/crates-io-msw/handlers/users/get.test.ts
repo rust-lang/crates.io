@@ -17,18 +17,46 @@ test('returns 404 for unknown users', async function () {
 });
 
 test('returns a user object for known users', async function () {
-  let user = await db.user.create({ name: 'John Doe' });
+  await db.user.create({
+    login: 'crates-user',
+    githubLogin: 'github-user',
+  });
 
-  let response = await fetch(`/api/v1/users/${user.login}`);
+  let response = await fetch('/api/v1/users/Crates_User');
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
         "id": 1,
-        "login": "john-doe",
-        "name": "John Doe",
-        "url": "https://github.com/john-doe",
+        "login": "crates-user",
+        "name": "User 1",
+        "url": "https://github.com/github-user",
+      },
+    }
+  `);
+});
+
+test('returns the newest user for canonical username collisions', async function () {
+  await db.user.create({
+    login: 'foo-bar',
+    name: 'Older User',
+  });
+  await db.user.create({
+    login: 'FOO_BAR',
+    name: 'Newer User',
+  });
+
+  let response = await fetch('/api/v1/users/Foo-Bar');
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "user": {
+        "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "id": 2,
+        "login": "FOO_BAR",
+        "name": "Newer User",
+        "url": "https://github.com/FOO_BAR",
       },
     }
   `);

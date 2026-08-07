@@ -43,6 +43,7 @@ test('happy path', async ({ expect }) => {
         "emailVerificationToken": null,
         "emailVerified": true,
         "followedCrates": [],
+        "githubLogin": "user-1",
         "id": 1,
         "isAdmin": false,
         "login": "user-1",

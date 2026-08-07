@@ -6,7 +6,7 @@ use crate::views::EncodablePublicUser;
 use axum::Json;
 use axum::extract::Path;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use crates_io_database::fns::lower;
+use crates_io_database::fns::canon_username;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Serialize;
@@ -22,7 +22,7 @@ pub struct UserGetResponse {
     get,
     path = "/api/v1/users/{user}",
     params(
-        ("user" = String, Path, description = "Login name of the user"),
+        ("user" = String, Path, description = "crates.io username"),
     ),
     tag = "users",
     responses(
@@ -37,11 +37,11 @@ pub async fn find_user(
 ) -> AppResult<Json<UserGetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    use crate::schema::users::dsl::{gh_login, id};
+    use crate::schema::users::dsl::{id, username};
 
-    let name = lower(&user_name);
+    let name = canon_username(&user_name);
     let user: PublicUser = PublicUser::query()
-        .filter(lower(gh_login).eq(name))
+        .filter(canon_username(username).eq(name))
         .order(id.desc())
         .first(&mut conn)
         .await?;
