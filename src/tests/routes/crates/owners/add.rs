@@ -1,6 +1,7 @@
-use crate::builders::CrateBuilder;
+use crate::builders::{CrateBuilder, OauthGithubBuilder};
 use crate::owners::expire_invitation;
 use crate::util::{RequestHelper, TestApp};
+use crates_io::models::CrateOwner;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use insta::assert_snapshot;
 
@@ -382,4 +383,553 @@ async fn no_invite_emails_for_txn_rollback() {
 
     // 9 emails to the good invitees should have been sent.
     assert_eq!(app.emails().await.len(), 9);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unsupported_disambiguation_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("user2").await;
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "gitlab:user2").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguated_github_username_not_found() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:nonexistent").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with github username nonexistent"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguated_cratesio_username_not_found() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "cratesio:nonexistent").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with cratesio username nonexistent"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_ambiguous_username_error() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let new_user = app.db_new_user_with_gh_login("user2", "user2-gh").await;
+
+    OauthGithubBuilder::for_user(new_user.as_model())
+        .with_login("user2-gh")
+        .insert(&conn)
+        .await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "user2").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `user2` is possibly ambiguous. The crates.io account `user2` is associated with GitHub user `user2-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add cratesio:user2\n$ cargo owner --add github:user2-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_separator_variant_gh_login_is_not_ambiguous() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let new_user = app.db_new_user_with_gh_login("user-2", "user_2").await;
+
+    OauthGithubBuilder::for_user(new_user.as_model())
+        .with_login("user_2")
+        .insert(&conn)
+        .await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "user-2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_add_separator_variant_unprefixed_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("user-2").await;
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "user_2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user user_2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+/// Test that ambiguity is resolved before comparing against existing owners
+#[tokio::test(flavor = "multi_thread")]
+async fn test_shared_login_is_ambiguous_even_when_one_account_is_already_an_owner() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let cratesio_alice = app.db_new_user_with_gh_login("alice", "alice-gh").await;
+    OauthGithubBuilder::for_user(cratesio_alice.as_model())
+        .with_login("alice-gh")
+        .insert(&conn)
+        .await;
+
+    let github_alice = app.db_new_user_with_gh_login("bob", "alice").await;
+    OauthGithubBuilder::for_user(github_alice.as_model())
+        .with_login("alice")
+        .insert(&conn)
+        .await;
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // The crates.io `alice` is already an owner, the GitHub `alice` is not.
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(cratesio_alice.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "alice").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice` is possibly ambiguous. The crates.io account `alice` is associated with GitHub user `alice-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add cratesio:alice\n$ cargo owner --add github:alice-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+
+    let response = cookie.add_named_owner("foo", "cratesio:alice").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cratesio:alice is already an owner"}]}"#);
+
+    // …while disambiguating to the GitHub `alice` invites the other account.
+    let response = cookie.add_named_owner("foo", "github:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user alice has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguate_with_github_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let new_user = app.db_new_user_with_gh_login("user2", "user2-gh").await;
+
+    // Create oauth_github entry with the GitHub login
+    OauthGithubBuilder::for_user(new_user.as_model())
+        .with_login("user2-gh")
+        .insert(&conn)
+        .await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Using github: prefix should resolve the ambiguity and invite the user
+    let response = cookie.add_named_owner("foo", "github:user2-gh").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user user2-gh has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguate_with_cratesio_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user_with_gh_login("user2", "user2-gh").await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Using cratesio: prefix should resolve the ambiguity and invite the user
+    let response = cookie.add_named_owner("foo", "cratesio:user2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_already_owner_error() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // The cookie user is already the owner of the crate
+    let response = cookie
+        .add_named_owner("foo", &cookie.as_model().gh_login)
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"foo is already an owner"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_add_mixed_case_unprefixed_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("user2").await;
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "USer2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user USer2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_add_mixed_case_cratesio_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("user2").await;
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "cratesio:USeR2").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user USeR2 has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_add_mixed_case_github_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
+    OauthGithubBuilder::for_user(user2.as_model())
+        .with_login("user2-gh")
+        .insert(&conn)
+        .await;
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:UseR2-gh").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"user UseR2-gh has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_already_owner_unprefixed() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let user2 = app.db_new_user("user2").await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // add existing owner
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(user2.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "user2").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"user2 is already an owner"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_already_owner_cratesio() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let user2 = app.db_new_user("user2").await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // add existing owner
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(user2.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "cratesio:user2").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cratesio:user2 is already an owner"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_already_owner_github() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    // `user2` has matching crates.io username and GitHub login.
+    let user2 = app.db_new_user("user2").await;
+    OauthGithubBuilder::for_user(user2.as_model())
+        .with_login("user2")
+        .insert(&conn)
+        .await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // add existing owner
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(user2.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "github:user2").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"github:user2 is already an owner"}]}"#);
+}
+
+/// An existing owner whose crates.io username differs from their GitHub login
+/// is still detected as "already an owner" when re-added via the `github:`
+/// prefix, because the duplicate check matches `github:` logins against the
+/// owner's GitHub login (not their crates.io username).
+#[tokio::test(flavor = "multi_thread")]
+async fn test_already_owner_github_mismatched_username() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let user2 = app.db_new_user_with_gh_login("user2", "user2-gh").await;
+    OauthGithubBuilder::for_user(user2.as_model())
+        .with_login("user2-gh")
+        .insert(&conn)
+        .await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // add existing owner
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(user2.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "github:user2-gh").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"github:user2-gh is already an owner"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_team_with_extra_component() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie
+        .add_named_owner("foo", "github:alice:team:extra")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_org_with_extra_component() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github::team:extra").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_org() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github::team").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_team() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:org:").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_github_username() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_cratesio_username() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "cratesio:").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_single_colon() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", ":").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_double_colon() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "::").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_github_username_with_invalid_char() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:a&lice*").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot contain special characters like &"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_org_with_invalid_char() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:or&g:team").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like &"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_team_with_invalid_char() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:org:te@m").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team cannot contain special characters like @"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_unprefixed_login_with_invalid_char() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "a&lice").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot contain special characters like &"}]}"#);
 }
