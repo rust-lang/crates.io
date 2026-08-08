@@ -921,6 +921,26 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "SignupDetails": {
+        "description": "Public GitHub account details displayed while a user completes signup.",
+        "properties": {
+          "email": {
+            "description": "The email address suggested by GitHub, if one is available.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "login": {
+            "description": "The GitHub account login.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {
@@ -1653,7 +1673,7 @@ expression: response.json()
     },
     "/api/private/session/authorize": {
       "post": {
-        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>",
+        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. Existing crates.io users are signed in.\nNew users must complete signup when explicit signup is enabled and are created immediately\notherwise.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>",
         "operationId": "authorize_session",
         "requestBody": {
           "content": {
@@ -1686,46 +1706,90 @@ expression: response.json()
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "owned_crates": {
-                      "description": "The crates that the authenticated user owns.",
-                      "items": {
-                        "properties": {
-                          "email_notifications": {
-                            "deprecated": true,
-                            "type": "boolean"
-                          },
-                          "id": {
-                            "description": "The opaque identifier of the crate.",
-                            "example": 123,
-                            "format": "int32",
-                            "type": "integer"
-                          },
-                          "name": {
-                            "description": "The name of the crate.",
-                            "example": "serde",
-                            "type": "string"
-                          }
+                  "description": "The result of completing the GitHub OAuth flow.",
+                  "oneOf": [
+                    {
+                      "allOf": [
+                        {
+                          "description": "The GitHub OAuth flow signed in a crates.io user.",
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "owned_crates": {
+                                  "description": "The crates that the authenticated user owns.",
+                                  "items": {
+                                    "properties": {
+                                      "email_notifications": {
+                                        "deprecated": true,
+                                        "type": "boolean"
+                                      },
+                                      "id": {
+                                        "description": "The opaque identifier of the crate.",
+                                        "example": 123,
+                                        "format": "int32",
+                                        "type": "integer"
+                                      },
+                                      "name": {
+                                        "description": "The name of the crate.",
+                                        "example": "serde",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "email_notifications"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "user": {
+                                  "$ref": "#/components/schemas/AuthenticatedUser",
+                                  "description": "The authenticated user."
+                                }
+                              },
+                              "required": [
+                                "user",
+                                "owned_crates"
+                              ],
+                              "type": "object"
+                            }
+                          ]
                         },
-                        "required": [
-                          "id",
-                          "name",
-                          "email_notifications"
-                        ],
-                        "type": "object"
-                      },
-                      "type": "array"
+                        {
+                          "properties": {
+                            "status": {
+                              "enum": [
+                                "signed_in"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "description": "The GitHub OAuth flow signed in a crates.io user."
                     },
-                    "user": {
-                      "$ref": "#/components/schemas/AuthenticatedUser",
-                      "description": "The authenticated user."
+                    {
+                      "description": "The GitHub account needs a crates.io account.",
+                      "properties": {
+                        "status": {
+                          "enum": [
+                            "signup_required"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ],
+                      "type": "object"
                     }
-                  },
-                  "required": [
-                    "user",
-                    "owned_crates"
-                  ],
-                  "type": "object"
+                  ]
                 }
               }
             },
@@ -1809,6 +1873,219 @@ expression: response.json()
           }
         },
         "summary": "Begin authentication flow.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
+    "/api/private/session/signup": {
+      "delete": {
+        "operationId": "delete_pending_signup",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Cancel a pending signup.",
+        "tags": [
+          "session"
+        ]
+      },
+      "get": {
+        "description": "The encrypted GitHub token remains in the signed session cookie and is never returned to the\nfrontend. Missing, malformed, and expired signup state require restarting GitHub\nauthentication.",
+        "operationId": "get_pending_signup",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Response containing details for a pending signup.",
+                  "properties": {
+                    "signup": {
+                      "$ref": "#/components/schemas/SignupDetails"
+                    }
+                  },
+                  "required": [
+                    "signup"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Load the GitHub account details for a pending signup.",
+        "tags": [
+          "session"
+        ]
+      },
+      "post": {
+        "operationId": "complete_pending_signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request to complete a pending signup.",
+                "properties": {
+                  "signup": {
+                    "description": "User-controlled signup details.",
+                    "oneOf": [
+                      {
+                        "description": "User-controlled details for a pending signup.",
+                        "properties": {
+                          "email": {
+                            "description": "The email address to associate with the new account.",
+                            "example": "new-user@example.com",
+                            "format": "email",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "email"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "signup"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "owned_crates": {
+                      "description": "The crates that the authenticated user owns.",
+                      "items": {
+                        "properties": {
+                          "email_notifications": {
+                            "deprecated": true,
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "The opaque identifier of the crate.",
+                            "example": 123,
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "name": {
+                            "description": "The name of the crate.",
+                            "example": "serde",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "email_notifications"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/AuthenticatedUser",
+                      "description": "The authenticated user."
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "owned_crates"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Complete a pending signup.",
         "tags": [
           "session"
         ]

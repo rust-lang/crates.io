@@ -205,6 +205,12 @@ export class SessionState {
       return;
     }
 
+    if (data.status === 'signup_required') {
+      this.#notifications?.error('Signup is currently not possible.');
+      this.state = 'logged-out';
+      return;
+    }
+
     localStorage.setItem(LOGIN_KEY, '1');
 
     let user = await loadUser(this.#client);
