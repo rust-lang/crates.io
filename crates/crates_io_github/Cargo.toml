@@ -17,7 +17,7 @@ mockall = { version = "=0.15.0", optional = true }
 reqwest = { version = "=0.13.4", features = ["json"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.229", features = ["derive"] }
-thiserror = "=2.0.19"
+thiserror = "=2.0.20"
 tracing = "=0.1.44"
 url = "=2.5.8"
 
