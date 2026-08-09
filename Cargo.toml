@@ -114,7 +114,7 @@ crates_io_worker = { path = "crates/crates_io_worker" }
 csv = "=1.4.0"
 chrono = { version = "=0.4.45", default-features = false, features = ["serde"] }
 clap = { version = "=4.6.6", features = ["derive", "env", "unicode", "wrap_help"] }
-cookie = { version = "=0.18.1", features = ["secure"] }
+cookie = { version = "=0.18.2", features = ["secure"] }
 deadpool-runtime = { version = "=0.3.1", features = ["tokio_1"] }
 derive_more = { version = "=2.1.1", features = ["deref", "deref_mut", "display"] }
 dialoguer = "=0.12.0"
