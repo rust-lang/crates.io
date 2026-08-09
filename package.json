@@ -40,7 +40,7 @@
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@msw/playwright": "0.6.7",
     "@percy/cli": "1.32.5",
-    "@percy/playwright": "1.1.1",
+    "@percy/playwright": "1.1.2",
     "@playwright/test": "1.62.1",
     "@sinonjs/fake-timers": "15.4.0",
     "@types/node": "24.13.3",
