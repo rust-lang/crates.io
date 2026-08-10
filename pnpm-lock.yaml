@@ -37,8 +37,8 @@ importers:
         specifier: 1.32.5
         version: 1.32.5(supports-color@10.2.2)(typescript@6.0.3)
       '@percy/playwright':
-        specifier: 1.1.1
-        version: 1.1.1(playwright-core@1.62.1)
+        specifier: 1.1.2
+        version: 1.1.2(@percy/cli@1.32.5(supports-color@10.2.2)(typescript@6.0.3))(@playwright/test@1.62.1)(playwright-core@1.62.1)(supports-color@10.2.2)
       '@playwright/test':
         specifier: 1.62.1
         version: 1.62.1
@@ -1425,11 +1425,18 @@ packages:
     resolution: {integrity: sha512-BfA//KSBrijXqT2lBVnr5mqQ14QNVvyal1WerIbwD+x++fyYE7msDiKCBEPdRxlHM3L5Wq6QEIFu2kovZhj8/Q==}
     engines: {node: '>=14'}
 
-  '@percy/playwright@1.1.1':
-    resolution: {integrity: sha512-aEzMgvlNV9ork/hvCcQamEa9Xi00GYJhtO01xic000LBv6lvveie91n9Scpysfueaf2RFF5goBRf2IoI0wKTFA==}
-    engines: {node: '>=14'}
+  '@percy/playwright@1.1.2':
+    resolution: {integrity: sha512-IghZHmh1+R3gvneOd//+HbN2xg6e6qgnMy9yJ5V7vWJ49JpkHeU5Esjs1qI9EqFMHKAg0zOorDQ0mJRglQpkyw==}
+    engines: {node: '>=16'}
     peerDependencies:
+      '@percy/cli': '>=1.32.3'
+      '@playwright/test': '>=1.49.0'
       playwright-core: '>=1'
+    peerDependenciesMeta:
+      '@percy/cli':
+        optional: true
+      '@playwright/test':
+        optional: true
 
   '@percy/sdk-utils@1.32.5':
     resolution: {integrity: sha512-xdCmG2QiWKT8M5NtWQqLLkG9DiE/m4kHvbROqwAGbVk0hd+fgUYIq/O6AvkHXtVZVfBXr7CiNqqRTjGKakIY7g==}
@@ -5388,9 +5395,15 @@ snapshots:
       - supports-color
       - typescript
 
-  '@percy/playwright@1.1.1(playwright-core@1.62.1)':
+  '@percy/playwright@1.1.2(@percy/cli@1.32.5(supports-color@10.2.2)(typescript@6.0.3))(@playwright/test@1.62.1)(playwright-core@1.62.1)(supports-color@10.2.2)':
     dependencies:
+      '@percy/sdk-utils': 1.32.5(supports-color@10.2.2)
       playwright-core: 1.62.1
+    optionalDependencies:
+      '@percy/cli': 1.32.5(supports-color@10.2.2)(typescript@6.0.3)
+      '@playwright/test': 1.62.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@percy/sdk-utils@1.32.5(supports-color@10.2.2)':
     dependencies:
