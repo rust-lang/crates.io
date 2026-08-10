@@ -135,7 +135,7 @@ json-subscriber = "=0.3.0"
 lettre = { version = "=0.11.23", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "serde", "tokio1", "tokio1-native-tls"] }
 minijinja = { version = "=2.23.0", features = ["loader"] }
 mockall = "=0.15.0"
-moka = { version = "=0.12.15", default-features = false, features = ["future"] }
+moka = { version = "=0.12.16", default-features = false, features = ["future"] }
 native-tls = "=0.2.18"
 oauth2 = { version = "=5.0.0", default-features = false }
 object_store = { version = "=0.14.1", features = ["aws"] }
