@@ -9,5 +9,5 @@ cargo-insta = "1.48.0"
 "cargo:diesel_cli" = { version = "=2.3.11", features = "postgres", default-features = false }
 "cargo:diesel-guard" = "=0.12.0"
 node = "24.19.0"
-pnpm = "11.20.0"
+pnpm = "11.21.0"
 zizmor = "1.29.0"
