@@ -11,7 +11,7 @@ workspace = true
 anyhow = "=1.0.104"
 diesel = { version = "=2.3.12", features = ["postgres", "serde_json"] }
 diesel-async = { version = "=0.9.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
-futures-util = "=0.3.33"
+futures-util = "=0.3.34"
 sentry-core = { version = "=0.48.5", features = ["client"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
