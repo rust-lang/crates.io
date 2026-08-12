@@ -29,6 +29,7 @@ expression: json
       "name": null,
       "avatar": null,
       "url": "https://github.com/foo",
+      "github_username_matches": true,
       "created_at": "[datetime]"
     },
     "audit_actions": [
@@ -40,6 +41,7 @@ expression: json
           "name": null,
           "avatar": null,
           "url": "https://github.com/foo",
+          "github_username_matches": true,
           "created_at": "[datetime]"
         },
         "time": "[datetime]"
@@ -52,6 +54,7 @@ expression: json
           "name": null,
           "avatar": null,
           "url": "https://github.com/foo",
+          "github_username_matches": true,
           "created_at": "[datetime]"
         },
         "time": "[datetime]"

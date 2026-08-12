@@ -1,11 +1,12 @@
 use crate::TestApp;
+use crate::builders::OauthGithubBuilder;
 use crate::util::github::next_gh_id;
 use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
 use claims::{assert_err, assert_ok, assert_ok_eq};
 use crates_io::controllers::session;
-use crates_io::models::{ApiToken, Email, OauthGithub, User};
-use crates_io::schema::oauth_github;
+use crates_io::models::{ApiToken, Email, OauthGithub, PublicUser, User};
+use crates_io::schema::{oauth_github, users};
 use crates_io::util::token::HashedToken;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::GitHubUser;
@@ -21,6 +22,34 @@ impl crate::util::MockCookieUser {
         let response = self.put::<()>(&url, &[] as &[u8]).await;
         assert_snapshot!(response.status(), @"200 OK");
         assert_eq!(response.json(), json!({ "ok": true }));
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn public_user_github_username_matches() {
+    let (app, _, matching_user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let mismatching_user = app.db_new_user("bar").await;
+    OauthGithubBuilder::for_user(mismatching_user.as_model())
+        .with_login("BAR")
+        .insert(&conn)
+        .await;
+
+    let unlinked_user_id = crate::new_user("baz").insert(&conn).await.unwrap();
+
+    for (user_id, expected) in [
+        (matching_user.as_model().id, true),
+        (mismatching_user.as_model().id, false),
+        (unlinked_user_id, false),
+    ] {
+        let user = PublicUser::query()
+            .filter(users::id.eq(user_id))
+            .first(&mut conn)
+            .await
+            .unwrap();
+
+        assert_eq!(user.github_username_matches, expected);
     }
 }
 

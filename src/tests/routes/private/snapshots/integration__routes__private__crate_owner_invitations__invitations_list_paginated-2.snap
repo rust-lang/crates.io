@@ -20,6 +20,7 @@ expression: invitations
       "name": null,
       "avatar": null,
       "url": "https://github.com/foo",
+      "github_username_matches": true,
       "created_at": "[datetime]"
     },
     {
@@ -28,6 +29,7 @@ expression: invitations
       "name": null,
       "avatar": null,
       "url": "https://github.com/invited_user",
+      "github_username_matches": true,
       "created_at": "[datetime]"
     }
   ],

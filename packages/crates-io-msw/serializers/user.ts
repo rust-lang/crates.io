@@ -11,13 +11,13 @@ export function serializeUser(
   user: User,
   { removePrivateData = true }: { removePrivateData?: boolean } = {},
 ): ApiUser | ApiAuthenticatedUser {
-  let serialized: ApiUser = {
+  let serialized = {
     id: user.id,
     login: user.login,
     name: user.name,
     url: user.url,
     avatar: user.avatar,
-  };
+  } satisfies Omit<ApiUser, 'github_username_matches'>;
 
   if (!removePrivateData) {
     return {
@@ -30,5 +30,8 @@ export function serializeUser(
     };
   }
 
-  return serialized;
+  return {
+    ...serialized,
+    github_username_matches: user.githubAccounts.some(account => account.login === user.login),
+  };
 }

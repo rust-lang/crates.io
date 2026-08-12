@@ -11,7 +11,13 @@ test('default are applied', async ({ expect }) => {
       "emailVerificationToken": null,
       "emailVerified": true,
       "followedCrates": [],
-      "githubLogin": "user-1",
+      "githubAccounts": [
+        {
+          "accountId": "1",
+          "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "login": "user-1",
+        },
+      ],
       "id": 1,
       "isAdmin": false,
       "login": "user-1",
@@ -31,7 +37,13 @@ test('name can be set', async ({ expect }) => {
       "emailVerificationToken": null,
       "emailVerified": true,
       "followedCrates": [],
-      "githubLogin": "john-doe",
+      "githubAccounts": [
+        {
+          "accountId": "1",
+          "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "login": "john-doe",
+        },
+      ],
       "id": 1,
       "isAdmin": false,
       "login": "john-doe",

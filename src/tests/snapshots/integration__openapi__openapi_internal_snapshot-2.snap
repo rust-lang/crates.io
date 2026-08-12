@@ -838,6 +838,13 @@ expression: response.json()
               "null"
             ]
           },
+          "github_username_matches": {
+            "description": "Whether a linked GitHub username exactly matches the crates.io username.\n\nThis field is present only for user owners.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "id": {
             "description": "The opaque identifier for the team or user, depending on the `kind` field.",
             "example": 42,
@@ -1091,6 +1098,10 @@ expression: response.json()
               "null"
             ]
           },
+          "github_username_matches": {
+            "description": "Whether a linked GitHub username exactly matches the crates.io username.",
+            "type": "boolean"
+          },
           "id": {
             "description": "An opaque identifier for the user.",
             "example": 42,
@@ -1119,7 +1130,8 @@ expression: response.json()
         "required": [
           "id",
           "login",
-          "url"
+          "url",
+          "github_username_matches"
         ],
         "type": "object"
       },

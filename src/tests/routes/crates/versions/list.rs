@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
+use crates_io::models::{NewVersionOwnerAction, Version, VersionAction};
 use crates_io::schema::versions;
 use crates_io::views::EncodableVersion;
 use diesel::{prelude::*, update};
@@ -22,6 +23,19 @@ async fn versions() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
+    let published_version = versions::table
+        .filter(versions::num.eq("0.5.1"))
+        .select(Version::as_select())
+        .first(&mut conn)
+        .await?;
+    NewVersionOwnerAction::builder()
+        .version_id(published_version.id)
+        .user_id(user.id)
+        .action(VersionAction::Publish)
+        .build()
+        .insert(&conn)
+        .await?;
+
     // Make version 1.0.0 mimic a version published before we started recording who published
     // versions
     let none: Option<i32> = None;
@@ -37,6 +51,8 @@ async fn versions() -> anyhow::Result<()> {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
         ".versions[].published_by.created_at" => "[datetime]",
+        ".versions[].audit_actions[].time" => "[datetime]",
+        ".versions[].audit_actions[].user.created_at" => "[datetime]",
     });
 
     Ok(())

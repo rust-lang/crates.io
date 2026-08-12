@@ -35,11 +35,14 @@ test('returns the list of users that own the specified crate', async function ()
 
   let response = await fetch('/api/v1/crates/rand/owner_user');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.users[0].github_username_matches).toBe(true);
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "github_username_matches": true,
           "id": 1,
           "kind": "user",
           "login": "john-doe",

@@ -5,13 +5,15 @@ import { db } from '../../index.js';
 test('returns the `user` resource including the private fields', async function () {
   let user = await db.user.create({
     login: 'crates-user',
-    githubLogin: 'github-user',
+    githubAccounts: [{ accountId: '10', login: 'github-user', avatar: null }],
   });
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let responsePayload = await response.json();
+  expect(responsePayload.user).not.toHaveProperty('github_username_matches');
+  expect(responsePayload).toMatchInlineSnapshot(`
     {
       "owned_crates": [],
       "user": {

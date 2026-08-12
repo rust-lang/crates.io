@@ -6,6 +6,7 @@ expression: response.json()
   "users": [
     {
       "avatar": null,
+      "github_username_matches": true,
       "id": 1,
       "kind": "user",
       "login": "foo",
@@ -14,6 +15,7 @@ expression: response.json()
     },
     {
       "avatar": null,
+      "github_username_matches": true,
       "id": 2,
       "kind": "user",
       "login": "bar",

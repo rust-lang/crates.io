@@ -1532,6 +1532,12 @@ export interface components {
              */
             avatar?: string | null;
             /**
+             * @description Whether a linked GitHub username exactly matches the crates.io username.
+             *
+             *     This field is present only for user owners.
+             */
+            github_username_matches?: boolean | null;
+            /**
              * Format: int32
              * @description The opaque identifier for the team or user, depending on the `kind` field.
              * @example 42
@@ -1661,6 +1667,8 @@ export interface components {
              *     deleted before June 19, 2026, this field will be empty.
              */
             created_at?: string | null;
+            /** @description Whether a linked GitHub username exactly matches the crates.io username. */
+            github_username_matches: boolean;
             /**
              * Format: int32
              * @description An opaque identifier for the user.

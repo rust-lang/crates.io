@@ -45,6 +45,7 @@
       published_by: {
         id: 1,
         login: 'dtolnay',
+        github_username_matches: true,
         name: 'David Tolnay',
         avatar: 'https://avatars.githubusercontent.com/u/1940490?v=4',
         url: 'https://github.com/dtolnay',
