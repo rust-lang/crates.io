@@ -53,7 +53,7 @@
     "@sveltejs/adapter-static": "3.0.10",
     "@sveltejs/enhanced-img": "0.11.0",
     "@sveltejs/kit": "2.70.2",
-    "@sveltejs/vite-plugin-svelte": "7.2.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@types/node": "24.13.3",
     "@types/semver": "7.8.0",
     "@unocss/preset-icons": "66.7.5",
