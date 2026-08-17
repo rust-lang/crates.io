@@ -176,8 +176,8 @@ pub struct ChangeOwnersRequest {
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
     ///
     /// To disambiguate between crates.io and GitHub usernames, use
-    /// the `cratesio:username` or `github:username` prefix.
-    #[schema(example = json!(["octocat", "github:rust-lang:owners", "cratesio:some_user", "github:other_user"]))]
+    /// the `crates.io:username` or `github:username` prefix.
+    #[schema(example = json!(["octocat", "github:rust-lang:owners", "crates.io:some_user", "github:other_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
@@ -368,7 +368,7 @@ async fn resolve_unprefixed_login(
         let error = format_args!(
             "username `{username}` is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n\n\
              To confirm this is the account you want to add, please run one of the following:\n\n\
-             $ cargo owner --add cratesio:{username}\n\
+             $ cargo owner --add crates.io:{username}\n\
              $ cargo owner --add github:{gh_login}\n\n\
              If this is not the account you want to add, verify the crates.io username of the account you want.",
         );
@@ -413,7 +413,7 @@ async fn add_owner(
                 .optional()?
                 .ok_or_else(|| {
                     bad_request(format_args!(
-                        "could not find user with cratesio username {username}"
+                        "could not find user with crates.io username {username}"
                     ))
                 })?;
             invite_user_owner(app, conn, req_user, user, username, krate).await
@@ -454,7 +454,7 @@ async fn remove_owner(
                 let error = format_args!(
                     "username `{username}` is ambiguous. There are two owners of this crate with the username `{username}` on different services.\n\n\
                      To confirm which owner you want to remove, please run one of the following:\n\n\
-                     $ cargo owner --remove cratesio:{username}\n\
+                     $ cargo owner --remove crates.io:{username}\n\
                      $ cargo owner --remove github:{username}\n\n\
                      If this is not the account you want to remove, verify the crates.io username of the account you want.",
                 );
@@ -484,7 +484,7 @@ enum Login<'a> {
     },
     /// GitHub user (e.g. `github:username`).
     GitHub(&'a str),
-    /// crates.io user (`cratesio:username`).
+    /// crates.io user (`crates.io:username`).
     CratesIo(&'a str),
     /// Unprefixed username (`username` without any prefix)
     Unprefixed(&'a str),
@@ -514,10 +514,10 @@ fn parse_login<'a>(login: &'a str) -> Result<Login<'a>, BoxedAppError> {
             Ok(Login::GitHubTeam { login, org, team })
         }
         ["github", username] if is_valid(username, "username")? => Ok(Login::GitHub(username)),
-        ["cratesio", username] if is_valid(username, "username")? => Ok(Login::CratesIo(username)),
+        ["crates.io", username] if is_valid(username, "username")? => Ok(Login::CratesIo(username)),
         [username] if is_valid(username, "username")? => Ok(Login::Unprefixed(username)),
         _ => Err(bad_request(
-            "invalid argument. only github:org:team, github:username, cratesio:username and username are supported.",
+            "invalid argument. only github:org:team, github:username, crates.io:username and username are supported.",
         )),
     }
 }

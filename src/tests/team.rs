@@ -32,7 +32,7 @@ async fn not_github() {
         .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -77,7 +77,7 @@ async fn too_many_colons() {
         .add_named_owner("foo_too_many_colons", "github:test:core:extra")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -188,7 +188,7 @@ async fn test_remove_ambiguous_user() {
 
     let response = cookie.remove_named_owner("foo", "alice").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice` is ambiguous. There are two owners of this crate with the username `alice` on different services.\n\nTo confirm which owner you want to remove, please run one of the following:\n\n$ cargo owner --remove cratesio:alice\n$ cargo owner --remove github:alice\n\nIf this is not the account you want to remove, verify the crates.io username of the account you want."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice` is ambiguous. There are two owners of this crate with the username `alice` on different services.\n\nTo confirm which owner you want to remove, please run one of the following:\n\n$ cargo owner --remove crates.io:alice\n$ cargo owner --remove github:alice\n\nIf this is not the account you want to remove, verify the crates.io username of the account you want."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -218,7 +218,7 @@ async fn test_remove_ambiguous_user_with_cratesio_prefix() {
             .unwrap();
     }
 
-    let response = cookie.remove_named_owner("foo", "cratesio:alice").await;
+    let response = cookie.remove_named_owner("foo", "crates.io:alice").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
@@ -289,13 +289,13 @@ async fn test_remove_ambiguous_user_differing_only_by_separator() {
 
     let response = cookie.remove_named_owner("foo", "alice-2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice-2` is ambiguous. There are two owners of this crate with the username `alice-2` on different services.\n\nTo confirm which owner you want to remove, please run one of the following:\n\n$ cargo owner --remove cratesio:alice-2\n$ cargo owner --remove github:alice-2\n\nIf this is not the account you want to remove, verify the crates.io username of the account you want."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice-2` is ambiguous. There are two owners of this crate with the username `alice-2` on different services.\n\nTo confirm which owner you want to remove, please run one of the following:\n\n$ cargo owner --remove crates.io:alice-2\n$ cargo owner --remove github:alice-2\n\nIf this is not the account you want to remove, verify the crates.io username of the account you want."}]}"#);
 
     // The suggested commands name the owners as they are stored, so both work.
     let response = cookie.remove_named_owner("foo", "github:alice_2").await;
     assert_snapshot!(response.status(), @"200 OK");
 
-    let response = cookie.remove_named_owner("foo", "cratesio:alice-2").await;
+    let response = cookie.remove_named_owner("foo", "crates.io:alice-2").await;
     assert_snapshot!(response.status(), @"200 OK");
 }
 
@@ -438,7 +438,7 @@ async fn test_remove_mixed_case_cratesio() {
         .await
         .unwrap();
 
-    let response = cookie.remove_named_owner("foo", "cratesio:USer2").await;
+    let response = cookie.remove_named_owner("foo", "crates.io:USer2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
@@ -512,7 +512,7 @@ async fn test_remove_separator_variant_cratesio() {
         .await
         .unwrap();
 
-    let response = cookie.remove_named_owner("foo", "cratesio:user_2").await;
+    let response = cookie.remove_named_owner("foo", "crates.io:user_2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
@@ -558,7 +558,7 @@ async fn test_reject_team_with_extra_component() {
         .remove_named_owner("foo", "github:alice:team:extra")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -598,7 +598,7 @@ async fn test_reject_empty_cratesio_username() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie.remove_named_owner("foo", "cratesio:").await;
+    let response = cookie.remove_named_owner("foo", "crates.io:").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
 }
@@ -643,7 +643,7 @@ async fn test_unsupported_disambiguation_prefix() {
 
     let response = cookie.remove_named_owner("foo", "gitlab:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 /// Test that removing with nonexistent github username returns an error.
@@ -661,7 +661,7 @@ async fn test_disambiguated_github_username_not_found() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `nonexistent`"}]}"#);
 }
 
-/// Test that removing with nonexistent cratesio username returns an error.
+/// Test that removing with nonexistent crates.io username returns an error.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguated_cratesio_username_not_found() {
     let (app, _, cookie) = TestApp::full().with_user().await;
@@ -672,7 +672,7 @@ async fn test_disambiguated_cratesio_username_not_found() {
         .await;
 
     let response = cookie
-        .remove_named_owner("foo", "cratesio:nonexistent")
+        .remove_named_owner("foo", "crates.io:nonexistent")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `nonexistent`"}]}"#);
@@ -708,7 +708,7 @@ async fn test_disambiguate_remove_with_github_prefix() {
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
 
-/// Test that removing an ambiguous user with cratesio: prefix works .
+/// Test that removing an ambiguous user with crates.io: prefix works .
 #[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguate_remove_with_cratesio_prefix() {
     let (app, _, cookie) = TestApp::full().with_user().await;
@@ -728,7 +728,7 @@ async fn test_disambiguate_remove_with_cratesio_prefix() {
         .await
         .unwrap();
 
-    let response = cookie.remove_named_owner("foo", "cratesio:user2").await;
+    let response = cookie.remove_named_owner("foo", "crates.io:user2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }

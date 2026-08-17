@@ -213,7 +213,7 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    /// Remove owner given a cratesio username.
+    /// Remove owner given a crates.io username.
     pub async fn owner_remove_with_username(
         &self,
         mut conn: &AsyncPgConnection,

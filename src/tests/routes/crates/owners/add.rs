@@ -397,7 +397,7 @@ async fn test_unsupported_disambiguation_prefix() {
 
     let response = cookie.add_named_owner("foo", "gitlab:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -423,9 +423,9 @@ async fn test_disambiguated_cratesio_username_not_found() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie.add_named_owner("foo", "cratesio:nonexistent").await;
+    let response = cookie.add_named_owner("foo", "crates.io:nonexistent").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with cratesio username nonexistent"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with crates.io username nonexistent"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -446,7 +446,7 @@ async fn test_ambiguous_username_error() {
 
     let response = cookie.add_named_owner("foo", "user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `user2` is possibly ambiguous. The crates.io account `user2` is associated with GitHub user `user2-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add cratesio:user2\n$ cargo owner --add github:user2-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `user2` is possibly ambiguous. The crates.io account `user2` is associated with GitHub user `user2-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add crates.io:user2\n$ cargo owner --add github:user2-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -519,11 +519,11 @@ async fn test_shared_login_is_ambiguous_even_when_one_account_is_already_an_owne
 
     let response = cookie.add_named_owner("foo", "alice").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice` is possibly ambiguous. The crates.io account `alice` is associated with GitHub user `alice-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add cratesio:alice\n$ cargo owner --add github:alice-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username `alice` is possibly ambiguous. The crates.io account `alice` is associated with GitHub user `alice-gh`.\n\nTo confirm this is the account you want to add, please run one of the following:\n\n$ cargo owner --add crates.io:alice\n$ cargo owner --add github:alice-gh\n\nIf this is not the account you want to add, verify the crates.io username of the account you want."}]}"#);
 
-    let response = cookie.add_named_owner("foo", "cratesio:alice").await;
+    let response = cookie.add_named_owner("foo", "crates.io:alice").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cratesio:alice is already an owner"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io:alice is already an owner"}]}"#);
 
     // …while disambiguating to the GitHub `alice` invites the other account.
     let response = cookie.add_named_owner("foo", "github:alice").await;
@@ -565,8 +565,8 @@ async fn test_disambiguate_with_cratesio_prefix() {
         .expect_build(&mut conn)
         .await;
 
-    // Using cratesio: prefix should resolve the ambiguity and invite the user
-    let response = cookie.add_named_owner("foo", "cratesio:user2").await;
+    // Using crates.io: prefix should resolve the ambiguity and invite the user
+    let response = cookie.add_named_owner("foo", "crates.io:user2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"#);
 }
@@ -613,7 +613,7 @@ async fn test_add_mixed_case_cratesio_login() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie.add_named_owner("foo", "cratesio:USeR2").await;
+    let response = cookie.add_named_owner("foo", "crates.io:USeR2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user USeR2 has been invited to be an owner of crate foo","ok":true}"#);
 }
@@ -682,9 +682,9 @@ async fn test_already_owner_cratesio() {
         .await
         .unwrap();
 
-    let response = cookie.add_named_owner("foo", "cratesio:user2").await;
+    let response = cookie.add_named_owner("foo", "crates.io:user2").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cratesio:user2 is already an owner"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io:user2 is already an owner"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -763,7 +763,7 @@ async fn test_reject_team_with_extra_component() {
         .add_named_owner("foo", "github:alice:team:extra")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -777,7 +777,7 @@ async fn test_reject_empty_org_with_extra_component() {
 
     let response = cookie.add_named_owner("foo", "github::team:extra").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -831,7 +831,7 @@ async fn test_reject_empty_cratesio_username() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie.add_named_owner("foo", "cratesio:").await;
+    let response = cookie.add_named_owner("foo", "crates.io:").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
 }
@@ -861,7 +861,7 @@ async fn test_reject_single_colon() {
 
     let response = cookie.add_named_owner("foo", ":").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -875,7 +875,7 @@ async fn test_reject_double_colon() {
 
     let response = cookie.add_named_owner("foo", "::").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, cratesio:username and username are supported."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

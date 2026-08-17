@@ -2675,11 +2675,11 @@ export interface operations {
                      *     For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
                      *
                      *     To disambiguate between crates.io and GitHub usernames, use
-                     *     the `cratesio:username` or `github:username` prefix.
+                     *     the `crates.io:username` or `github:username` prefix.
                      * @example [
                      *       "octocat",
                      *       "github:rust-lang:owners",
-                     *       "cratesio:some_user",
+                     *       "crates.io:some_user",
                      *       "github:other_user"
                      *     ]
                      */
@@ -2727,11 +2727,11 @@ export interface operations {
                      *     For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
                      *
                      *     To disambiguate between crates.io and GitHub usernames, use
-                     *     the `cratesio:username` or `github:username` prefix.
+                     *     the `crates.io:username` or `github:username` prefix.
                      * @example [
                      *       "octocat",
                      *       "github:rust-lang:owners",
-                     *       "cratesio:some_user",
+                     *       "crates.io:some_user",
                      *       "github:other_user"
                      *     ]
                      */
