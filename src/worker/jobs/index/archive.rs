@@ -124,7 +124,7 @@ impl BackgroundJob for ArchiveIndexBranch {
         let push_start = Instant::now();
         let output = Command::new("git")
             .current_dir(tempdir.path())
-            .args(["push", REMOTE_NAME, &refspec])
+            .args(["push", "--progress", REMOTE_NAME, &refspec])
             .output()
             .await?;
 
