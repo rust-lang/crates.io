@@ -19,12 +19,18 @@
   let cargoInstallCommand = $derived(exactVersion ? `cargo install ${crate}@${version}` : `cargo install ${crate}`);
 
   let cargoAddCommand = $derived(exactVersion ? `cargo add ${crate}@=${version}` : `cargo add ${crate}`);
-
+  
   let tomlSnippet = $derived.by(() => {
     let v = version.split('+', 1)[0];
     let exact = exactVersion ? '=' : '';
     return `${crate} = "${exact}${v}"`;
   });
+
+  let cargoVersionCommand = $derived.by(() => {
+  let v = version.split('+', 1)[0];
+  return exactVersion ? `=${v}` : v;
+});
+  
 </script>
 
 <div class="install-instructions">
@@ -71,6 +77,7 @@
         <span class="selectable">{cargoAddCommand}</span>
         <Icon class="i-mdi:content-copy copy-icon" />
       </CopyButton>
+      
     {:else}
       <code class="copy-fallback">{cargoAddCommand}</code>
     {/if}
@@ -84,6 +91,16 @@
       </CopyButton>
     {:else}
       <code class="copy-fallback">{tomlSnippet}</code>
+    {/if}
+     <p class="copy-help">Or copy just the version:</p>
+
+    {#if isClipboardSupported}
+      <CopyButton copyText={cargoVersionCommand} title="Copy version to clipboard" class="copy-button">
+        <span class="selectable">{cargoVersionCommand}</span>
+        <Icon class="i-mdi:content-copy copy-icon" />
+      </CopyButton>
+    {:else}
+      <code class="copy-fallback">{cargoVersionCommand}</code>
     {/if}
   {/if}
 </div>
