@@ -4,8 +4,10 @@ use serde::Serialize;
 
 pub mod authorization;
 pub(crate) mod pagination;
+pub(crate) mod username;
 
 pub(crate) use self::pagination::Paginate;
+pub(crate) use self::username::{USERNAME_COOLDOWN, check_username};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct OkResponse {

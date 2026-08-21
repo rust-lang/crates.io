@@ -5460,6 +5460,7 @@ export interface operations {
                     user: {
                         email?: string | null;
                         publish_notifications?: boolean | null;
+                        username?: string | null;
                     };
                 };
             };
