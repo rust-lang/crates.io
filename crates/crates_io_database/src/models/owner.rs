@@ -102,10 +102,17 @@ impl Owner {
         }
     }
 
-    pub fn login(&self) -> &str {
+    pub fn username(&self) -> &str {
         match self {
-            Owner::User(user) => &user.gh_login,
+            Owner::User(user) => &user.username,
             Owner::Team(team) => &team.login,
+        }
+    }
+
+    pub fn gh_login(&self) -> Option<&str> {
+        match self {
+            Owner::User(user) => user.gh_username.as_deref(),
+            Owner::Team(team) => Some(&team.login),
         }
     }
 

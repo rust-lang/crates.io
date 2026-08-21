@@ -175,6 +175,42 @@ impl TestApp {
         }
     }
 
+    /// Create a new user with a different GitHub login and a verified email
+    /// address in the database (`<username>@example.com`) and return a mock
+    /// user session.
+    ///
+    /// This method updates the database directly.
+    pub async fn db_new_user_with_gh_login(
+        &self,
+        username: &str,
+        gh_login: &str,
+    ) -> MockCookieUser {
+        let conn = self.db_conn().await;
+
+        let email = format!("{username}@example.com");
+
+        let new_user = crate::builders::UserBuilder::new()
+            .with_username(username)
+            .with_gh_login(gh_login)
+            .new_user();
+        let id = new_user.insert(&conn).await.unwrap();
+
+        let new_email = NewEmail::builder()
+            .user_id(id)
+            .email(&email)
+            .verified(true)
+            .build();
+
+        new_email.insert(&conn).await.unwrap();
+
+        let user = User::find(&conn, id).await.unwrap();
+
+        MockCookieUser {
+            app: self.clone(),
+            user,
+        }
+    }
+
     /// Obtains a reference to the upstream repository ("the index")
     pub fn upstream_index(&self) -> &UpstreamIndex {
         assert_some!(self.0.index.as_ref())
