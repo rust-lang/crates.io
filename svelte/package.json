@@ -62,7 +62,7 @@
     "@vitest/browser-playwright": "4.1.11",
     "@vitest/coverage-v8": "4.1.11",
     "chromatic": "18.2.0",
-    "magic-string": "1.2.0",
+    "magic-string": "1.2.1",
     "msw": "2.15.0",
     "playwright": "1.62.1",
     "sharp": "0.35.3",
