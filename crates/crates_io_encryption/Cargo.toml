@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-aes-gcm = "=0.11.0"
+aes-gcm = "=0.11.1"
 anyhow = "=1.0.104"
 hex = "=0.4.3"
 secrecy = "=0.10.3"
