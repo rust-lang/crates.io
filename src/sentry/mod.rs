@@ -2,7 +2,6 @@ use crate::config::SentryConfig;
 use http::header::{AUTHORIZATION, COOKIE};
 use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
-use std::sync::Arc;
 use tracing::warn;
 
 /// Initializes the Sentry SDK from the environment variables.
@@ -77,16 +76,22 @@ fn options(config: SentryConfig) -> ClientOptions {
         Some(event)
     };
 
-    ClientOptions {
-        auto_session_tracking: true,
-        dsn: config.dsn,
-        environment: config.environment.map(Into::into),
-        release: config.release.map(Into::into),
-        before_send: Some(Arc::new(before_send)),
-        session_mode: sentry::SessionMode::Request,
-        traces_sampler: Some(Arc::new(traces_sampler)),
-        ..Default::default()
+    let mut options = ClientOptions::new()
+        .auto_session_tracking(true)
+        .before_send(before_send)
+        .maybe_release(config.release)
+        .session_mode(sentry::SessionMode::Request)
+        .traces_sampler(traces_sampler);
+
+    if let Some(dsn) = config.dsn {
+        options = options.dsn(&dsn.to_string());
     }
+
+    if let Some(environment) = config.environment {
+        options = options.environment(environment);
+    }
+
+    options
 }
 
 #[cfg(test)]
