@@ -14,12 +14,20 @@ pub async fn middleware(
     state: AppState,
     req: Request,
     next: Next,
-) -> Result<impl IntoResponse, Response> {
-    block_by_ip(&real_ip, &state, req.headers()).map_err(IntoResponse::into_response)?;
-    block_by_header(&state, &req).map_err(IntoResponse::into_response)?;
-    block_routes(matched_path.as_ref(), &state).map_err(IntoResponse::into_response)?;
+) -> Response {
+    if let Err(rejection) = block_by_ip(&real_ip, &state, req.headers()) {
+        return rejection.into_response();
+    }
 
-    Ok(next.run(req).await)
+    if let Err(rejection) = block_by_header(&state, &req) {
+        return rejection.into_response();
+    }
+
+    if let Err(rejection) = block_routes(matched_path.as_ref(), &state) {
+        return rejection.into_response();
+    }
+
+    next.run(req).await
 }
 
 #[derive(Debug)]
