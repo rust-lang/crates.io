@@ -92,6 +92,7 @@ function createOwner(id: number): Owner {
     name: `User ${id}`,
     avatar: `https://avatars.githubusercontent.com/u/${id}?v=4`,
     url: `https://github.com/user-${id}`,
+    github_username_matches: true,
   };
 }
 

@@ -12,6 +12,11 @@ export default http.get('/api/v1/crates/{name}/owner_user', ({ params, response 
   let ownerships = db.crateOwnership.findMany(q => q.where(ownership => ownership.crate.id === crate.id));
 
   return response(200).json({
-    users: ownerships.filter(o => o.user).map(o => ({ ...serializeUser(o.user), kind: 'user' })),
+    users: ownerships
+      .filter(o => o.user)
+      .map(o => {
+        let user = serializeUser(o.user);
+        return { ...user, name: user.name ?? null, avatar: user.avatar ?? null, kind: 'user' };
+      }),
   });
 });

@@ -18,6 +18,7 @@ function createUser(id: number, options: { name?: string | null; login?: string 
     name,
     avatar: `https://avatars.githubusercontent.com/u/${id}?v=4`,
     url: `https://github.com/${login}`,
+    github_username_matches: true,
   };
 }
 

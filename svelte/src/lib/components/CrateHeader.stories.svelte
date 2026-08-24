@@ -40,6 +40,7 @@
       url: 'https://github.com/johndoe',
       name: 'John Doe',
       avatar: 'https://avatars.githubusercontent.com/u/1234567?v=4',
+      github_username_matches: true,
     },
   ];
 

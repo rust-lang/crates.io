@@ -838,61 +838,121 @@ expression: response.json()
         "type": "object"
       },
       "Owner": {
-        "properties": {
-          "avatar": {
-            "description": "The avatar URL of the team or user.",
-            "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
-            "type": [
-              "string",
-              "null"
-            ]
+        "description": "A user or team that owns a crate.",
+        "oneOf": [
+          {
+            "description": "A user owner.",
+            "properties": {
+              "avatar": {
+                "description": "The user's avatar URL.",
+                "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "github_username_matches": {
+                "description": "Whether a linked GitHub username exactly matches the crates.io username.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "The opaque identifier for the user.",
+                "example": 42,
+                "format": "int32",
+                "type": "integer"
+              },
+              "kind": {
+                "enum": [
+                  "user"
+                ],
+                "type": "string"
+              },
+              "login": {
+                "description": "The crates.io username.",
+                "example": "ghost",
+                "type": "string"
+              },
+              "name": {
+                "description": "The user's display name.",
+                "example": "Kate Morgan",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "The URL to the user's GitHub profile.",
+                "example": "https://github.com/ghost",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "login",
+              "url",
+              "name",
+              "avatar",
+              "github_username_matches",
+              "kind"
+            ],
+            "type": "object"
           },
-          "github_username_matches": {
-            "description": "Whether a linked GitHub username exactly matches the crates.io username.\n\nThis field is present only for user owners.",
-            "type": "boolean"
-          },
-          "id": {
-            "description": "The opaque identifier for the team or user, depending on the `kind` field.",
-            "example": 42,
-            "format": "int32",
-            "type": "integer"
-          },
-          "kind": {
-            "description": "The kind of the owner (`user` or `team`).",
-            "example": "user",
-            "type": "string"
-          },
-          "login": {
-            "description": "The login name of the team or user.",
-            "example": "ghost",
-            "type": "string"
-          },
-          "name": {
-            "description": "The display name of the team or user.",
-            "example": "Kate Morgan",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "url": {
-            "description": "The URL to the owner's profile.",
-            "example": "https://github.com/ghost",
-            "type": [
-              "string",
-              "null"
-            ]
+          {
+            "description": "A team owner.",
+            "properties": {
+              "avatar": {
+                "description": "The team's avatar URL.",
+                "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The opaque identifier for the team.",
+                "example": 42,
+                "format": "int32",
+                "type": "integer"
+              },
+              "kind": {
+                "enum": [
+                  "team"
+                ],
+                "type": "string"
+              },
+              "login": {
+                "description": "The team's login name.",
+                "example": "github:rust-lang:crates-io",
+                "type": "string"
+              },
+              "name": {
+                "description": "The team's display name.",
+                "example": "Crates.io team",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "The URL to the team's GitHub profile.",
+                "example": "https://github.com/rust-lang",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "login",
+              "url",
+              "name",
+              "avatar",
+              "kind"
+            ],
+            "type": "object"
           }
-        },
-        "required": [
-          "id",
-          "login",
-          "kind",
-          "url",
-          "name",
-          "avatar"
-        ],
-        "type": "object"
+        ]
       },
       "PublishWarnings": {
         "properties": {

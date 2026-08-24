@@ -1,7 +1,11 @@
-<script module>
+<script module lang="ts">
+  import type { ComponentProps } from 'svelte';
+
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
   import UserAvatar from './UserAvatar.svelte';
+
+  type AvatarUser = ComponentProps<typeof UserAvatar>['user'];
 
   const { Story } = defineMeta({
     title: 'UserAvatar',
@@ -14,58 +18,46 @@
     },
   });
 
-  const JANE_DOE = {
-    id: 1,
+  const JANE_DOE: AvatarUser = {
     kind: 'user',
     name: 'Jane Doe',
     login: 'janedoe',
     avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
-    url: 'https://github.com/janedoe',
   };
 
-  const ANON_123 = {
-    id: 2,
+  const ANON_123: AvatarUser = {
     kind: 'user',
     name: null,
     login: 'anon123',
     avatar: 'https://avatars.githubusercontent.com/u/2?v=4',
-    url: 'https://github.com/anon123',
   };
 
-  const RUST_TEAM = {
-    id: 5_430_905,
+  const RUST_TEAM: AvatarUser = {
     kind: 'team',
     name: 'Rust Team',
     login: 'rust-lang',
     avatar: 'https://avatars.githubusercontent.com/u/5430905?v=4',
-    url: 'https://github.com/rust-lang',
   };
 
-  const NO_AVATAR_USER = {
-    id: 3,
+  const NO_AVATAR_USER: AvatarUser = {
     kind: 'user',
     name: 'Jane Doe',
     login: 'janedoe',
     avatar: null,
-    url: 'https://github.com/janedoe',
   };
 
-  const NO_AVATAR_ANON = {
-    id: 4,
+  const NO_AVATAR_ANON: AvatarUser = {
     kind: 'user',
     name: null,
     login: 'anon123',
     avatar: null,
-    url: 'https://github.com/anon123',
   };
 
-  const NO_AVATAR_TEAM = {
-    id: 5,
+  const NO_AVATAR_TEAM: AvatarUser = {
     kind: 'team',
     name: 'Rust Team',
     login: 'rust-lang',
     avatar: null,
-    url: 'https://github.com/rust-lang',
   };
 </script>
 
