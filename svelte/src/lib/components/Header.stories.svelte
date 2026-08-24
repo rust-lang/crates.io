@@ -20,6 +20,7 @@
 
   const baseUser: AuthenticatedUser = {
     id: 42,
+    created_at: null,
     login: 'johndoe',
     name: 'John Doe',
     avatar: 'https://avatars.githubusercontent.com/u/1234567?v=4',

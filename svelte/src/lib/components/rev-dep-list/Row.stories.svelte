@@ -25,6 +25,7 @@
       default_features: true,
       features: [],
       downloads: 100_000,
+      target: null,
       dependentCrateName: 'actix-web',
       ...overrides,
     };

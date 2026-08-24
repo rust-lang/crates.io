@@ -15,6 +15,7 @@
   function createCrate(overrides: Partial<Crate> & { id: string; name: string }): Crate {
     return {
       badges: [],
+      categories: null,
       created_at: '2014-11-05T00:00:00Z',
       default_version: '1.0.0',
       description: 'A sample crate description',
@@ -22,13 +23,16 @@
       downloads: 1_000_000,
       exact_match: false,
       homepage: 'https://example.com',
+      keywords: null,
       links: {
         owner_team: `/api/v1/crates/${overrides.id}/owner_team`,
         owner_user: `/api/v1/crates/${overrides.id}/owner_user`,
+        owners: `/api/v1/crates/${overrides.id}/owners`,
         reverse_dependencies: `/api/v1/crates/${overrides.id}/reverse_dependencies`,
         version_downloads: `/api/v1/crates/${overrides.id}/downloads`,
         versions: `/api/v1/crates/${overrides.id}/versions`,
       },
+      max_stable_version: '1.0.0',
       max_version: '1.0.0',
       newest_version: '1.0.0',
       num_versions: 10,
@@ -36,6 +40,7 @@
       repository: 'https://github.com/example/example',
       trustpub_only: false,
       updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      versions: null,
       yanked: false,
       ...overrides,
     };
