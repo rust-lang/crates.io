@@ -2602,12 +2602,12 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?page=3
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * @description Query string to the previous page of results, if any.
                              * @example ?page=1
                              */
-                            prev_page?: string | null;
+                            prev_page: string | null;
                             /**
                              * Format: int64
                              * @description The total number of crates that match the query.

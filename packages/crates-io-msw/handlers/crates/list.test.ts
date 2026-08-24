@@ -9,6 +9,8 @@ test('empty case', async function () {
     {
       "crates": [],
       "meta": {
+        "next_page": null,
+        "prev_page": null,
         "total": 0,
       },
     }
@@ -69,6 +71,8 @@ test('returns a paginated crates list', async function () {
         },
       ],
       "meta": {
+        "next_page": null,
+        "prev_page": null,
         "total": 1,
       },
     }

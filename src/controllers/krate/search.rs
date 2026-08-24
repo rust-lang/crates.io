@@ -53,11 +53,11 @@ pub struct CrateListMeta {
     total: i64,
 
     /// Query string to the next page of results, if any.
-    #[schema(example = "?page=3")]
+    #[schema(required = true, example = "?page=3")]
     next_page: Option<String>,
 
     /// Query string to the previous page of results, if any.
-    #[schema(example = "?page=1")]
+    #[schema(required = true, example = "?page=1")]
     prev_page: Option<String>,
 }
 

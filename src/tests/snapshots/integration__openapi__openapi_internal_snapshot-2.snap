@@ -2611,7 +2611,9 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page",
+                        "prev_page"
                       ],
                       "type": "object"
                     }

@@ -80,7 +80,7 @@ export default http.get('/api/v1/crates', ({ request, response }) => {
     .slice(start, end)
     .map(c => ({ ...serializeCrate(c), exact_match: c.name.toLowerCase() === q }));
 
-  return response(200).json({ crates: serialized, meta: { total } });
+  return response(200).json({ crates: serialized, meta: { total, next_page: null, prev_page: null } });
 });
 
 export function compare(a: string, b: string) {
