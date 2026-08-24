@@ -878,7 +878,10 @@ expression: response.json()
         "required": [
           "id",
           "login",
-          "kind"
+          "kind",
+          "url",
+          "name",
+          "avatar"
         ],
         "type": "object"
       },

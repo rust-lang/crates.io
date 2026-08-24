@@ -543,15 +543,18 @@ pub struct EncodableOwner {
     pub kind: String,
 
     /// The URL to the owner's profile.
-    #[schema(example = "https://github.com/ghost")]
+    #[schema(required = true, example = "https://github.com/ghost")]
     pub url: Option<String>,
 
     /// The display name of the team or user.
-    #[schema(example = "Kate Morgan")]
+    #[schema(required = true, example = "Kate Morgan")]
     pub name: Option<String>,
 
     /// The avatar URL of the team or user.
-    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    #[schema(
+        required = true,
+        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+    )]
     pub avatar: Option<String>,
 
     /// Whether a linked GitHub username exactly matches the crates.io username.

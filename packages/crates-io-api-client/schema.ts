@@ -1530,7 +1530,7 @@ export interface components {
              * @description The avatar URL of the team or user.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * @description Whether a linked GitHub username exactly matches the crates.io username.
              *
@@ -1557,12 +1557,12 @@ export interface components {
              * @description The display name of the team or user.
              * @example Kate Morgan
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description The URL to the owner's profile.
              * @example https://github.com/ghost
              */
-            url?: string | null;
+            url: string | null;
         };
         PublishWarnings: {
             /**
