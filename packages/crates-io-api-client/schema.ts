@@ -1404,7 +1404,7 @@ export interface components {
              */
             req: string;
             /** @description The target platform for this dependency, if any. */
-            target?: string | null;
+            target: string | null;
             /**
              * Format: int32
              * @description The ID of the version this dependency belongs to.

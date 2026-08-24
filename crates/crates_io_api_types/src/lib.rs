@@ -172,6 +172,7 @@ pub struct EncodableDependency {
     pub features: Vec<String>,
 
     /// The target platform for this dependency, if any.
+    #[schema(required = true)]
     pub target: Option<String>,
 
     /// The type of dependency this is (normal, dev, or build).

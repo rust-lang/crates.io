@@ -617,6 +617,7 @@ expression: response.json()
           "optional",
           "default_features",
           "features",
+          "target",
           "kind",
           "downloads"
         ],
