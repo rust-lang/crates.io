@@ -1604,6 +1604,9 @@ expression: response.json()
                           ]
                         }
                       },
+                      "required": [
+                        "next_page"
+                      ],
                       "type": "object"
                     },
                     "users": {

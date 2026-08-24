@@ -1950,7 +1950,7 @@ export interface operations {
                              * @description Query parameter string to fetch the next page of results.
                              * @example ?seek=c0ffee
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                         };
                         /** @description The list of users referenced in the crate owner invitations. */
                         users: components["schemas"]["User"][];

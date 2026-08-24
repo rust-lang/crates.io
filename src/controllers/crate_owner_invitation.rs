@@ -336,7 +336,7 @@ pub struct PrivateListResponse {
 #[derive(Serialize, utoipa::ToSchema)]
 struct ResponseMeta {
     /// Query parameter string to fetch the next page of results.
-    #[schema(example = "?seek=c0ffee")]
+    #[schema(required = true, example = "?seek=c0ffee")]
     next_page: Option<String>,
 }
 
