@@ -2954,7 +2954,7 @@ export interface operations {
                          * @description The versions referenced in the download counts, if `?include=versions`
                          *     was requested.
                          */
-                        versions?: components["schemas"]["Version"][] | null;
+                        versions?: components["schemas"]["Version"][];
                     };
                 };
             };

@@ -2476,10 +2476,7 @@ expression: response.json()
                       "items": {
                         "$ref": "#/components/schemas/Version"
                       },
-                      "type": [
-                        "array",
-                        "null"
-                      ]
+                      "type": "array"
                     }
                   },
                   "required": [
