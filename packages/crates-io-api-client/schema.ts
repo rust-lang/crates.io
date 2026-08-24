@@ -4693,7 +4693,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description Optional banner message to display on all pages. */
-                        banner_message?: string | null;
+                        banner_message?: string;
                         /**
                          * @description CDN base URL that e.g. crate files are served from.
                          * @example https://static.crates.io

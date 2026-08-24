@@ -4605,10 +4605,7 @@ expression: response.json()
                   "properties": {
                     "banner_message": {
                       "description": "Optional banner message to display on all pages.",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": "string"
                     },
                     "cdn_base": {
                       "description": "CDN base URL that e.g. crate files are served from.",

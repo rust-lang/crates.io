@@ -25,6 +25,8 @@ pub struct MetadataResponse<'a> {
     pub read_only: bool,
 
     /// Optional banner message to display on all pages.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(nullable = false)]
     pub banner_message: Option<&'a str>,
 }
 
