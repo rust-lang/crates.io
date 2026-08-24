@@ -242,10 +242,7 @@ expression: response.json()
             "items": {
               "$ref": "#/components/schemas/Category"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           },
           "slug": {
             "description": "The \"slug\" of the category.\n\nSee <https://crates.io/category_slugs>.",
@@ -258,10 +255,7 @@ expression: response.json()
             "items": {
               "$ref": "#/components/schemas/Category"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           }
         },
         "required": [

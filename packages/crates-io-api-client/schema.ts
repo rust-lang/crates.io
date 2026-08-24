@@ -1162,7 +1162,7 @@ export interface components {
              *     but not when listing categories.
              * @example []
              */
-            parent_categories?: components["schemas"]["Category"][] | null;
+            parent_categories?: components["schemas"]["Category"][];
             /**
              * @description The "slug" of the category.
              *
@@ -1177,7 +1177,7 @@ export interface components {
              *     but not when listing categories.
              * @example []
              */
-            subcategories?: components["schemas"]["Category"][] | null;
+            subcategories?: components["schemas"]["Category"][];
         };
         Crate: {
             /**

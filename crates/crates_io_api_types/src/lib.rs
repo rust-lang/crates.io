@@ -47,7 +47,7 @@ pub struct EncodableCategory {
     /// This field is only present when the category details are queried,
     /// but not when listing categories.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(no_recursion, example = json!([]))]
+    #[schema(nullable = false, no_recursion, example = json!([]))]
     pub subcategories: Option<Vec<EncodableCategory>>,
 
     /// The parent categories of this category.
@@ -55,7 +55,7 @@ pub struct EncodableCategory {
     /// This field is only present when the category details are queried,
     /// but not when listing categories.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(no_recursion, example = json!([]))]
+    #[schema(nullable = false, no_recursion, example = json!([]))]
     pub parent_categories: Option<Vec<EncodableCategory>>,
 }
 
