@@ -1135,8 +1135,11 @@ expression: response.json()
         "required": [
           "id",
           "login",
+          "name",
+          "avatar",
           "url",
-          "github_username_matches"
+          "github_username_matches",
+          "created_at"
         ],
         "type": "object"
       },
