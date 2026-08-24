@@ -4926,7 +4926,7 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?seek=abc123
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * Format: int64
                              * @description The total number of GitHub configs belonging to the crate.

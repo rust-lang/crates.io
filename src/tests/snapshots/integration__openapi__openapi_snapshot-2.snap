@@ -4963,7 +4963,8 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page"
                       ],
                       "type": "object"
                     }
