@@ -892,15 +892,15 @@ pub struct EncodableVersion {
     pub yanked: bool,
 
     /// The message given when this version was yanked, if any.
-    #[schema(example = "Security vulnerability")]
+    #[schema(required = true, example = "Security vulnerability")]
     pub yank_message: Option<String>,
 
     /// The name of the native library this version links with, if any.
-    #[schema(example = "git2")]
+    #[schema(required = true, example = "git2")]
     pub lib_links: Option<String>,
 
     /// The license of this version of the crate.
-    #[schema(example = "MIT")]
+    #[schema(required = true, example = "MIT")]
     pub license: Option<String>,
 
     /// Links to other API endpoints related to this version.
@@ -914,6 +914,7 @@ pub struct EncodableVersion {
     ///
     /// This field may be `null` if the version was published before crates.io
     /// started recording this information.
+    #[schema(required = true)]
     pub published_by: Option<EncodablePublicUser>,
 
     /// A list of actions performed on this version.
@@ -927,35 +928,38 @@ pub struct EncodableVersion {
 
     /// The minimum version of the Rust compiler required to compile
     /// this version, if set.
-    #[schema(example = "1.31")]
+    #[schema(required = true, example = "1.31")]
     pub rust_version: Option<String>,
 
     /// Whether this version can be used as a library.
-    #[schema(example = true)]
+    #[schema(required = true, example = true)]
     pub has_lib: Option<bool>,
 
     /// The names of the binaries provided by this version, if any.
-    #[schema(example = json!([]))]
+    #[schema(required = true, example = json!([]))]
     pub bin_names: Option<Vec<Option<String>>>,
 
     /// The Rust Edition used to compile this version, if set.
-    #[schema(example = "2021")]
+    #[schema(required = true, example = "2021")]
     pub edition: Option<String>,
 
     /// The description of this version of the crate.
-    #[schema(example = "A generic serialization/deserialization framework")]
+    #[schema(
+        required = true,
+        example = "A generic serialization/deserialization framework"
+    )]
     pub description: Option<String>,
 
     /// The URL to the crate's homepage, if set.
-    #[schema(example = "https://serde.rs")]
+    #[schema(required = true, example = "https://serde.rs")]
     pub homepage: Option<String>,
 
     /// The URL to the crate's documentation, if set.
-    #[schema(example = "https://docs.rs/serde")]
+    #[schema(required = true, example = "https://docs.rs/serde")]
     pub documentation: Option<String>,
 
     /// The URL to the crate's repository, if set.
-    #[schema(example = "https://github.com/serde-rs/serde")]
+    #[schema(required = true, example = "https://github.com/serde-rs/serde")]
     pub repository: Option<String>,
 
     /// Information about the trusted publisher that published this version, if any.
@@ -967,6 +971,7 @@ pub struct EncodableVersion {
     ///
     /// The exact structure of this field depends on the `provider` field
     /// inside it.
+    #[schema(required = true)]
     pub trustpub_data: Option<TrustpubData>,
 
     /// Line count statistics for this version.
@@ -975,7 +980,10 @@ pub struct EncodableVersion {
     ///
     /// This field may be `null` until the version has been analyzed, which
     /// happens in an asynchronous background job.
-    #[schema(value_type = Option<HashMap<String, serde_json::Value>>)]
+    #[schema(
+        required = true,
+        value_type = Option<HashMap<String, serde_json::Value>>
+    )]
     pub linecounts: Option<serde_json::Value>,
 }
 

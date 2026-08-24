@@ -1712,7 +1712,7 @@ export interface components {
              * @description The names of the binaries provided by this version, if any.
              * @example []
              */
-            bin_names?: (string | null)[] | null;
+            bin_names: (string | null)[] | null;
             /**
              * @description The SHA256 checksum of the compressed crate file encoded as a
              *     hexadecimal string.
@@ -1740,7 +1740,7 @@ export interface components {
              * @description The description of this version of the crate.
              * @example A generic serialization/deserialization framework
              */
-            description?: string | null;
+            description: string | null;
             /**
              * @description The API path to download the crate.
              * @example /api/v1/crates/serde/1.0.0/download
@@ -1750,7 +1750,7 @@ export interface components {
              * @description The URL to the crate's documentation, if set.
              * @example https://docs.rs/serde
              */
-            documentation?: string | null;
+            documentation: string | null;
             /**
              * Format: int32
              * @description The total number of downloads for this version.
@@ -1761,7 +1761,7 @@ export interface components {
              * @description The Rust Edition used to compile this version, if set.
              * @example 2021
              */
-            edition?: string | null;
+            edition: string | null;
             /** @description The features defined by this version. */
             features: {
                 [key: string]: string[];
@@ -1770,12 +1770,12 @@ export interface components {
              * @description Whether this version can be used as a library.
              * @example true
              */
-            has_lib?: boolean | null;
+            has_lib: boolean | null;
             /**
              * @description The URL to the crate's homepage, if set.
              * @example https://serde.rs
              */
-            homepage?: string | null;
+            homepage: string | null;
             /**
              * Format: int32
              * @description An opaque identifier for the version.
@@ -1786,12 +1786,12 @@ export interface components {
              * @description The name of the native library this version links with, if any.
              * @example git2
              */
-            lib_links?: string | null;
+            lib_links: string | null;
             /**
              * @description The license of this version of the crate.
              * @example MIT
              */
-            license?: string | null;
+            license: string | null;
             /**
              * @description Line count statistics for this version.
              *
@@ -1800,7 +1800,7 @@ export interface components {
              *     This field may be `null` until the version has been analyzed, which
              *     happens in an asynchronous background job.
              */
-            linecounts?: {
+            linecounts: {
                 [key: string]: unknown;
             } | null;
             /** @description Links to other API endpoints related to this version. */
@@ -1810,7 +1810,7 @@ export interface components {
              * @example 1.0.0
              */
             num: string;
-            published_by?: null | components["schemas"]["User"];
+            published_by: null | components["schemas"]["User"];
             /**
              * @description The API path to download the crate's README file as HTML code.
              * @example /api/v1/crates/serde/1.0.0/readme
@@ -1820,14 +1820,14 @@ export interface components {
              * @description The URL to the crate's repository, if set.
              * @example https://github.com/serde-rs/serde
              */
-            repository?: string | null;
+            repository: string | null;
             /**
              * @description The minimum version of the Rust compiler required to compile
              *     this version, if set.
              * @example 1.31
              */
-            rust_version?: string | null;
-            trustpub_data?: null | components["schemas"]["TrustpubData"];
+            rust_version: string | null;
+            trustpub_data: null | components["schemas"]["TrustpubData"];
             /**
              * Format: date-time
              * @description The date and time this version was last updated (i.e. yanked or unyanked).
@@ -1838,7 +1838,7 @@ export interface components {
              * @description The message given when this version was yanked, if any.
              * @example Security vulnerability
              */
-            yank_message?: string | null;
+            yank_message: string | null;
             /**
              * @description Whether this version has been yanked.
              * @example false
