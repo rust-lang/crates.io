@@ -1189,7 +1189,7 @@ export interface components {
              * @description The list of categories belonging to this crate.
              * @example null
              */
-            categories?: string[] | null;
+            categories: string[] | null;
             /**
              * Format: date-time
              * @description The date and time this crate was created.
@@ -1202,17 +1202,17 @@ export interface components {
              *     This version will be displayed by default on the crate's page.
              * @example 1.3.0
              */
-            default_version?: string | null;
+            default_version: string | null;
             /**
              * @description Description of the crate.
              * @example A generic serialization/deserialization framework
              */
-            description?: string | null;
+            description: string | null;
             /**
              * @description The URL to the crate's documentation, if set.
              * @example https://docs.rs/serde
              */
-            documentation?: string | null;
+            documentation: string | null;
             /**
              * Format: int64
              * @description The total number of downloads for this crate.
@@ -1228,7 +1228,7 @@ export interface components {
              * @description The URL to the crate's homepage, if set.
              * @example https://serde.rs
              */
-            homepage?: string | null;
+            homepage: string | null;
             /**
              * @description An opaque identifier for the crate.
              * @example serde
@@ -1238,7 +1238,7 @@ export interface components {
              * @description The list of keywords belonging to this crate.
              * @example null
              */
-            keywords?: string[] | null;
+            keywords: string[] | null;
             /** @description Links to other API endpoints related to this crate. */
             links: components["schemas"]["CrateLinks"];
             /**
@@ -1246,7 +1246,7 @@ export interface components {
              * @description The highest version number for this crate that is not a pre-release.
              * @example 1.3.0
              */
-            max_stable_version?: string | null;
+            max_stable_version: string | null;
             /**
              * @deprecated
              * @description The highest version number for this crate.
@@ -1275,12 +1275,12 @@ export interface components {
              * @description The total number of downloads for this crate in the last 90 days.
              * @example 456789
              */
-            recent_downloads?: number | null;
+            recent_downloads: number | null;
             /**
              * @description The URL to the crate's repository, if set.
              * @example https://github.com/serde-rs/serde
              */
-            repository?: string | null;
+            repository: string | null;
             /** @description Whether this crate can only be published via Trusted Publishing. */
             trustpub_only: boolean;
             /**
@@ -1293,7 +1293,7 @@ export interface components {
              * @description The list of version IDs belonging to this crate.
              * @example null
              */
-            versions?: number[] | null;
+            versions: number[] | null;
             /** @description Whether all versions of this crate have been yanked. */
             yanked: boolean;
         };
