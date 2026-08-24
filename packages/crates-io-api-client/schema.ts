@@ -3506,14 +3506,14 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?page=3
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * @description Additional data about the crate's release tracks,
                              *     if `?include=release_tracks` is used.
                              */
                             release_tracks?: {
                                 [key: string]: components["schemas"]["ReleaseTrackDetails"];
-                            } | null;
+                            };
                             /**
                              * Format: int64
                              * @description The total number of versions belonging to the crate.

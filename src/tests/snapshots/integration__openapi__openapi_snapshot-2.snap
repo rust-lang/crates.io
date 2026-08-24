@@ -3265,10 +3265,7 @@ expression: response.json()
                           "propertyNames": {
                             "type": "string"
                           },
-                          "type": [
-                            "object",
-                            "null"
-                          ]
+                          "type": "object"
                         },
                         "total": {
                           "description": "The total number of versions belonging to the crate.",
@@ -3278,7 +3275,8 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page"
                       ],
                       "type": "object"
                     },

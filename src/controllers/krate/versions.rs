@@ -334,13 +334,16 @@ struct ResponseMeta {
     total: i64,
 
     /// Query string to the next page of results, if any.
-    #[schema(example = "?page=3")]
+    #[schema(required = true, example = "?page=3")]
     next_page: Option<String>,
 
     /// Additional data about the crate's release tracks,
     /// if `?include=release_tracks` is used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(value_type = Option<std::collections::HashMap<String, ReleaseTrackDetails>>)]
+    #[schema(
+        nullable = false,
+        value_type = Option<std::collections::HashMap<String, ReleaseTrackDetails>>
+    )]
     release_tracks: Option<ReleaseTracks>,
 }
 
