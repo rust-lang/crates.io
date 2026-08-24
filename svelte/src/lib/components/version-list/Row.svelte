@@ -21,7 +21,6 @@
 
   type Version = components['schemas']['Version'];
   type User = components['schemas']['User'];
-  type Owner = components['schemas']['Owner'];
 
   interface Feature {
     name: string;
@@ -98,7 +97,7 @@
     return null;
   });
 
-  let publishedBy = $derived.by((): Owner | null => {
+  let publishedBy = $derived.by(() => {
     let user = version.published_by as User | null | undefined;
     if (!user) return null;
     return { ...user, kind: 'user', url: user.url ?? null };

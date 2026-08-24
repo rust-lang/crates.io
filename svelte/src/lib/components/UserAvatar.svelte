@@ -1,14 +1,19 @@
 <script lang="ts">
-  import type { components } from '@crates-io/api-client';
   import type { HTMLImgAttributes } from 'svelte/elements';
 
   import avatarPlaceholder from '$lib/assets/avatar-placeholder.svg';
 
   type Size = 'small' | 'medium-small' | 'medium';
-  type Owner = components['schemas']['Owner'];
+
+  interface AvatarUser {
+    avatar?: string | null;
+    kind?: string;
+    login: string;
+    name?: string | null;
+  }
 
   interface Props extends Omit<HTMLImgAttributes, 'src' | 'width' | 'height' | 'alt'> {
-    user: Owner;
+    user: AvatarUser;
     size?: Size;
   }
 
