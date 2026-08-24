@@ -554,6 +554,7 @@ pub struct EncodableOwner {
     ///
     /// This field is present only for user owners.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(nullable = false)]
     pub github_username_matches: Option<bool>,
 }
 

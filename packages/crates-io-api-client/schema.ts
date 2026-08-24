@@ -1536,7 +1536,7 @@ export interface components {
              *
              *     This field is present only for user owners.
              */
-            github_username_matches?: boolean | null;
+            github_username_matches?: boolean;
             /**
              * Format: int32
              * @description The opaque identifier for the team or user, depending on the `kind` field.
