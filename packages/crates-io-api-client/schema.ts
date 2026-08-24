@@ -1302,17 +1302,17 @@ export interface components {
              * @description The API path to this crate's team owners.
              * @example /api/v1/crates/serde/owner_team
              */
-            owner_team?: string | null;
+            owner_team: string;
             /**
              * @description The API path to this crate's user owners.
              * @example /api/v1/crates/serde/owner_user
              */
-            owner_user?: string | null;
+            owner_user: string;
             /**
              * @description The API path to this crate's owners.
              * @example /api/v1/crates/serde/owners
              */
-            owners?: string | null;
+            owners: string;
             /**
              * @description The API path to this crate's reverse dependencies.
              * @example /api/v1/crates/serde/reverse_dependencies
@@ -1327,7 +1327,7 @@ export interface components {
              * @description The API path to this crate's versions.
              * @example /api/v1/crates/serde/versions
              */
-            versions?: string | null;
+            versions: string | null;
         };
         CrateOwnerInvitation: {
             /**

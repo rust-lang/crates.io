@@ -47,6 +47,7 @@ test('returns the data for the front page', async function () {
       "links": {
         "owner_team": "/api/v1/crates/crate-1/owner_team",
         "owner_user": "/api/v1/crates/crate-1/owner_user",
+        "owners": "/api/v1/crates/crate-1/owners",
         "reverse_dependencies": "/api/v1/crates/crate-1/reverse_dependencies",
         "version_downloads": "/api/v1/crates/crate-1/downloads",
         "versions": "/api/v1/crates/crate-1/versions",
@@ -82,6 +83,7 @@ test('returns the data for the front page', async function () {
       "links": {
         "owner_team": "/api/v1/crates/crate-4/owner_team",
         "owner_user": "/api/v1/crates/crate-4/owner_user",
+        "owners": "/api/v1/crates/crate-4/owners",
         "reverse_dependencies": "/api/v1/crates/crate-4/reverse_dependencies",
         "version_downloads": "/api/v1/crates/crate-4/downloads",
         "versions": "/api/v1/crates/crate-4/versions",
@@ -117,6 +119,7 @@ test('returns the data for the front page', async function () {
       "links": {
         "owner_team": "/api/v1/crates/crate-11/owner_team",
         "owner_user": "/api/v1/crates/crate-11/owner_user",
+        "owners": "/api/v1/crates/crate-11/owners",
         "reverse_dependencies": "/api/v1/crates/crate-11/reverse_dependencies",
         "version_downloads": "/api/v1/crates/crate-11/downloads",
         "versions": "/api/v1/crates/crate-11/versions",
@@ -152,6 +155,7 @@ test('returns the data for the front page', async function () {
       "links": {
         "owner_team": "/api/v1/crates/crate-20/owner_team",
         "owner_user": "/api/v1/crates/crate-20/owner_user",
+        "owners": "/api/v1/crates/crate-20/owners",
         "reverse_dependencies": "/api/v1/crates/crate-20/reverse_dependencies",
         "version_downloads": "/api/v1/crates/crate-20/downloads",
         "versions": "/api/v1/crates/crate-20/versions",

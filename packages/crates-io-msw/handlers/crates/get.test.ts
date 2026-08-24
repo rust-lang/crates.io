@@ -40,6 +40,7 @@ test('returns a crate object for known crates', async function () {
         "links": {
           "owner_team": "/api/v1/crates/rand/owner_team",
           "owner_user": "/api/v1/crates/rand/owner_user",
+          "owners": "/api/v1/crates/rand/owners",
           "reverse_dependencies": "/api/v1/crates/rand/reverse_dependencies",
           "version_downloads": "/api/v1/crates/rand/downloads",
           "versions": "/api/v1/crates/rand/versions",
@@ -130,6 +131,7 @@ test('works for non-canonical names', async function () {
         "links": {
           "owner_team": "/api/v1/crates/foo-bar/owner_team",
           "owner_user": "/api/v1/crates/foo-bar/owner_user",
+          "owners": "/api/v1/crates/foo-bar/owners",
           "reverse_dependencies": "/api/v1/crates/foo-bar/reverse_dependencies",
           "version_downloads": "/api/v1/crates/foo-bar/downloads",
           "versions": "/api/v1/crates/foo-bar/versions",

@@ -466,26 +466,17 @@ expression: response.json()
           "owner_team": {
             "description": "The API path to this crate's team owners.",
             "example": "/api/v1/crates/serde/owner_team",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "owner_user": {
             "description": "The API path to this crate's user owners.",
             "example": "/api/v1/crates/serde/owner_user",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "owners": {
             "description": "The API path to this crate's owners.",
             "example": "/api/v1/crates/serde/owners",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "reverse_dependencies": {
             "description": "The API path to this crate's reverse dependencies.",
@@ -508,6 +499,10 @@ expression: response.json()
         },
         "required": [
           "version_downloads",
+          "versions",
+          "owners",
+          "owner_team",
+          "owner_user",
           "reverse_dependencies"
         ],
         "type": "object"

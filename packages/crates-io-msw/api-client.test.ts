@@ -52,6 +52,7 @@ test('GET /api/v1/crates/{name}', async () => {
         "links": {
           "owner_team": "/api/v1/crates/serde/owner_team",
           "owner_user": "/api/v1/crates/serde/owner_user",
+          "owners": "/api/v1/crates/serde/owners",
           "reverse_dependencies": "/api/v1/crates/serde/reverse_dependencies",
           "version_downloads": "/api/v1/crates/serde/downloads",
           "versions": "/api/v1/crates/serde/versions",

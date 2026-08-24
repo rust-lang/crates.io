@@ -464,9 +464,9 @@ impl EncodableCrate {
             links: EncodableCrateLinks {
                 version_downloads: format!("/api/v1/crates/{name}/downloads"),
                 versions: versions_link,
-                owners: Some(format!("/api/v1/crates/{name}/owners")),
-                owner_team: Some(format!("/api/v1/crates/{name}/owner_team")),
-                owner_user: Some(format!("/api/v1/crates/{name}/owner_user")),
+                owners: format!("/api/v1/crates/{name}/owners"),
+                owner_team: format!("/api/v1/crates/{name}/owner_team"),
+                owner_user: format!("/api/v1/crates/{name}/owner_user"),
                 reverse_dependencies: format!("/api/v1/crates/{name}/reverse_dependencies"),
             },
         }
@@ -507,20 +507,20 @@ pub struct EncodableCrateLinks {
     pub version_downloads: String,
 
     /// The API path to this crate's versions.
-    #[schema(example = "/api/v1/crates/serde/versions")]
+    #[schema(required = true, example = "/api/v1/crates/serde/versions")]
     pub versions: Option<String>,
 
     /// The API path to this crate's owners.
     #[schema(example = "/api/v1/crates/serde/owners")]
-    pub owners: Option<String>,
+    pub owners: String,
 
     /// The API path to this crate's team owners.
     #[schema(example = "/api/v1/crates/serde/owner_team")]
-    pub owner_team: Option<String>,
+    pub owner_team: String,
 
     /// The API path to this crate's user owners.
     #[schema(example = "/api/v1/crates/serde/owner_user")]
-    pub owner_user: Option<String>,
+    pub owner_user: String,
 
     /// The API path to this crate's reverse dependencies.
     #[schema(example = "/api/v1/crates/serde/reverse_dependencies")]
@@ -1223,9 +1223,9 @@ mod tests {
             links: EncodableCrateLinks {
                 version_downloads: "".to_string(),
                 versions: None,
-                owners: None,
-                owner_team: None,
-                owner_user: None,
+                owners: String::new(),
+                owner_team: String::new(),
+                owner_user: String::new(),
                 reverse_dependencies: "".to_string(),
             },
             exact_match: false,
