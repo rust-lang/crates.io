@@ -603,15 +603,18 @@ pub struct EncodableTeam {
     pub login: String,
 
     /// The display name of the team.
-    #[schema(example = "Crates.io team")]
+    #[schema(required = true, example = "Crates.io team")]
     pub name: Option<String>,
 
     /// The avatar URL of the team.
-    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    #[schema(
+        required = true,
+        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+    )]
     pub avatar: Option<String>,
 
     /// The GitHub profile URL of the team.
-    #[schema(example = "https://github.com/rust-lang")]
+    #[schema(required = true, example = "https://github.com/rust-lang")]
     pub url: Option<String>,
 }
 

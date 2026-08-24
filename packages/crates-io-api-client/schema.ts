@@ -1609,7 +1609,7 @@ export interface components {
              * @description The avatar URL of the team.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * Format: int32
              * @description An opaque identifier for the team.
@@ -1625,12 +1625,12 @@ export interface components {
              * @description The display name of the team.
              * @example Crates.io team
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description The GitHub profile URL of the team.
              * @example https://github.com/rust-lang
              */
-            url?: string | null;
+            url: string | null;
         };
         /** @description Data structure containing trusted publisher information extracted from JWT claims */
         TrustpubData: {
