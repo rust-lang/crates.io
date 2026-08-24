@@ -16,6 +16,7 @@ test('creates a user and session from the pending signup', async function () {
       "owned_crates": [],
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "created_at": null,
         "email": "new-user@example.com",
         "email_verification_sent": true,
         "email_verified": false,

@@ -49,6 +49,7 @@ test('returns user owners', async function () {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "created_at": null,
           "github_username_matches": true,
           "id": 1,
           "kind": "user",
@@ -103,6 +104,7 @@ test('returns user owners before team owners', async function () {
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "created_at": null,
           "github_username_matches": true,
           "id": 1,
           "kind": "user",

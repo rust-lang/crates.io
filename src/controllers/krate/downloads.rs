@@ -43,6 +43,7 @@ pub struct DownloadsResponse {
     /// The versions referenced in the download counts, if `?include=versions`
     /// was requested.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(nullable = false)]
     pub versions: Option<Vec<EncodableVersion>>,
 
     #[schema(inline)]

@@ -1018,7 +1018,7 @@ export interface components {
              *       "serde"
              *     ]
              */
-            crate_scopes?: string[] | null;
+            crate_scopes: string[] | null;
             /**
              * Format: date-time
              * @description The date and time when the token was created.
@@ -1031,13 +1031,13 @@ export interface components {
              *       "publish-update"
              *     ]
              */
-            endpoint_scopes?: components["schemas"]["EndpointScope"][] | null;
+            endpoint_scopes: components["schemas"]["EndpointScope"][] | null;
             /**
              * Format: date-time
              * @description The date and time when the token will expire, or `null`.
              * @example 2030-10-26T11:32:12Z
              */
-            expired_at?: string | null;
+            expired_at: string | null;
             /**
              * Format: int32
              * @description An opaque unique identifier for the token.
@@ -1049,7 +1049,7 @@ export interface components {
              * @description The date and time when the token was last used.
              * @example 2021-10-26T11:32:12Z
              */
-            last_used_at?: string | null;
+            last_used_at: string | null;
             /**
              * @description The name of the token.
              * @example Example API Token
@@ -1070,7 +1070,7 @@ export interface components {
              * @description The user's avatar URL, if set.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * Format: date-time
              * @description The date and time the user was created.
@@ -1079,12 +1079,12 @@ export interface components {
              *     time the user's GitHub account was created. If the GitHub account was
              *     deleted before June 19, 2026, this field will be empty.
              */
-            created_at?: string | null;
+            created_at: string | null;
             /**
              * @description The user's email address, if set.
              * @example kate@morgan.dev
              */
-            email?: string | null;
+            email: string | null;
             /**
              * @description Whether the user's email address verification email has been sent.
              * @example true
@@ -1115,7 +1115,7 @@ export interface components {
              * @description The user's display name, if set.
              * @example Kate Morgan
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description Whether the user has opted in to receive publish notifications via email.
              * @example true
@@ -1125,7 +1125,7 @@ export interface components {
              * @description The user's GitHub profile URL.
              * @example https://github.com/ghost
              */
-            url?: string | null;
+            url: string;
         };
         Category: {
             /**
@@ -1162,7 +1162,7 @@ export interface components {
              *     but not when listing categories.
              * @example []
              */
-            parent_categories?: components["schemas"]["Category"][] | null;
+            parent_categories?: components["schemas"]["Category"][];
             /**
              * @description The "slug" of the category.
              *
@@ -1177,7 +1177,7 @@ export interface components {
              *     but not when listing categories.
              * @example []
              */
-            subcategories?: components["schemas"]["Category"][] | null;
+            subcategories?: components["schemas"]["Category"][];
         };
         Crate: {
             /**
@@ -1189,7 +1189,7 @@ export interface components {
              * @description The list of categories belonging to this crate.
              * @example null
              */
-            categories?: string[] | null;
+            categories: string[] | null;
             /**
              * Format: date-time
              * @description The date and time this crate was created.
@@ -1202,17 +1202,17 @@ export interface components {
              *     This version will be displayed by default on the crate's page.
              * @example 1.3.0
              */
-            default_version?: string | null;
+            default_version: string | null;
             /**
              * @description Description of the crate.
              * @example A generic serialization/deserialization framework
              */
-            description?: string | null;
+            description: string | null;
             /**
              * @description The URL to the crate's documentation, if set.
              * @example https://docs.rs/serde
              */
-            documentation?: string | null;
+            documentation: string | null;
             /**
              * Format: int64
              * @description The total number of downloads for this crate.
@@ -1228,7 +1228,7 @@ export interface components {
              * @description The URL to the crate's homepage, if set.
              * @example https://serde.rs
              */
-            homepage?: string | null;
+            homepage: string | null;
             /**
              * @description An opaque identifier for the crate.
              * @example serde
@@ -1238,7 +1238,7 @@ export interface components {
              * @description The list of keywords belonging to this crate.
              * @example null
              */
-            keywords?: string[] | null;
+            keywords: string[] | null;
             /** @description Links to other API endpoints related to this crate. */
             links: components["schemas"]["CrateLinks"];
             /**
@@ -1246,7 +1246,7 @@ export interface components {
              * @description The highest version number for this crate that is not a pre-release.
              * @example 1.3.0
              */
-            max_stable_version?: string | null;
+            max_stable_version: string | null;
             /**
              * @deprecated
              * @description The highest version number for this crate.
@@ -1275,12 +1275,12 @@ export interface components {
              * @description The total number of downloads for this crate in the last 90 days.
              * @example 456789
              */
-            recent_downloads?: number | null;
+            recent_downloads: number | null;
             /**
              * @description The URL to the crate's repository, if set.
              * @example https://github.com/serde-rs/serde
              */
-            repository?: string | null;
+            repository: string | null;
             /** @description Whether this crate can only be published via Trusted Publishing. */
             trustpub_only: boolean;
             /**
@@ -1293,7 +1293,7 @@ export interface components {
              * @description The list of version IDs belonging to this crate.
              * @example null
              */
-            versions?: number[] | null;
+            versions: number[] | null;
             /** @description Whether all versions of this crate have been yanked. */
             yanked: boolean;
         };
@@ -1302,17 +1302,17 @@ export interface components {
              * @description The API path to this crate's team owners.
              * @example /api/v1/crates/serde/owner_team
              */
-            owner_team?: string | null;
+            owner_team: string;
             /**
              * @description The API path to this crate's user owners.
              * @example /api/v1/crates/serde/owner_user
              */
-            owner_user?: string | null;
+            owner_user: string;
             /**
              * @description The API path to this crate's owners.
              * @example /api/v1/crates/serde/owners
              */
-            owners?: string | null;
+            owners: string;
             /**
              * @description The API path to this crate's reverse dependencies.
              * @example /api/v1/crates/serde/reverse_dependencies
@@ -1327,7 +1327,7 @@ export interface components {
              * @description The API path to this crate's versions.
              * @example /api/v1/crates/serde/versions
              */
-            versions?: string | null;
+            versions: string | null;
         };
         CrateOwnerInvitation: {
             /**
@@ -1404,7 +1404,7 @@ export interface components {
              */
             req: string;
             /** @description The target platform for this dependency, if any. */
-            target?: string | null;
+            target: string | null;
             /**
              * Format: int32
              * @description The ID of the version this dependency belongs to.
@@ -1420,7 +1420,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             /** @example null */
-            environment?: string | null;
+            environment: string | null;
             /**
              * Format: int32
              * @example 42
@@ -1444,7 +1444,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             /** @example null */
-            environment?: string | null;
+            environment: string | null;
             /**
              * Format: int32
              * @example 42
@@ -1453,7 +1453,7 @@ export interface components {
             /** @example rust-lang */
             namespace: string;
             /** @example null */
-            namespace_id?: string | null;
+            namespace_id: string | null;
             /** @example regex */
             project: string;
             /** @example .gitlab-ci.yml */
@@ -1530,7 +1530,7 @@ export interface components {
              * @description The avatar URL of the team or user.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * @description Whether a linked GitHub username exactly matches the crates.io username.
              *
@@ -1557,12 +1557,12 @@ export interface components {
              * @description The display name of the team or user.
              * @example Kate Morgan
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description The URL to the owner's profile.
              * @example https://github.com/ghost
              */
-            url?: string | null;
+            url: string | null;
         };
         PublishWarnings: {
             /**
@@ -1581,7 +1581,7 @@ export interface components {
         /** @description Public GitHub account details displayed while a user completes signup. */
         SignupDetails: {
             /** @description The email address suggested by GitHub, if one is available. */
-            email?: string | null;
+            email: string | null;
             /** @description The GitHub account login. */
             login: string;
         };
@@ -1609,7 +1609,7 @@ export interface components {
              * @description The avatar URL of the team.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * Format: int32
              * @description An opaque identifier for the team.
@@ -1625,12 +1625,12 @@ export interface components {
              * @description The display name of the team.
              * @example Crates.io team
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description The GitHub profile URL of the team.
              * @example https://github.com/rust-lang
              */
-            url?: string | null;
+            url: string | null;
         };
         /** @description Data structure containing trusted publisher information extracted from JWT claims */
         TrustpubData: {
@@ -1657,7 +1657,7 @@ export interface components {
              * @description The user's avatar URL, if set.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * Format: date-time
              * @description The date and time the user was created.
@@ -1666,7 +1666,7 @@ export interface components {
              *     time the user's GitHub account was created. If the GitHub account was
              *     deleted before June 19, 2026, this field will be empty.
              */
-            created_at?: string | null;
+            created_at: string | null;
             /** @description Whether a linked GitHub username exactly matches the crates.io username. */
             github_username_matches: boolean;
             /**
@@ -1684,7 +1684,7 @@ export interface components {
              * @description The user's display name, if set.
              * @example Kate Morgan
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description The user's GitHub profile URL.
              * @example https://github.com/ghost
@@ -1712,7 +1712,7 @@ export interface components {
              * @description The names of the binaries provided by this version, if any.
              * @example []
              */
-            bin_names?: (string | null)[] | null;
+            bin_names: (string | null)[] | null;
             /**
              * @description The SHA256 checksum of the compressed crate file encoded as a
              *     hexadecimal string.
@@ -1740,7 +1740,7 @@ export interface components {
              * @description The description of this version of the crate.
              * @example A generic serialization/deserialization framework
              */
-            description?: string | null;
+            description: string | null;
             /**
              * @description The API path to download the crate.
              * @example /api/v1/crates/serde/1.0.0/download
@@ -1750,7 +1750,7 @@ export interface components {
              * @description The URL to the crate's documentation, if set.
              * @example https://docs.rs/serde
              */
-            documentation?: string | null;
+            documentation: string | null;
             /**
              * Format: int32
              * @description The total number of downloads for this version.
@@ -1761,7 +1761,7 @@ export interface components {
              * @description The Rust Edition used to compile this version, if set.
              * @example 2021
              */
-            edition?: string | null;
+            edition: string | null;
             /** @description The features defined by this version. */
             features: {
                 [key: string]: string[];
@@ -1770,12 +1770,12 @@ export interface components {
              * @description Whether this version can be used as a library.
              * @example true
              */
-            has_lib?: boolean | null;
+            has_lib: boolean | null;
             /**
              * @description The URL to the crate's homepage, if set.
              * @example https://serde.rs
              */
-            homepage?: string | null;
+            homepage: string | null;
             /**
              * Format: int32
              * @description An opaque identifier for the version.
@@ -1786,12 +1786,12 @@ export interface components {
              * @description The name of the native library this version links with, if any.
              * @example git2
              */
-            lib_links?: string | null;
+            lib_links: string | null;
             /**
              * @description The license of this version of the crate.
              * @example MIT
              */
-            license?: string | null;
+            license: string | null;
             /**
              * @description Line count statistics for this version.
              *
@@ -1800,7 +1800,7 @@ export interface components {
              *     This field may be `null` until the version has been analyzed, which
              *     happens in an asynchronous background job.
              */
-            linecounts?: {
+            linecounts: {
                 [key: string]: unknown;
             } | null;
             /** @description Links to other API endpoints related to this version. */
@@ -1810,7 +1810,7 @@ export interface components {
              * @example 1.0.0
              */
             num: string;
-            published_by?: null | components["schemas"]["User"];
+            published_by: null | components["schemas"]["User"];
             /**
              * @description The API path to download the crate's README file as HTML code.
              * @example /api/v1/crates/serde/1.0.0/readme
@@ -1820,14 +1820,14 @@ export interface components {
              * @description The URL to the crate's repository, if set.
              * @example https://github.com/serde-rs/serde
              */
-            repository?: string | null;
+            repository: string | null;
             /**
              * @description The minimum version of the Rust compiler required to compile
              *     this version, if set.
              * @example 1.31
              */
-            rust_version?: string | null;
-            trustpub_data?: null | components["schemas"]["TrustpubData"];
+            rust_version: string | null;
+            trustpub_data: null | components["schemas"]["TrustpubData"];
             /**
              * Format: date-time
              * @description The date and time this version was last updated (i.e. yanked or unyanked).
@@ -1838,7 +1838,7 @@ export interface components {
              * @description The message given when this version was yanked, if any.
              * @example Security vulnerability
              */
-            yank_message?: string | null;
+            yank_message: string | null;
             /**
              * @description Whether this version has been yanked.
              * @example false
@@ -1950,7 +1950,7 @@ export interface operations {
                              * @description Query parameter string to fetch the next page of results.
                              * @example ?seek=c0ffee
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                         };
                         /** @description The list of users referenced in the crate owner invitations. */
                         users: components["schemas"]["User"][];
@@ -2602,12 +2602,12 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?page=3
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * @description Query string to the previous page of results, if any.
                              * @example ?page=1
                              */
-                            prev_page?: string | null;
+                            prev_page: string | null;
                             /**
                              * Format: int64
                              * @description The total number of crates that match the query.
@@ -2658,19 +2658,19 @@ export interface operations {
                          * @description The categories of the crate.
                          * @example null
                          */
-                        categories?: components["schemas"]["Category"][] | null;
+                        categories: components["schemas"]["Category"][] | null;
                         /** @description The crate metadata. */
                         crate: components["schemas"]["Crate"];
                         /**
                          * @description The keywords of the crate.
                          * @example null
                          */
-                        keywords?: components["schemas"]["Keyword"][] | null;
+                        keywords: components["schemas"]["Keyword"][] | null;
                         /**
                          * @description The versions of the crate.
                          * @example null
                          */
-                        versions?: components["schemas"]["Version"][] | null;
+                        versions: components["schemas"]["Version"][] | null;
                     };
                 };
             };
@@ -2772,19 +2772,19 @@ export interface operations {
                          * @description The categories of the crate.
                          * @example null
                          */
-                        categories?: components["schemas"]["Category"][] | null;
+                        categories: components["schemas"]["Category"][] | null;
                         /** @description The crate metadata. */
                         crate: components["schemas"]["Crate"];
                         /**
                          * @description The keywords of the crate.
                          * @example null
                          */
-                        keywords?: components["schemas"]["Keyword"][] | null;
+                        keywords: components["schemas"]["Keyword"][] | null;
                         /**
                          * @description The versions of the crate.
                          * @example null
                          */
-                        versions?: components["schemas"]["Version"][] | null;
+                        versions: components["schemas"]["Version"][] | null;
                     };
                 };
             };
@@ -2954,7 +2954,7 @@ export interface operations {
                          * @description The versions referenced in the download counts, if `?include=versions`
                          *     was requested.
                          */
-                        versions?: components["schemas"]["Version"][] | null;
+                        versions?: components["schemas"]["Version"][];
                     };
                 };
             };
@@ -3506,14 +3506,14 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?page=3
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * @description Additional data about the crate's release tracks,
                              *     if `?include=release_tracks` is used.
                              */
                             release_tracks?: {
                                 [key: string]: components["schemas"]["ReleaseTrackDetails"];
-                            } | null;
+                            };
                             /**
                              * Format: int64
                              * @description The total number of versions belonging to the crate.
@@ -4693,7 +4693,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description Optional banner message to display on all pages. */
-                        banner_message?: string | null;
+                        banner_message?: string;
                         /**
                          * @description CDN base URL that e.g. crate files are served from.
                          * @example https://static.crates.io
@@ -4926,7 +4926,7 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?seek=abc123
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * Format: int64
                              * @description The total number of GitHub configs belonging to the crate.
@@ -5100,7 +5100,7 @@ export interface operations {
                              * @description Query string to the next page of results, if any.
                              * @example ?seek=abc123
                              */
-                            next_page?: string | null;
+                            next_page: string | null;
                             /**
                              * Format: int64
                              * @description The total number of GitLab configs belonging to the crate.

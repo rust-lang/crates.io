@@ -18,6 +18,7 @@ test('returns the `user` resource including the private fields', async function 
       "owned_crates": [],
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "created_at": null,
         "email": "crates-user@crates.io",
         "email_verification_sent": true,
         "email_verified": true,

@@ -13,6 +13,7 @@ export function serializeUser(
 ): ApiUser | ApiAuthenticatedUser {
   let serialized = {
     id: user.id,
+    created_at: null,
     login: user.login,
     name: user.name,
     url: user.url,

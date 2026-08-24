@@ -17,7 +17,7 @@ pub struct GitHubConfig {
     pub repository_name: String,
     #[schema(example = "ci.yml")]
     pub workflow_filename: String,
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub environment: Option<String>,
     pub created_at: DateTime<Utc>,
 }
@@ -48,13 +48,13 @@ pub struct GitLabConfig {
     pub krate: String,
     #[schema(example = "rust-lang")]
     pub namespace: String,
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub namespace_id: Option<String>,
     #[schema(example = "regex")]
     pub project: String,
     #[schema(example = ".gitlab-ci.yml")]
     pub workflow_filepath: String,
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub environment: Option<String>,
     pub created_at: DateTime<Utc>,
 }

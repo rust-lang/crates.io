@@ -57,6 +57,7 @@ export function serializeCrate(
     num_versions: versions.length,
     yanked: versionsByNum[defaultVersion]?.yanked ?? false,
     links: {
+      owners: `/api/v1/crates/${crate.name}/owners`,
       owner_user: `/api/v1/crates/${crate.name}/owner_user`,
       owner_team: `/api/v1/crates/${crate.name}/owner_team`,
       reverse_dependencies: `/api/v1/crates/${crate.name}/reverse_dependencies`,

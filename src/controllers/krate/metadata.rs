@@ -47,15 +47,15 @@ pub struct CrateGetResponse {
     krate: EncodableCrate,
 
     /// The versions of the crate.
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     versions: Option<Vec<EncodableVersion>>,
 
     /// The keywords of the crate.
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     keywords: Option<Vec<EncodableKeyword>>,
 
     /// The categories of the crate.
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     categories: Option<Vec<EncodableCategory>>,
 }
 

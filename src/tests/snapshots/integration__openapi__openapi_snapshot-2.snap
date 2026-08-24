@@ -99,7 +99,11 @@ expression: response.json()
         "required": [
           "id",
           "name",
-          "created_at"
+          "created_at",
+          "last_used_at",
+          "crate_scopes",
+          "endpoint_scopes",
+          "expired_at"
         ],
         "type": "object"
       },
@@ -191,10 +195,7 @@ expression: response.json()
           "url": {
             "description": "The user's GitHub profile URL.",
             "example": "https://github.com/ghost",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           }
         },
         "required": [
@@ -202,8 +203,13 @@ expression: response.json()
           "login",
           "email_verified",
           "email_verification_sent",
+          "name",
+          "email",
+          "avatar",
+          "url",
           "is_admin",
-          "publish_notifications"
+          "publish_notifications",
+          "created_at"
         ],
         "type": "object"
       },
@@ -242,10 +248,7 @@ expression: response.json()
             "items": {
               "$ref": "#/components/schemas/Category"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           },
           "slug": {
             "description": "The \"slug\" of the category.\n\nSee <https://crates.io/category_slugs>.",
@@ -258,10 +261,7 @@ expression: response.json()
             "items": {
               "$ref": "#/components/schemas/Category"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           }
         },
         "required": [
@@ -444,13 +444,23 @@ expression: response.json()
           "id",
           "name",
           "updated_at",
+          "versions",
+          "keywords",
+          "categories",
           "badges",
           "created_at",
           "downloads",
+          "recent_downloads",
+          "default_version",
           "num_versions",
           "yanked",
           "max_version",
           "newest_version",
+          "max_stable_version",
+          "description",
+          "homepage",
+          "documentation",
+          "repository",
           "links",
           "exact_match",
           "trustpub_only"
@@ -462,26 +472,17 @@ expression: response.json()
           "owner_team": {
             "description": "The API path to this crate's team owners.",
             "example": "/api/v1/crates/serde/owner_team",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "owner_user": {
             "description": "The API path to this crate's user owners.",
             "example": "/api/v1/crates/serde/owner_user",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "owners": {
             "description": "The API path to this crate's owners.",
             "example": "/api/v1/crates/serde/owners",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "reverse_dependencies": {
             "description": "The API path to this crate's reverse dependencies.",
@@ -504,6 +505,10 @@ expression: response.json()
         },
         "required": [
           "version_downloads",
+          "versions",
+          "owners",
+          "owner_team",
+          "owner_user",
           "reverse_dependencies"
         ],
         "type": "object"
@@ -623,6 +628,7 @@ expression: response.json()
           "optional",
           "default_features",
           "features",
+          "target",
           "kind",
           "downloads"
         ],
@@ -685,6 +691,7 @@ expression: response.json()
           "repository_owner_id",
           "repository_name",
           "workflow_filename",
+          "environment",
           "created_at"
         ],
         "type": "object"
@@ -735,8 +742,10 @@ expression: response.json()
           "id",
           "crate",
           "namespace",
+          "namespace_id",
           "project",
           "workflow_filepath",
+          "environment",
           "created_at"
         ],
         "type": "object"
@@ -878,7 +887,10 @@ expression: response.json()
         "required": [
           "id",
           "login",
-          "kind"
+          "kind",
+          "url",
+          "name",
+          "avatar"
         ],
         "type": "object"
       },
@@ -941,7 +953,8 @@ expression: response.json()
           }
         },
         "required": [
-          "login"
+          "login",
+          "email"
         ],
         "type": "object"
       },
@@ -1010,7 +1023,10 @@ expression: response.json()
         },
         "required": [
           "id",
-          "login"
+          "login",
+          "name",
+          "avatar",
+          "url"
         ],
         "type": "object"
       },
@@ -1127,8 +1143,11 @@ expression: response.json()
         "required": [
           "id",
           "login",
+          "name",
+          "avatar",
           "url",
-          "github_username_matches"
+          "github_username_matches",
+          "created_at"
         ],
         "type": "object"
       },
@@ -1379,10 +1398,24 @@ expression: response.json()
           "downloads",
           "features",
           "yanked",
+          "yank_message",
+          "lib_links",
+          "license",
           "links",
           "crate_size",
+          "published_by",
           "audit_actions",
-          "checksum"
+          "checksum",
+          "rust_version",
+          "has_lib",
+          "bin_names",
+          "edition",
+          "description",
+          "homepage",
+          "documentation",
+          "repository",
+          "trustpub_data",
+          "linecounts"
         ],
         "type": "object"
       },
@@ -1969,7 +2002,9 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page",
+                        "prev_page"
                       ],
                       "type": "object"
                     }
@@ -2070,7 +2105,10 @@ expression: response.json()
                     }
                   },
                   "required": [
-                    "crate"
+                    "crate",
+                    "versions",
+                    "keywords",
+                    "categories"
                   ],
                   "type": "object"
                 }
@@ -2237,7 +2275,10 @@ expression: response.json()
                     }
                   },
                   "required": [
-                    "crate"
+                    "crate",
+                    "versions",
+                    "keywords",
+                    "categories"
                   ],
                   "type": "object"
                 }
@@ -2444,10 +2485,7 @@ expression: response.json()
                       "items": {
                         "$ref": "#/components/schemas/Version"
                       },
-                      "type": [
-                        "array",
-                        "null"
-                      ]
+                      "type": "array"
                     }
                   },
                   "required": [
@@ -3228,10 +3266,7 @@ expression: response.json()
                           "propertyNames": {
                             "type": "string"
                           },
-                          "type": [
-                            "object",
-                            "null"
-                          ]
+                          "type": "object"
                         },
                         "total": {
                           "description": "The total number of versions belonging to the crate.",
@@ -3241,7 +3276,8 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page"
                       ],
                       "type": "object"
                     },
@@ -4569,10 +4605,7 @@ expression: response.json()
                   "properties": {
                     "banner_message": {
                       "description": "Optional banner message to display on all pages.",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": "string"
                     },
                     "cdn_base": {
                       "description": "CDN base URL that e.g. crate files are served from.",
@@ -4930,7 +4963,8 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page"
                       ],
                       "type": "object"
                     }
@@ -5225,7 +5259,8 @@ expression: response.json()
                         }
                       },
                       "required": [
-                        "total"
+                        "total",
+                        "next_page"
                       ],
                       "type": "object"
                     }

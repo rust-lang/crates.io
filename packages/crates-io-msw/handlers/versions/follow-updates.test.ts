@@ -36,14 +36,21 @@ test('returns latest versions of followed crates', async function () {
       "versions": [
         {
           "audit_actions": [],
+          "bin_names": null,
           "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
           "crate": "foo",
           "crate_size": 162963,
           "created_at": "2010-06-16T21:30:45Z",
+          "description": null,
           "dl_path": "/api/v1/crates/foo/1.2.3/download",
+          "documentation": null,
           "downloads": 3702,
+          "edition": null,
           "features": {},
+          "has_lib": null,
+          "homepage": null,
           "id": 1,
+          "lib_links": null,
           "license": "MIT",
           "linecounts": {
             "languages": {
@@ -69,6 +76,7 @@ test('returns latest versions of followed crates', async function () {
           "num": "1.2.3",
           "published_by": null,
           "readme_path": "/api/v1/crates/foo/1.2.3/readme",
+          "repository": null,
           "rust_version": null,
           "trustpub_data": null,
           "updated_at": "2017-02-24T12:34:56Z",

@@ -47,7 +47,7 @@ pub struct EncodableCategory {
     /// This field is only present when the category details are queried,
     /// but not when listing categories.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(no_recursion, example = json!([]))]
+    #[schema(nullable = false, no_recursion, example = json!([]))]
     pub subcategories: Option<Vec<EncodableCategory>>,
 
     /// The parent categories of this category.
@@ -55,7 +55,7 @@ pub struct EncodableCategory {
     /// This field is only present when the category details are queried,
     /// but not when listing categories.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(no_recursion, example = json!([]))]
+    #[schema(nullable = false, no_recursion, example = json!([]))]
     pub parent_categories: Option<Vec<EncodableCategory>>,
 }
 
@@ -172,6 +172,7 @@ pub struct EncodableDependency {
     pub features: Vec<String>,
 
     /// The target platform for this dependency, if any.
+    #[schema(required = true)]
     pub target: Option<String>,
 
     /// The type of dependency this is (normal, dev, or build).
@@ -289,15 +290,15 @@ pub struct EncodableCrate {
     pub updated_at: DateTime<Utc>,
 
     /// The list of version IDs belonging to this crate.
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub versions: Option<Vec<i32>>,
 
     /// The list of keywords belonging to this crate.
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub keywords: Option<Vec<String>>,
 
     /// The list of categories belonging to this crate.
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub categories: Option<Vec<String>>,
 
     #[schema(deprecated, value_type = Vec<Object>, example = json!([]))]
@@ -312,13 +313,13 @@ pub struct EncodableCrate {
     pub downloads: i64,
 
     /// The total number of downloads for this crate in the last 90 days.
-    #[schema(example = 456_789)]
+    #[schema(required = true, example = 456_789)]
     pub recent_downloads: Option<i64>,
 
     /// The "default" version of this crate.
     ///
     /// This version will be displayed by default on the crate's page.
-    #[schema(example = "1.3.0")]
+    #[schema(required = true, example = "1.3.0")]
     pub default_version: Option<String>,
 
     /// The total number of versions for this crate.
@@ -337,23 +338,26 @@ pub struct EncodableCrate {
     pub newest_version: String,
 
     /// The highest version number for this crate that is not a pre-release.
-    #[schema(deprecated, example = "1.3.0")]
+    #[schema(required = true, deprecated, example = "1.3.0")]
     pub max_stable_version: Option<String>,
 
     /// Description of the crate.
-    #[schema(example = "A generic serialization/deserialization framework")]
+    #[schema(
+        required = true,
+        example = "A generic serialization/deserialization framework"
+    )]
     pub description: Option<String>,
 
     /// The URL to the crate's homepage, if set.
-    #[schema(example = "https://serde.rs")]
+    #[schema(required = true, example = "https://serde.rs")]
     pub homepage: Option<String>,
 
     /// The URL to the crate's documentation, if set.
-    #[schema(example = "https://docs.rs/serde")]
+    #[schema(required = true, example = "https://docs.rs/serde")]
     pub documentation: Option<String>,
 
     /// The URL to the crate's repository, if set.
-    #[schema(example = "https://github.com/serde-rs/serde")]
+    #[schema(required = true, example = "https://github.com/serde-rs/serde")]
     pub repository: Option<String>,
 
     /// Links to other API endpoints related to this crate.
@@ -460,9 +464,9 @@ impl EncodableCrate {
             links: EncodableCrateLinks {
                 version_downloads: format!("/api/v1/crates/{name}/downloads"),
                 versions: versions_link,
-                owners: Some(format!("/api/v1/crates/{name}/owners")),
-                owner_team: Some(format!("/api/v1/crates/{name}/owner_team")),
-                owner_user: Some(format!("/api/v1/crates/{name}/owner_user")),
+                owners: format!("/api/v1/crates/{name}/owners"),
+                owner_team: format!("/api/v1/crates/{name}/owner_team"),
+                owner_user: format!("/api/v1/crates/{name}/owner_user"),
                 reverse_dependencies: format!("/api/v1/crates/{name}/reverse_dependencies"),
             },
         }
@@ -503,20 +507,20 @@ pub struct EncodableCrateLinks {
     pub version_downloads: String,
 
     /// The API path to this crate's versions.
-    #[schema(example = "/api/v1/crates/serde/versions")]
+    #[schema(required = true, example = "/api/v1/crates/serde/versions")]
     pub versions: Option<String>,
 
     /// The API path to this crate's owners.
     #[schema(example = "/api/v1/crates/serde/owners")]
-    pub owners: Option<String>,
+    pub owners: String,
 
     /// The API path to this crate's team owners.
     #[schema(example = "/api/v1/crates/serde/owner_team")]
-    pub owner_team: Option<String>,
+    pub owner_team: String,
 
     /// The API path to this crate's user owners.
     #[schema(example = "/api/v1/crates/serde/owner_user")]
-    pub owner_user: Option<String>,
+    pub owner_user: String,
 
     /// The API path to this crate's reverse dependencies.
     #[schema(example = "/api/v1/crates/serde/reverse_dependencies")]
@@ -539,15 +543,18 @@ pub struct EncodableOwner {
     pub kind: String,
 
     /// The URL to the owner's profile.
-    #[schema(example = "https://github.com/ghost")]
+    #[schema(required = true, example = "https://github.com/ghost")]
     pub url: Option<String>,
 
     /// The display name of the team or user.
-    #[schema(example = "Kate Morgan")]
+    #[schema(required = true, example = "Kate Morgan")]
     pub name: Option<String>,
 
     /// The avatar URL of the team or user.
-    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    #[schema(
+        required = true,
+        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+    )]
     pub avatar: Option<String>,
 
     /// Whether a linked GitHub username exactly matches the crates.io username.
@@ -596,15 +603,18 @@ pub struct EncodableTeam {
     pub login: String,
 
     /// The display name of the team.
-    #[schema(example = "Crates.io team")]
+    #[schema(required = true, example = "Crates.io team")]
     pub name: Option<String>,
 
     /// The avatar URL of the team.
-    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    #[schema(
+        required = true,
+        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+    )]
     pub avatar: Option<String>,
 
     /// The GitHub profile URL of the team.
-    #[schema(example = "https://github.com/rust-lang")]
+    #[schema(required = true, example = "https://github.com/rust-lang")]
     pub url: Option<String>,
 }
 
@@ -687,20 +697,23 @@ pub struct EncodablePrivateUser {
     pub email_verification_sent: bool,
 
     /// The user's display name, if set.
-    #[schema(example = "Kate Morgan")]
+    #[schema(required = true, example = "Kate Morgan")]
     pub name: Option<String>,
 
     /// The user's email address, if set.
-    #[schema(example = "kate@morgan.dev")]
+    #[schema(required = true, example = "kate@morgan.dev")]
     pub email: Option<String>,
 
     /// The user's avatar URL, if set.
-    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    #[schema(
+        required = true,
+        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+    )]
     pub avatar: Option<String>,
 
     /// The user's GitHub profile URL.
     #[schema(example = "https://github.com/ghost")]
-    pub url: Option<String>,
+    pub url: String,
 
     /// Whether the user is a crates.io administrator.
     #[schema(example = false)]
@@ -715,6 +728,7 @@ pub struct EncodablePrivateUser {
     /// For users created before June 19, 2026, the creation time will be the
     /// time the user's GitHub account was created. If the GitHub account was
     /// deleted before June 19, 2026, this field will be empty.
+    #[schema(required = true)]
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -747,7 +761,7 @@ impl EncodablePrivateUser {
             avatar: gh_avatar,
             login: username,
             name,
-            url: Some(url),
+            url,
             is_admin,
             publish_notifications,
             created_at,
@@ -767,11 +781,14 @@ pub struct EncodablePublicUser {
     pub login: String,
 
     /// The user's display name, if set.
-    #[schema(example = "Kate Morgan")]
+    #[schema(required = true, example = "Kate Morgan")]
     pub name: Option<String>,
 
     /// The user's avatar URL, if set.
-    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    #[schema(
+        required = true,
+        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+    )]
     pub avatar: Option<String>,
 
     /// The user's GitHub profile URL.
@@ -786,6 +803,7 @@ pub struct EncodablePublicUser {
     /// For users created before June 19, 2026, the creation time will be the
     /// time the user's GitHub account was created. If the GitHub account was
     /// deleted before June 19, 2026, this field will be empty.
+    #[schema(required = true)]
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -874,15 +892,15 @@ pub struct EncodableVersion {
     pub yanked: bool,
 
     /// The message given when this version was yanked, if any.
-    #[schema(example = "Security vulnerability")]
+    #[schema(required = true, example = "Security vulnerability")]
     pub yank_message: Option<String>,
 
     /// The name of the native library this version links with, if any.
-    #[schema(example = "git2")]
+    #[schema(required = true, example = "git2")]
     pub lib_links: Option<String>,
 
     /// The license of this version of the crate.
-    #[schema(example = "MIT")]
+    #[schema(required = true, example = "MIT")]
     pub license: Option<String>,
 
     /// Links to other API endpoints related to this version.
@@ -896,6 +914,7 @@ pub struct EncodableVersion {
     ///
     /// This field may be `null` if the version was published before crates.io
     /// started recording this information.
+    #[schema(required = true)]
     pub published_by: Option<EncodablePublicUser>,
 
     /// A list of actions performed on this version.
@@ -909,35 +928,38 @@ pub struct EncodableVersion {
 
     /// The minimum version of the Rust compiler required to compile
     /// this version, if set.
-    #[schema(example = "1.31")]
+    #[schema(required = true, example = "1.31")]
     pub rust_version: Option<String>,
 
     /// Whether this version can be used as a library.
-    #[schema(example = true)]
+    #[schema(required = true, example = true)]
     pub has_lib: Option<bool>,
 
     /// The names of the binaries provided by this version, if any.
-    #[schema(example = json!([]))]
+    #[schema(required = true, example = json!([]))]
     pub bin_names: Option<Vec<Option<String>>>,
 
     /// The Rust Edition used to compile this version, if set.
-    #[schema(example = "2021")]
+    #[schema(required = true, example = "2021")]
     pub edition: Option<String>,
 
     /// The description of this version of the crate.
-    #[schema(example = "A generic serialization/deserialization framework")]
+    #[schema(
+        required = true,
+        example = "A generic serialization/deserialization framework"
+    )]
     pub description: Option<String>,
 
     /// The URL to the crate's homepage, if set.
-    #[schema(example = "https://serde.rs")]
+    #[schema(required = true, example = "https://serde.rs")]
     pub homepage: Option<String>,
 
     /// The URL to the crate's documentation, if set.
-    #[schema(example = "https://docs.rs/serde")]
+    #[schema(required = true, example = "https://docs.rs/serde")]
     pub documentation: Option<String>,
 
     /// The URL to the crate's repository, if set.
-    #[schema(example = "https://github.com/serde-rs/serde")]
+    #[schema(required = true, example = "https://github.com/serde-rs/serde")]
     pub repository: Option<String>,
 
     /// Information about the trusted publisher that published this version, if any.
@@ -949,6 +971,7 @@ pub struct EncodableVersion {
     ///
     /// The exact structure of this field depends on the `provider` field
     /// inside it.
+    #[schema(required = true)]
     pub trustpub_data: Option<TrustpubData>,
 
     /// Line count statistics for this version.
@@ -957,7 +980,10 @@ pub struct EncodableVersion {
     ///
     /// This field may be `null` until the version has been analyzed, which
     /// happens in an asynchronous background job.
-    #[schema(value_type = Option<HashMap<String, serde_json::Value>>)]
+    #[schema(
+        required = true,
+        value_type = Option<HashMap<String, serde_json::Value>>
+    )]
     pub linecounts: Option<serde_json::Value>,
 }
 
@@ -1219,9 +1245,9 @@ mod tests {
             links: EncodableCrateLinks {
                 version_downloads: "".to_string(),
                 versions: None,
-                owners: None,
-                owner_team: None,
-                owner_user: None,
+                owners: String::new(),
+                owner_team: String::new(),
+                owner_user: String::new(),
                 reverse_dependencies: "".to_string(),
             },
             exact_match: false,
