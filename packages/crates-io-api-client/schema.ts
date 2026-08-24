@@ -1420,7 +1420,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             /** @example null */
-            environment?: string | null;
+            environment: string | null;
             /**
              * Format: int32
              * @example 42

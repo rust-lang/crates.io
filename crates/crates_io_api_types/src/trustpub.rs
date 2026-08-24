@@ -17,7 +17,7 @@ pub struct GitHubConfig {
     pub repository_name: String,
     #[schema(example = "ci.yml")]
     pub workflow_filename: String,
-    #[schema(example = json!(null))]
+    #[schema(required = true, example = json!(null))]
     pub environment: Option<String>,
     pub created_at: DateTime<Utc>,
 }

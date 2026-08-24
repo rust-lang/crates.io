@@ -687,6 +687,7 @@ expression: response.json()
           "repository_owner_id",
           "repository_name",
           "workflow_filename",
+          "environment",
           "created_at"
         ],
         "type": "object"
