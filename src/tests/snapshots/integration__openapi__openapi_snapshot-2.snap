@@ -2102,7 +2102,10 @@ expression: response.json()
                     }
                   },
                   "required": [
-                    "crate"
+                    "crate",
+                    "versions",
+                    "keywords",
+                    "categories"
                   ],
                   "type": "object"
                 }
@@ -2269,7 +2272,10 @@ expression: response.json()
                     }
                   },
                   "required": [
-                    "crate"
+                    "crate",
+                    "versions",
+                    "keywords",
+                    "categories"
                   ],
                   "type": "object"
                 }

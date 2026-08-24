@@ -2658,19 +2658,19 @@ export interface operations {
                          * @description The categories of the crate.
                          * @example null
                          */
-                        categories?: components["schemas"]["Category"][] | null;
+                        categories: components["schemas"]["Category"][] | null;
                         /** @description The crate metadata. */
                         crate: components["schemas"]["Crate"];
                         /**
                          * @description The keywords of the crate.
                          * @example null
                          */
-                        keywords?: components["schemas"]["Keyword"][] | null;
+                        keywords: components["schemas"]["Keyword"][] | null;
                         /**
                          * @description The versions of the crate.
                          * @example null
                          */
-                        versions?: components["schemas"]["Version"][] | null;
+                        versions: components["schemas"]["Version"][] | null;
                     };
                 };
             };
@@ -2772,19 +2772,19 @@ export interface operations {
                          * @description The categories of the crate.
                          * @example null
                          */
-                        categories?: components["schemas"]["Category"][] | null;
+                        categories: components["schemas"]["Category"][] | null;
                         /** @description The crate metadata. */
                         crate: components["schemas"]["Crate"];
                         /**
                          * @description The keywords of the crate.
                          * @example null
                          */
-                        keywords?: components["schemas"]["Keyword"][] | null;
+                        keywords: components["schemas"]["Keyword"][] | null;
                         /**
                          * @description The versions of the crate.
                          * @example null
                          */
-                        versions?: components["schemas"]["Version"][] | null;
+                        versions: components["schemas"]["Version"][] | null;
                     };
                 };
             };
