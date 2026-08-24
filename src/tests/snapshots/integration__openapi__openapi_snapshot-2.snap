@@ -953,7 +953,8 @@ expression: response.json()
           }
         },
         "required": [
-          "login"
+          "login",
+          "email"
         ],
         "type": "object"
       },

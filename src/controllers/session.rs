@@ -128,6 +128,7 @@ pub struct SignupDetails {
     /// The GitHub account login.
     login: String,
     /// The email address suggested by GitHub, if one is available.
+    #[schema(required = true)]
     email: Option<String>,
 }
 

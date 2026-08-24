@@ -1581,7 +1581,7 @@ export interface components {
         /** @description Public GitHub account details displayed while a user completes signup. */
         SignupDetails: {
             /** @description The email address suggested by GitHub, if one is available. */
-            email?: string | null;
+            email: string | null;
             /** @description The GitHub account login. */
             login: string;
         };
