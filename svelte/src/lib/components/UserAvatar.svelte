@@ -7,7 +7,7 @@
 
   interface AvatarUser {
     avatar?: string | null;
-    kind?: string;
+    kind: 'user' | 'team';
     login: string;
     name?: string | null;
   }
@@ -27,15 +27,7 @@
 
   let alt = $derived(user.name ? `${user.name} (${user.login})` : `(${user.login})`);
 
-  let title = $derived.by(() => {
-    if (!user.kind || user.kind === 'user') {
-      return user.name;
-    } else if (user.kind === 'team') {
-      return `${user.name} team`;
-    } else {
-      return `${user.name} (${user.kind})`;
-    }
-  });
+  let title = $derived(user.kind === 'team' ? `${user.name} team` : user.name);
 
   let src = $derived(user.avatar ? `${user.avatar}&s=${sizeValue * 2}` : avatarPlaceholder);
 </script>
