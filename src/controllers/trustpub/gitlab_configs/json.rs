@@ -33,6 +33,6 @@ pub struct GitLabConfigListMeta {
     pub total: i64,
 
     /// Query string to the next page of results, if any.
-    #[schema(example = "?seek=abc123")]
+    #[schema(required = true, example = "?seek=abc123")]
     pub next_page: Option<String>,
 }
