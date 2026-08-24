@@ -1444,7 +1444,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             /** @example null */
-            environment?: string | null;
+            environment: string | null;
             /**
              * Format: int32
              * @example 42
@@ -1453,7 +1453,7 @@ export interface components {
             /** @example rust-lang */
             namespace: string;
             /** @example null */
-            namespace_id?: string | null;
+            namespace_id: string | null;
             /** @example regex */
             project: string;
             /** @example .gitlab-ci.yml */

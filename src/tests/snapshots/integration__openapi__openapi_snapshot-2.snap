@@ -738,8 +738,10 @@ expression: response.json()
           "id",
           "crate",
           "namespace",
+          "namespace_id",
           "project",
           "workflow_filepath",
+          "environment",
           "created_at"
         ],
         "type": "object"
