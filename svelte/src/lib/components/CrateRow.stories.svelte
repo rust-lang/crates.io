@@ -26,18 +26,23 @@
     documentation: 'https://docs.rs/serde',
     repository: 'https://github.com/serde-rs/serde',
     badges: [],
+    categories: null,
     exact_match: false,
+    keywords: null,
     links: {
       owner_team: '/api/v1/crates/serde/owner_team',
       owner_user: '/api/v1/crates/serde/owner_user',
+      owners: '/api/v1/crates/serde/owners',
       reverse_dependencies: '/api/v1/crates/serde/reverse_dependencies',
       version_downloads: '/api/v1/crates/serde/downloads',
       versions: '/api/v1/crates/serde/versions',
     },
+    max_stable_version: '1.0.215',
     max_version: '1.0.215',
     newest_version: '1.0.215',
     num_versions: 215,
     trustpub_only: false,
+    versions: null,
   };
 </script>
 

@@ -14,6 +14,7 @@
     name: 'Jane Doe',
     login: 'janedoe',
     avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
+    url: 'https://github.com/janedoe',
   };
 
   const JOHN_SMITH = {
@@ -22,6 +23,7 @@
     name: 'John Smith',
     login: 'johnsmith',
     avatar: 'https://avatars.githubusercontent.com/u/2?v=4',
+    url: 'https://github.com/johnsmith',
   };
 
   const ANONYMOUS = {
@@ -30,6 +32,7 @@
     name: null,
     login: 'anonymous',
     avatar: 'https://avatars.githubusercontent.com/u/3?v=4',
+    url: 'https://github.com/anonymous',
   };
 
   const RUST_TEAM = {
@@ -38,6 +41,7 @@
     name: 'core',
     login: 'github:crates-io:core',
     avatar: 'https://avatars.githubusercontent.com/u/5430905?v=4',
+    url: 'https://github.com/crates-io',
   };
 
   const ANOTHER_TEAM = {
@@ -46,6 +50,7 @@
     name: 'admins',
     login: 'github:crates-io:admins',
     avatar: 'https://avatars.githubusercontent.com/t/5430906?v=4',
+    url: 'https://github.com/crates-io',
   };
 
   const USER_4 = {
@@ -54,6 +59,7 @@
     name: 'User Four',
     login: 'user4',
     avatar: 'https://avatars.githubusercontent.com/u/4?v=4',
+    url: 'https://github.com/user4',
   };
 
   const USER_5 = {
@@ -62,6 +68,7 @@
     name: 'User Five',
     login: 'user5',
     avatar: 'https://avatars.githubusercontent.com/u/5?v=4',
+    url: 'https://github.com/user5',
   };
 
   const USER_6 = {
@@ -70,6 +77,7 @@
     name: 'User Six',
     login: 'user6',
     avatar: 'https://avatars.githubusercontent.com/u/6?v=4',
+    url: 'https://github.com/user6',
   };
 
   const NO_AVATAR_USER = {
@@ -78,6 +86,7 @@
     name: 'Avatarless Andy',
     login: 'avatarless',
     avatar: null,
+    url: 'https://github.com/avatarless',
   };
 
   const NO_AVATAR_ANON = {
@@ -86,6 +95,7 @@
     name: null,
     login: 'noname',
     avatar: null,
+    url: 'https://github.com/noname',
   };
 
   const NO_AVATAR_TEAM = {
@@ -94,6 +104,7 @@
     name: 'maintainers',
     login: 'github:crates-io:maintainers',
     avatar: null,
+    url: 'https://github.com/crates-io',
   };
 </script>
 
