@@ -1,41 +1,48 @@
-<script module>
+<script module lang="ts">
+  import type { components } from '@crates-io/api-client';
+
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
   import OwnersList from './OwnersList.svelte';
+
+  type Owner = components['schemas']['Owner'];
 
   const { Story } = defineMeta({
     title: 'OwnersList',
     component: OwnersList,
   });
 
-  const JANE_DOE = {
+  const JANE_DOE: Owner = {
     id: 1,
     kind: 'user',
     name: 'Jane Doe',
     login: 'janedoe',
     avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
     url: 'https://github.com/janedoe',
+    github_username_matches: true,
   };
 
-  const JOHN_SMITH = {
+  const JOHN_SMITH: Owner = {
     id: 2,
     kind: 'user',
     name: 'John Smith',
     login: 'johnsmith',
     avatar: 'https://avatars.githubusercontent.com/u/2?v=4',
     url: 'https://github.com/johnsmith',
+    github_username_matches: true,
   };
 
-  const ANONYMOUS = {
+  const ANONYMOUS: Owner = {
     id: 3,
     kind: 'user',
     name: null,
     login: 'anonymous',
     avatar: 'https://avatars.githubusercontent.com/u/3?v=4',
     url: 'https://github.com/anonymous',
+    github_username_matches: true,
   };
 
-  const RUST_TEAM = {
+  const RUST_TEAM: Owner = {
     id: 5_430_905,
     kind: 'team',
     name: 'core',
@@ -44,7 +51,7 @@
     url: 'https://github.com/crates-io',
   };
 
-  const ANOTHER_TEAM = {
+  const ANOTHER_TEAM: Owner = {
     id: 5_430_906,
     kind: 'team',
     name: 'admins',
@@ -53,52 +60,57 @@
     url: 'https://github.com/crates-io',
   };
 
-  const USER_4 = {
+  const USER_4: Owner = {
     id: 4,
     kind: 'user',
     name: 'User Four',
     login: 'user4',
     avatar: 'https://avatars.githubusercontent.com/u/4?v=4',
     url: 'https://github.com/user4',
+    github_username_matches: true,
   };
 
-  const USER_5 = {
+  const USER_5: Owner = {
     id: 5,
     kind: 'user',
     name: 'User Five',
     login: 'user5',
     avatar: 'https://avatars.githubusercontent.com/u/5?v=4',
     url: 'https://github.com/user5',
+    github_username_matches: true,
   };
 
-  const USER_6 = {
+  const USER_6: Owner = {
     id: 6,
     kind: 'user',
     name: 'User Six',
     login: 'user6',
     avatar: 'https://avatars.githubusercontent.com/u/6?v=4',
     url: 'https://github.com/user6',
+    github_username_matches: true,
   };
 
-  const NO_AVATAR_USER = {
+  const NO_AVATAR_USER: Owner = {
     id: 7,
     kind: 'user',
     name: 'Avatarless Andy',
     login: 'avatarless',
     avatar: null,
     url: 'https://github.com/avatarless',
+    github_username_matches: true,
   };
 
-  const NO_AVATAR_ANON = {
+  const NO_AVATAR_ANON: Owner = {
     id: 8,
     kind: 'user',
     name: null,
     login: 'noname',
     avatar: null,
     url: 'https://github.com/noname',
+    github_username_matches: true,
   };
 
-  const NO_AVATAR_TEAM = {
+  const NO_AVATAR_TEAM: Owner = {
     id: 9,
     kind: 'team',
     name: 'maintainers',

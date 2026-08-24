@@ -1525,42 +1525,65 @@ export interface components {
              */
             inviter_id: number;
         };
+        /** @description A user or team that owns a crate. */
         Owner: {
             /**
-             * @description The avatar URL of the team or user.
+             * @description The user's avatar URL.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
             avatar: string | null;
-            /**
-             * @description Whether a linked GitHub username exactly matches the crates.io username.
-             *
-             *     This field is present only for user owners.
-             */
-            github_username_matches?: boolean;
+            /** @description Whether a linked GitHub username exactly matches the crates.io username. */
+            github_username_matches: boolean;
             /**
              * Format: int32
-             * @description The opaque identifier for the team or user, depending on the `kind` field.
+             * @description The opaque identifier for the user.
              * @example 42
              */
             id: number;
+            /** @enum {string} */
+            kind: "user";
             /**
-             * @description The kind of the owner (`user` or `team`).
-             * @example user
-             */
-            kind: string;
-            /**
-             * @description The login name of the team or user.
+             * @description The crates.io username.
              * @example ghost
              */
             login: string;
             /**
-             * @description The display name of the team or user.
+             * @description The user's display name.
              * @example Kate Morgan
              */
             name: string | null;
             /**
-             * @description The URL to the owner's profile.
+             * @description The URL to the user's GitHub profile.
              * @example https://github.com/ghost
+             */
+            url: string;
+        } | {
+            /**
+             * @description The team's avatar URL.
+             * @example https://avatars2.githubusercontent.com/u/1234567?v=4
+             */
+            avatar: string | null;
+            /**
+             * Format: int32
+             * @description The opaque identifier for the team.
+             * @example 42
+             */
+            id: number;
+            /** @enum {string} */
+            kind: "team";
+            /**
+             * @description The team's login name.
+             * @example github:rust-lang:crates-io
+             */
+            login: string;
+            /**
+             * @description The team's display name.
+             * @example Crates.io team
+             */
+            name: string | null;
+            /**
+             * @description The URL to the team's GitHub profile.
+             * @example https://github.com/rust-lang
              */
             url: string | null;
         };
@@ -5513,6 +5536,12 @@ export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJs
     status: unknown;
 }>["status"]> = ["signup_required"];
 export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
+export const ownerOneOf0KindValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["Owner"], {
+    kind: unknown;
+}>["kind"]> = ["user"];
+export const ownerOneOf1KindValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["Owner"], {
+    kind: unknown;
+}>["kind"]> = ["team"];
 export const trustpubDataOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["TrustpubData"], {
     provider: unknown;
 }>["provider"]> = ["github"];

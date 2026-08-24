@@ -1,10 +1,18 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::{OwnerTeamsResponse, RequestHelper, TestApp, add_team_to_crate, new_team};
 use crates_io::models::{Crate, CrateOwner, NewTeam};
+use crates_io::views::EncodableOwner;
 
 use diesel::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
+
+fn team_login(owner: &EncodableOwner) -> &str {
+    let EncodableOwner::Team { login, .. } = owner else {
+        panic!("expected a team owner");
+    };
+    login
+}
 
 impl crate::util::MockAnonymousUser {
     /// Lists the team owners of the specified crate.
@@ -119,7 +127,7 @@ async fn add_renamed_team() -> anyhow::Result<()> {
 
     let json = anon.crate_owner_teams("foo_renamed_team").await.good();
     assert_eq!(json.teams.len(), 1);
-    assert_eq!(json.teams[0].login, "github:test-org:core");
+    assert_eq!(team_login(&json.teams[0]), "github:test-org:core");
 
     Ok(())
 }
@@ -149,7 +157,7 @@ async fn add_team_mixed_case() -> anyhow::Result<()> {
 
     let json = anon.crate_owner_teams("foo_mixed_case").await.good();
     assert_eq!(json.teams.len(), 1);
-    assert_eq!(json.teams[0].login, "github:test-org:core");
+    assert_eq!(team_login(&json.teams[0]), "github:test-org:core");
 
     Ok(())
 }
@@ -178,7 +186,7 @@ async fn add_team_as_org_owner() -> anyhow::Result<()> {
 
     let json = anon.crate_owner_teams("foo_org_owner").await.good();
     assert_eq!(json.teams.len(), 1);
-    assert_eq!(json.teams[0].login, "github:test-org:core");
+    assert_eq!(team_login(&json.teams[0]), "github:test-org:core");
 
     Ok(())
 }

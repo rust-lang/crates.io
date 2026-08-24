@@ -116,6 +116,7 @@
       login: 'dtolnay',
       avatar: 'https://avatars.githubusercontent.com/u/1940490?v=4',
       url: 'https://github.com/dtolnay',
+      github_username_matches: true,
     },
     {
       id: 2,
@@ -124,6 +125,7 @@
       login: 'erickt',
       avatar: 'https://avatars.githubusercontent.com/u/315?v=4',
       url: 'https://github.com/erickt',
+      github_username_matches: true,
     },
   ];
 
@@ -136,6 +138,7 @@
       login: 'alice',
       avatar: 'https://avatars.githubusercontent.com/u/3?v=4',
       url: 'https://github.com/alice',
+      github_username_matches: true,
     },
     {
       id: 4,
@@ -144,6 +147,7 @@
       login: 'bob',
       avatar: 'https://avatars.githubusercontent.com/u/4?v=4',
       url: 'https://github.com/bob',
+      github_username_matches: true,
     },
     {
       id: 5,
@@ -152,6 +156,7 @@
       login: 'charlie',
       avatar: 'https://avatars.githubusercontent.com/u/5?v=4',
       url: 'https://github.com/charlie',
+      github_username_matches: true,
     },
     {
       id: 6,
@@ -160,6 +165,7 @@
       login: 'diana',
       avatar: 'https://avatars.githubusercontent.com/u/6?v=4',
       url: 'https://github.com/diana',
+      github_username_matches: true,
     },
   ];
 </script>

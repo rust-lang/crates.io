@@ -527,66 +527,86 @@ pub struct EncodableCrateLinks {
     pub reverse_dependencies: String,
 }
 
+/// A user or team that owns a crate.
 #[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 #[schema(as = Owner)]
-pub struct EncodableOwner {
-    /// The opaque identifier for the team or user, depending on the `kind` field.
-    #[schema(example = 42)]
-    pub id: i32,
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum EncodableOwner {
+    /// A user owner.
+    User {
+        /// The opaque identifier for the user.
+        #[schema(example = 42)]
+        id: i32,
 
-    /// The login name of the team or user.
-    #[schema(example = "ghost")]
-    pub login: String,
+        /// The crates.io username.
+        #[schema(example = "ghost")]
+        login: String,
 
-    /// The kind of the owner (`user` or `team`).
-    #[schema(example = "user")]
-    pub kind: String,
+        /// The URL to the user's GitHub profile.
+        #[schema(example = "https://github.com/ghost")]
+        url: String,
 
-    /// The URL to the owner's profile.
-    #[schema(required = true, example = "https://github.com/ghost")]
-    pub url: Option<String>,
+        /// The user's display name.
+        #[schema(required, example = "Kate Morgan")]
+        name: Option<String>,
 
-    /// The display name of the team or user.
-    #[schema(required = true, example = "Kate Morgan")]
-    pub name: Option<String>,
+        /// The user's avatar URL.
+        #[schema(
+            required,
+            example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+        )]
+        avatar: Option<String>,
 
-    /// The avatar URL of the team or user.
-    #[schema(
-        required = true,
-        example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
-    )]
-    pub avatar: Option<String>,
+        /// Whether a linked GitHub username exactly matches the crates.io username.
+        github_username_matches: bool,
+    },
 
-    /// Whether a linked GitHub username exactly matches the crates.io username.
-    ///
-    /// This field is present only for user owners.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(nullable = false)]
-    pub github_username_matches: Option<bool>,
+    /// A team owner.
+    Team {
+        /// The opaque identifier for the team.
+        #[schema(example = 42)]
+        id: i32,
+
+        /// The team's login name.
+        #[schema(example = "github:rust-lang:crates-io")]
+        login: String,
+
+        /// The URL to the team's GitHub profile.
+        #[schema(required, example = "https://github.com/rust-lang")]
+        url: Option<String>,
+
+        /// The team's display name.
+        #[schema(required, example = "Crates.io team")]
+        name: Option<String>,
+
+        /// The team's avatar URL.
+        #[schema(
+            required,
+            example = "https://avatars2.githubusercontent.com/u/1234567?v=4"
+        )]
+        avatar: Option<String>,
+    },
 }
 
 impl EncodableOwner {
     pub fn from_user(user: PublicUser) -> Self {
-        Self {
-            github_username_matches: Some(user.github_username_matches),
-            url: Some(format!("https://github.com/{}", user.gh_login)),
+        Self::User {
+            github_username_matches: user.github_username_matches,
+            url: format!("https://github.com/{}", user.gh_login),
             id: user.id,
             login: user.username,
             avatar: user.gh_avatar,
             name: user.name,
-            kind: String::from("user"),
         }
     }
 
     pub fn from_team(team: Team) -> Self {
-        Self {
+        Self::Team {
             id: team.id,
             url: team.url(),
             login: team.login,
             avatar: team.avatar,
             name: team.name,
-            kind: String::from("team"),
-            github_username_matches: None,
         }
     }
 }
