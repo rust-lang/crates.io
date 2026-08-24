@@ -19,38 +19,38 @@ pub async fn serve_svelte(request: Request, next: Next) -> Response {
 }
 
 async fn serve<P: AsRef<Path>>(path: P, request: Request, next: Next) -> Response {
-    match serve_static(path, request).await {
-        Ok(response) => response,
-        Err(request) => next.run(request).await,
+    let (parts, body) = request.into_parts();
+    match serve_static(path, &parts).await {
+        Some(response) => response,
+        None => next.run(Request::from_parts(parts, body)).await,
     }
 }
 
 /// Serves a static file from `path`, using the precompressed `.br`/`.gz`
 /// variants when available and accepted.
 ///
-/// Returns the original request back as [`Err`] when it should fall through to
-/// the next handler: for non-GET/HEAD methods, for the `/` and `/index.html`
-/// Jinja template (rendered by `frontend_html::serve`), and when no matching
-/// file exists.
-async fn serve_static<P: AsRef<Path>>(path: P, request: Request) -> Result<Response, Request> {
-    if !matches!(*request.method(), Method::GET | Method::HEAD)
-        || matches!(request.uri().path().as_bytes(), b"/" | b"/index.html")
+/// Returns [`None`] when the request should fall through to the next handler:
+/// for non-GET/HEAD methods, for the `/` and `/index.html` Jinja template
+/// (rendered by `frontend_html::serve`), and when no matching file exists.
+async fn serve_static<P: AsRef<Path>>(path: P, parts: &http::request::Parts) -> Option<Response> {
+    if !matches!(parts.method, Method::GET | Method::HEAD)
+        || matches!(parts.uri.path().as_bytes(), b"/" | b"/index.html")
     {
-        return Err(request);
+        return None;
     }
 
     let mut static_req = Request::new(());
-    *static_req.method_mut() = request.method().clone();
-    *static_req.uri_mut() = request.uri().clone();
-    *static_req.headers_mut() = request.headers().clone();
+    *static_req.method_mut() = parts.method.clone();
+    *static_req.uri_mut() = parts.uri.clone();
+    *static_req.headers_mut() = parts.headers.clone();
 
     let serve_dir = ServeDir::new(path).precompressed_br().precompressed_gzip();
     let Ok(response) = serve_dir.oneshot(static_req).await;
     if response.status() == StatusCode::NOT_FOUND {
-        return Err(request);
+        return None;
     }
 
-    Ok(response.map(Body::new))
+    Some(response.map(Body::new))
 }
 
 #[cfg(test)]
@@ -58,7 +58,7 @@ mod tests {
     use super::serve_static;
     use axum::body::Body;
     use axum::extract::Request;
-    use claims::{assert_err, assert_ok};
+    use claims::{assert_none, assert_some};
     use http::{StatusCode, header};
 
     #[tokio::test]
@@ -67,7 +67,8 @@ mod tests {
         std::fs::write(dir.path().join("app.js"), b"console.log(1)").unwrap();
 
         let request = Request::get("/app.js").body(Body::empty()).unwrap();
-        let response = assert_ok!(serve_static(dir.path(), request).await);
+        let (parts, _) = request.into_parts();
+        let response = assert_some!(serve_static(dir.path(), &parts).await);
 
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
@@ -81,6 +82,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
 
         let request = Request::get("/missing.js").body(Body::empty()).unwrap();
-        assert_err!(serve_static(dir.path(), request).await);
+        let (parts, _) = request.into_parts();
+        assert_none!(serve_static(dir.path(), &parts).await);
     }
 }
