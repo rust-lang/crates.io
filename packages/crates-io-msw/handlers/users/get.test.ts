@@ -27,8 +27,42 @@ test('returns a user object for known users', async function () {
 
   let response = await fetch('/api/v1/users/Crates_User');
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchInlineSnapshot(`
+  let body = await response.json();
+  expect(body).not.toHaveProperty('linked_accounts');
+  expect(body).toMatchInlineSnapshot(`
     {
+      "user": {
+        "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "created_at": null,
+        "github_username_matches": true,
+        "id": 1,
+        "login": "crates-user",
+        "name": "User 1",
+        "url": "https://github.com/github-user",
+      },
+    }
+  `);
+
+  let expandedResponse = await fetch('/api/v1/users/Crates_User?include=linked_accounts');
+  expect(expandedResponse.status).toBe(200);
+  expect(await expandedResponse.json()).toMatchInlineSnapshot(`
+    {
+      "linked_accounts": [
+        {
+          "account_id": "10",
+          "avatar": null,
+          "login": "github-user",
+          "provider": "github",
+          "url": "https://github.com/github-user",
+        },
+        {
+          "account_id": "11",
+          "avatar": null,
+          "login": "crates-user",
+          "provider": "github",
+          "url": "https://github.com/crates-user",
+        },
+      ],
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
         "created_at": null,
