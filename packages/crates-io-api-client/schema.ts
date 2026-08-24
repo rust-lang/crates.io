@@ -1526,6 +1526,19 @@ export interface components {
              */
             inviter_id: number;
         };
+        /** @description This type contains public data for an external account of a crates.io user. */
+        LinkedAccount: {
+            /** @description The stable GitHub account ID. */
+            account_id: string;
+            /** @description The GitHub avatar URL. */
+            avatar: string | null;
+            /** @description The GitHub username. */
+            login: string;
+            /** @enum {string} */
+            provider: "github";
+            /** @description The GitHub profile URL. */
+            url: string;
+        };
         /** @description A user or team that owns a crate. */
         Owner: {
             /**
@@ -5428,7 +5441,18 @@ export interface operations {
     };
     find_user: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description Additional data to include in the response.
+                 *
+                 *     Valid values: `linked_accounts`.
+                 *
+                 *     Defaults to no additional data.
+                 *
+                 *     This parameter expects a comma-separated list of values.
+                 */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description crates.io username */
@@ -5445,6 +5469,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Public linked accounts, if the client requested them. */
+                        linked_accounts?: components["schemas"]["LinkedAccount"][];
                         user: components["schemas"]["User"];
                     };
                 };
@@ -5538,6 +5564,9 @@ export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJs
     status: unknown;
 }>["status"]> = ["signup_required"];
 export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
+export const linkedAccountOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["LinkedAccount"], {
+    provider: unknown;
+}>["provider"]> = ["github"];
 export const ownerOneOf0KindValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["Owner"], {
     kind: unknown;
 }>["kind"]> = ["user"];

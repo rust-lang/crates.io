@@ -1,13 +1,15 @@
 use crate::util::{RequestHelper, TestApp};
+use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
 use crates_io::models::{NewUser, User};
-use crates_io::views::EncodablePublicUser;
+use crates_io::views::{EncodableLinkedAccount, EncodablePublicUser};
 use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
-use insta::assert_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct UserShowPublicResponse {
     pub user: EncodablePublicUser,
+    pub linked_accounts: Option<Vec<EncodableLinkedAccount>>,
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -23,6 +25,26 @@ async fn show() {
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
     assert!(json.user.github_username_matches);
+    assert_none!(json.linked_accounts);
+
+    let url = "/api/v1/users/foo?include=linked_accounts";
+    let response = anon.get::<()>(url).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        ".user.created_at" => "[datetime]",
+        ".linked_accounts[].account_id" => insta::dynamic_redaction(|value, _path| {
+            let account_id = assert_some!(value.as_str());
+            assert_ok!(account_id.parse::<i64>());
+            "[account-id]"
+        }),
+    });
+
+    let response = anon.get::<()>("/api/v1/users/foo?include=unknown").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(
+        response.text(),
+        @r#"{"errors":[{"detail":"invalid component for ?include= (expected 'linked_accounts')"}]}"#
+    );
 
     // Lookup by username is case insensitive; returned data uses capitalization in database
     let json: UserShowPublicResponse = anon.get("/api/v1/users/crates_bar").await.good();
@@ -96,7 +118,9 @@ async fn user_without_github_account() {
     // This user doesn't have a linked record in `oauth_github`
 
     // The crates.io username still exists
-    let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
+    let url = "/api/v1/users/fOObAr?include=linked_accounts";
+    let json: UserShowPublicResponse = anon.get(url).await.good();
     assert_eq!("I deleted my github account", json.user.name.unwrap());
     assert!(!json.user.github_username_matches);
+    assert_some_eq!(json.linked_accounts, Vec::new());
 }

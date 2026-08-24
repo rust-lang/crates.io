@@ -838,6 +838,49 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "LinkedAccount": {
+        "description": "This type contains public data for an external account of a crates.io user.",
+        "oneOf": [
+          {
+            "description": "A linked GitHub account.",
+            "properties": {
+              "account_id": {
+                "description": "The stable GitHub account ID.",
+                "type": "string"
+              },
+              "avatar": {
+                "description": "The GitHub avatar URL.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "login": {
+                "description": "The GitHub username.",
+                "type": "string"
+              },
+              "provider": {
+                "enum": [
+                  "github"
+                ],
+                "type": "string"
+              },
+              "url": {
+                "description": "The GitHub profile URL.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "account_id",
+              "login",
+              "avatar",
+              "url",
+              "provider"
+            ],
+            "type": "object"
+          }
+        ]
+      },
       "Owner": {
         "description": "A user or team that owns a crate.",
         "oneOf": [
@@ -5782,6 +5825,15 @@ expression: response.json()
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Additional data to include in the response.\n\nValid values: `linked_accounts`.\n\nDefaults to no additional data.\n\nThis parameter expects a comma-separated list of values.",
+            "in": "query",
+            "name": "include",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5791,6 +5843,13 @@ expression: response.json()
                 "schema": {
                   "description": "Response returned when getting a user by login.",
                   "properties": {
+                    "linked_accounts": {
+                      "description": "Public linked accounts, if the client requested them.",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedAccount"
+                      },
+                      "type": "array"
+                    },
                     "user": {
                       "$ref": "#/components/schemas/User"
                     }
