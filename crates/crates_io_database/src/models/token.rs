@@ -57,22 +57,26 @@ pub struct ApiToken {
     pub created_at: DateTime<Utc>,
 
     /// The date and time when the token was last used.
-    #[schema(example = "2021-10-26T11:32:12Z")]
+    #[schema(required = true, example = "2021-10-26T11:32:12Z")]
     pub last_used_at: Option<DateTime<Utc>>,
 
     #[serde(skip)]
     pub revoked: bool,
 
     /// `None` or a list of crate scope patterns (see RFC #2947).
-    #[schema(value_type = Option<Vec<String>>, example = json!(["serde"]))]
+    #[schema(
+        required = true,
+        value_type = Option<Vec<String>>,
+        example = json!(["serde"])
+    )]
     pub crate_scopes: Option<Vec<CrateScope>>,
 
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947).
-    #[schema(example = json!(["publish-update"]))]
+    #[schema(required = true, example = json!(["publish-update"]))]
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
 
     /// The date and time when the token will expire, or `null`.
-    #[schema(example = "2030-10-26T11:32:12Z")]
+    #[schema(required = true, example = "2030-10-26T11:32:12Z")]
     pub expired_at: Option<DateTime<Utc>>,
 }
 

@@ -99,7 +99,11 @@ expression: response.json()
         "required": [
           "id",
           "name",
-          "created_at"
+          "created_at",
+          "last_used_at",
+          "crate_scopes",
+          "endpoint_scopes",
+          "expired_at"
         ],
         "type": "object"
       },

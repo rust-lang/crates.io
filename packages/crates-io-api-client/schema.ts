@@ -1018,7 +1018,7 @@ export interface components {
              *       "serde"
              *     ]
              */
-            crate_scopes?: string[] | null;
+            crate_scopes: string[] | null;
             /**
              * Format: date-time
              * @description The date and time when the token was created.
@@ -1031,13 +1031,13 @@ export interface components {
              *       "publish-update"
              *     ]
              */
-            endpoint_scopes?: components["schemas"]["EndpointScope"][] | null;
+            endpoint_scopes: components["schemas"]["EndpointScope"][] | null;
             /**
              * Format: date-time
              * @description The date and time when the token will expire, or `null`.
              * @example 2030-10-26T11:32:12Z
              */
-            expired_at?: string | null;
+            expired_at: string | null;
             /**
              * Format: int32
              * @description An opaque unique identifier for the token.
@@ -1049,7 +1049,7 @@ export interface components {
              * @description The date and time when the token was last used.
              * @example 2021-10-26T11:32:12Z
              */
-            last_used_at?: string | null;
+            last_used_at: string | null;
             /**
              * @description The name of the token.
              * @example Example API Token
