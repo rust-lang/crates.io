@@ -720,7 +720,7 @@ mod tests {
                 name: Some("Kate Morgan".into()),
                 email: Some("kate@morgan.dev".into()),
                 avatar: Some("https://avatars2.githubusercontent.com/u/1234567?v=4".into()),
-                url: Some("https://github.com/ghost".into()),
+                url: "https://github.com/ghost".into(),
                 is_admin: false,
                 publish_notifications: true,
                 created_at: None,

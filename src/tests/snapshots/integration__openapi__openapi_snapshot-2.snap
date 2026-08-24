@@ -191,10 +191,7 @@ expression: response.json()
           "url": {
             "description": "The user's GitHub profile URL.",
             "example": "https://github.com/ghost",
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           }
         },
         "required": [
@@ -202,8 +199,13 @@ expression: response.json()
           "login",
           "email_verified",
           "email_verification_sent",
+          "name",
+          "email",
+          "avatar",
+          "url",
           "is_admin",
-          "publish_notifications"
+          "publish_notifications",
+          "created_at"
         ],
         "type": "object"
       },

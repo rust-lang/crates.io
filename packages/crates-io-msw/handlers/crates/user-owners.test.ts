@@ -42,6 +42,7 @@ test('returns the list of users that own the specified crate', async function ()
       "users": [
         {
           "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "created_at": null,
           "github_username_matches": true,
           "id": 1,
           "kind": "user",

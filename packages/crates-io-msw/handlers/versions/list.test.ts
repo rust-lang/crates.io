@@ -124,6 +124,7 @@ test('returns all versions belonging to the specified crate', async function () 
           "num": "1.1.0",
           "published_by": {
             "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+            "created_at": null,
             "github_username_matches": true,
             "id": 1,
             "login": "user-1",

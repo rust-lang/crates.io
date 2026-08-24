@@ -1070,7 +1070,7 @@ export interface components {
              * @description The user's avatar URL, if set.
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
-            avatar?: string | null;
+            avatar: string | null;
             /**
              * Format: date-time
              * @description The date and time the user was created.
@@ -1079,12 +1079,12 @@ export interface components {
              *     time the user's GitHub account was created. If the GitHub account was
              *     deleted before June 19, 2026, this field will be empty.
              */
-            created_at?: string | null;
+            created_at: string | null;
             /**
              * @description The user's email address, if set.
              * @example kate@morgan.dev
              */
-            email?: string | null;
+            email: string | null;
             /**
              * @description Whether the user's email address verification email has been sent.
              * @example true
@@ -1115,7 +1115,7 @@ export interface components {
              * @description The user's display name, if set.
              * @example Kate Morgan
              */
-            name?: string | null;
+            name: string | null;
             /**
              * @description Whether the user has opted in to receive publish notifications via email.
              * @example true
@@ -1125,7 +1125,7 @@ export interface components {
              * @description The user's GitHub profile URL.
              * @example https://github.com/ghost
              */
-            url?: string | null;
+            url: string;
         };
         Category: {
             /**

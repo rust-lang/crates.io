@@ -31,6 +31,7 @@ test('returns a user object for known users', async function () {
     {
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "created_at": null,
         "github_username_matches": true,
         "id": 1,
         "login": "crates-user",
@@ -54,6 +55,7 @@ test('returns a user object for known users', async function () {
     {
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "created_at": null,
         "github_username_matches": false,
         "id": 2,
         "login": "second-user",
@@ -80,6 +82,7 @@ test('returns the newest user for canonical username collisions', async function
     {
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+        "created_at": null,
         "github_username_matches": true,
         "id": 2,
         "login": "FOO_BAR",
