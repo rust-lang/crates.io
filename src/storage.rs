@@ -41,7 +41,6 @@ pub fn release_cache_tag(name: &str, version: &str) -> String {
 pub struct StorageConfig {
     backend: StorageBackend,
     pub cdn_prefix: Option<String>,
-    pub cache_tags_enabled: bool,
 }
 
 #[derive(Debug)]
@@ -65,7 +64,6 @@ impl StorageConfig {
         Self {
             backend: StorageBackend::InMemory,
             cdn_prefix: None,
-            cache_tags_enabled: false,
         }
     }
 
@@ -99,7 +97,6 @@ impl StorageConfig {
             return Self {
                 backend,
                 cdn_prefix,
-                cache_tags_enabled: false,
             };
         }
 
@@ -114,7 +111,6 @@ impl StorageConfig {
         Self {
             backend,
             cdn_prefix: None,
-            cache_tags_enabled: false,
         }
     }
 }
@@ -124,7 +120,6 @@ pub struct Storage {
     store: Arc<dyn ObjectStore>,
     index_store: Arc<dyn ObjectStore>,
     supports_attributes: bool,
-    cache_tags_enabled: bool,
 }
 
 impl Storage {
@@ -160,7 +155,6 @@ impl Storage {
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
                     supports_attributes: true,
-                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
 
@@ -189,7 +183,6 @@ impl Storage {
                     store,
                     index_store,
                     supports_attributes: false,
-                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
 
@@ -202,7 +195,6 @@ impl Storage {
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
                     supports_attributes: true,
-                    cache_tags_enabled: config.cache_tags_enabled,
                 }
             }
         }
@@ -286,9 +278,7 @@ impl Storage {
 
         let mut attributes = key.attributes();
 
-        if self.cache_tags_enabled
-            && let Some(cache_tags) = key.cache_tags()
-        {
+        if let Some(cache_tags) = key.cache_tags() {
             attributes.insert(Attribute::Metadata("cache-tags".into()), cache_tags.into());
         }
 
@@ -702,9 +692,7 @@ mod tests {
     async fn upload_sets_cache_tags_metadata() {
         use claims::{assert_none, assert_some_eq};
 
-        let mut config = StorageConfig::in_memory();
-        config.cache_tags_enabled = true;
-        let s = Storage::from_config(&config);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         let key = StorageKey::for_crate_file("foo", "1.2.3");
         s.upload(&key, Bytes::new().into()).await.unwrap();
