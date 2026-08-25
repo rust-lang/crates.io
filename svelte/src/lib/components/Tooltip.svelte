@@ -19,6 +19,8 @@
      * redundant tooltip that merely repeats fully visible text.
      */
     onlyWhenTruncated?: boolean;
+    /** Element checked for truncation instead of the tooltip anchor. */
+    truncationTarget?: HTMLElement | null;
   }
 
   interface TextProps extends BaseProps {
@@ -33,7 +35,7 @@
 
   type Props = TextProps | ChildrenProps;
 
-  let { text, children, side = 'top', delay = 0, onlyWhenTruncated = false }: Props = $props();
+  let { text, children, side = 'top', delay = 0, onlyWhenTruncated = false, truncationTarget }: Props = $props();
 
   let anchorElement = $state<HTMLElement | null>(null);
   let visible = $state(false);
@@ -44,7 +46,8 @@
     // Sub-pixel rounding can leave `scrollWidth` 1px above `clientWidth`
     // without any visible clipping, so require more than that before treating
     // the content as truncated.
-    if (onlyWhenTruncated && anchorElement && anchorElement.scrollWidth - anchorElement.clientWidth <= 1) {
+    let overflowElement = truncationTarget ?? anchorElement;
+    if (onlyWhenTruncated && overflowElement && overflowElement.scrollWidth - overflowElement.clientWidth <= 1) {
       return;
     }
 

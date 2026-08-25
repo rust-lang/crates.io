@@ -48,5 +48,18 @@ describe('Tooltip', () => {
 
       expect(document.querySelector('.tooltip')).toBeNull();
     });
+
+    it('checks a separate truncation target when provided', async () => {
+      await render(TooltipTestWrapper, {
+        text: 'A very long string that does not fit into the narrow target element',
+        width: '500px',
+        truncationTargetWidth: '50px',
+        onlyWhenTruncated: true,
+      });
+
+      await userEvent.hover(page.getByCSS('[data-test-anchor]'));
+
+      await expect.element(page.getByCSS('.tooltip')).toBeVisible();
+    });
   });
 });
