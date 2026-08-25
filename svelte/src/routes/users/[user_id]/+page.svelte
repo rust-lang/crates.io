@@ -1,11 +1,9 @@
 <script lang="ts">
   import CrateList from '$lib/components/CrateList.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
-  import UserAvatar from '$lib/components/UserAvatar.svelte';
+  import UserPageHeader from '$lib/components/UserPageHeader.svelte';
   import { calculatePagination } from '$lib/utils/pagination';
 
   const MAX_PAGES = 50;
@@ -23,14 +21,7 @@
   });
 </script>
 
-<PageHeader style="display: flex; align-items: center; gap: var(--space-xs);" data-test-heading>
-  <UserAvatar user={{ ...data.user, kind: 'user' }} size="medium" data-test-avatar />
-  <h1 data-test-username>{data.user.login}</h1>
-  <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-  <a href={data.user.url} title={data.user.login} class="github-link" data-test-user-link>
-    <Icon class="i-simple-icons:github" label="GitHub profile" />
-  </a>
-</PageHeader>
+<UserPageHeader user={data.user} />
 
 <div class="results-meta">
   <ResultsCount
@@ -56,19 +47,6 @@
 <Pagination {pagination} />
 
 <style>
-  h1 {
-    margin: 0;
-  }
-
-  .github-link {
-    --icon-size: 32px;
-
-    &,
-    &:hover {
-      color: var(--main-color);
-    }
-  }
-
   .results-meta {
     display: flex;
     align-items: center;
