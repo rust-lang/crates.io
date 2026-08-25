@@ -31,7 +31,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
         let og_image_key = StorageKey::for_og_image(name);
         let feed_key = StorageKey::CrateFeed { name };
 
-        let (crate_file_paths, readme_paths, _, _) = try_join!(
+        try_join!(
             async {
                 info!("{name}: Deleting crate files from S3…");
                 let result = ctx.storage.delete_all_crate_files(name).await;
@@ -59,17 +59,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
         info!("{name}: Enqueuing CDN invalidations");
 
         let conn = ctx.deadpool.get().await?;
-        let job = if ctx.config.features.cache_tag_invalidations_enabled {
-            InvalidateCdns::cache_tags([crate_cache_tag(name)])
-        } else {
-            InvalidateCdns::paths(
-                crate_file_paths
-                    .into_iter()
-                    .chain(readme_paths)
-                    .chain(std::iter::once(og_image_key.path()))
-                    .chain(std::iter::once(feed_key.path())),
-            )
-        };
+        let job = InvalidateCdns::cache_tags([crate_cache_tag(name)]);
         job.enqueue(&conn).await?;
 
         info!("{name}: Successfully enqueued CDN invalidations.");
