@@ -12,6 +12,33 @@ use tracing::{info, instrument, warn};
 use url::Url;
 
 const REMOTE_NAME: &str = "archive";
+const TEMP_BRANCH: &str = "temp";
+const COMMITS_PER_PUSH: usize = 100_000;
+
+/// A contiguous commit range ending at the checkpoint pushed to the archive.
+#[derive(Debug, PartialEq)]
+struct ArchivePushChunk {
+    start: usize,
+    end: usize,
+    commit: String,
+}
+
+/// Splits an oldest-to-newest commit list into archive push checkpoints.
+fn archive_push_chunks(commits: &str, chunk_size: usize) -> Vec<ArchivePushChunk> {
+    let commits = commits.lines().collect::<Vec<_>>();
+    commits
+        .chunks(chunk_size)
+        .enumerate()
+        .map(|(index, chunk)| {
+            let start = index * chunk_size;
+            ArchivePushChunk {
+                start,
+                end: start + chunk.len(),
+                commit: chunk.last().unwrap().to_string(),
+            }
+        })
+        .collect()
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct ArchiveIndexBranch {
@@ -116,6 +143,67 @@ impl BackgroundJob for ArchiveIndexBranch {
         .await??;
         info!("Added archive repository as `{REMOTE_NAME}` remote");
 
+        let output = Command::new("git")
+            .current_dir(tempdir.path())
+            .args(["rev-list", "--reverse", &self.branch])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            return Err(anyhow!(
+                "git rev-list failed: {}{}",
+                String::from_utf8_lossy(&output.stderr),
+                String::from_utf8_lossy(&output.stdout)
+            ));
+        }
+
+        let commits =
+            String::from_utf8(output.stdout).context("git rev-list output was not UTF-8")?;
+        let chunks = archive_push_chunks(&commits, COMMITS_PER_PUSH);
+        let commit_count = chunks.last().map_or(0, |chunk| chunk.end);
+        let chunk_count = chunks.len();
+        info!(
+            "Found {commit_count} commits in {chunk_count} chunks for snapshot branch ({branch})",
+            branch = self.branch,
+        );
+
+        for chunk in chunks {
+            let ArchivePushChunk { start, end, commit } = chunk;
+            info!(
+                "Pushing commits {start} to {end} for snapshot branch ({branch}) at commit {commit}",
+                branch = self.branch,
+            );
+
+            let refspec = format!("+{commit}:refs/heads/{TEMP_BRANCH}");
+            let push_start = Instant::now();
+            let output = Command::new("git")
+                .current_dir(tempdir.path())
+                .args(["push", REMOTE_NAME, &refspec])
+                .output()
+                .await
+                .with_context(|| {
+                    format!(
+                        "Failed to run git push for commits {start} to {end} of snapshot branch ({}) at commit {commit}",
+                        self.branch
+                    )
+                })?;
+
+            if !output.status.success() {
+                return Err(anyhow!(
+                    "git push failed for commits {start} to {end} of snapshot branch ({}) at commit {commit}: {}{}",
+                    self.branch,
+                    String::from_utf8_lossy(&output.stderr),
+                    String::from_utf8_lossy(&output.stdout)
+                ));
+            }
+
+            info!(
+                duration = push_start.elapsed().as_nanos(),
+                "Pushed commits {start} to {end} for snapshot branch ({branch}) at commit {commit}",
+                branch = self.branch,
+            );
+        }
+
         info!(
             "Pushing snapshot branch ({branch}) to archive repository ({archive_url})",
             branch = self.branch
@@ -124,7 +212,7 @@ impl BackgroundJob for ArchiveIndexBranch {
         let push_start = Instant::now();
         let output = Command::new("git")
             .current_dir(tempdir.path())
-            .args(["push", "--progress", REMOTE_NAME, &refspec])
+            .args(["push", REMOTE_NAME, &refspec])
             .output()
             .await?;
 
@@ -138,8 +226,38 @@ impl BackgroundJob for ArchiveIndexBranch {
 
         info!(
             duration = push_start.elapsed().as_nanos(),
-            "Snapshot pushed to archive repository"
+            "Pushed snapshot branch ({branch}) to archive repository",
+            branch = self.branch,
         );
+
+        info!("Deleting temporary archive branch (`{TEMP_BRANCH}`)");
+        let delete_start = Instant::now();
+        let output = Command::new("git")
+            .current_dir(tempdir.path())
+            .args(["push", REMOTE_NAME, "--delete", TEMP_BRANCH])
+            .output()
+            .await;
+
+        match output {
+            Ok(output) if output.status.success() => {
+                info!(
+                    duration = delete_start.elapsed().as_nanos(),
+                    "Deleted temporary archive branch (`{TEMP_BRANCH}`)"
+                );
+            }
+            Ok(output) => {
+                warn!(
+                    "Failed to delete temporary archive branch (`{TEMP_BRANCH}`): {}{}",
+                    String::from_utf8_lossy(&output.stderr),
+                    String::from_utf8_lossy(&output.stdout)
+                );
+            }
+            Err(error) => {
+                warn!("Failed to delete temporary archive branch (`{TEMP_BRANCH}`): {error}");
+            }
+        }
+
+        info!("Archived snapshot branch ({branch})", branch = self.branch,);
 
         Ok(())
     }
@@ -180,6 +298,31 @@ mod tests {
     use super::*;
     use claims::assert_err;
     use insta::assert_snapshot;
+
+    fn chunk(start: usize, end: usize, commit: &str) -> ArchivePushChunk {
+        ArchivePushChunk {
+            start,
+            end,
+            commit: commit.into(),
+        }
+    }
+
+    #[test]
+    fn archive_push_chunks_include_partial_final_chunk() {
+        let chunks = archive_push_chunks("a\nb\nc\nd\ne\n", 2);
+
+        assert_eq!(
+            chunks,
+            [chunk(0, 2, "b"), chunk(2, 4, "d"), chunk(4, 5, "e")]
+        );
+    }
+
+    #[test]
+    fn archive_push_chunks_do_not_duplicate_exact_final_chunk() {
+        let chunks = archive_push_chunks("a\nb\nc\nd\n", 2);
+
+        assert_eq!(chunks, [chunk(0, 2, "b"), chunk(2, 4, "d")]);
+    }
 
     #[test]
     fn build_credentialed_url_https() {

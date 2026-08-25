@@ -5,6 +5,7 @@ use crates_io::worker::jobs;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_worker::BackgroundJob;
 use diesel_async::RunQueryDsl;
+use git2::ErrorCode;
 use insta::assert_snapshot;
 
 const SNAPSHOT_BRANCH: &str = "snapshot-test";
@@ -24,6 +25,11 @@ fn seed_snapshot_branch(upstream: &UpstreamIndex) {
 async fn archive_index_branch() {
     let archive = UpstreamIndex::new().unwrap();
     let archive_url = archive.url();
+    {
+        let archive_repo = archive.repository.lock().unwrap();
+        let head = archive_repo.head().unwrap().peel_to_commit().unwrap();
+        archive_repo.branch("temp", &head, false).unwrap();
+    }
 
     let (app, _) = TestApp::full()
         .with_git_index()
@@ -40,6 +46,12 @@ async fn archive_index_branch() {
     app.run_pending_background_jobs().await;
 
     assert_eq!(archive.branch_oid(SNAPSHOT_BRANCH).unwrap(), expected_oid);
+    let archive_repo = archive.repository.lock().unwrap();
+    let error = archive_repo
+        .find_reference("refs/heads/temp")
+        .err()
+        .unwrap();
+    assert_eq!(error.code(), ErrorCode::NotFound);
 }
 
 /// With no `index_archive_url` configured, the job should succeed as a no-op
