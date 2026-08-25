@@ -1,11 +1,9 @@
 <script lang="ts">
   import CrateList from '$lib/components/CrateList.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
-  import UserAvatar from '$lib/components/UserAvatar.svelte';
+  import TeamPageHeader from '$lib/components/TeamPageHeader.svelte';
   import { calculatePagination } from '$lib/utils/pagination';
 
   const MAX_PAGES = 50;
@@ -13,9 +11,6 @@
   let { data } = $props();
 
   let pagination = $derived(calculatePagination(data.page, data.perPage, data.cratesResponse.meta.total, MAX_PAGES));
-
-  // login format is "github:org_name:team_name"
-  let orgName = $derived(data.team.login.split(':', 2)[1]);
 
   let currentSortBy = $derived.by(() => {
     if (data.sort === 'downloads') return 'All-Time Downloads';
@@ -26,24 +21,7 @@
   });
 </script>
 
-<PageHeader style="display: flex; align-items: center;" data-test-heading>
-  <UserAvatar
-    user={{ ...data.team, kind: 'team' }}
-    size="medium"
-    style="margin-right: var(--space-m)"
-    data-test-avatar
-  />
-  <div>
-    <div class="header-row">
-      <h1 data-test-org-name>{orgName}</h1>
-      <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-      <a href={data.team.url} title={data.team.login} class="github-link" data-test-github-link>
-        <Icon class="i-simple-icons:github" label="GitHub profile" />
-      </a>
-    </div>
-    <h2 data-test-team-name>{data.team.name}</h2>
-  </div>
-</PageHeader>
+<TeamPageHeader team={data.team} />
 
 <div class="results-meta">
   <ResultsCount
@@ -69,32 +47,6 @@
 <Pagination {pagination} />
 
 <style>
-  h1,
-  h2 {
-    margin: 0;
-    padding: 0;
-  }
-
-  h2 {
-    margin-top: var(--space-2xs);
-    color: var(--main-color-light);
-  }
-
-  .header-row {
-    display: flex;
-    align-items: center;
-  }
-
-  .github-link {
-    margin-left: var(--space-s);
-    --icon-size: 32px;
-
-    &,
-    &:hover {
-      color: var(--main-color);
-    }
-  }
-
   .results-meta {
     display: flex;
     align-items: center;
