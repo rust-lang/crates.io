@@ -601,7 +601,6 @@ fn simple_config() -> config::Server {
         banner_message: None,
         features: FeaturesConfig {
             explicit_signup_enabled: true,
-            zip_archives_enabled: true,
             cache_tags_enabled: true,
             cache_tag_invalidations_enabled: true,
         },
