@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.104"
-bon = "=3.9.3"
+bon = "=3.10.0"
 reqwest = { version = "=0.13.4", features = ["json"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.229", features = ["derive"] }
