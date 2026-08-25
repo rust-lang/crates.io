@@ -9,7 +9,8 @@ expression: metadata
     "deps": [],
     "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
-    "yanked": true
+    "yanked": true,
+    "pubtime": "2020-01-01T00:00:00Z"
   },
   {
     "name": "bar",
@@ -17,7 +18,8 @@ expression: metadata
     "deps": [],
     "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "2020-01-01T00:00:00Z"
   },
   {
     "name": "bar",
@@ -35,7 +37,8 @@ expression: metadata
     ],
     "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "2020-02-01T00:00:00Z"
   },
   {
     "name": "bar",
@@ -43,6 +46,7 @@ expression: metadata
     "deps": [],
     "cksum": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "2020-03-01T00:00:00Z"
   }
 ]
