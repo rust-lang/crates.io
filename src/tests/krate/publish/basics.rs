@@ -20,7 +20,7 @@ async fn new_krate() {
     });
 
     let crates = app.crates_from_index_head("foo_new");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 
     assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_new/foo_new-1.0.0.crate
@@ -105,7 +105,7 @@ async fn new_krate_twice() {
     });
 
     let crates = app.crates_from_index_head("foo_twice");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 
     assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_twice/foo_twice-0.99.0.crate
@@ -140,7 +140,7 @@ async fn new_krate_twice_alt() {
     });
 
     let crates = app.crates_from_index_head("foo_twice");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 
     assert_snapshot!(app.stored_files().await.join("\n"), @"
     crates/foo_twice/foo_twice-0.99.0.crate

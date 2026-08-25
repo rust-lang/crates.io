@@ -37,5 +37,5 @@ async fn test_crate_with_links_field() {
     assert_snapshot!(response.status(), @"200 OK");
 
     let crates = app.crates_from_index_head("foo");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }

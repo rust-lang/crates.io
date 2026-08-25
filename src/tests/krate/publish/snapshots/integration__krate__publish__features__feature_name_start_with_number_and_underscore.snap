@@ -12,6 +12,7 @@ expression: crates
       "0foo1.bar": [],
       "_foo2.bar": []
     },
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   }
 ]

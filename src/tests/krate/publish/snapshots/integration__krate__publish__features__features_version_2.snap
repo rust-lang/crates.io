@@ -28,6 +28,7 @@ expression: crates
       ]
     },
     "yanked": false,
+    "pubtime": "[datetime]",
     "v": 2
   }
 ]

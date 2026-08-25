@@ -9,7 +9,8 @@ expression: crates
     "deps": [],
     "cksum": "99ef473e84e6bede426d948d4dca03d79a64acb51511ffcbeb11d253505c9968",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   },
   {
     "name": "foo_twice",
@@ -17,6 +18,7 @@ expression: crates
     "deps": [],
     "cksum": "7e71c271648114db81fa41450dd8d4d50c35622d3630e65c4f8211948bdf83f3",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   }
 ]
