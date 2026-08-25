@@ -45,7 +45,9 @@ nothing. Say which operation failed for what input.
   a reserved word in Rust.
 - Use the same name for the same thing everywhere, so a single query finds every
   occurrence.
-- Put the unit in the name for measurements: `duration_ms`, `size_bytes`.
+- Use Datadog's standard `duration` field for durations, expressed in
+  nanoseconds. Put the unit in the name for other measurements, such as
+  `size_bytes`.
 - Use `tracing`'s sigils to control how a value is recorded: `%value` for its
   `Display` representation, `?value` for its `Debug` representation.
 
