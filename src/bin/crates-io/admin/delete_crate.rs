@@ -3,10 +3,10 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
 use crates_io::controllers::krate::delete::max_downloads;
-use crates_io::models::{NewDeletedCrate, User};
-use crates_io::schema::{crate_downloads, deleted_crates};
+use crates_io::db;
+use crates_io::models::{NewDeletedCrate, users_by_username};
+use crates_io::schema::{crate_downloads, crates, deleted_crates, users};
 use crates_io::worker::jobs;
-use crates_io::{db, schema::crates};
 use crates_io_database::schema::dependencies;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::{count_star, sql};
@@ -31,7 +31,7 @@ pub struct Opts {
     #[arg(short, long)]
     yes: bool,
 
-    /// Your GitHub username.
+    /// Your crates.io username.
     #[arg(long)]
     deleted_by: String,
 
@@ -59,7 +59,9 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .await
         .context("Failed to look up crate name from the database")?;
 
-    let deleted_by = User::find_by_login(&conn, &opts.deleted_by)
+    let deleted_by_id: i32 = users_by_username(&opts.deleted_by)
+        .select(users::id)
+        .first(&mut conn)
         .await
         .context("Failed to look up `--deleted-by` user from the database")?;
 
@@ -87,7 +89,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             let deleted_crate = NewDeletedCrate::builder(name)
                 .created_at(&crate_info.created_at)
                 .deleted_at(&now)
-                .deleted_by(deleted_by.id)
+                .deleted_by(deleted_by_id)
                 .maybe_message(opts.message.as_deref())
                 .available_at(&available_at)
                 .build();
