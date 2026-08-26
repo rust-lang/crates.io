@@ -16,7 +16,15 @@ import svelteConfig from './svelte/svelte.config.js';
 const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
 
 export default defineConfig(
-  eslintPluginUnicorn.configs.unopinionated,
+  {
+    languageOptions: {
+      globals: globals.builtin,
+    },
+    plugins: {
+      unicorn: eslintPluginUnicorn,
+    },
+    rules: unicornRules(),
+  },
   includeIgnoreFile(gitignorePath),
   // `crates/` (Rust workspace crates) is not in `.gitignore` but should not be
   // linted. `svelte/static/` contains vendored files like `mockServiceWorker.js`
@@ -54,19 +62,6 @@ export default defineConfig(
 
       'prefer-const': 'off',
       'prefer-let/prefer-let': 'error',
-
-      'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
-      // disabled because we don't want to go all-in on ES6 modules for Node.js code yet
-      'unicorn/prefer-module': 'off',
-      // disabled because it seems unnecessary
-      'unicorn/prefer-number-properties': 'off',
-      // disabled because of false positives on non-array `push()` methods
-      'unicorn/prefer-single-call': 'off',
-      // disabled because switch statements in JS are quite error-prone
-      'unicorn/prefer-switch': 'off',
-      // disabled because Svelte component `<script>` blocks instantiate
-      // synchronously, so top-level await is not appropriate there
-      'unicorn/prefer-top-level-await': 'off',
     },
   },
   {
@@ -83,3 +78,158 @@ export default defineConfig(
     },
   },
 );
+
+/**
+ * Returns the Unicorn rules that are appropriate for crates.io.
+ *
+ * Even Unicorn's `unopinionated` preset enables many rules that encode style
+ * preferences or otherwise do not fit this project. Defining the rules here
+ * lets us enable only checks that we consider relevant, and prevents dependency
+ * upgrades from silently changing the project's lint policy. New Unicorn rules
+ * should therefore be reviewed and added deliberately instead of inherited
+ * through a built-in preset.
+ */
+function unicornRules() {
+  return {
+    'unicorn/better-dom-traversing': 'error',
+    'unicorn/consistent-compound-words': 'error',
+    'unicorn/consistent-date-clone': 'error',
+    'unicorn/consistent-existence-index-check': 'error',
+    'unicorn/dom-node-dataset': 'error',
+    'unicorn/error-message': 'error',
+    'unicorn/escape-case': 'error',
+    'unicorn/expiring-todo-comments': 'error',
+    'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
+    'unicorn/import-style': 'error',
+    'unicorn/new-for-builtins': 'error',
+    'unicorn/no-abusive-eslint-disable': 'error',
+    'unicorn/no-accessor-recursion': 'error',
+    'unicorn/no-anonymous-default-export': 'error',
+    'unicorn/no-array-fill-with-reference-type': 'error',
+    'unicorn/no-array-for-each': 'error',
+    'unicorn/no-array-from-fill': 'error',
+    'unicorn/no-array-method-this-argument': 'error',
+    'unicorn/no-array-reverse': 'error',
+    'unicorn/no-array-sort': 'error',
+    'unicorn/no-await-in-promise-methods': 'error',
+    'unicorn/no-blob-to-file': 'error',
+    'unicorn/no-canvas-to-image': 'error',
+    'unicorn/no-console-spaces': 'error',
+    'unicorn/no-document-cookie': 'error',
+    'unicorn/no-empty-file': 'error',
+    'unicorn/no-exports-in-scripts': 'error',
+    'unicorn/no-hex-escape': 'error',
+    'unicorn/no-instanceof-builtins': 'error',
+    'unicorn/no-invalid-fetch-options': 'error',
+    'unicorn/no-invalid-remove-event-listener': 'error',
+    'unicorn/no-lonely-if': 'error',
+    'unicorn/no-magic-array-flat-depth': 'error',
+    'unicorn/no-named-default': 'error',
+    'unicorn/no-negated-condition': 'error',
+    'unicorn/no-negation-in-equality-check': 'error',
+    'unicorn/no-new-array': 'error',
+    'unicorn/no-new-buffer': 'error',
+    'unicorn/no-object-as-default-parameter': 'error',
+    'unicorn/no-process-exit': 'error',
+    'unicorn/no-single-promise-in-promise-methods': 'error',
+    'unicorn/no-static-only-class': 'error',
+    'unicorn/no-thenable': 'error',
+    'unicorn/no-this-assignment': 'error',
+    'unicorn/no-typeof-undefined': 'error',
+    'unicorn/no-unnecessary-array-flat-depth': 'error',
+    'unicorn/no-unnecessary-array-splice-count': 'error',
+    'unicorn/no-unnecessary-await': 'error',
+    'unicorn/no-unnecessary-nested-ternary': 'error',
+    'unicorn/no-unnecessary-polyfills': 'error',
+    'unicorn/no-unnecessary-slice-end': 'error',
+    'unicorn/no-unreadable-array-destructuring': 'error',
+    'unicorn/no-unreadable-iife': 'error',
+    'unicorn/no-unused-array-method-return': 'error',
+    'unicorn/no-useless-collection-argument': 'error',
+    'unicorn/no-useless-error-capture-stack-trace': 'error',
+    'unicorn/no-useless-fallback-in-spread': 'error',
+    'unicorn/no-useless-iterator-to-array': 'error',
+    'unicorn/no-useless-length-check': 'error',
+    'unicorn/no-useless-promise-resolve-reject': 'error',
+    'unicorn/no-useless-spread': 'error',
+    'unicorn/no-useless-switch-case': 'error',
+    'unicorn/no-useless-undefined': 'error',
+    'unicorn/no-zero-fractions': 'error',
+    'unicorn/number-literal-case': 'error',
+    'unicorn/numeric-separators-style': 'error',
+    'unicorn/prefer-add-event-listener': 'error',
+    'unicorn/prefer-array-find': 'error',
+    'unicorn/prefer-array-flat': 'error',
+    'unicorn/prefer-array-flat-map': 'error',
+    'unicorn/prefer-array-index-of': 'error',
+    'unicorn/prefer-array-last-methods': 'error',
+    'unicorn/prefer-array-some': 'error',
+    'unicorn/prefer-at': 'error',
+    'unicorn/prefer-bigint-literals': 'error',
+    'unicorn/prefer-blob-reading-methods': 'error',
+    'unicorn/prefer-class-fields': 'error',
+    'unicorn/prefer-classlist-toggle': 'error',
+    'unicorn/prefer-code-point': 'error',
+    'unicorn/prefer-date-now': 'error',
+    'unicorn/prefer-default-parameters': 'error',
+    'unicorn/prefer-dom-node-append': 'error',
+    'unicorn/prefer-dom-node-remove': 'error',
+    'unicorn/prefer-dom-node-text-content': 'error',
+    'unicorn/prefer-event-target': 'error',
+    'unicorn/prefer-global-this': 'error',
+    'unicorn/prefer-includes': 'error',
+    'unicorn/prefer-iterator-to-array-at-end': 'error',
+    'unicorn/prefer-keyboard-event-key': 'error',
+    'unicorn/prefer-logical-operator-over-ternary': 'error',
+    'unicorn/prefer-math-abs': 'error',
+    'unicorn/prefer-math-min-max': 'error',
+    'unicorn/prefer-math-trunc': 'error',
+    'unicorn/prefer-modern-dom-apis': 'error',
+    'unicorn/prefer-modern-math-apis': 'error',
+    // We don't want to go all-in on ES6 modules for Node.js code yet.
+    'unicorn/prefer-module': 'off',
+    'unicorn/prefer-native-coercion-functions': 'error',
+    'unicorn/prefer-negative-index': 'error',
+    'unicorn/prefer-node-protocol': 'error',
+    // This rule seems unnecessary.
+    'unicorn/prefer-number-properties': 'off',
+    'unicorn/prefer-object-from-entries': 'error',
+    'unicorn/prefer-optional-catch-binding': 'error',
+    'unicorn/prefer-prototype-methods': 'error',
+    'unicorn/prefer-queue-microtask': 'error',
+    'unicorn/prefer-reflect-apply': 'error',
+    'unicorn/prefer-regexp-test': 'error',
+    'unicorn/prefer-response-static-json': 'error',
+    'unicorn/prefer-set-has': 'error',
+    'unicorn/prefer-set-size': 'error',
+    'unicorn/prefer-simple-condition-first': 'error',
+    // This rule has false positives on non-array `push()` methods.
+    'unicorn/prefer-single-call': 'off',
+    'unicorn/prefer-split-limit': 'error',
+    'unicorn/prefer-string-match-all': 'error',
+    'unicorn/prefer-string-pad-start-end': 'error',
+    'unicorn/prefer-string-raw': 'error',
+    'unicorn/prefer-string-repeat': 'error',
+    'unicorn/prefer-string-replace-all': 'error',
+    'unicorn/prefer-string-slice': 'error',
+    'unicorn/prefer-string-starts-ends-with': 'error',
+    'unicorn/prefer-string-trim-start-end': 'error',
+    'unicorn/prefer-structured-clone': 'error',
+    // Switch statements in JavaScript are quite error-prone.
+    'unicorn/prefer-switch': 'off',
+    'unicorn/prefer-ternary': 'error',
+    // Svelte component `<script>` blocks instantiate synchronously, so top-level
+    // await is not appropriate there.
+    'unicorn/prefer-top-level-await': 'off',
+    'unicorn/prefer-type-error': 'error',
+    'unicorn/relative-url-style': 'error',
+    'unicorn/require-array-join-separator': 'error',
+    'unicorn/require-css-escape': 'error',
+    'unicorn/require-module-attributes': 'error',
+    'unicorn/require-module-specifiers': 'error',
+    'unicorn/require-number-to-fixed-digits-argument': 'error',
+    'unicorn/require-passive-events': 'error',
+    'unicorn/text-encoding-identifier-case': 'error',
+    'unicorn/throw-new-error': 'error',
+  };
+}
