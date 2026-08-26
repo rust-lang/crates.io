@@ -19,6 +19,7 @@ expression: crates
     ],
     "cksum": "5503e734eb2fdc003688c5a275d4a6d8cd2a82135eb37befbda449feb8ea1800",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   }
 ]

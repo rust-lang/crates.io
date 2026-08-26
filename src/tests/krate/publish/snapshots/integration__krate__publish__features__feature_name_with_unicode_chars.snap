@@ -11,6 +11,7 @@ expression: crates
     "features": {
       "foo.你好世界": []
     },
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   }
 ]

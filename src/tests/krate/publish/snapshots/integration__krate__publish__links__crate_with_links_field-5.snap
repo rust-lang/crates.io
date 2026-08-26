@@ -10,6 +10,7 @@ expression: crates
     "cksum": "b2c9e153a8860ce92ba7cbdea7b718409d181c08f4c6c5c2a612919dcb155af2",
     "features": {},
     "yanked": false,
-    "links": "git2"
+    "links": "git2",
+    "pubtime": "[datetime]"
   }
 ]

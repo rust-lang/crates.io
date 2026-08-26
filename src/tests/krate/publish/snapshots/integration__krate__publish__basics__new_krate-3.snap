@@ -9,6 +9,7 @@ expression: crates
     "deps": [],
     "cksum": "696b8fc0b2d62c399459b2000dbcab7d9914e5dfafff974f53c1212e02f014bb",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   }
 ]

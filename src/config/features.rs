@@ -7,11 +7,6 @@ pub struct FeaturesConfig {
     /// Read from the `EXPLICIT_SIGNUP_ENABLED` environment variable.
     pub explicit_signup_enabled: bool,
 
-    /// Include publication timestamps in index entries (ISO8601 format).
-    ///
-    /// Read from the `INDEX_INCLUDE_PUBTIME` environment variable.
-    pub index_include_pubtime: bool,
-
     /// Enable enqueueing of `BuildCrateZip` jobs in the publish flow.
     ///
     /// Read from the `ZIP_ARCHIVES_ENABLED` environment variable.
@@ -31,7 +26,6 @@ pub struct FeaturesConfig {
 impl FeaturesConfig {
     pub fn from_env() -> anyhow::Result<Self> {
         let explicit_signup_enabled = var_parsed("EXPLICIT_SIGNUP_ENABLED")?.unwrap_or(false);
-        let index_include_pubtime = var_parsed("INDEX_INCLUDE_PUBTIME")?.unwrap_or(false);
         let zip_archives_enabled = var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false);
         let cache_tags_enabled = var_parsed("CACHE_TAGS_ENABLED")?.unwrap_or(false);
         let cache_tag_invalidations_enabled =
@@ -43,7 +37,6 @@ impl FeaturesConfig {
 
         Ok(Self {
             explicit_signup_enabled,
-            index_include_pubtime,
             zip_archives_enabled,
             cache_tags_enabled,
             cache_tag_invalidations_enabled,

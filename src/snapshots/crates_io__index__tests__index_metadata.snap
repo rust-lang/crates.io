@@ -9,6 +9,7 @@ expression: metadata
     "deps": [],
     "cksum": "0000000000000000000000000000000000000000000000000000000000000000",
     "features": {},
-    "yanked": false
+    "yanked": false,
+    "pubtime": "2020-01-01T00:00:00Z"
   }
 ]

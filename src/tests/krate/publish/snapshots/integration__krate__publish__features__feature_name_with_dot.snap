@@ -11,6 +11,7 @@ expression: crates
     "features": {
       "foo.bar": []
     },
-    "yanked": false
+    "yanked": false,
+    "pubtime": "[datetime]"
   }
 ]

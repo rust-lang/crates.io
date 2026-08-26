@@ -31,7 +31,7 @@ async fn new_with_renamed_dependency() {
     token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("new-krate");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -155,7 +155,7 @@ async fn new_with_underscore_renamed_dependency() {
     token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("new-krate");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -190,7 +190,7 @@ async fn new_krate_with_dependency() {
     assert_eq!(dependencies[0].req, "^1.0.0");
 
     let crates = app.crates_from_index_head("new_dep");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -354,7 +354,7 @@ async fn new_krate_sorts_deps() {
     token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("two-deps");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]

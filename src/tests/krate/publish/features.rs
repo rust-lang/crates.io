@@ -22,7 +22,7 @@ async fn features_version_2() {
     token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("foo");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -31,7 +31,7 @@ async fn feature_name_with_dot() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.bar", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -42,7 +42,7 @@ async fn feature_name_start_with_number_and_underscore() {
         .feature("_foo2.bar", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -51,7 +51,7 @@ async fn feature_name_with_unicode_chars() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.你好世界", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
-    assert_json_snapshot!(crates);
+    assert_json_snapshot!(crates, { "[].pubtime" => "[datetime]" });
 }
 
 #[tokio::test(flavor = "multi_thread")]

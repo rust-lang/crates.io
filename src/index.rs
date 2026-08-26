@@ -15,7 +15,6 @@ use tracing::{debug, instrument};
 pub async fn get_index_data(
     name: &str,
     conn: &mut AsyncPgConnection,
-    include_pubtime: bool,
 ) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
     let krate = Crate::query()
@@ -29,7 +28,7 @@ pub async fn get_index_data(
     };
 
     debug!("Gathering remaining index data");
-    let crates = index_metadata(&krate, conn, include_pubtime)
+    let crates = index_metadata(&krate, conn)
         .await
         .context("Failed to gather index metadata")?;
 
@@ -59,7 +58,6 @@ pub async fn get_index_data(
 pub async fn index_metadata(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
-    include_pubtime: bool,
 ) -> QueryResult<Vec<crates_io_index::Crate>> {
     let mut versions: Vec<Version> = Version::belonging_to(krate)
         .select(Version::as_select())
@@ -129,7 +127,7 @@ pub async fn index_metadata(
                 features,
                 links: version.links,
                 rust_version: version.rust_version,
-                pubtime: include_pubtime.then_some(version.created_at),
+                pubtime: Some(version.created_at),
                 features2,
                 v,
             };
@@ -142,7 +140,6 @@ pub async fn index_metadata(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{Days, Utc};
     use crates_io_test_db::TestDatabase;
     use crates_io_test_utils::builders::{CrateBuilder, UserBuilder, VersionBuilder};
     use insta::assert_json_snapshot;
@@ -159,15 +156,16 @@ mod tests {
             .await
             .unwrap();
 
-        let created_at_1 = Utc::now().checked_sub_days(Days::new(14)).unwrap();
-        let created_at_2 = Utc::now().checked_sub_days(Days::new(7)).unwrap();
+        let created_at_1 = "2020-01-01T00:00:00Z".parse().unwrap();
+        let created_at_2 = "2020-02-01T00:00:00Z".parse().unwrap();
+        let created_at_3 = "2020-03-01T00:00:00Z".parse().unwrap();
 
         let fooo = CrateBuilder::new("foo", user_id)
-            .version(VersionBuilder::new("0.1.0"))
+            .version(VersionBuilder::new("0.1.0").created_at(created_at_1))
             .expect_build(&mut conn)
             .await;
 
-        let metadata = index_metadata(&fooo, &mut conn, false).await.unwrap();
+        let metadata = index_metadata(&fooo, &mut conn).await.unwrap();
         assert_json_snapshot!(metadata);
 
         let bar = CrateBuilder::new("bar", user_id)
@@ -184,37 +182,13 @@ mod tests {
             )
             .version(
                 VersionBuilder::new("1.0.1")
+                    .created_at(created_at_3)
                     .checksum("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
             )
             .expect_build(&mut conn)
             .await;
 
-        let metadata = index_metadata(&bar, &mut conn, false).await.unwrap();
-        assert_json_snapshot!(metadata);
-    }
-
-    #[tokio::test]
-    async fn test_index_metadata_with_pubtime() {
-        let test_db = TestDatabase::new();
-        let mut conn = test_db.async_connect().await;
-
-        let user_id = UserBuilder::new()
-            .with_username("user1")
-            .new_user()
-            .insert(&conn)
-            .await
-            .unwrap();
-
-        let v1 = VersionBuilder::new("1.0.0").created_at("2020-01-01T00:00:00Z".parse().unwrap());
-        let v2 = VersionBuilder::new("2.0.0").created_at("2020-02-01T00:00:00Z".parse().unwrap());
-
-        let bar = CrateBuilder::new("bar", user_id)
-            .version(v1)
-            .version(v2)
-            .expect_build(&mut conn)
-            .await;
-
-        let metadata = index_metadata(&bar, &mut conn, true).await.unwrap();
+        let metadata = index_metadata(&bar, &mut conn).await.unwrap();
         assert_json_snapshot!(metadata);
     }
 }
