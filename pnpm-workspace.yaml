@@ -18,4 +18,4 @@ allowBuilds:
   protobufjs: false
 
 patchedDependencies:
-  '@pierre/trees@1.0.0-beta.5': patches/@pierre__trees@1.0.0-beta.5.patch
+  '@pierre/trees@*': patches/@pierre__trees.patch
