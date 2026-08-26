@@ -94,7 +94,7 @@ impl<'a> OauthGithubBuilder<'a> {
             user_id: user.id,
             account_id: user.gh_id as i64,
             encrypted_token: &ENCRYPTED_TOKEN,
-            login: &user.username,
+            login: &user.gh_login,
             avatar: None,
         }
     }
