@@ -106,7 +106,7 @@ function unicornRules() {
     'unicorn/no-accessor-recursion': 'error',
     'unicorn/no-anonymous-default-export': 'error',
     'unicorn/no-array-fill-with-reference-type': 'error',
-    'unicorn/no-array-for-each': 'error',
+    'unicorn/no-for-each': 'error',
     'unicorn/no-array-from-fill': 'error',
     'unicorn/no-array-method-this-argument': 'error',
     'unicorn/no-array-reverse': 'error',

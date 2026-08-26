@@ -105,7 +105,6 @@ test.describe('Acceptance | crate code viewer', { tag: '@acceptance' }, () => {
       for (let number of [1, 2, 3, 4, 5]) {
         let expectation = expect(line(number));
 
-        // eslint-disable-next-line unicorn/prefer-ternary
         if (selected.has(number)) {
           await expectation.toHaveAttribute('data-selected-line');
         } else {

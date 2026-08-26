@@ -28,7 +28,7 @@
   setDropdown(context);
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && isExpanded) {
+    if (isExpanded && event.key === 'Escape') {
       isExpanded = false;
     }
   }

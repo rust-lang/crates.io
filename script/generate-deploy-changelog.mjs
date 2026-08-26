@@ -38,7 +38,7 @@ function getCommits(from, to) {
     .split('\n')
     .filter(Boolean)
     .map(line => {
-      let [sha, author, message] = line.split('\u0000');
+      let [sha, author, message] = line.split('\u0000', 3);
       return { sha, author, message };
     });
 }

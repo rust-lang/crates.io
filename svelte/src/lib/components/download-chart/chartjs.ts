@@ -73,7 +73,7 @@ export function loadChart(): Promise<typeof ChartType> {
 }
 
 function assert(message: string, predicate: boolean): asserts predicate {
-  if (import.meta.env.DEV && !predicate) {
+  if (!predicate && import.meta.env.DEV) {
     throw new Error(message);
   }
 }

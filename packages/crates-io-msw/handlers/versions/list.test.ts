@@ -287,7 +287,7 @@ test('supports seek pagination', async function () {
     let base_url = '/api/v1/crates/rand/versions';
     let params = new URLSearchParams(queryParams as Record<string, string>);
     let url = `${base_url}?${params}`;
-    while ((calls == 0 || next_page) && calls < 50) {
+    while ((next_page || calls == 0) && calls < 50) {
       if (next_page) {
         url = `${base_url}${next_page}`;
       }
