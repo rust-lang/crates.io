@@ -23,7 +23,7 @@ use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
-use crates_io_test_utils::builders::OauthGithubBuilder;
+use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
 use crates_io_trustpub::github::test_helpers::AUDIENCE;
 use crates_io_trustpub::keystore::{MockOidcKeyStore, OidcKeyStore};
 use crates_io_worker::Runner;
@@ -151,11 +151,17 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
+        let builder = UserBuilder::new().with_username(username);
+        self.db_new_user_from_builder(builder).await
+    }
+
+    /// Create a new user from a builder with a verified email address in the
+    /// database (`<username>@example.com`) and return a mock user session.
+    pub async fn db_new_user_from_builder(&self, builder: UserBuilder<'_>) -> MockCookieUser {
         let conn = self.db_conn().await;
 
-        let email = format!("{username}@example.com");
-
-        let new_user = crate::new_user(username);
+        let new_user = builder.new_user();
+        let email = format!("{}@example.com", new_user.username);
         let id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
 
