@@ -11,7 +11,6 @@ export function serializeLinkedAccount(account: User['githubAccounts'][number]):
     account_id: account.accountId,
     login: account.login,
     avatar: account.avatar,
-    url: `https://github.com/${account.login}`,
   };
 }
 

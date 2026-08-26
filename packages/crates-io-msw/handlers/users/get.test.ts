@@ -53,14 +53,12 @@ test('returns a user object for known users', async function () {
           "avatar": null,
           "login": "github-user",
           "provider": "github",
-          "url": "https://github.com/github-user",
         },
         {
           "account_id": "11",
           "avatar": null,
           "login": "crates-user",
           "provider": "github",
-          "url": "https://github.com/crates-user",
         },
       ],
       "user": {

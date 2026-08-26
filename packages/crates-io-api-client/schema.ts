@@ -1536,8 +1536,6 @@ export interface components {
             login: string;
             /** @enum {string} */
             provider: "github";
-            /** @description The GitHub profile URL. */
-            url: string;
         };
         /** @description A user or team that owns a crate. */
         Owner: {

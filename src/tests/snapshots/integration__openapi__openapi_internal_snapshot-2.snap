@@ -864,17 +864,12 @@ expression: response.json()
                   "github"
                 ],
                 "type": "string"
-              },
-              "url": {
-                "description": "The GitHub profile URL.",
-                "type": "string"
               }
             },
             "required": [
               "account_id",
               "login",
               "avatar",
-              "url",
               "provider"
             ],
             "type": "object"

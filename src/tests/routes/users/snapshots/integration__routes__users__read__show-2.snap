@@ -8,8 +8,7 @@ expression: response.json()
       "account_id": "[account-id]",
       "avatar": null,
       "login": "foo",
-      "provider": "github",
-      "url": "https://github.com/foo"
+      "provider": "github"
     }
   ],
   "user": {

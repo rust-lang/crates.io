@@ -870,21 +870,16 @@ pub enum EncodableLinkedAccount {
         /// The GitHub avatar URL.
         #[schema(required)]
         avatar: Option<String>,
-
-        /// The GitHub profile URL.
-        url: String,
     },
 }
 
 impl EncodableLinkedAccount {
     /// Creates a public linked GitHub account.
     pub fn github(account_id: i64, login: String, avatar: Option<String>) -> Self {
-        let url = format!("https://github.com/{login}");
         Self::GitHub {
             account_id: account_id.to_string(),
             login,
             avatar,
-            url,
         }
     }
 }
