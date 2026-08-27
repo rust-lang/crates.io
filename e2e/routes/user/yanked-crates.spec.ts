@@ -4,7 +4,7 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Route | user | yanked crates visibility', { tag: '@routes' }, () => {
   async function prepare(msw: AppFixtures['msw']) {
-    let user1 = await msw.db.user.create({ login: 'alice', name: 'Alice' });
+    let user1 = await msw.db.user.create({ login: 'alice_user', name: 'Alice' });
     let user2 = await msw.db.user.create({ login: 'bob', name: 'Bob' });
 
     // Alice owns "alpha" (not yanked) and "alpha-yanked" (all versions yanked)
@@ -28,11 +28,11 @@ test.describe('Route | user | yanked crates visibility', { tag: '@routes' }, () 
     return { user1, user2 };
   }
 
-  test('own profile shows yanked crates', async ({ page, msw }) => {
+  test('own profile through a canonical alias shows yanked crates', async ({ page, msw }) => {
     let { user1 } = await prepare(msw);
     await msw.authenticateAs(user1);
 
-    await page.goto('/users/alice');
+    await page.goto('/users/ALICE-USER');
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(2);
     await expect(page.locator('[data-test-crate-link]')).toContainText(['alpha', 'alpha-yanked']);
   });
@@ -49,7 +49,7 @@ test.describe('Route | user | yanked crates visibility', { tag: '@routes' }, () 
   test('unauthenticated view hides yanked crates', async ({ page, msw }) => {
     await prepare(msw);
 
-    await page.goto('/users/alice');
+    await page.goto('/users/alice_user');
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(1);
     await expect(page.locator('[data-test-crate-link]')).toContainText(['alpha']);
   });

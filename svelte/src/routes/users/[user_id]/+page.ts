@@ -27,7 +27,7 @@ export async function load({ fetch, params, parent, url }) {
   if (isLoggedIn()) {
     let { userPromise } = await parent();
     let currentUser = await userPromise;
-    isOwnProfile = currentUser?.login === params.user_id;
+    isOwnProfile = currentUser?.id === user.id;
   }
 
   let cratesResponse = await loadCrates(client, params.user_id, {
