@@ -3,9 +3,13 @@
   Renders the public user identity header.
 -->
 <script lang="ts">
+  import type { components } from '@crates-io/api-client';
+
   import AccountChip from './AccountChip.svelte';
   import PageHeader from './PageHeader.svelte';
   import UserAvatar from './UserAvatar.svelte';
+
+  type LinkedAccount = Pick<components['schemas']['LinkedAccount'], 'account_id' | 'login' | 'provider'>;
 
   interface UserPageHeaderUser {
     /** The user's avatar URL, if available. */
@@ -14,19 +18,29 @@
     /** The username displayed in the page heading. */
     login: string;
 
+    /** Whether a linked GitHub username exactly matches the crates.io username. */
+    github_username_matches: boolean;
+
     /** The user's optional display name. */
     name?: string | null;
-
-    /** The URL of the user's GitHub profile. */
-    url: string;
   }
 
   interface Props {
     /** The public user identity displayed in the header. */
     user: UserPageHeaderUser;
+
+    /** The external accounts linked to the user. */
+    linkedAccounts: LinkedAccount[];
   }
 
-  let { user }: Props = $props();
+  let { user, linkedAccounts }: Props = $props();
+
+  function buildUrl(account: LinkedAccount): string {
+    switch (account.provider) {
+      case 'github':
+        return `https://github.com/${account.login}`;
+    }
+  }
 </script>
 
 <PageHeader data-test-heading>
@@ -42,9 +56,18 @@
       {#if user.name}
         <div class="display-name" data-test-display-name>{user.name}</div>
       {/if}
-      <div class="accounts">
-        <AccountChip provider="github" handle={user.login} href={user.url} />
-      </div>
+      {#if linkedAccounts.length !== 0}
+        <div class="accounts">
+          {#each linkedAccounts as account (account.account_id)}
+            <AccountChip
+              provider={account.provider}
+              handle={account.login}
+              href={buildUrl(account)}
+              mismatched={account.provider === 'github' && !user.github_username_matches}
+            />
+          {/each}
+        </div>
+      {/if}
     </div>
   </div>
 </PageHeader>

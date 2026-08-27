@@ -21,7 +21,7 @@
   });
 </script>
 
-<UserPageHeader user={data.user} />
+<UserPageHeader user={data.user} linkedAccounts={data.linkedAccounts ?? []} />
 
 <div class="results-meta">
   <ResultsCount

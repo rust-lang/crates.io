@@ -13,7 +13,7 @@ export async function load({ fetch, params, parent, url }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'alpha';
 
-  let user = await loadUser(client, params.user_id);
+  let { user, linked_accounts: linkedAccounts } = await loadUser(client, params.user_id);
 
   // Check if the logged-in user is viewing their own profile, so that
   // yanked crates are included in the results. We gate the `parent()`
@@ -38,7 +38,7 @@ export async function load({ fetch, params, parent, url }) {
     include_yanked: isOwnProfile ? 'yes' : 'n',
   });
 
-  return { user, cratesResponse, page, perPage, sort };
+  return { user, linkedAccounts, cratesResponse, page, perPage, sort };
 }
 
 function loadUserError(login: string, status: number): never {
@@ -52,7 +52,12 @@ function loadUserError(login: string, status: number): never {
 async function loadUser(client: ReturnType<typeof createClient>, login: string) {
   let response;
   try {
-    response = await client.GET('/api/v1/users/{user}', { params: { path: { user: login } } });
+    response = await client.GET('/api/v1/users/{user}', {
+      params: {
+        path: { user: login },
+        query: { include: 'linked_accounts' },
+      },
+    });
   } catch {
     // Network errors are treated as `504 Gateway Timeout`
     loadUserError(login, 504);
@@ -63,7 +68,7 @@ async function loadUser(client: ReturnType<typeof createClient>, login: string) 
     loadUserError(login, status);
   }
 
-  return response.data.user;
+  return response.data;
 }
 
 async function loadCrates(
