@@ -1,12 +1,11 @@
 use crate::app::AppState;
-use crate::models::{CrateOwner, OwnerKind, PublicUser};
-use crate::schema::{crate_downloads, crate_owners, crates};
+use crate::models::{CrateOwner, OwnerKind, PublicUser, users_by_username};
+use crate::schema::{crate_downloads, crate_owners, crates, oauth_github};
 use crate::util::errors::AppResult;
 use crate::views::EncodablePublicUser;
 use axum::Json;
 use axum::extract::Path;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use crates_io_database::fns::canon_username;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Serialize;
@@ -37,12 +36,9 @@ pub async fn find_user(
 ) -> AppResult<Json<UserGetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    use crate::schema::users::dsl::{id, username};
-
-    let name = canon_username(&user_name);
-    let user: PublicUser = PublicUser::query()
-        .filter(canon_username(username).eq(name))
-        .order(id.desc())
+    let user = users_by_username(&user_name)
+        .left_join(oauth_github::table)
+        .select(PublicUser::as_select())
         .first(&mut conn)
         .await?;
 

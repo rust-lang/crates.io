@@ -7,7 +7,7 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-use crate::fns::lower;
+use crate::fns::{canon_username, lower};
 use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
@@ -27,6 +27,14 @@ pub fn github_username_matches() -> _ {
     let username_matches = account.field(oauth_github::login).eq(users::username);
 
     exists(account.filter(belongs_to_user).filter(username_matches))
+}
+
+/// Finds users whose crates.io username matches the given name.
+#[diesel::dsl::auto_type]
+pub fn users_by_username<'a>(username: &'a str) -> _ {
+    users::table
+        .filter(canon_username(users::username).eq(canon_username(username)))
+        .order(users::id.desc())
 }
 
 /// Public data for a crates.io user.
