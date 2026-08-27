@@ -9,6 +9,7 @@ test.describe('Acceptance | user page', { tag: '@acceptance' }, () => {
 
   test('has user display', async ({ page, percy, a11y }) => {
     await expect(page.locator('[data-test-heading] [data-test-username]')).toHaveText('thehydroimpulse');
+    await expect(page.locator('[data-test-heading] [data-test-display-name]')).toHaveText('Daniel Fagnan');
 
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });

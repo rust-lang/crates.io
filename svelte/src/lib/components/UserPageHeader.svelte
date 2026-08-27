@@ -39,6 +39,9 @@
     />
     <div class="identity">
       <h1 data-test-username>{user.login}</h1>
+      {#if user.name}
+        <div class="display-name" data-test-display-name>{user.name}</div>
+      {/if}
       <div class="accounts">
         <AccountChip provider="github" handle={user.login} href={user.url} />
       </div>
@@ -61,6 +64,13 @@
   h1 {
     margin: 0;
     line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .display-name {
+    margin-top: var(--space-3xs);
+    color: var(--main-color-light);
+    font-size: 0.9375em;
     overflow-wrap: anywhere;
   }
 
