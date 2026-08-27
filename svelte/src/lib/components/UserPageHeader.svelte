@@ -33,6 +33,7 @@
   <UserAvatar
     user={{ avatar: user.avatar, kind: 'user', login: user.login, name: user.name }}
     size="medium"
+    class="user-page-avatar"
     data-test-avatar
   />
   <h1 data-test-username>{user.login}</h1>
@@ -45,6 +46,14 @@
 <style>
   h1 {
     margin: 0;
+  }
+
+  :global(.user-page-avatar) {
+    border-radius: 50%;
+    object-fit: cover;
+    background: white;
+    padding: 3px;
+    box-shadow: 1px 2px 2px 0 light-dark(hsla(51, 50%, 44%, 0.35), #232321);
   }
 
   .github-link {
