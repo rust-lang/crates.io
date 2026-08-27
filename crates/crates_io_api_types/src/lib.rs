@@ -853,6 +853,37 @@ impl From<PublicUser> for EncodablePublicUser {
     }
 }
 
+/// This type contains public data for an external account of a crates.io user.
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
+#[schema(as = LinkedAccount)]
+#[serde(tag = "provider")]
+pub enum EncodableLinkedAccount {
+    /// A linked GitHub account.
+    #[serde(rename = "github")]
+    GitHub {
+        /// The stable GitHub account ID.
+        account_id: String,
+
+        /// The GitHub username.
+        login: String,
+
+        /// The GitHub avatar URL.
+        #[schema(required)]
+        avatar: Option<String>,
+    },
+}
+
+impl EncodableLinkedAccount {
+    /// Creates a public linked GitHub account.
+    pub fn github(account_id: i64, login: String, avatar: Option<String>) -> Self {
+        Self::GitHub {
+            account_id: account_id.to_string(),
+            login,
+            avatar,
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, utoipa::ToSchema)]
 pub struct EncodableAuditAction {
     /// The action that was performed.

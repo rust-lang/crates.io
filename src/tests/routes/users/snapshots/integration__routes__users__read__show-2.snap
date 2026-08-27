@@ -1,0 +1,23 @@
+---
+source: src/tests/routes/users/read.rs
+expression: response.json()
+---
+{
+  "linked_accounts": [
+    {
+      "account_id": "[account-id]",
+      "avatar": null,
+      "login": "foo",
+      "provider": "github"
+    }
+  ],
+  "user": {
+    "avatar": null,
+    "created_at": "[datetime]",
+    "github_username_matches": true,
+    "id": 1,
+    "login": "foo",
+    "name": null,
+    "url": "https://github.com/foo"
+  }
+}
