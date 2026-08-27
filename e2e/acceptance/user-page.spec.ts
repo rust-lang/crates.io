@@ -15,11 +15,11 @@ test.describe('Acceptance | user page', { tag: '@acceptance' }, () => {
     await a11y.audit();
   });
 
-  test('has link to github in user header', async ({ page }) => {
-    await expect(page.locator('[data-test-heading] [data-test-user-link]')).toHaveAttribute(
-      'href',
-      'https://github.com/thehydroimpulse',
-    );
+  test('has GitHub account chip in user header', async ({ page }) => {
+    let accountChip = page.locator('[data-test-heading] [data-test-account-chip]');
+
+    await expect(accountChip).toHaveAttribute('href', 'https://github.com/thehydroimpulse');
+    await expect(accountChip.locator('[data-test-handle]')).toHaveText('thehydroimpulse');
   });
 
   test('user details has github profile icon', async ({ page }) => {

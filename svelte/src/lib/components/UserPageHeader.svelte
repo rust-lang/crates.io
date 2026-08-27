@@ -3,7 +3,7 @@
   Renders the public user identity header.
 -->
 <script lang="ts">
-  import Icon from './Icon.svelte';
+  import AccountChip from './AccountChip.svelte';
   import PageHeader from './PageHeader.svelte';
   import UserAvatar from './UserAvatar.svelte';
 
@@ -29,39 +29,55 @@
   let { user }: Props = $props();
 </script>
 
-<PageHeader style="display: flex; align-items: center; gap: var(--space-xs);" data-test-heading>
-  <UserAvatar
-    user={{ avatar: user.avatar, kind: 'user', login: user.login, name: user.name }}
-    size="medium"
-    class="user-page-avatar"
-    data-test-avatar
-  />
-  <h1 data-test-username>{user.login}</h1>
-  <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-  <a href={user.url} title={user.login} class="github-link" data-test-user-link>
-    <Icon class="i-simple-icons:github" label="GitHub profile" />
-  </a>
+<PageHeader data-test-heading>
+  <div class="layout">
+    <UserAvatar
+      user={{ avatar: user.avatar, kind: 'user', login: user.login, name: user.name }}
+      size="medium"
+      class="user-page-avatar"
+      data-test-avatar
+    />
+    <div class="identity">
+      <h1 data-test-username>{user.login}</h1>
+      <div class="accounts">
+        <AccountChip provider="github" handle={user.login} href={user.url} />
+      </div>
+    </div>
+  </div>
 </PageHeader>
 
 <style>
+  .layout {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+  }
+
+  .identity {
+    flex: 1;
+    min-width: 0;
+  }
+
   h1 {
     margin: 0;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .accounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    margin-top: var(--space-2xs);
   }
 
   :global(.user-page-avatar) {
+    align-self: start;
+    flex-shrink: 0;
     border-radius: 50%;
     object-fit: cover;
     background: white;
     padding: 3px;
     box-shadow: 1px 2px 2px 0 light-dark(hsla(51, 50%, 44%, 0.35), #232321);
-  }
-
-  .github-link {
-    --icon-size: 32px;
-
-    &,
-    &:hover {
-      color: var(--main-color);
-    }
   }
 </style>
