@@ -35,6 +35,7 @@
   <UserAvatar
     user={{ avatar: team.avatar, kind: 'team', login: team.login, name: team.name }}
     size="medium"
+    class="team-page-avatar"
     style="margin-right: var(--space-m)"
     data-test-avatar
   />
@@ -60,6 +61,14 @@
   h2 {
     margin-top: var(--space-2xs);
     color: var(--main-color-light);
+  }
+
+  :global(.team-page-avatar) {
+    border-radius: 4px;
+    object-fit: cover;
+    background: white;
+    padding: 3px;
+    box-shadow: 1px 2px 2px 0 light-dark(hsla(51, 50%, 44%, 0.35), #232321);
   }
 
   .header-row {
