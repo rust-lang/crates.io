@@ -7,11 +7,6 @@ pub struct FeaturesConfig {
     /// Read from the `EXPLICIT_SIGNUP_ENABLED` environment variable.
     pub explicit_signup_enabled: bool,
 
-    /// Enable enqueueing of `BuildCrateZip` jobs in the publish flow.
-    ///
-    /// Read from the `ZIP_ARCHIVES_ENABLED` environment variable.
-    pub zip_archives_enabled: bool,
-
     /// Emit CDN cache tags as storage metadata on uploads.
     ///
     /// Read from the `CACHE_TAGS_ENABLED` environment variable.
@@ -26,7 +21,6 @@ pub struct FeaturesConfig {
 impl FeaturesConfig {
     pub fn from_env() -> anyhow::Result<Self> {
         let explicit_signup_enabled = var_parsed("EXPLICIT_SIGNUP_ENABLED")?.unwrap_or(false);
-        let zip_archives_enabled = var_parsed("ZIP_ARCHIVES_ENABLED")?.unwrap_or(false);
         let cache_tags_enabled = var_parsed("CACHE_TAGS_ENABLED")?.unwrap_or(false);
         let cache_tag_invalidations_enabled =
             var_parsed("CACHE_TAG_INVALIDATIONS_ENABLED")?.unwrap_or(false);
@@ -37,7 +31,6 @@ impl FeaturesConfig {
 
         Ok(Self {
             explicit_signup_enabled,
-            zip_archives_enabled,
             cache_tags_enabled,
             cache_tag_invalidations_enabled,
         })
