@@ -1122,6 +1122,7 @@ export interface components {
              */
             publish_notifications: boolean;
             /**
+             * @deprecated
              * @description The user's GitHub profile URL.
              * @example https://github.com/ghost
              */
@@ -1709,6 +1710,7 @@ export interface components {
              */
             name: string | null;
             /**
+             * @deprecated
              * @description The user's GitHub profile URL.
              * @example https://github.com/ghost
              */

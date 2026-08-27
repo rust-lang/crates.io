@@ -193,6 +193,7 @@ expression: response.json()
             "type": "boolean"
           },
           "url": {
+            "deprecated": true,
             "description": "The user's GitHub profile URL.",
             "example": "https://github.com/ghost",
             "type": "string"
@@ -1195,6 +1196,7 @@ expression: response.json()
             ]
           },
           "url": {
+            "deprecated": true,
             "description": "The user's GitHub profile URL.",
             "example": "https://github.com/ghost",
             "type": "string"
