@@ -45,7 +45,7 @@
     "@sinonjs/fake-timers": "15.4.0",
     "@types/node": "24.13.3",
     "@types/sinonjs__fake-timers": "15.0.1",
-    "eslint": "10.9.0",
+    "eslint": "10.9.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-storybook": "10.5.10",
