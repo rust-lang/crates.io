@@ -1,10 +1,7 @@
 use crate::util::{RequestHelper, TestApp};
 use crates_io::models::{NewUser, User};
-use crates_io::schema::users;
 use crates_io::views::EncodablePublicUser;
 use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
 use serde::Deserialize;
 
@@ -16,19 +13,12 @@ pub struct UserShowPublicResponse {
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
     let (app, anon, _) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn().await;
 
-    let bar = app.db_new_user("github-Bar").await;
-    diesel::update(users::table.find(bar.as_model().id))
-        .set(users::username.eq("crates-Bar"))
-        .execute(&mut conn)
-        .await
-        .unwrap();
-    let bar_model = bar.as_model();
-    OauthGithubBuilder::for_user(bar_model)
-        .with_login("CRATES-BAR")
-        .insert(&conn)
-        .await;
+    let builder = UserBuilder::new()
+        .with_username("crates-Bar")
+        .with_gh_login("github-Bar");
+
+    app.db_new_user_from_builder(builder).await;
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
