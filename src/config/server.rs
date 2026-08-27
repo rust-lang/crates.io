@@ -122,8 +122,7 @@ impl Server {
 
         let features = FeaturesConfig::from_env()?;
 
-        let mut storage = StorageConfig::from_environment();
-        storage.cache_tags_enabled = features.cache_tags_enabled;
+        let storage = StorageConfig::from_environment();
 
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());

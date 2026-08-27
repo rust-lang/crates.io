@@ -557,7 +557,6 @@ fn simple_config() -> config::Server {
 
     let mut storage = StorageConfig::in_memory();
     storage.cdn_prefix = Some("static.crates.io".to_string());
-    storage.cache_tags_enabled = true;
 
     config::Server {
         base,
@@ -607,8 +606,6 @@ fn simple_config() -> config::Server {
         banner_message: None,
         features: FeaturesConfig {
             explicit_signup_enabled: true,
-            cache_tags_enabled: true,
-            cache_tag_invalidations_enabled: true,
         },
         fastly: None,
         sync_git_index: false,
