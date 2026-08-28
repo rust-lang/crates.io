@@ -15,8 +15,11 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 pub struct Opts {
     /// Name of the crate
     crate_name: String,
-    /// Version number that should be deleted
+    /// Version number that should be yanked or unyanked
     version: String,
+    /// Undo a yank, putting a version back into the index
+    #[arg(short, long)]
+    undo: bool,
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
     #[arg(short, long)]
     yes: bool,
@@ -35,6 +38,7 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
     let Opts {
         crate_name,
         version,
+        undo,
         yes,
     } = opts;
     let krate: Crate = Crate::by_name(&crate_name).first(conn).await?;
@@ -45,14 +49,16 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
         .first(conn)
         .await?;
 
-    if v.yanked {
-        println!("Version {version} of crate {crate_name} is already yanked");
+    let verb = if undo { "unyank" } else { "yank" };
+
+    if v.yanked != undo {
+        println!("Version {version} of crate {crate_name} is already {verb}ed");
         return Ok(());
     }
 
     if !yes {
         let prompt = format!(
-            "Are you sure you want to yank {crate_name}#{version} ({})?",
+            "Are you sure you want to {verb} {crate_name}#{version} ({})?",
             v.id
         );
         if !dialoguer::confirm(&prompt).await? {
@@ -60,9 +66,9 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
         }
     }
 
-    println!("yanking version {} ({})", v.num, v.id);
+    println!("{verb}ing version {} ({})", v.num, v.id);
     diesel::update(&v)
-        .set(versions::yanked.eq(true))
+        .set(versions::yanked.eq(!undo))
         .execute(conn)
         .await?;
 
