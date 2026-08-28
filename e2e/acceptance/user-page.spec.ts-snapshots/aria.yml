@@ -11,9 +11,10 @@
 - main:
   - img "Daniel Fagnan (thehydroimpulse)"
   - heading "thehydroimpulse" [level=1]
-  - link "GitHub profile":
+  - link "GitHub thehydroimpulse":
     - /url: https://github.com/thehydroimpulse
-    - img "GitHub profile"
+    - img "GitHub"
+    - text: thehydroimpulse
   - text: Displaying 1-1 of 1 total results Sort by
   - button "Alphabetical"
   - list:
