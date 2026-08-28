@@ -260,7 +260,7 @@ impl Crate {
         Ok(())
     }
 
-    /// Remove owner given a GitHub username.
+    /// Remove owner given a github username.
     pub async fn owner_remove_with_gh_login(
         &self,
         mut conn: &AsyncPgConnection,

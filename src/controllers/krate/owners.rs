@@ -195,17 +195,21 @@ pub async fn add_owners(
             for login in &logins {
                 let parsed_login = Login::parse(login)?;
                 let owner = resolve_unprefixed_login(conn, &parsed_login).await?;
-                let login_test = |owner: &Owner| match parsed_login {
-                    Login::GitHubTeam(_) => {
-                        canon_username(owner.username()) == canon_username(login)
-                    }
-                    Login::GitHub(username) => owner
-                        .gh_login()
-                        .is_some_and(|login| canon_username(login) == canon_username(username)),
-                    Login::CratesIo(username) | Login::Unprefixed(username) => {
-                        canon_username(owner.username()) == canon_username(username)
+
+                let login_test = |owner: &Owner| -> bool {
+                    match parsed_login {
+                        Login::GitHubTeam(_) => {
+                            canon_username(owner.username()) == canon_username(login)
+                        }
+                        Login::GitHub(username) => owner
+                            .gh_login()
+                            .is_some_and(|u| canon_username(u) == canon_username(username)),
+                        Login::CratesIo(u) | Login::Unprefixed(u) => {
+                            canon_username(owner.username()) == canon_username(u)
+                        }
                     }
                 };
+
                 if owners.iter().any(login_test) {
                     return Err(bad_request(format_args!("`{login}` is already an owner")));
                 }
@@ -308,7 +312,7 @@ pub async fn remove_owners(
     conn.transaction(async |conn| {
         for login in &body.owners {
             let parsed_login = Login::parse(login)?;
-            remove_owner(&krate, conn, parsed_login).await?;
+            remove_owner(&krate, conn, parsed_login, &owners).await?
         }
         if User::owning(&krate, conn).await?.is_empty() {
             return Err(bad_request(
@@ -372,10 +376,9 @@ fn render_owner_invite_email(
     )
 }
 
-/// Checks whether an unprefixed login is ambiguous.
+/// Check if an unprefixed login is ambiguous.
 ///
-/// Prefixed logins return `None`. A successfully resolved unprefixed login
-/// returns its user.
+/// Returns `Ok(None)` for prefixed logins, and Ok(user) for a resolved unprefixed login.
 async fn resolve_unprefixed_login(
     conn: &mut AsyncPgConnection,
     login: &Login<'_>,
@@ -407,8 +410,18 @@ async fn resolve_unprefixed_login(
     Ok(Some(user))
 }
 
+async fn find_user_by_username(conn: &mut AsyncPgConnection, username: &str) -> QueryResult<User> {
+    users_by_username(username)
+        .left_join(oauth_github::table)
+        .select(User::as_select())
+        .first(conn)
+        .await
+}
+
 /// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
+///
+/// `owner` is the resolved login if the supplied login was unprefixed. passing it here to avoid a duplicate `find_by_username()` request to the database.
 async fn add_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
@@ -455,31 +468,80 @@ async fn add_owner(
     }
 }
 
-/// Parsed owner login used by the owner endpoints.
+async fn remove_owner(
+    krate: &Crate,
+    conn: &mut AsyncPgConnection,
+    login: Login<'_>,
+    owners: &[Owner],
+) -> Result<(), BoxedAppError> {
+    match login {
+        Login::GitHubTeam(login) => krate.owner_remove_with_username(conn, login.login).await?,
+        Login::GitHub(username) => krate.owner_remove_with_gh_login(conn, username).await?,
+        Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await?,
+        Login::Unprefixed(username) => {
+            let cratesio_owner_to_remove = owners
+                .iter()
+                .find(|o| canon_username(o.username()) == canon_username(username));
+            let github_owner_to_remove = owners.iter().find(|o| {
+                o.gh_login()
+                    .is_some_and(|u| canon_username(u) == canon_username(username))
+            });
+
+            // check if ambiguous. assumes usernames are unique on separate services.
+            if let Some(cratesio_owner) = cratesio_owner_to_remove
+                && let Some(github_owner) = github_owner_to_remove
+                && cratesio_owner.id() != github_owner.id()
+            {
+                let error = format_args!(
+                    "username `{username}` is ambiguous. There are two owners of this crate with the username `{username}` on different services.\n\n\
+                     To confirm which owner you want to remove, please run one of the following:\n\n\
+                     $ cargo owner --remove crates.io:{username}\n\
+                     $ cargo owner --remove github:{username}\n\n\
+                     If this is not the account you want to remove, verify the crates.io username of the account you want.",
+                );
+
+                return Err(bad_request(error));
+            }
+
+            if cratesio_owner_to_remove.is_some() {
+                krate.owner_remove_with_username(conn, username).await?
+            } else if github_owner_to_remove.is_some() {
+                krate.owner_remove_with_gh_login(conn, username).await?
+            } else {
+                return Err(OwnerRemoveError::not_found(username).into());
+            }
+        }
+    };
+    Ok(())
+}
+
+/// Parsed login string representation
 enum Login<'a> {
-    /// GitHub organization team, such as `github:rust-lang:owners`.
+    /// GitHub organization team (e.g `github:org:team`). the original login is preserved as a convenience to avoid rebuilding it.
     GitHubTeam(GitHubTeamLogin<'a>),
-    /// GitHub user, such as `github:octocat`.
+    /// GitHub user (e.g. `github:username`).
     GitHub(&'a str),
-    /// crates.io user, such as `crates.io:octocat`.
+    /// crates.io user (`crates.io:username`).
     CratesIo(&'a str),
-    /// User login without a service prefix.
+    /// Unprefixed username (`username` without any prefix)
     Unprefixed(&'a str),
 }
 
 impl<'a> Login<'a> {
     /// Parses an owner login.
     fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
-        fn is_valid(value: &str, label: &str) -> Result<bool, BoxedAppError> {
-            if value.is_empty() {
+        // sanitization
+        fn is_valid(s: &str, label: &str) -> Result<bool, BoxedAppError> {
+            if s.is_empty() {
                 return Err(bad_request(format_args!("{label} cannot be empty")));
             }
 
-            if let Some(character) = value.chars().find(
-                |character| !matches!(character, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'),
-            ) {
+            if let Some(c) = s
+                .chars()
+                .find(|c| !matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'))
+            {
                 return Err(bad_request(format_args!(
-                    "{label} cannot contain special characters like {character}"
+                    "{label} cannot contain special characters like {c}"
                 )));
             }
 
@@ -529,21 +591,6 @@ impl<'a> GitHubTeamLogin<'a> {
     }
 }
 
-async fn remove_owner(
-    krate: &Crate,
-    conn: &mut AsyncPgConnection,
-    login: Login<'_>,
-) -> Result<(), BoxedAppError> {
-    match login {
-        Login::GitHubTeam(login) => krate.owner_remove_with_username(conn, login.login).await?,
-        Login::GitHub(username) => krate.owner_remove_with_gh_login(conn, username).await?,
-        Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await?,
-        Login::Unprefixed(login) => krate.owner_remove_with_gh_login(conn, login).await?,
-    }
-
-    Ok(())
-}
-
 async fn invite_user_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
@@ -571,14 +618,7 @@ async fn invite_user_owner(
     }
 }
 
-async fn find_user_by_username(conn: &mut AsyncPgConnection, username: &str) -> QueryResult<User> {
-    users_by_username(username)
-        .left_join(oauth_github::table)
-        .select(User::as_select())
-        .first(conn)
-        .await
-}
-
+/// Adds a parsed GitHub team as a crate owner.
 async fn add_github_team_owner(
     gh_client: &dyn GitHubClient,
     conn: &mut AsyncPgConnection,
@@ -591,7 +631,7 @@ async fn add_github_team_owner(
     let team = create_or_update_github_team(
         gh_client,
         conn,
-        &login.login.to_lowercase(),
+        login.login,
         login.org,
         login.team,
         req_user,
@@ -613,7 +653,7 @@ async fn add_github_team_owner(
 }
 
 /// Tries to create or update a GitHub Team. Assumes `org` and `team` are
-/// correctly parsed out of the full `name`. `name` is passed as a
+/// correctly parsed out of the full `login`. `login` is passed as a
 /// convenience to avoid rebuilding it.
 pub async fn create_or_update_github_team(
     gh_client: &dyn GitHubClient,
@@ -624,21 +664,6 @@ pub async fn create_or_update_github_team(
     req_user: &User,
     encryption: &TokenEncryption,
 ) -> AppResult<Team> {
-    // GET orgs/:org/teams
-    // check that `team` is the `slug` in results, and grab its data
-
-    // "sanitization"
-    fn is_allowed_char(c: char) -> bool {
-        matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
-    }
-
-    if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
-        return Err(bad_request(format_args!(
-            "organization cannot contain special \
-                 characters like {c}"
-        )));
-    }
-
     let Some(token) = req_user.gh_encrypted_token.as_ref() else {
         return Err(bad_request(
             "Cannot add a GitHub team as an owner without a connected GitHub account",
