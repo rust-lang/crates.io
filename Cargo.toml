@@ -123,7 +123,7 @@ diesel-async = { version = "=0.9.2", features = ["async-connection-wrapper", "de
 diesel_full_text_search = "=2.3.0"
 diesel_migrations = { version = "=2.3.2", features = ["postgres"] }
 dotenvy = "=0.15.7"
-flate2 = "=1.1.9"
+flate2 = "=1.1.10"
 futures-util = "=0.3.34"
 git2 = "=0.21.0"
 hex = "=0.4.3"

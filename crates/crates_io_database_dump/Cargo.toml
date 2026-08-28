@@ -11,7 +11,7 @@ workspace = true
 anyhow = "=1.0.104"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
 crates_io_version = { path = "../crates_io_version" }
-flate2 = "=1.1.9"
+flate2 = "=1.1.10"
 minijinja = "=2.24.0"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
