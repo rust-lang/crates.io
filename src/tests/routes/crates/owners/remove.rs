@@ -174,16 +174,16 @@ async fn unprefixed_github_login_case_insensitive() {
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_github_login_separator_variant() {
     let (response, owner_count) = remove_distinct_login_user("github_user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github_user`"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefixed_username_verbatim() {
     let (response, owner_count) = remove_distinct_login_user("crates.io:crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates.io:crates-user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -191,7 +191,7 @@ async fn crates_io_prefixed_username_verbatim() {
 async fn crates_io_prefixed_username_case_insensitive() {
     let (response, owner_count) = remove_distinct_login_user("crates.io:CRATES-USER").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates.io:CRATES-USER`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -199,7 +199,7 @@ async fn crates_io_prefixed_username_case_insensitive() {
 async fn crates_io_prefixed_username_separator_variant() {
     let (response, owner_count) = remove_distinct_login_user("crates.io:crates_user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates.io:crates_user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -207,7 +207,7 @@ async fn crates_io_prefixed_username_separator_variant() {
 async fn github_prefixed_login_verbatim() {
     let (response, owner_count) = remove_distinct_login_user("github:github-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:github-user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -215,7 +215,7 @@ async fn github_prefixed_login_verbatim() {
 async fn github_prefixed_login_case_insensitive() {
     let (response, owner_count) = remove_distinct_login_user("github:GITHUB-USER").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:GITHUB-USER`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -223,7 +223,7 @@ async fn github_prefixed_login_case_insensitive() {
 async fn github_prefixed_login_separator_variant() {
     let (response, owner_count) = remove_distinct_login_user("github:github_user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:github_user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -231,7 +231,7 @@ async fn github_prefixed_login_separator_variant() {
 async fn crates_io_prefix_does_not_match_github_login() {
     let (response, owner_count) = remove_distinct_login_user("crates.io:github-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates.io:github-user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
@@ -239,7 +239,7 @@ async fn crates_io_prefix_does_not_match_github_login() {
 async fn github_prefix_does_not_match_crates_io_username() {
     let (response, owner_count) = remove_distinct_login_user("github:crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:crates-user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
     assert_eq!(owner_count, 2);
 }
 

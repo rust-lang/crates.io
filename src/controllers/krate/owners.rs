@@ -309,7 +309,7 @@ pub async fn remove_owners(
 
     conn.transaction(async |conn| {
         for login in &body.owners {
-            krate.owner_remove(conn, login).await?;
+            remove_owner(&krate, conn, login).await?;
         }
         if User::owning(&krate, conn).await?.is_empty() {
             return Err(bad_request(
@@ -495,6 +495,29 @@ impl<'a> GitHubTeamLogin<'a> {
 
         Ok(Self { login, org, team })
     }
+}
+
+async fn remove_owner(
+    krate: &Crate,
+    conn: &mut AsyncPgConnection,
+    login: &str,
+) -> Result<(), BoxedAppError> {
+    match Login::parse(login)? {
+        Login::GitHubTeam(login) => krate.owner_remove_with_username(conn, login.login).await?,
+        Login::GitHub(_) => {
+            return Err(bad_request(
+                "missing github team argument; format is github:org:team",
+            ));
+        }
+        Login::CratesIo(_) => {
+            return Err(bad_request(
+                "unknown organization handler, only 'github:org:team' is supported",
+            ));
+        }
+        Login::Unprefixed(login) => krate.owner_remove_with_gh_login(conn, login).await?,
+    }
+
+    Ok(())
 }
 
 async fn invite_user_owner(

@@ -213,7 +213,8 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    pub async fn owner_remove(
+    /// Remove owner given a crates.io username.
+    pub async fn owner_remove_with_username(
         &self,
         mut conn: &AsyncPgConnection,
         login: &str,
@@ -225,7 +226,7 @@ impl Crate {
                     CASE WHEN crate_owners.owner_kind = 1 THEN
                          teams.login
                     ELSE
-                         users.gh_login
+                         users.username
                     END AS login
                 FROM crate_owners
                 LEFT JOIN teams
@@ -243,7 +244,47 @@ impl Crate {
             WHERE crate_owners.crate_id = crate_owners_with_login.crate_id
                 AND crate_owners.owner_id = crate_owners_with_login.owner_id
                 AND crate_owners.owner_kind = crate_owners_with_login.owner_kind
-                AND lower(crate_owners_with_login.login) = lower($2);"#,
+                AND canon_username(crate_owners_with_login.login) = canon_username($2);"#,
+        );
+
+        let num_updated_rows = query
+            .bind::<Integer, _>(self.id)
+            .bind::<Text, _>(login)
+            .execute(&mut conn)
+            .await?;
+
+        if num_updated_rows == 0 {
+            return Err(OwnerRemoveError::not_found(login));
+        }
+
+        Ok(())
+    }
+
+    /// Remove owner given a GitHub username.
+    pub async fn owner_remove_with_gh_login(
+        &self,
+        mut conn: &AsyncPgConnection,
+        login: &str,
+    ) -> Result<(), OwnerRemoveError> {
+        let query = diesel::sql_query(
+            r#"WITH crate_owners_with_gh_login AS (
+                SELECT
+                    crate_owners.*,
+                    login
+                FROM crate_owners
+                JOIN oauth_github
+                    ON crate_owners.owner_id = oauth_github.user_id
+                    AND crate_owners.owner_kind = 0
+                WHERE crate_owners.crate_id = $1
+                    AND crate_owners.deleted = false
+            )
+            UPDATE crate_owners
+            SET deleted = true
+            FROM crate_owners_with_gh_login
+            WHERE crate_owners.crate_id = crate_owners_with_gh_login.crate_id
+                AND crate_owners.owner_id = crate_owners_with_gh_login.owner_id
+                AND crate_owners.owner_kind = crate_owners_with_gh_login.owner_kind
+                AND canon_username(crate_owners_with_gh_login.login) = canon_username($2);"#,
         );
 
         let num_updated_rows = query
