@@ -60,8 +60,9 @@ impl<'a> UserBuilder<'a> {
     pub fn build(self) -> User {
         User {
             id: 1,
-            gh_login: self.gh_login.into(),
             name: self.display_name.map(ToString::to_string),
+            gh_login: self.gh_login.into(),
+            gh_username: Some(self.gh_login.into()),
             gh_id: 123,
             gh_avatar: None,
             gh_encrypted_token: None,
