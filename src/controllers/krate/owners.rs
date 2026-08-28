@@ -194,6 +194,7 @@ pub async fn add_owners(
             let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
                 let parsed_login = Login::parse(login)?;
+                let owner = resolve_unprefixed_login(conn, &parsed_login).await?;
                 let login_test = |owner: &Owner| match parsed_login {
                     Login::GitHubTeam(_) => {
                         canon_username(owner.username()) == canon_username(login)
@@ -201,18 +202,15 @@ pub async fn add_owners(
                     Login::GitHub(username) => owner
                         .gh_login()
                         .is_some_and(|login| canon_username(login) == canon_username(username)),
-                    Login::CratesIo(username) => {
+                    Login::CratesIo(username) | Login::Unprefixed(username) => {
                         canon_username(owner.username()) == canon_username(username)
                     }
-                    Login::Unprefixed(_) => owner.gh_login().is_some_and(|owner_login| {
-                        owner_login.to_lowercase() == login.to_lowercase()
-                    }),
                 };
                 if owners.iter().any(login_test) {
                     return Err(bad_request(format_args!("`{login}` is already an owner")));
                 }
 
-                match add_owner(&app, conn, user, &krate, parsed_login).await {
+                match add_owner(&app, conn, user, &krate, parsed_login, owner).await {
                     // A user was successfully invited, and they must accept
                     // the invite, and a best-effort attempt should be made
                     // to email them the invite token for one-click
@@ -374,6 +372,41 @@ fn render_owner_invite_email(
     )
 }
 
+/// Checks whether an unprefixed login is ambiguous.
+///
+/// Prefixed logins return `None`. A successfully resolved unprefixed login
+/// returns its user.
+async fn resolve_unprefixed_login(
+    conn: &mut AsyncPgConnection,
+    login: &Login<'_>,
+) -> Result<Option<User>, BoxedAppError> {
+    let Login::Unprefixed(username) = login else {
+        return Ok(None);
+    };
+
+    let Some(user) = find_user_by_username(conn, username).await.optional()? else {
+        return Err(bad_request(format_args!(
+            "could not find user with login `{username}`"
+        )));
+    };
+
+    if let Some(gh_login) = &user.gh_username
+        && canon_username(gh_login) != canon_username(&user.username)
+    {
+        let error = format_args!(
+            "username `{username}` is possibly ambiguous. The crates.io account `{username}` is associated with GitHub user `{gh_login}`.\n\n\
+             To confirm this is the account you want to add, please run one of the following:\n\n\
+             $ cargo owner --add crates.io:{username}\n\
+             $ cargo owner --add github:{gh_login}\n\n\
+             If this is not the account you want to add, verify the crates.io username of the account you want.",
+        );
+
+        return Err(bad_request(error));
+    }
+
+    Ok(Some(user))
+}
+
 /// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
 async fn add_owner(
@@ -382,6 +415,7 @@ async fn add_owner(
     req_user: &User,
     krate: &Crate,
     login: Login<'_>,
+    owner: Option<User>,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     match login {
         Login::GitHubTeam(team) => {
@@ -413,12 +447,9 @@ async fn add_owner(
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
         Login::Unprefixed(username) => {
-            let user = User::find_by_login(conn, username)
-                .await
-                .optional()?
-                .ok_or_else(|| {
-                    bad_request(format_args!("could not find user with login `{username}`"))
-                })?;
+            let user = owner.ok_or_else(|| {
+                bad_request(format_args!("could not find user with login `{username}`"))
+            })?;
             invite_user_owner(app, conn, req_user, user, username, krate).await
         }
     }
