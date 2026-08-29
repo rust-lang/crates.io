@@ -361,6 +361,33 @@ async fn add_owner(
     }
 }
 
+/// Parsed GitHub organization team login, such as `github:rust-lang:owners`.
+struct GitHubTeamLogin<'a> {
+    login: &'a str,
+    org: &'a str,
+    team: &'a str,
+}
+
+impl<'a> GitHubTeamLogin<'a> {
+    /// Parses a GitHub organization team login.
+    fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
+        let mut chunks = login.split(':');
+        let team_system = chunks.next().unwrap_or_default();
+        if team_system != "github" {
+            let error = "unknown organization handler, only 'github:org:team' is supported";
+            return Err(bad_request(error));
+        }
+
+        let org = chunks.next().unwrap_or_default();
+        let team = chunks.next().ok_or_else(|| {
+            let error = "missing github team argument; format is github:org:team";
+            bad_request(error)
+        })?;
+
+        Ok(Self { login, org, team })
+    }
+}
+
 async fn invite_user_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
@@ -400,29 +427,15 @@ async fn add_team_owner(
     login: &str,
     encryption: &TokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    // github:rust-lang:owners
-    let mut chunks = login.split(':');
-
-    let team_system = chunks.next().unwrap();
-    if team_system != "github" {
-        let error = "unknown organization handler, only 'github:org:team' is supported";
-        return Err(bad_request(error).into());
-    }
-
-    // unwrap is documented above as part of the calling contract
-    let org = chunks.next().unwrap();
-    let team = chunks.next().ok_or_else(|| {
-        let error = "missing github team argument; format is github:org:team";
-        bad_request(error)
-    })?;
+    let login = GitHubTeamLogin::parse(login)?;
 
     // Always recreate teams to get the most up-to-date GitHub ID
     let team = create_or_update_github_team(
         gh_client,
         conn,
-        &login.to_lowercase(),
-        org,
-        team,
+        &login.login.to_lowercase(),
+        login.org,
+        login.team,
         req_user,
         encryption,
     )
@@ -566,5 +579,19 @@ impl From<OwnerRemoveError> for BoxedAppError {
                 bad_request(format!("could not find owner with login `{login}`"))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::GitHubTeamLogin;
+
+    #[test]
+    fn parses_github_team_login() {
+        let login = GitHubTeamLogin::parse("github:rust-lang:owners").unwrap();
+
+        assert_eq!(login.login, "github:rust-lang:owners");
+        assert_eq!(login.org, "rust-lang");
+        assert_eq!(login.team, "owners");
     }
 }
