@@ -336,8 +336,9 @@ pub struct ChangeOwnersRequest {
     /// For users, use just the username (e.g., `"octocat"`).
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
     ///
-    /// When adding an owner, use the `crates.io:username` or `github:username`
-    /// prefix to explicitly select the username's service.
+    /// To explicitly select a crates.io username, use the `crates.io:username`
+    /// prefix. When adding an owner, use the `github:username` prefix to
+    /// explicitly select a GitHub username.
     #[schema(example = json!(["octocat", "github:rust-lang:owners", "crates.io:some_user", "github:other_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
@@ -509,11 +510,7 @@ async fn remove_owner(
                 "missing github team argument; format is github:org:team",
             ));
         }
-        Login::CratesIo(_) => {
-            return Err(bad_request(
-                "unknown organization handler, only 'github:org:team' is supported",
-            ));
-        }
+        Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await?,
         Login::Unprefixed(login) => krate.owner_remove_with_gh_login(conn, login).await?,
     }
 

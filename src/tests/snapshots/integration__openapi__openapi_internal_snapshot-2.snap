@@ -3640,7 +3640,7 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nWhen adding an owner, use the `crates.io:username` or `github:username`\nprefix to explicitly select the username's service.",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nTo explicitly select a crates.io username, use the `crates.io:username`\nprefix. When adding an owner, use the `github:username` prefix to\nexplicitly select a GitHub username.",
                     "example": [
                       "octocat",
                       "github:rust-lang:owners",
@@ -3802,7 +3802,7 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nWhen adding an owner, use the `crates.io:username` or `github:username`\nprefix to explicitly select the username's service.",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nTo explicitly select a crates.io username, use the `crates.io:username`\nprefix. When adding an owner, use the `github:username` prefix to\nexplicitly select a GitHub username.",
                     "example": [
                       "octocat",
                       "github:rust-lang:owners",
