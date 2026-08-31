@@ -109,6 +109,13 @@ impl Owner {
         }
     }
 
+    pub fn username(&self) -> &str {
+        match self {
+            Owner::User(user) => &user.username,
+            Owner::Team(team) => &team.login,
+        }
+    }
+
     pub fn id(&self) -> i32 {
         match self {
             Owner::User(user) => user.id,

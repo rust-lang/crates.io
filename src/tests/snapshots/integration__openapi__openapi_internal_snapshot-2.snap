@@ -3640,10 +3640,11 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nWhen adding an owner, use the `crates.io:username` prefix to explicitly\nselect a crates.io username.",
                     "example": [
                       "octocat",
-                      "github:rust-lang:owners"
+                      "github:rust-lang:owners",
+                      "crates.io:some_user"
                     ],
                     "items": {
                       "type": "string"
@@ -3800,10 +3801,11 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nWhen adding an owner, use the `crates.io:username` prefix to explicitly\nselect a crates.io username.",
                     "example": [
                       "octocat",
-                      "github:rust-lang:owners"
+                      "github:rust-lang:owners",
+                      "crates.io:some_user"
                     ],
                     "items": {
                       "type": "string"

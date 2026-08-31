@@ -40,7 +40,7 @@ async fn not_github() {
         .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, crates.io:username and username are supported."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

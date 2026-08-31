@@ -3,11 +3,13 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Owner, PublicUser, Team, User};
+use crate::models::{Crate, Owner, PublicUser, Team, User, users_by_username};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
+use crate::schema::oauth_github;
+use crate::util::canon_username::canon_username;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
@@ -17,7 +19,7 @@ use chrono::Utc;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
@@ -190,21 +192,28 @@ pub async fn add_owners(
 
             let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
-                let login_test =
-                    |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+                let parsed_login = Login::parse(login)?;
+                let login_test = |owner: &Owner| match parsed_login {
+                    Login::GitHubTeam(_) | Login::Unprefixed(_) => {
+                        owner.login().to_lowercase() == login.to_lowercase()
+                    }
+                    Login::CratesIo(username) => {
+                        canon_username(owner.username()) == canon_username(username)
+                    }
+                };
                 if owners.iter().any(login_test) {
                     return Err(bad_request(format_args!("`{login}` is already an owner")));
                 }
 
-                match add_owner(&app, conn, user, &krate, login).await {
+                match add_owner(&app, conn, user, &krate, parsed_login).await {
                     // A user was successfully invited, and they must accept
                     // the invite, and a best-effort attempt should be made
                     // to email them the invite token for one-click
                     // acceptance.
-                    Ok(NewOwnerInvite::User(invitee, token)) => {
+                    Ok(NewOwnerInvite::User(invitee, token, username)) => {
                         msgs.push(format!(
                             "user {} has been invited to be an owner of crate {}",
-                            invitee.gh_login, krate.name,
+                            username, krate.name,
                         ));
 
                         if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
@@ -319,7 +328,10 @@ pub struct ChangeOwnersRequest {
     ///
     /// For users, use just the username (e.g., `"octocat"`).
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
-    #[schema(example = json!(["octocat", "github:rust-lang:owners"]))]
+    ///
+    /// When adding an owner, use the `crates.io:username` prefix to explicitly
+    /// select a crates.io username.
+    #[schema(example = json!(["octocat", "github:rust-lang:owners", "crates.io:some_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
@@ -361,15 +373,35 @@ async fn add_owner(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
-    login: &str,
+    login: Login<'_>,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    match Login::parse(login)? {
+    match login {
         Login::GitHubTeam(team) => {
             let github = &*app.github;
             let encryption = &app.config.token_encryption;
             add_github_team_owner(github, conn, req_user, krate, team, encryption).await
         }
-        Login::Unprefixed(login) => invite_user_owner(app, conn, req_user, krate, login).await,
+        Login::CratesIo(username) => {
+            let user = find_user_by_username(conn, username)
+                .await
+                .optional()?
+                .ok_or_else(|| {
+                    bad_request(format_args!(
+                        "could not find user with crates.io username {username}"
+                    ))
+                })?;
+            invite_user_owner(app, conn, req_user, user, username.to_owned(), krate).await
+        }
+        Login::Unprefixed(username) => {
+            let user = User::find_by_login(conn, username)
+                .await
+                .optional()?
+                .ok_or_else(|| {
+                    bad_request(format_args!("could not find user with login `{username}`"))
+                })?;
+            let gh_login = user.gh_login.clone();
+            invite_user_owner(app, conn, req_user, user, gh_login, krate).await
+        }
     }
 }
 
@@ -377,6 +409,8 @@ async fn add_owner(
 enum Login<'a> {
     /// GitHub organization team, such as `github:rust-lang:owners`.
     GitHubTeam(GitHubTeamLogin<'a>),
+    /// crates.io user, such as `crates.io:octocat`.
+    CratesIo(&'a str),
     /// User login without a service prefix.
     Unprefixed(&'a str),
 }
@@ -384,11 +418,37 @@ enum Login<'a> {
 impl<'a> Login<'a> {
     /// Parses an owner login.
     fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
-        if !login.contains(':') {
-            return Ok(Self::Unprefixed(login));
+        fn is_valid(value: &str, label: &str) -> Result<bool, BoxedAppError> {
+            if value.is_empty() {
+                return Err(bad_request(format_args!("{label} cannot be empty")));
+            }
+
+            if let Some(character) = value.chars().find(
+                |character| !matches!(character, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'),
+            ) {
+                return Err(bad_request(format_args!(
+                    "{label} cannot contain special characters like {character}"
+                )));
+            }
+
+            Ok(true)
         }
 
-        GitHubTeamLogin::parse(login).map(Self::GitHubTeam)
+        match login.split(':').collect::<Vec<_>>().as_slice() {
+            ["github", org, team] if is_valid(org, "organization")? && is_valid(team, "team")? => {
+                GitHubTeamLogin::parse(login).map(Self::GitHubTeam)
+            }
+            ["crates.io", username] if is_valid(username, "username")? => {
+                Ok(Self::CratesIo(username))
+            }
+            ["github", _] => Err(bad_request(
+                "missing github team argument; format is github:org:team",
+            )),
+            [username] if is_valid(username, "username")? => Ok(Self::Unprefixed(username)),
+            _ => Err(bad_request(
+                "invalid argument. only github:org:team, crates.io:username and username are supported.",
+            )),
+        }
     }
 }
 
@@ -423,14 +483,10 @@ async fn invite_user_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
     req_user: &User,
+    user: User,
+    username: String,
     krate: &Crate,
-    login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    let user = User::find_by_login(conn, login)
-        .await
-        .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
-
     // Users are invited and must accept before being added
     let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
     let invite = NewCrateOwnerInvitation {
@@ -442,12 +498,20 @@ async fn invite_user_owner(
 
     match invite.create(conn).await? {
         NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-            Ok(NewOwnerInvite::User(user, plaintext_token))
+            Ok(NewOwnerInvite::User(user, plaintext_token, username))
         }
         NewCrateOwnerInvitationOutcome::AlreadyExists => {
             Err(OwnerAddError::AlreadyInvited(Box::new(user)))
         }
     }
+}
+
+async fn find_user_by_username(conn: &mut AsyncPgConnection, username: &str) -> QueryResult<User> {
+    users_by_username(username)
+        .left_join(oauth_github::table)
+        .select(User::as_select())
+        .first(conn)
+        .await
 }
 
 async fn add_github_team_owner(

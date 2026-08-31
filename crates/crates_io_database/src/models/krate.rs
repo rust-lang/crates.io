@@ -265,7 +265,7 @@ impl Crate {
 pub enum NewOwnerInvite {
     /// The invitee was a [`User`], and they must accept the invite through the
     /// UI or via the provided invite token.
-    User(User, SecretString),
+    User(User, SecretString, String),
 
     /// The invitee was a [`Team`], and they were immediately added as an owner.
     Team(Team),
