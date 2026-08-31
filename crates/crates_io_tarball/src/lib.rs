@@ -213,7 +213,10 @@ async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
     // legacy tar headers, which is 8 GiB. In practice, this should not be an
     // issue for crates.io given our other limits.
 
-    let tar_size = entry.header().size().map_err(TarballError::Malformed)?;
+    let tar_size = entry
+        .header()
+        .raw_file_size()
+        .map_err(TarballError::Malformed)?;
 
     if let Some(pax) = entry.pax_extensions().await? {
         for ext_result in pax {
