@@ -16,6 +16,7 @@ use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
+use crates_io_database::models::OauthGithub;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
@@ -194,12 +195,18 @@ pub async fn add_owners(
             for login in &logins {
                 let parsed_login = Login::parse(login)?;
                 let login_test = |owner: &Owner| match parsed_login {
-                    Login::GitHubTeam(_) | Login::Unprefixed(_) => {
-                        owner.login().to_lowercase() == login.to_lowercase()
+                    Login::GitHubTeam(_) => {
+                        canon_username(owner.username()) == canon_username(login)
                     }
+                    Login::GitHub(username) => owner
+                        .gh_login()
+                        .is_some_and(|login| canon_username(login) == canon_username(username)),
                     Login::CratesIo(username) => {
                         canon_username(owner.username()) == canon_username(username)
                     }
+                    Login::Unprefixed(_) => owner.gh_login().is_some_and(|owner_login| {
+                        owner_login.to_lowercase() == login.to_lowercase()
+                    }),
                 };
                 if owners.iter().any(login_test) {
                     return Err(bad_request(format_args!("`{login}` is already an owner")));
@@ -329,9 +336,9 @@ pub struct ChangeOwnersRequest {
     /// For users, use just the username (e.g., `"octocat"`).
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
     ///
-    /// When adding an owner, use the `crates.io:username` prefix to explicitly
-    /// select a crates.io username.
-    #[schema(example = json!(["octocat", "github:rust-lang:owners", "crates.io:some_user"]))]
+    /// When adding an owner, use the `crates.io:username` or `github:username`
+    /// prefix to explicitly select the username's service.
+    #[schema(example = json!(["octocat", "github:rust-lang:owners", "crates.io:some_user", "github:other_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
@@ -381,6 +388,18 @@ async fn add_owner(
             let encryption = &app.config.token_encryption;
             add_github_team_owner(github, conn, req_user, krate, team, encryption).await
         }
+        Login::GitHub(username) => {
+            let oauth = OauthGithub::find_by_login(conn, username)
+                .await
+                .optional()?
+                .ok_or_else(|| {
+                    bad_request(format_args!(
+                        "could not find user with github username {username}"
+                    ))
+                })?;
+            let user = User::find(conn, oauth.user_id).await?;
+            invite_user_owner(app, conn, req_user, user, username, krate).await
+        }
         Login::CratesIo(username) => {
             let user = find_user_by_username(conn, username)
                 .await
@@ -390,7 +409,7 @@ async fn add_owner(
                         "could not find user with crates.io username {username}"
                     ))
                 })?;
-            invite_user_owner(app, conn, req_user, user, username.to_owned(), krate).await
+            invite_user_owner(app, conn, req_user, user, username, krate).await
         }
         Login::Unprefixed(username) => {
             let user = User::find_by_login(conn, username)
@@ -399,8 +418,7 @@ async fn add_owner(
                 .ok_or_else(|| {
                     bad_request(format_args!("could not find user with login `{username}`"))
                 })?;
-            let gh_login = user.gh_login.clone();
-            invite_user_owner(app, conn, req_user, user, gh_login, krate).await
+            invite_user_owner(app, conn, req_user, user, username, krate).await
         }
     }
 }
@@ -409,6 +427,8 @@ async fn add_owner(
 enum Login<'a> {
     /// GitHub organization team, such as `github:rust-lang:owners`.
     GitHubTeam(GitHubTeamLogin<'a>),
+    /// GitHub user, such as `github:octocat`.
+    GitHub(&'a str),
     /// crates.io user, such as `crates.io:octocat`.
     CratesIo(&'a str),
     /// User login without a service prefix.
@@ -438,15 +458,13 @@ impl<'a> Login<'a> {
             ["github", org, team] if is_valid(org, "organization")? && is_valid(team, "team")? => {
                 GitHubTeamLogin::parse(login).map(Self::GitHubTeam)
             }
+            ["github", username] if is_valid(username, "username")? => Ok(Self::GitHub(username)),
             ["crates.io", username] if is_valid(username, "username")? => {
                 Ok(Self::CratesIo(username))
             }
-            ["github", _] => Err(bad_request(
-                "missing github team argument; format is github:org:team",
-            )),
             [username] if is_valid(username, "username")? => Ok(Self::Unprefixed(username)),
             _ => Err(bad_request(
-                "invalid argument. only github:org:team, crates.io:username and username are supported.",
+                "invalid argument. only github:org:team, github:username, crates.io:username and username are supported.",
             )),
         }
     }
@@ -484,7 +502,7 @@ async fn invite_user_owner(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     user: User,
-    username: String,
+    username: &str,
     krate: &Crate,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // Users are invited and must accept before being added
@@ -498,7 +516,7 @@ async fn invite_user_owner(
 
     match invite.create(conn).await? {
         NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-            Ok(NewOwnerInvite::User(user, plaintext_token, username))
+            Ok(NewOwnerInvite::User(user, plaintext_token, username.into()))
         }
         NewCrateOwnerInvitationOutcome::AlreadyExists => {
             Err(OwnerAddError::AlreadyInvited(Box::new(user)))

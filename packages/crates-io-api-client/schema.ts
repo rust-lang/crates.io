@@ -3294,12 +3294,13 @@ export interface operations {
                      *     For users, use just the username (e.g., `"octocat"`).
                      *     For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
                      *
-                     *     When adding an owner, use the `crates.io:username` prefix to explicitly
-                     *     select a crates.io username.
+                     *     When adding an owner, use the `crates.io:username` or `github:username`
+                     *     prefix to explicitly select the username's service.
                      * @example [
                      *       "octocat",
                      *       "github:rust-lang:owners",
-                     *       "crates.io:some_user"
+                     *       "crates.io:some_user",
+                     *       "github:other_user"
                      *     ]
                      */
                     owners: string[];
@@ -3363,12 +3364,13 @@ export interface operations {
                      *     For users, use just the username (e.g., `"octocat"`).
                      *     For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
                      *
-                     *     When adding an owner, use the `crates.io:username` prefix to explicitly
-                     *     select a crates.io username.
+                     *     When adding an owner, use the `crates.io:username` or `github:username`
+                     *     prefix to explicitly select the username's service.
                      * @example [
                      *       "octocat",
                      *       "github:rust-lang:owners",
-                     *       "crates.io:some_user"
+                     *       "crates.io:some_user",
+                     *       "github:other_user"
                      *     ]
                      */
                     owners: string[];

@@ -27,8 +27,8 @@ async fn test_issue_1205() -> anyhow::Result<()> {
 
     let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
-    assert_eq!(owners[0].login(), "foo");
-    assert_eq!(owners[1].login(), "github:rustaudio:owners");
+    assert_eq!(owners[0].username(), "foo");
+    assert_eq!(owners[1].username(), "github:rustaudio:owners");
 
     let response = user
         .add_named_owner(CRATE_NAME, "github:rustaudio:cratesio-push")
@@ -38,8 +38,8 @@ async fn test_issue_1205() -> anyhow::Result<()> {
 
     let owners = krate.owners(&conn).await?;
     assert_eq!(owners.len(), 2);
-    assert_eq!(owners[0].login(), "foo");
-    assert_eq!(owners[1].login(), "github:rustaudio:cratesio-push");
+    assert_eq!(owners[0].username(), "foo");
+    assert_eq!(owners[1].username(), "github:rustaudio:cratesio-push");
 
     let response = user
         .remove_named_owner(CRATE_NAME, "github:rustaudio:owners")
