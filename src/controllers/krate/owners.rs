@@ -309,7 +309,8 @@ pub async fn remove_owners(
 
     conn.transaction(async |conn| {
         for login in &body.owners {
-            remove_owner(&krate, conn, login).await?;
+            let parsed_login = Login::parse(login)?;
+            remove_owner(&krate, conn, parsed_login).await?;
         }
         if User::owning(&krate, conn).await?.is_empty() {
             return Err(bad_request(
@@ -336,9 +337,8 @@ pub struct ChangeOwnersRequest {
     /// For users, use just the username (e.g., `"octocat"`).
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
     ///
-    /// To explicitly select a crates.io username, use the `crates.io:username`
-    /// prefix. When adding an owner, use the `github:username` prefix to
-    /// explicitly select a GitHub username.
+    /// To disambiguate between crates.io and GitHub usernames, use
+    /// the `crates.io:username` or `github:username` prefix.
     #[schema(example = json!(["octocat", "github:rust-lang:owners", "crates.io:some_user", "github:other_user"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
@@ -501,15 +501,11 @@ impl<'a> GitHubTeamLogin<'a> {
 async fn remove_owner(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
-    login: &str,
+    login: Login<'_>,
 ) -> Result<(), BoxedAppError> {
-    match Login::parse(login)? {
+    match login {
         Login::GitHubTeam(login) => krate.owner_remove_with_username(conn, login.login).await?,
-        Login::GitHub(_) => {
-            return Err(bad_request(
-                "missing github team argument; format is github:org:team",
-            ));
-        }
+        Login::GitHub(username) => krate.owner_remove_with_gh_login(conn, username).await?,
         Login::CratesIo(username) => krate.owner_remove_with_username(conn, username).await?,
         Login::Unprefixed(login) => krate.owner_remove_with_gh_login(conn, login).await?,
     }

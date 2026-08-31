@@ -143,6 +143,88 @@ async fn test_remove_ambiguous_user_with_cratesio_prefix() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_remove_ambiguous_user_with_github_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let builder = UserBuilder::new()
+        .with_username("alice")
+        .with_gh_login("alice-gh");
+    let cratesio_alice = app.db_new_user_from_builder(builder).await;
+    let builder = UserBuilder::new()
+        .with_username("bob")
+        .with_gh_login("alice");
+    let github_alice = app.db_new_user_from_builder(builder).await;
+    OauthGithubBuilder::for_user(github_alice.as_model())
+        .with_login("alice")
+        .insert(&conn)
+        .await;
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    for user in [&cratesio_alice, &github_alice] {
+        CrateOwner::builder()
+            .crate_id(krate.id)
+            .user_id(user.as_model().id)
+            .created_by(cookie.as_model().id)
+            .build()
+            .insert(&conn)
+            .await
+            .unwrap();
+    }
+
+    let response = cookie.remove_named_owner("foo", "github:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_team_with_extra_component() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie
+        .remove_named_owner("foo", "github:alice:team:extra")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_org() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.remove_named_owner("foo", "github::team").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_team() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.remove_named_owner("foo", "github:org:").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_reject_empty_cratesio_username() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
@@ -156,6 +238,65 @@ async fn test_reject_empty_cratesio_username() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_empty_login() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.remove_named_owner("foo", "").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot be empty"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_reject_github_username_with_invalid_char() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.remove_named_owner("foo", "github:a&lice*").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"username cannot contain special characters like &"}]}"#);
+}
+
+/// Test that an unsupported prefix (e.g. gitlab:) returns an error.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unsupported_disambiguation_prefix() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.remove_named_owner("foo", "gitlab:user2").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid argument. only github:org:team, github:username, crates.io:username and username are supported."}]}"#);
+}
+
+/// Test that removing with nonexistent github username returns an error.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_disambiguated_github_username_not_found() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.remove_named_owner("foo", "github:nonexistent").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `nonexistent`"}]}"#);
+}
+
+/// Test that removing with nonexistent crates.io username returns an error.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_disambiguated_cratesio_username_not_found() {
     let (app, _, cookie) = TestApp::full().with_user().await;
@@ -274,25 +415,25 @@ async fn crates_io_prefixed_username_separator_variant() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_verbatim() {
     let (response, owner_count) = remove_distinct_login_user("github:github-user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_case_insensitive() {
     let (response, owner_count) = remove_distinct_login_user("github:GITHUB-USER").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_separator_variant() {
     let (response, owner_count) = remove_distinct_login_user("github:github_user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -307,7 +448,7 @@ async fn crates_io_prefix_does_not_match_github_login() {
 async fn github_prefix_does_not_match_crates_io_username() {
     let (response, owner_count) = remove_distinct_login_user("github:crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates-user`"}]}"#);
     assert_eq!(owner_count, 2);
 }
 
