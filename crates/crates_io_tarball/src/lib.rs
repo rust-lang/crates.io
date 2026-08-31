@@ -607,6 +607,23 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn process_tarball_test_repeated_pax_size_mismatch() {
+        let manifest_size = MANIFEST.len().to_string();
+        // The final size matches the tar header, but every size record must match.
+        let tarball = TarballBuilder::new()
+            .add_pax_extensions([
+                ("size", "2048".as_bytes()),
+                ("size", manifest_size.as_bytes()),
+            ])
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_symlink("smuggled", "/etc/issue")
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
+        assert_snapshot!(err, @"mismatched pax and tar header sizes");
+    }
+
+    #[tokio::test]
     async fn test_lib() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
