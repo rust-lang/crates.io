@@ -353,11 +353,59 @@ async fn add_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    if login.contains(':') {
-        let encryption = &app.config.token_encryption;
-        add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
-    } else {
-        invite_user_owner(app, conn, req_user, krate, login).await
+    match Login::parse(login)? {
+        Login::GitHubTeam(team) => {
+            let github = &*app.github;
+            let encryption = &app.config.token_encryption;
+            add_github_team_owner(github, conn, req_user, krate, team, encryption).await
+        }
+        Login::Unprefixed(login) => invite_user_owner(app, conn, req_user, krate, login).await,
+    }
+}
+
+/// Parsed owner login used by the owner endpoints.
+enum Login<'a> {
+    /// GitHub organization team, such as `github:rust-lang:owners`.
+    GitHubTeam(GitHubTeamLogin<'a>),
+    /// User login without a service prefix.
+    Unprefixed(&'a str),
+}
+
+impl<'a> Login<'a> {
+    /// Parses an owner login.
+    fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
+        if !login.contains(':') {
+            return Ok(Self::Unprefixed(login));
+        }
+
+        GitHubTeamLogin::parse(login).map(Self::GitHubTeam)
+    }
+}
+
+/// Parsed GitHub organization team login, such as `github:rust-lang:owners`.
+struct GitHubTeamLogin<'a> {
+    login: &'a str,
+    org: &'a str,
+    team: &'a str,
+}
+
+impl<'a> GitHubTeamLogin<'a> {
+    /// Parses a GitHub organization team login.
+    fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
+        let mut chunks = login.split(':');
+        let team_system = chunks.next().unwrap_or_default();
+        if team_system != "github" {
+            let error = "unknown organization handler, only 'github:org:team' is supported";
+            return Err(bad_request(error));
+        }
+
+        let org = chunks.next().unwrap_or_default();
+        let team = chunks.next().ok_or_else(|| {
+            let error = "missing github team argument; format is github:org:team";
+            bad_request(error)
+        })?;
+
+        Ok(Self { login, org, team })
     }
 }
 
@@ -392,37 +440,21 @@ async fn invite_user_owner(
     }
 }
 
-async fn add_team_owner(
+async fn add_github_team_owner(
     gh_client: &dyn GitHubClient,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
-    login: &str,
+    login: GitHubTeamLogin<'_>,
     encryption: &TokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    // github:rust-lang:owners
-    let mut chunks = login.split(':');
-
-    let team_system = chunks.next().unwrap();
-    if team_system != "github" {
-        let error = "unknown organization handler, only 'github:org:team' is supported";
-        return Err(bad_request(error).into());
-    }
-
-    // unwrap is documented above as part of the calling contract
-    let org = chunks.next().unwrap();
-    let team = chunks.next().ok_or_else(|| {
-        let error = "missing github team argument; format is github:org:team";
-        bad_request(error)
-    })?;
-
     // Always recreate teams to get the most up-to-date GitHub ID
     let team = create_or_update_github_team(
         gh_client,
         conn,
-        &login.to_lowercase(),
-        org,
-        team,
+        &login.login.to_lowercase(),
+        login.org,
+        login.team,
         req_user,
         encryption,
     )
@@ -566,5 +598,40 @@ impl From<OwnerRemoveError> for BoxedAppError {
                 bad_request(format!("could not find owner with login `{login}`"))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{GitHubTeamLogin, Login};
+
+    #[test]
+    fn parses_github_team_login() {
+        let login = GitHubTeamLogin::parse("github:rust-lang:owners").unwrap();
+
+        assert_eq!(login.login, "github:rust-lang:owners");
+        assert_eq!(login.org, "rust-lang");
+        assert_eq!(login.team, "owners");
+    }
+
+    #[test]
+    fn parses_unprefixed_login() {
+        let login = Login::parse("octocat").unwrap();
+
+        let Login::Unprefixed(username) = login else {
+            panic!("expected unprefixed login");
+        };
+        assert_eq!(username, "octocat");
+    }
+
+    #[test]
+    fn parses_github_team_as_login() {
+        let login = Login::parse("github:rust-lang:owners").unwrap();
+
+        let Login::GitHubTeam(team) = login else {
+            panic!("expected GitHub team login");
+        };
+        assert_eq!(team.org, "rust-lang");
+        assert_eq!(team.team, "owners");
     }
 }
