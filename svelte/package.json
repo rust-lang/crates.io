@@ -67,7 +67,7 @@
     "playwright": "1.62.1",
     "sharp": "0.35.4",
     "storybook": "10.5.10",
-    "svelte": "5.56.10",
+    "svelte": "5.57.0",
     "svelte-check": "4.7.6",
     "typescript": "6.0.3",
     "vite": "8.2.2",
