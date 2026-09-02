@@ -10,7 +10,7 @@ use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
 use minijinja::Environment;
 use rand::distr::{Alphanumeric, SampleString};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::LazyLock;
 
@@ -88,7 +88,7 @@ fn render_template(
 }
 
 /// A rendered email ready for delivery.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailMessage {
     pub template_name: String,
     pub subject: String,
