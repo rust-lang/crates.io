@@ -161,8 +161,9 @@ pub async fn create_api_token(
         warn!(
             network.client.ip = client_ip,
             http.headers = ?headers,
-            "Blocked token creation for user `{}` (id: {}) due to disabled flag (token name: `{}`)",
-            user.gh_login, user.id, new.api_token.name
+            "Blocked token creation for crates.io user `{}` (id: {}) \
+            due to disabled flag (token name: `{}`)",
+            user.username, user.id, new.api_token.name
         );
 
         let message = disable_message.clone();

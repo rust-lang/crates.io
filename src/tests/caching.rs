@@ -104,7 +104,7 @@ async fn admin_list_is_not_cached() {
         .await
         .unwrap();
 
-    let response = user.admin_list::<()>(&user.as_model().gh_login).await;
+    let response = user.admin_list::<()>(&user.as_model().username).await;
     response.assert_cache_control("no-store");
 }
 

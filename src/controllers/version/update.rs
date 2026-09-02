@@ -135,8 +135,8 @@ pub async fn perform_version_yank_update(
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };
             warn!(
-                "Admin {} is {action} {}@{}",
-                user.gh_login, krate.name, version.num
+                "Admin crates.io user {} is {action} {}@{}",
+                user.username, krate.name, version.num
             );
         } else {
             return Err(custom(
