@@ -87,9 +87,10 @@ fn render_template(
     EMAIL_ENV.get_template(template_name)?.render(context)
 }
 
+/// A rendered email ready for delivery.
 #[derive(Debug, Clone)]
 pub struct EmailMessage {
-    pub template_name: &'static str,
+    pub template_name: String,
     pub subject: String,
     pub body_text: String,
     pub body_html: String,
@@ -105,7 +106,7 @@ impl EmailMessage {
         let body_html = render_template(&format!("{template_name}/body.html.j2"), &context)?;
 
         Ok(EmailMessage {
-            template_name,
+            template_name: template_name.into(),
             subject,
             body_text,
             body_html,
@@ -453,7 +454,7 @@ mod tests {
 
         let address = "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)";
         let email = EmailMessage {
-            template_name: "test",
+            template_name: "test".into(),
             subject: "test".into(),
             body_text: "test".into(),
             body_html: "<p>test</p>".into(),
@@ -467,7 +468,7 @@ mod tests {
 
         let address = "someone@example.com";
         let email = EmailMessage {
-            template_name: "test",
+            template_name: "test".into(),
             subject: "test".into(),
             body_text: "test".into(),
             body_html: "<p>test</p>".into(),
