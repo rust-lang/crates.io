@@ -91,7 +91,6 @@ async fn create_user(
     let user_id = diesel::insert_into(users::table)
         .values((
             users::name.eq(name),
-            users::gh_login.eq(name),
             users::username.eq(name),
             users::gh_id.eq(account_id as i32),
             users::is_admin.eq(is_admin),

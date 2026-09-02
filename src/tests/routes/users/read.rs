@@ -112,7 +112,7 @@ async fn user_without_github_account() {
         .with_username("foobar")
         .with_display_name("I deleted my github account");
     app.db_new_user_from_builder(builder).await;
-
+    // This user doesn't have a linked record in `oauth_github`
     // The crates.io username still exists
     let url = "/api/v1/users/fOObAr?include=linked_accounts";
     let json: UserShowPublicResponse = anon.get(url).await.good();
