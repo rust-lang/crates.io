@@ -543,7 +543,7 @@ pub enum EncodableOwner {
         login: String,
 
         /// The URL to the user's GitHub profile.
-        #[schema(example = "https://github.com/ghost")]
+        #[schema(example = "https://github.com/ghost", deprecated)]
         url: String,
 
         /// The user's display name.

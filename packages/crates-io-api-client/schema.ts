@@ -1565,6 +1565,7 @@ export interface components {
              */
             name: string | null;
             /**
+             * @deprecated
              * @description The URL to the user's GitHub profile.
              * @example https://github.com/ghost
              */
