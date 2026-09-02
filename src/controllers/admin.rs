@@ -1,7 +1,7 @@
 use crate::{
     app::AppState,
     auth::AuthCheck,
-    models::{OwnerKind, User},
+    models::{OwnerKind, User, users_by_username},
     schema::*,
     util::errors::{AppResult, custom},
     util::no_store,
@@ -79,10 +79,9 @@ pub async fn list(
         ));
     }
 
-    let (user, verified, user_email) = users::table
+    let (user, verified, user_email) = users_by_username(&username)
         .left_join(emails::table)
         .left_join(oauth_github::table)
-        .filter(users::gh_login.eq(username))
         .select((
             User::as_select(),
             emails::verified.nullable(),
