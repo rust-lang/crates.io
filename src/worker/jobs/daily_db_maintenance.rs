@@ -24,7 +24,7 @@ impl BackgroundJob for DailyDbMaintenance {
     /// We only need to keep 90 days of entries in `version_downloads`. Once we have a mechanism to
     /// archive daily download counts and drop historical data, we can drop this task and rely on
     /// auto-vacuum again.
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         let mut conn = env.deadpool.get().await?;
 
         info!("Running VACUUM on version_downloads table");

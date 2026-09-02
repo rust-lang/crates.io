@@ -28,7 +28,7 @@ impl BackgroundJob for SendTokenExpiryNotifications {
     type Context = Arc<Environment>;
 
     #[instrument(skip(env), err)]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         let mut conn = env.deadpool.get().await?;
 
         // Check if the token is about to expire

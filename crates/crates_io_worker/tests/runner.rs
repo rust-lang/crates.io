@@ -60,7 +60,7 @@ async fn jobs_are_locked_when_fetched() -> anyhow::Result<()> {
         const JOB_NAME: &'static str = "test";
         type Context = TestContext;
 
-        async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
             ctx.job_started_barrier.wait().await;
             ctx.assertions_finished_barrier.wait().await;
             Ok(())
@@ -107,7 +107,7 @@ async fn jobs_are_deleted_when_successfully_run() -> anyhow::Result<()> {
         const JOB_NAME: &'static str = "test";
         type Context = ();
 
-        async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, _ctx: Self::Context) -> anyhow::Result<()> {
             Ok(())
         }
     }
@@ -149,7 +149,7 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() -> anyhow:
         const JOB_NAME: &'static str = "test";
         type Context = TestContext;
 
-        async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
             ctx.job_started_barrier.wait().await;
             panic!();
         }
@@ -205,7 +205,7 @@ async fn panicking_in_jobs_updates_retry_counter() -> anyhow::Result<()> {
         const JOB_NAME: &'static str = "test";
         type Context = ();
 
-        async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, _ctx: Self::Context) -> anyhow::Result<()> {
             panic!()
         }
     }
@@ -259,7 +259,7 @@ async fn jobs_can_be_deduplicated() -> anyhow::Result<()> {
         const DEDUPLICATED: bool = true;
         type Context = TestContext;
 
-        async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
             let runs = ctx.runs.fetch_add(1, Ordering::SeqCst);
             if runs == 0 {
                 ctx.job_started_barrier.wait().await;
@@ -329,7 +329,7 @@ async fn enqueueing_a_job_emits_a_notification() -> anyhow::Result<()> {
         const JOB_NAME: &'static str = "test";
         type Context = ();
 
-        async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, _ctx: Self::Context) -> anyhow::Result<()> {
             Ok(())
         }
     }
@@ -379,7 +379,7 @@ async fn workers_wake_up_on_notification() -> anyhow::Result<()> {
         const JOB_NAME: &'static str = "test";
         type Context = TestContext;
 
-        async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
             ctx.job_ran.notify_one();
             Ok(())
         }

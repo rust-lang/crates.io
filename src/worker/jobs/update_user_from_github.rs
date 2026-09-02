@@ -33,7 +33,7 @@ impl BackgroundJob for UpdateUserFromGithub {
     /// For the specified user, queries the GitHub API for the user's current information to see if
     /// their account has been deleted or renamed. Updates the `users` and `oauth_github` tables,
     /// saving the current time in `last_sync` even if the user information hasn't changed.
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let mut conn = ctx.deadpool.get().await?;
 
         // If no oauth_github info with this account id is found, then the record has been deleted

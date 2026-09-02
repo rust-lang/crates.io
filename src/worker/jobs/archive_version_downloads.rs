@@ -51,7 +51,7 @@ impl BackgroundJob for ArchiveVersionDownloads {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Archiving old version downloads…");
 
         let Some(downloads_archive_store) = env.downloads_archive_store.as_ref() else {

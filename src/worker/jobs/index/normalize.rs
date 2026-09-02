@@ -23,7 +23,7 @@ impl BackgroundJob for NormalizeIndex {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Normalizing the index");
 
         let dry_run = self.dry_run;

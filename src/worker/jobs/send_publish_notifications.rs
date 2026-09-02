@@ -31,7 +31,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let version_id = self.version_id;
 
         info!("Sending publish notifications for version {version_id}…");

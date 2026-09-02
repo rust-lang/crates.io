@@ -30,7 +30,7 @@ impl BackgroundJob for SyncUpdatesFeed {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let key = StorageKey::UpdatesFeed;
         let domain = &ctx.config.domain_name;
 

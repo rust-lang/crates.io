@@ -47,7 +47,7 @@ impl BackgroundJob for RenderAndUploadReadme {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(krate.name))]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
         use diesel_async::RunQueryDsl;

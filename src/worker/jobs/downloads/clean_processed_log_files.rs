@@ -20,7 +20,7 @@ impl BackgroundJob for CleanProcessedLogFiles {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         let mut conn = env.deadpool.get().await?;
         Ok(run(&mut conn).await?)
     }

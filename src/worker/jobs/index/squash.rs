@@ -52,7 +52,7 @@ impl BackgroundJob for SquashIndex {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all)]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Squashing the index into a single commit via the GitHub API");
 
         let index_sync_github_app = env

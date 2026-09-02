@@ -23,7 +23,7 @@ impl BackgroundJob for SyncAdmins {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Syncing admins from rust-lang/team repo…");
 
         let repo_admins = ctx.team_repo.get_permission(PERMISSION_NAME).await?.people;

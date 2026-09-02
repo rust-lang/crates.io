@@ -34,7 +34,7 @@ impl BackgroundJob for SyncToGitIndex {
 
     /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
 
         let crate_name = self.krate.clone();
@@ -104,7 +104,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(num_crates = self.crate_names.len()))]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!(commit_message = ?self.commit_message, "Syncing {} crates to git index", self.crate_names.len());
 
         let crate_names = self.crate_names.clone();
@@ -179,7 +179,7 @@ impl BackgroundJob for SyncToSparseIndex {
 
     /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
 
         let crate_name = self.krate.clone();

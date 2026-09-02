@@ -84,7 +84,7 @@ impl BackgroundJob for SendEmailJob {
 
     type Context = AppContext;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         // Job implementation
         ctx.email_service.send(&self.to, &self.subject, &self.body).await?;
         Ok(())

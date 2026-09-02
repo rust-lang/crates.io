@@ -66,7 +66,7 @@ impl BackgroundJob for ArchiveIndexBranch {
     /// snapshot branch in a `TempDir`. The job does not share state with the
     /// long-lived bare clone behind `Environment::lock_index()`.
     #[instrument(skip_all, fields(branch = self.branch))]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         let Some(archive_url) = env.config.index_archive_url.as_ref() else {
             info!("`index_archive_url` not configured, skipping archive push");
             return Ok(());

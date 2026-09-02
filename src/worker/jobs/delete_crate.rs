@@ -26,7 +26,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;
         let og_image_key = StorageKey::for_og_image(name);
         let feed_key = StorageKey::CrateFeed { name };

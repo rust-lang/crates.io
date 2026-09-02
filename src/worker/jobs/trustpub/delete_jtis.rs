@@ -17,7 +17,7 @@ impl BackgroundJob for DeleteExpiredJtis {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let mut conn = ctx.deadpool.get().await?;
 
         diesel::delete(trustpub_used_jtis::table)
