@@ -175,7 +175,7 @@ async fn create_and_add_owner(
 async fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
-    let username = &user.as_model().gh_login;
+    let username = &user.as_model().username;
 
     let krate = CrateBuilder::new("owners_selfremove", user.as_model().id)
         .expect_build(&mut conn)
@@ -210,7 +210,7 @@ async fn owners_can_remove_self() {
 async fn modify_multiple_owners() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
-    let username = &user.as_model().gh_login;
+    let username = &user.as_model().username;
 
     let krate = CrateBuilder::new("owners_multiple", user.as_model().id)
         .expect_build(&mut conn)
@@ -393,7 +393,7 @@ async fn deleted_ownership_isnt_in_owner_user() {
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&conn, &user.gh_login).await.unwrap();
+    krate.owner_remove(&conn, &user.username).await.unwrap();
 
     let json: UserResponse = anon
         .get("/api/v1/crates/foo_my_packages/owner_user")

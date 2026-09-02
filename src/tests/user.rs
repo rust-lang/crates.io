@@ -81,7 +81,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let api_token = assert_ok!(ApiToken::find_by_api_token(&mut conn, &hashed_token).await);
     let user = assert_ok!(User::find(&conn, api_token.user_id).await);
 
-    assert_eq!(user.gh_login, "bar");
+    assert_eq!(user.username, "bar");
     let decrypted_token = encryption.decrypt(user.gh_encrypted_token.as_ref().unwrap())?;
     assert_eq!(decrypted_token.expose_secret(), "bar_token");
 
