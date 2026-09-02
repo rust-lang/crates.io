@@ -60,7 +60,7 @@ impl<'a> UserBuilder<'a> {
     pub fn build(self) -> User {
         User {
             id: 1,
-            gh_login: self.gh_login.into(),
+            gh_login: Some(self.gh_login.into()),
             name: self.display_name.map(ToString::to_string),
             gh_id: 123,
             gh_avatar: None,
@@ -105,7 +105,7 @@ impl<'a> OauthGithubBuilder<'a> {
             user_id: user.id,
             account_id: user.gh_id as i64,
             encrypted_token: &ENCRYPTED_TOKEN,
-            login: &user.gh_login,
+            login: user.gh_login.as_ref().unwrap_or(&user.username),
             avatar: None,
         }
     }
