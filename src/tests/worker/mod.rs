@@ -5,6 +5,7 @@ mod git;
 mod normalize_index;
 mod readmes;
 mod rss;
+mod send_email;
 mod send_publish_notifications;
 mod squash_index;
 mod sync_admins;
