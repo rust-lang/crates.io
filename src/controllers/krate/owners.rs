@@ -21,7 +21,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
-use secrecy::ExposeSecret;
+use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::warn;
@@ -208,15 +208,7 @@ pub async fn add_owners(
                         ));
 
                         if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
-                            let email = EmailMessage::from_template(
-                                "owner_invite",
-                                context! {
-                                    inviter => user.gh_login,
-                                    domain => app.emails.domain,
-                                    crate_name => krate.name,
-                                    token => token.expose_secret()
-                                },
-                            );
+                            let email = render_owner_invite_email(&app, user, &krate, &token);
 
                             match email {
                                 Ok(email_msg) => emails.push((recipient, email_msg)),
@@ -342,6 +334,24 @@ async fn check_owner_permissions(app: &App, user: &User, owners: &[Owner]) -> Ap
         Rights::Publish => Err(forbidden(TEAM_MEMBER_ERROR)),
         Rights::None => Err(forbidden(NOT_OWNER_ERROR)),
     }
+}
+
+/// Renders an owner invitation email with a token for accepting the invitation.
+fn render_owner_invite_email(
+    app: &App,
+    inviter: &User,
+    krate: &Crate,
+    token: &SecretString,
+) -> Result<EmailMessage, minijinja::Error> {
+    EmailMessage::from_template(
+        "owner_invite",
+        context! {
+            inviter => inviter.gh_login,
+            domain => app.emails.domain,
+            crate_name => krate.name,
+            token => token.expose_secret()
+        },
+    )
 }
 
 /// Invites `login` as an owner of this crate, returning the created
