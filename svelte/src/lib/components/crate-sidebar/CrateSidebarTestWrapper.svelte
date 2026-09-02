@@ -3,7 +3,10 @@
   import type { DocsRsStatus } from '$lib/utils/docs-rs';
   import type { PlaygroundCrate } from '$lib/utils/playground';
 
+  import { createClient } from '@crates-io/api-client';
+
   import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
+  import { SessionState, setSession } from '$lib/utils/session.svelte';
   import CrateSidebar from './CrateSidebar.svelte';
 
   type Crate = components['schemas']['Crate'];
@@ -33,6 +36,7 @@
 
   let notifications = new NotificationsState();
   setNotifications(notifications);
+  setSession(new SessionState(createClient({ fetch })));
 </script>
 
 <CrateSidebar

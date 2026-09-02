@@ -16,6 +16,7 @@
   import { formatShortNum } from '$lib/utils/format-short-num';
   import { buildPlaygroundLink } from '$lib/utils/playground';
   import { getPurl } from '$lib/utils/purl';
+  import { getSession } from '$lib/utils/session.svelte';
   import Edition from './Edition.svelte';
   import InstallInstructions from './InstallInstructions.svelte';
   import Link, { simplifyUrl } from './Link.svelte';
@@ -49,6 +50,7 @@
     docsRsStatusPromise,
   }: Props = $props();
 
+  let session = getSession();
   let canHover = new MediaQuery('hover: hover', false);
 
   let showHomepage = $derived.by(() => {
@@ -252,10 +254,12 @@
       <!-- Silently ignore playground loading failures -->
     {/await}
 
-    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-    <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
-      Report crate
-    </a>
+    {#if session.currentUser}
+      <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+      <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
+        Report crate
+      </a>
+    {/if}
   </div>
 </section>
 

@@ -199,8 +199,17 @@ test detail
     });
   });
 
+  test('hides the report crate button when logged out', async ({ page }) => {
+    await page.goto('/crates/nanomsg');
+    await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
+    await expect(page.getByTestId('link-crate-report')).toHaveCount(0);
+  });
+
   test.describe('reporting a crate from crate page', () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, msw }) => {
+      let user = await msw.db.user.create({});
+      await msw.authenticateAs(user);
+
       await page.goto('/crates/nanomsg');
       await page.getByTestId('link-crate-report').click();
       await expect(page).toHaveURL('/support?crate=nanomsg&inquire=crate-violation');
