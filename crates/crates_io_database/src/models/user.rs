@@ -138,7 +138,6 @@ impl User {
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
-    pub gh_login: &'a str,
     pub username: &'a str,
     pub name: Option<&'a str>,
 }
@@ -173,7 +172,6 @@ impl NewUser<'_> {
             .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
             .do_update()
             .set((
-                users::gh_login.eq(excluded(users::gh_login)),
                 users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
             ))

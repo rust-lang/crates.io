@@ -452,8 +452,8 @@ async fn update_user(
     // First, try to update an existing `oauth_github` record with the specified GitHub ID
     // and the associated `users` record.
     //
-    // For now, update user display name, gh_login, and username. Eventually, we will
-    // get rid of `gh_login` and stop syncing `name` and `username` with GitHub.
+    // For now, update user display name and username. Eventually, we will stop syncing `name` and
+    // `username` with GitHub.
     let oauth_github = diesel::update(oauth_github::table)
         .filter(oauth_github::account_id.eq(gh_user.id as i64))
         .set((
@@ -469,8 +469,6 @@ async fn update_user(
         .set((
             users::name.eq(gh_user.name.as_ref()),
             users::username.eq(&gh_user.login),
-            // These fields are soon to be deprecated.
-            users::gh_login.eq(&gh_user.login),
         ))
         .execute(conn)
         .await?;
@@ -493,7 +491,6 @@ async fn create_user(
 ) -> QueryResult<i32> {
     let new_user = NewUser::builder()
         .gh_id(gh_user.id)
-        .gh_login(&gh_user.login)
         .username(&gh_user.login)
         .maybe_name(gh_user.name.as_deref())
         .build();
