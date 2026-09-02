@@ -116,7 +116,7 @@ async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
         .await
         .unwrap();
 
-    let response = cookie.add_named_owner("foo", "SHARED").await;
+    let response = cookie.add_named_owner("foo", "github:SHARED").await;
     assert_snapshot!(response.status(), @"200 OK");
 
     let invitees = invited_user_ids(&mut conn, krate.id).await;
@@ -143,7 +143,7 @@ async fn owner_lookup_error_precedes_duplicate_check() {
         .await
         .unwrap();
 
-    let response = cookie.add_named_owner("foo", "INACTIVE").await;
+    let response = cookie.add_named_owner("foo", "github:INACTIVE").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `INACTIVE`"}]}"#);
     assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
@@ -211,36 +211,36 @@ async fn invite_distinct_login_user(login: &str) -> Response<OwnerResp> {
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_verbatim() {
     let response = invite_distinct_login_user("crates-user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `crates-user`"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_case_insensitive() {
     let response = invite_distinct_login_user("CRATES-USER").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `CRATES-USER`"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_separator_variant() {
     let response = invite_distinct_login_user("crates_user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `crates_user`"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_github_login_verbatim() {
     let response = invite_distinct_login_user("github-user").await;
-    assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `github-user`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_github_login_case_insensitive() {
     let response = invite_distinct_login_user("GITHUB-USER").await;
-    assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `GITHUB-USER`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -627,7 +627,7 @@ async fn invite_with_invalid_email() -> anyhow::Result<()> {
         .await?;
 
     let response = owner
-        .add_named_owners("foo", &["valid_user", "github_user"])
+        .add_named_owners("foo", &["valid_user", "invalid_user"])
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"user `invalid_user` has an invalid email address"}]}"#);

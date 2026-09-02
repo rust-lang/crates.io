@@ -161,11 +161,15 @@ impl TestApp {
         let conn = self.db_conn().await;
 
         let new_user = builder.new_user();
+        let gh_login = new_user.gh_login;
         let email = format!("{}@example.com", new_user.username);
         let id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
 
-        OauthGithubBuilder::for_user(&user).insert(&conn).await;
+        OauthGithubBuilder::for_user(&user)
+            .with_login(gh_login)
+            .insert(&conn)
+            .await;
 
         let new_email = NewEmail::builder()
             .user_id(id)
