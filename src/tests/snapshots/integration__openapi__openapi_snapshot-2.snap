@@ -2935,7 +2935,7 @@ expression: response.json()
                   "properties": {
                     "msg": {
                       "description": "A message describing the result of the operation.",
-                      "example": "user ghost has been invited to be an owner of crate serde",
+                      "example": "Crates.io user ghost has been invited to be an owner of crate serde",
                       "type": "string"
                     },
                     "ok": {
@@ -3095,7 +3095,7 @@ expression: response.json()
                   "properties": {
                     "msg": {
                       "description": "A message describing the result of the operation.",
-                      "example": "user ghost has been invited to be an owner of crate serde",
+                      "example": "Crates.io user ghost has been invited to be an owner of crate serde",
                       "type": "string"
                     },
                     "ok": {
