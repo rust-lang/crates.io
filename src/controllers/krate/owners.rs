@@ -223,14 +223,14 @@ async fn modify_owners(
 
     let user = auth.user();
 
+    let krate = path.load_crate(&conn).await?;
+
+    let owners = krate.owners(&conn).await?;
+
+    check_owner_permissions(&app, user, &owners).await?;
+
     let (msg, emails) = conn
         .transaction(async |conn| {
-            let krate = path.load_crate(conn).await?;
-
-            let owners = krate.owners(conn).await?;
-
-            check_owner_permissions(&app, user, &owners).await?;
-
             // The set of emails to send out after invite processing is complete and
             // the database transaction has committed.
             let mut emails = Vec::with_capacity(logins.len());
