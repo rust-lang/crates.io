@@ -23,7 +23,7 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
-    gh_login: &'a str,
+    pub gh_login: &'a str,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -77,7 +77,6 @@ impl<'a> UserBuilder<'a> {
     pub fn new_user(self) -> NewUser<'a> {
         NewUser::builder()
             .gh_id(next_gh_id())
-            .gh_login(self.gh_login)
             .username(self.username)
             .maybe_name(self.display_name)
             .build()

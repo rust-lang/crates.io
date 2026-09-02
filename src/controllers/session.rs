@@ -493,7 +493,6 @@ async fn create_user(
 ) -> QueryResult<i32> {
     let new_user = NewUser::builder()
         .gh_id(gh_user.id)
-        .gh_login(&gh_user.login)
         .username(&gh_user.login)
         .maybe_name(gh_user.name.as_deref())
         .build();
@@ -521,7 +520,7 @@ async fn create_user(
             let email = EmailMessage::from_template(
                 "user_confirm",
                 context! {
-                    user_name => new_user.gh_login,
+                    user_name => new_user.username,
                     domain => emails.domain,
                     token => token.expose_secret()
                 },
