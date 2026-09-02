@@ -229,14 +229,16 @@ pub trait RequestHelper {
         self.get(url).await.good()
     }
 
-    /// Adds to the specified crate the specified owners.
+    /// Adds the specified owners and runs background jobs to completion.
     async fn add_named_owners<T>(&self, krate_name: &str, owners: &[T]) -> Response<OwnerResp>
     where
         T: serde::Serialize,
     {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.put(&url, body).await
+        let response = self.put(&url, body).await;
+        self.app().run_pending_background_jobs().await;
+        response
     }
 
     /// Adds a single owner to the specified crate.

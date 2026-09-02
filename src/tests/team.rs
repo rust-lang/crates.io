@@ -28,7 +28,7 @@ impl crate::util::MockAnonymousUser {
 /// Tests adding team without `github:`
 #[tokio::test(flavor = "multi_thread")]
 async fn not_github() {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
 
     let mut conn = app.db_conn().await;
 
@@ -45,7 +45,7 @@ async fn not_github() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn weird_name() {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_weird_name", user.as_model().id)
@@ -62,7 +62,7 @@ async fn weird_name() {
 /// Tests adding team without second `:`
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_one_colon", user.as_model().id)
@@ -76,7 +76,7 @@ async fn one_colon() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn add_nonexistent_team() {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_add_nonexistent", user.as_model().id)
@@ -93,7 +93,7 @@ async fn add_nonexistent_team() {
 /// Tests adding a renamed team
 #[tokio::test(flavor = "multi_thread")]
 async fn add_renamed_team() -> anyhow::Result<()> {
-    let (app, anon) = TestApp::init().empty().await;
+    let (app, anon) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -135,7 +135,7 @@ async fn add_renamed_team() -> anyhow::Result<()> {
 /// Tests adding team names with mixed case, when on the team
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_mixed_case() -> anyhow::Result<()> {
-    let (app, anon) = TestApp::init().empty().await;
+    let (app, anon) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -164,7 +164,7 @@ async fn add_team_mixed_case() -> anyhow::Result<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_as_org_owner() -> anyhow::Result<()> {
-    let (app, anon) = TestApp::init().empty().await;
+    let (app, anon) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-org-owner").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -194,7 +194,7 @@ async fn add_team_as_org_owner() -> anyhow::Result<()> {
 /// Tests adding team as owner when not on it
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_as_non_member() {
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-one-team").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -251,7 +251,7 @@ async fn remove_team_as_named_owner() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn remove_team_as_team_owner() {
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
@@ -408,7 +408,7 @@ async fn publish_owned() {
 /// Tests trying to change owners (when only on an owning team)
 #[tokio::test(flavor = "multi_thread")]
 async fn add_owners_as_org_owner() {
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
@@ -436,7 +436,7 @@ async fn add_owners_as_org_owner() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn add_owners_as_team_owner() {
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams

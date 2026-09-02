@@ -10,12 +10,14 @@ use crate::models::{
 };
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
+use crate::worker::jobs::SendEmail;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use http::StatusCode;
@@ -182,12 +184,8 @@ pub async fn add_owners(
 
     check_owner_permissions(&app, user, &owners).await?;
 
-    let (msg, emails) = conn
+    let msg = conn
         .transaction(async |conn| {
-            // The set of emails to send out after invite processing is complete and
-            // the database transaction has committed.
-            let mut emails = Vec::with_capacity(logins.len());
-
             let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
                 let login_test =
@@ -197,10 +195,8 @@ pub async fn add_owners(
                 }
 
                 match add_owner(&app, conn, user, &krate, login).await {
-                    // A user was successfully invited, and they must accept
-                    // the invite, and a best-effort attempt should be made
-                    // to email them the invite token for one-click
-                    // acceptance.
+                    // A user must accept the invitation through their account
+                    // or with the emailed token.
                     Ok(NewOwnerInvite::User(invitee, token)) => {
                         msgs.push(format!(
                             "Crates.io user {} has been invited to be an owner of crate {}",
@@ -208,10 +204,18 @@ pub async fn add_owners(
                         ));
 
                         if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
+                            let recipient = recipient.parse().map_err(|_| {
+                                bad_request(format_args!(
+                                    "user `{}` has an invalid email address",
+                                    invitee.username
+                                ))
+                            })?;
                             let email = render_owner_invite_email(&app, user, &krate, &token);
 
                             match email {
-                                Ok(email_msg) => emails.push((recipient, email_msg)),
+                                Ok(email) => {
+                                    SendEmail::new(recipient, email).enqueue(conn).await?;
+                                }
                                 Err(error) => {
                                     warn!("Failed to render owner invite email template: {error}")
                                 }
@@ -239,17 +243,9 @@ pub async fn add_owners(
                 }
             }
 
-            Ok((msgs.join(","), emails))
+            Ok(msgs.join(","))
         })
         .await?;
-
-    // Send the accumulated invite emails now the database state has
-    // committed.
-    for (recipient, email) in emails {
-        if let Err(error) = app.emails.send(&recipient, email).await {
-            warn!("Failed to send owner invite email to {recipient}: {error}");
-        }
-    }
 
     Ok(Json(ModifyResponse { msg, ok: true }))
 }
