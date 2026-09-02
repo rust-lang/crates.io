@@ -2907,10 +2907,12 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nTo disambiguate between crates.io and GitHub usernames, use\nthe `crates.io:username` or `github:username` prefix.",
                     "example": [
                       "octocat",
-                      "github:rust-lang:owners"
+                      "github:rust-lang:owners",
+                      "crates.io:some_user",
+                      "github:other_user"
                     ],
                     "items": {
                       "type": "string"
@@ -3067,10 +3069,12 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).\n\nTo disambiguate between crates.io and GitHub usernames, use\nthe `crates.io:username` or `github:username` prefix.",
                     "example": [
                       "octocat",
-                      "github:rust-lang:owners"
+                      "github:rust-lang:owners",
+                      "crates.io:some_user",
+                      "github:other_user"
                     ],
                     "items": {
                       "type": "string"

@@ -393,7 +393,10 @@ async fn deleted_ownership_isnt_in_owner_user() {
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&conn, &user.gh_login).await.unwrap();
+    krate
+        .owner_remove_with_username(&conn, &user.username)
+        .await
+        .unwrap();
 
     let json: UserResponse = anon
         .get("/api/v1/crates/foo_my_packages/owner_user")

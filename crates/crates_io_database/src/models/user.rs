@@ -77,6 +77,10 @@ pub struct User {
     pub name: Option<String>,
     pub gh_id: i32,
     pub gh_login: String,
+    // This is the same as gh_login, but reads from oauth_github instead.
+    // Can rename to `gh_login` or something more appropriate when gh_login is removed from this struct.
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_username: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = oauth_github::encrypted_token.nullable())]
@@ -216,6 +220,20 @@ pub struct OauthGithub {
     pub user_id: i32,
 }
 
+impl OauthGithub {
+    pub async fn find_by_login(
+        mut conn: &AsyncPgConnection,
+        login: &str,
+    ) -> QueryResult<OauthGithub> {
+        oauth_github::table
+            .filter(canon_username(oauth_github::login).eq(canon_username(login)))
+            .filter(oauth_github::account_id.ne(-1))
+            .order(oauth_github::account_id.desc())
+            .first(&mut conn)
+            .await
+    }
+}
+
 /// Represents a new crates.io user to GitHub user OAuth link to be inserted into the
 /// `oauth_github` table.
 #[derive(Insertable, Debug, Builder)]
@@ -243,5 +261,55 @@ impl NewOauthGithub<'_> {
             .await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crates_io_test_db::TestDatabase;
+
+    async fn insert_user(
+        conn: &AsyncPgConnection,
+        username: &str,
+        gh_login: &str,
+        gh_id: i32,
+    ) -> QueryResult<i32> {
+        let user_id = NewUser::builder()
+            .gh_id(gh_id)
+            .gh_login(gh_login)
+            .username(username)
+            .build()
+            .insert(conn)
+            .await?;
+
+        NewOauthGithub::builder()
+            .account_id(gh_id as i64)
+            .encrypted_token(&[])
+            .login(gh_login)
+            .user_id(user_id)
+            .build()
+            .insert(conn)
+            .await?;
+
+        Ok(user_id)
+    }
+
+    #[tokio::test]
+    async fn test_find_by_login_returns_highest_account_id_account() {
+        let test_db = TestDatabase::new();
+        let conn = test_db.async_connect().await;
+
+        insert_user(&conn, "alice", "alice", 100).await.unwrap();
+        let user_id = insert_user(&conn, "alice", "Alice", 200).await.unwrap();
+
+        // case-insensitive checks
+        for login in ["alice", "Alice", "ALICE"] {
+            let user = OauthGithub::find_by_login(&conn, login).await.unwrap();
+
+            assert_eq!(user.account_id, 200);
+            assert_eq!(user.user_id, user_id);
+            assert_eq!(user.login, "Alice");
+        }
     }
 }
