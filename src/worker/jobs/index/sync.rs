@@ -37,7 +37,7 @@ impl BackgroundJob for SyncToGitIndex {
     async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
 
-        let crate_name = self.krate.clone();
+        let crate_name = self.krate;
         let mut conn = env.deadpool.get().await?;
 
         let new = get_index_data(&crate_name, &mut conn)
@@ -107,8 +107,8 @@ impl BackgroundJob for BulkSyncToGitIndex {
     async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!(commit_message = ?self.commit_message, "Syncing {} crates to git index", self.crate_names.len());
 
-        let crate_names = self.crate_names.clone();
-        let commit_message = self.commit_message.clone();
+        let crate_names = self.crate_names;
+        let commit_message = self.commit_message;
 
         let handle = Handle::current();
         spawn_blocking(move || {
@@ -182,17 +182,17 @@ impl BackgroundJob for SyncToSparseIndex {
     async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
 
-        let crate_name = self.krate.clone();
+        let crate_name = self.krate;
         let mut conn = env.deadpool.get().await?;
 
         let content = get_index_data(&crate_name, &mut conn)
             .await
             .context("Failed to get index data")?;
 
-        let future = env.storage.sync_index(&self.krate, content);
+        let future = env.storage.sync_index(&crate_name, content);
         future.await.context("Failed to sync index data")?;
 
-        let path = Repository::relative_index_file_for_url(&self.krate);
+        let path = Repository::relative_index_file_for_url(&crate_name);
 
         if let Some(fastly) = env.fastly() {
             let domain_name = &env.config.domain_name;

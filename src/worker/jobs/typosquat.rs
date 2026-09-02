@@ -34,7 +34,7 @@ impl BackgroundJob for CheckTyposquat {
 
     #[instrument(skip(env), err)]
     async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let crate_name = self.name.clone();
+        let crate_name = self.name;
 
         let mut conn = env.deadpool.get().await?;
 

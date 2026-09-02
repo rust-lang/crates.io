@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, instrument, warn};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {
     version_id: i32,
     text: String,
@@ -54,13 +54,12 @@ impl BackgroundJob for RenderAndUploadReadme {
 
         info!(version_id = ?self.version_id, "Rendering README");
 
-        let job = self.clone();
         let rendered = spawn_blocking(move || {
             text_to_html(
-                &job.text,
-                &job.readme_path,
-                job.base_url.as_deref(),
-                job.pkg_path_in_vcs.as_ref(),
+                &self.text,
+                &self.readme_path,
+                self.base_url.as_deref(),
+                self.pkg_path_in_vcs.as_ref(),
             )
         })
         .await?;
@@ -71,26 +70,26 @@ impl BackgroundJob for RenderAndUploadReadme {
 
         let mut conn = env.deadpool.get().await?;
         conn.transaction(async |conn| {
-            match Version::record_readme_rendering(job.version_id, conn).await {
+            match Version::record_readme_rendering(self.version_id, conn).await {
                 Ok(_) => {}
                 Err(DatabaseError(DatabaseErrorKind::ForeignKeyViolation, ..)) => {
                     warn!(
                         "Skipping README rendering recording for version {}: version not found",
-                        job.version_id
+                        self.version_id
                     );
                     return Ok(());
                 }
                 Err(err) => {
                     warn!(
                         "Failed to record README rendering for version {}: {err}",
-                        job.version_id,
+                        self.version_id,
                     );
                     return Err(err.into());
                 }
             }
 
             let result = versions::table
-                .find(job.version_id)
+                .find(self.version_id)
                 .inner_join(crates::table)
                 .select((crates::name, versions::num))
                 .first::<(String, String)>(conn)
@@ -100,7 +99,7 @@ impl BackgroundJob for RenderAndUploadReadme {
             let Some((crate_name, vers)) = result else {
                 warn!(
                     "Skipping README rendering for version {}: version not found",
-                    job.version_id
+                    self.version_id
                 );
                 return Ok(());
             };
