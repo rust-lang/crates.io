@@ -8,7 +8,7 @@ use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
@@ -329,14 +329,10 @@ async fn modify_owners(
 async fn check_owner_permissions(app: &App, user: &User, owners: &[Owner]) -> AppResult<()> {
     match Rights::get(user, &*app.github, owners, &app.config.token_encryption).await? {
         Rights::Full => Ok(()),
-        Rights::Publish => Err(custom(
-            StatusCode::FORBIDDEN,
+        Rights::Publish => Err(forbidden(
             "team members don't have permission to modify owners",
         )),
-        Rights::None => Err(custom(
-            StatusCode::FORBIDDEN,
-            "only owners have permission to modify owners",
-        )),
+        Rights::None => Err(forbidden("only owners have permission to modify owners")),
     }
 }
 
