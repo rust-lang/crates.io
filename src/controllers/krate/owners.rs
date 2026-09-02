@@ -127,7 +127,7 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ModifyResponse {
     /// A message describing the result of the operation.
-    #[schema(example = "user ghost has been invited to be an owner of crate serde")]
+    #[schema(example = "Crates.io user ghost has been invited to be an owner of crate serde")]
     pub msg: String,
 
     #[schema(example = true)]
@@ -203,8 +203,8 @@ pub async fn add_owners(
                     // acceptance.
                     Ok(NewOwnerInvite::User(invitee, token)) => {
                         msgs.push(format!(
-                            "user {} has been invited to be an owner of crate {}",
-                            invitee.gh_login, krate.name,
+                            "Crates.io user {} has been invited to be an owner of crate {}",
+                            invitee.username, krate.name,
                         ));
 
                         if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
@@ -228,8 +228,9 @@ pub async fn add_owners(
 
                     // This user has a pending invite.
                     Err(OwnerAddError::AlreadyInvited(user)) => msgs.push(format!(
-                        "user {} already has a pending invitation to be an owner of crate {}",
-                        user.gh_login, krate.name
+                        "Crates.io user {} already has a pending invitation \
+                        to be an owner of crate {}",
+                        user.username, krate.name
                     )),
 
                     // An opaque error occurred.
