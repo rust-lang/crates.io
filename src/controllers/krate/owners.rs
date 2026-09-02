@@ -229,22 +229,7 @@ async fn modify_owners(
 
             let owners = krate.owners(conn).await?;
 
-            match Rights::get(user, &*app.github, &owners, &app.config.token_encryption).await? {
-                Rights::Full => {}
-                // Yes!
-                Rights::Publish => {
-                    return Err(custom(
-                        StatusCode::FORBIDDEN,
-                        "team members don't have permission to modify owners",
-                    ));
-                }
-                Rights::None => {
-                    return Err(custom(
-                        StatusCode::FORBIDDEN,
-                        "only owners have permission to modify owners",
-                    ));
-                }
-            }
+            check_owner_permissions(&app, user, &owners).await?;
 
             // The set of emails to send out after invite processing is complete and
             // the database transaction has committed.
@@ -338,6 +323,21 @@ async fn modify_owners(
     }
 
     Ok(Json(ModifyResponse { msg, ok: true }))
+}
+
+/// Checks whether the user has permission to modify the crate's owners.
+async fn check_owner_permissions(app: &App, user: &User, owners: &[Owner]) -> AppResult<()> {
+    match Rights::get(user, &*app.github, owners, &app.config.token_encryption).await? {
+        Rights::Full => Ok(()),
+        Rights::Publish => Err(custom(
+            StatusCode::FORBIDDEN,
+            "team members don't have permission to modify owners",
+        )),
+        Rights::None => Err(custom(
+            StatusCode::FORBIDDEN,
+            "only owners have permission to modify owners",
+        )),
+    }
 }
 
 /// Invites `login` as an owner of this crate, returning the created
