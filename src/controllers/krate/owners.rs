@@ -8,7 +8,7 @@ use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom};
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
@@ -17,7 +17,7 @@ use chrono::Utc;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
@@ -157,7 +157,7 @@ pub async fn add_owners(
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<ModifyResponse>> {
-    modify_owners(app, path.name, parts, body, true).await
+    modify_owners(app, path, parts, body, true).await
 }
 
 /// Removes crate owners.
@@ -183,7 +183,7 @@ pub async fn remove_owners(
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<ModifyResponse>> {
-    modify_owners(app, path.name, parts, body, false).await
+    modify_owners(app, path, parts, body, false).await
 }
 
 #[derive(Deserialize, utoipa::ToSchema)]
@@ -199,7 +199,7 @@ pub struct ChangeOwnersRequest {
 
 async fn modify_owners(
     app: AppState,
-    crate_name: String,
+    path: CratePath,
     parts: Parts,
     body: ChangeOwnersRequest,
     add: bool,
@@ -217,7 +217,7 @@ async fn modify_owners(
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
-        .for_crate(&crate_name)
+        .for_crate(&path.name)
         .check(&parts, &mut conn)
         .await?;
 
@@ -225,11 +225,7 @@ async fn modify_owners(
 
     let (msg, emails) = conn
         .transaction(async |conn| {
-            let krate: Crate = Crate::by_name(&crate_name)
-                .first(conn)
-                .await
-                .optional()?
-                .ok_or_else(|| crate_not_found(&crate_name))?;
+            let krate = path.load_crate(conn).await?;
 
             let owners = krate.owners(conn).await?;
 
