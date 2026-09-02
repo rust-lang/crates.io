@@ -327,12 +327,13 @@ async fn modify_owners(
 
 /// Checks whether the user has permission to modify the crate's owners.
 async fn check_owner_permissions(app: &App, user: &User, owners: &[Owner]) -> AppResult<()> {
+    const TEAM_MEMBER_ERROR: &str = "team members don't have permission to modify owners";
+    const NOT_OWNER_ERROR: &str = "only owners have permission to modify owners";
+
     match Rights::get(user, &*app.github, owners, &app.config.token_encryption).await? {
         Rights::Full => Ok(()),
-        Rights::Publish => Err(forbidden(
-            "team members don't have permission to modify owners",
-        )),
-        Rights::None => Err(forbidden("only owners have permission to modify owners")),
+        Rights::Publish => Err(forbidden(TEAM_MEMBER_ERROR)),
+        Rights::None => Err(forbidden(NOT_OWNER_ERROR)),
     }
 }
 
