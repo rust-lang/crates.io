@@ -3,7 +3,6 @@ use crate::config;
 use lettre::address::Envelope;
 use lettre::message::Mailbox;
 use lettre::message::MultiPart;
-use lettre::message::header::ContentType;
 use lettre::transport::file::AsyncFileTransport;
 use lettre::transport::smtp::AsyncSmtpTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
@@ -119,7 +118,6 @@ pub struct Emails {
     backend: EmailBackend,
     pub domain: String,
     from: Address,
-    html_emails_enabled: bool,
 }
 
 const DEFAULT_FROM: &str = "noreply@crates.io";
@@ -156,15 +154,10 @@ impl Emails {
 
         let domain = config.domain_name.clone();
 
-        let html_emails_enabled = dotenvy::var("HTML_EMAILS_ENABLED")
-            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-            .unwrap_or(false);
-
         Self {
             backend,
             domain,
             from,
-            html_emails_enabled,
         }
     }
 
@@ -175,7 +168,6 @@ impl Emails {
             backend: EmailBackend::Memory(AsyncStubTransport::new_ok()),
             domain: "crates.io".into(),
             from: DEFAULT_FROM.parse().unwrap(),
-            html_emails_enabled: true,
         }
     }
 
@@ -222,11 +214,7 @@ impl Emails {
             .from(from)
             .subject(subject);
 
-        let message = if self.html_emails_enabled {
-            builder.multipart(MultiPart::alternative_plain_html(body_text, body_html))?
-        } else {
-            builder.header(ContentType::TEXT_PLAIN).body(body_text)?
-        };
+        let message = builder.multipart(MultiPart::alternative_plain_html(body_text, body_html))?;
 
         Ok(message)
     }
