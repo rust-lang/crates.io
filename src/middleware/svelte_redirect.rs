@@ -2,7 +2,7 @@
 //!
 //! While the SvelteKit frontend was being developed, it was served at
 //! `/svelte/`. Now that Svelte is the default frontend at `/`, this
-//! middleware 307-redirects any leftover `/svelte/...` URL (bookmarks,
+//! middleware 308-redirects any leftover `/svelte/...` URL (bookmarks,
 //! external links, in-flight HTML pages cached by browsers/CDNs) back
 //! to the canonical un-prefixed location.
 
@@ -16,7 +16,7 @@ pub async fn redirect(request: Request, next: Next) -> Response {
     let Some(target) = redirect_target(request.uri().path(), request.uri().query()) else {
         return next.run(request).await;
     };
-    Redirect::temporary(&target).into_response()
+    Redirect::permanent(&target).into_response()
 }
 
 /// Computes the redirect target for a request to a `/svelte/...` path.
