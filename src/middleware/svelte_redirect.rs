@@ -39,6 +39,10 @@ fn redirect_target(path: &str, query: Option<&str>) -> Option<String> {
         return None;
     }
 
+    if new_path == "/api" || new_path.starts_with("/api/") {
+        return None;
+    }
+
     Some(match query {
         Some(query) => format!("{new_path}?{query}"),
         None => new_path.to_owned(),
@@ -78,6 +82,12 @@ mod tests {
                 Some("/crates/tokio?foo=1"),
             ),
             ("/svelte", Some("x=y"), Some("/?x=y")),
+            // API paths
+            ("/svelte/api", None, None),
+            ("/svelte/api/", None, None),
+            ("/svelte/api/v1/crates", Some("q=tokio"), None),
+            ("/svelte/apiculture", None, Some("/apiculture")),
+            ("/svelte/crates/api", None, Some("/crates/api")),
             // Non-matching paths
             ("/", None, None),
             ("/crates/tokio", None, None),
