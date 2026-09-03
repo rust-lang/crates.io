@@ -31,7 +31,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Processing messages from the CDN log queue…");
 
         let queue = build_queue(&ctx.config.cdn_log_queue);

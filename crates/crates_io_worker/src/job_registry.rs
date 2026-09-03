@@ -57,7 +57,7 @@ mod tests {
         impl BackgroundJob for TestJob {
             const JOB_NAME: &'static str = "test";
             type Context = ();
-            async fn run(&self, _: Self::Context) -> anyhow::Result<()> {
+            async fn run(self, _: Self::Context) -> anyhow::Result<()> {
                 Ok(())
             }
         }

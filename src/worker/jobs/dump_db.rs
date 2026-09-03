@@ -38,12 +38,12 @@ impl BackgroundJob for DumpDb {
 
     /// Creates CSV dumps of the public information in the database, wraps them in a
     /// tarball and uploads to S3.
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         let db_config = &env.config.db;
         let db_pool_config = db_config.replica.as_ref().unwrap_or(&db_config.primary);
         let database_url = db_pool_config.url.clone();
         let postgres_bin_dir = env.config.postgres_bin_dir.clone();
-        let schema = self.schema.clone();
+        let schema = self.schema;
 
         let archives = spawn_blocking(move || {
             let directory = DumpDirectory::create(postgres_bin_dir)?;

@@ -61,7 +61,7 @@ impl BackgroundJob for InvalidateCdns {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         // We won't parallelise: most crate deletions are for new crates with one (or very few)
         // versions, so the number of invalidations is likely to be small.
         if let Some(fastly) = ctx.fastly()

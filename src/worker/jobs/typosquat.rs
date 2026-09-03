@@ -33,8 +33,8 @@ impl BackgroundJob for CheckTyposquat {
     type Context = Arc<Environment>;
 
     #[instrument(skip(env), err)]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        let crate_name = self.name.clone();
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+        let crate_name = self.name;
 
         let mut conn = env.deadpool.get().await?;
 

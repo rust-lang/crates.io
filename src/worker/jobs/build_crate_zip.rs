@@ -38,7 +38,7 @@ impl BackgroundJob for BuildCrateZip {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(version_id = ?self.version_id))]
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         let version_id = self.version_id;
 
         info!("Starting zip build… (version_id={version_id})");

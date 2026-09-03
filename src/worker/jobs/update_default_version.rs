@@ -27,7 +27,7 @@ impl BackgroundJob for UpdateDefaultVersion {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let crate_id = self.crate_id;
 
         info!("Updating default version for crate {crate_id}");

@@ -117,7 +117,7 @@ impl BackgroundJob for ProcessCloudfrontInvalidationQueue {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all)]
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let Some(cloudfront) = ctx.cloudfront() else {
             warn!("CloudFront not configured, skipping queue processing");
             return Ok(());

@@ -38,7 +38,7 @@ impl BackgroundJob for SyncCrateFeed {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;
         let domain = &ctx.config.domain_name;
 

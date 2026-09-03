@@ -48,7 +48,7 @@ impl BackgroundJob for ProcessCdnLog {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         // The store is rebuilt for each run because we don't want to assume
         // that all log files live in the same AWS region or bucket, and those
         // two pieces are necessary for the store construction.

@@ -22,7 +22,7 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
         info!("Indexing old version downloads…");
 
         let Some(downloads_archive_store) = env.downloads_archive_store.as_ref() else {
