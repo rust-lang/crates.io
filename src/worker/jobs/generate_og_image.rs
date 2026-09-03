@@ -179,7 +179,7 @@ async fn fetch_user_owners(
         .filter(crate_owners::crate_id.eq(crate_id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .filter(crate_owners::deleted.eq(false))
-        .select((users::gh_login, oauth_github::avatar.nullable()))
+        .select((users::username, oauth_github::avatar.nullable()))
         .load(&mut conn)
         .await
 }
