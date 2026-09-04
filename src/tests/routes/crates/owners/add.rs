@@ -1,11 +1,11 @@
-use crate::OwnerResp;
 use crate::builders::{CrateBuilder, UserBuilder};
 use crate::owners::expire_invitation;
 use crate::util::github::next_gh_id;
 use crate::util::{RequestHelper, Response, TestApp};
+use crate::{OwnerResp, new_team};
 use crates_io::models::CrateOwner;
 use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::schema::{crate_owner_invitations, emails};
+use crates_io::schema::{crate_owner_invitations, emails, teams};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
@@ -88,9 +88,9 @@ async fn reused_github_login_invites_highest_github_id() {
     assert_eq!(invitees, [newer.as_model().id]);
 }
 
-/// The legacy duplicate check rejects a reused login before resolving its user.
+/// An older owner's cached GitHub login does not block inviting a different user.
 #[tokio::test(flavor = "multi_thread")]
-async fn reused_github_login_rejected_when_older_account_owns_crate() {
+async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
 
@@ -117,11 +117,67 @@ async fn reused_github_login_rejected_when_older_account_owns_crate() {
         .unwrap();
 
     let response = cookie.add_named_owner("foo", "SHARED").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`SHARED` is already an owner"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let invitees = invited_user_ids(&mut conn, krate.id).await;
-    assert!(invitees.is_empty());
+    assert_eq!(invitees, [newer.as_model().id]);
+}
+
+/// An owner excluded from user lookup produces a lookup error, not a duplicate error.
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_lookup_error_precedes_duplicate_check() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let inactive = UserBuilder::new().with_username("inactive").with_gh_id(-1);
+    let inactive = app.db_new_user_from_builder(inactive).await;
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(inactive.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "INACTIVE").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `INACTIVE`"}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
+}
+
+/// User and team IDs belong to separate namespaces.
+#[tokio::test(flavor = "multi_thread")]
+async fn invite_user_with_same_id_as_team_owner() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let invitee = app.db_new_user("invitee").await;
+    let invitee_id = invitee.as_model().id;
+
+    diesel::insert_into(teams::table)
+        .values((teams::id.eq(invitee_id), new_team("github:org:team")))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .team_id(invitee_id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "invitee").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(invited_user_ids(&mut conn, krate.id).await, [invitee_id]);
 }
 
 /// Returns the invited user IDs for a crate in ascending order.

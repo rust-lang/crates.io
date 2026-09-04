@@ -382,6 +382,18 @@ async fn add_existing_team() {
         ret.text(),
         r#"{"errors":[{"detail":"`github:test_org:bananas` is already an owner"}]}"#
     );
+
+    let response = token
+        .add_named_owner("best_crate", "github:TEST_ORG:BANANAS")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`github:TEST_ORG:BANANAS` is already an owner"}]}"#);
+
+    let response = token
+        .add_named_owner("best_crate", "GITHUB:test_org:bananas")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

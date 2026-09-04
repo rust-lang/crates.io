@@ -188,13 +188,7 @@ pub async fn add_owners(
         .transaction(async |conn| {
             let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
-                let login_test =
-                    |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
-                if owners.iter().any(login_test) {
-                    return Err(bad_request(format_args!("`{login}` is already an owner")));
-                }
-
-                match add_owner(&app, conn, user, &krate, login).await {
+                match add_owner(&app, conn, user, &krate, &owners, login).await {
                     // A user must accept the invitation through their account
                     // or with the emailed token.
                     Ok(NewOwnerInvite::User(invitee, token)) => {
@@ -358,10 +352,16 @@ async fn add_owner(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
+    owners: &[Owner],
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     match Login::parse(login)? {
         Login::GitHubTeam(team) => {
+            let login_test = |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+            if owners.iter().any(login_test) {
+                return Err(bad_request(format_args!("`{login}` is already an owner")).into());
+            }
+
             let github = &*app.github;
             let encryption = &app.config.token_encryption;
             add_github_team_owner(github, conn, req_user, krate, team, encryption).await
@@ -371,6 +371,12 @@ async fn add_owner(
             let user = user.ok_or_else(|| {
                 bad_request(format_args!("could not find user with login `{login}`"))
             })?;
+
+            let is_owner =
+                |owner: &Owner| matches!(owner, Owner::User(owner) if owner.id == user.id);
+            if owners.iter().any(is_owner) {
+                return Err(bad_request(format_args!("`{login}` is already an owner")).into());
+            }
 
             invite_user_owner(app, conn, req_user, krate, user).await
         }
