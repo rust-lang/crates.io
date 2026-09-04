@@ -386,6 +386,7 @@ async fn add_owner(
 }
 
 /// Parsed owner login used by the owner endpoints.
+#[derive(Debug)]
 enum Login<'a> {
     /// GitHub organization team, such as `github:rust-lang:owners`.
     GitHubTeam(GitHubTeamLogin<'a>),
@@ -405,6 +406,7 @@ impl<'a> Login<'a> {
 }
 
 /// Parsed GitHub organization team login, such as `github:rust-lang:owners`.
+#[derive(Debug)]
 struct GitHubTeamLogin<'a> {
     login: &'a str,
     org: &'a str,
