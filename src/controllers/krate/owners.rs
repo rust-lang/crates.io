@@ -366,7 +366,14 @@ async fn add_owner(
             let encryption = &app.config.token_encryption;
             add_github_team_owner(github, conn, req_user, krate, team, encryption).await
         }
-        Login::Unprefixed(login) => invite_user_owner(app, conn, req_user, krate, login).await,
+        Login::Unprefixed(login) => {
+            let user = User::find_by_login(conn, login).await.optional()?;
+            let user = user.ok_or_else(|| {
+                bad_request(format_args!("could not find user with login `{login}`"))
+            })?;
+
+            invite_user_owner(app, conn, req_user, krate, user).await
+        }
     }
 }
 
@@ -416,18 +423,14 @@ impl<'a> GitHubTeamLogin<'a> {
     }
 }
 
+/// Creates an owner invitation for a resolved user.
 async fn invite_user_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
-    login: &str,
+    user: User,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    let user = User::find_by_login(conn, login)
-        .await
-        .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
-
     // Users are invited and must accept before being added
     let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
     let invite = NewCrateOwnerInvitation {
