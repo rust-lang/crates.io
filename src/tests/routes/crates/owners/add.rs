@@ -31,7 +31,7 @@ async fn test_cargo_invite_owners() {
     // version of cargo
     assert_eq!(
         json.msg,
-        "user cilantro has been invited to be an owner of crate guacamole"
+        "Crates.io user cilantro has been invited to be an owner of crate guacamole"
     )
 }
 
@@ -49,7 +49,7 @@ async fn owner_change_via_cookie() {
 
     let response = cookie.add_named_owner(&krate.name, &user2.username).await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 async fn invite_distinct_login_user(login: &str) -> Response<OwnerResp> {
@@ -94,14 +94,14 @@ async fn unprefixed_crates_io_username_separator_variant() {
 async fn unprefixed_github_login_verbatim() {
     let response = invite_distinct_login_user("github-user").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user github-user has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_github_login_case_insensitive() {
     let response = invite_distinct_login_user("GITHUB-USER").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user github-user has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -181,7 +181,7 @@ async fn owner_change_via_token() {
 
     let response = token.add_named_owner(&krate.name, &user2.username).await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -201,7 +201,7 @@ async fn owner_change_via_change_owner_token() {
 
     let response = token.add_named_owner(&krate.name, &user2.username).await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -222,7 +222,7 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
 
     let response = token.add_named_owner(&krate.name, &user2.username).await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -298,7 +298,7 @@ async fn test_owner_change_with_legacy_field() {
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user2 has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -352,7 +352,7 @@ async fn invite_already_invited_user() {
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
     assert_eq!(app.emails().await.len(), 1);
@@ -360,7 +360,7 @@ async fn invite_already_invited_user() {
     // Then invite the user a second time, the message should point out the user is already invited
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user already has a pending invitation to be an owner of crate crate_name","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user invited_user already has a pending invitation to be an owner of crate crate_name","ok":true}"#);
 
     // Check that no new email is sent after the second invitation
     assert_eq!(app.emails().await.len(), 1);
@@ -382,7 +382,7 @@ async fn invite_with_existing_expired_invite() {
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
     assert_eq!(app.emails().await.len(), 1);
@@ -393,7 +393,7 @@ async fn invite_with_existing_expired_invite() {
     // Then invite the user a second time, a new invite is created as the old one expired
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check that the email for the second invite was sent
     assert_eq!(app.emails().await.len(), 2);

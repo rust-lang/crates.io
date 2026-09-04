@@ -62,7 +62,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     // Once that removal works, it should be possible to add the new account as an owner
     let response = someone_else.add_named_owner("crate1", "foo").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user foo has been invited to be an owner of crate crate1","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user foo has been invited to be an owner of crate crate1","ok":true}"#);
 
     Ok(())
 }
