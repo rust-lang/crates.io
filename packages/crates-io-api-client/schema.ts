@@ -359,7 +359,13 @@ export interface paths {
         };
         /** Lists crate owners. */
         get: operations["list_owners"];
-        /** Adds crate owners. */
+        /**
+         * Adds crate owners.
+         * @description Supported owner names:
+         *     - `username` for a GitHub user.
+         *     - `crates.io:username` for a crates.io user.
+         *     - `github:org:team` for a GitHub organization team.
+         */
         put: operations["add_owners"];
         post?: never;
         /** Removes crate owners. */
