@@ -1,23 +1,23 @@
 //! All routes related to managing owners of a crate
 
-use crate::controllers::helpers::authorization::Rights;
-use crate::controllers::krate::CratePath;
-use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Owner, PublicUser, Team, User};
+use crate::controllers::{helpers::authorization::Rights, krate::CratePath};
 use crate::models::{
-    CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
-    krate::NewOwnerInvite, token::EndpointScope,
+    Crate, CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam, Owner,
+    PublicUser, Team, User,
+    krate::{NewOwnerInvite, OwnerRemoveError},
+    token::EndpointScope,
+    users_by_username,
 };
+use crate::schema::oauth_github;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
-use crate::{App, app::AppState};
-use crate::{auth::AuthCheck, email::EmailMessage};
+use crate::{App, app::AppState, auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
@@ -127,7 +127,7 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ModifyResponse {
     /// A message describing the result of the operation.
-    #[schema(example = "user ghost has been invited to be an owner of crate serde")]
+    #[schema(example = "Crates.io user ghost has been invited to be an owner of crate serde")]
     pub msg: String,
 
     #[schema(example = true)]
@@ -203,8 +203,8 @@ pub async fn add_owners(
                     // acceptance.
                     Ok(NewOwnerInvite::User(invitee, token)) => {
                         msgs.push(format!(
-                            "user {} has been invited to be an owner of crate {}",
-                            invitee.gh_login, krate.name,
+                            "Crates.io user {} has been invited to be an owner of crate {}",
+                            invitee.username, krate.name,
                         ));
 
                         if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
@@ -228,8 +228,9 @@ pub async fn add_owners(
 
                     // This user has a pending invite.
                     Err(OwnerAddError::AlreadyInvited(user)) => msgs.push(format!(
-                        "user {} already has a pending invitation to be an owner of crate {}",
-                        user.gh_login, krate.name
+                        "Crates.io user {} already has a pending invitation \
+                        to be an owner of crate {}",
+                        user.username, krate.name
                     )),
 
                     // An opaque error occurred.
@@ -426,7 +427,10 @@ async fn invite_user_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    let user = User::find_by_login(conn, login)
+    let user = users_by_username(login)
+        .left_join(oauth_github::table)
+        .select(User::as_select())
+        .first(conn)
         .await
         .optional()?
         .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
@@ -536,13 +540,16 @@ pub async fn create_or_update_github_team(
     let org_id = team.organization.id;
     let gh_login = &req_user.gh_login;
 
-    let is_team_member = gh_client
-        .team_membership(org_id, team.id, gh_login, &auth)
-        .await?
-        .is_some_and(|m| m.is_active());
+    let can_add_team = if let Some(gh_login) = gh_login {
+        let is_team_member = gh_client
+            .team_membership(org_id, team.id, gh_login, &auth)
+            .await?
+            .is_some_and(|m| m.is_active());
 
-    let can_add_team =
-        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &auth).await?;
+        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &auth).await?
+    } else {
+        false
+    };
 
     if !can_add_team {
         return Err(custom(

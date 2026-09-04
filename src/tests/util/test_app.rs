@@ -160,12 +160,17 @@ impl TestApp {
     pub async fn db_new_user_from_builder(&self, builder: UserBuilder<'_>) -> MockCookieUser {
         let conn = self.db_conn().await;
 
+        let gh_login = builder.gh_login.to_string();
+
         let new_user = builder.new_user();
         let email = format!("{}@example.com", new_user.username);
         let id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
 
-        OauthGithubBuilder::for_user(&user).insert(&conn).await;
+        OauthGithubBuilder::for_user(&user)
+            .with_login(&gh_login)
+            .insert(&conn)
+            .await;
 
         let new_email = NewEmail::builder()
             .user_id(id)

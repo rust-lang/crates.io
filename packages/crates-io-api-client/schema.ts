@@ -3313,7 +3313,7 @@ export interface operations {
                     "application/json": {
                         /**
                          * @description A message describing the result of the operation.
-                         * @example user ghost has been invited to be an owner of crate serde
+                         * @example Crates.io user ghost has been invited to be an owner of crate serde
                          */
                         msg: string;
                         /** @example true */
@@ -3378,7 +3378,7 @@ export interface operations {
                     "application/json": {
                         /**
                          * @description A message describing the result of the operation.
-                         * @example user ghost has been invited to be an owner of crate serde
+                         * @example Crates.io user ghost has been invited to be an owner of crate serde
                          */
                         msg: string;
                         /** @example true */

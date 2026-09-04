@@ -250,7 +250,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
         .add_named_owners("owners_multiple", &["user2", "user3"])
         .await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate owners_multiple,user user3 has been invited to be an owner of crate owners_multiple","ok":true}"#);
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user2 has been invited to be an owner of crate owners_multiple,Crates.io user user3 has been invited to be an owner of crate owners_multiple","ok":true}"#);
 
     assert_snapshot!(app.emails_snapshot().await);
 
@@ -804,7 +804,6 @@ async fn inactive_users_dont_get_invitations() {
 
     NewUser::builder()
         .gh_id(-1)
-        .gh_login(invited_gh_login)
         .username(invited_gh_login)
         .build()
         .insert(&conn)
