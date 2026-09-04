@@ -304,8 +304,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))(vitest@4.1.11)
       zimmerframe:
-        specifier: 1.1.4
-        version: 1.1.4
+        specifier: 1.1.5
+        version: 1.1.5
 
 packages:
 
@@ -4887,6 +4887,9 @@ packages:
   zimmerframe@1.1.4:
     resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
 
+  zimmerframe@1.1.5:
+    resolution: {integrity: sha512-msJxIvYDYcoNL+PJsu+7qmpDWsYmAxTY+2TNYXXF0hzBzBk0BMecOqDOG/EckUoKCuKwObfbugIl8QpqHDXeFA==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -6193,7 +6196,7 @@ snapshots:
       svelte: 5.57.0(@typescript-eslint/types@8.69.0)
       svelte-ast-print: 0.4.2(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
-      zimmerframe: 1.1.4
+      zimmerframe: 1.1.5
     transitivePeerDependencies:
       - babel-plugin-macros
 
@@ -6301,7 +6304,7 @@ snapshots:
       svelte-parse-markup: 0.1.5(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
       vite-imagetools: 9.0.3
-      zimmerframe: 1.1.4
+      zimmerframe: 1.1.5
     transitivePeerDependencies:
       - rollup
 
@@ -9668,5 +9671,7 @@ snapshots:
   zimmerframe@1.1.2: {}
 
   zimmerframe@1.1.4: {}
+
+  zimmerframe@1.1.5: {}
 
   zwitch@2.0.4: {}
