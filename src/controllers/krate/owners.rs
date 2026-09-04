@@ -3,7 +3,7 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Email, Owner, PublicUser, Team, User, users_by_username};
+use crate::models::{Crate, Email, OauthGithub, Owner, PublicUser, Team, User, users_by_username};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
@@ -142,6 +142,7 @@ pub struct ModifyResponse {
 /// Supported owner names:
 /// - `username` for a GitHub user.
 /// - `crates.io:username` for a crates.io user.
+/// - `github:username` for a GitHub user.
 /// - `github:org:team` for a GitHub organization team.
 #[utoipa::path(
     put,
@@ -386,6 +387,14 @@ async fn add_owner(
                 bad_request(message)
             })?
         }
+        Login::GitHub(username) => {
+            let account = OauthGithub::find_by_login(conn, username).await;
+            let account = account.optional()?.ok_or_else(|| {
+                let message = format!("could not find GitHub user with login `{username}`");
+                bad_request(message)
+            })?;
+            PublicUser::find(conn, account.user_id).await?
+        }
         Login::Unprefixed(username) => PublicUser::find_by_login(conn, username)
             .await
             .optional()?
@@ -407,6 +416,8 @@ enum Login<'a> {
     GitHubTeam(GitHubTeamLogin<'a>),
     /// crates.io username, such as `crates.io:octocat`.
     CratesIo(&'a str),
+    /// GitHub username, such as `github:octocat`.
+    GitHub(&'a str),
     /// User login without a service prefix.
     Unprefixed(&'a str),
 }
@@ -430,7 +441,10 @@ impl<'a> Login<'a> {
                 "unknown organization handler, only 'github:org:team' is supported"
             }
             ("crates.io", Some(username), None, _) => return Ok(Self::CratesIo(username)),
-            (_, Some(_), None, _) => "unsupported user prefix: expected crates.io:username",
+            ("github", Some(username), None, _) => return Ok(Self::GitHub(username)),
+            (_, Some(_), None, _) => {
+                "unsupported user prefix: expected github:username or crates.io:username"
+            }
             (username, None, None, _) => return Ok(Self::Unprefixed(username)),
         };
 
@@ -666,7 +680,8 @@ mod tests {
         let extra_component = "owner logins must have at most three components";
         let unknown_org_handler =
             "unknown organization handler, only 'github:org:team' is supported";
-        let unknown_user_prefix = "unsupported user prefix: expected crates.io:username";
+        let unknown_user_prefix =
+            "unsupported user prefix: expected github:username or crates.io:username";
         let cases = [
             ("", empty_component),
             ("github:", empty_component),
