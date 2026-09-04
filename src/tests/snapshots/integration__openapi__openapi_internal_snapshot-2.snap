@@ -3783,7 +3783,7 @@ expression: response.json()
         ]
       },
       "put": {
-        "description": "Supported owner names:\n- `username` for a GitHub user.\n- `crates.io:username` for a crates.io user.\n- `github:org:team` for a GitHub organization team.",
+        "description": "Supported owner names:\n- `username` for a GitHub user.\n- `crates.io:username` for a crates.io user.\n- `github:username` for a GitHub user.\n- `github:org:team` for a GitHub organization team.",
         "operationId": "add_owners",
         "parameters": [
           {
