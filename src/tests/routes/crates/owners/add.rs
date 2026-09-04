@@ -1,11 +1,13 @@
 use crate::OwnerResp;
 use crate::builders::{CrateBuilder, UserBuilder};
 use crate::owners::expire_invitation;
+use crate::util::github::next_gh_id;
 use crate::util::{RequestHelper, Response, TestApp};
+use crates_io::models::CrateOwner;
 use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::schema::emails;
+use crates_io::schema::{crate_owner_invitations, emails};
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
 
 // This is testing Cargo functionality! ! !
@@ -53,6 +55,84 @@ async fn owner_change_via_cookie() {
     let response = cookie.add_named_owner(&krate.name, &user2.username).await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
+}
+
+/// Reused GitHub logins select the highest GitHub ID, regardless of crates.io ID.
+#[tokio::test(flavor = "multi_thread")]
+async fn reused_github_login_invites_highest_github_id() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let older_gh_id = next_gh_id();
+    let newer = UserBuilder::new()
+        .with_username("newer")
+        .with_gh_login("SHARED");
+    let newer = app.db_new_user_from_builder(newer).await;
+    let older = UserBuilder::new()
+        .with_username("older")
+        .with_gh_login("shared")
+        .with_gh_id(older_gh_id);
+    let older = app.db_new_user_from_builder(older).await;
+
+    assert!(newer.as_model().gh_id > older.as_model().gh_id);
+    assert!(newer.as_model().id < older.as_model().id);
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "shared").await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert_eq!(invitees, [newer.as_model().id]);
+}
+
+/// The legacy duplicate check rejects a reused login before resolving its user.
+#[tokio::test(flavor = "multi_thread")]
+async fn reused_github_login_rejected_when_older_account_owns_crate() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let older = UserBuilder::new()
+        .with_username("older")
+        .with_gh_login("shared");
+    let older = app.db_new_user_from_builder(older).await;
+    let newer = UserBuilder::new()
+        .with_username("newer")
+        .with_gh_login("SHARED");
+    let newer = app.db_new_user_from_builder(newer).await;
+    assert!(newer.as_model().gh_id > older.as_model().gh_id);
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(older.as_model().id)
+        .created_by(cookie.as_model().id)
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "SHARED").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`SHARED` is already an owner"}]}"#);
+
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert!(invitees.is_empty());
+}
+
+/// Returns the invited user IDs for a crate in ascending order.
+async fn invited_user_ids(conn: &mut AsyncPgConnection, crate_id: i32) -> Vec<i32> {
+    crate_owner_invitations::table
+        .filter(crate_owner_invitations::crate_id.eq(crate_id))
+        .select(crate_owner_invitations::invited_user_id)
+        .order(crate_owner_invitations::invited_user_id)
+        .load(conn)
+        .await
+        .unwrap()
 }
 
 async fn invite_distinct_login_user(login: &str) -> Response<OwnerResp> {
