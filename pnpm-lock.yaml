@@ -70,8 +70,8 @@ importers:
         specifier: 74.0.0
         version: 74.0.0(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
       globals:
-        specifier: 17.11.0
-        version: 17.11.0
+        specifier: 17.12.0
+        version: 17.12.0
       msw:
         specifier: 2.15.0
         version: 2.15.0(@types/node@24.13.3)(typescript@6.0.3)
@@ -3209,8 +3209,8 @@ packages:
     resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
     engines: {node: '>=18'}
 
-  globals@17.11.0:
-    resolution: {integrity: sha512-Z2I8hM+PbJDXQDq3Icgpzv+mPdwr68iZUU9d5WW4FuXfDUQfkZaZuvjMv42/5crNyw154+9+VWXbYrUgDXbxNw==}
+  globals@17.12.0:
+    resolution: {integrity: sha512-cezEd/DTyyht9cvSSURyygXPfy04GtWO/5e6ZPvH7fCtjKz9PYOmuawphw1Ctd1f6C+5JypXfGD7ahNMXvevBA==}
     engines: {node: '>=18'}
 
   got@11.8.6:
@@ -7637,7 +7637,7 @@ snapshots:
       entities: 8.0.0
       eslint: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
       find-up-simple: 1.0.1
-      globals: 17.11.0
+      globals: 17.12.0
       indent-string: 5.0.0
       is-builtin-module: 5.0.0
       is-identifier: 1.1.0
@@ -7870,7 +7870,7 @@ snapshots:
 
   globals@16.5.0: {}
 
-  globals@17.11.0: {}
+  globals@17.12.0: {}
 
   got@11.8.6:
     dependencies:
