@@ -188,13 +188,7 @@ pub async fn add_owners(
         .transaction(async |conn| {
             let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
-                let login_test =
-                    |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
-                if owners.iter().any(login_test) {
-                    return Err(bad_request(format_args!("`{login}` is already an owner")));
-                }
-
-                match add_owner(&app, conn, user, &krate, login).await {
+                match add_owner(&app, conn, user, &krate, &owners, login).await {
                     // A user must accept the invitation through their account
                     // or with the emailed token.
                     Ok(NewOwnerInvite::User(invitee, token)) => {
@@ -358,15 +352,35 @@ async fn add_owner(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
+    owners: &[Owner],
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     match Login::parse(login)? {
         Login::GitHubTeam(team) => {
+            let lowercase_login = login.to_lowercase();
+            let login_test = |owner: &Owner| owner.login().to_lowercase() == lowercase_login;
+            if owners.iter().any(login_test) {
+                return Err(bad_request(format_args!("`{login}` is already an owner")).into());
+            }
+
             let github = &*app.github;
             let encryption = &app.config.token_encryption;
             add_github_team_owner(github, conn, req_user, krate, team, encryption).await
         }
-        Login::Unprefixed(login) => invite_user_owner(app, conn, req_user, krate, login).await,
+        Login::Unprefixed(login) => {
+            let user = User::find_by_login(conn, login).await.optional()?;
+            let user = user.ok_or_else(|| {
+                bad_request(format_args!("could not find user with login `{login}`"))
+            })?;
+
+            let is_owner =
+                |owner: &Owner| matches!(owner, Owner::User(owner) if owner.id == user.id);
+            if owners.iter().any(is_owner) {
+                return Err(bad_request(format_args!("`{login}` is already an owner")).into());
+            }
+
+            invite_user_owner(app, conn, req_user, krate, user).await
+        }
     }
 }
 
@@ -416,18 +430,14 @@ impl<'a> GitHubTeamLogin<'a> {
     }
 }
 
+/// Creates an owner invitation for a resolved user.
 async fn invite_user_owner(
     app: &App,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
-    login: &str,
+    user: User,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    let user = User::find_by_login(conn, login)
-        .await
-        .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
-
     // Users are invited and must accept before being added
     let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
     let invite = NewCrateOwnerInvitation {

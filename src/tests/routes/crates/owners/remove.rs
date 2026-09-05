@@ -1,7 +1,7 @@
 use crate::OwnerResp;
 use crate::builders::{CrateBuilder, UserBuilder};
 use crate::util::{RequestHelper, Response, TestApp};
-use crates_io::models::CrateOwner;
+use crates_io::models::{CrateOwner, User};
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use insta::assert_snapshot;
 
@@ -102,6 +102,38 @@ async fn test_remove_uppercase_user() {
     let response = cookie.remove_named_owner("foo", "USER2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+}
+
+/// One GitHub login can remove multiple owners while leaving another user owner.
+#[tokio::test(flavor = "multi_thread")]
+async fn reused_github_login_removes_all_matching_owners() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    for (username, login) in [("older", "shared"), ("newer", "SHARED")] {
+        let user = UserBuilder::new()
+            .with_username(username)
+            .with_gh_login(login);
+        let user = app.db_new_user_from_builder(user).await;
+        CrateOwner::builder()
+            .crate_id(krate.id)
+            .user_id(user.as_model().id)
+            .created_by(cookie.as_model().id)
+            .build()
+            .insert(&conn)
+            .await
+            .unwrap();
+    }
+
+    let response = cookie.remove_named_owner("foo", "shared").await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let owners = User::owning(&krate, &conn).await.unwrap();
+    let owner_ids: Vec<_> = owners.iter().map(|owner| owner.id).collect();
+    assert_eq!(owner_ids, [cookie.as_model().id]);
 }
 
 async fn remove_distinct_login_user(login: &str) -> (Response<OwnerResp>, usize) {

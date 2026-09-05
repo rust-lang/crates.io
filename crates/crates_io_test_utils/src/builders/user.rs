@@ -24,6 +24,7 @@ pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
     gh_login: &'a str,
+    gh_id: Option<i32>,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -34,6 +35,7 @@ impl<'a> UserBuilder<'a> {
             username: "octocat",
             display_name: None,
             gh_login: "octocat",
+            gh_id: None,
         }
     }
 
@@ -57,12 +59,20 @@ impl<'a> UserBuilder<'a> {
         Self { gh_login, ..self }
     }
 
+    /// Sets the legacy GitHub account ID.
+    pub fn with_gh_id(self, gh_id: i32) -> Self {
+        Self {
+            gh_id: Some(gh_id),
+            ..self
+        }
+    }
+
     pub fn build(self) -> User {
         User {
             id: 1,
             gh_login: self.gh_login.into(),
             name: self.display_name.map(ToString::to_string),
-            gh_id: 123,
+            gh_id: self.gh_id.unwrap_or(123),
             gh_avatar: None,
             gh_encrypted_token: None,
             account_lock_reason: None,
@@ -76,7 +86,7 @@ impl<'a> UserBuilder<'a> {
 
     pub fn new_user(self) -> NewUser<'a> {
         NewUser::builder()
-            .gh_id(next_gh_id())
+            .gh_id(self.gh_id.unwrap_or_else(next_gh_id))
             .gh_login(self.gh_login)
             .username(self.username)
             .maybe_name(self.display_name)
