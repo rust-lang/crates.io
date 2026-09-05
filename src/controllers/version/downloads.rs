@@ -7,7 +7,7 @@ use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
 use crate::storage::StorageKey;
-use crate::util::errors::AppResult;
+use crate::util::errors::{AppResult, bad_request};
 use crate::util::{RequestUtils, redirect};
 use crate::views::EncodableVersionDownload;
 use axum::Json;
@@ -105,7 +105,9 @@ pub async fn get_version_downloads(
         .before_date
         .unwrap_or_else(|| Utc::now().date_naive());
 
-    let cutoff_start_date = cutoff_end_date - Duration::days(89);
+    let cutoff_start_date = cutoff_end_date
+        .checked_sub_signed(Duration::days(89))
+        .ok_or_else(|| bad_request("before_date is too early"))?;
 
     let version_downloads = VersionDownload::belonging_to(&version)
         .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
