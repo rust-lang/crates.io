@@ -173,7 +173,7 @@ async fn create_and_add_owner(
 /// a user can still remove their own login as an owner.
 #[tokio::test(flavor = "multi_thread")]
 async fn owners_can_remove_self() {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let username = &user.as_model().username;
 
@@ -208,7 +208,7 @@ async fn owners_can_remove_self() {
 /// Verifies consistency when adding or removing multiple owners in a single request.
 #[tokio::test(flavor = "multi_thread")]
 async fn modify_multiple_owners() -> anyhow::Result<()> {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let username = &user.as_model().username;
 
@@ -359,7 +359,7 @@ async fn check_ownership_one_crate() -> anyhow::Result<()> {
 /// when that team is already a crate owner.
 #[tokio::test(flavor = "multi_thread")]
 async fn add_existing_team() {
-    let (app, _, user, token) = TestApp::init().with_token().await;
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
 
@@ -438,7 +438,7 @@ async fn api_token_cannot_list_invitations_v1() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_v1() {
-    let (app, _, owner, token) = TestApp::init().with_token().await;
+    let (app, _, owner, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
@@ -465,7 +465,7 @@ async fn invitations_list_v1() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_does_not_include_expired_invites_v1() {
-    let (app, _, owner, token) = TestApp::init().with_token().await;
+    let (app, _, owner, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
@@ -504,7 +504,7 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
 /// inserted into the table for the given crate.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_invitation() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
     let invited_user = app.db_new_user("user_bar").await;
@@ -539,7 +539,7 @@ async fn test_accept_invitation() {
 /// the invitations table.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_decline_invitation() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
     let invited_user = app.db_new_user("user_bar").await;
@@ -570,7 +570,7 @@ async fn test_decline_invitation() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_invitation_by_mail() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     let owner = owner.as_model();
@@ -627,7 +627,7 @@ pub async fn expire_invitation(app: &TestApp, crate_id: i32) {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_expired_invitation() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
     let invited_user = app.db_new_user("demo_user").await;
@@ -669,7 +669,7 @@ async fn test_accept_expired_invitation() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_decline_expired_invitation() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
     let invited_user = app.db_new_user("demo_user").await;
@@ -702,7 +702,7 @@ async fn test_decline_expired_invitation() {
 /// invitation if they don't have a verified email address.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_invitation_without_verified_email() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
@@ -747,7 +747,7 @@ async fn test_accept_invitation_without_verified_email() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_expired_invitation_by_mail() {
-    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     let owner = owner.as_model();
@@ -794,7 +794,7 @@ async fn test_accept_expired_invitation_by_mail() {
 async fn inactive_users_dont_get_invitations() {
     use crates_io::models::NewUser;
 
-    let (app, _, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, _, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
@@ -828,7 +828,7 @@ async fn inactive_users_dont_get_invitations() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn highest_gh_id_is_most_recent_account_we_know_of() {
-    let (app, _, owner, owner_token) = TestApp::init().with_token().await;
+    let (app, _, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 

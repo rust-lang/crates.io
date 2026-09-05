@@ -30,7 +30,7 @@ async fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvita
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list() {
-    let (app, _, owner, token) = TestApp::init().with_token().await;
+    let (app, _, owner, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     let _crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
@@ -89,7 +89,7 @@ async fn invitation_list() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_does_not_include_expired_invites() {
-    let (app, _, owner, token) = TestApp::init().with_token().await;
+    let (app, _, owner, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("invited_user").await;
 
@@ -123,7 +123,7 @@ async fn invitations_list_does_not_include_expired_invites() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_paginated() {
-    let (app, _, owner, token) = TestApp::init().with_token().await;
+    let (app, _, owner, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("invited_user").await;
 

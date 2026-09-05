@@ -3,6 +3,9 @@ use crate::builders::{CrateBuilder, UserBuilder};
 use crate::owners::expire_invitation;
 use crate::util::{RequestHelper, Response, TestApp};
 use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::schema::emails;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
 
 // This is testing Cargo functionality! ! !
@@ -10,7 +13,7 @@ use insta::assert_snapshot;
 // which call the `PUT /crates/{crate_id}/owners` route
 #[tokio::test(flavor = "multi_thread")]
 async fn test_cargo_invite_owners() {
-    let (app, _, owner) = TestApp::init().with_user().await;
+    let (app, _, owner) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
 
     let new_user = app.db_new_user("cilantro").await;
@@ -338,7 +341,7 @@ async fn test_owner_change_with_invalid_json() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invite_already_invited_user() {
-    let (app, _, _, owner) = TestApp::init().with_token().await;
+    let (app, _, _, owner) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     app.db_new_user("invited_user").await;
@@ -368,7 +371,7 @@ async fn invite_already_invited_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invite_with_existing_expired_invite() {
-    let (app, _, _, owner) = TestApp::init().with_token().await;
+    let (app, _, _, owner) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     app.db_new_user("invited_user").await;
@@ -441,7 +444,7 @@ async fn test_unknown_team() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn max_invites_per_request() {
-    let (app, _, _, owner) = TestApp::init().with_token().await;
+    let (app, _, _, owner) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     CrateBuilder::new("crate_name", owner.as_model().user_id)
@@ -462,10 +465,45 @@ async fn max_invites_per_request() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"too many invites for this request - maximum 10"}]}"#);
 }
 
+/// Invalid recipient addresses reject the request without exposing the address.
+#[tokio::test(flavor = "multi_thread")]
+async fn invite_with_invalid_email() -> anyhow::Result<()> {
+    let (app, _, owner) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", owner.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+    app.db_new_user("valid_user").await;
+    let invitee = UserBuilder::new()
+        .with_username("invalid_user")
+        .with_gh_login("github_user");
+    let invitee = app.db_new_user_from_builder(invitee).await;
+    let email = emails::table.filter(emails::user_id.eq(invitee.as_model().id));
+    diesel::update(email)
+        .set(emails::email.eq("private address@example.com"))
+        .execute(&mut conn)
+        .await?;
+    // The email-change trigger clears `verified`, so set it in a separate update.
+    diesel::update(email)
+        .set(emails::verified.eq(true))
+        .execute(&mut conn)
+        .await?;
+
+    let response = owner
+        .add_named_owners("foo", &["valid_user", "github_user"])
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"user `invalid_user` has an invalid email address"}]}"#);
+
+    assert!(app.emails().await.is_empty());
+    Ok(())
+}
+
 /// Asserts that emails are only sent if the request succeeds.
 #[tokio::test(flavor = "multi_thread")]
 async fn no_invite_emails_for_txn_rollback() {
-    let (app, _, _, token) = TestApp::init().with_token().await;
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
     CrateBuilder::new("crate_name", token.as_model().user_id)

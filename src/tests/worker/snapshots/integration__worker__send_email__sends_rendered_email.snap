@@ -1,0 +1,22 @@
+---
+source: src/tests/worker/send_email.rs
+expression: app.emails_snapshot().await
+---
+To: recipient@example.com
+From: crates.io <noreply@crates.io>
+Subject: Prepared subject
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Prepared plain text
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<p>Prepared HTML</p>
+--[boundary]--
