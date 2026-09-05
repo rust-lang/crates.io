@@ -290,7 +290,12 @@ pub async fn remove_owners(
 
     conn.transaction(async |conn| {
         for login in &body.owners {
-            krate.owner_remove(conn, login).await?;
+            match Login::parse(login)? {
+                Login::GitHubTeam(login) => {
+                    krate.owner_remove_with_team_name(conn, login.login).await?
+                }
+                Login::Unprefixed(login) => krate.owner_remove_with_username(conn, login).await?,
+            }
         }
         if User::owning(&krate, conn).await?.is_empty() {
             return Err(bad_request(
