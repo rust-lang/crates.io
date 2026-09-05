@@ -1372,7 +1372,10 @@ async fn crates_by_user_id_not_including_deleted_owners() -> anyhow::Result<()> 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove_with_username(&conn, "foo").await.unwrap();
+    krate
+        .owner_remove_with_username(&conn, "foo")
+        .await
+        .unwrap();
 
     for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);
