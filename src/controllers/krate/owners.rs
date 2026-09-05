@@ -357,7 +357,8 @@ async fn add_owner(
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     match Login::parse(login)? {
         Login::GitHubTeam(team) => {
-            let login_test = |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+            let lowercase_login = login.to_lowercase();
+            let login_test = |owner: &Owner| owner.login().to_lowercase() == lowercase_login;
             if owners.iter().any(login_test) {
                 return Err(bad_request(format_args!("`{login}` is already an owner")).into());
             }
