@@ -48,7 +48,7 @@
     "eslint": "10.9.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.2.2",
-    "eslint-plugin-storybook": "10.5.10",
+    "eslint-plugin-storybook": "10.6.0",
     "eslint-plugin-svelte": "3.23.0",
     "eslint-plugin-unicorn": "74.0.0",
     "globals": "17.12.0",
