@@ -221,7 +221,7 @@ pub async fn create_api_token(
     if let Some(recipient) = recipient {
         let context = context! {
             token_name => &new.api_token.name,
-            user_name => &user.gh_login,
+            user_name => &user.username,
             domain => app.emails.domain,
         };
 

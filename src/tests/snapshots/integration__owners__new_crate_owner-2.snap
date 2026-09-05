@@ -72,7 +72,7 @@ Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 
-foo has invited you to become an owner of the crate foo_owner!
+Crates.io user foo has invited you to become an owner of the crate foo_owner!
 
 Visit https://crates.io/accept-invite/[invite-token] to accept this invitation.
 
@@ -85,7 +85,7 @@ Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 
-<p>foo has invited you to become an owner of the crate <strong>foo_owner</strong>!</p>
+<p>Crates.io user foo has invited you to become an owner of the crate <strong>foo_owner</strong>!</p>
 
 <p>Visit <a href="https://crates.io/accept-invite/[invite-token]">https://crates.io/accept-invite/[invite-token]</a> to accept this invitation.</p>
 

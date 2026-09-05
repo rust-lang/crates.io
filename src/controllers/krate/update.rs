@@ -98,7 +98,7 @@ async fn update_inner(
         .filter(crate_owners::crate_id.eq(krate.id))
         .filter(crate_owners::deleted.eq(false))
         .filter(crate_owners::owner_kind.eq(crate::models::OwnerKind::User))
-        .select((users::id, users::gh_login, emails::email, emails::verified))
+        .select((users::id, users::username, emails::email, emails::verified))
         .load::<(i32, String, String, bool)>(conn)
         .await?;
 
@@ -132,10 +132,10 @@ async fn update_inner(
         );
 
         // Send email notifications to all crate owners
-        for (_, gh_login, email_address, email_verified) in &user_owners {
+        for (_, username, email_address, email_verified) in &user_owners {
             if *email_verified {
                 let email = TrustpubOnlyChangedEmail {
-                    recipient: gh_login,
+                    recipient: username,
                     auth_user: user,
                     krate,
                     trustpub_only,
@@ -195,7 +195,7 @@ async fn update_inner(
 
 #[derive(Serialize)]
 struct TrustpubOnlyChangedEmail<'a> {
-    /// The GitHub login of the email recipient.
+    /// The Crates.io username of the email recipient.
     recipient: &'a str,
     /// The user who changed the setting.
     auth_user: &'a User,

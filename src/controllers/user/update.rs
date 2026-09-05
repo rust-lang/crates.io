@@ -82,7 +82,7 @@ pub async fn update_user(
                 let email = EmailMessage::from_template(
                     "unsubscribe_notifications",
                     context! {
-                        user_name => user.gh_login,
+                        user_name => user.username,
                         domain => state.emails.domain
                     },
                 );
@@ -127,7 +127,7 @@ pub async fn update_user(
         let email = EmailMessage::from_template(
             "user_confirm",
             context! {
-                user_name => user.gh_login,
+                user_name => user.username,
                 domain => state.emails.domain,
                 token => token.expose_secret()
             },
