@@ -48,8 +48,6 @@
     - button "nanomsg = \"0.6.1\""
     - heading "Owners" [level=2]
     - list
-    - link "Report crate":
-      - /url: /support?crate=nanomsg&inquire=crate-violation
   - heading "Stats Overview" [level=3]
   - text: /\d+,\d+ Downloads all time 2 Versions published/
   - heading /Downloads over the last \d+ days/ [level=4]
