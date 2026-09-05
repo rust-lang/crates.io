@@ -1,0 +1,1 @@
+ALTER TABLE users ALTER COLUMN gh_login SET NOT NULL;
