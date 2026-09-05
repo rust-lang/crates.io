@@ -62,7 +62,7 @@ async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
         .expect_build(&mut conn)
         .await;
     krate
-        .owner_remove(&conn, &user_model.username)
+        .owner_remove_with_username(&conn, &user_model.username)
         .await
         .unwrap();
 

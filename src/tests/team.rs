@@ -501,7 +501,10 @@ async fn crates_by_team_id_not_including_deleted_owners() -> anyhow::Result<()> 
         .expect_build(&mut conn)
         .await;
     add_team_to_crate(&t, &krate, user.id, &mut conn).await?;
-    krate.owner_remove(&conn, &t.login).await.unwrap();
+    krate
+        .owner_remove_with_team_name(&conn, &t.login)
+        .await
+        .unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 0);

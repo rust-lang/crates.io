@@ -213,7 +213,53 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    pub async fn owner_remove(
+    pub async fn owner_remove_with_username(
+        &self,
+        mut conn: &AsyncPgConnection,
+        login: &str,
+    ) -> Result<(), OwnerRemoveError> {
+        let query = diesel::sql_query(
+            r#"WITH crate_owners_with_login AS (
+                SELECT
+                    crate_owners.*,
+                    CASE WHEN crate_owners.owner_kind = 1 THEN
+                         teams.login
+                    ELSE
+                         users.gh_login
+                    END AS login
+                FROM crate_owners
+                LEFT JOIN teams
+                    ON crate_owners.owner_id = teams.id
+                    AND crate_owners.owner_kind = 1
+                LEFT JOIN users
+                    ON crate_owners.owner_id = users.id
+                    AND crate_owners.owner_kind = 0
+                WHERE crate_owners.crate_id = $1
+                    AND crate_owners.deleted = false
+            )
+            UPDATE crate_owners
+            SET deleted = true
+            FROM crate_owners_with_login
+            WHERE crate_owners.crate_id = crate_owners_with_login.crate_id
+                AND crate_owners.owner_id = crate_owners_with_login.owner_id
+                AND crate_owners.owner_kind = crate_owners_with_login.owner_kind
+                AND lower(crate_owners_with_login.login) = lower($2);"#,
+        );
+
+        let num_updated_rows = query
+            .bind::<Integer, _>(self.id)
+            .bind::<Text, _>(login)
+            .execute(&mut conn)
+            .await?;
+
+        if num_updated_rows == 0 {
+            return Err(OwnerRemoveError::not_found(login));
+        }
+
+        Ok(())
+    }
+
+    pub async fn owner_remove_with_team_name(
         &self,
         mut conn: &AsyncPgConnection,
         login: &str,
