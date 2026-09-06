@@ -261,18 +261,11 @@ impl Crate {
             r#"WITH crate_owners_with_login AS (
                 SELECT
                     crate_owners.*,
-                    CASE WHEN crate_owners.owner_kind = 1 THEN
-                         teams.login
-                    ELSE
-                         users.gh_login
-                    END AS login
+                    teams.login
                 FROM crate_owners
-                LEFT JOIN teams
+                JOIN teams
                     ON crate_owners.owner_id = teams.id
                     AND crate_owners.owner_kind = 1
-                LEFT JOIN users
-                    ON crate_owners.owner_id = users.id
-                    AND crate_owners.owner_kind = 0
                 WHERE crate_owners.crate_id = $1
                     AND crate_owners.deleted = false
             )
