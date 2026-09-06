@@ -521,7 +521,7 @@ async fn create_user(
             let email = EmailMessage::from_template(
                 "user_confirm",
                 context! {
-                    user_name => new_user.gh_login,
+                    user_name => new_user.username,
                     domain => emails.domain,
                     token => token.expose_secret()
                 },

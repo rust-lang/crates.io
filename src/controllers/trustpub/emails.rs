@@ -11,7 +11,7 @@ pub enum ConfigType<'a> {
 
 #[derive(serde::Serialize)]
 pub struct ConfigCreatedEmail<'a> {
-    /// The GitHub login of the email recipient.
+    /// The Crates.io username of the email recipient.
     pub recipient: &'a str,
     /// The user who created the trusted publishing configuration.
     pub auth_user: &'a User,

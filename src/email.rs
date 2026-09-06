@@ -386,7 +386,7 @@ mod tests {
 
         insta::assert_snapshot!(content, @"
 
-        <script>alert('xss');</script> has invited you to become an owner of the crate example-crate!
+        Crates.io user <script>alert('xss');</script> has invited you to become an owner of the crate example-crate!
 
         Visit https://crates.io/accept-invite/abc123 to accept this invitation.
 
@@ -408,7 +408,7 @@ mod tests {
 
         insta::assert_snapshot!(content, @r#"
 
-        <p>&lt;script&gt;alert(&#x27;xss&#x27;);&lt;&#x2f;script&gt; has invited you to become an owner of the crate <strong>example-crate</strong>!</p>
+        <p>Crates.io user &lt;script&gt;alert(&#x27;xss&#x27;);&lt;&#x2f;script&gt; has invited you to become an owner of the crate <strong>example-crate</strong>!</p>
 
         <p>Visit <a href="https://crates.io/accept-invite/abc123">https://crates.io/accept-invite/abc123</a> to accept this invitation.</p>
 
