@@ -35,7 +35,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@crates-io/msw": "workspace:*",
-    "@eslint/compat": "2.1.0",
+    "@eslint/compat": "2.1.1",
     "@eslint/js": "10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@msw/playwright": "0.6.7",

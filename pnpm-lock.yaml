@@ -22,8 +22,8 @@ importers:
         specifier: workspace:*
         version: link:packages/crates-io-msw
       '@eslint/compat':
-        specifier: 2.1.0
-        version: 2.1.0(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
+        specifier: 2.1.1
+        version: 2.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
       '@eslint/js':
         specifier: 10.0.1
         version: 10.0.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
@@ -573,8 +573,8 @@ packages:
     resolution: {integrity: sha512-EriSTlt5OC9/7SXkRSCAhfSxxoSUgBm33OH+IkwbdpgoqsSsUg7y3uh+IICI/Qg4BBWr3U2i39RpmycbxMq4ew==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  '@eslint/compat@2.1.0':
-    resolution: {integrity: sha512-LgaSCymEpw7tF53xvDw9SNsraPb1IBHxpdABIOM0hW8UAlP8znrjYtuxfR58FSJ3L9BhwD+FaPRFQpZq84Nh6g==}
+  '@eslint/compat@2.1.1':
+    resolution: {integrity: sha512-rMcy8GSrwNzcISX/BlTDY/GLB4eCopEuy9woIls3To+15OLxykZrxxq+WUcylCPCQ6F4MujjBM1DX5V1aqI3Vw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     peerDependencies:
       eslint: ^8.40 || 9 || 10
@@ -5047,7 +5047,7 @@ snapshots:
 
   '@eslint-community/regexpp@4.12.2': {}
 
-  '@eslint/compat@2.1.0(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))':
+  '@eslint/compat@2.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))':
     dependencies:
       '@eslint/core': 1.2.1
     optionalDependencies:
@@ -5647,7 +5647,7 @@ snapshots:
   '@percy/cli-command@1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)':
     dependencies:
       '@percy/config': 1.32.7(typescript@6.0.3)
-      '@percy/core': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
+      '@percy/core': 1.32.7(supports-color@10.2.2)(typescript@6.0.3)
       '@percy/logger': 1.32.7
       glob-to-regexp: 0.4.1
     optionalDependencies:
@@ -5669,12 +5669,12 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-doctor@1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)':
+  '@percy/cli-doctor@1.32.7(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
       '@percy/cli-command': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
       '@percy/client': 1.32.7(supports-color@10.2.2)(typescript@6.0.3)
       '@percy/config': 1.32.7(typescript@6.0.3)
-      '@percy/core': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
+      '@percy/core': 1.32.7(supports-color@10.2.2)(typescript@6.0.3)
       '@percy/env': 1.32.7
       '@percy/logger': 1.32.7
       '@percy/monitoring': 1.32.7(supports-color@10.2.2)(typescript@6.0.3)
@@ -5683,7 +5683,6 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - supports-color
-      - typanion
       - typescript
       - utf-8-validate
 
@@ -5729,7 +5728,7 @@ snapshots:
       '@percy/cli-build': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
       '@percy/cli-command': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
       '@percy/cli-config': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
-      '@percy/cli-doctor': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
+      '@percy/cli-doctor': 1.32.7(supports-color@10.2.2)(typescript@6.0.3)
       '@percy/cli-exec': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
       '@percy/cli-snapshot': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
       '@percy/cli-upload': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
@@ -5762,7 +5761,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@percy/core@1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)':
+  '@percy/core@1.32.7(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
       '@grpc/grpc-js': 1.14.4
       '@grpc/proto-loader': 0.8.1
@@ -5786,11 +5785,10 @@ snapshots:
       ws: 8.21.3
       yaml: 2.9.0
     optionalDependencies:
-      '@percy/cli-doctor': 1.32.7(supports-color@10.2.2)(typanion@3.14.0)(typescript@6.0.3)
+      '@percy/cli-doctor': 1.32.7(supports-color@10.2.2)(typescript@6.0.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
-      - typanion
       - typescript
       - utf-8-validate
 
