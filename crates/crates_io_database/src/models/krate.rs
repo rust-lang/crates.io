@@ -222,16 +222,9 @@ impl Crate {
             r#"WITH crate_owners_with_login AS (
                 SELECT
                     crate_owners.*,
-                    CASE WHEN crate_owners.owner_kind = 1 THEN
-                         teams.login
-                    ELSE
-                         users.gh_login
-                    END AS login
+                    users.gh_login
                 FROM crate_owners
-                LEFT JOIN teams
-                    ON crate_owners.owner_id = teams.id
-                    AND crate_owners.owner_kind = 1
-                LEFT JOIN users
+                JOIN users
                     ON crate_owners.owner_id = users.id
                     AND crate_owners.owner_kind = 0
                 WHERE crate_owners.crate_id = $1
@@ -243,7 +236,7 @@ impl Crate {
             WHERE crate_owners.crate_id = crate_owners_with_login.crate_id
                 AND crate_owners.owner_id = crate_owners_with_login.owner_id
                 AND crate_owners.owner_kind = crate_owners_with_login.owner_kind
-                AND lower(crate_owners_with_login.login) = lower($2);"#,
+                AND lower(crate_owners_with_login.gh_login) = lower($2);"#,
         );
 
         let num_updated_rows = query
