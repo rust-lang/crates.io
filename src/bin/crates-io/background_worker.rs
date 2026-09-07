@@ -78,7 +78,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let user_agent = crates_io_version::user_agent();
     let http_client = Client::builder().user_agent(user_agent).build()?;
-    let datadog = config.datadog.client(http_client.clone());
+    let datadog = config.datadog.client(http_client.clone()).map(Arc::new);
 
     let cloudfront = CloudFront::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));

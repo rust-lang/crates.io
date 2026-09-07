@@ -15,6 +15,7 @@ use crates_io_datadog::{DatadogClient, MetricType as DatadogMetricType, Point, R
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use prometheus::proto::{MetricFamily, MetricType};
+use std::sync::Arc;
 use std::time::Duration;
 use tracing::{info, warn};
 
@@ -28,7 +29,11 @@ const SUBMIT_INTERVAL: Duration = Duration::from_secs(5);
 /// `background_worker` dyno; scaling the worker horizontally would make every
 /// instance submit the same series (identical host and tags per environment),
 /// causing last-write-wins collisions.
-pub fn spawn(config: &Server, deadpool: Pool<AsyncPgConnection>, datadog: Option<DatadogClient>) {
+pub fn spawn(
+    config: &Server,
+    deadpool: Pool<AsyncPgConnection>,
+    datadog: Option<Arc<DatadogClient>>,
+) {
     let Some(datadog) = datadog else {
         info!("Datadog API key not configured, skipping Datadog metrics submission");
         return;
