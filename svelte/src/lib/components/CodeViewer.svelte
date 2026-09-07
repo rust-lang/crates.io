@@ -26,7 +26,7 @@
   let view = $state.raw<CodeView>();
   let selectedRange = $derived(parseLineHash(lineHash));
 
-  function options(): CodeViewOptions<undefined> {
+  function options(): CodeViewOptions<undefined, undefined> {
     return {
       theme: THEMES,
       themeType: colorScheme,
