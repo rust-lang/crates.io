@@ -189,8 +189,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       pretty-bytes:
-        specifier: 7.1.2
-        version: 7.1.2
+        specifier: 7.1.3
+        version: 7.1.3
       semver:
         specifier: 7.8.5
         version: 7.8.5
@@ -4073,8 +4073,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  pretty-bytes@7.1.2:
-    resolution: {integrity: sha512-spZIOSORH9joSPGN0L/tYfvINH+xbOpnI3kdcEkq0mzGMjFvDZzyRVbqEOV0wACF0gggdKE9RWO2mosGsBh/Rg==}
+  pretty-bytes@7.1.3:
+    resolution: {integrity: sha512-U2KZ675nqba6XSBppSjU2pRgc9Ffx9+uUtd/RTWYmOawVkZuUbBYuwdtFZQmLv+yMgQ2TQxWWuOpyNje67J9tg==}
     engines: {node: '>=20'}
 
   pretty-format@27.5.1:
@@ -8750,7 +8750,7 @@ snapshots:
 
   prettier@3.9.6: {}
 
-  pretty-bytes@7.1.2: {}
+  pretty-bytes@7.1.3: {}
 
   pretty-format@27.5.1:
     dependencies:
