@@ -1,13 +1,17 @@
+use crate::datadog::common_tags;
 use crate::storage::StorageKey;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
+use chrono::{DateTime, Utc};
 use crates_io_database::models::CloudFrontDistribution;
 use crates_io_database_dump::{DumpDirectory, create_archives};
+use crates_io_datadog::{DatadogClient, MetricType, Point, Resource, Series};
 use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
 #[derive(Clone, Default, Serialize, Deserialize)]
@@ -61,7 +65,18 @@ impl BackgroundJob for DumpDb {
         info!("Uploading tarball…");
         let tar_key = StorageKey::DbDumpTar;
         let tar_file = tokio::fs::File::open(archives.tar.path()).await?;
+        let size = tar_file.metadata().await?.len();
+        let upload_start = Instant::now();
         env.storage.upload_stream(&tar_key, tar_file).await?;
+        let upload_duration = upload_start.elapsed();
+        if let Some(datadog) = &env.datadog {
+            let domain = &env.config.domain_name;
+            let result =
+                report_dump_metrics(datadog, domain, "tar.gz", size, upload_duration).await;
+            if let Err(error) = result {
+                warn!("Failed to submit database dump metrics: {error:#}");
+            }
+        }
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
@@ -75,7 +90,17 @@ impl BackgroundJob for DumpDb {
         info!("Uploading zip file…");
         let zip_key = StorageKey::DbDumpZip;
         let zip_file = tokio::fs::File::open(archives.zip.path()).await?;
+        let size = zip_file.metadata().await?.len();
+        let upload_start = Instant::now();
         env.storage.upload_stream(&zip_key, zip_file).await?;
+        let upload_duration = upload_start.elapsed();
+        if let Some(datadog) = &env.datadog {
+            let domain = &env.config.domain_name;
+            let result = report_dump_metrics(datadog, domain, "zip", size, upload_duration).await;
+            if let Err(error) = result {
+                warn!("Failed to submit database dump metrics: {error:#}");
+            }
+        }
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
@@ -84,5 +109,61 @@ impl BackgroundJob for DumpDb {
         }
 
         Ok(())
+    }
+}
+
+/// Submits the compressed archive size in bytes and successful upload time in nanoseconds.
+async fn report_dump_metrics(
+    datadog: &DatadogClient,
+    domain: &str,
+    format: &str,
+    size: u64,
+    upload_duration: Duration,
+) -> anyhow::Result<()> {
+    let timestamp = Utc::now();
+    let series = dump_metric_series(domain, format, size, upload_duration, timestamp);
+    datadog.submit_metrics(&series).await
+}
+
+/// Builds archive size and upload duration metrics at the supplied time.
+fn dump_metric_series(
+    domain: &str,
+    format: &str,
+    size: u64,
+    upload_duration: Duration,
+    timestamp: DateTime<Utc>,
+) -> [Series; 2] {
+    let timestamp = timestamp.timestamp();
+    let mut tags = common_tags(domain);
+    tags.push(format!("format:{format}"));
+    let host = Resource::builder().kind("host").name(domain).build();
+    let upload_ns = upload_duration.as_nanos() as f64;
+    [
+        ("crates_io.db_dump_size_bytes", size as f64),
+        ("crates_io.db_dump_upload_duration_ns", upload_ns),
+    ]
+    .map(|(metric, value)| {
+        let point = Point::builder().timestamp(timestamp).value(value).build();
+        Series::builder()
+            .metric(metric)
+            .kind(MetricType::Gauge)
+            .points(vec![point])
+            .resources(vec![host.clone()])
+            .tags(tags.clone())
+            .build()
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Checks the archive measurements, units, timestamp, and identifying tags.
+    #[test]
+    fn builds_dump_metric_series() {
+        let duration = Duration::from_millis(1250);
+        let timestamp = DateTime::from_timestamp(1000, 0).unwrap();
+        let series = dump_metric_series("staging.crates.io", "tar.gz", 4096, duration, timestamp);
+        insta::assert_json_snapshot!(series);
     }
 }

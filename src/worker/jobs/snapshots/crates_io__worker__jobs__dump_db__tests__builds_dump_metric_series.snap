@@ -1,0 +1,48 @@
+---
+source: src/worker/jobs/dump_db.rs
+expression: series
+---
+[
+  {
+    "metric": "crates_io.db_dump_size_bytes",
+    "type": 3,
+    "points": [
+      {
+        "timestamp": 1000,
+        "value": 4096.0
+      }
+    ],
+    "resources": [
+      {
+        "type": "host",
+        "name": "staging.crates.io"
+      }
+    ],
+    "tags": [
+      "env:staging",
+      "service:crates_io",
+      "format:tar.gz"
+    ]
+  },
+  {
+    "metric": "crates_io.db_dump_upload_duration_ns",
+    "type": 3,
+    "points": [
+      {
+        "timestamp": 1000,
+        "value": 1250000000.0
+      }
+    ],
+    "resources": [
+      {
+        "type": "host",
+        "name": "staging.crates.io"
+      }
+    ],
+    "tags": [
+      "env:staging",
+      "service:crates_io",
+      "format:tar.gz"
+    ]
+  }
+]
