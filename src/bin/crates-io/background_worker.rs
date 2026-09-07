@@ -109,6 +109,7 @@ pub fn run() -> anyhow::Result<()> {
         .maybe_cloudfront(cloudfront)
         .maybe_fastly(fastly)
         .storage(storage)
+        .maybe_datadog(datadog.clone())
         .downloads_archive_store(downloads_archive_store)
         .deadpool(deadpool.clone())
         .emails(emails)
