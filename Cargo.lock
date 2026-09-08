@@ -6390,9 +6390,9 @@ checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
 
 [[package]]
 name = "rss"
-version = "2.1.0"
+version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc13570823abc675c60d7837f1fe7daaf18dd181a3cacb3c6ba7a062eef581c0"
+checksum = "f505d3e5e7b06b4dc0245b13294f8ef9a1a0f70284708be1e11c5b7b7441034e"
 dependencies = [
  "atom_syndication",
  "quick-xml 0.41.0",
