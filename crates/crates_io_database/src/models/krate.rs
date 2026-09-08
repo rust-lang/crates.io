@@ -1,6 +1,6 @@
 use crate::fns::canon_crate_name;
 use crate::models::version::TopVersions;
-use crate::models::{CrateOwner, Owner, User, Version};
+use crate::models::{CrateOwner, Owner, PublicUser, User, Version};
 use crate::schema::*;
 use chrono::{DateTime, Utc};
 use diesel::associations::Identifiable;
@@ -263,9 +263,9 @@ impl Crate {
 /// Details of a newly created invite.
 #[derive(Debug)]
 pub enum NewOwnerInvite {
-    /// The invitee was a [`User`], and they must accept the invite through the
+    /// The invitee was a [`PublicUser`], and they must accept the invite through the
     /// UI or via the provided invite token.
-    User(User, SecretString),
+    User(PublicUser, SecretString),
 
     /// The invitee was a [`Team`], and they were immediately added as an owner.
     Team(Team),

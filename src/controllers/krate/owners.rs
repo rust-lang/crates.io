@@ -3,7 +3,7 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Owner, PublicUser, Team, User};
+use crate::models::{Crate, Email, Owner, PublicUser, Team, User};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
@@ -197,7 +197,8 @@ pub async fn add_owners(
                             invitee.username, krate.name,
                         ));
 
-                        if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
+                        let recipient = Email::verified_for_user(conn, invitee.id).await;
+                        if let Some(recipient) = recipient.ok().flatten() {
                             let recipient = recipient.parse().map_err(|_| {
                                 bad_request(format_args!(
                                     "user `{}` has an invalid email address",
@@ -368,7 +369,7 @@ async fn add_owner(
             add_github_team_owner(github, conn, req_user, krate, team, encryption).await
         }
         Login::Unprefixed(login) => {
-            let user = User::find_by_login(conn, login).await.optional()?;
+            let user = PublicUser::find_by_login(conn, login).await.optional()?;
             let user = user.ok_or_else(|| {
                 bad_request(format_args!("could not find user with login `{login}`"))
             })?;
@@ -436,7 +437,7 @@ async fn invite_user_owner(
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
-    user: User,
+    user: PublicUser,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // Users are invited and must accept before being added
     let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
@@ -596,7 +597,7 @@ enum OwnerAddError {
     /// Note: Teams are always immediately added, so they cannot have a pending
     /// invite to cause this error.
     #[error("user already has pending invite")]
-    AlreadyInvited(Box<User>),
+    AlreadyInvited(Box<PublicUser>),
 }
 
 /// A [`BoxedAppError`] does not impl [`std::error::Error`] so it needs a manual

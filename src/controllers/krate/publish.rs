@@ -2,6 +2,7 @@
 
 use crate::app::AppState;
 use crate::auth::{AuthCheck, AuthHeader, Authentication};
+use crate::models::Email;
 use crate::worker::jobs::{
     self, AnalyzeCrateFile, BuildCrateZip, CheckTyposquat, GenerateOgImage,
     SendPublishNotificationsJob, UpdateDefaultVersion,
@@ -238,7 +239,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     }
 
     let verified_email_address = if let Some(user) = auth.user() {
-        let verified_email_address = user.verified_email(&conn).await?;
+        let verified_email_address = Email::verified_for_user(&conn, user.id).await?;
         Some(verified_email_address.ok_or_else(|| verified_email_error(&app.config.domain_name))?)
     } else {
         None

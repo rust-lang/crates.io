@@ -1,4 +1,5 @@
-use crates_io_database::models::{NewUser, users_by_username};
+use claims::assert_err_eq;
+use crates_io_database::models::{NewUser, PublicUser, users_by_username};
 use crates_io_database::schema::users;
 use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
@@ -35,4 +36,25 @@ async fn find_latest_user_by_canonical_username() {
         .unwrap();
 
     assert_eq!(user_id, second_id);
+}
+
+/// Public lookup works without linked accounts and rejects unknown IDs.
+#[tokio::test]
+async fn find_public_user_by_id() {
+    let test_db = TestDatabase::new();
+    let conn = test_db.async_connect().await;
+    let user = NewUser::builder()
+        .gh_id(1)
+        .gh_login("github-user")
+        .username("crates-user")
+        .build();
+    let id = user.insert(&conn).await.unwrap();
+
+    let user = PublicUser::find(&conn, id).await.unwrap();
+    assert_eq!(user.id, id);
+    assert_eq!(user.username, "crates-user");
+    assert!(!user.github_username_matches);
+
+    let missing = PublicUser::find(&conn, 0).await;
+    assert_err_eq!(missing, diesel::result::Error::NotFound);
 }

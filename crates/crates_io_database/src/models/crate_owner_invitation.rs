@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
-use crate::models::{CrateOwner, User};
+use crate::models::{CrateOwner, Email, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 
 #[derive(Debug)]
@@ -108,7 +108,7 @@ impl CrateOwnerInvitation {
             .first(conn)
             .await?;
 
-        let verified_email = user.verified_email(conn).await?;
+        let verified_email = Email::verified_for_user(conn, user.id).await?;
         if verified_email.is_none() {
             let crate_name = get_crate_name(conn).await?;
             return Err(AcceptError::EmailNotVerified { crate_name });
