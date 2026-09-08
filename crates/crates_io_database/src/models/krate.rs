@@ -1,6 +1,6 @@
 use crate::fns::canon_crate_name;
 use crate::models::version::TopVersions;
-use crate::models::{CrateOwner, Owner, PublicUser, User, Version};
+use crate::models::{CrateOwner, Owner, OwnerKind, PublicUser, User, Version};
 use crate::schema::*;
 use chrono::{DateTime, Utc};
 use diesel::associations::Identifiable;
@@ -211,6 +211,35 @@ impl Crate {
         let teams = teams.into_iter().map(Owner::Team);
 
         Ok(users.chain(teams).collect())
+    }
+
+    /// Soft-deletes the selected owner identities and returns the number of active rows removed.
+    /// Missing or already deleted owners are ignored, and an empty selection removes nothing.
+    pub async fn remove_owners(
+        &self,
+        mut conn: &AsyncPgConnection,
+        owners: &[(OwnerKind, i32)],
+    ) -> QueryResult<usize> {
+        let user_ids = owners
+            .iter()
+            .filter_map(|&(kind, id)| (kind == OwnerKind::User).then_some(id));
+        let team_ids = owners
+            .iter()
+            .filter_map(|&(kind, id)| (kind == OwnerKind::Team).then_some(id));
+        let selected_users = crate_owners::owner_kind
+            .eq(OwnerKind::User)
+            .and(crate_owners::owner_id.eq_any(user_ids));
+        let selected_teams = crate_owners::owner_kind
+            .eq(OwnerKind::Team)
+            .and(crate_owners::owner_id.eq_any(team_ids));
+
+        diesel::update(crate_owners::table)
+            .filter(crate_owners::crate_id.eq(self.id))
+            .filter(crate_owners::deleted.eq(false))
+            .filter(selected_users.or(selected_teams))
+            .set(crate_owners::deleted.eq(true))
+            .execute(&mut conn)
+            .await
     }
 
     pub async fn owner_remove(
