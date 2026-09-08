@@ -101,6 +101,29 @@ async fn test_download() {
     assert_dl_count(&anon, "foo_download", Some(&query), 1).await;
 }
 
+/// Rejects dates that cannot represent the full download statistics window.
+#[tokio::test(flavor = "multi_thread")]
+async fn version_downloads_rejects_date_underflow() {
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .version("1.0.0")
+        .expect_build(&mut conn)
+        .await;
+
+    let url = "/api/v1/crates/foo/1.0.0/downloads";
+    let response = anon
+        .get_with_query::<()>(url, "before_date=-262143-01-01")
+        .await;
+
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(
+        response.text(),
+        @r#"{"errors":[{"detail":"before_date is too early"}]}"#
+    );
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download_with_counting_via_cdn() {
     let (app, anon, user) = TestApp::init().with_user().await;
