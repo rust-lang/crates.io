@@ -17,10 +17,18 @@ export default http.delete('/api/v1/crates/{name}/owners', async ({ request, par
   let body = await request.json();
 
   for (let owner of body.owners) {
+    let isTeam = owner.split(':').length === 3;
+    let expectedPrefix = isTeam ? 'github:' : 'crates.io:';
+
+    // Unlike the production backend, require explicit prefixes to validate frontend requests.
+    if (!owner.startsWith(expectedPrefix)) {
+      return response('4XX').json({ errors: [{ detail: 'Invalid owner prefix' }] }, { status: 400 });
+    }
+
     let ownership = db.crateOwnership.findFirst(
-      owner.includes(':')
+      isTeam
         ? q => q.where(ownership => ownership.team?.login === owner)
-        : q => q.where(ownership => ownership.user?.login === owner),
+        : q => q.where(ownership => ownership.user?.login === owner.slice(expectedPrefix.length)),
     );
     if (!ownership) return response('4XX').json(notFoundError(), { status: 404 });
     db.crateOwnership.delete(q => q.where({ id: ownership.id }));
