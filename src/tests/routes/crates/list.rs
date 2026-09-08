@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::{new_category, new_user};
-use crates_io::models::Category;
+use crates_io::models::{Category, OwnerKind};
 use crates_io::schema::{crates, version_downloads, versions};
 use crates_io_database::schema::categories;
 use diesel::dsl::{IntervalDsl, now};
@@ -1372,7 +1372,8 @@ async fn crates_by_user_id_not_including_deleted_owners() -> anyhow::Result<()> 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&conn, "foo").await.unwrap();
+    let owners = [(OwnerKind::User, user.id)];
+    krate.remove_owners(&conn, &owners).await.unwrap();
 
     for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);
