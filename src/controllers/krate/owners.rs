@@ -9,7 +9,7 @@ use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
-use crate::schema::oauth_github;
+use crate::schema::{oauth_github, users};
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
 use crate::worker::jobs::SendEmail;
@@ -17,6 +17,7 @@ use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
+use crates_io_database::fns::lower;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use crates_io_worker::BackgroundJob;
@@ -254,6 +255,12 @@ pub async fn add_owners(
 }
 
 /// Removes crate owners.
+///
+/// Supported owner names:
+/// - `username` for a GitHub user.
+/// - `crates.io:username` for a crates.io user.
+/// - `github:username` for a GitHub user.
+/// - `github:org:team` for a GitHub organization team.
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/owners",
@@ -291,23 +298,51 @@ pub async fn remove_owners(
 
     check_owner_permissions(&app, user, &owners).await?;
 
+    let user_ids: Vec<_> = owners
+        .iter()
+        .filter_map(|owner| match owner {
+            Owner::User(user) => Some(user.id),
+            Owner::Team(_) => None,
+        })
+        .collect();
     let mut selected = Vec::new();
     for login in &body.owners {
         let normalized_login = login.to_lowercase();
-        let mut matching = owners
-            .iter()
-            .filter(|owner| owner.login().to_lowercase() == normalized_login)
-            .peekable();
+        let matching: Vec<_> = match Login::parse(login)? {
+            Login::CratesIo(username) => users_by_username(username)
+                .filter(users::id.eq_any(&user_ids))
+                .select(users::id)
+                .load::<i32>(&mut conn)
+                .await?
+                .into_iter()
+                .map(|id| (OwnerKind::User, id))
+                .collect(),
+            Login::GitHub(username) => oauth_github::table
+                .filter(oauth_github::user_id.eq_any(&user_ids))
+                .filter(lower(oauth_github::login).eq(lower(username)))
+                .filter(oauth_github::account_id.ne(-1))
+                .select(oauth_github::user_id)
+                .load::<i32>(&mut conn)
+                .await?
+                .into_iter()
+                .map(|id| (OwnerKind::User, id))
+                .collect(),
+            Login::GitHubTeam(_) | Login::Unprefixed(_) => owners
+                .iter()
+                .filter(|owner| owner.login().to_lowercase() == normalized_login)
+                .map(|owner| match owner {
+                    Owner::User(user) => (OwnerKind::User, user.id),
+                    Owner::Team(team) => (OwnerKind::Team, team.id),
+                })
+                .collect(),
+        };
 
-        if matching.peek().is_none() {
+        if matching.is_empty() {
             let message = format!("could not find owner with login `{login}`");
             return Err(bad_request(message));
         }
 
-        selected.extend(matching.map(|owner| match owner {
-            Owner::User(user) => (OwnerKind::User, user.id),
-            Owner::Team(team) => (OwnerKind::Team, team.id),
-        }));
+        selected.extend(matching);
     }
 
     conn.transaction(async |conn| {
@@ -334,9 +369,9 @@ pub async fn remove_owners(
 pub struct ChangeOwnersRequest {
     /// List of owner login names to add or remove.
     ///
-    /// For users, use just the username (e.g., `"octocat"`).
+    /// For users, use `username`, `crates.io:username`, or `github:username`.
     /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
-    #[schema(example = json!(["octocat", "github:rust-lang:owners"]))]
+    #[schema(example = json!(["octocat", "crates.io:octocat", "github:octocat", "github:rust-lang:owners"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }

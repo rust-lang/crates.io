@@ -369,7 +369,14 @@ export interface paths {
          */
         put: operations["add_owners"];
         post?: never;
-        /** Removes crate owners. */
+        /**
+         * Removes crate owners.
+         * @description Supported owner names:
+         *     - `username` for a GitHub user.
+         *     - `crates.io:username` for a crates.io user.
+         *     - `github:username` for a GitHub user.
+         *     - `github:org:team` for a GitHub organization team.
+         */
         delete: operations["remove_owners"];
         options?: never;
         head?: never;
@@ -3299,10 +3306,12 @@ export interface operations {
                     /**
                      * @description List of owner login names to add or remove.
                      *
-                     *     For users, use just the username (e.g., `"octocat"`).
+                     *     For users, use `username`, `crates.io:username`, or `github:username`.
                      *     For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
                      * @example [
                      *       "octocat",
+                     *       "crates.io:octocat",
+                     *       "github:octocat",
                      *       "github:rust-lang:owners"
                      *     ]
                      */
@@ -3364,10 +3373,12 @@ export interface operations {
                     /**
                      * @description List of owner login names to add or remove.
                      *
-                     *     For users, use just the username (e.g., `"octocat"`).
+                     *     For users, use `username`, `crates.io:username`, or `github:username`.
                      *     For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
                      * @example [
                      *       "octocat",
+                     *       "crates.io:octocat",
+                     *       "github:octocat",
                      *       "github:rust-lang:owners"
                      *     ]
                      */

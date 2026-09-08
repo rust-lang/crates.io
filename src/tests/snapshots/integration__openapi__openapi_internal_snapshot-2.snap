@@ -3623,6 +3623,7 @@ expression: response.json()
     },
     "/api/v1/crates/{name}/owners": {
       "delete": {
+        "description": "Supported owner names:\n- `username` for a GitHub user.\n- `crates.io:username` for a crates.io user.\n- `github:username` for a GitHub user.\n- `github:org:team` for a GitHub organization team.",
         "operationId": "remove_owners",
         "parameters": [
           {
@@ -3641,9 +3642,11 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use `username`, `crates.io:username`, or `github:username`.\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
                     "example": [
                       "octocat",
+                      "crates.io:octocat",
+                      "github:octocat",
                       "github:rust-lang:owners"
                     ],
                     "items": {
@@ -3802,9 +3805,11 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "owners": {
-                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "description": "List of owner login names to add or remove.\n\nFor users, use `username`, `crates.io:username`, or `github:username`.\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
                     "example": [
                       "octocat",
+                      "crates.io:octocat",
+                      "github:octocat",
                       "github:rust-lang:owners"
                     ],
                     "items": {
