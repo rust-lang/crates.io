@@ -1,14 +1,18 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::helpers::OkResponse;
+use crate::controllers::helpers::{OkResponse, USERNAME_COOLDOWN, check_username};
 use crate::email::EmailMessage;
 use crate::models::NewEmail;
-use crate::schema::users;
+use crate::schema::{abandoned_usernames, users};
 use crate::util::errors::{AppResult, bad_request, server_error};
+
+use crates_io_database::models::NewAbandonedUsername;
+
 use axum::Json;
 use axum::extract::Path;
+use chrono::Utc;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
 use lettre::Address;
 use minijinja::context;
@@ -24,6 +28,7 @@ pub struct UserUpdate {
 
 #[derive(Deserialize, utoipa::ToSchema)]
 pub struct User {
+    username: Option<String>,
     email: Option<String>,
     publish_notifications: Option<bool>,
 }
@@ -99,6 +104,33 @@ pub async fn update_user(
                 }
             }
         }
+    }
+
+    if let Some(newname) = &user_update.user.username
+        && newname != &user.username
+    {
+        conn.transaction(async |conn| -> AppResult<()> {
+            // ensure this username can be adopted
+            check_username(newname, conn).await?;
+
+            let now = Utc::now();
+            diesel::insert_into(abandoned_usernames::table)
+                .values(NewAbandonedUsername {
+                    username: &user.username,
+                    previous_user_id: Some(user.id),
+                    abandoned_at: &now,
+                    available_at: &(now + USERNAME_COOLDOWN),
+                })
+                .execute(conn)
+                .await?;
+            diesel::update(user)
+                .set(users::username.eq(newname))
+                .execute(conn)
+                .await?;
+
+            Ok(())
+        })
+        .await?;
     }
 
     if let Some(user_email) = &user_update.user.email {
