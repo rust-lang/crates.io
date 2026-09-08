@@ -110,7 +110,6 @@ async fn user_without_github_account() {
         // The gh_id column will eventually be removed; there are currently records in production
         // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
         .gh_id(-1)
-        .gh_login("foobar")
         .username("foobar")
         .name("I deleted my github account")
         .build();

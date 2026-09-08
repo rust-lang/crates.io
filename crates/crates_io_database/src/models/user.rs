@@ -7,7 +7,7 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-use crate::fns::{canon_username, lower};
+use crate::fns::canon_username;
 use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
@@ -46,7 +46,8 @@ pub fn users_by_username<'a>(username: &'a str) -> _ {
 pub struct PublicUser {
     pub id: i32,
     pub name: Option<String>,
-    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = github_username_matches())]
@@ -76,7 +77,8 @@ pub struct User {
     pub id: i32,
     pub name: Option<String>,
     pub gh_id: i32,
-    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = oauth_github::encrypted_token.nullable())]
@@ -94,15 +96,6 @@ impl User {
     pub async fn find(mut conn: &AsyncPgConnection, id: i32) -> QueryResult<User> {
         User::query()
             .filter(users::id.eq(id))
-            .first(&mut conn)
-            .await
-    }
-
-    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
-        User::query()
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
-            .filter(users::gh_id.ne(-1))
-            .order(users::gh_id.desc())
             .first(&mut conn)
             .await
     }
@@ -145,7 +138,6 @@ impl User {
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
-    pub gh_login: &'a str,
     pub username: &'a str,
     pub name: Option<&'a str>,
 }
@@ -180,7 +172,6 @@ impl NewUser<'_> {
             .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
             .do_update()
             .set((
-                users::gh_login.eq(excluded(users::gh_login)),
                 users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
             ))

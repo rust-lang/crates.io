@@ -527,6 +527,14 @@ pub struct EncodableCrateLinks {
     pub reverse_dependencies: String,
 }
 
+fn url_or_deprecation_message(gh_login: Option<&str>) -> String {
+    gh_login
+        .map(|gh_login| format!("https://github.com/{gh_login}"))
+        .unwrap_or(String::from(
+            "This field is deprecated. Use LinkedAccount instead.",
+        ))
+}
+
 /// A user or team that owns a crate.
 #[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 #[schema(as = Owner)]
@@ -592,7 +600,7 @@ impl EncodableOwner {
     pub fn from_user(user: PublicUser) -> Self {
         Self::User {
             github_username_matches: user.github_username_matches,
-            url: format!("https://github.com/{}", user.gh_login),
+            url: url_or_deprecation_message(user.gh_login.as_deref()),
             id: user.id,
             login: user.username,
             avatar: user.gh_avatar,
@@ -771,7 +779,8 @@ impl EncodablePrivateUser {
             created_at,
             ..
         } = user;
-        let url = format!("https://github.com/{gh_login}");
+
+        let url = url_or_deprecation_message(gh_login.as_deref());
 
         EncodablePrivateUser {
             id,
@@ -840,7 +849,9 @@ impl From<PublicUser> for EncodablePublicUser {
             created_at,
             ..
         } = user;
-        let url = format!("https://github.com/{gh_login}");
+
+        let url = url_or_deprecation_message(gh_login.as_deref());
+
         EncodablePublicUser {
             id,
             avatar: gh_avatar,
