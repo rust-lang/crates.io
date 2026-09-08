@@ -116,20 +116,6 @@ impl User {
             .await
     }
 
-    /// Queries the database for the verified emails
-    /// belonging to a given user.
-    pub async fn verified_email(
-        &self,
-        mut conn: &AsyncPgConnection,
-    ) -> QueryResult<Option<String>> {
-        Email::belonging_to(self)
-            .select(emails::email)
-            .filter(emails::verified.eq(true))
-            .first(&mut conn)
-            .await
-            .optional()
-    }
-
     /// Queries for the email belonging to a particular user.
     pub async fn email(&self, mut conn: &AsyncPgConnection) -> QueryResult<Option<String>> {
         Email::belonging_to(self)

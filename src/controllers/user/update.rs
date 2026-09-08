@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
-use crate::models::NewEmail;
+use crate::models::{Email, NewEmail};
 use crate::schema::users;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use axum::Json;
@@ -76,7 +76,7 @@ pub async fn update_user(
             .await?;
 
         if !publish_notifications {
-            let email_address = user.verified_email(&conn).await?;
+            let email_address = Email::verified_for_user(&conn, user.id).await?;
 
             if let Some(email_address) = email_address {
                 let email = EmailMessage::from_template(

@@ -3,7 +3,7 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Owner, PublicUser, Team, User};
+use crate::models::{Crate, Email, Owner, PublicUser, Team, User};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
@@ -197,7 +197,8 @@ pub async fn add_owners(
                             invitee.username, krate.name,
                         ));
 
-                        if let Some(recipient) = invitee.verified_email(conn).await.ok().flatten() {
+                        let recipient = Email::verified_for_user(conn, invitee.id).await;
+                        if let Some(recipient) = recipient.ok().flatten() {
                             let recipient = recipient.parse().map_err(|_| {
                                 bad_request(format_args!(
                                     "user `{}` has an invalid email address",

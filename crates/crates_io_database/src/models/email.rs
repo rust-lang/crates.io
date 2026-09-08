@@ -17,6 +17,22 @@ pub struct Email {
     pub token: SecretString,
 }
 
+impl Email {
+    /// Returns the user's verified email address, if one exists.
+    pub async fn verified_for_user(
+        mut conn: &AsyncPgConnection,
+        user_id: i32,
+    ) -> QueryResult<Option<String>> {
+        emails::table
+            .filter(emails::user_id.eq(user_id))
+            .filter(emails::verified.eq(true))
+            .select(emails::email)
+            .first(&mut conn)
+            .await
+            .optional()
+    }
+}
+
 #[derive(Debug, Insertable, AsChangeset, Builder)]
 #[diesel(table_name = emails, check_for_backend(diesel::pg::Pg))]
 pub struct NewEmail<'a> {
