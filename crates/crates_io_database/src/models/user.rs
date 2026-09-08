@@ -64,6 +64,17 @@ impl PublicUser {
             .await
     }
 
+    /// Finds a GitHub login case-insensitively, preferring the highest GitHub ID.
+    /// Accounts with the legacy ID `-1` are excluded.
+    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<Self> {
+        Self::query()
+            .filter(lower(users::gh_login).eq(login.to_lowercase()))
+            .filter(users::gh_id.ne(-1))
+            .order(users::gh_id.desc())
+            .first(&mut conn)
+            .await
+    }
+
     pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
         CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table.left_join(oauth_github::table))
@@ -102,15 +113,6 @@ impl User {
     pub async fn find(mut conn: &AsyncPgConnection, id: i32) -> QueryResult<User> {
         User::query()
             .filter(users::id.eq(id))
-            .first(&mut conn)
-            .await
-    }
-
-    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<User> {
-        User::query()
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
-            .filter(users::gh_id.ne(-1))
-            .order(users::gh_id.desc())
             .first(&mut conn)
             .await
     }
