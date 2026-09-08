@@ -56,6 +56,14 @@ pub struct PublicUser {
 }
 
 impl PublicUser {
+    /// Finds a public user by ID, returning `NotFound` if the user does not exist.
+    pub async fn find(mut conn: &AsyncPgConnection, id: i32) -> QueryResult<Self> {
+        Self::query()
+            .filter(users::id.eq(id))
+            .first(&mut conn)
+            .await
+    }
+
     pub async fn owning(krate: &Crate, mut conn: &AsyncPgConnection) -> QueryResult<Vec<Self>> {
         CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table.left_join(oauth_github::table))
