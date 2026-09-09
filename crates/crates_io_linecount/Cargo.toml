@@ -10,7 +10,7 @@ workspace = true
 
 [dependencies]
 serde = { version = "=1.0.229", features = ["derive"] }
-tokei = { version = "=14.0.0", default-features = false }
+tokei = { version = "=15.0.0", default-features = false }
 
 [dev-dependencies]
 claims = "=0.8.0"
