@@ -1,6 +1,6 @@
 use crate::util::{RequestHelper, TestApp};
 use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
-use crates_io::models::{NewUser, User};
+use crates_io::models::User;
 use crates_io::views::{EncodableLinkedAccount, EncodablePublicUser};
 use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -104,18 +104,14 @@ async fn show_latest_user_case_insensitively() {
 #[tokio::test(flavor = "multi_thread")]
 async fn user_without_github_account() {
     let (app, anon) = TestApp::init().empty().await;
-    let conn = app.db_conn().await;
 
-    let new_user = NewUser::builder()
+    let builder = UserBuilder::new()
         // The gh_id column will eventually be removed; there are currently records in production
         // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
-        .gh_id(-1)
-        .gh_login("foobar")
-        .username("foobar")
-        .name("I deleted my github account")
-        .build();
-    new_user.insert(&conn).await.unwrap();
-    // This user doesn't have a linked record in `oauth_github`
+        .with_gh_id(-1)
+        .with_username("foobar")
+        .with_display_name("I deleted my github account");
+    app.db_new_user_from_builder(builder).await;
 
     // The crates.io username still exists
     let url = "/api/v1/users/fOObAr?include=linked_accounts";
