@@ -40,12 +40,17 @@
 
   let isSaving = $state(false);
 
-  let repository = $derived(namespace && project ? `${namespace}/${project}` : '');
+  let repository = $derived.by(() => {
+    let owner = namespace.trim();
+    let repo = project.trim();
+    return owner && repo ? `${owner}/${repo}` : '';
+  });
 
   let verificationUrl = $derived.by(() => {
     if (publisher !== 'GitHub') return '';
-    if (!namespace || !project || !workflow) return '';
-    return `https://raw.githubusercontent.com/${namespace}/${project}/HEAD/.github/workflows/${workflow}`;
+    let filename = workflow.trim();
+    if (!repository || !filename) return '';
+    return `https://raw.githubusercontent.com/${repository}/HEAD/.github/workflows/${filename}`;
   });
 
   function parseRepositoryUrl(repository: string): PrefillData | null {
@@ -109,6 +114,11 @@
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
+
+    namespace = namespace.trim();
+    project = project.trim();
+    workflow = workflow.trim();
+    environment = environment.trim();
 
     if (!validate()) return;
 
@@ -196,6 +206,7 @@
         id="namespace"
         type="text"
         bind:value={namespace}
+        onblur={() => (namespace = namespace.trim())}
         disabled={isSaving}
         aria-required="true"
         aria-invalid={namespaceInvalid}
@@ -219,6 +230,7 @@
         id="project"
         type="text"
         bind:value={project}
+        onblur={() => (project = project.trim())}
         disabled={isSaving}
         aria-required="true"
         aria-invalid={projectInvalid}
@@ -241,6 +253,7 @@
         id="workflow"
         type="text"
         bind:value={workflow}
+        onblur={() => (workflow = workflow.trim())}
         disabled={isSaving}
         aria-required="true"
         aria-invalid={workflowInvalid}
@@ -286,6 +299,7 @@
         id="environment"
         type="text"
         bind:value={environment}
+        onblur={() => (environment = environment.trim())}
         disabled={isSaving}
         class="input base-input"
         data-test-environment
@@ -312,6 +326,7 @@
         id="namespace"
         type="text"
         bind:value={namespace}
+        onblur={() => (namespace = namespace.trim())}
         disabled={isSaving}
         aria-required="true"
         aria-invalid={namespaceInvalid}
@@ -335,6 +350,7 @@
         id="project"
         type="text"
         bind:value={project}
+        onblur={() => (project = project.trim())}
         disabled={isSaving}
         aria-required="true"
         aria-invalid={projectInvalid}
@@ -357,6 +373,7 @@
         id="workflow"
         type="text"
         bind:value={workflow}
+        onblur={() => (workflow = workflow.trim())}
         disabled={isSaving}
         aria-required="true"
         aria-invalid={workflowInvalid}
@@ -388,6 +405,7 @@
         id="environment"
         type="text"
         bind:value={environment}
+        onblur={() => (environment = environment.trim())}
         disabled={isSaving}
         class="input base-input"
         data-test-environment

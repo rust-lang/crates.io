@@ -159,6 +159,77 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
   });
 
   test.describe('GitHub', () => {
+    test('trims surrounding whitespace from all inputs', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.selectOption('[data-test-publisher]', 'GitHub');
+
+      await page.fill('[data-test-namespace]', ' rust-lang ');
+      await page.fill('[data-test-project]', ' crates.io ');
+      await page.fill('[data-test-workflow]', ' ci.yml ');
+      await page.fill('[data-test-environment]', ' release candidate ');
+      await page.locator('[data-test-environment]').press('Tab');
+
+      await expect(page.locator('[data-test-namespace]')).toHaveValue('rust-lang');
+      await expect(page.locator('[data-test-project]')).toHaveValue('crates.io');
+      await expect(page.locator('[data-test-workflow]')).toHaveValue('ci.yml');
+      await expect(page.locator('[data-test-environment]')).toHaveValue('release candidate');
+      await page.click('[data-test-add]');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+
+      let publisher = { repository_owner: 'rust-lang', repository_name: 'crates.io', workflow_filename: 'ci.yml' };
+      let config = msw.db.trustpubGithubConfig.findFirst(q => q.where(publisher));
+      expect(config?.environment).toBe('release candidate');
+    });
+
+    test('omits whitespace-only environment', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.selectOption('[data-test-publisher]', 'GitHub');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', 'ci.yml');
+      await page.fill('[data-test-environment]', ' \t ');
+      await page.click('[data-test-add]');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+
+      let configs = msw.db.trustpubGithubConfig.findMany();
+      expect(configs).toHaveLength(1);
+      expect(configs[0]?.environment).toBeNull();
+    });
+
+    test('trims workflow whitespace before verification and submission', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      let workflowUrl = 'https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml';
+      msw.worker.use(http.head(workflowUrl, () => new HttpResponse(null, { status: 200 })));
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', ' \tci.yml\t ');
+
+      let verification = page.locator('[data-test-workflow-verification="success"]');
+      await expect(verification).toHaveText(`✓ Workflow file found at ${workflowUrl}`);
+      await expect(page.locator('[data-test-workflow]')).toBeFocused();
+      await page.locator('[data-test-workflow]').press('Enter');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+      let config = msw.db.trustpubGithubConfig.findFirst(q => q.where({ workflow_filename: 'ci.yml' }));
+      expect(config, 'Config uses the verified filename').toBeDefined();
+    });
+
+    test('rejects whitespace-only workflow before submission', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', ' \t ');
+      await page.click('[data-test-add]');
+
+      let workflowError = page.locator('[data-test-workflow-group] [data-test-error]');
+      await expect(workflowError).toHaveText('Please enter a workflow filename.');
+      await expect(page.locator('[data-test-workflow-verification="initial"]')).toBeVisible();
+      expect(msw.db.trustpubGithubConfig.findMany()).toHaveLength(0);
+    });
+
     test('happy path', async ({ msw, page, percy }) => {
       let { crate } = await prepare(msw);
 
@@ -378,6 +449,75 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
   });
 
   test.describe('GitLab', () => {
+    test('trims surrounding whitespace from all inputs', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.selectOption('[data-test-publisher]', 'GitLab');
+
+      await page.fill('[data-test-namespace]', ' rust-lang ');
+      await page.fill('[data-test-project]', ' crates.io ');
+      await page.fill('[data-test-workflow]', ' ci.yml ');
+      await page.fill('[data-test-environment]', ' release candidate ');
+      await page.locator('[data-test-environment]').press('Tab');
+
+      await expect(page.locator('[data-test-namespace]')).toHaveValue('rust-lang');
+      await expect(page.locator('[data-test-project]')).toHaveValue('crates.io');
+      await expect(page.locator('[data-test-workflow]')).toHaveValue('ci.yml');
+      await expect(page.locator('[data-test-environment]')).toHaveValue('release candidate');
+      await page.click('[data-test-add]');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+
+      let publisher = { namespace: 'rust-lang', project: 'crates.io', workflow_filepath: 'ci.yml' };
+      let config = msw.db.trustpubGitlabConfig.findFirst(q => q.where(publisher));
+      expect(config?.environment).toBe('release candidate');
+    });
+
+    test('omits whitespace-only environment', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.selectOption('[data-test-publisher]', 'GitLab');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', 'ci.yml');
+      await page.fill('[data-test-environment]', ' \t ');
+      await page.click('[data-test-add]');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+
+      let configs = msw.db.trustpubGitlabConfig.findMany();
+      expect(configs).toHaveLength(1);
+      expect(configs[0]?.environment).toBeNull();
+    });
+
+    test('trims workflow whitespace on submission without blur', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.selectOption('[data-test-publisher]', 'GitLab');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+
+      let workflow = page.locator('[data-test-workflow]');
+      await workflow.fill(' \tci/publish release.yml\t ');
+      await expect(workflow).toBeFocused();
+      await workflow.press('Enter');
+
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+      let config = msw.db.trustpubGitlabConfig.findFirst(q => q.where({ workflow_filepath: 'ci/publish release.yml' }));
+      expect(config, 'Config uses the trimmed filepath').toBeDefined();
+    });
+
+    test('rejects whitespace-only workflow before submission', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.selectOption('[data-test-publisher]', 'GitLab');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', ' \t ');
+      await page.click('[data-test-add]');
+
+      await expect(page.locator('[data-test-workflow-group] [data-test-error]')).toBeVisible();
+      expect(msw.db.trustpubGitlabConfig.findMany()).toHaveLength(0);
+    });
+
     test('happy path', async ({ msw, page }) => {
       let { crate } = await prepare(msw);
 
