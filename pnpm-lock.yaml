@@ -165,8 +165,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       '@pierre/diffs':
-        specifier: 1.4.0
-        version: 1.4.0(@shikijs/themes@4.4.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 1.4.1
+        version: 1.4.1(@shikijs/themes@4.4.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pierre/trees':
         specifier: 1.0.0-beta.6
         version: 1.0.0-beta.6(patch_hash=1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4)(@pierre/theme@2.0.0)(@shikijs/themes@4.4.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
@@ -1510,8 +1510,8 @@ packages:
     resolution: {integrity: sha512-NGkQ4/wh8gaVGvxuNdbqdsI84RAM3ohvtsV+1LaNcq0Vs4WmPT9RZ5CsZkNgmqb2OJbGEUk81AL08bDrAFz1wQ==}
     engines: {node: '>=14'}
 
-  '@pierre/diffs@1.4.0':
-    resolution: {integrity: sha512-eSYnNDjRdgx01O16t8yxVW5M96ppgUMKbMyRE7/cyeJa+dMQrS/s0ed3n0KK9a2Or7SXon6cYbBLhAiAggD6ZQ==}
+  '@pierre/diffs@1.4.1':
+    resolution: {integrity: sha512-rzvY9FeeYdGtVcErjNsW6tnrjpMb0DvGtgCFNuMoYT8wufE+gO1ZXAzKAc2VPRBS3Rl5HELEQ38WDlis4qZHkQ==}
     peerDependencies:
       react: ^18.3.1 || ^19.0.0
       react-dom: ^18.3.1 || ^19.0.0
@@ -6078,7 +6078,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@pierre/diffs@1.4.0(@shikijs/themes@4.4.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@pierre/diffs@1.4.1(@shikijs/themes@4.4.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@pierre/theme': 2.0.0
       '@pierre/theming': 1.0.1(@pierre/theme@2.0.0)(@shikijs/themes@4.4.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
