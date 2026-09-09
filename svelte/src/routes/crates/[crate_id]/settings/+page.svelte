@@ -109,7 +109,7 @@
         throw new Error(detail ?? '');
       }
 
-      if (name.includes(':')) {
+      if (name.split(':').length === 3) {
         notifications.success(`Team ${name} was added as a crate owner`);
         await invalidateAll();
       } else {
