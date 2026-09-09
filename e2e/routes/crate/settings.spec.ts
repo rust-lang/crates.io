@@ -57,6 +57,36 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-delete-button]')).toBeVisible();
   });
 
+  for (let name of ['alice', 'crates.io:alice', 'github:alice']) {
+    test(`inviting ${name} shows an invitation message`, async ({ msw, page }) => {
+      await prepare(msw);
+      msw.worker.use(http.put('/api/v1/crates/:name/owners', () => HttpResponse.json({ ok: true })));
+
+      await page.goto('/crates/foo/settings');
+      await page.locator('[data-test-add-owner-button]').click();
+      await page.getByLabel('Username', { exact: true }).fill(name);
+      await page.locator('[data-test-save-button]').click();
+
+      await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(
+        `An invite has been sent to ${name}`,
+      );
+    });
+  }
+
+  test('adding a GitHub team shows a team message', async ({ msw, page }) => {
+    await prepare(msw);
+    msw.worker.use(http.put('/api/v1/crates/:name/owners', () => HttpResponse.json({ ok: true })));
+
+    await page.goto('/crates/foo/settings');
+    await page.locator('[data-test-add-owner-button]').click();
+    await page.getByLabel('Username', { exact: true }).fill('github:rust-lang:owners');
+    await page.locator('[data-test-save-button]').click();
+
+    await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(
+      'Team github:rust-lang:owners was added as a crate owner',
+    );
+  });
+
   test('only the authenticated owner has their email shown in the owners list', async ({ msw, page }) => {
     let user1 = await msw.db.user.create({ login: 'authenticated-owner' });
     let user2 = await msw.db.user.create({ login: 'other-owner' });
