@@ -165,7 +165,9 @@ impl TestApp {
         let id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
 
-        OauthGithubBuilder::for_user(&user).insert(&conn).await;
+        if user.gh_id != -1 {
+            OauthGithubBuilder::for_user(&user).insert(&conn).await;
+        }
 
         let new_email = NewEmail::builder()
             .user_id(id)
