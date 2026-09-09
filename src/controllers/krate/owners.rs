@@ -148,7 +148,7 @@ pub struct ModifyResponse {
 /// Adds crate owners.
 ///
 /// Supported owner names:
-/// - `username` for a GitHub user.
+/// - `username` for a crates.io user, with confirmation for ambiguous or mismatched accounts.
 /// - `crates.io:username` for a crates.io user.
 /// - `github:username` for a GitHub user.
 /// - `github:org:team` for a GitHub organization team.
@@ -458,9 +458,8 @@ async fn add_owner(
             })?;
             PublicUser::find(conn, account.user_id).await?
         }
-        Login::Unprefixed(username) => PublicUser::find_by_login(conn, username)
-            .await
-            .optional()?
+        Login::Unprefixed(username) => resolve_unprefixed_user(conn, username)
+            .await?
             .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?,
     };
 
@@ -470,6 +469,50 @@ async fn add_owner(
     }
 
     invite_user_owner(ctx, conn, req_user, krate, user).await
+}
+
+/// Resolves an unprefixed username or asks the caller to choose an explicit prefix.
+async fn resolve_unprefixed_user(
+    conn: &mut AsyncPgConnection,
+    username: &str,
+) -> AppResult<Option<PublicUser>> {
+    let user = users_by_username(username)
+        .left_join(oauth_github::table)
+        .select(PublicUser::as_select())
+        .first(conn)
+        .await
+        .optional()?;
+
+    let Some(user) = user else {
+        return Ok(None);
+    };
+
+    // Resolve the GitHub meaning too: reused logins can select a different user.
+    let github = OauthGithub::find_by_login(conn, username).await;
+    let github = github.optional()?;
+    let crates_io_name = &user.username;
+
+    if let Some(account) = github {
+        if account.user_id == user.id {
+            return Ok(Some(user));
+        }
+
+        let other = PublicUser::find(conn, account.user_id).await?;
+        let other_name = &other.username;
+        let github_name = &account.login;
+        return Err(bad_request(format_args!(
+            "The username `{username}` matches different accounts. \
+             Use `crates.io:{crates_io_name}` for https://crates.io/users/{crates_io_name}, \
+             or `github:{github_name}` for https://crates.io/users/{other_name} \
+             (linked to https://github.com/{github_name})."
+        )));
+    }
+
+    Err(bad_request(format_args!(
+        "The username `{username}` refers to https://crates.io/users/{crates_io_name}, \
+         which is NOT linked to https://github.com/{username}. \
+         To explicitly select this account, use `crates.io:{crates_io_name}`."
+    )))
 }
 
 /// Parsed owner login used by the owner endpoints.
