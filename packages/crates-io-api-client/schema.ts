@@ -372,7 +372,7 @@ export interface paths {
         /**
          * Removes crate owners.
          * @description Supported owner names:
-         *     - `username` for a GitHub user.
+         *     - `username` for a crates.io or GitHub user, if the owner selection is unambiguous.
          *     - `crates.io:username` for a crates.io user.
          *     - `github:username` for a GitHub user.
          *     - `github:org:team` for a GitHub organization team.
