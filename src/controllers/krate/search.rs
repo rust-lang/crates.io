@@ -20,7 +20,7 @@ use utoipa::IntoParams;
 
 use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
-use crate::models::{Crate, CrateOwner, OwnerKind, TopVersions, Version};
+use crate::models::{Crate, CrateOwner, OwnerKind, TopVersions};
 use crate::schema::*;
 use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableCrate;
@@ -284,16 +284,15 @@ pub async fn list_crates(
     let crates = data.iter().map(|r| &r.krate).collect::<Vec<_>>();
 
     let span = info_span!("db.query", message = "SELECT ... FROM versions");
-    let versions: Vec<Version> = Version::belonging_to(&crates)
+    let versions = PartialVersion::query()
+        .filter(versions::crate_id.eq_any(crates.iter().map(|krate| krate.id)))
         .filter(versions::yanked.eq(false))
-        .select(Version::as_select())
         .load(&mut conn)
         .instrument(span)
         .await?;
-    let versions = versions
-        .grouped_by(&crates)
-        .into_iter()
-        .map(TopVersions::from_versions);
+    let versions = versions.grouped_by(&crates).into_iter().map(|versions| {
+        TopVersions::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
+    });
 
     let crates = versions
         .zip(data)
@@ -841,6 +840,15 @@ mod seek {
             }
         }
     }
+}
+
+/// Version fields needed to calculate the listing's version summaries.
+#[derive(Debug, Associations, HasQuery)]
+#[diesel(table_name = versions, belongs_to(Crate))]
+pub struct PartialVersion {
+    pub crate_id: i32,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub num: String,
 }
 
 #[derive(Debug, Clone, Queryable)]
