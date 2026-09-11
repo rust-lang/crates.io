@@ -71,7 +71,7 @@ async fn one_colon() {
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

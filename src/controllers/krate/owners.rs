@@ -386,6 +386,7 @@ async fn add_owner(
 }
 
 /// Parsed owner login used by the owner endpoints.
+#[derive(Debug)]
 enum Login<'a> {
     /// GitHub organization team, such as `github:rust-lang:owners`.
     GitHubTeam(GitHubTeamLogin<'a>),
@@ -396,39 +397,35 @@ enum Login<'a> {
 impl<'a> Login<'a> {
     /// Parses an owner login.
     fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
-        if !login.contains(':') {
-            return Ok(Self::Unprefixed(login));
-        }
+        let mut chunks = login.split(':');
+        let first = chunks.next().unwrap_or_default();
+        let parts = (first, chunks.next(), chunks.next(), chunks.next());
 
-        GitHubTeamLogin::parse(login).map(Self::GitHubTeam)
+        let error = match parts {
+            (_, _, _, Some(_)) => "owner logins must have at most three components",
+            ("", _, _, _) | (_, Some(""), _, _) | (_, _, Some(""), _) => {
+                "owner login components must not be empty"
+            }
+            ("github", Some(org), Some(team), _) => {
+                return Ok(Self::GitHubTeam(GitHubTeamLogin { login, org, team }));
+            }
+            (_, _, Some(_), _) => {
+                "unknown organization handler, only 'github:org:team' is supported"
+            }
+            (_, Some(_), None, _) => "prefixed usernames are not supported yet",
+            (username, None, None, _) => return Ok(Self::Unprefixed(username)),
+        };
+
+        Err(bad_request(error))
     }
 }
 
 /// Parsed GitHub organization team login, such as `github:rust-lang:owners`.
+#[derive(Debug)]
 struct GitHubTeamLogin<'a> {
     login: &'a str,
     org: &'a str,
     team: &'a str,
-}
-
-impl<'a> GitHubTeamLogin<'a> {
-    /// Parses a GitHub organization team login.
-    fn parse(login: &'a str) -> Result<Self, BoxedAppError> {
-        let mut chunks = login.split(':');
-        let team_system = chunks.next().unwrap_or_default();
-        if team_system != "github" {
-            let error = "unknown organization handler, only 'github:org:team' is supported";
-            return Err(bad_request(error));
-        }
-
-        let org = chunks.next().unwrap_or_default();
-        let team = chunks.next().ok_or_else(|| {
-            let error = "missing github team argument; format is github:org:team";
-            bad_request(error)
-        })?;
-
-        Ok(Self { login, org, team })
-    }
 }
 
 /// Creates an owner invitation for a resolved user.
@@ -621,11 +618,13 @@ impl From<OwnerRemoveError> for BoxedAppError {
 
 #[cfg(test)]
 mod tests {
-    use super::{GitHubTeamLogin, Login};
+    use super::Login;
 
     #[test]
     fn parses_github_team_login() {
-        let login = GitHubTeamLogin::parse("github:rust-lang:owners").unwrap();
+        let Login::GitHubTeam(login) = Login::parse("github:rust-lang:owners").unwrap() else {
+            panic!("expected GitHub team login");
+        };
 
         assert_eq!(login.login, "github:rust-lang:owners");
         assert_eq!(login.org, "rust-lang");
@@ -640,6 +639,40 @@ mod tests {
             panic!("expected unprefixed login");
         };
         assert_eq!(username, "octocat");
+    }
+
+    /// Owner logins reject empty components, extra components, and unsupported prefixes.
+    #[test]
+    fn rejects_invalid_owner_logins() {
+        let empty_component = "owner login components must not be empty";
+        let extra_component = "owner logins must have at most three components";
+        let unknown_org_handler =
+            "unknown organization handler, only 'github:org:team' is supported";
+        let cases = [
+            ("", empty_component),
+            ("github:", empty_component),
+            ("crates.io:", empty_component),
+            (":user", empty_component),
+            ("github::team", empty_component),
+            ("github:org:", empty_component),
+            (":org:team", empty_component),
+            ("github:org:team:extra", extra_component),
+            ("github:org:team:", extra_component),
+            ("github:org:team:extra:more", extra_component),
+            ("gitlab:user", "prefixed usernames are not supported yet"),
+            ("GitHub:user", "prefixed usernames are not supported yet"),
+            ("Crates.io:user", "prefixed usernames are not supported yet"),
+            ("CRATES.IO:user", "prefixed usernames are not supported yet"),
+            ("GITHUB:user", "prefixed usernames are not supported yet"),
+            ("crates.io:org:team", unknown_org_handler),
+            ("GitHub:org:team", unknown_org_handler),
+            ("gitlab:org:team", unknown_org_handler),
+        ];
+
+        for (login, error) in cases {
+            let actual = Login::parse(login).unwrap_err();
+            assert_eq!(actual.to_string(), error, "{login}");
+        }
     }
 
     #[test]

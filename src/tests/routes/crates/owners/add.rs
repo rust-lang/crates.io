@@ -254,56 +254,56 @@ async fn unprefixed_github_login_separator_variant() {
 async fn crates_io_prefixed_username_verbatim() {
     let response = invite_distinct_login_user("crates.io:crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefixed_username_case_insensitive() {
     let response = invite_distinct_login_user("crates.io:CRATES-USER").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefixed_username_separator_variant() {
     let response = invite_distinct_login_user("crates.io:crates_user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_verbatim() {
     let response = invite_distinct_login_user("github:github-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_case_insensitive() {
     let response = invite_distinct_login_user("github:GITHUB-USER").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_separator_variant() {
     let response = invite_distinct_login_user("github:github_user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefix_does_not_match_github_login() {
     let response = invite_distinct_login_user("crates.io:github-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefix_does_not_match_crates_io_username() {
     let response = invite_distinct_login_user("github:crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
