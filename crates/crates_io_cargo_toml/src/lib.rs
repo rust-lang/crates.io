@@ -3,7 +3,7 @@
 
 use serde::Deserializer;
 use serde::{Deserialize, Serialize, Serializer};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -333,6 +333,14 @@ fn process_discovered_targets(
     discovered_targets: Vec<DiscoveredTarget>,
     add_discovered_targets: bool,
 ) -> Result<(), Error> {
+    let mut discovered_by_name = HashMap::with_capacity(discovered_targets.len());
+    for discovered_target in &discovered_targets {
+        // Preserve the first discovered target for duplicate names.
+        discovered_by_name
+            .entry(discovered_target.name.as_str())
+            .or_insert(discovered_target);
+    }
+
     for target in targets.iter_mut() {
         // `name` is always required, if it's missing we skip the target
         // (see https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-name-field).
@@ -343,10 +351,9 @@ fn process_discovered_targets(
         // Use `path` if it's set, otherwise try to find a matching auto-discovered target
         // (see https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-path-field).
         if target.path.is_none() {
-            let discovered_target = discovered_targets.iter().find(|t| t.name == *name);
-            if let Some(discovered_target) = discovered_target {
-                target.path = Some(discovered_target.path.clone());
-            }
+            target.path = discovered_by_name
+                .get(name.as_str())
+                .map(|target| target.path.clone());
 
             // If no matching auto-discovered target was found the
             // `path` field is kept as `None` to let the user decide
@@ -358,11 +365,13 @@ fn process_discovered_targets(
     }
 
     if add_discovered_targets {
+        let mut known_paths = targets
+            .iter()
+            .filter_map(|t| t.path.clone())
+            .collect::<HashSet<_>>();
+
         for discovered_target in discovered_targets {
-            if targets
-                .iter()
-                .any(|b| b.path.as_deref() == Some(&discovered_target.path))
-            {
+            if !known_paths.insert(discovered_target.path.clone()) {
                 continue;
             }
 
