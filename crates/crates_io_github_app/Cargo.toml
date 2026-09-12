@@ -16,7 +16,7 @@ async-trait = "=0.1.92"
 chrono = { version = "=0.4.45", features = ["serde"] }
 jsonwebtoken = { version = "=11.0.0", features = ["aws_lc_rs"] }
 mockall = { version = "=0.15.0", optional = true }
-reqwest = { version = "=0.13.4", features = ["json"] }
+reqwest = { version = "=0.13.5", features = ["json"] }
 secrecy = { version = "=0.10.3", features = ["serde"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 tokio = { version = "=1.53.1", features = ["sync"] }
