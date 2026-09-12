@@ -38,3 +38,9 @@ For performance reasons, the live `version_downloads` table only includes data f
 3.  Run the import script.
 
         psql DATABASE_URL < import.sql
+
+## User-supplied Content
+
+The CSV files contain crate and user metadata exactly as it was submitted to crates.io, without any modification. Fields such as `crates.description`, `crates.homepage`, `crates.repository`, `crates.readme`, and `users.name` can therefore start with characters like `=`, `+`, `-`, or `@` that spreadsheet applications interpret as the beginning of a formula.
+
+The files are intended to be imported with `import.sql` or processed with a CSV library. Do not open them in spreadsheet software with automatic formula evaluation enabled, or make sure that the application treats all cells as plain text when importing.
