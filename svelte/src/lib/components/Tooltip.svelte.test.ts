@@ -1,5 +1,5 @@
 import { tick } from 'svelte';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page, userEvent } from 'vitest/browser';
 
@@ -15,6 +15,9 @@ describe('Tooltip', () => {
   });
 
   describe('delay', () => {
+    beforeEach(() => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }));
+    afterEach(() => vi.useRealTimers());
+
     it('waits for the configured delay before showing the tooltip', async () => {
       await render(TooltipTestWrapper, { text: 'short', width: '500px', delay: 200 });
 
@@ -22,6 +25,14 @@ describe('Tooltip', () => {
       await tick();
 
       expect(document.querySelector('.tooltip')).toBeNull();
+
+      await vi.advanceTimersByTimeAsync(199);
+      await tick();
+
+      expect(document.querySelector('.tooltip')).toBeNull();
+
+      await vi.advanceTimersByTimeAsync(1);
+      await tick();
 
       await expect.element(page.getByCSS('.tooltip')).toBeVisible();
     });
