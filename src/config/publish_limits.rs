@@ -14,6 +14,10 @@ pub struct PublishLimitsConfig {
     /// value disables the limit.
     pub tarball_entries: Option<usize>,
 
+    /// Maximum size in bytes of the `Cargo.toml` and `.cargo_vcs_info.json`
+    /// files inside an uploaded crate tarball.
+    pub metadata_file_size: u64,
+
     /// Maximum number of dependencies a crate can have.
     pub dependencies: usize,
 
@@ -28,6 +32,7 @@ impl Default for PublishLimitsConfig {
             upload_size: 10 * 1024 * 1024,  // 10 MB
             unpack_size: 512 * 1024 * 1024, // 512 MB
             tarball_entries: None,
+            metadata_file_size: 1024 * 1024, // 1 MB
             dependencies: 500,
             features: 300,
         }
@@ -50,6 +55,7 @@ impl PublishLimitsConfig {
             upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
             unpack_size: 128 * 1024,
             tarball_entries: None,
+            metadata_file_size: 32 * 1024,
             dependencies: 10,
             features: 10,
         }
