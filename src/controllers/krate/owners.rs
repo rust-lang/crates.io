@@ -3,11 +3,12 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Email, Owner, PublicUser, Team, User};
+use crate::models::{Crate, Email, OauthGithub, Owner, PublicUser, Team, User, users_by_username};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
 };
+use crate::schema::oauth_github;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
 use crate::worker::jobs::SendEmail;
@@ -19,7 +20,7 @@ use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubAuth, GitHubClient, GitHubError};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
@@ -137,6 +138,12 @@ pub struct ModifyResponse {
 }
 
 /// Adds crate owners.
+///
+/// Supported owner names:
+/// - `username` for a GitHub user.
+/// - `crates.io:username` for a crates.io user.
+/// - `github:username` for a GitHub user.
+/// - `github:org:team` for a GitHub organization team.
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/owners",
@@ -356,7 +363,7 @@ async fn add_owner(
     owners: &[Owner],
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    match Login::parse(login)? {
+    let user = match Login::parse(login)? {
         Login::GitHubTeam(team) => {
             let lowercase_login = login.to_lowercase();
             let login_test = |owner: &Owner| owner.login().to_lowercase() == lowercase_login;
@@ -366,23 +373,40 @@ async fn add_owner(
 
             let github = &*app.github;
             let encryption = &app.config.token_encryption;
-            add_github_team_owner(github, conn, req_user, krate, team, encryption).await
+            return add_github_team_owner(github, conn, req_user, krate, team, encryption).await;
         }
-        Login::Unprefixed(login) => {
-            let user = PublicUser::find_by_login(conn, login).await.optional()?;
-            let user = user.ok_or_else(|| {
-                bad_request(format_args!("could not find user with login `{login}`"))
+        Login::CratesIo(username) => {
+            let user = users_by_username(username)
+                .left_join(oauth_github::table)
+                .select(PublicUser::as_select())
+                .first(conn)
+                .await
+                .optional()?;
+            user.ok_or_else(|| {
+                let message = format!("could not find crates.io user with username `{username}`");
+                bad_request(message)
+            })?
+        }
+        Login::GitHub(username) => {
+            let account = OauthGithub::find_by_login(conn, username).await;
+            let account = account.optional()?.ok_or_else(|| {
+                let message = format!("could not find GitHub user with login `{username}`");
+                bad_request(message)
             })?;
-
-            let is_owner =
-                |owner: &Owner| matches!(owner, Owner::User(owner) if owner.id == user.id);
-            if owners.iter().any(is_owner) {
-                return Err(bad_request(format_args!("`{login}` is already an owner")).into());
-            }
-
-            invite_user_owner(app, conn, req_user, krate, user).await
+            PublicUser::find(conn, account.user_id).await?
         }
+        Login::Unprefixed(username) => PublicUser::find_by_login(conn, username)
+            .await
+            .optional()?
+            .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?,
+    };
+
+    let is_owner = |owner: &Owner| matches!(owner, Owner::User(owner) if owner.id == user.id);
+    if owners.iter().any(is_owner) {
+        return Err(bad_request(format_args!("`{login}` is already an owner")).into());
     }
+
+    invite_user_owner(app, conn, req_user, krate, user).await
 }
 
 /// Parsed owner login used by the owner endpoints.
@@ -390,6 +414,10 @@ async fn add_owner(
 enum Login<'a> {
     /// GitHub organization team, such as `github:rust-lang:owners`.
     GitHubTeam(GitHubTeamLogin<'a>),
+    /// crates.io username, such as `crates.io:octocat`.
+    CratesIo(&'a str),
+    /// GitHub username, such as `github:octocat`.
+    GitHub(&'a str),
     /// User login without a service prefix.
     Unprefixed(&'a str),
 }
@@ -412,7 +440,11 @@ impl<'a> Login<'a> {
             (_, _, Some(_), _) => {
                 "unknown organization handler, only 'github:org:team' is supported"
             }
-            (_, Some(_), None, _) => "prefixed usernames are not supported yet",
+            ("crates.io", Some(username), None, _) => return Ok(Self::CratesIo(username)),
+            ("github", Some(username), None, _) => return Ok(Self::GitHub(username)),
+            (_, Some(_), None, _) => {
+                "unsupported user prefix: expected github:username or crates.io:username"
+            }
             (username, None, None, _) => return Ok(Self::Unprefixed(username)),
         };
 
@@ -648,6 +680,8 @@ mod tests {
         let extra_component = "owner logins must have at most three components";
         let unknown_org_handler =
             "unknown organization handler, only 'github:org:team' is supported";
+        let unknown_user_prefix =
+            "unsupported user prefix: expected github:username or crates.io:username";
         let cases = [
             ("", empty_component),
             ("github:", empty_component),
@@ -659,11 +693,11 @@ mod tests {
             ("github:org:team:extra", extra_component),
             ("github:org:team:", extra_component),
             ("github:org:team:extra:more", extra_component),
-            ("gitlab:user", "prefixed usernames are not supported yet"),
-            ("GitHub:user", "prefixed usernames are not supported yet"),
-            ("Crates.io:user", "prefixed usernames are not supported yet"),
-            ("CRATES.IO:user", "prefixed usernames are not supported yet"),
-            ("GITHUB:user", "prefixed usernames are not supported yet"),
+            ("gitlab:user", unknown_user_prefix),
+            ("GitHub:user", unknown_user_prefix),
+            ("Crates.io:user", unknown_user_prefix),
+            ("CRATES.IO:user", unknown_user_prefix),
+            ("GITHUB:user", unknown_user_prefix),
             ("crates.io:org:team", unknown_org_handler),
             ("GitHub:org:team", unknown_org_handler),
             ("gitlab:org:team", unknown_org_handler),

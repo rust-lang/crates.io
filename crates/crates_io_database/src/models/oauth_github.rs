@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
+use crate::fns::lower;
 use crate::models::User;
 use crate::schema::oauth_github;
 
@@ -30,6 +31,18 @@ pub struct OauthGithub {
     pub login: String,
     /// Foreign key to the `users` table.
     pub user_id: i32,
+}
+
+impl OauthGithub {
+    /// Finds a linked GitHub account by its case-insensitive login.
+    /// If several accounts match, returns the one with the highest account ID.
+    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<Self> {
+        oauth_github::table
+            .filter(lower(oauth_github::login).eq(lower(login)))
+            .order(oauth_github::account_id.desc())
+            .first(&mut conn)
+            .await
+    }
 }
 
 /// Represents a new crates.io user to GitHub user OAuth link to be inserted into the
