@@ -40,6 +40,35 @@ async fn tarball_entry_limit_applies_to_new_versions() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball contains more than 2 entries"}]}"#);
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn tarball_metadata_file_size_limit() {
+    let (_app, _, _, token) = TestApp::full()
+        .with_config(|config| config.publish_limits.metadata_file_size = 256)
+        .with_token()
+        .await;
+
+    let vcs_info = format!(r#"{{"path_in_vcs": "{}"}}"#, "a".repeat(300));
+    let version =
+        PublishBuilder::new("foo", "1.0.0").add_file("foo-1.0.0/.cargo_vcs_info.json", vcs_info);
+
+    let response = token.publish_crate(version).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"metadata file `foo-1.0.0/.cargo_vcs_info.json` exceeds the maximum size of 256 bytes"}]}"#);
+
+    let version = PublishBuilder::new("foo", "1.0.0").description(&"a".repeat(300));
+
+    let response = token.publish_crate(version).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"metadata file `foo-1.0.0/Cargo.toml` exceeds the maximum size of 256 bytes"}]}"#);
+
+    // Other files are only subject to the overall unpack size limit.
+    let version =
+        PublishBuilder::new("foo", "1.0.0").add_file("foo-1.0.0/README.md", "a".repeat(300));
+
+    let response = token.publish_crate(version).await;
+    assert_snapshot!(response.status(), @"200 OK");
+}
+
 async fn publish_tarball_with_entry(entry_type: tar::EntryType) -> String {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
