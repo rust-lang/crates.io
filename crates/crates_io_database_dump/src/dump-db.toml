@@ -274,6 +274,15 @@ account_lock_until = "private"
 is_admin = "private"
 publish_notifications = "private"
 
+[abandoned_usernames]
+dependencies = ["users"]
+[abandoned_usernames.columns]
+id = "private"
+username = "private"
+previous_user_id = "private"
+abandoned_at = "private"
+available_at = "private"
+
 [version_downloads]
 dependencies = ["versions"]
 [version_downloads.columns]
