@@ -25,6 +25,11 @@
     let exact = exactVersion ? '=' : '';
     return `${crate} = "${exact}${v}"`;
   });
+
+  let versionOnly = $derived.by(() => {
+    let v = version.split('+', 1)[0];
+    return exactVersion ? `=${v}` : v;
+  });
 </script>
 
 <div class="install-instructions">
@@ -84,6 +89,17 @@
       </CopyButton>
     {:else}
       <code class="copy-fallback">{tomlSnippet}</code>
+    {/if}
+
+    <p class="copy-help">Or copy just the version:</p>
+
+    {#if isClipboardSupported}
+      <CopyButton copyText={versionOnly} title="Copy version to clipboard" class="copy-button">
+        <span class="selectable">{versionOnly}</span>
+        <Icon class="i-mdi:content-copy copy-icon" />
+      </CopyButton>
+    {:else}
+      <code class="copy-fallback">{versionOnly}</code>
     {/if}
   {/if}
 </div>
