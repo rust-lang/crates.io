@@ -134,8 +134,8 @@ importers:
         specifier: 7.8.5
         version: 7.8.5
       valibot:
-        specifier: 1.4.2
-        version: 1.4.2(typescript@6.0.3)
+        specifier: 1.5.0
+        version: 1.5.0(typescript@6.0.3)
     devDependencies:
       '@types/semver':
         specifier: 7.8.0
@@ -4832,8 +4832,8 @@ packages:
     deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
-  valibot@1.4.2:
-    resolution: {integrity: sha512-gjdCvJ6d3RyHAneqxMYMW9QMCwYMb3jpOO0IyHZV1bnRHFBHrX3VkIILt5XYR0WhwHiH7Mty8ovuPZ/O3gamrg==}
+  valibot@1.5.0:
+    resolution: {integrity: sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ==}
     peerDependencies:
       typescript: '>=5'
     peerDependenciesMeta:
@@ -9899,7 +9899,7 @@ snapshots:
   uuid@8.3.2:
     optional: true
 
-  valibot@1.4.2(typescript@6.0.3):
+  valibot@1.5.0(typescript@6.0.3):
     optionalDependencies:
       typescript: 6.0.3
 
