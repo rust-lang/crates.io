@@ -52,15 +52,27 @@ ORIG_WD="$(pwd)"
 readonly ORIG_WD
 
 cd $DUMP_PATH
+
+SCHEMA_FILE=schema.sql
+if [ -f schema-before.sql ] && [ -f schema-after.sql ]; then
+  SCHEMA_FILE=schema-before.sql
+fi
+readonly SCHEMA_FILE
+
 echo "Creating '$DATABASE_NAME' database"
 psql --command="DROP DATABASE IF EXISTS $DATABASE_NAME" "$DROP_CREATE_DATABASE_NAME"
 psql --command="CREATE DATABASE $DATABASE_NAME" "$DROP_CREATE_DATABASE_NAME"
 
 echo "Importing database schema"
-psql -a "$DATABASE_NAME" < schema.sql
+psql -a "$DATABASE_NAME" < "$SCHEMA_FILE"
 
 echo "Importing data"
 psql -a "$DATABASE_NAME" < import.sql
+
+if [ "$SCHEMA_FILE" = schema-before.sql ]; then
+  echo "Creating indexes, constraints, and remaining triggers"
+  psql -a "$DATABASE_NAME" < schema-after.sql
+fi
 
 cd "$ORIG_WD"
 
