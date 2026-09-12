@@ -178,6 +178,22 @@ impl SanitizeUrl {
     }
 }
 
+/// Resolves `.` and `..` segments in a relative path, dropping the segments
+/// that would escape the root of the repository.
+fn normalize_path(path: &str) -> String {
+    let mut segments = Vec::new();
+    for segment in path.split('/') {
+        match segment {
+            "." => {}
+            ".." => {
+                segments.pop();
+            }
+            segment => segments.push(segment),
+        }
+    }
+    segments.join("/")
+}
+
 /// Groups media-related URL info.
 struct MediaUrl {
     is_media: bool,
@@ -239,14 +255,23 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
                 add_sanitize_query,
             } = is_media_url(url);
             new_url += if is_media { "raw/HEAD" } else { "blob/HEAD" };
+
+            let mut path = String::new();
             if !self.base_dir.is_empty() {
-                new_url += "/";
-                new_url += &self.base_dir;
+                path += &self.base_dir;
+                path.push('/');
             }
-            if !url.starts_with('/') {
-                new_url.push('/');
-            }
-            new_url += url;
+            path += url.strip_prefix('/').unwrap_or(url);
+
+            let (path, rest) = match path.find(['?', '#']) {
+                Some(index) => path.split_at(index),
+                None => (path.as_str(), ""),
+            };
+
+            new_url.push('/');
+            new_url += &normalize_path(path);
+            new_url += rest;
+
             if add_sanitize_query && let Ok(mut parsed_url) = Url::parse(&new_url) {
                 parsed_url.query_pairs_mut().append_pair("sanitize", "true");
                 new_url = parsed_url.into();
@@ -577,6 +602,50 @@ There can also be some text in between!
         assert_eq!(
             result,
             "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
+        );
+    }
+
+    #[test]
+    fn relative_links_with_dot_segments() {
+        let url = "https://github.com/rust-lang/test";
+        let png = "![alt](../img/img.png)";
+        let svg = "![alt](../img/sanitize.svg)";
+        let link = "[changelog](../CHANGELOG.md#v1)";
+
+        let result = markdown_to_html(png, Some(url), "subdir");
+        assert_eq!(
+            result,
+            "<p><img src=\"https://github.com/rust-lang/test/raw/HEAD/img/img.png\" alt=\"alt\"></p>\n"
+        );
+
+        let result = markdown_to_html(svg, Some(url), "subdir");
+        assert_eq!(
+            result,
+            "<p><img src=\"https://github.com/rust-lang/test/raw/HEAD/img/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n"
+        );
+
+        let result = markdown_to_html(link, Some(url), "subdir");
+        assert_eq!(
+            result,
+            "<p><a href=\"https://github.com/rust-lang/test/blob/HEAD/CHANGELOG.md#v1\" rel=\"nofollow noopener noreferrer\">changelog</a></p>\n"
+        );
+
+        let result = markdown_to_html("![alt](../../img/img.png)", Some(url), "subdir1/subdir2");
+        assert_eq!(
+            result,
+            "<p><img src=\"https://github.com/rust-lang/test/raw/HEAD/img/img.png\" alt=\"alt\"></p>\n"
+        );
+
+        let result = markdown_to_html("![alt](./img.png)", Some(url), "subdir");
+        assert_eq!(
+            result,
+            "<p><img src=\"https://github.com/rust-lang/test/raw/HEAD/subdir/img.png\" alt=\"alt\"></p>\n"
+        );
+
+        let result = markdown_to_html("![alt](../../../img.png)", Some(url), "subdir");
+        assert_eq!(
+            result,
+            "<p><img src=\"https://github.com/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\"></p>\n"
         );
     }
 
