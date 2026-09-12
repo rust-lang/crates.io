@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
-use comrak::nodes::{AstNode, NodeValue};
+use comrak::nodes::NodeValue;
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;
@@ -115,7 +115,7 @@ impl<'a> MarkdownRenderer<'a> {
         let root = parse_document(&arena, text, &options);
 
         // Tweak annotations of code blocks.
-        iter_nodes(root, &|node| {
+        for node in root.descendants() {
             if let NodeValue::CodeBlock(ref mut ncb) = node.data.borrow_mut().value {
                 let orig_annot = ncb.info.as_str();
 
@@ -124,22 +124,11 @@ impl<'a> MarkdownRenderer<'a> {
                     ncb.info = before_comma.to_string();
                 }
             }
-        });
+        }
 
         let mut html = String::new();
         format_html(root, &options, &mut html).unwrap();
         self.html_sanitizer.clean(&html).to_string()
-    }
-}
-
-/// Iterates the nodes in the CommonMark AST, used in comrak.
-fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
-where
-    F: Fn(&'a AstNode<'a>),
-{
-    f(node);
-    for c in node.children() {
-        iter_nodes(c, f);
     }
 }
 
@@ -757,5 +746,15 @@ world!
         <p>world!</p>
         </div>
         "#);
+    }
+
+    #[test]
+    fn deeply_nested_markup() {
+        const DEPTH: usize = 50_000;
+        let text = format!("{0}lobster{0}\n", "**".repeat(DEPTH));
+        let html = text_to_html(&text, "README.md", None, None);
+        assert!(html.starts_with("<p><strong><strong>"));
+        assert!(html.contains("lobster"));
+        assert_eq!(html.matches("<strong>").count(), DEPTH);
     }
 }
