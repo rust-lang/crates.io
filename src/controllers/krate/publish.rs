@@ -272,7 +272,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     );
     let limits = TarballLimits {
         unpack_size: max_unpack_size,
-        entries: app.config.publish_limits.tarball_entries,
+        entries: Some(app.config.publish_limits.tarball_entries),
         metadata_file_size: app.config.publish_limits.metadata_file_size,
     };
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;

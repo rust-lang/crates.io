@@ -23,7 +23,7 @@ async fn new_krate_wrong_files() {
 #[tokio::test(flavor = "multi_thread")]
 async fn tarball_entry_limit_applies_to_new_versions() {
     let (_app, _, _, token) = TestApp::full()
-        .with_config(|config| config.publish_limits.tarball_entries = Some(2))
+        .with_config(|config| config.publish_limits.tarball_entries = 2)
         .with_token()
         .await;
 
