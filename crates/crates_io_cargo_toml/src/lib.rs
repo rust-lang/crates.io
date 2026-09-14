@@ -17,6 +17,7 @@ pub type PatchSet = BTreeMap<String, DepsSet>;
 
 mod afs;
 mod error;
+pub mod target_metadata;
 pub use crate::afs::*;
 pub use crate::error::Error;
 use serde::de::{Error as _, Unexpected};
