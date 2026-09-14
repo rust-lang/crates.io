@@ -35,6 +35,16 @@ pub struct Manifest {
     pub files: Vec<FileEntry>,
 }
 
+impl Manifest {
+    /// Returns the package manifest entry, including historical lowercase names.
+    pub fn cargo_toml(&self) -> anyhow::Result<&FileEntry> {
+        self.files
+            .iter()
+            .find(|file| file.path.eq_ignore_ascii_case(CARGO_TOML))
+            .context("ZIP manifest contains no `Cargo.toml` entry")
+    }
+}
+
 /// A single file recorded in a [`Manifest`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FileEntry {
