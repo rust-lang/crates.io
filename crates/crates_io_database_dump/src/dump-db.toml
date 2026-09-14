@@ -307,6 +307,8 @@ has_lib = "public"
 # The following column is private for now, until we can guarantee a stable data schema.
 lib_name = "private"
 bin_names = "public"
+# This column is private until its data schema has stabilized.
+target_metadata = "private"
 yank_message = "private"
 edition = "public"
 description = "public"

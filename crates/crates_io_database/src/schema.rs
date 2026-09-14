@@ -1228,6 +1228,8 @@ diesel::table! {
         semver_ord_v2 -> Bytea,
         /// SHA256 checksum of the crate tarball, stored as 32 raw bytes.
         tar_sha256 -> Bytea,
+        /// Build script, library, and binary target metadata derived from the published package
+        target_metadata -> Nullable<Jsonb>,
         /// JSONB data containing JWT claims from the trusted publisher (e.g., GitHub Actions context like repository, run_id, sha)
         trustpub_data -> Nullable<Jsonb>,
         /// The `updated_at` column of the `versions` table.

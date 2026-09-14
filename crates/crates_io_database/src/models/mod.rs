@@ -20,7 +20,7 @@ pub use self::team::{NewTeam, Team};
 pub use self::token::ApiToken;
 pub use self::trustpub::TrustpubData;
 pub use self::user::{NewUser, PublicUser, User, users_by_username};
-pub use self::version::{NewVersion, TopVersions, Version};
+pub use self::version::{NewVersion, TopVersions, Version, VersionTargetMetadata};
 
 pub mod helpers;
 

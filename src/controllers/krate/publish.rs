@@ -34,7 +34,7 @@ use url::Url;
 
 use crate::models::{
     Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion, NewVersionOwnerAction,
-    VersionAction, default_versions::Version as DefaultVersion,
+    VersionAction, VersionTargetMetadata, default_versions::Version as DefaultVersion,
 };
 
 use crate::controllers::helpers::authorization::Rights;
@@ -532,6 +532,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let edition = edition.map(|edition| edition.as_str());
 
         let tar_sha256 = Sha256::digest(&tarball_bytes);
+        let target_metadata = VersionTargetMetadata::from(tarball_info.target_metadata);
 
         // Persist the new version of this crate
         let new_version = NewVersion::builder(krate.id, &version_string)
@@ -547,6 +548,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .has_lib(tarball_info.manifest.lib.is_some())
             .maybe_lib_name(lib_name.as_deref())
             .bin_names(bin_names.as_slice())
+            .target_metadata(&target_metadata)
             .maybe_edition(edition)
             .maybe_description(description.as_deref())
             .maybe_homepage(homepage.as_deref())
