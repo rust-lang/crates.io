@@ -94,9 +94,38 @@ impl TargetMetadata {
         })
     }
 
+    /// Returns an error if a target source is missing from the file inventory.
+    pub fn require_existing_sources(&self) -> Result<(), Error> {
+        if let Some(source) = &self.build_script
+            && !source.exists
+        {
+            return Err(Error::MissingSourceFile {
+                target: "build script".into(),
+                path: source.path.clone(),
+            });
+        }
+
+        if let Some(library) = &self.library
+            && !library.source.exists
+        {
+            return Err(Error::MissingSourceFile {
+                target: format!("library target `{}`", library.name),
+                path: library.source.path.clone(),
+            });
+        }
+
+        if let Some(binary) = self.binaries.iter().find(|binary| !binary.source.exists) {
+            return Err(Error::MissingSourceFile {
+                target: format!("binary target `{}`", binary.name),
+                path: binary.source.path.clone(),
+            });
+        }
+
+        Ok(())
+    }
 }
 
-/// An error encountered while extracting package target metadata.
+/// An error encountered while extracting or validating package target metadata.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The manifest could not be completed from the file inventory.
@@ -115,6 +144,14 @@ pub enum Error {
         target: String,
         /// The missing manifest field.
         field: &'static str,
+    },
+    /// A target source is missing from the file inventory.
+    #[error("{target} source file `{path}` is missing from the package")]
+    MissingSourceFile {
+        /// A human-readable target identifier.
+        target: String,
+        /// The package-relative source path.
+        path: String,
     },
 }
 
