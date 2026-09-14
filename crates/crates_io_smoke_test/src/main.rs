@@ -168,17 +168,19 @@ async fn main() -> anyhow::Result<()> {
 
     if !options.skip_publish {
         info!("Checking failed publish with large payload…");
-        create_dummy_content(&project_path).await?;
+        let mut oversized_version = version.clone();
+        oversized_version.patch += 1;
+        prepare_oversized_publish(&project_path, &options.crate_name, &oversized_version).await?;
 
         info!("Sending publish request…");
         let output = cargo::publish_with_output(&project_path, &options.token).await?;
         if output.status.success() {
-            bail!("Expected `cargo publish` to fail with invalid token");
+            bail!("Expected `cargo publish` to fail with a `413 Payload Too Large` error");
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
             if !stderr.contains("413 Payload Too Large") {
                 bail!(
-                    "Expected `cargo publish` to fail with an `413 Payload Too Large` error, but got:\n{stderr}"
+                    "Expected `cargo publish` to fail with a `413 Payload Too Large` error, but got:\n{stderr}"
                 );
             }
         }
@@ -274,7 +276,12 @@ description = "test crate"
     Ok(())
 }
 
-async fn create_dummy_content(project_path: &Path) -> anyhow::Result<()> {
+/// Prepares an oversized version of an existing crate for publishing.
+async fn prepare_oversized_publish(
+    project_path: &Path,
+    crate_name: &str,
+    version: &semver::Version,
+) -> anyhow::Result<()> {
     const FILE_SIZE: u32 = 15 * 1024 * 1024;
 
     debug!("Creating `dummy.txt` file…");
@@ -285,7 +292,7 @@ async fn create_dummy_content(project_path: &Path) -> anyhow::Result<()> {
     }
     drop(writer);
 
-    write_manifest(project_path, "dummy", "0.0.0-dummy").await?;
+    write_manifest(project_path, crate_name, &version.to_string()).await?;
 
     debug!("Creating additional git commit…");
     git::add_all(project_path)
