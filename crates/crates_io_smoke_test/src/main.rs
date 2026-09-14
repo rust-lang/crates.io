@@ -175,12 +175,12 @@ async fn main() -> anyhow::Result<()> {
         info!("Sending publish request…");
         let output = cargo::publish_with_output(&project_path, &options.token).await?;
         if output.status.success() {
-            bail!("Expected `cargo publish` to fail with invalid token");
+            bail!("Expected `cargo publish` to fail with a `413 Payload Too Large` error");
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
             if !stderr.contains("413 Payload Too Large") {
                 bail!(
-                    "Expected `cargo publish` to fail with an `413 Payload Too Large` error, but got:\n{stderr}"
+                    "Expected `cargo publish` to fail with a `413 Payload Too Large` error, but got:\n{stderr}"
                 );
             }
         }
