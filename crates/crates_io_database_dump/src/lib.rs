@@ -6,6 +6,7 @@ use std::fs;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tempfile::NamedTempFile;
 use tracing::debug;
 use zip::write::SimpleFileOptions;
 
@@ -24,7 +25,7 @@ pub struct DumpDirectory {
     /// The temporary directory that contains the export directory.
     tempdir: tempfile::TempDir,
     pub timestamp: chrono::DateTime<chrono::Utc>,
-    /// Optional directory containing the `pg_dump` and `psql` binaries to use.
+    /// Optional directory containing the PostgreSQL client binaries to use.
     /// When `None`, the binaries are resolved via `PATH`.
     postgres_bin_dir: Option<PathBuf>,
 }
@@ -56,7 +57,7 @@ impl DumpDirectory {
         }
     }
 
-    /// Generates the full export directory (README, metadata, `schema.sql`,
+    /// Generates the full export directory (README, metadata, schema scripts,
     /// `export.sql`/`import.sql`, and CSV data files) from the database at
     /// `database_url`. When `schema` is `Some`, the dump is restricted to that
     /// Postgres schema; when `None`, every schema in the database is dumped.
@@ -70,7 +71,7 @@ impl DumpDirectory {
             .context("Failed to write metadata.json file")?;
 
         self.dump_schema(database_url, schema)
-            .context("Failed to generate schema.sql file")?;
+            .context("Failed to generate schema scripts")?;
 
         self.dump_db(database_url)
             .context("Failed to create database dump")
@@ -106,40 +107,107 @@ impl DumpDirectory {
         Ok(())
     }
 
+    /// Generates complete and staged schema scripts from one `pg_dump` output file.
     pub fn dump_schema(&self, database_url: &str, schema: Option<&str>) -> anyhow::Result<()> {
-        let path = self.path().join("schema.sql");
-        debug!(?path, "Writing schema.sql file…");
-        let schema_sql =
-            File::create(&path).with_context(|| format!("Failed to create {}", path.display()))?;
+        let pg_dump_output = NamedTempFile::new()?;
+        let pg_dump_path = pg_dump_output.path();
 
-        let program = self.pg_program("pg_dump");
-
-        let mut command = Command::new(&program);
-        command
-            .arg("--schema-only")
-            .arg("--no-owner")
-            .arg("--no-acl");
-
+        let args = ["--schema-only", "--format=custom", "--file"];
+        let mut command = Command::new(self.pg_program("pg_dump"));
+        command.args(args).arg(pg_dump_path);
         if let Some(schema) = schema {
             command.arg(format!("--schema={schema}"));
         }
+        command.arg(database_url);
+        command_output(&mut command)?;
 
-        let status = command
-            .arg(database_url)
-            .stdout(schema_sql)
-            .spawn()
-            .with_context(|| format!("Failed to run `{}` command", program.display()))?
-            .wait()
-            .with_context(|| format!("Failed to wait for `{}` to exit", program.display()))?;
+        // Create full `schema.sql` file from the `pg_dump` output.
+        let complete = self.restore_schema(pg_dump_path, &[])?;
+        fs::write(self.path().join("schema.sql"), complete)?;
 
-        if !status.success() {
-            return Err(anyhow!(
-                "pg_dump did not finish successfully (exit code: {}).",
-                status
-            ));
-        }
+        // Read the full list of contents from the `pg_dump` output.
+        let full_list = self.restore_schema(pg_dump_path, &["--list"])?;
+        let full_list =
+            String::from_utf8(full_list).context("Invalid UTF-8 in pg_dump output listing")?;
+
+        // These triggers must be created *before* the data import.
+        const REQ_TRIGGERS: &[&str] = &[
+            // Populates `crates.textsearchable_index_col`, which is omitted from the dump.
+            "crates trigger_crates_tsvector_update",
+            // Populates `versions.semver_ord_v2`, which is omitted from the dump.
+            "versions trigger_set_semver_ord_v2",
+        ];
+
+        // Read only the required triggers from the `pg_dump` output and
+        // write them to a temporary file.
+        let args = REQ_TRIGGERS
+            .iter()
+            .map(|name| format!("--trigger={name}"))
+            .collect::<Vec<_>>();
+        let args = std::iter::once("--list")
+            .chain(args.iter().map(String::as_str))
+            .collect::<Vec<_>>();
+        let req_triggers = self.restore_schema(pg_dump_path, &args)?;
+        let req_triggers =
+            String::from_utf8(req_triggers).context("Invalid UTF-8 in trigger listing")?;
+
+        let req_triggers_file = NamedTempFile::with_prefix("required-triggers-")?;
+        fs::write(req_triggers_file.path(), &req_triggers)?;
+
+        let req_triggers = req_triggers
+            .lines()
+            .filter(|line| !line.starts_with(';') && !line.trim().is_empty())
+            .collect::<Vec<_>>();
+
+        anyhow::ensure!(
+            req_triggers.len() == REQ_TRIGGERS.len(),
+            "Expected {} required import triggers, found {}",
+            REQ_TRIGGERS.len(),
+            req_triggers.len()
+        );
+
+        // Remove the required triggers from the full list and write the
+        // remaining lines to another temporary file.
+        let remaining_lines = full_list
+            .lines()
+            .filter(|line| !req_triggers.contains(line))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let remaining_file = NamedTempFile::with_prefix("remaining-schema-")?;
+        fs::write(remaining_file.path(), remaining_lines)?;
+
+        // Generate the schema for the required triggers
+        let required_path = req_triggers_file.path().to_str();
+        let required_path = required_path.context("Invalid required trigger list path")?;
+        let triggers = self.restore_schema(pg_dump_path, &["--use-list", required_path])?;
+
+        // Generate the schema for everything required *before* the data
+        // import and append the required triggers to it, then save it
+        // as `schema-before.sql`.
+        let mut before = self.restore_schema(pg_dump_path, &["--section=pre-data"])?;
+        before.extend_from_slice(&triggers);
+        fs::write(self.path().join("schema-before.sql"), before)?;
+
+        // Generate the schema for everything required *after* the data import
+        // and save it as `schema-after.sql`.
+        let remaining_path = remaining_file.path().to_str();
+        let remaining_path = remaining_path.context("Invalid remaining schema list path")?;
+        let args = ["--section=post-data", "--use-list", remaining_path];
+        let after = self.restore_schema(pg_dump_path, &args)?;
+        fs::write(self.path().join("schema-after.sql"), after)?;
 
         Ok(())
+    }
+
+    /// Reads selected schema definitions or their listing from the `pg_dump` output.
+    fn restore_schema(&self, pg_dump_output: &Path, args: &[&str]) -> anyhow::Result<Vec<u8>> {
+        let mut command = Command::new(self.pg_program("pg_restore"));
+        command
+            .args(["--no-owner", "--no-acl", "--file=-"])
+            .args(args)
+            .arg(pg_dump_output);
+        command_output(&mut command)
     }
 
     pub fn dump_db(&self, database_url: &str) -> anyhow::Result<()> {
@@ -184,6 +252,18 @@ impl DumpDirectory {
         }
         Ok(())
     }
+}
+
+/// Captures a PostgreSQL command's output and reports failures with its diagnostics.
+fn command_output(command: &mut Command) -> anyhow::Result<Vec<u8>> {
+    let program = command.get_program().to_owned();
+    let output = command
+        .output()
+        .with_context(|| format!("Failed to run {program:?}"))?;
+    let status = output.status;
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    anyhow::ensure!(status.success(), "{program:?} failed ({status}): {stderr}");
+    Ok(output.stdout)
 }
 
 pub struct Archives {
@@ -289,6 +369,9 @@ mod tests {
         let p = tempdir.path();
 
         fs::write(p.join("README.md"), "# crates.io Database Dump\n").unwrap();
+        for name in ["schema.sql", "schema-before.sql", "schema-after.sql"] {
+            fs::write(p.join(name), "").unwrap();
+        }
         fs::create_dir(p.join("data")).unwrap();
         fs::write(p.join("data").join("crates.csv"), "").unwrap();
         fs::write(p.join("data").join("crate_owners.csv"), "").unwrap();
@@ -307,6 +390,9 @@ mod tests {
         [
             "0000-00-00",
             "0000-00-00/README.md",
+            "0000-00-00/schema-after.sql",
+            "0000-00-00/schema-before.sql",
+            "0000-00-00/schema.sql",
             "0000-00-00/data",
             "0000-00-00/data/crates.csv",
             "0000-00-00/data/users.csv",
@@ -322,6 +408,9 @@ mod tests {
         assert_debug_snapshot!(zip_paths, @r#"
         [
             "README.md",
+            "schema-after.sql",
+            "schema-before.sql",
+            "schema.sql",
             "data/",
             "data/crates.csv",
             "data/users.csv",
@@ -332,6 +421,16 @@ mod tests {
 
     #[test]
     fn dump_db_and_reimport_dump() {
+        reimport_dump(&["schema.sql", "import.sql"]);
+    }
+
+    #[test]
+    fn dump_db_and_reimport_staged_dump() {
+        reimport_dump(&["schema-before.sql", "import.sql", "schema-after.sql"]);
+    }
+
+    /// Restores a dump through the given sequence of generated scripts.
+    fn reimport_dump(scripts: &[&str]) {
         use diesel::RunQueryDsl;
         use diesel::sql_query;
 
@@ -354,11 +453,10 @@ mod tests {
             .execute(&mut conn)
             .unwrap();
 
-        let schema_script = directory.path().join("schema.sql");
-        directory.run_psql(&schema_script, test_db.url()).unwrap();
-
-        let import_script = directory.path().join("import.sql");
-        directory.run_psql(&import_script, test_db.url()).unwrap();
+        for script in scripts {
+            let path = directory.path().join(script);
+            directory.run_psql(&path, test_db.url()).unwrap();
+        }
 
         // TODO: Consistency checks on the re-imported data?
     }
