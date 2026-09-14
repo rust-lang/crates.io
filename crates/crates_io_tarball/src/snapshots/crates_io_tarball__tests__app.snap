@@ -64,5 +64,18 @@ TarballInfo {
         patch: None,
         lib: None,
     },
+    target_metadata: TargetMetadata {
+        build_script: None,
+        library: None,
+        binaries: [
+            BinaryMetadata {
+                source: SourceFile {
+                    path: "src/main.rs",
+                    exists: true,
+                },
+                name: "foo",
+            },
+        ],
+    },
     vcs_info: None,
 }

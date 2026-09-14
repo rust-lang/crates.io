@@ -276,6 +276,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         metadata_file_size: app.config.publish_limits.metadata_file_size,
     };
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
+    tarball_info
+        .target_metadata
+        .require_existing_sources()
+        .map_err(|error| bad_request(error.to_string()))?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
     // we only accept manifests with a `package` section and without
@@ -1091,6 +1095,7 @@ impl From<TarballError> for BoxedAppError {
             TarballError::InvalidManifest(err) => bad_request(format!(
                 "failed to parse `Cargo.toml` manifest file\n\n{err}"
             )),
+            TarballError::InvalidTargetMetadata(err) => bad_request(err.to_string()),
         }
     }
 }

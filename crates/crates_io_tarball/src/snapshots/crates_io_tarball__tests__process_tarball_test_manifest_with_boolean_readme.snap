@@ -51,5 +51,10 @@ TarballInfo {
         patch: None,
         lib: None,
     },
+    target_metadata: TargetMetadata {
+        build_script: None,
+        library: None,
+        binaries: [],
+    },
     vcs_info: None,
 }
