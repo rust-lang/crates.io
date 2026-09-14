@@ -1,5 +1,7 @@
 use crates_io_env_vars::var_parsed;
 
+const DEFAULT_TARBALL_ENTRIES: usize = 30_000;
+
 #[derive(Debug)]
 pub struct PublishLimitsConfig {
     /// Maximum size in bytes of an uploaded crate file.
@@ -11,8 +13,8 @@ pub struct PublishLimitsConfig {
     /// Maximum number of entries in an uploaded crate tarball.
     ///
     /// Read from the `MAX_TARBALL_ENTRIES` environment variable. An unset
-    /// value disables the limit.
-    pub tarball_entries: Option<usize>,
+    /// value defaults to 30,000 entries.
+    pub tarball_entries: usize,
 
     /// Maximum size in bytes of the `Cargo.toml` and `.cargo_vcs_info.json`
     /// files inside an uploaded crate tarball.
@@ -31,7 +33,7 @@ impl Default for PublishLimitsConfig {
         Self {
             upload_size: 10 * 1024 * 1024,  // 10 MB
             unpack_size: 512 * 1024 * 1024, // 512 MB
-            tarball_entries: None,
+            tarball_entries: DEFAULT_TARBALL_ENTRIES,
             metadata_file_size: 1024 * 1024, // 1 MB
             dependencies: 500,
             features: 300,
@@ -43,7 +45,7 @@ impl PublishLimitsConfig {
     /// Returns the default publish limits with environment overrides applied.
     pub fn from_env() -> anyhow::Result<Self> {
         Ok(Self {
-            tarball_entries: var_parsed("MAX_TARBALL_ENTRIES")?,
+            tarball_entries: var_parsed("MAX_TARBALL_ENTRIES")?.unwrap_or(DEFAULT_TARBALL_ENTRIES),
             ..Self::default()
         })
     }
@@ -54,7 +56,7 @@ impl PublishLimitsConfig {
         Self {
             upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
             unpack_size: 128 * 1024,
-            tarball_entries: None,
+            tarball_entries: DEFAULT_TARBALL_ENTRIES,
             metadata_file_size: 32 * 1024,
             dependencies: 10,
             features: 10,
