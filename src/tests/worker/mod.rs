@@ -1,4 +1,5 @@
 mod archive_index_branch;
+mod backfill_target_metadata;
 mod build_crate_zip;
 mod generate_og_image;
 mod git;
