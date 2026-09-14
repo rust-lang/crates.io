@@ -250,60 +250,166 @@ async fn unprefixed_github_login_separator_variant() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `github_user`"}]}"#);
 }
 
+/// Crates.io usernames can resolve users without a linked GitHub account.
+#[tokio::test(flavor = "multi_thread")]
+async fn crates_io_prefixed_invitation_without_github_account() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user_id = UserBuilder::new()
+        .with_username("inactive")
+        .with_gh_id(-1)
+        .new_user()
+        .insert(&conn)
+        .await
+        .unwrap();
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "crates.io:inactive").await;
+    assert_eq!(response.status(), 200);
+    assert_eq!(invited_user_ids(&mut conn, krate.id).await, [user_id]);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefixed_username_verbatim() {
     let response = invite_distinct_login_user("crates.io:crates-user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+/// A crates.io-prefixed invitation selects the username even when a GitHub login conflicts.
+#[tokio::test(flavor = "multi_thread")]
+async fn crates_io_prefixed_invitation_targets_username() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = UserBuilder::new()
+        .with_username("crates-user")
+        .with_gh_login("github-user");
+    let user = app.db_new_user_from_builder(user).await;
+    let other_user = UserBuilder::new()
+        .with_username("github-user")
+        .with_gh_login("crates-user");
+    app.db_new_user_from_builder(other_user).await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "crates.io:CrAtEs_UsEr").await;
+    assert_eq!(response.status(), 200);
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert_eq!(invitees, [user.as_model().id]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefixed_username_case_insensitive() {
     let response = invite_distinct_login_user("crates.io:CRATES-USER").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefixed_username_separator_variant() {
     let response = invite_distinct_login_user("crates.io:crates_user").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+/// GitHub logins cannot resolve users without a linked GitHub account.
+#[tokio::test(flavor = "multi_thread")]
+async fn github_prefixed_invitation_without_github_account() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    UserBuilder::new()
+        .with_username("inactive")
+        .with_gh_id(-1)
+        .new_user()
+        .insert(&conn)
+        .await
+        .unwrap();
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:inactive").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find GitHub user with login `inactive`"}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_verbatim() {
     let response = invite_distinct_login_user("github:github-user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+}
+
+/// Reused GitHub logins select the highest account ID despite a matching crates.io name.
+#[tokio::test(flavor = "multi_thread")]
+async fn github_prefixed_invitation_uses_highest_account_id() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    app.db_new_user("shared").await;
+    let user = UserBuilder::new()
+        .with_username("newer")
+        .with_gh_login("SHARED");
+    let user = app.db_new_user_from_builder(user).await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "github:SHARED").await;
+    assert_eq!(response.status(), 200);
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert_eq!(invitees, [user.as_model().id]);
+
+    let response = cookie.add_named_owner("foo", "crates.io:newer").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user newer already has a pending invitation to be an owner of crate foo","ok":true}"#);
+    assert_eq!(app.emails().await.len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_case_insensitive() {
     let response = invite_distinct_login_user("github:GITHUB-USER").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefixed_login_separator_variant() {
     let response = invite_distinct_login_user("github:github_user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find GitHub user with login `github_user`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_io_prefix_does_not_match_github_login() {
     let response = invite_distinct_login_user("crates.io:github-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find crates.io user with username `github-user`"}]}"#);
+}
+
+/// Explicit usernames still reject existing owners by user ID.
+#[tokio::test(flavor = "multi_thread")]
+async fn crates_io_prefixed_existing_owner() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "crates.io:FOO").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`crates.io:FOO` is already an owner"}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_prefix_does_not_match_crates_io_username() {
     let response = invite_distinct_login_user("github:crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"prefixed usernames are not supported yet"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find GitHub user with login `crates-user`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
