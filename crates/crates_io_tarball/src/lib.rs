@@ -9,10 +9,10 @@ pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
-use crates_io_cargo_toml::AbstractFilesystem;
+use crates_io_cargo_toml::PathsFileSystem;
 pub use crates_io_cargo_toml::{Manifest, StringOrBool};
 use futures_util::StreamExt;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tokio::io::{AsyncReadExt, BufReader};
@@ -194,7 +194,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         return Err(TarballError::IncorrectlyCasedManifest(file.into()));
     }
 
-    manifest.complete_from_abstract_filesystem(&PathsFileSystem(paths))?;
+    manifest.complete_from_abstract_filesystem(&PathsFileSystem::new(paths))?;
 
     Ok(TarballInfo { manifest, vcs_info })
 }
@@ -254,34 +254,6 @@ async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
     }
 
     Ok(())
-}
-
-struct PathsFileSystem(Vec<PathBuf>);
-
-impl AbstractFilesystem for PathsFileSystem {
-    fn file_names_in<T: AsRef<Path>>(&self, rel_path: T) -> std::io::Result<BTreeSet<Box<str>>> {
-        let mut rel_path = rel_path.as_ref();
-
-        // Deal with relative paths that start with `./`
-        let mut components = rel_path.components();
-        while components.next() == Some(Component::CurDir) {
-            rel_path = components.as_path();
-        }
-
-        let paths = &self.0;
-        let file_names = paths
-            .iter()
-            .filter_map(move |p| p.strip_prefix(rel_path).ok())
-            .filter_map(|name| match name.components().next() {
-                // `process_tarball()` rejects non-utf8 paths before they reach here, so `to_str()` should always succeeds
-                Some(Component::Normal(p)) => p.to_str(),
-                _ => None,
-            })
-            .map(From::from)
-            .collect();
-
-        Ok(file_names)
-    }
 }
 
 #[cfg(test)]
