@@ -4,6 +4,7 @@ use crate::worker::Environment;
 use chrono::{Duration, Utc};
 use crates_io_database::models::CloudFrontDistribution;
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
@@ -21,15 +22,9 @@ const ALWAYS_INCLUDE_AGE: Duration = Duration::hours(24);
 /// the feed.
 const NUM_ITEMS: i64 = 10;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Constructor, Serialize, Deserialize)]
 pub struct SyncCrateFeed {
     name: String,
-}
-
-impl SyncCrateFeed {
-    pub fn new(name: String) -> Self {
-        Self { name }
-    }
 }
 
 impl BackgroundJob for SyncCrateFeed {

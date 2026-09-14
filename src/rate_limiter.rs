@@ -3,6 +3,7 @@ use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{DateTime, Utc};
 use crates_io_database::fns::{date_part, floor, greatest, interval_part, least};
 use crates_io_database::pg_enum;
+use derive_more::Constructor;
 use diesel::dsl::IntervalDsl;
 use diesel::prelude::*;
 use diesel::sql_types::Interval;
@@ -65,16 +66,12 @@ pub struct RateLimiterConfig {
     pub burst: i32,
 }
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct RateLimiter {
     config: HashMap<LimitedAction, RateLimiterConfig>,
 }
 
 impl RateLimiter {
-    pub fn new(config: HashMap<LimitedAction, RateLimiterConfig>) -> Self {
-        Self { config }
-    }
-
     pub async fn check_rate_limit(
         &self,
         uploader: i32,

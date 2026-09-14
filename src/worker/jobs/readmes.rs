@@ -6,6 +6,7 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::result::DatabaseErrorKind;
 use diesel::result::Error::DatabaseError;
 use diesel_async::AsyncConnection;
@@ -13,31 +14,13 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, instrument, warn};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Constructor, Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {
     version_id: i32,
     text: String,
     readme_path: String,
     base_url: Option<String>,
     pkg_path_in_vcs: Option<String>,
-}
-
-impl RenderAndUploadReadme {
-    pub fn new(
-        version_id: i32,
-        text: String,
-        readme_path: String,
-        base_url: Option<String>,
-        pkg_path_in_vcs: Option<String>,
-    ) -> Self {
-        Self {
-            version_id,
-            text,
-            readme_path,
-            base_url,
-            pkg_path_in_vcs,
-        }
-    }
 }
 
 impl BackgroundJob for RenderAndUploadReadme {

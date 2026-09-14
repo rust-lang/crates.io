@@ -4,6 +4,7 @@ use anyhow::Context;
 use chrono::NaiveDate;
 use crates_io_cdn_logs::{Decompressor, DownloadsMap, count_downloads};
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel::{QueryResult, select};
@@ -24,21 +25,11 @@ use tracing::{debug, info, instrument, warn};
 /// A background job that loads a CDN log file from an object store (aka. S3),
 /// counts the number of downloads for each crate and version, and then inserts
 /// the results into the database.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Constructor, Debug, Serialize, Deserialize)]
 pub struct ProcessCdnLog {
     pub region: String,
     pub bucket: String,
     pub path: String,
-}
-
-impl ProcessCdnLog {
-    pub fn new(region: String, bucket: String, path: String) -> Self {
-        Self {
-            region,
-            bucket,
-            path,
-        }
-    }
 }
 
 impl BackgroundJob for ProcessCdnLog {

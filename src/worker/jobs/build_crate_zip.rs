@@ -5,6 +5,7 @@ use anyhow::Context;
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use crates_io_crate_zip::build_zip;
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
@@ -20,15 +21,9 @@ use tracing::{info, instrument, warn};
 
 /// Builds the seekable `.zip` source archive and its `.zip.json` manifest for a
 /// single version, uploads both, and records their checksums on the version.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Constructor, Serialize, Deserialize)]
 pub struct BuildCrateZip {
     version_id: i32,
-}
-
-impl BuildCrateZip {
-    pub fn new(version_id: i32) -> Self {
-        Self { version_id }
-    }
 }
 
 impl BackgroundJob for BuildCrateZip {
