@@ -96,7 +96,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     let pkg_root = Path::new(&pkg_name);
 
     let mut vcs_info = None;
-    let mut paths = Vec::new();
+    let mut files = Vec::new();
     let mut manifests = BTreeMap::new();
     let mut entries = archive.entries()?;
     let mut num_entries = 0;
@@ -154,7 +154,9 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             });
         }
 
-        paths.push(in_pkg_path.to_path_buf());
+        if entry_type.is_file() {
+            files.push(in_pkg_path.to_path_buf());
+        }
 
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
@@ -194,7 +196,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         return Err(TarballError::IncorrectlyCasedManifest(file.into()));
     }
 
-    manifest.complete_from_abstract_filesystem(&PathsFileSystem::new(paths))?;
+    manifest.complete_from_abstract_filesystem(&PathsFileSystem::new(files))?;
 
     Ok(TarballInfo { manifest, vcs_info })
 }
@@ -300,6 +302,23 @@ mod tests {
 
         let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, LIMITS).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_ignores_directories_during_target_discovery() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_dir("foo-0.0.1/build.rs")
+            .add_dir("foo-0.0.1/src/lib.rs")
+            .add_dir("foo-0.0.1/src/main.rs")
+            .add_dir("foo-0.0.1/src/bin/tool.rs")
+            .build();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LIMITS).await);
+
+        assert_none!(tarball_info.manifest.package.unwrap().build);
+        assert_none!(tarball_info.manifest.lib);
+        assert!(tarball_info.manifest.bin.is_empty());
     }
 
     #[tokio::test]
