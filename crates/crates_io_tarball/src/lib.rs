@@ -37,6 +37,9 @@ pub struct TarballLimits {
     /// Metadata headers consumed by the tar parser are not counted. `None`
     /// disables the limit.
     pub entries: Option<usize>,
+    /// Maximum size in bytes of the `Cargo.toml` and `.cargo_vcs_info.json`
+    /// entries.
+    pub metadata_file_size: u64,
 }
 
 #[derive(Debug)]
@@ -59,6 +62,8 @@ pub enum TarballError {
     UnexpectedEntry { path: String, entry_type: EntryType },
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
+    #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
+    MetadataFileTooLarge { path: String, max: u64 },
     #[error("Cargo.toml manifest is missing")]
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
@@ -154,15 +159,13 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
         if in_pkg_path_str == ".cargo_vcs_info.json" {
-            let mut contents = String::new();
-            entry.read_to_string(&mut contents).await?;
+            let contents = read_metadata_entry(&mut entry, limits.metadata_file_size).await?;
             vcs_info = CargoVcsInfo::from_contents(&contents).ok();
         } else if in_pkg_path_str.eq_ignore_ascii_case("cargo.toml") {
             // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
             // cannot be read.
             let owned_entry_path = entry_path.into_owned();
-            let mut contents = String::new();
-            entry.read_to_string(&mut contents).await?;
+            let contents = read_metadata_entry(&mut entry, limits.metadata_file_size).await?;
 
             let manifest = Manifest::from_str(&contents)?;
             validate_manifest(&manifest)?;
@@ -194,6 +197,21 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     manifest.complete_from_abstract_filesystem(&PathsFileSystem(paths))?;
 
     Ok(TarballInfo { manifest, vcs_info })
+}
+
+/// Reads a metadata entry into memory after checking its declared size.
+async fn read_metadata_entry<R: tokio::io::AsyncRead + Unpin>(
+    entry: &mut Entry<R>,
+    max: u64,
+) -> Result<String, TarballError> {
+    if entry.effective_size() > max {
+        let path = entry.path()?.display().to_string();
+        return Err(TarballError::MetadataFileTooLarge { path, max });
+    }
+
+    let mut contents = String::new();
+    entry.read_to_string(&mut contents).await?;
+    Ok(contents)
 }
 
 async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
@@ -276,6 +294,7 @@ mod tests {
     const LIMITS: TarballLimits = TarballLimits {
         unpack_size: 512 * 1024 * 1024,
         entries: None,
+        metadata_file_size: 1024 * 1024,
     };
 
     fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
@@ -393,7 +412,7 @@ mod tests {
 
         let limits = TarballLimits {
             unpack_size: tarball.len() as u64 - 1,
-            entries: None,
+            ..LIMITS
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
@@ -421,6 +440,51 @@ mod tests {
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
         assert_snapshot!(err, @"uploaded tarball contains more than 3 entries");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_metadata_size_limit() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let limits = TarballLimits {
+            metadata_file_size: MANIFEST.len() as u64,
+            ..LIMITS
+        };
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, limits).await);
+
+        let limits = TarballLimits {
+            metadata_file_size: MANIFEST.len() as u64 - 1,
+            ..LIMITS
+        };
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
+        assert_snapshot!(err, @"metadata file `foo-0.0.1/Cargo.toml` exceeds the maximum size of 40 bytes");
+
+        let vcs_info = br#"{"path_in_vcs": "a/path/that/is/longer/than/the/manifest"}"#;
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/.cargo_vcs_info.json", vcs_info)
+            .build();
+
+        let limits = TarballLimits {
+            metadata_file_size: MANIFEST.len() as u64,
+            ..LIMITS
+        };
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limits).await);
+        assert_snapshot!(err, @"metadata file `foo-0.0.1/.cargo_vcs_info.json` exceeds the maximum size of 41 bytes");
+
+        // Entries other than the two metadata files are not affected by the limit.
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/src/lib.rs", &[b'a'; 4096])
+            .build();
+
+        let limits = TarballLimits {
+            metadata_file_size: MANIFEST.len() as u64,
+            ..LIMITS
+        };
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, limits).await);
     }
 
     #[tokio::test]

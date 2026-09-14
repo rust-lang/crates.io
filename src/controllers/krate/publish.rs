@@ -273,6 +273,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let limits = TarballLimits {
         unpack_size: max_unpack_size,
         entries: app.config.publish_limits.tarball_entries,
+        metadata_file_size: app.config.publish_limits.metadata_file_size,
     };
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
 
@@ -1062,7 +1063,8 @@ impl From<TarballError> for BoxedAppError {
                 bad_request(format!("uploaded tarball contains more than {max} entries"))
             }
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
-            error @ TarballError::UnexpectedEntry { .. } => bad_request(error.to_string()),
+            error @ (TarballError::UnexpectedEntry { .. }
+            | TarballError::MetadataFileTooLarge { .. }) => bad_request(error.to_string()),
             TarballError::IO(err) => err.into(),
             TarballError::MissingManifest => {
                 bad_request("uploaded tarball is missing a `Cargo.toml` manifest file")
