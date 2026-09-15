@@ -68,5 +68,19 @@ TarballInfo {
             },
         ),
     },
+    target_metadata: TargetMetadata {
+        build_script: None,
+        library: Some(
+            LibraryMetadata {
+                source: SourceFile {
+                    path: "src/lib.rs",
+                    exists: true,
+                },
+                name: "foo",
+                is_proc_macro: false,
+            },
+        ),
+        binaries: [],
+    },
     vcs_info: None,
 }

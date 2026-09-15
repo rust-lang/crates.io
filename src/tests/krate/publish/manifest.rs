@@ -1,7 +1,8 @@
 use crate::builders::PublishBuilder;
 use crate::util::insta::{any_id_redaction, id_redaction};
-use crate::util::{RequestHelper, TestApp};
+use crate::util::{RequestHelper, Response, TestApp};
 use crates_io::schema::versions;
+use crates_io::views::GoodCrate;
 use diesel::QueryDsl;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -137,6 +138,83 @@ async fn invalid_manifest_missing_version() {
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\nmissing field `version`"}]}"#);
+}
+
+async fn publish_manifest(manifest: &'static str) -> Response<GoodCrate> {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
+    token
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(manifest))
+        .await
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_manifest_missing_library_path() {
+    let manifest = r#"[package]
+name = "foo"
+version = "1.0.0"
+description = "description"
+license = "MIT"
+
+[lib]
+"#;
+
+    let response = publish_manifest(manifest).await;
+
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\ncan't find library, rename file to `src/lib.rs` or specify lib.path"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn missing_build_script() {
+    let manifest = r#"[package]
+name = "foo"
+version = "1.0.0"
+description = "description"
+license = "MIT"
+build = "build.rs"
+"#;
+
+    let response = publish_manifest(manifest).await;
+
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"build script source file `build.rs` is missing from the package"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn missing_library_source() {
+    let manifest = r#"[package]
+name = "foo"
+version = "1.0.0"
+description = "description"
+license = "MIT"
+
+[lib]
+path = "src/lib.rs"
+"#;
+
+    let response = publish_manifest(manifest).await;
+
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"library target `foo` source file `src/lib.rs` is missing from the package"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn missing_binary_source() {
+    let manifest = r#"[package]
+name = "foo"
+version = "1.0.0"
+description = "description"
+license = "MIT"
+
+[[bin]]
+name = "tool"
+path = "src/bin/tool.rs"
+"#;
+
+    let response = publish_manifest(manifest).await;
+
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"binary target `tool` source file `src/bin/tool.rs` is missing from the package"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

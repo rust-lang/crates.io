@@ -1783,6 +1783,7 @@ version = "0.0.0"
 dependencies = [
  "insta",
  "serde",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.20",
  "toml 1.1.6+spec-1.1.0",
