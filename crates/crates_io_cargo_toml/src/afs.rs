@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use std::fs::read_dir;
 use std::io;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 /// A trait for abstracting over filesystem operations.
 ///
@@ -36,5 +36,40 @@ impl AbstractFilesystem for Filesystem<'_> {
                     .map(|e| e.file_name().to_string_lossy().to_string().into_boxed_str())
             })
             .collect())
+    }
+}
+
+/// An [`AbstractFilesystem`] backed by a list of package-relative paths.
+pub struct PathsFileSystem(Vec<PathBuf>);
+
+impl PathsFileSystem {
+    /// Creates an abstract filesystem from package-relative paths.
+    pub fn new(paths: Vec<PathBuf>) -> Self {
+        Self(paths)
+    }
+}
+
+impl AbstractFilesystem for PathsFileSystem {
+    fn file_names_in<T: AsRef<Path>>(&self, rel_path: T) -> io::Result<BTreeSet<Box<str>>> {
+        let mut rel_path = rel_path.as_ref();
+
+        // Deal with relative paths that start with `./`
+        let mut components = rel_path.components();
+        while components.next() == Some(Component::CurDir) {
+            rel_path = components.as_path();
+        }
+
+        let file_names = self
+            .0
+            .iter()
+            .filter_map(move |path| path.strip_prefix(rel_path).ok())
+            .filter_map(|name| match name.components().next() {
+                Some(Component::Normal(path)) => path.to_str(),
+                _ => None,
+            })
+            .map(From::from)
+            .collect();
+
+        Ok(file_names)
     }
 }
