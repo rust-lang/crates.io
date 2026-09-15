@@ -335,7 +335,7 @@ repository = "https://github.com/foo/foo"
         let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
             .await
             .unwrap();
-        assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/./Other.md\""))
+        assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/Other.md\""))
     }
 
     #[tokio::test]
@@ -361,6 +361,6 @@ repository = "https://github.com/foo/foo"
             .await
             .unwrap();
         assert!(result.contains("docs/readme"));
-        assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/docs/./Other.md\""))
+        assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/docs/Other.md\""))
     }
 }
