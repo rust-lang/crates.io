@@ -1,8 +1,8 @@
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
+use derive_more::Display;
 use serde::Serialize;
 use std::borrow::Cow;
-use std::fmt;
 
 use super::{AppError, BoxedAppError};
 
@@ -53,16 +53,11 @@ pub fn custom(status: StatusCode, detail: impl Into<Cow<'static, str>>) -> Boxed
     })
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Display)]
+#[display("{detail}")]
 pub struct CustomApiError {
     status: StatusCode,
     detail: Cow<'static, str>,
-}
-
-impl fmt::Display for CustomApiError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.detail.fmt(f)
-    }
 }
 
 impl AppError for CustomApiError {
@@ -71,7 +66,8 @@ impl AppError for CustomApiError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
+#[display("Too many requests")]
 pub(crate) struct TooManyRequests {
     pub action: LimitedAction,
     pub retry_after: DateTime<Utc>,
@@ -98,13 +94,8 @@ impl AppError for TooManyRequests {
     }
 }
 
-impl fmt::Display for TooManyRequests {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Too many requests".fmt(f)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Display)]
+#[display("{TOKEN_FORMAT_ERROR}")]
 pub struct InsecurelyGeneratedTokenRevoked;
 
 impl InsecurelyGeneratedTokenRevoked {
@@ -130,10 +121,3 @@ pub const TOKEN_FORMAT_ERROR: &str = "The given API token does not match the for
     For more information please see \
     https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. \
     We apologize for any inconvenience.";
-
-impl fmt::Display for InsecurelyGeneratedTokenRevoked {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(TOKEN_FORMAT_ERROR)?;
-        Result::Ok(())
-    }
-}

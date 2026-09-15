@@ -1,3 +1,4 @@
+use derive_more::Display;
 use indexmap::IndexMap;
 use serde::Serialize;
 
@@ -29,8 +30,9 @@ impl ReleaseTracks {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Display, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ReleaseTrackName {
+    #[display("0.{_0}")]
     Minor(u64),
     Major(u64),
 }
@@ -41,15 +43,6 @@ impl ReleaseTrackName {
             Self::Minor(version.minor)
         } else {
             Self::Major(version.major)
-        }
-    }
-}
-
-impl std::fmt::Display for ReleaseTrackName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Minor(minor) => write!(f, "0.{minor}"),
-            Self::Major(major) => write!(f, "{major}"),
         }
     }
 }

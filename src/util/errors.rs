@@ -14,6 +14,7 @@
 //!   controllers, and middleware layers.
 
 use axum::response::IntoResponse;
+use derive_more::Display;
 use std::any::{Any, TypeId};
 use std::borrow::Cow;
 use std::error::Error;
@@ -253,16 +254,10 @@ impl From<crates_io_trustpub::gitlab::validation::ValidationError> for BoxedAppE
 // =============================================================================
 // Internal error for use with `chain_error`
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
+#[display("{description}")]
 struct InternalAppError {
     description: String,
-}
-
-impl fmt::Display for InternalAppError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description)?;
-        Ok(())
-    }
 }
 
 impl AppError for InternalAppError {
