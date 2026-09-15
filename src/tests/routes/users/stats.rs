@@ -1,4 +1,5 @@
 use crate::util::{RequestHelper, TestApp};
+use crates_io::models::OwnerKind;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -52,8 +53,9 @@ async fn user_total_downloads() -> anyhow::Result<()> {
         .set(crate_downloads::downloads.eq(5))
         .execute(&mut conn)
         .await?;
+    let owners = [(OwnerKind::User, user.id)];
     no_longer_my_krate
-        .owner_remove(&conn, &user.username)
+        .remove_owners(&conn, &owners)
         .await
         .unwrap();
 

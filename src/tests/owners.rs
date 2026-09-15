@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response};
 use crate::{TestApp, add_team_to_crate, new_team};
-use crates_io::models::{Crate, CrateOwner};
+use crates_io::models::{Crate, CrateOwner, OwnerKind};
 use crates_io::schema::emails;
 use crates_io::views::{
     EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
@@ -229,9 +229,9 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
     assert_eq!(krate.owners(&conn).await?.len(), 3);
 
-    // Deleting two owners at once is allowed.
+    // Repeated names select the same owner from the initial owner list.
     let response = token
-        .remove_named_owners("owners_multiple", &["user2", "user3"])
+        .remove_named_owners("owners_multiple", &["user2", "USER2", "user2", "user3"])
         .await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
@@ -261,6 +261,13 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
         .accept_ownership_invitation(&krate.name, krate.id)
         .await;
 
+    assert_eq!(krate.owners(&conn).await?.len(), 3);
+
+    let response = token
+        .remove_named_owners("owners_multiple", &["user2", "unknown"])
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
     assert_eq!(krate.owners(&conn).await?.len(), 3);
 
     Ok(())
@@ -405,7 +412,8 @@ async fn deleted_ownership_isnt_in_owner_user() {
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&conn, &user.username).await.unwrap();
+    let owners = [(OwnerKind::User, user.id)];
+    krate.remove_owners(&conn, &owners).await.unwrap();
 
     let json: UserResponse = anon
         .get("/api/v1/crates/foo_my_packages/owner_user")

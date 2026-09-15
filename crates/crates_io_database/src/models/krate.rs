@@ -1,17 +1,16 @@
 use crate::fns::canon_crate_name;
 use crate::models::version::TopVersions;
-use crate::models::{CrateOwner, Owner, PublicUser, User, Version};
+use crate::models::{CrateOwner, Owner, OwnerKind, PublicUser, User, Version};
 use crate::schema::*;
 use chrono::{DateTime, Utc};
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::sql_types::{Bool, Integer, Text};
+use diesel::sql_types::{Bool, Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 use serde::Serialize;
-use thiserror::Error;
 
 use super::Team;
 
@@ -213,50 +212,33 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    pub async fn owner_remove(
+    /// Soft-deletes the selected owner identities and returns the number of active rows removed.
+    /// Missing or already deleted owners are ignored, and an empty selection removes nothing.
+    pub async fn remove_owners(
         &self,
         mut conn: &AsyncPgConnection,
-        login: &str,
-    ) -> Result<(), OwnerRemoveError> {
-        let query = diesel::sql_query(
-            r#"WITH crate_owners_with_login AS (
-                SELECT
-                    crate_owners.*,
-                    CASE WHEN crate_owners.owner_kind = 1 THEN
-                         teams.login
-                    ELSE
-                         users.gh_login
-                    END AS login
-                FROM crate_owners
-                LEFT JOIN teams
-                    ON crate_owners.owner_id = teams.id
-                    AND crate_owners.owner_kind = 1
-                LEFT JOIN users
-                    ON crate_owners.owner_id = users.id
-                    AND crate_owners.owner_kind = 0
-                WHERE crate_owners.crate_id = $1
-                    AND crate_owners.deleted = false
-            )
-            UPDATE crate_owners
-            SET deleted = true
-            FROM crate_owners_with_login
-            WHERE crate_owners.crate_id = crate_owners_with_login.crate_id
-                AND crate_owners.owner_id = crate_owners_with_login.owner_id
-                AND crate_owners.owner_kind = crate_owners_with_login.owner_kind
-                AND lower(crate_owners_with_login.login) = lower($2);"#,
-        );
+        owners: &[(OwnerKind, i32)],
+    ) -> QueryResult<usize> {
+        let user_ids = owners
+            .iter()
+            .filter_map(|&(kind, id)| (kind == OwnerKind::User).then_some(id));
+        let team_ids = owners
+            .iter()
+            .filter_map(|&(kind, id)| (kind == OwnerKind::Team).then_some(id));
+        let selected_users = crate_owners::owner_kind
+            .eq(OwnerKind::User)
+            .and(crate_owners::owner_id.eq_any(user_ids));
+        let selected_teams = crate_owners::owner_kind
+            .eq(OwnerKind::Team)
+            .and(crate_owners::owner_id.eq_any(team_ids));
 
-        let num_updated_rows = query
-            .bind::<Integer, _>(self.id)
-            .bind::<Text, _>(login)
+        diesel::update(crate_owners::table)
+            .filter(crate_owners::crate_id.eq(self.id))
+            .filter(crate_owners::deleted.eq(false))
+            .filter(selected_users.or(selected_teams))
+            .set(crate_owners::deleted.eq(true))
             .execute(&mut conn)
-            .await?;
-
-        if num_updated_rows == 0 {
-            return Err(OwnerRemoveError::not_found(login));
-        }
-
-        Ok(())
+            .await
     }
 }
 
@@ -269,19 +251,4 @@ pub enum NewOwnerInvite {
 
     /// The invitee was a [`Team`], and they were immediately added as an owner.
     Team(Team),
-}
-
-#[derive(Debug, Error)]
-pub enum OwnerRemoveError {
-    #[error(transparent)]
-    Diesel(#[from] diesel::result::Error),
-    #[error("Could not find owner with login `{login}`")]
-    NotFound { login: String },
-}
-
-impl OwnerRemoveError {
-    pub fn not_found(login: &str) -> Self {
-        let login = login.to_string();
-        Self::NotFound { login }
-    }
 }
