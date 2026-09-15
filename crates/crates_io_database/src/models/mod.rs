@@ -1,3 +1,4 @@
+pub use self::abandoned_username::{AbandonedUsername, NewAbandonedUsername};
 pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::cloudfront_invalidation_queue::{
@@ -24,6 +25,7 @@ pub use self::version::{NewVersion, TopVersions, Version};
 
 pub mod helpers;
 
+mod abandoned_username;
 mod action;
 pub mod category;
 mod cloudfront_invalidation_queue;
