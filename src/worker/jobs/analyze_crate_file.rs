@@ -7,6 +7,7 @@ use async_compression::tokio::bufread::GzipDecoder;
 use crates_io_database::schema::default_versions;
 use crates_io_linecount::{LinecountStats, PathDetails};
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -18,15 +19,9 @@ use tokio::io::{AsyncReadExt, BufReader};
 use tokio_util::io::StreamReader;
 use tracing::{info, instrument, warn};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Constructor, Serialize, Deserialize)]
 pub struct AnalyzeCrateFile {
     version_id: i32,
-}
-
-impl AnalyzeCrateFile {
-    pub fn new(version_id: i32) -> Self {
-        Self { version_id }
-    }
 }
 
 impl BackgroundJob for AnalyzeCrateFile {

@@ -3,21 +3,16 @@ use crate::schema::crates;
 use crate::worker::Environment;
 use crate::worker::jobs::GenerateOgImage;
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, warn};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Constructor, Serialize, Deserialize)]
 pub struct UpdateDefaultVersion {
     crate_id: i32,
-}
-
-impl UpdateDefaultVersion {
-    pub fn new(crate_id: i32) -> Self {
-        Self { crate_id }
-    }
 }
 
 impl BackgroundJob for UpdateDefaultVersion {

@@ -2,21 +2,16 @@ use crate::worker::Environment;
 use anyhow::anyhow;
 use crates_io_docs_rs::DocsRsError;
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, warn};
 
 /// A background job that queues a docs rebuild for a specific release.
-#[derive(Serialize, Deserialize)]
+#[derive(Constructor, Serialize, Deserialize)]
 pub struct DocsRsQueueRebuild {
     name: String,
     version: String,
-}
-
-impl DocsRsQueueRebuild {
-    pub fn new(name: String, version: String) -> Self {
-        Self { name, version }
-    }
 }
 
 impl BackgroundJob for DocsRsQueueRebuild {

@@ -5,6 +5,7 @@ use crate::worker::Environment;
 use anyhow::anyhow;
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
@@ -14,15 +15,9 @@ use tracing::{debug, info, warn};
 
 /// Background job that sends email notifications to all crate owners when a
 /// new crate version is published.
-#[derive(Serialize, Deserialize)]
+#[derive(Constructor, Serialize, Deserialize)]
 pub struct SendPublishNotificationsJob {
     version_id: i32,
-}
-
-impl SendPublishNotificationsJob {
-    pub fn new(version_id: i32) -> Self {
-        Self { version_id }
-    }
 }
 
 impl BackgroundJob for SendPublishNotificationsJob {

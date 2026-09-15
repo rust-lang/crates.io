@@ -2,19 +2,14 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_index::{Crate, DependencyKind};
 use crates_io_worker::BackgroundJob;
+use derive_more::Constructor;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::info;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Constructor, Serialize, Deserialize)]
 pub struct NormalizeIndex {
     dry_run: bool,
-}
-
-impl NormalizeIndex {
-    pub fn new(dry_run: bool) -> Self {
-        Self { dry_run }
-    }
 }
 
 impl BackgroundJob for NormalizeIndex {
