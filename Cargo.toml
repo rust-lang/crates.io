@@ -193,6 +193,7 @@ diesel = { version = "=2.3.13", features = ["r2d2"] }
 googletest = "=0.14.3"
 insta = { version = "=1.48.0", features = ["glob", "json", "redactions"] }
 jsonwebtoken = { version = "=11.0.0", features = ["aws_lc_rs"] }
+opentelemetry_sdk = { version = "=0.32.1", default-features = false, features = ["testing"] }
 quoted_printable = "=0.5.2"
 sentry = { version = "=0.49.2", features = ["test"] }
 tokio = "=1.53.1"

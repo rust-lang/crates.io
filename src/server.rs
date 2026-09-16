@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::email::Emails;
-use crate::metrics::{InstanceMetrics, ServiceMetrics};
+use crate::metrics::{InstanceMetrics, ServerMetrics, ServiceMetrics};
 use crate::rate_limiter::{LimitedAction, RateLimiter, RateLimiterConfig};
 use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
@@ -71,6 +71,9 @@ pub struct ServerContextInner {
     /// Metrics related to this specific instance of the service
     #[builder(default = InstanceMetrics::new().expect("could not initialize instance metrics"))]
     pub instance_metrics: InstanceMetrics,
+
+    /// OpenTelemetry metrics recorded by the HTTP server
+    pub metrics: ServerMetrics,
 
     /// Rate limit select actions.
     pub rate_limiter: RateLimiter,
