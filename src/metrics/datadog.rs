@@ -14,6 +14,7 @@ use crates_io_datadog::{DatadogClient, MetricType as DatadogMetricType, Point, R
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use prometheus::proto::{MetricFamily, MetricType};
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{info, warn};
@@ -54,10 +55,13 @@ pub fn spawn(
     let resources = vec![Resource::builder().kind("host").name(domain_name).build()];
 
     tokio::spawn(async move {
+        let mut observed_queues = HashSet::new();
+
         loop {
             let result = submit(
                 &deadpool,
                 &worker_metrics,
+                &mut observed_queues,
                 legacy.as_ref(),
                 &resources,
                 &common_tags,
@@ -77,6 +81,7 @@ pub fn spawn(
 async fn submit(
     deadpool: &Pool<AsyncPgConnection>,
     worker_metrics: &WorkerMetrics,
+    observed_queues: &mut HashSet<(String, String)>,
     legacy: Option<&(Arc<DatadogClient>, ServiceMetrics)>,
     resources: &[Resource],
     common_tags: &[String],
@@ -92,6 +97,12 @@ async fn submit(
         .context("Failed to gather service metrics")?;
 
     worker_metrics.record_service_totals(snapshot.crates_total, snapshot.versions_total);
+
+    observed_queues.extend(snapshot.background_jobs.keys().cloned());
+    for queue in observed_queues.iter() {
+        let count = snapshot.background_jobs.get(queue).copied().unwrap_or(0);
+        worker_metrics.record_background_jobs(queue, count);
+    }
 
     let Some((datadog, service_metrics)) = legacy else {
         return Ok(());

@@ -1,6 +1,9 @@
 /// The instrumentation scope name used by crates.io metrics.
 pub const METER_NAME: &str = "crates.io";
 
+/// The queued background jobs instrument name.
+pub const BACKGROUND_JOBS: &str = "crates_io.background_jobs";
+
 /// The total crates instrument name.
 pub const CRATES_TOTAL: &str = "crates_io.crates_total";
 
@@ -21,6 +24,12 @@ pub const HTTP_REQUEST_METHOD: &str = "http.request.method";
 
 /// The active HTTP server requests instrument name.
 pub const HTTP_SERVER_ACTIVE_REQUESTS: &str = "http.server.active_requests";
+
+/// The background job type attribute key.
+pub const JOB: &str = "job";
+
+/// The background job priority attribute key.
+pub const PRIORITY: &str = "priority";
 
 /// The URL scheme attribute key.
 pub const URL_SCHEME: &str = "url.scheme";
