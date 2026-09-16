@@ -60,6 +60,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let meter_provider = meter_provider(&config);
     let meter = meter_provider.meter(METER_NAME);
+    let worker_metrics = WorkerMetrics::new(&meter);
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -110,10 +111,11 @@ pub fn run() -> anyhow::Result<()> {
     let sync_github_app = build_sync_github_app()?;
 
     let deadpool = db::create_pool(&config.db.primary);
+    worker_metrics.track_db_pool("worker", &deadpool);
 
     let ctx = WorkerContext::builder()
         .config(Arc::new(config))
-        .metrics(WorkerMetrics::new(&meter))
+        .metrics(worker_metrics)
         .repository_config(repository_config)
         .maybe_cloudfront(cloudfront)
         .maybe_fastly(fastly)

@@ -389,9 +389,12 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
+            let worker_metrics = WorkerMetrics::new(&self.meter);
+            worker_metrics.track_db_pool("worker", &ctx.primary_database);
+
             let worker_ctx = WorkerContext::builder()
                 .config(ctx.config.clone())
-                .metrics(WorkerMetrics::new(&self.meter))
+                .metrics(worker_metrics)
                 .repository_config(repository_config)
                 .storage(ctx.storage.clone())
                 .deadpool(ctx.primary_database.clone())

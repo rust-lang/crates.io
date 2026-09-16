@@ -15,7 +15,7 @@ async fn reports_database_pool_connections() {
     let provider = SdkMeterProvider::builder().with_reader(reader).build();
     let meter = provider.meter(METER_NAME);
 
-    let (app, _) = TestApp::init()
+    let (app, _) = TestApp::full()
         .with_meter(meter)
         .with_replica()
         .empty()
@@ -37,11 +37,13 @@ async fn reports_database_pool_connections() {
     assert!(!sum.is_monotonic());
 
     let points = sum.data_points().collect::<Vec<_>>();
-    assert_eq!(points.len(), 4);
+    assert_eq!(points.len(), 6);
     assert_point(&points, "primary", "idle", 0);
     assert_point(&points, "primary", "used", 1);
     assert_point(&points, "replica", "idle", 0);
     assert_point(&points, "replica", "used", 0);
+    assert_point(&points, "worker", "idle", 0);
+    assert_point(&points, "worker", "used", 1);
 }
 
 fn assert_point(points: &[&SumDataPoint<i64>], pool: &str, state: &str, expected: i64) {
