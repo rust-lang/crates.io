@@ -540,11 +540,9 @@ impl TestAppBuilder {
             url: primary.url.clone(),
             read_only_mode: true,
             pool_size: primary.pool_size,
-            min_idle: primary.min_idle,
             tcp_timeout: primary.tcp_timeout,
             connection_timeout: primary.connection_timeout,
             statement_timeout: primary.statement_timeout,
-            helper_threads: primary.helper_threads,
             enforce_tls: primary.enforce_tls,
         });
 
@@ -563,11 +561,9 @@ fn simple_config() -> config::Server {
             url: String::from("invalid default url").into(),
             read_only_mode: false,
             pool_size: 5,
-            min_idle: None,
             tcp_timeout: Duration::from_secs(1),
             connection_timeout: Duration::from_secs(1),
             statement_timeout: Duration::from_secs(1),
-            helper_threads: 1,
             enforce_tls: false,
         },
         replica: None,

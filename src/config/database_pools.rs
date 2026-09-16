@@ -4,8 +4,6 @@
 //! - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
 //! - `DB_PRIMARY_ASYNC_POOL_SIZE`: The number of connections of the primary database.
 //! - `DB_REPLICA_ASYNC_POOL_SIZE`: The number of connections of the read-only / replica database.
-//! - `DB_PRIMARY_MIN_IDLE`: The primary pool will maintain at least this number of connections.
-//! - `DB_REPLICA_MIN_IDLE`: The replica pool will maintain at least this number of connections.
 //! - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
 //!   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
 //! - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
@@ -19,7 +17,6 @@ use secrecy::SecretString;
 use std::time::Duration;
 
 const DEFAULT_POOL_SIZE: usize = 3;
-const DEFAULT_HELPER_THREADS: usize = 3;
 const DEFAULT_TCP_TIMEOUT: Duration = Duration::from_secs(15);
 const DEFAULT_CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -36,7 +33,6 @@ pub struct DbPoolConfig {
     pub url: SecretString,
     pub read_only_mode: bool,
     pub pool_size: usize,
-    pub min_idle: Option<u32>,
     /// Number of seconds to wait for unacknowledged TCP packets before treating the connection as
     /// broken. This value will determine how long crates.io stays unavailable in case of full
     /// packet loss between the application and the database: setting it too high will result in an
@@ -49,9 +45,6 @@ pub struct DbPoolConfig {
     /// Time to wait for a query response before canceling the query and
     /// returning an error.
     pub statement_timeout: Duration,
-    /// Number of threads to use for asynchronous operations such as connection
-    /// creation.
-    pub helper_threads: usize,
     /// Whether to enforce that all the database connections are encrypted with TLS.
     pub enforce_tls: bool,
 }
@@ -78,9 +71,6 @@ impl DatabasePools {
         let replica_async_pool_size =
             var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
 
-        let primary_min_idle = var_parsed("DB_PRIMARY_MIN_IDLE")?;
-        let replica_min_idle = var_parsed("DB_REPLICA_MIN_IDLE")?;
-
         let tcp_timeout = var_parsed("DB_TCP_TIMEOUT_MS")?
             .map(Duration::from_millis)
             .unwrap_or(DEFAULT_TCP_TIMEOUT);
@@ -92,8 +82,6 @@ impl DatabasePools {
         // `DB_TIMEOUT` currently configures both the connection timeout and
         // the statement timeout, so we can copy the parsed connection timeout.
         let statement_timeout = connection_timeout;
-
-        let helper_threads = var_parsed("DB_HELPER_THREADS")?.unwrap_or(DEFAULT_HELPER_THREADS);
 
         let enforce_tls = base.env == Env::Production;
 
@@ -107,11 +95,9 @@ impl DatabasePools {
                     })?,
                     read_only_mode: true,
                     pool_size: primary_async_pool_size,
-                    min_idle: primary_min_idle,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
-                    helper_threads,
                     enforce_tls,
                 },
                 replica: None,
@@ -122,11 +108,9 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_async_pool_size,
-                    min_idle: primary_min_idle,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
-                    helper_threads,
                     enforce_tls,
                 },
                 replica: None,
@@ -136,11 +120,9 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_async_pool_size,
-                    min_idle: primary_min_idle,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
-                    helper_threads,
                     enforce_tls,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
@@ -150,11 +132,9 @@ impl DatabasePools {
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
                     pool_size: replica_async_pool_size,
-                    min_idle: replica_min_idle,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
-                    helper_threads,
                     enforce_tls,
                 }),
             },
