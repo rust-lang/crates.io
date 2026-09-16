@@ -208,6 +208,8 @@ impl ServerContext {
                     .get_metric_with_label_values(&["follower"])
                     .map(|metric| metric.inc());
 
+                self.metrics.db_fallback("replica");
+
                 warn!("Replica is unavailable, falling back to primary ({error})");
                 self.primary_database.get().await
             }
@@ -234,6 +236,8 @@ impl ServerContext {
                     .database_fallback_used
                     .get_metric_with_label_values(&["primary"])
                     .map(|metric| metric.inc());
+
+                self.metrics.db_fallback("primary");
 
                 warn!("Primary is unavailable, falling back to replica ({error})");
                 read_only_pool.get().await

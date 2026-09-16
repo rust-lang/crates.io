@@ -4,6 +4,9 @@ pub const METER_NAME: &str = "crates.io";
 /// The database pool connection count instrument name.
 pub const DB_CLIENT_CONNECTION_COUNT: &str = "db.client.connection.count";
 
+/// The database connection fallback instrument name.
+pub const DB_CLIENT_CONNECTION_FALLBACKS: &str = "crates_io.db.client.connection.fallbacks";
+
 /// The database pool name attribute key.
 pub const DB_CLIENT_CONNECTION_POOL_NAME: &str = "db.client.connection.pool.name";
 

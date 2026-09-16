@@ -1,8 +1,12 @@
 use super::SharedMetrics;
-use super::consts::{HTTP_REQUEST_METHOD, HTTP_SERVER_ACTIVE_REQUESTS, URL_SCHEME};
+use super::consts::{
+    DB_CLIENT_CONNECTION_FALLBACKS, DB_CLIENT_CONNECTION_POOL_NAME, HTTP_REQUEST_METHOD,
+    HTTP_SERVER_ACTIVE_REQUESTS, URL_SCHEME,
+};
+use super::otel::kv;
 use derive_more::Deref;
 use opentelemetry::KeyValue;
-use opentelemetry::metrics::{Meter, UpDownCounter};
+use opentelemetry::metrics::{Counter, Meter, UpDownCounter};
 
 /// OpenTelemetry instruments recorded by the HTTP server.
 #[derive(Clone, Debug, Deref)]
@@ -11,6 +15,7 @@ pub struct ServerMetrics {
     shared: SharedMetrics,
 
     active_requests: UpDownCounter<i64>,
+    db_fallbacks: Counter<u64>,
 }
 
 impl ServerMetrics {
@@ -23,9 +28,15 @@ impl ServerMetrics {
             .with_unit("{request}")
             .build();
 
+        let db_fallbacks = meter
+            .u64_counter(DB_CLIENT_CONNECTION_FALLBACKS)
+            .with_unit("{fallback}")
+            .build();
+
         Self {
             shared,
             active_requests,
+            db_fallbacks,
         }
     }
 
@@ -37,6 +48,12 @@ impl ServerMetrics {
             KeyValue::new(URL_SCHEME, scheme),
         ];
         ActiveRequestGuard::new(&self.active_requests, attributes)
+    }
+
+    /// Records a fallback from an unavailable database pool.
+    pub fn db_fallback(&self, pool: &'static str) {
+        self.db_fallbacks
+            .add(1, &[kv(DB_CLIENT_CONNECTION_POOL_NAME, pool)]);
     }
 }
 
