@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::email::Emails;
-use crate::metrics::{InstanceMetrics, ServerMetrics, ServiceMetrics};
+use crate::metrics::ServerMetrics;
 use crate::rate_limiter::{LimitedAction, RateLimiter, RateLimiterConfig};
 use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
@@ -63,14 +63,6 @@ pub struct ServerContextInner {
 
     /// Storage backend for crate files and other large objects.
     pub storage: Arc<Storage>,
-
-    /// Metrics related to the service as a whole
-    #[builder(default = ServiceMetrics::new().expect("could not initialize service metrics"))]
-    pub service_metrics: ServiceMetrics,
-
-    /// Metrics related to this specific instance of the service
-    #[builder(default = InstanceMetrics::new().expect("could not initialize instance metrics"))]
-    pub instance_metrics: InstanceMetrics,
 
     /// OpenTelemetry metrics recorded by the HTTP server
     pub metrics: ServerMetrics,
@@ -202,12 +194,6 @@ impl ServerContext {
 
             // Replica is not available, but primary might be available
             Err(error) => {
-                let _ = self
-                    .instance_metrics
-                    .database_fallback_used
-                    .get_metric_with_label_values(&["follower"])
-                    .map(|metric| metric.inc());
-
                 self.metrics.db_fallback("replica");
 
                 warn!("Replica is unavailable, falling back to primary ({error})");
@@ -231,12 +217,6 @@ impl ServerContext {
 
             // Primary is not available, but replica might be available
             Err(error) => {
-                let _ = self
-                    .instance_metrics
-                    .database_fallback_used
-                    .get_metric_with_label_values(&["primary"])
-                    .map(|metric| metric.inc());
-
                 self.metrics.db_fallback("primary");
 
                 warn!("Primary is unavailable, falling back to replica ({error})");

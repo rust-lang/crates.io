@@ -180,12 +180,6 @@ impl From<diesel_async::pooled_connection::deadpool::PoolError> for BoxedAppErro
     }
 }
 
-impl From<prometheus::Error> for BoxedAppError {
-    fn from(err: prometheus::Error) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
 impl From<reqwest::Error> for BoxedAppError {
     fn from(err: reqwest::Error) -> BoxedAppError {
         Box::new(err)

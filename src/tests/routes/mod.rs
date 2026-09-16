@@ -16,7 +16,6 @@ pub mod category_slugs;
 pub mod crates;
 pub mod keywords;
 pub mod me;
-pub mod metrics;
 mod private;
 pub mod session;
 mod site_metadata;
