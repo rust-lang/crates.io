@@ -7,8 +7,8 @@ use crates_io::config::{
     FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig, RateLimitsConfig,
     SharedConfig,
 };
-use crates_io::metrics::ServerMetrics;
 use crates_io::metrics::consts::METER_NAME;
+use crates_io::metrics::{ServerMetrics, WorkerMetrics};
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
@@ -391,6 +391,7 @@ impl TestAppBuilder {
 
             let worker_ctx = WorkerContext::builder()
                 .config(ctx.config.clone())
+                .metrics(WorkerMetrics::new(&self.meter))
                 .repository_config(repository_config)
                 .storage(ctx.storage.clone())
                 .deadpool(ctx.primary_database.clone())

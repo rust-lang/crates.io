@@ -16,6 +16,8 @@ use crates_io::Emails;
 use crates_io::cloudfront::CloudFront;
 use crates_io::config::SharedConfig;
 use crates_io::db;
+use crates_io::metrics::consts::METER_NAME;
+use crates_io::metrics::{WorkerMetrics, meter_provider};
 use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{RunnerExt, WorkerContext};
@@ -55,6 +57,9 @@ pub fn run() -> anyhow::Result<()> {
     // We run some long-running queries in the background worker, so we need to
     // increase the statement timeout a bit…
     config.db.primary.statement_timeout = Duration::from_secs(4 * 60 * 60);
+
+    let meter_provider = meter_provider(&config);
+    let meter = meter_provider.meter(METER_NAME);
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -108,6 +113,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let ctx = WorkerContext::builder()
         .config(Arc::new(config))
+        .metrics(WorkerMetrics::new(&meter))
         .repository_config(repository_config)
         .maybe_cloudfront(cloudfront)
         .maybe_fastly(fastly)
@@ -145,7 +151,12 @@ pub fn run() -> anyhow::Result<()> {
 
     runtime.block_on(async {
         let handle = runner.start();
-        crates_io::metrics::datadog::spawn(&ctx.config, ctx.deadpool.clone(), datadog);
+        crates_io::metrics::datadog::spawn(
+            &ctx.config,
+            ctx.deadpool.clone(),
+            ctx.metrics.clone(),
+            datadog,
+        );
 
         info!("Runner booted, running jobs");
         handle.wait_for_shutdown().await

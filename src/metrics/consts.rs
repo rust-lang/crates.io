@@ -1,6 +1,9 @@
 /// The instrumentation scope name used by crates.io metrics.
 pub const METER_NAME: &str = "crates.io";
 
+/// The total crates instrument name.
+pub const CRATES_TOTAL: &str = "crates_io.crates_total";
+
 /// The database pool connection count instrument name.
 pub const DB_CLIENT_CONNECTION_COUNT: &str = "db.client.connection.count";
 
@@ -21,3 +24,6 @@ pub const HTTP_SERVER_ACTIVE_REQUESTS: &str = "http.server.active_requests";
 
 /// The URL scheme attribute key.
 pub const URL_SCHEME: &str = "url.scheme";
+
+/// The total versions instrument name.
+pub const VERSIONS_TOTAL: &str = "crates_io.versions_total";
