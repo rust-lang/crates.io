@@ -9,7 +9,7 @@
 
 use crate::config::SharedConfig;
 use crate::datadog::common_tags;
-use crate::metrics::ServiceMetrics;
+use crate::metrics::{ServiceMetrics, ServiceMetricsSnapshot};
 use anyhow::{Context, anyhow};
 use crates_io_datadog::{DatadogClient, MetricType as DatadogMetricType, Point, Resource, Series};
 use diesel_async::AsyncPgConnection;
@@ -92,10 +92,12 @@ async fn submit(
         .await
         .context("Failed to acquire database connection")?;
 
-    let families = service_metrics
-        .gather(&mut conn)
+    let snapshot = ServiceMetricsSnapshot::load(&mut conn)
         .await
         .map_err(|err| anyhow!("{err}"))
+        .context("Failed to gather service metrics")?;
+    let families = service_metrics
+        .record(snapshot)
         .context("Failed to gather service metrics")?;
 
     let timestamp = chrono::Utc::now().timestamp();

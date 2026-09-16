@@ -1,3 +1,4 @@
+use crate::metrics::ServiceMetricsSnapshot;
 use crate::server::ServerContext;
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{AppResult, custom, forbidden, not_found};
@@ -36,7 +37,8 @@ pub async fn prometheus(
     let metrics = match kind.as_str() {
         "service" => {
             let mut conn = ctx.db_read().await?;
-            ctx.service_metrics.gather(&mut conn).await?
+            let snapshot = ServiceMetricsSnapshot::load(&mut conn).await?;
+            ctx.service_metrics.record(snapshot)?
         }
         "instance" => spawn_blocking(move || ctx.instance_metrics.gather(&ctx)).await??,
         _ => return Err(not_found()),
