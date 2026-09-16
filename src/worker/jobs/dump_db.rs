@@ -68,6 +68,8 @@ impl BackgroundJob for DumpDb {
         let upload_start = Instant::now();
         ctx.storage.upload_stream(&tar_key, tar_file).await?;
         let upload_duration = upload_start.elapsed();
+        ctx.metrics.record_db_dump("tar.gz", size, upload_duration);
+
         if let Some(datadog) = &ctx.datadog {
             let domain = &ctx.config.domain_name;
             let result =
@@ -93,6 +95,8 @@ impl BackgroundJob for DumpDb {
         let upload_start = Instant::now();
         ctx.storage.upload_stream(&zip_key, zip_file).await?;
         let upload_duration = upload_start.elapsed();
+        ctx.metrics.record_db_dump("zip", size, upload_duration);
+
         if let Some(datadog) = &ctx.datadog {
             let domain = &ctx.config.domain_name;
             let result = report_dump_metrics(datadog, domain, "zip", size, upload_duration).await;

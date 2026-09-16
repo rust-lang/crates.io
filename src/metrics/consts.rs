@@ -19,6 +19,15 @@ pub const DB_CLIENT_CONNECTION_POOL_NAME: &str = "db.client.connection.pool.name
 /// The database connection state attribute key.
 pub const DB_CLIENT_CONNECTION_STATE: &str = "db.client.connection.state";
 
+/// The database dump size instrument name.
+pub const DB_DUMP_SIZE_BYTES: &str = "crates_io.db_dump_size_bytes";
+
+/// The database dump upload duration instrument name.
+pub const DB_DUMP_UPLOAD_DURATION_NS: &str = "crates_io.db_dump_upload_duration_ns";
+
+/// The archive format attribute key.
+pub const FORMAT: &str = "format";
+
 /// The HTTP request method attribute key.
 pub const HTTP_REQUEST_METHOD: &str = "http.request.method";
 
