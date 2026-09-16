@@ -2,8 +2,8 @@
 //!
 //! - `DATABASE_URL`: The URL of the postgres database to use.
 //! - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
-//! - `DB_PRIMARY_ASYNC_POOL_SIZE`: The number of connections of the primary database.
-//! - `DB_REPLICA_ASYNC_POOL_SIZE`: The number of connections of the read-only / replica database.
+//! - `DB_PRIMARY_POOL_SIZE`: The number of connections of the primary database.
+//! - `DB_REPLICA_POOL_SIZE`: The number of connections of the read-only / replica database.
 //! - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
 //!   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
 //! - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
@@ -66,10 +66,8 @@ impl DatabasePools {
         let follower_url = var("READ_ONLY_REPLICA_URL")?.map(Into::into);
         let read_only_mode = var("READ_ONLY_MODE")?.is_some();
 
-        let primary_async_pool_size =
-            var_parsed("DB_PRIMARY_ASYNC_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
-        let replica_async_pool_size =
-            var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
+        let primary_pool_size = var_parsed("DB_PRIMARY_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
+        let replica_pool_size = var_parsed("DB_REPLICA_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
 
         let tcp_timeout = var_parsed("DB_TCP_TIMEOUT_MS")?
             .map(Duration::from_millis)
@@ -94,7 +92,7 @@ impl DatabasePools {
                         anyhow!("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`.")
                     })?,
                     read_only_mode: true,
-                    pool_size: primary_async_pool_size,
+                    pool_size: primary_pool_size,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
@@ -107,7 +105,7 @@ impl DatabasePools {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,
-                    pool_size: primary_async_pool_size,
+                    pool_size: primary_pool_size,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
@@ -119,7 +117,7 @@ impl DatabasePools {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,
-                    pool_size: primary_async_pool_size,
+                    pool_size: primary_pool_size,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
@@ -131,7 +129,7 @@ impl DatabasePools {
                     // same leader database to both environment variables and this ensures the
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
-                    pool_size: replica_async_pool_size,
+                    pool_size: replica_pool_size,
                     tcp_timeout,
                     connection_timeout,
                     statement_timeout,
