@@ -34,6 +34,11 @@ pub fn spawn(
     deadpool: Pool<AsyncPgConnection>,
     datadog: Option<Arc<DatadogClient>>,
 ) {
+    if config.metrics.otlp_enabled {
+        info!("OTLP metrics selected, skipping direct Datadog metrics submission");
+        return;
+    }
+
     let Some(datadog) = datadog else {
         info!("Datadog API key not configured, skipping Datadog metrics submission");
         return;
