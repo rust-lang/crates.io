@@ -31,8 +31,6 @@ metrics! {
         database_idle_conns: IntGaugeVec["pool"],
         /// Number of used database connections in the pool
         database_used_conns: IntGaugeVec["pool"],
-        /// Amount of time required to obtain a database connection
-        pub database_time_to_obtain_connection: HistogramVec["pool"],
         /// Number of times the database pool was unavailable and the fallback was used
         pub database_fallback_used: IntGaugeVec["pool"],
 
