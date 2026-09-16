@@ -349,7 +349,23 @@ impl TestAppBuilder {
             None => Arc::new(MOCK_GITHUB_DATA.as_mock_client()),
         };
 
-        let (app, router) = build_app(self.config, Arc::clone(&github), self.oidc_key_stores);
+        // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent
+        // by the application. This will also prevent cluttering the filesystem.
+        let emails = Emails::new_in_memory();
+
+        let app = App::builder()
+            .databases_from_config(&self.config.db)
+            .github(Arc::clone(&github))
+            .github_oauth_from_config(&self.config)
+            .oidc_key_stores(self.oidc_key_stores)
+            .emails(emails)
+            .storage_from_config(&self.config.storage)
+            .rate_limiter_from_config(self.config.rate_limits.actions.clone())
+            .config(Arc::new(self.config))
+            .build();
+
+        let app = Arc::new(app);
+        let router = crates_io::build_handler(Arc::clone(&app));
 
         let runner = if self.build_job_runner {
             let index_location = self
@@ -614,29 +630,4 @@ fn simple_config() -> config::Server {
         index_archive_url: None,
         postgres_bin_dir: None,
     }
-}
-
-fn build_app(
-    config: config::Server,
-    github: Arc<dyn GitHubClient>,
-    oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
-) -> (Arc<App>, axum::Router) {
-    // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
-    // the application. This will also prevent cluttering the filesystem.
-    let emails = Emails::new_in_memory();
-
-    let app = App::builder()
-        .databases_from_config(&config.db)
-        .github(github)
-        .github_oauth_from_config(&config)
-        .oidc_key_stores(oidc_key_stores)
-        .emails(emails)
-        .storage_from_config(&config.storage)
-        .rate_limiter_from_config(config.rate_limits.actions.clone())
-        .config(Arc::new(config))
-        .build();
-
-    let app = Arc::new(app);
-    let router = crates_io::build_handler(Arc::clone(&app));
-    (app, router)
 }
