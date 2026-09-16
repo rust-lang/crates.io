@@ -35,13 +35,6 @@ impl<S: datadog_client_builder::State> DatadogClientBuilder<S> {
 }
 
 impl DatadogClient {
-    /// Submits a batch of metric series to Datadog.
-    pub async fn submit_metrics(&self, series: &[Series]) -> anyhow::Result<()> {
-        let body = MetricsBody { series };
-
-        self.submit("/api/v2/series", &body).await
-    }
-
     /// Submits a batch of service checks to Datadog.
     pub async fn submit_service_checks(&self, checks: &[ServiceCheck]) -> anyhow::Result<()> {
         self.submit("/api/v1/check_run", checks).await
@@ -74,11 +67,6 @@ impl DatadogClient {
     fn api_url(&self, path: &str) -> String {
         format!("{}{path}", self.base_url)
     }
-}
-
-#[derive(Serialize)]
-struct MetricsBody<'a> {
-    series: &'a [Series],
 }
 
 /// A service check submitted to Datadog.
@@ -123,63 +111,6 @@ impl Serialize for ServiceCheckStatus {
     }
 }
 
-/// A metric series submitted to Datadog.
-#[derive(Builder, Debug, PartialEq, Serialize)]
-pub struct Series {
-    #[builder(into)]
-    metric: String,
-    #[serde(rename = "type")]
-    kind: MetricType,
-    points: Vec<Point>,
-    resources: Vec<Resource>,
-    tags: Vec<String>,
-}
-
-/// The type of a Datadog metric series.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum MetricType {
-    /// A count representing the total number of event occurrences in one time
-    /// interval.
-    Count,
-    /// A rate representing the normalized number of event occurrences per
-    /// second.
-    Rate,
-    /// A gauge representing a value at a specific point in time.
-    Gauge,
-}
-
-impl Serialize for MetricType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let value = match self {
-            Self::Count => 1,
-            Self::Rate => 2,
-            Self::Gauge => 3,
-        };
-
-        serializer.serialize_u8(value)
-    }
-}
-
-/// A timestamped value in a Datadog metric series.
-#[derive(Builder, Debug, PartialEq, Serialize)]
-pub struct Point {
-    timestamp: i64,
-    value: f64,
-}
-
-/// A resource associated with a Datadog metric series.
-#[derive(Builder, Clone, Debug, PartialEq, Serialize)]
-pub struct Resource {
-    #[builder(into)]
-    #[serde(rename = "type")]
-    kind: String,
-    #[builder(into)]
-    name: String,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -205,26 +136,6 @@ mod tests {
             .build()
     }
 
-    fn metric_series() -> Series {
-        let point = Point::builder()
-            .timestamp(1_753_000_000)
-            .value(42.0)
-            .build();
-
-        let resource = Resource::builder().kind("host").name("crates.io").build();
-
-        Series::builder()
-            .metric("crates_io.background_jobs")
-            .kind(MetricType::Gauge)
-            .points(vec![point])
-            .resources(vec![resource])
-            .tags(vec![
-                "env:test".to_string(),
-                "service:crates_io".to_string(),
-            ])
-            .build()
-    }
-
     fn service_check(check: &str, status: ServiceCheckStatus, message: &str) -> ServiceCheck {
         ServiceCheck::builder()
             .check(check)
@@ -247,8 +158,8 @@ mod tests {
             .build();
 
         assert_eq!(
-            client.api_url("/api/v2/series"),
-            "https://api.datadoghq.eu/api/v2/series"
+            client.api_url("/api/v1/check_run"),
+            "https://api.datadoghq.eu/api/v1/check_run"
         );
     }
 
@@ -261,60 +172,9 @@ mod tests {
             .build();
 
         assert_eq!(
-            client.api_url("/api/v2/series"),
-            "http://localhost/api/v2/series"
+            client.api_url("/api/v1/check_run"),
+            "http://localhost/api/v1/check_run"
         );
-    }
-
-    #[tokio::test]
-    async fn submits_metric_series() {
-        let mut server = mock_server().await;
-        let _mock = server
-            .mock("POST", "/api/v2/series")
-            .match_header("dd-api-key", TEST_API_KEY)
-            .match_body(Matcher::JsonString(
-                r#"{
-                    "series": [{
-                        "metric": "crates_io.background_jobs",
-                        "type": 3,
-                        "points": [{
-                            "timestamp": 1753000000,
-                            "value": 42.0
-                        }],
-                        "resources": [{
-                            "type": "host",
-                            "name": "crates.io"
-                        }],
-                        "tags": ["env:test", "service:crates_io"]
-                    }]
-                }"#
-                .to_string(),
-            ))
-            .with_status(202)
-            .expect(1)
-            .create_async()
-            .await;
-
-        let client = client_with_server(&server);
-        assert_ok!(client.submit_metrics(&[metric_series()]).await);
-    }
-
-    #[tokio::test]
-    async fn reports_rejected_metric_submissions() {
-        let mut server = mock_server().await;
-        let _mock = server
-            .mock("POST", "/api/v2/series")
-            .with_status(403)
-            .expect(1)
-            .create_async()
-            .await;
-
-        let client = client_with_server(&server);
-        let error = assert_err!(client.submit_metrics(&[metric_series()]).await);
-        assert_snapshot!(error, @"Datadog returned an error response");
-
-        let http_error = assert_some!(error.downcast_ref::<reqwest::Error>());
-        assert_some_eq!(http_error.status(), reqwest::StatusCode::FORBIDDEN);
     }
 
     #[tokio::test]
