@@ -2,8 +2,9 @@
 
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
-use crate::models::krate::OwnerRemoveError;
-use crate::models::{Crate, Email, OauthGithub, Owner, PublicUser, Team, User, users_by_username};
+use crate::models::{
+    Crate, Email, OauthGithub, Owner, OwnerKind, PublicUser, Team, User, users_by_username,
+};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
     krate::NewOwnerInvite, token::EndpointScope,
@@ -290,10 +291,27 @@ pub async fn remove_owners(
 
     check_owner_permissions(&app, user, &owners).await?;
 
-    conn.transaction(async |conn| {
-        for login in &body.owners {
-            krate.owner_remove(conn, login).await?;
+    let mut selected = Vec::new();
+    for login in &body.owners {
+        let normalized_login = login.to_lowercase();
+        let mut matching = owners
+            .iter()
+            .filter(|owner| owner.login().to_lowercase() == normalized_login)
+            .peekable();
+
+        if matching.peek().is_none() {
+            let message = format!("could not find owner with login `{login}`");
+            return Err(bad_request(message));
         }
+
+        selected.extend(matching.map(|owner| match owner {
+            Owner::User(user) => (OwnerKind::User, user.id),
+            Owner::Team(team) => (OwnerKind::Team, team.id),
+        }));
+    }
+
+    conn.transaction(async |conn| {
+        krate.remove_owners(conn, &selected).await?;
         if User::owning(&krate, conn).await?.is_empty() {
             return Err(bad_request(
                 "cannot remove all individual owners of a crate. \
@@ -634,17 +652,6 @@ enum OwnerAddError {
 impl From<BoxedAppError> for OwnerAddError {
     fn from(value: BoxedAppError) -> Self {
         Self::AppError(value)
-    }
-}
-
-impl From<OwnerRemoveError> for BoxedAppError {
-    fn from(error: OwnerRemoveError) -> Self {
-        match error {
-            OwnerRemoveError::Diesel(error) => error.into(),
-            OwnerRemoveError::NotFound { login } => {
-                bad_request(format!("could not find owner with login `{login}`"))
-            }
-        }
     }
 }
 

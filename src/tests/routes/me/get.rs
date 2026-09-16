@@ -1,5 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
+use crates_io::models::OwnerKind;
 use crates_io::schema::users;
 use crates_io::views::{EncodablePrivateUser, OwnedCrate};
 use diesel::prelude::*;
@@ -61,10 +62,8 @@ async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
     let krate = CrateBuilder::new("foo_my_packages", user_model.id)
         .expect_build(&mut conn)
         .await;
-    krate
-        .owner_remove(&conn, &user_model.username)
-        .await
-        .unwrap();
+    let owners = [(OwnerKind::User, user_model.id)];
+    krate.remove_owners(&conn, &owners).await.unwrap();
 
     let json = user.show_me().await;
     assert_eq!(json.owned_crates.len(), 0);
