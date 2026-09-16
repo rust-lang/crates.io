@@ -370,6 +370,11 @@ impl TestAppBuilder {
             .config(Arc::new(self.config))
             .build();
 
+        ctx.metrics.track_db_pool("primary", &ctx.primary_database);
+        if let Some(pool) = &ctx.replica_database {
+            ctx.metrics.track_db_pool("replica", pool);
+        }
+
         let router = crates_io::build_handler(ctx.clone());
 
         let runner = if self.build_job_runner {

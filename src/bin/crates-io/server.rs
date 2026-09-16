@@ -50,6 +50,11 @@ pub fn run() -> anyhow::Result<()> {
         .config(Arc::new(config))
         .build();
 
+    ctx.metrics.track_db_pool("primary", &ctx.primary_database);
+    if let Some(pool) = &ctx.replica_database {
+        ctx.metrics.track_db_pool("replica", pool);
+    }
+
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(ctx.clone());
 

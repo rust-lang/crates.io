@@ -74,6 +74,6 @@ fn resource(config: &config::SharedConfig) -> anyhow::Result<Resource> {
     Ok(builder.build())
 }
 
-fn kv(key: &'static str, value: impl Into<Value>) -> KeyValue {
+pub fn kv(key: &'static str, value: impl Into<Value>) -> KeyValue {
     KeyValue::new(key, value)
 }

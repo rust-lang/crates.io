@@ -1,23 +1,32 @@
+use super::SharedMetrics;
 use super::consts::{HTTP_REQUEST_METHOD, HTTP_SERVER_ACTIVE_REQUESTS, URL_SCHEME};
+use derive_more::Deref;
 use opentelemetry::KeyValue;
 use opentelemetry::metrics::{Meter, UpDownCounter};
 
 /// OpenTelemetry instruments recorded by the HTTP server.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deref)]
 pub struct ServerMetrics {
+    #[deref]
+    shared: SharedMetrics,
+
     active_requests: UpDownCounter<i64>,
 }
 
 impl ServerMetrics {
     /// Creates the server instruments from `meter`.
     pub fn new(meter: &Meter) -> Self {
+        let shared = SharedMetrics::new(meter);
         let active_requests = meter
             .i64_up_down_counter(HTTP_SERVER_ACTIVE_REQUESTS)
             .with_description("Number of active HTTP server requests.")
             .with_unit("{request}")
             .build();
 
-        Self { active_requests }
+        Self {
+            shared,
+            active_requests,
+        }
     }
 
     /// Records an active request until the returned guard is dropped.
