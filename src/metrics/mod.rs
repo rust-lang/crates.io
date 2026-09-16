@@ -6,8 +6,8 @@ pub use self::service::{ServiceMetrics, ServiceMetricsSnapshot};
 pub use self::shared::SharedMetrics;
 pub use self::worker::WorkerMetrics;
 
+pub mod collector;
 pub mod consts;
-pub mod datadog;
 mod instance;
 mod log_encoder;
 mod macros;
