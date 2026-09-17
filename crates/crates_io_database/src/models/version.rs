@@ -2,13 +2,50 @@ use std::collections::BTreeMap;
 
 use bon::Builder;
 use chrono::{DateTime, Utc};
+use crates_io_cargo_toml::target_metadata::TargetMetadata;
 use crates_io_index::features::FeaturesMap;
+use diesel::deserialize::{self, FromSql};
+use diesel::pg::{Pg, PgValue};
 use diesel::prelude::*;
+use diesel::serialize::{self, Output, ToSql};
+use diesel::sql_types::Jsonb;
+use diesel::{AsExpression, FromSqlRow};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
 use crate::models::{Crate, PublicUser, TrustpubData};
 use crate::schema::{readme_renderings, users, versions};
+
+/// Target metadata stored in the `versions.target_metadata` JSONB column.
+#[derive(Clone, Debug, Eq, PartialEq, FromSqlRow, AsExpression)]
+#[diesel(sql_type = Jsonb)]
+pub struct VersionTargetMetadata(pub TargetMetadata);
+
+impl From<TargetMetadata> for VersionTargetMetadata {
+    fn from(metadata: TargetMetadata) -> Self {
+        Self(metadata)
+    }
+}
+
+impl From<VersionTargetMetadata> for TargetMetadata {
+    fn from(metadata: VersionTargetMetadata) -> Self {
+        metadata.0
+    }
+}
+
+impl ToSql<Jsonb, Pg> for VersionTargetMetadata {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+        let json = serde_json::to_value(&self.0)?;
+        <serde_json::Value as ToSql<Jsonb, Pg>>::to_sql(&json, &mut out.reborrow())
+    }
+}
+
+impl FromSql<Jsonb, Pg> for VersionTargetMetadata {
+    fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
+        let json = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
+        Ok(Self(serde_json::from_value(json)?))
+    }
+}
 
 #[derive(Clone, Identifiable, Associations, Debug, HasQuery)]
 #[diesel(belongs_to(Crate), belongs_to(crate::models::download::Version, foreign_key=id))]
@@ -38,6 +75,8 @@ pub struct Version {
     pub repository: Option<String>,
     pub trustpub_data: Option<TrustpubData>,
     pub linecounts: Option<serde_json::Value>,
+    /// Build script, library, and binary targets derived from the package source.
+    pub target_metadata: Option<VersionTargetMetadata>,
     /// SHA256 checksum of the zip source archive,
     /// or `None` if it has not been built yet.
     pub zip_sha256: Option<Vec<u8>>,
@@ -121,6 +160,7 @@ pub struct NewVersion<'a> {
     keywords: Option<&'a [&'a str]>,
     trustpub_data: Option<&'a TrustpubData>,
     linecounts: Option<serde_json::Value>,
+    target_metadata: Option<&'a VersionTargetMetadata>,
 }
 
 impl NewVersion<'_> {

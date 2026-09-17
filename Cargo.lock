@@ -1835,6 +1835,7 @@ dependencies = [
  "bon",
  "chrono",
  "claims",
+ "crates_io_cargo_toml",
  "crates_io_index",
  "crates_io_test_db",
  "crates_io_validation",
