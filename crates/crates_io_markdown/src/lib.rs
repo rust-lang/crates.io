@@ -606,6 +606,9 @@ There can also be some text in between!
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "../README.md", Some("https://github.com/rust-lang/test"), Some("crate")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/crate/../docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("[docs](../docs/index.html?source=../README.md#intro)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/subdir/../docs/index.html?source=../README.md#intro" rel="nofollow noopener noreferrer">docs</a></p>"#);
+        assert_snapshot!(text_to_html("[guide](/guide.md)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/subdir/guide.md" rel="nofollow noopener noreferrer">guide</a></p>"#);
     }
 
     #[test]
