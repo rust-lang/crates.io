@@ -26,7 +26,11 @@
   ],
   packageRules: [
     {
-      matchDepNames: ['@percy/cli', 'tj-actions/changed-files'],
+      matchManagers: ['github-actions'],
+      extends: ['schedule:weekly'],
+    },
+    {
+      matchDepNames: ['@percy/cli'],
       extends: ['schedule:weekly'],
     },
     {
