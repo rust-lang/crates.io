@@ -12,8 +12,8 @@
 //!      cargo run -- background-worker
 
 use anyhow::{Context, anyhow};
-use crates_io::app::create_database_pool;
 use crates_io::cloudfront::CloudFront;
+use crates_io::db;
 use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{Environment, RunnerExt};
@@ -101,7 +101,7 @@ pub fn run() -> anyhow::Result<()> {
     let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
     let sync_github_app = build_sync_github_app()?;
 
-    let deadpool = create_database_pool(&config.db.primary);
+    let deadpool = db::create_pool(&config.db.primary);
 
     let environment = Environment::builder()
         .config(Arc::new(config))
