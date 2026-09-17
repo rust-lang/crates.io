@@ -12,12 +12,13 @@
 //!      cargo run -- background-worker
 
 use anyhow::{Context, anyhow};
+use crates_io::Emails;
 use crates_io::cloudfront::CloudFront;
+use crates_io::config::SharedConfig;
 use crates_io::db;
 use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{Environment, RunnerExt};
-use crates_io::{Emails, config};
 use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_fastly::Fastly;
@@ -46,7 +47,7 @@ pub fn run() -> anyhow::Result<()> {
 
     info!("Booting runner");
 
-    let mut config = config::Server::from_environment()?;
+    let mut config = SharedConfig::from_environment()?;
 
     // Override the pool size for the background worker
     config.db.primary.pool_size = var_parsed("DB_WORKER_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);

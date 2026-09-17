@@ -24,7 +24,9 @@ use std::convert::Infallible;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-pub struct Server {
+/// Application configuration shared by the API server, background worker, and some administrative
+/// commands.
+pub struct SharedConfig {
     pub env: Env,
     pub bind: BindConfig,
     pub max_blocking_threads: Option<usize>,
@@ -85,13 +87,13 @@ pub struct Server {
     pub postgres_bin_dir: Option<PathBuf>,
 }
 
-impl Server {
+impl SharedConfig {
     /// Returns a default value for the application's config.
     ///
     /// Sets the following default values:
     ///
     /// - `PublishLimitsConfig::upload_size`: 10MiB
-    /// - `Server::ownership_invitations_expiration`: 30 days
+    /// - `SharedConfig::ownership_invitations_expiration`: 30 days
     ///
     /// Pulls values from the following environment variables:
     ///
@@ -111,7 +113,7 @@ impl Server {
     ///
     /// # Panics
     ///
-    /// This function panics if the Server configuration is invalid.
+    /// This function panics if the shared configuration is invalid.
     pub fn from_environment() -> anyhow::Result<Self> {
         let allowed_origins = AllowedOrigins::from_default_env()?;
 
@@ -129,7 +131,7 @@ impl Server {
         let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
         let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
 
-        Ok(Server {
+        Ok(SharedConfig {
             db: DatabasePools::full_from_environment(env)?,
             backfill_workers: var_parsed("BACKFILL_WORKERS")?.unwrap_or(0),
             storage,

@@ -1,5 +1,5 @@
 use crate::Env;
-use crate::config;
+use crate::config::SharedConfig;
 use lettre::address::Envelope;
 use lettre::message::Mailbox;
 use lettre::message::MultiPart;
@@ -126,7 +126,7 @@ const DEFAULT_FROM: &str = "noreply@crates.io";
 impl Emails {
     /// Creates a new instance detecting the backend from the environment. This will either connect
     /// to a SMTP server or store the emails on the local filesystem.
-    pub fn from_environment(config: &config::Server) -> Self {
+    pub fn from_environment(config: &SharedConfig) -> Self {
         let login = dotenvy::var("MAILGUN_SMTP_LOGIN");
         let password = dotenvy::var("MAILGUN_SMTP_PASSWORD");
         let server = dotenvy::var("MAILGUN_SMTP_SERVER");

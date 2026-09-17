@@ -1,6 +1,6 @@
 //! Application-wide components in a struct accessible from each request
 
-use crate::config;
+use crate::config::{DatabasePools, SharedConfig};
 use crate::db;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -51,8 +51,7 @@ pub struct App {
     #[builder(default)]
     pub oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
 
-    /// The server configuration
-    pub config: Arc<config::Server>,
+    pub config: Arc<SharedConfig>,
 
     /// Backend used to send emails
     pub emails: Emails,
@@ -75,7 +74,7 @@ pub struct App {
 impl<S: app_builder::State> AppBuilder<S> {
     pub fn github_oauth_from_config(
         self,
-        config: &config::Server,
+        config: &SharedConfig,
     ) -> AppBuilder<app_builder::SetGithubOauth<S>>
     where
         S::GithubOauth: app_builder::IsUnset,
@@ -131,7 +130,7 @@ impl<S: app_builder::State> AppBuilder<S> {
 
     pub fn databases_from_config(
         self,
-        config: &config::DatabasePools,
+        config: &DatabasePools,
     ) -> AppBuilder<app_builder::SetReplicaDatabase<app_builder::SetPrimaryDatabase<S>>>
     where
         S::PrimaryDatabase: app_builder::IsUnset,
