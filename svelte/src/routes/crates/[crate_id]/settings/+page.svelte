@@ -69,7 +69,7 @@
     try {
       let result = await client.DELETE('/api/v1/crates/{name}/owners', {
         params: { path: { name: crateName } },
-        body: { owners: [owner.login] },
+        body: { owners: [isTeam ? owner.login : `crates.io:${owner.login}`] },
       });
 
       if (!result.response.ok) {

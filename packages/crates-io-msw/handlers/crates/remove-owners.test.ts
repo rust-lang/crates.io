@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
-const REMOVE_USER_BODY = JSON.stringify({ owners: ['john-doe'] });
+const REMOVE_USER_BODY = JSON.stringify({ owners: ['crates.io:john-doe'] });
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body: REMOVE_USER_BODY });
@@ -35,6 +35,20 @@ test('returns 404 for unknown crates', async function () {
   `);
 });
 
+test.each(['john-doe', 'github:john-doe', 'crates.io:org:team'])(
+  'rejects an invalid owner prefix in %s',
+  async function (owner) {
+    let user = await db.user.create({});
+    await db.mswSession.create({ user });
+    await db.crate.create({ name: 'foo' });
+
+    let body = JSON.stringify({ owners: [owner] });
+    let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ errors: [{ detail: 'Invalid owner prefix' }] });
+  },
+);
+
 test('can remove a user owner', async function () {
   let user = await db.user.create({});
   await db.mswSession.create({ user });
@@ -45,7 +59,7 @@ test('can remove a user owner', async function () {
   let user2 = await db.user.create({});
   await db.crateOwnership.create({ crate, user: user2 });
 
-  let body = JSON.stringify({ owners: [user2.login] });
+  let body = JSON.stringify({ owners: [`crates.io:${user2.login}`] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
@@ -105,7 +119,7 @@ test('can remove multiple owners', async function () {
   let user2 = await db.user.create({});
   await db.crateOwnership.create({ crate, user: user2 });
 
-  let body = JSON.stringify({ owners: [user2.login, team.login] });
+  let body = JSON.stringify({ owners: [`crates.io:${user2.login}`, team.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
