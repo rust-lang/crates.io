@@ -34,7 +34,7 @@
       extends: ['schedule:weekly'],
     },
     {
-      matchDepNames: ['@percy/cli'],
+      matchDepNames: ['@chromatic-com/storybook', '@percy/cli', '@percy/playwright', 'chromatic'],
       extends: ['schedule:weekly'],
     },
     {
