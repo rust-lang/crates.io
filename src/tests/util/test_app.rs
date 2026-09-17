@@ -3,7 +3,7 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
+    self, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
     DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
     RateLimitsConfig,
 };
@@ -551,8 +551,6 @@ impl TestAppBuilder {
 }
 
 fn simple_config() -> config::Server {
-    let base = Base { env: Env::Test };
-
     let db = DatabasePools {
         primary: DbPoolConfig {
             // This value is supposed be overridden by the
@@ -573,7 +571,7 @@ fn simple_config() -> config::Server {
     storage.cdn_prefix = Some("static.crates.io".to_string());
 
     config::Server {
-        base,
+        env: Env::Test,
         bind: BindConfig {
             ip: [127, 0, 0, 1].into(),
             port: 8888,

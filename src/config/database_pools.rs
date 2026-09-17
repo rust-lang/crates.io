@@ -10,7 +10,6 @@
 //! - `DB_TCP_TIMEOUT_MS`: TCP timeout in milliseconds. See the doc comment for more details.
 
 use crate::Env;
-use crate::config::Base;
 use anyhow::anyhow;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use secrecy::SecretString;
@@ -61,7 +60,7 @@ impl DatabasePools {
     /// # Errors
     ///
     /// This function returns an error if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
-    pub fn full_from_environment(base: &Base) -> anyhow::Result<Self> {
+    pub fn full_from_environment(env: Env) -> anyhow::Result<Self> {
         let leader_url = required_var("DATABASE_URL")?.into();
         let follower_url = var("READ_ONLY_REPLICA_URL")?.map(Into::into);
         let read_only_mode = var("READ_ONLY_MODE")?.is_some();
@@ -81,7 +80,7 @@ impl DatabasePools {
         // the statement timeout, so we can copy the parsed connection timeout.
         let statement_timeout = connection_timeout;
 
-        let enforce_tls = base.env == Env::Production;
+        let enforce_tls = env == Env::Production;
 
         Ok(match var("DB_OFFLINE")?.as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and

@@ -1,4 +1,6 @@
+use crate::Env;
 use crate::certs::CRUNCHY;
+use crate::config::{DatabasePools, DbPoolConfig};
 use deadpool_runtime::Runtime;
 use diesel::{ConnectionResult, QueryResult};
 use diesel_async::pooled_connection::deadpool::{Hook, HookError, Pool};
@@ -10,21 +12,19 @@ use secrecy::ExposeSecret;
 use std::time::Duration;
 use url::Url;
 
-use crate::config;
-
 pub async fn oneoff_connection_with_config(
-    config: &config::DatabasePools,
+    config: &DatabasePools,
 ) -> ConnectionResult<AsyncPgConnection> {
     let url = connection_url(&config.primary);
     establish_async_connection(&url, config.primary.enforce_tls).await
 }
 
 pub async fn oneoff_connection() -> anyhow::Result<AsyncPgConnection> {
-    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?)?;
+    let config = DatabasePools::full_from_environment(Env::from_environment()?)?;
     Ok(oneoff_connection_with_config(&config).await?)
 }
 
-pub fn create_pool(config: &config::DbPoolConfig) -> Pool<AsyncPgConnection> {
+pub fn create_pool(config: &DbPoolConfig) -> Pool<AsyncPgConnection> {
     let connection_config = ConnectionConfig {
         statement_timeout: config.statement_timeout,
         read_only: config.read_only_mode,
@@ -43,7 +43,7 @@ pub fn create_pool(config: &config::DbPoolConfig) -> Pool<AsyncPgConnection> {
         .unwrap()
 }
 
-pub fn connection_url(config: &config::DbPoolConfig) -> String {
+pub fn connection_url(config: &DbPoolConfig) -> String {
     let mut url = Url::parse(config.url.expose_secret()).expect("Invalid database URL");
 
     if config.enforce_tls {

@@ -127,7 +127,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     // In production, for crates.io, cargo gets the index from
     // https://github.com/rust-lang/crates.io-index directly
     // or from the sparse index CDN https://index.crates.io.
-    if state.config.env() == Env::Development {
+    if state.config.env == Env::Development {
         router = router.route(
             "/git/index/{*path}",
             get(git::http_backend).post(git::http_backend),

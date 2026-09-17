@@ -45,14 +45,24 @@ pub mod worker;
 /// Used for setting different values depending on whether the app is being run in production,
 /// in development, or for testing.
 ///
-/// The app's `config.env` value is set by [`Base::from_environment()`](crate::config::Base::from_environment)
-/// to `Production` if the environment variable `HEROKU` is set and `Development` otherwise. It is
-/// set to `Test` unconditionally by the test harness.
+/// The app's `config.env` value is set by [`Env::from_environment()`] to `Production` if the
+/// environment variable `HEROKU` is set and `Development` otherwise. It is set to `Test`
+/// unconditionally by the test harness.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,
     Test,
     Production,
+}
+
+impl Env {
+    /// Detects the environment from the `HEROKU` environment variable.
+    pub fn from_environment() -> anyhow::Result<Self> {
+        Ok(match crates_io_env_vars::var("HEROKU")? {
+            Some(_) => Self::Production,
+            None => Self::Development,
+        })
+    }
 }
 
 /// Configures routes, sessions, logging, and other middleware.

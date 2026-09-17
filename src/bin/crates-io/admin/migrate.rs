@@ -1,4 +1,6 @@
 use anyhow::{Context, Error, anyhow};
+use crates_io::Env;
+use crates_io::config::DatabasePools;
 use crates_io::tasks::spawn_blocking;
 use diesel_async::AsyncPgConnection;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
@@ -18,9 +20,8 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 pub struct Opts;
 
 pub async fn run(_opts: Opts) -> Result<(), Error> {
-    let config = crates_io::config::DatabasePools::full_from_environment(
-        &crates_io::config::Base::from_environment()?,
-    )?;
+    let env = Env::from_environment()?;
+    let config = DatabasePools::full_from_environment(env)?;
 
     // TODO: Refactor logic so that we can also check things from App::new() here.
     // If the app will panic due to bad configuration, it is better to error in the release phase

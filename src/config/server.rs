@@ -2,7 +2,6 @@ use url::Url;
 
 use crate::Env;
 
-use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::CdnLogQueueConfig;
 use crate::config::bind::BindConfig;
@@ -26,7 +25,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 pub struct Server {
-    pub base: Base,
+    pub env: Env,
     pub bind: BindConfig,
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
@@ -116,7 +115,7 @@ impl Server {
     pub fn from_environment() -> anyhow::Result<Self> {
         let allowed_origins = AllowedOrigins::from_default_env()?;
 
-        let base = Base::from_environment()?;
+        let env = Env::from_environment()?;
         let excluded_crate_names = list("EXCLUDED_CRATE_NAMES")?;
 
         let max_blocking_threads = var_parsed("SERVER_THREADS")?;
@@ -131,12 +130,12 @@ impl Server {
         let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
 
         Ok(Server {
-            db: DatabasePools::full_from_environment(&base)?,
+            db: DatabasePools::full_from_environment(env)?,
             backfill_workers: var_parsed("BACKFILL_WORKERS")?.unwrap_or(0),
             storage,
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
             cdn_log_queue: CdnLogQueueConfig::from_env()?,
-            base,
+            env,
             bind: BindConfig::from_env()?,
             max_blocking_threads,
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
@@ -164,12 +163,6 @@ impl Server {
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,
         })
-    }
-}
-
-impl Server {
-    pub fn env(&self) -> Env {
-        self.base.env
     }
 }
 

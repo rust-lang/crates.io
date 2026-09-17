@@ -149,7 +149,7 @@ impl Emails {
             }
         };
 
-        if config.base.env == Env::Production && !matches!(backend, EmailBackend::Smtp { .. }) {
+        if config.env == Env::Production && !matches!(backend, EmailBackend::Smtp { .. }) {
             panic!("only the smtp backend is allowed in production");
         }
 
