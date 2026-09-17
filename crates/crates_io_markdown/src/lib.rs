@@ -167,6 +167,22 @@ impl SanitizeUrl {
     }
 }
 
+/// Resolves `.` and `..` segments in a relative path, dropping the segments
+/// that would escape the root of the repository.
+fn normalize_path(path: &str) -> String {
+    let mut segments = Vec::new();
+    for segment in path.split('/') {
+        match segment {
+            "." => {}
+            ".." => {
+                segments.pop();
+            }
+            segment => segments.push(segment),
+        }
+    }
+    segments.join("/")
+}
+
 /// Groups media-related URL info.
 struct MediaUrl {
     is_media: bool,
@@ -228,14 +244,23 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
                 add_sanitize_query,
             } = is_media_url(url);
             new_url += if is_media { "raw/HEAD" } else { "blob/HEAD" };
+
+            let mut path = String::new();
             if !self.base_dir.is_empty() {
-                new_url += "/";
-                new_url += &self.base_dir;
+                path.push_str(&self.base_dir);
+                path.push('/');
             }
-            if !url.starts_with('/') {
-                new_url.push('/');
-            }
-            new_url += url;
+            path.push_str(url.strip_prefix('/').unwrap_or(url));
+
+            let (path, rest) = match path.find(['?', '#']) {
+                Some(index) => path.split_at(index),
+                None => (path.as_str(), ""),
+            };
+
+            new_url.push('/');
+            new_url.push_str(&normalize_path(path));
+            new_url.push_str(rest);
+
             if add_sanitize_query && let Ok(mut parsed_url) = Url::parse(&new_url) {
                 parsed_url.query_pairs_mut().append_pair("sanitize", "true");
                 new_url = parsed_url.into();
@@ -570,6 +595,19 @@ There can also be some text in between!
     }
 
     #[test]
+    fn relative_links_with_dot_segments() {
+        let repository = Some("https://github.com/rust-lang/test");
+        let render = |markdown, base_dir| markdown_to_html(markdown, repository, base_dir);
+
+        assert_snapshot!(render("![alt](../img/img.png)", "subdir"), @r#"<p><img src="https://github.com/rust-lang/test/raw/HEAD/img/img.png" alt="alt"></p>"#);
+        assert_snapshot!(render("![alt](../img/sanitize.svg)", "subdir"), @r#"<p><img src="https://github.com/rust-lang/test/raw/HEAD/img/sanitize.svg?sanitize=true" alt="alt"></p>"#);
+        assert_snapshot!(render("[changelog](../CHANGELOG.md#v1)", "subdir"), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/CHANGELOG.md#v1" rel="nofollow noopener noreferrer">changelog</a></p>"#);
+        assert_snapshot!(render("![alt](../../img/img.png)", "subdir1/subdir2"), @r#"<p><img src="https://github.com/rust-lang/test/raw/HEAD/img/img.png" alt="alt"></p>"#);
+        assert_snapshot!(render("![alt](./img.png)", "subdir"), @r#"<p><img src="https://github.com/rust-lang/test/raw/HEAD/subdir/img.png" alt="alt"></p>"#);
+        assert_snapshot!(render("![alt](../../../img.png)", "subdir"), @r#"<p><img src="https://github.com/rust-lang/test/raw/HEAD/img.png" alt="alt"></p>"#);
+    }
+
+    #[test]
     fn absolute_links_dont_get_resolved() {
         let text = "[![crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
@@ -606,6 +644,9 @@ There can also be some text in between!
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "../README.md", Some("https://github.com/rust-lang/test"), Some("crate")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("[docs](../docs/index.html?source=../README.md#intro)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/docs/index.html?source=../README.md#intro" rel="nofollow noopener noreferrer">docs</a></p>"#);
+        assert_snapshot!(text_to_html("[guide](/guide.md)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/subdir/guide.md" rel="nofollow noopener noreferrer">guide</a></p>"#);
     }
 
     #[test]
