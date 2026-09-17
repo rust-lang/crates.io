@@ -38,6 +38,10 @@
       extends: ['schedule:weekly'],
     },
     {
+      matchDepNames: ['@catppuccin/palette', '/^@fontsource\\//', '/^@iconify-json\\//'],
+      extends: ['schedule:weekly'],
+    },
+    {
       // Avoid "Artifact update problem" for pnpm updates when the renovatebot
       // setup does not support the new version yet.
       matchDepNames: ['pnpm'],
