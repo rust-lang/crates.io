@@ -46,6 +46,7 @@
       // setup does not support the new version yet.
       matchDepNames: ['pnpm'],
       minimumReleaseAge: '24 hours',
+      extends: ['schedule:weekly'],
     },
     {
       matchManagers: ['custom.regex'],
