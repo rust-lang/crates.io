@@ -1,10 +1,9 @@
 use crate::schema::processed_log_files;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 /// This job is responsible for cleaning up old entries in the
 /// `processed_log_files` table.
@@ -18,10 +17,10 @@ impl BackgroundJob for CleanProcessedLogFiles {
     const DEDUPLICATED: bool = true;
     const QUEUE: &'static str = "downloads";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.deadpool.get().await?;
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let mut conn = ctx.deadpool.get().await?;
         Ok(run(&mut conn).await?)
     }
 }

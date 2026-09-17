@@ -1,10 +1,9 @@
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_database::schema::trustpub_used_jtis;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 /// A background job that deletes expired JSON Web Token IDs (JTIs)
 /// tokens from the database.
@@ -15,7 +14,7 @@ impl BackgroundJob for DeleteExpiredJtis {
     const JOB_NAME: &'static str = "trustpub::delete_expired_jtis";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let mut conn = ctx.deadpool.get().await?;

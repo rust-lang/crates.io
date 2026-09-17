@@ -1,10 +1,9 @@
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::anyhow;
 use crates_io_docs_rs::DocsRsError;
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{error, warn};
 
 /// A background job that queues a docs rebuild for a specific release.
@@ -18,7 +17,7 @@ impl BackgroundJob for DocsRsQueueRebuild {
     const JOB_NAME: &'static str = "docs_rs_queue_rebuild";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let Some(docs_rs) = ctx.docs_rs.as_ref() else {

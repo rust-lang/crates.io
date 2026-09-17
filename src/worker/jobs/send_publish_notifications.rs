@@ -1,7 +1,7 @@
 use crate::email::EmailMessage;
 use crate::models::{OwnerKind, TrustpubData};
 use crate::schema::{crate_owners, crates, emails, users, versions};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::anyhow;
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_worker::BackgroundJob;
@@ -10,7 +10,6 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{debug, info, warn};
 
 /// Background job that sends email notifications to all crate owners when a
@@ -24,7 +23,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
     const JOB_NAME: &'static str = "send_publish_notifications";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let version_id = self.version_id;

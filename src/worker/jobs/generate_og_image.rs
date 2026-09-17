@@ -1,7 +1,7 @@
 use crate::models::OwnerKind;
 use crate::schema::*;
 use crate::storage::StorageKey;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use bigdecimal::ToPrimitive;
@@ -11,7 +11,6 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{error, info, instrument, warn};
 
 #[derive(Serialize, Deserialize)]
@@ -40,7 +39,7 @@ impl BackgroundJob for GenerateOgImage {
     const JOB_NAME: &'static str = "generate_og_image";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all, fields(krate.name = %self.crate_name))]
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {

@@ -1,6 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::StorageKey;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use crates_io_crate_zip::build_zip;
@@ -13,7 +13,6 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek};
-use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::AsyncWriteExt;
 use tokio::task::spawn_blocking;
@@ -30,17 +29,17 @@ impl BackgroundJob for BuildCrateZip {
     const JOB_NAME: &'static str = "build_crate_zip";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all, fields(version_id = ?self.version_id))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let version_id = self.version_id;
 
         info!("Starting zip build… (version_id={version_id})");
 
         let start = Instant::now();
 
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
 
         let Some(info) = CrateVersionInfo::load(version_id, &conn).await? else {
             warn!("version_id={version_id} not found in database, skipping zip build");
@@ -53,20 +52,20 @@ impl BackgroundJob for BuildCrateZip {
 
         info!("Building zip for {name}@{version}… (version_id={version_id})");
 
-        let tarball = download_to_tempfile(&env.storage, name, version).await?;
+        let tarball = download_to_tempfile(&ctx.storage, name, version).await?;
 
         let artifacts = spawn_blocking(move || Artifacts::build(tarball, created_at))
             .await
             .context("Zip build task panicked")??;
 
         let zip_key = StorageKey::for_crate_zip(name, version);
-        env.storage
+        ctx.storage
             .upload_stream(&zip_key, tokio::fs::File::from_std(artifacts.zip))
             .await
             .context("Failed to upload zip archive")?;
 
         let manifest_key = StorageKey::for_crate_zip_manifest(name, version);
-        env.storage
+        ctx.storage
             .upload(&manifest_key, artifacts.manifest_json.into())
             .await
             .context("Failed to upload zip manifest")?;

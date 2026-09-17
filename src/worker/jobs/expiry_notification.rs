@@ -1,6 +1,6 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::{Emails, email::EmailMessage, models::User, worker::Environment};
+use crate::{Emails, email::EmailMessage, models::User, worker::WorkerContext};
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::now;
@@ -9,7 +9,6 @@ use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{debug, error, info, instrument, warn};
 
 /// The threshold for the expiry notification.
@@ -25,15 +24,15 @@ impl BackgroundJob for SendTokenExpiryNotifications {
     const JOB_NAME: &'static str = "send_token_expiry_notifications";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    #[instrument(skip(env), err)]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.deadpool.get().await?;
+    #[instrument(skip(ctx), err)]
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let mut conn = ctx.deadpool.get().await?;
 
         // Check if the token is about to expire
         // If the token is about to expire, trigger a notification.
-        check(&env.emails, &mut conn).await
+        check(&ctx.emails, &mut conn).await
     }
 }
 

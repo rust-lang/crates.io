@@ -1,5 +1,5 @@
 use crate::config::CdnLogStorageConfig;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use chrono::NaiveDate;
 use crates_io_cdn_logs::{Decompressor, DownloadsMap, count_downloads};
@@ -37,7 +37,7 @@ impl BackgroundJob for ProcessCdnLog {
     const DEDUPLICATED: bool = true;
     const QUEUE: &'static str = "downloads";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         // The store is rebuilt for each run because we don't want to assume
@@ -88,7 +88,7 @@ fn build_store(
 /// downloads for each crate and version. The results are saved to the database.
 ///
 /// This function is separate from the [`BackgroundJob`] trait method so that
-/// it can be tested without having to construct a full [`Environment`]
+/// it can be tested without having to construct a full [`WorkerContext`]
 /// struct.
 #[instrument(skip_all, fields(cdn_log_store.path = %path))]
 async fn run(

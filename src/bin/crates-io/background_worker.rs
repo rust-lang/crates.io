@@ -18,7 +18,7 @@ use crates_io::config::SharedConfig;
 use crates_io::db;
 use crates_io::ssh;
 use crates_io::storage::Storage;
-use crates_io::worker::{Environment, RunnerExt};
+use crates_io::worker::{RunnerExt, WorkerContext};
 use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_fastly::Fastly;
@@ -104,7 +104,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let deadpool = db::create_pool(&config.db.primary);
 
-    let environment = Environment::builder()
+    let ctx = WorkerContext::builder()
         .config(Arc::new(config))
         .repository_config(repository_config)
         .maybe_cloudfront(cloudfront)
@@ -122,34 +122,28 @@ pub fn run() -> anyhow::Result<()> {
         .og_image_generator(OgImageGenerator::from_environment()?.with_oxipng())
         .build();
 
-    let environment = Arc::new(environment);
-
     std::thread::spawn({
-        let environment = environment.clone();
+        let ctx = ctx.clone();
         move || {
-            if let Err(err) = environment.lock_index() {
+            if let Err(err) = ctx.lock_index() {
                 warn!("Failed to clone index: {err}");
             };
         }
     });
 
-    let runner = Runner::new(deadpool, environment.clone())
+    let runner = Runner::new(deadpool, ctx.clone())
         .configure_default_queue(|queue| queue.num_workers(5))
         .configure_queue("downloads", |queue| queue.num_workers(1))
         .configure_queue("repository", |queue| queue.num_workers(1))
         .configure_queue("cloudfront", |queue| queue.num_workers(1))
         .configure_queue("backfill", |queue| {
-            queue.num_workers(environment.config.backfill_workers)
+            queue.num_workers(ctx.config.backfill_workers)
         })
         .register_crates_io_job_types();
 
     runtime.block_on(async {
         let handle = runner.start();
-        crates_io::metrics::datadog::spawn(
-            &environment.config,
-            environment.deadpool.clone(),
-            datadog,
-        );
+        crates_io::metrics::datadog::spawn(&ctx.config, ctx.deadpool.clone(), datadog);
 
         info!("Runner booted, running jobs");
         handle.wait_for_shutdown().await

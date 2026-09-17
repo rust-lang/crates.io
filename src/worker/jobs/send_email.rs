@@ -1,9 +1,8 @@
 use crate::email::EmailMessage;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_worker::BackgroundJob;
 use lettre::Address;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 /// Delivers a rendered email to one recipient.
 #[derive(Serialize, Deserialize)]
@@ -22,7 +21,7 @@ impl SendEmail {
 impl BackgroundJob for SendEmail {
     const JOB_NAME: &'static str = "send_email";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let recipient = self.recipient.as_ref();

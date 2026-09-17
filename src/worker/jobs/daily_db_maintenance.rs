@@ -1,9 +1,8 @@
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_worker::BackgroundJob;
 use diesel::sql_query;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::info;
 
 #[derive(Serialize, Deserialize)]
@@ -13,7 +12,7 @@ impl BackgroundJob for DailyDbMaintenance {
     const JOB_NAME: &'static str = "daily_db_maintenance";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     /// Runs daily database maintenance tasks.
     ///
@@ -24,8 +23,8 @@ impl BackgroundJob for DailyDbMaintenance {
     /// We only need to keep 90 days of entries in `version_downloads`. Once we have a mechanism to
     /// archive daily download counts and drop historical data, we can drop this task and rely on
     /// auto-vacuum again.
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.deadpool.get().await?;
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let mut conn = ctx.deadpool.get().await?;
 
         info!("Running VACUUM on version_downloads table");
         sql_query("VACUUM version_downloads;")

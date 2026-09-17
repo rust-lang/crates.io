@@ -1,7 +1,7 @@
 use super::IndexVersionDownloadsArchive;
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::{Context, anyhow};
 use chrono::{NaiveDate, Utc};
 use crates_io_worker::BackgroundJob;
@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 use std::path::Path;
-use std::sync::Arc;
 use std::time::Instant;
 use tempfile::tempdir;
 use tracing::{debug, error, info, warn};
@@ -49,12 +48,12 @@ impl BackgroundJob for ArchiveVersionDownloads {
     const JOB_NAME: &'static str = "archive_version_downloads";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Archiving old version downloads…");
 
-        let Some(downloads_archive_store) = env.downloads_archive_store.as_ref() else {
+        let Some(downloads_archive_store) = ctx.downloads_archive_store.as_ref() else {
             warn!("No downloads archive store configured");
             return Ok(());
         };
@@ -62,11 +61,11 @@ impl BackgroundJob for ArchiveVersionDownloads {
         let tempdir = tempdir().context("Failed to create temporary directory")?;
         let csv_path = tempdir.path().join(FILE_NAME);
 
-        export(&env.config.db.primary.url, &csv_path, &self.before).await?;
+        export(&ctx.config.db.primary.url, &csv_path, &self.before).await?;
         let dates = spawn_blocking(move || split(csv_path)).await??;
         let uploaded_dates = upload(downloads_archive_store, tempdir.path(), dates).await?;
 
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
         delete(&mut conn, uploaded_dates).await?;
 
         // Queue up the job to regenerate the archive index.

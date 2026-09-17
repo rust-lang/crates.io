@@ -1,13 +1,12 @@
 use crate::models::update_default_version;
 use crate::schema::crates;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::GenerateOgImage;
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{info, warn};
 
 #[derive(Constructor, Serialize, Deserialize)]
@@ -20,7 +19,7 @@ impl BackgroundJob for UpdateDefaultVersion {
     const PRIORITY: i16 = 80;
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let crate_id = self.crate_id;

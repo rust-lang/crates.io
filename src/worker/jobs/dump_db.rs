@@ -1,7 +1,7 @@
 use crate::datadog::common_tags;
 use crate::storage::StorageKey;
 use crate::tasks::spawn_blocking;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use chrono::{DateTime, Utc};
 use crates_io_database::models::CloudFrontDistribution;
 use crates_io_database_dump::{DumpDirectory, create_archives};
@@ -10,7 +10,6 @@ use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
@@ -38,15 +37,15 @@ impl BackgroundJob for DumpDb {
     const JOB_NAME: &'static str = "dump_db";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     /// Creates CSV dumps of the public information in the database, wraps them in a
     /// tarball and uploads to S3.
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let db_config = &env.config.db;
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let db_config = &ctx.config.db;
         let db_pool_config = db_config.replica.as_ref().unwrap_or(&db_config.primary);
         let database_url = db_pool_config.url.clone();
-        let postgres_bin_dir = env.config.postgres_bin_dir.clone();
+        let postgres_bin_dir = ctx.config.postgres_bin_dir.clone();
         let schema = self.schema;
 
         let archives = spawn_blocking(move || {
@@ -67,10 +66,10 @@ impl BackgroundJob for DumpDb {
         let tar_file = tokio::fs::File::open(archives.tar.path()).await?;
         let size = tar_file.metadata().await?.len();
         let upload_start = Instant::now();
-        env.storage.upload_stream(&tar_key, tar_file).await?;
+        ctx.storage.upload_stream(&tar_key, tar_file).await?;
         let upload_duration = upload_start.elapsed();
-        if let Some(datadog) = &env.datadog {
-            let domain = &env.config.domain_name;
+        if let Some(datadog) = &ctx.datadog {
+            let domain = &ctx.config.domain_name;
             let result =
                 report_dump_metrics(datadog, domain, "tar.gz", size, upload_duration).await;
             if let Err(error) = result {
@@ -80,10 +79,10 @@ impl BackgroundJob for DumpDb {
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
-        let conn = env.deadpool.get().await?;
+        let conn = ctx.deadpool.get().await?;
         let dist = CloudFrontDistribution::Static;
 
-        if let Err(error) = env.invalidate_cdns(&conn, dist, &tar_key.cdn_path()).await {
+        if let Err(error) = ctx.invalidate_cdns(&conn, dist, &tar_key.cdn_path()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
@@ -92,10 +91,10 @@ impl BackgroundJob for DumpDb {
         let zip_file = tokio::fs::File::open(archives.zip.path()).await?;
         let size = zip_file.metadata().await?.len();
         let upload_start = Instant::now();
-        env.storage.upload_stream(&zip_key, zip_file).await?;
+        ctx.storage.upload_stream(&zip_key, zip_file).await?;
         let upload_duration = upload_start.elapsed();
-        if let Some(datadog) = &env.datadog {
-            let domain = &env.config.domain_name;
+        if let Some(datadog) = &ctx.datadog {
+            let domain = &ctx.config.domain_name;
             let result = report_dump_metrics(datadog, domain, "zip", size, upload_duration).await;
             if let Err(error) = result {
                 warn!("Failed to submit database dump metrics: {error:#}");
@@ -104,7 +103,7 @@ impl BackgroundJob for DumpDb {
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Err(error) = env.invalidate_cdns(&conn, dist, &zip_key.cdn_path()).await {
+        if let Err(error) = ctx.invalidate_cdns(&conn, dist, &zip_key.cdn_path()).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 

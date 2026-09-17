@@ -1,7 +1,7 @@
 use crate::{
     models::OauthGithub,
     schema::{oauth_github, users},
-    worker::Environment,
+    worker::WorkerContext,
 };
 use anyhow::anyhow;
 use chrono::Utc;
@@ -10,7 +10,6 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{error, info};
 
 #[derive(Serialize, Deserialize)]
@@ -28,7 +27,7 @@ impl BackgroundJob for UpdateUserFromGithub {
     // These jobs aren't urgent and shouldn't page anyone if they take a long time.
     const PRIORITY: i16 = -15;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     /// For the specified user, queries the GitHub API for the user's current information to see if
     /// their account has been deleted or renamed. Updates the `users` and `oauth_github` tables,
@@ -82,11 +81,10 @@ impl BackgroundJob for UpdateUserFromGithub {
 }
 
 impl UpdateUserFromGithub {
-    /// Given the current environment's context, requests information from GitHub using the user's
-    /// API token.
+    /// Uses the worker context to request information from GitHub with the user's API token.
     async fn refresh_user(
         &self,
-        ctx: &Arc<Environment>,
+        ctx: &WorkerContext,
         oauth_github: &OauthGithub,
     ) -> anyhow::Result<GitHubUser> {
         let github = ctx.github.as_ref();

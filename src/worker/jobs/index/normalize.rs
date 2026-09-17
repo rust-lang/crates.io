@@ -1,10 +1,9 @@
 use crate::tasks::spawn_blocking;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_index::{Crate, DependencyKind};
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::info;
 
 #[derive(Constructor, Serialize, Deserialize)]
@@ -16,14 +15,14 @@ impl BackgroundJob for NormalizeIndex {
     const JOB_NAME: &'static str = "normalize_index";
     const QUEUE: &'static str = "repository";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Normalizing the index");
 
         let dry_run = self.dry_run;
         spawn_blocking(move || {
-            let repo = env.lock_index()?;
+            let repo = ctx.lock_index()?;
 
             let entries = repo.list_entries()?;
             let num_entries = entries.len();

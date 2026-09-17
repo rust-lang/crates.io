@@ -1,6 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::{Storage, StorageKey};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use crates_io_cargo_toml::Manifest as CargoManifest;
 use crates_io_cargo_toml::target_metadata::TargetMetadata;
@@ -10,7 +10,6 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{instrument, warn};
 
 /// Collects target metadata for one previously published crate version.
@@ -31,12 +30,12 @@ impl BackgroundJob for BackfillTargetMetadata {
     const QUEUE: &'static str = "backfill";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all, fields(version_id = self.version_id))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let info = {
-            let conn = env.deadpool.get().await?;
+            let conn = ctx.deadpool.get().await?;
             CrateVersionInfo::load(self.version_id, &conn).await?
         };
         let Some(info) = info else {
@@ -44,13 +43,13 @@ impl BackgroundJob for BackfillTargetMetadata {
             return Ok(());
         };
 
-        let metadata = analyze(&env.storage, &info.name, &info.version).await?;
+        let metadata = analyze(&ctx.storage, &info.name, &info.version).await?;
         if let Err(error) = metadata.require_existing_sources() {
             warn!("Target metadata validation failed: {error}");
         }
 
         let metadata = VersionTargetMetadata(metadata);
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
         diesel::update(versions::table.find(self.version_id))
             .set(versions::target_metadata.eq(Some(&metadata)))
             .execute(&mut conn)

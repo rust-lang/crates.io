@@ -12,7 +12,7 @@ use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
-use crates_io::worker::{Environment, RunnerExt};
+use crates_io::worker::{RunnerExt, WorkerContext};
 use crates_io::{Emails, Env, ServerContext};
 use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_encryption::TokenEncryption;
@@ -41,7 +41,7 @@ struct TestAppInner {
     ctx: ServerContext,
     router: axum::Router,
     index: Option<UpstreamIndex>,
-    runner: Option<Runner<Arc<Environment>>>,
+    runner: Option<Runner<WorkerContext>>,
 
     primary_db_chaosproxy: Option<Arc<ChaosProxy>>,
     replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
@@ -378,7 +378,7 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
-            let environment = Environment::builder()
+            let worker_ctx = WorkerContext::builder()
                 .config(ctx.config.clone())
                 .repository_config(repository_config)
                 .storage(ctx.storage.clone())
@@ -392,7 +392,7 @@ impl TestAppBuilder {
                 .maybe_og_image_generator(self.og_image_generator)
                 .build();
 
-            let runner = Runner::new(ctx.primary_database.clone(), Arc::new(environment))
+            let runner = Runner::new(ctx.primary_database.clone(), worker_ctx)
                 .shutdown_when_queue_empty()
                 .register_crates_io_job_types();
 

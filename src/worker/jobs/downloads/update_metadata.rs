@@ -1,11 +1,10 @@
 use crate::schema::version_downloads;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::BigInt;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::{info, instrument};
 
@@ -16,10 +15,10 @@ impl BackgroundJob for UpdateDownloads {
     const JOB_NAME: &'static str = "update_downloads";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.deadpool.get().await?;
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let mut conn = ctx.deadpool.get().await?;
         Ok(update(&mut conn).await?)
     }
 }
