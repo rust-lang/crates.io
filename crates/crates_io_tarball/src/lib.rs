@@ -9,7 +9,7 @@ pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
-use crates_io_cargo_toml::PathsFileSystem;
+use crates_io_cargo_toml::target_metadata::{self, TargetMetadata};
 pub use crates_io_cargo_toml::{Manifest, StringOrBool};
 use futures_util::StreamExt;
 use std::collections::BTreeMap;
@@ -45,6 +45,8 @@ pub struct TarballLimits {
 #[derive(Debug)]
 pub struct TarballInfo {
     pub manifest: Manifest,
+    /// Source entry points derived from the manifest and tarball contents.
+    pub target_metadata: TargetMetadata,
     pub vcs_info: Option<CargoVcsInfo>,
 }
 
@@ -68,6 +70,8 @@ pub enum TarballError {
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
     InvalidManifest(#[from] crates_io_cargo_toml::Error),
+    #[error("Cargo.toml target metadata is invalid: {0}")]
+    InvalidTargetMetadata(#[source] target_metadata::Error),
     #[error("Cargo.toml manifest is incorrectly cased: {0:?}")]
     IncorrectlyCasedManifest(PathBuf),
     #[error("more than one Cargo.toml manifest in tarball: {0:?}")]
@@ -196,9 +200,17 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         return Err(TarballError::IncorrectlyCasedManifest(file.into()));
     }
 
-    manifest.complete_from_abstract_filesystem(&PathsFileSystem::new(files))?;
+    let target_metadata =
+        TargetMetadata::extract(&mut manifest, files).map_err(|error| match error {
+            target_metadata::Error::Manifest(error) => TarballError::InvalidManifest(error),
+            error => TarballError::InvalidTargetMetadata(error),
+        })?;
 
-    Ok(TarballInfo { manifest, vcs_info })
+    Ok(TarballInfo {
+        manifest,
+        target_metadata,
+        vcs_info,
+    })
 }
 
 /// Reads a metadata entry into memory after checking its declared size.

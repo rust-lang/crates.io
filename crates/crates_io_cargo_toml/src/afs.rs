@@ -47,6 +47,11 @@ impl PathsFileSystem {
     pub fn new(paths: Vec<PathBuf>) -> Self {
         Self(paths)
     }
+
+    /// Returns whether the backing path list contains the exact path.
+    pub fn contains<P: AsRef<Path>>(&self, path: P) -> bool {
+        self.0.iter().any(|candidate| candidate == path.as_ref())
+    }
 }
 
 impl AbstractFilesystem for PathsFileSystem {

@@ -128,5 +128,34 @@ TarballInfo {
             },
         ),
     },
+    target_metadata: TargetMetadata {
+        build_script: None,
+        library: Some(
+            LibraryMetadata {
+                source: SourceFile {
+                    path: "src/lib.rs",
+                    exists: true,
+                },
+                name: "foo",
+                is_proc_macro: false,
+            },
+        ),
+        binaries: [
+            BinaryMetadata {
+                source: SourceFile {
+                    path: "src/bin/bar.rs",
+                    exists: true,
+                },
+                name: "bar",
+            },
+            BinaryMetadata {
+                source: SourceFile {
+                    path: "src/bin/foo.rs",
+                    exists: true,
+                },
+                name: "foo",
+            },
+        ],
+    },
     vcs_info: None,
 }
