@@ -1,8 +1,8 @@
-use crate::app::AppState;
 use crate::models::{Category, Crate, Keyword, TopVersions, Version};
 use crate::schema::{
     crate_downloads, crates, default_versions, keywords, metadata, recent_crate_downloads, versions,
 };
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
@@ -58,11 +58,11 @@ pub struct SummaryResponse {
     ),
 )]
 pub async fn get_summary(
-    state: AppState,
+    ctx: ServerContext,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<SummaryResponse>)> {
-    let conn = state.db_read().await?;
+    let conn = ctx.db_read().await?;
 
-    let config = &state.config;
+    let config = &ctx.config;
 
     let (
         num_crates,

@@ -1,10 +1,10 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::email::EmailMessage;
 use crate::models::NewDeletedCrate;
 use crate::schema::{crate_downloads, crates, dependencies, versions};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, BoxedAppError, custom};
 use crate::worker::jobs;
 use axum::extract::rejection::QueryRejection;
@@ -63,9 +63,9 @@ pub async fn delete_crate(
     path: CratePath,
     params: DeleteQueryParams,
     parts: Parts,
-    app: AppState,
+    ctx: ServerContext,
 ) -> AppResult<StatusCode> {
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     // Check that the user is authenticated
     let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
@@ -76,7 +76,7 @@ pub async fn delete_crate(
     // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
     let user = auth.user();
     let owners = krate.owners(&conn).await?;
-    match Rights::get(user, &*app.github, &owners, &app.config.token_encryption).await? {
+    match Rights::get(user, &*ctx.github, &owners, &ctx.config.token_encryption).await? {
         Rights::Full => {}
         Rights::Publish => {
             let msg = "team members don't have permission to delete crates";
@@ -139,7 +139,7 @@ pub async fn delete_crate(
             .await?;
 
         let sync_git_index = async {
-            if app.config.sync_git_index {
+            if ctx.config.sync_git_index {
                 let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
                 git_index_job.enqueue(&*conn).await?;
             }
@@ -169,7 +169,7 @@ pub async fn delete_crate(
                 },
             )?;
 
-            app.emails.send(&recipient, email).await?
+            ctx.emails.send(&recipient, email).await?
         }
 
         Ok::<_, anyhow::Error>(())

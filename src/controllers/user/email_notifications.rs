@@ -1,8 +1,8 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::crate_owners;
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use axum::Json;
 use diesel::prelude::*;
@@ -37,7 +37,7 @@ pub struct CrateEmailNotifications {
 )]
 #[deprecated]
 pub async fn update_email_notifications(
-    app: AppState,
+    ctx: ServerContext,
     parts: Parts,
     Json(updates): Json<Vec<CrateEmailNotifications>>,
 ) -> AppResult<OkResponse> {
@@ -48,7 +48,7 @@ pub async fn update_email_notifications(
         .map(|c| (c.id, c.email_notifications))
         .collect();
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let user_id = AuthCheck::default()
         .check(&parts, &mut conn)
         .await?

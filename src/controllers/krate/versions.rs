@@ -1,12 +1,12 @@
 //! Endpoint for versions of a crate
 
-use crate::app::AppState;
 use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::CratePath;
 use crate::models::{PublicUser, Version, VersionOwnerAction};
 use crate::schema::{oauth_github, users, versions};
+use crate::server::ServerContext;
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::util::string_excl_null::StringExclNull;
@@ -86,13 +86,13 @@ pub struct VersionListResponse {
     ),
 )]
 pub async fn list_versions(
-    state: AppState,
+    ctx: ServerContext,
     path: CratePath,
     params: VersionListQueryParams,
     pagination: PaginationQueryParams,
     req: Parts,
 ) -> AppResult<Json<VersionListResponse>> {
-    let conn = state.db_read().await?;
+    let conn = ctx.db_read().await?;
 
     let crate_id = path.load_crate_id(&conn).await?;
 

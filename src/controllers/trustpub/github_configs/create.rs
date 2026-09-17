@@ -1,8 +1,8 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::emails::{ConfigCreatedEmail, ConfigType};
 use crate::controllers::trustpub::github_configs::json;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, bad_request, custom, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
@@ -35,7 +35,7 @@ const MAX_CONFIGS_PER_CRATE: usize = 5;
     ),
 )]
 pub async fn create_trustpub_github_config(
-    state: AppState,
+    ctx: ServerContext,
     parts: Parts,
     json: json::CreateRequest,
 ) -> AppResult<Json<json::CreateResponse>> {
@@ -48,7 +48,7 @@ pub async fn create_trustpub_github_config(
         validate_environment(env)?;
     }
 
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
@@ -93,7 +93,7 @@ pub async fn create_trustpub_github_config(
 
     let owner = &json_config.repository_owner;
 
-    let encryption = &state.config.token_encryption;
+    let encryption = &ctx.config.token_encryption;
     let Some(gh_auth) = auth_user.gh_encrypted_token.as_ref() else {
         return Err(bad_request(
             "Must have a linked GitHub account to create a Trusted Publishing config",
@@ -106,7 +106,7 @@ pub async fn create_trustpub_github_config(
     })?;
     let gh_auth = GitHubAuth::bearer(gh_auth);
 
-    let github_user = match state.github.get_user(owner, &gh_auth).await {
+    let github_user = match ctx.github.get_user(owner, &gh_auth).await {
         Ok(user) => user,
         Err(GitHubError::NotFound(_)) => Err(bad_request("Unknown GitHub user or organization"))?,
         Err(err) => Err(err)?,
@@ -144,7 +144,7 @@ pub async fn create_trustpub_github_config(
             saved_config,
         };
 
-        if let Err(err) = send_notification_email(&state, email_address, context).await {
+        if let Err(err) = send_notification_email(&ctx, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");
         }
     }
@@ -164,15 +164,14 @@ pub async fn create_trustpub_github_config(
 }
 
 async fn send_notification_email(
-    state: &AppState,
+    ctx: &ServerContext,
     email_address: &str,
     context: ConfigCreatedEmail<'_>,
 ) -> anyhow::Result<()> {
     let email = context.render();
     let email = email.context("Failed to render email template")?;
 
-    state
-        .emails
+    ctx.emails
         .send(email_address, email)
         .await
         .context("Failed to send email")

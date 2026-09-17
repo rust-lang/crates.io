@@ -1,8 +1,8 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use crate::app::AppState;
 use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::models::Email;
+use crate::server::ServerContext;
 use crate::worker::jobs::{
     self, AnalyzeCrateFile, BuildCrateZip, CheckTyposquat, GenerateOgImage,
     SendPublishNotificationsJob, UpdateDefaultVersion,
@@ -103,7 +103,7 @@ impl AuthType {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
+pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();
     let stream = stream.map_err(std::io::Error::other);
     let mut reader = StreamReader::new(stream);
@@ -143,7 +143,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     request_log.add("crate_name", &*metadata.name);
     request_log.add("crate_version", &version_string);
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     let deleted_crate: Option<(String, DateTime<Utc>)> = deleted_crates::table
         .filter(canon_crate_name(deleted_crates::name).eq(canon_crate_name(&metadata.name)))
@@ -240,7 +240,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
     let verified_email_address = if let Some(user) = auth.user() {
         let verified_email_address = Email::verified_for_user(&conn, user.id).await?;
-        Some(verified_email_address.ok_or_else(|| verified_email_error(&app.config.domain_name))?)
+        Some(verified_email_address.ok_or_else(|| verified_email_error(&ctx.config.domain_name))?)
     } else {
         None
     };
@@ -252,7 +252,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             None => LimitedAction::PublishNew,
         };
 
-        app.rate_limiter
+        ctx.rate_limiter
             .check_rate_limit(user_id, rate_limit_action, &mut conn)
             .await?;
     }
@@ -260,20 +260,20 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let max_upload_size = existing_crate
         .as_ref()
         .and_then(|c| c.max_upload_size())
-        .unwrap_or(app.config.publish_limits.upload_size);
+        .unwrap_or(ctx.config.publish_limits.upload_size);
 
     let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
     let pkg_name = format!("{}-{version_string}", &*metadata.name);
     let max_unpack_size = std::cmp::max(
-        app.config.publish_limits.unpack_size,
+        ctx.config.publish_limits.unpack_size,
         max_upload_size as u64,
     );
     let limits = TarballLimits {
         unpack_size: max_unpack_size,
-        entries: Some(app.config.publish_limits.tarball_entries),
-        metadata_file_size: app.config.publish_limits.metadata_file_size,
+        entries: Some(ctx.config.publish_limits.tarball_entries),
+        metadata_file_size: ctx.config.publish_limits.metadata_file_size,
     };
     let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
     tarball_info
@@ -394,7 +394,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     let max_features = existing_crate
         .as_ref()
         .and_then(|c| c.max_features.map(|mf| mf as usize))
-        .unwrap_or(app.config.publish_limits.features);
+        .unwrap_or(ctx.config.publish_limits.features);
 
     let features = tarball_info.manifest.features.unwrap_or_default();
     let num_features = features.len();
@@ -442,7 +442,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         tarball_info.manifest.target.as_ref(),
     );
 
-    let max_dependencies = app.config.publish_limits.dependencies;
+    let max_dependencies = ctx.config.publish_limits.dependencies;
     if deps.len() > max_dependencies {
         return Err(bad_request(format!(
             "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
@@ -488,7 +488,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             };
 
             let owners = krate.owners(conn).await?;
-            if Rights::get(user, &*app.github, &owners, &app.config.token_encryption).await? < Rights::Publish {
+            if Rights::get(user, &*ctx.github, &owners, &ctx.config.token_encryption).await? < Rights::Publish {
                 return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
             }
 
@@ -505,7 +505,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             )));
         }
 
-        if let Some(daily_version_limit) = app.config.rate_limits.new_versions_daily {
+        if let Some(daily_version_limit) = ctx.config.rate_limits.new_versions_daily {
             let published_today = count_versions_published_today(krate.id, conn).await?;
             if published_today >= daily_version_limit as i64 {
                 return Err(custom(
@@ -634,7 +634,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let unknown_categories = Category::update_crate(conn, krate.id, &categories).await?;
         if !unknown_categories.is_empty() {
             let unknown_categories = unknown_categories.join(", ");
-            let domain = &app.config.domain_name;
+            let domain = &ctx.config.domain_name;
             return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {unknown_categories}\n\nSee https://{domain}/category_slugs for a list of supported slugs.")));
         }
 
@@ -661,12 +661,12 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         // Upload crate tarball
         let key = StorageKey::for_crate_file(&krate.name, &version_string);
-        app.storage.upload(&key, tarball_bytes.into())
+        ctx.storage.upload(&key, tarball_bytes.into())
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
         let sync_git_index = async {
-            if app.config.sync_git_index {
+            if ctx.config.sync_git_index {
                 let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
                 git_index_job.enqueue(&*conn).await?;
             }

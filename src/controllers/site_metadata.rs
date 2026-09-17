@@ -1,4 +1,4 @@
-use crate::app::AppState;
+use crate::server::ServerContext;
 use axum::Json;
 use axum::response::IntoResponse;
 use axum_extra::TypedHeader;
@@ -44,8 +44,8 @@ pub struct MetadataResponse<'a> {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
-    let read_only = state.config.db.are_all_read_only();
+pub async fn get_site_metadata(ctx: ServerContext) -> impl IntoResponse {
+    let read_only = ctx.config.db.are_all_read_only();
 
     let deployed_sha = commit().ok().flatten();
     let deployed_sha = deployed_sha.as_deref().unwrap_or("unknown");
@@ -60,8 +60,8 @@ pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
             deployed_sha,
             commit: deployed_sha,
             read_only,
-            banner_message: state.config.banner_message.as_deref(),
-            cdn_base: state.storage.cdn_base(),
+            banner_message: ctx.config.banner_message.as_deref(),
+            cdn_base: ctx.storage.cdn_base(),
         }),
     )
         .into_response()

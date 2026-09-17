@@ -1,6 +1,6 @@
 use crates_io::config::SharedConfig;
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{App, Emails, metrics::LogEncoder};
+use crates_io::{Emails, ServerContext, metrics::LogEncoder};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -34,7 +34,7 @@ pub fn run() -> anyhow::Result<()> {
     let github = RealGitHubClient::new(client);
     let github = Arc::new(github);
 
-    let app = App::builder()
+    let ctx = ServerContext::builder()
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
@@ -45,12 +45,10 @@ pub fn run() -> anyhow::Result<()> {
         .config(Arc::new(config))
         .build();
 
-    let app = Arc::new(app);
-
     // Start the background thread periodically logging instance metrics.
-    log_instance_metrics_thread(app.clone());
+    log_instance_metrics_thread(ctx.clone());
 
-    let axum_router = crates_io::build_handler(app.clone());
+    let axum_router = crates_io::build_handler(ctx.clone());
 
     // Apply the `normalize_path` middleware around the axum router.
     //
@@ -61,7 +59,7 @@ pub fn run() -> anyhow::Result<()> {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
     builder.worker_threads(CORE_THREADS);
-    if let Some(threads) = app.config.max_blocking_threads {
+    if let Some(threads) = ctx.config.max_blocking_threads {
         builder.max_blocking_threads(threads);
     }
 
@@ -72,7 +70,7 @@ pub fn run() -> anyhow::Result<()> {
     // Block the main thread until the server has shutdown
     rt.block_on(async {
         // Create a `TcpListener` using tokio.
-        let listener = TcpListener::bind((app.config.bind.ip, app.config.bind.port)).await?;
+        let listener = TcpListener::bind((ctx.config.bind.ip, ctx.config.bind.port)).await?;
 
         let addr = listener.local_addr()?;
 
@@ -111,16 +109,16 @@ async fn shutdown_signal() {
     }
 }
 
-fn log_instance_metrics_thread(app: Arc<App>) {
+fn log_instance_metrics_thread(ctx: ServerContext) {
     // Only run the thread if the configuration is provided
-    let interval = match app.config.metrics.instance_log_every_seconds {
+    let interval = match ctx.config.metrics.instance_log_every_seconds {
         Some(secs) => Duration::from_secs(secs),
         None => return,
     };
 
     std::thread::spawn(move || {
         loop {
-            if let Err(err) = log_instance_metrics_inner(&app) {
+            if let Err(err) = log_instance_metrics_inner(&ctx) {
                 error!("log_instance_metrics error: {err}");
             }
             std::thread::sleep(interval);
@@ -128,8 +126,8 @@ fn log_instance_metrics_thread(app: Arc<App>) {
     });
 }
 
-fn log_instance_metrics_inner(app: &App) -> anyhow::Result<()> {
-    let families = app.instance_metrics.gather(app)?;
+fn log_instance_metrics_inner(ctx: &ServerContext) -> anyhow::Result<()> {
+    let families = ctx.instance_metrics.gather(ctx)?;
 
     let mut stdout = std::io::stdout();
     LogEncoder::new().encode(&families, &mut stdout)?;

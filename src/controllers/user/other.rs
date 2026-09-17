@@ -1,6 +1,6 @@
-use crate::app::AppState;
 use crate::models::{CrateOwner, OwnerKind, PublicUser, users_by_username};
 use crate::schema::{crate_downloads, crate_owners, crates, oauth_github};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::views::{EncodableLinkedAccount, EncodablePublicUser};
 use axum::Json;
@@ -54,11 +54,11 @@ pub struct UserGetResponse {
     ),
 )]
 pub async fn find_user(
-    state: AppState,
+    ctx: ServerContext,
     Path(user_name): Path<String>,
     params: UserQueryParams,
 ) -> AppResult<Json<UserGetResponse>> {
-    let mut conn = state.db_read_prefer_primary().await?;
+    let mut conn = ctx.db_read_prefer_primary().await?;
     let include = params
         .include
         .as_deref()
@@ -149,10 +149,10 @@ pub struct StatsResponse {
     ),
 )]
 pub async fn get_user_stats(
-    state: AppState,
+    ctx: ServerContext,
     Path(user_id): Path<i32>,
 ) -> AppResult<Json<StatsResponse>> {
-    let mut conn = state.db_read_prefer_primary().await?;
+    let mut conn = ctx.db_read_prefer_primary().await?;
 
     use diesel::dsl::sum;
     use diesel_async::RunQueryDsl;

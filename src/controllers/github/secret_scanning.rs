@@ -1,7 +1,7 @@
-use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::models::{ApiToken, User};
 use crate::schema::{api_tokens, crate_owners, crates, emails};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::util::token::HashedToken;
 use anyhow::{Context, anyhow};
@@ -54,7 +54,7 @@ fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
 }
 
 // Fetches list of public keys from GitHub API
-async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppError> {
+async fn get_public_keys(ctx: &ServerContext) -> Result<Vec<GitHubPublicKey>, BoxedAppError> {
     // Return list from cache if populated and still valid
     let mut cache = PUBLIC_KEY_CACHE.lock().await;
     if is_cache_valid(cache.timestamp) {
@@ -63,10 +63,10 @@ async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Boxed
 
     // Fetch from GitHub API
     let auth = GitHubAuth::basic(
-        state.config.github_oauth.client_id.as_str(),
-        state.config.github_oauth.client_secret.secret().clone(),
+        ctx.config.github_oauth.client_id.as_str(),
+        ctx.config.github_oauth.client_secret.secret().clone(),
     );
-    let keys = state.github.public_keys(&auth).await?;
+    let keys = ctx.github.public_keys(&auth).await?;
 
     // Populate cache
     cache.keys.clone_from(&keys);
@@ -78,7 +78,7 @@ async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Boxed
 /// Verifies that the GitHub signature in request headers is valid
 async fn verify_github_signature(
     headers: &HeaderMap,
-    state: &AppState,
+    ctx: &ServerContext,
     json: &[u8],
 ) -> Result<(), BoxedAppError> {
     // Read and decode request headers
@@ -97,7 +97,7 @@ async fn verify_github_signature(
     let sig = p256::ecdsa::Signature::from_der(&sig)
         .map_err(|e| bad_request(format!("failed to parse signature from ASN.1 DER: {e:?}")))?;
 
-    let public_keys = get_public_keys(state)
+    let public_keys = get_public_keys(ctx)
         .await
         .map_err(|e| bad_request(format!("failed to fetch GitHub public keys: {e:?}")))?;
 
@@ -138,7 +138,7 @@ struct GitHubSecretAlert {
 
 /// Revokes an API token or Trusted Publishing token and notifies the token owner
 async fn alert_revoke_token(
-    state: &AppState,
+    ctx: &ServerContext,
     alert: &GitHubSecretAlert,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
@@ -163,7 +163,7 @@ async fn alert_revoke_token(
 
         // Send notification emails to all affected crate owners
         let actual_crate_ids: Vec<i32> = crate_ids.into_iter().flatten().collect();
-        let result = send_trustpub_notification_emails(&actual_crate_ids, alert, state, conn).await;
+        let result = send_trustpub_notification_emails(&actual_crate_ids, alert, ctx, conn).await;
         if let Err(error) = result {
             warn!(
                 "Failed to send trusted publishing token exposure notifications for crates {actual_crate_ids:?}: {error}",
@@ -206,7 +206,7 @@ async fn alert_revoke_token(
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, state, conn).await {
+    if let Err(error) = send_notification_email(&token, alert, ctx, conn).await {
         warn!(
             token_id = %token.id, user_id = %token.user_id,
             "Failed to send email notification: {error}",
@@ -219,7 +219,7 @@ async fn alert_revoke_token(
 async fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
-    state: &AppState,
+    ctx: &ServerContext,
     conn: &AsyncPgConnection,
 ) -> anyhow::Result<()> {
     let user = User::find(conn, token.user_id)
@@ -233,7 +233,7 @@ async fn send_notification_email(
     let email = EmailMessage::from_template(
         "token_exposed",
         context! {
-            domain => state.config.domain_name,
+            domain => ctx.config.domain_name,
             reporter => "GitHub",
             source => alert.source,
             token_name => token.name,
@@ -241,7 +241,7 @@ async fn send_notification_email(
         },
     )?;
 
-    state.emails.send(&recipient, email).await?;
+    ctx.emails.send(&recipient, email).await?;
 
     Ok(())
 }
@@ -249,7 +249,7 @@ async fn send_notification_email(
 async fn send_trustpub_notification_emails(
     crate_ids: &[i32],
     alert: &GitHubSecretAlert,
-    state: &AppState,
+    ctx: &ServerContext,
     mut conn: &AsyncPgConnection,
 ) -> anyhow::Result<()> {
     // Build a mapping from crate_id to crate_name directly from the query
@@ -295,7 +295,7 @@ async fn send_trustpub_notification_emails(
         let message = EmailMessage::from_template(
             "trustpub_token_exposed",
             context! {
-                domain => state.config.domain_name,
+                domain => ctx.config.domain_name,
                 reporter => "GitHub",
                 source => alert.source,
                 crate_names,
@@ -312,7 +312,7 @@ async fn send_trustpub_notification_emails(
             continue;
         };
 
-        if let Err(error) = state.emails.send(&email, email_template).await {
+        if let Err(error) = ctx.emails.send(&email, email_template).await {
             warn!(
                 %email, ?crate_names,
                 "Failed to send trusted publishing token exposure notification: {error}"
@@ -339,22 +339,22 @@ pub enum GitHubSecretAlertFeedbackLabel {
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
 pub async fn verify(
-    state: AppState,
+    ctx: ServerContext,
     headers: HeaderMap,
     body: Bytes,
 ) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
-    verify_github_signature(&headers, &state, &body)
+    verify_github_signature(&headers, &ctx, &body)
         .await
         .map_err(|e| bad_request(format!("failed to verify request signature: {e:?}")))?;
 
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     let mut feedback = Vec::with_capacity(alerts.len());
     for alert in alerts {
-        let label = alert_revoke_token(&state, &alert, &mut conn).await?;
+        let label = alert_revoke_token(&ctx, &alert, &mut conn).await?;
         feedback.push(GitHubSecretAlertFeedback {
             token_raw: alert.token,
             token_type: alert.r#type,

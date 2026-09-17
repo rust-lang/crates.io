@@ -1,11 +1,11 @@
 use super::CrateVersionPath;
-use crate::app::AppState;
 use crate::auth::{AuthCheck, Authentication};
 use crate::controllers::helpers::authorization::Rights;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, NewVersionOwnerAction, Version, VersionAction, VersionOwnerAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, bad_request, custom};
 use crate::views::EncodableVersion;
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
@@ -53,23 +53,22 @@ pub struct UpdateResponse {
     ),
 )]
 pub async fn update_version(
-    state: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
     req: Parts,
     Json(update_request): Json<VersionUpdateRequest>,
 ) -> AppResult<Json<UpdateResponse>> {
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&conn).await?;
     validate_yank_update(&update_request.version, &version)?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 
-    state
-        .rate_limiter
+    ctx.rate_limiter
         .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
         .await?;
 
     perform_version_yank_update(
-        &state,
+        &ctx,
         &mut conn,
         &mut version,
         &krate,
@@ -116,7 +115,7 @@ pub async fn authenticate(
 }
 
 pub async fn perform_version_yank_update(
-    state: &AppState,
+    ctx: &ServerContext,
     conn: &mut AsyncPgConnection,
     version: &mut Version,
     krate: &Crate,
@@ -130,8 +129,8 @@ pub async fn perform_version_yank_update(
 
     let yanked = yanked.unwrap_or(version.yanked);
 
-    let encryption = &state.config.token_encryption;
-    if Rights::get(user, &*state.github, &owners, encryption).await? < Rights::Publish {
+    let encryption = &ctx.config.token_encryption;
+    if Rights::get(user, &*ctx.github, &owners, encryption).await? < Rights::Publish {
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };
             warn!(
@@ -185,7 +184,7 @@ pub async fn perform_version_yank_update(
         .await?;
 
     let sync_git_index = async {
-        if state.config.sync_git_index {
+        if ctx.config.sync_git_index {
             let git_index_job = SyncToGitIndex::new(&krate.name);
             git_index_job.enqueue(&*conn).await?;
         }

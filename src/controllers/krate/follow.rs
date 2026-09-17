@@ -1,11 +1,11 @@
 //! Endpoints for managing a per user list of followed crates
 
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, crate_not_found};
 use crate::util::no_store;
 use axum::Json;
@@ -47,8 +47,12 @@ async fn follow_target(
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
-    let mut conn = app.db_write().await?;
+pub async fn follow_crate(
+    ctx: ServerContext,
+    path: CratePath,
+    req: Parts,
+) -> AppResult<OkResponse> {
+    let mut conn = ctx.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     let follow = follow_target(&path.name, &conn, user_id).await?;
     diesel::insert_into(follows::table)
@@ -76,8 +80,12 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
-    let mut conn = app.db_write().await?;
+pub async fn unfollow_crate(
+    ctx: ServerContext,
+    path: CratePath,
+    req: Parts,
+) -> AppResult<OkResponse> {
+    let mut conn = ctx.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     let follow = follow_target(&path.name, &conn, user_id).await?;
     diesel::delete(&follow).execute(&mut conn).await?;
@@ -106,13 +114,13 @@ pub struct FollowingResponse {
     ),
 )]
 pub async fn get_following_crate(
-    app: AppState,
+    ctx: ServerContext,
     path: CratePath,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<FollowingResponse>)> {
     use diesel::dsl::exists;
 
-    let mut conn = app.db_read_prefer_primary().await?;
+    let mut conn = ctx.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
         .check(&req, &mut conn)
         .await?

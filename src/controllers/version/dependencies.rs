@@ -1,6 +1,6 @@
 use super::CrateVersionPath;
-use crate::app::AppState;
 use crate::models::Dependency;
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::views::EncodableDependency;
 use axum::Json;
@@ -33,10 +33,10 @@ pub struct Response {
     ),
 )]
 pub async fn get_version_dependencies(
-    state: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
 ) -> AppResult<Json<Response>> {
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
     let version = path.load_version(&conn).await?;
 
     let dependencies = Dependency::belonging_to(&version)

@@ -23,7 +23,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
     let env = Env::from_environment()?;
     let config = DatabasePools::full_from_environment(env)?;
 
-    // TODO: Refactor logic so that we can also check things from App::new() here.
+    // TODO: Refactor logic so that we can also check things from ServerContext::builder() here.
     // If the app will panic due to bad configuration, it is better to error in the release phase
     // to avoid launching dynos that will fail.
 

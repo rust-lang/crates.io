@@ -1,4 +1,4 @@
-use crate::middleware::app::RequestApp;
+use crate::middleware::context::RequestContext;
 use crate::middleware::log_request::RequestLogExt;
 use crate::util::errors::{AppResult, forbidden};
 use http::request::Parts;
@@ -12,7 +12,7 @@ use http::{Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Version, he
 /// be: <https://crates.io> in production, or <http://localhost:port/> in development.
 pub fn verify_origin(parts: &Parts) -> AppResult<()> {
     let headers = parts.headers();
-    let allowed_origins = &parts.app().config.allowed_origins;
+    let allowed_origins = &parts.server_context().config.allowed_origins;
 
     let bad_origin = headers
         .get_all(header::ORIGIN)

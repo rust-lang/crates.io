@@ -13,7 +13,7 @@ use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
 use crates_io::worker::{Environment, RunnerExt};
-use crates_io::{App, Emails, Env};
+use crates_io::{Emails, Env, ServerContext};
 use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_encryption::TokenEncryption;
 use crates_io_github::{GitHubClient, MockGitHubClient};
@@ -38,7 +38,7 @@ use tokio::task::block_in_place;
 use url::Url;
 
 struct TestAppInner {
-    app: Arc<App>,
+    ctx: ServerContext,
     router: axum::Router,
     index: Option<UpstreamIndex>,
     runner: Option<Runner<Arc<Environment>>>,
@@ -93,8 +93,8 @@ impl Drop for TestAppInner {
         // We manually close the connection pools here to prevent their `Drop`
         // implementation from failing because no tokio runtime is running.
         {
-            self.app.primary_database.close();
-            if let Some(pool) = &self.app.replica_database {
+            self.ctx.primary_database.close();
+            if let Some(pool) = &self.ctx.replica_database {
                 pool.close();
             }
         }
@@ -261,9 +261,9 @@ impl TestApp {
         runner.check_for_failed_jobs().await
     }
 
-    /// Obtains a reference to the inner `App` value
-    pub fn as_inner(&self) -> &App {
-        &self.0.app
+    /// Obtains a reference to the inner `ServerContext` value
+    pub fn as_inner(&self) -> &ServerContext {
+        &self.0.ctx
     }
 
     /// Name of the per-test Postgres schema backing this `TestApp`. Pass this
@@ -353,7 +353,7 @@ impl TestAppBuilder {
         // by the application. This will also prevent cluttering the filesystem.
         let emails = Emails::new_in_memory();
 
-        let app = App::builder()
+        let ctx = ServerContext::builder()
             .databases_from_config(&self.config.db)
             .github(Arc::clone(&github))
             .github_oauth_from_config(&self.config)
@@ -364,8 +364,7 @@ impl TestAppBuilder {
             .config(Arc::new(self.config))
             .build();
 
-        let app = Arc::new(app);
-        let router = crates_io::build_handler(Arc::clone(&app));
+        let router = crates_io::build_handler(ctx.clone());
 
         let runner = if self.build_job_runner {
             let index_location = self
@@ -380,11 +379,11 @@ impl TestAppBuilder {
             };
 
             let environment = Environment::builder()
-                .config(app.config.clone())
+                .config(ctx.config.clone())
                 .repository_config(repository_config)
-                .storage(app.storage.clone())
-                .deadpool(app.primary_database.clone())
-                .emails(app.emails.clone())
+                .storage(ctx.storage.clone())
+                .deadpool(ctx.primary_database.clone())
+                .emails(ctx.emails.clone())
                 .maybe_docs_rs(self.docs_rs.map(|cl| Box::new(cl) as _))
                 .team_repo(Box::new(self.team_repo))
                 .maybe_index_sync_github_app(self.index_sync_github_app.map(|a| Arc::new(a) as _))
@@ -393,7 +392,7 @@ impl TestAppBuilder {
                 .maybe_og_image_generator(self.og_image_generator)
                 .build();
 
-            let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
+            let runner = Runner::new(ctx.primary_database.clone(), Arc::new(environment))
                 .shutdown_when_queue_empty()
                 .register_crates_io_job_types();
 
@@ -403,7 +402,7 @@ impl TestAppBuilder {
         };
 
         let test_app_inner = TestAppInner {
-            app,
+            ctx,
             test_database,
             router,
             index: self.index,

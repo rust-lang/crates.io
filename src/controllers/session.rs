@@ -1,10 +1,10 @@
-use crate::app::AppState;
 use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewOauthGithub, NewUser, OauthGithub};
 use crate::schema::{oauth_github, users};
+use crate::server::ServerContext;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, not_found, server_error};
 use crate::util::no_store;
@@ -59,10 +59,10 @@ pub struct BeginResponse {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
+pub async fn begin_session(ctx: ServerContext, session: SessionExtension) -> Json<BeginResponse> {
     session.remove(PENDING_SIGNUP_KEY);
 
-    let (url, state) = app
+    let (url, state) = ctx
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
         .add_scope(Scope::new("read:org".to_string()))
@@ -190,10 +190,10 @@ fn load_pending_signup(session: &SessionExtension) -> AppResult<PendingSignup> {
     ),
 )]
 pub async fn get_pending_signup(
-    app: AppState,
+    ctx: ServerContext,
     session: SessionExtension,
 ) -> AppResult<impl IntoResponse> {
-    if !app.config.features.explicit_signup_enabled {
+    if !ctx.config.features.explicit_signup_enabled {
         return Err(not_found());
     }
     if session.get("user_id").is_some() {
@@ -226,11 +226,11 @@ pub async fn get_pending_signup(
     ),
 )]
 pub async fn complete_pending_signup(
-    app: AppState,
+    ctx: ServerContext,
     session: SessionExtension,
     Json(body): Json<CompletePendingSignupRequest>,
 ) -> AppResult<Json<EncodableMe>> {
-    if !app.config.features.explicit_signup_enabled {
+    if !ctx.config.features.explicit_signup_enabled {
         return Err(not_found());
     }
     if session.get("user_id").is_some() {
@@ -241,13 +241,13 @@ pub async fn complete_pending_signup(
     let mut github_user = pending_signup.github_user;
     github_user.email = Some(body.signup.email.to_string());
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let (user_id, user) = conn
         .transaction(async |conn| {
             let user_id = create_user(
                 &github_user,
                 &pending_signup.encrypted_token,
-                &app.emails,
+                &ctx.emails,
                 conn,
             )
             .await?;
@@ -300,7 +300,7 @@ pub async fn delete_pending_signup(session: SessionExtension) -> OkResponse {
     ),
 )]
 pub async fn authorize_session(
-    app: AppState,
+    ctx: ServerContext,
     session: SessionExtension,
     req: Parts,
     Json(body): Json<AuthorizeBody>,
@@ -319,7 +319,7 @@ pub async fn authorize_session(
             .build()?,
     );
 
-    let token = app
+    let token = ctx
         .github_oauth
         .exchange_code(body.code)
         .request_async(&client)
@@ -332,7 +332,7 @@ pub async fn authorize_session(
     let token = token.access_token();
 
     // Encrypt the GitHub access token
-    let encryption = &app.config.token_encryption;
+    let encryption = &ctx.config.token_encryption;
     let encrypted_token = encryption.encrypt(token.secret()).map_err(|error| {
         error!("Failed to encrypt GitHub token: {error}");
         server_error("Internal server error")
@@ -340,14 +340,14 @@ pub async fn authorize_session(
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
     let auth = GitHubAuth::bearer(token.secret().clone());
-    let ghuser = app.github.current_user(&auth).await?;
+    let ghuser = ctx.github.current_user(&auth).await?;
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let user_id = save_user_to_database(
-        app.config.features.explicit_signup_enabled,
+        ctx.config.features.explicit_signup_enabled,
         &ghuser,
         &encrypted_token,
-        &app.emails,
+        &ctx.emails,
         &mut conn,
     )
     .await?;

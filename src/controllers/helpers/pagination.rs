@@ -1,4 +1,4 @@
-use crate::middleware::app::RequestApp;
+use crate::middleware::context::RequestContext;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{AppResult, bad_request};
@@ -123,7 +123,7 @@ impl PaginationOptionsBuilder {
 
             // Block large offsets for performance reasons
             if self.limit_page_numbers {
-                let config = &parts.app().config;
+                let config = &parts.server_context().config;
                 if numeric_page > config.max_allowed_page_offset {
                     parts.request_log().add("cause", "large page offset");
 

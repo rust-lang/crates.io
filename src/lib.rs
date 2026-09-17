@@ -3,19 +3,17 @@
 //! All implemented routes are defined in the [`router`] module and implemented
 //! in the [`controllers`] module.
 
-pub use crate::{app::App, email::Emails};
+pub use crate::email::Emails;
+pub use crate::server::ServerContext;
 pub use crates_io_api_types as views;
 pub use crates_io_database::{models, schema};
-use std::sync::Arc;
 
-use crate::app::AppState;
 use crate::router::build_axum_router;
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
-pub mod app;
 pub mod auth;
 pub mod boot;
 pub mod certs;
@@ -34,6 +32,7 @@ pub mod openapi;
 pub mod rate_limiter;
 mod router;
 pub mod sentry;
+pub mod server;
 pub mod sqs;
 pub mod ssh;
 pub mod storage;
@@ -68,9 +67,7 @@ impl Env {
 /// Configures routes, sessions, logging, and other middleware.
 ///
 /// Called from *src/bin/crates-io/server.rs*.
-pub fn build_handler(app: Arc<App>) -> axum::Router {
-    let state = AppState(app);
-
-    let axum_router = build_axum_router(state.clone());
-    middleware::apply_axum_middleware(state, axum_router)
+pub fn build_handler(ctx: ServerContext) -> axum::Router {
+    let axum_router = build_axum_router(ctx.clone());
+    middleware::apply_axum_middleware(ctx, axum_router)
 }

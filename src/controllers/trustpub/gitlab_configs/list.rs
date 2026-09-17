@@ -1,4 +1,3 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
@@ -7,6 +6,7 @@ use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::gitlab_configs::json::{
     self, GitLabConfigListMeta, GitLabConfigListResponse,
 };
+use crate::server::ServerContext;
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, bad_request, forbidden};
 use crate::util::no_store;
@@ -52,13 +52,13 @@ pub struct GitLabConfigListQueryParams {
     ),
 )]
 pub async fn list_trustpub_gitlab_configs(
-    state: AppState,
+    ctx: ServerContext,
     params: GitLabConfigListQueryParams,
     parts: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<GitLabConfigListResponse>)> {
     let configs = match (&params.krate, params.user_id) {
-        (Some(krate), None) => list_by_crate(state, krate, parts).await,
-        (None, Some(user_id)) => list_by_user(state, user_id, parts).await,
+        (Some(krate), None) => list_by_crate(ctx, krate, parts).await,
+        (None, Some(user_id)) => list_by_user(ctx, user_id, parts).await,
         (Some(_), Some(_)) => Err(bad_request(
             "Cannot specify both `crate` and `user_id` query parameters",
         )),
@@ -71,11 +71,11 @@ pub async fn list_trustpub_gitlab_configs(
 }
 
 async fn list_by_crate(
-    state: AppState,
+    ctx: ServerContext,
     krate_name: &str,
     parts: Parts,
 ) -> AppResult<Json<GitLabConfigListResponse>> {
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
@@ -105,11 +105,11 @@ async fn list_by_crate(
 }
 
 async fn list_by_user(
-    state: AppState,
+    ctx: ServerContext,
     user_id: i32,
     parts: Parts,
 ) -> AppResult<Json<GitLabConfigListResponse>> {
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)

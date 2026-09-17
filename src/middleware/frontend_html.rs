@@ -18,7 +18,7 @@ use futures_util::FutureExt;
 use futures_util::future::{BoxFuture, Shared};
 use http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 
-use crate::app::AppState;
+use crate::server::ServerContext;
 use crate::storage::StorageKey;
 
 const OG_IMAGE_FALLBACK_URL: &str = "https://crates.io/assets/og-image.png";
@@ -59,7 +59,7 @@ fn init_html_cache(max_capacity: u64) -> TemplateCache {
         .build()
 }
 
-pub async fn serve(state: AppState, request: Request, next: Next) -> Response {
+pub async fn serve(ctx: ServerContext, request: Request, next: Next) -> Response {
     static TEMPLATE_ENV: LazyLock<TemplateEnvFut> =
         LazyLock::new(|| init_template_env().boxed().shared());
     static RENDERED_HTML_CACHE: OnceLock<TemplateCache> = OnceLock::new();
@@ -83,12 +83,12 @@ pub async fn serve(state: AppState, request: Request, next: Next) -> Response {
         let crate_name = extract_crate_name(path);
         let key = crate_name.map(StorageKey::for_og_image);
         let og_image_url = key
-            .map(|key| Cow::Owned(state.storage.location(&key)))
+            .map(|key| Cow::Owned(ctx.storage.location(&key)))
             .unwrap_or(Cow::Borrowed(OG_IMAGE_FALLBACK_URL));
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
         let html_cache = RENDERED_HTML_CACHE
-            .get_or_init(|| init_html_cache(state.config.frontend.html_render_cache_max_capacity));
+            .get_or_init(|| init_html_cache(ctx.config.frontend.html_render_cache_max_capacity));
 
         let render_result = html_cache
             .entry_by_ref(&og_image_url)

@@ -1,4 +1,4 @@
-//! Application-wide components in a struct accessible from each request
+//! Server components accessible from each request.
 
 use crate::config::{DatabasePools, SharedConfig};
 use crate::db;
@@ -27,10 +27,15 @@ type DeadpoolResult = Result<
     diesel_async::pooled_connection::deadpool::PoolError,
 >;
 
-/// The `App` struct holds the main components of the application like
-/// the database connection pool and configurations
+/// Components shared across server requests.
+#[doc(hidden)]
 #[derive(Builder)]
-pub struct App {
+#[builder(
+    builder_type(name = ServerContextBuilder, vis = "pub"),
+    state_mod(name = server_context_builder, vis = "pub"),
+    finish_fn(name = build_inner, vis = "")
+)]
+pub struct ServerContextInner {
     /// Database connection pool connected to the primary database
     pub primary_database: DeadpoolPool<AsyncPgConnection>,
 
@@ -71,13 +76,13 @@ pub struct App {
     pub rate_limiter: RateLimiter,
 }
 
-impl<S: app_builder::State> AppBuilder<S> {
+impl<S: server_context_builder::State> ServerContextBuilder<S> {
     pub fn github_oauth_from_config(
         self,
         config: &SharedConfig,
-    ) -> AppBuilder<app_builder::SetGithubOauth<S>>
+    ) -> ServerContextBuilder<server_context_builder::SetGithubOauth<S>>
     where
-        S::GithubOauth: app_builder::IsUnset,
+        S::GithubOauth: server_context_builder::IsUnset,
     {
         use oauth2::{AuthUrl, TokenUrl};
 
@@ -103,9 +108,9 @@ impl<S: app_builder::State> AppBuilder<S> {
     pub fn trustpub_providers(
         self,
         providers: &[String],
-    ) -> AppBuilder<app_builder::SetOidcKeyStores<S>>
+    ) -> ServerContextBuilder<server_context_builder::SetOidcKeyStores<S>>
     where
-        S::OidcKeyStores: app_builder::IsUnset,
+        S::OidcKeyStores: server_context_builder::IsUnset,
     {
         let mut key_stores: HashMap<String, Box<dyn OidcKeyStore>> = HashMap::new();
 
@@ -131,10 +136,12 @@ impl<S: app_builder::State> AppBuilder<S> {
     pub fn databases_from_config(
         self,
         config: &DatabasePools,
-    ) -> AppBuilder<app_builder::SetReplicaDatabase<app_builder::SetPrimaryDatabase<S>>>
+    ) -> ServerContextBuilder<
+        server_context_builder::SetReplicaDatabase<server_context_builder::SetPrimaryDatabase<S>>,
+    >
     where
-        S::PrimaryDatabase: app_builder::IsUnset,
-        S::ReplicaDatabase: app_builder::IsUnset,
+        S::PrimaryDatabase: server_context_builder::IsUnset,
+        S::ReplicaDatabase: server_context_builder::IsUnset,
     {
         let primary_database = db::create_pool(&config.primary);
         let replica_database = config.replica.as_ref().map(db::create_pool);
@@ -146,9 +153,9 @@ impl<S: app_builder::State> AppBuilder<S> {
     pub fn storage_from_config(
         self,
         config: &StorageConfig,
-    ) -> AppBuilder<app_builder::SetStorage<S>>
+    ) -> ServerContextBuilder<server_context_builder::SetStorage<S>>
     where
-        S::Storage: app_builder::IsUnset,
+        S::Storage: server_context_builder::IsUnset,
     {
         self.storage(Arc::new(Storage::from_config(config)))
     }
@@ -156,15 +163,15 @@ impl<S: app_builder::State> AppBuilder<S> {
     pub fn rate_limiter_from_config(
         self,
         config: HashMap<LimitedAction, RateLimiterConfig>,
-    ) -> AppBuilder<app_builder::SetRateLimiter<S>>
+    ) -> ServerContextBuilder<server_context_builder::SetRateLimiter<S>>
     where
-        S::RateLimiter: app_builder::IsUnset,
+        S::RateLimiter: server_context_builder::IsUnset,
     {
         self.rate_limiter(RateLimiter::new(config))
     }
 }
 
-impl App {
+impl ServerContext {
     /// A unique key to generate signed cookies
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
@@ -232,12 +239,30 @@ impl App {
     }
 }
 
+/// Components shared across server requests.
 #[derive(Clone, FromRequestParts, Deref)]
 #[from_request(via(State))]
-pub struct AppState(pub Arc<App>);
+pub struct ServerContext(Arc<ServerContextInner>);
 
-impl FromRef<AppState> for cookie::Key {
-    fn from_ref(app: &AppState) -> Self {
-        app.session_key().clone()
+impl ServerContext {
+    /// Creates a builder for a server context.
+    pub fn builder() -> ServerContextBuilder {
+        ServerContextInner::builder()
+    }
+}
+
+impl<S: server_context_builder::State> ServerContextBuilder<S> {
+    /// Finishes building the server context.
+    pub fn build(self) -> ServerContext
+    where
+        S: server_context_builder::IsComplete,
+    {
+        ServerContext(Arc::new(self.build_inner()))
+    }
+}
+
+impl FromRef<ServerContext> for cookie::Key {
+    fn from_ref(ctx: &ServerContext) -> Self {
+        ctx.session_key().clone()
     }
 }

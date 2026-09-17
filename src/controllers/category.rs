@@ -1,7 +1,7 @@
 use super::helpers::pagination::*;
-use crate::app::AppState;
 use crate::models::Category;
 use crate::schema::categories;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, not_found};
 use crate::views::EncodableCategory;
 use axum::Json;
@@ -55,7 +55,7 @@ pub struct CategoryListMeta {
     ),
 )]
 pub async fn list_categories(
-    app: AppState,
+    ctx: ServerContext,
     params: CategoryListQueryParams,
     req: Parts,
 ) -> AppResult<Json<CategoryListResponse>> {
@@ -64,7 +64,7 @@ pub async fn list_categories(
     // to paginate this.
     let options = PaginationOptions::builder().gather(&req)?;
 
-    let conn = app.db_read().await?;
+    let conn = ctx.db_read().await?;
 
     let sort = params.sort.as_ref().map_or("alpha", String::as_str);
 
@@ -102,7 +102,7 @@ pub struct CategoryGetResponse {
     ),
 )]
 pub async fn find_category(
-    state: AppState,
+    ctx: ServerContext,
     Path(slug): Path<String>,
 ) -> AppResult<Json<CategoryGetResponse>> {
     // Category slugs can never contain null bytes, so we reject such requests
@@ -113,7 +113,7 @@ pub async fn find_category(
         return Err(not_found());
     }
 
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     let cat: Category = Category::by_slug(&slug)
         .select(Category::as_select())
@@ -166,8 +166,8 @@ pub struct ListSlugsResponse {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn list_category_slugs(state: AppState) -> AppResult<Json<ListSlugsResponse>> {
-    let mut conn = state.db_read().await?;
+pub async fn list_category_slugs(ctx: ServerContext) -> AppResult<Json<ListSlugsResponse>> {
+    let mut conn = ctx.db_read().await?;
 
     let category_slugs = categories::table
         .select((categories::slug, categories::slug, categories::description))

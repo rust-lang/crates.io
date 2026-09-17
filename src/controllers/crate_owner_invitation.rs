@@ -1,4 +1,3 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::auth::Authentication;
 use crate::controllers::helpers::authorization::Rights;
@@ -6,6 +5,7 @@ use crate::controllers::helpers::pagination::{Page, PaginationOptions, Paginatio
 use crate::models::crate_owner_invitation::AcceptError;
 use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
+use crate::server::ServerContext;
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
 use crate::util::no_store;
@@ -51,17 +51,17 @@ pub struct LegacyListResponse {
     ),
 )]
 pub async fn list_crate_owner_invitations_for_user(
-    app: AppState,
+    ctx: ServerContext,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<LegacyListResponse>)> {
-    let mut conn = app.db_read().await?;
+    let mut conn = ctx.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let user_id = auth.user_id();
 
     let PrivateListResponse {
         invitations, users, ..
-    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &conn).await?;
+    } = prepare_list(&ctx, &req, auth, ListFilter::InviteeId(user_id), &conn).await?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
     let crate_owner_invitations = invitations
@@ -124,15 +124,15 @@ pub struct CrateOwnerInvitationListQueryParams {
     ),
 )]
 pub async fn list_crate_owner_invitations(
-    app: AppState,
+    ctx: ServerContext,
     params: CrateOwnerInvitationListQueryParams,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
-    let mut conn = app.db_read().await?;
+    let mut conn = ctx.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
-    let list = prepare_list(&app, &req, auth, filter, &conn).await?;
+    let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
     Ok((no_store(), Json(list)))
 }
 
@@ -158,7 +158,7 @@ impl TryFrom<CrateOwnerInvitationListQueryParams> for ListFilter {
 }
 
 async fn prepare_list(
-    state: &AppState,
+    ctx: &ServerContext,
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
@@ -171,7 +171,7 @@ async fn prepare_list(
 
     let user = auth.user();
 
-    let config = &state.config;
+    let config = &ctx.config;
 
     let mut crate_names = HashMap::new();
 
@@ -181,8 +181,8 @@ async fn prepare_list(
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(&mut conn).await?;
                 let owners = krate.owners(conn).await?;
-                let encryption = &state.config.token_encryption;
-                if Rights::get(user, &*state.github, &owners, encryption).await? != Rights::Full {
+                let encryption = &ctx.config.token_encryption;
+                if Rights::get(user, &*ctx.github, &owners, encryption).await? != Rights::Full {
                     let detail = "only crate owners can query pending invitations for their crate";
                     return Err(forbidden(detail));
                 }
@@ -372,13 +372,13 @@ pub struct HandleResponse {
     ),
 )]
 pub async fn handle_crate_owner_invitation(
-    state: AppState,
+    ctx: ServerContext,
     parts: Parts,
     Json(crate_invite): Json<OwnerInvitation>,
 ) -> AppResult<Json<HandleResponse>> {
     let crate_invite = crate_invite.crate_owner_invite;
 
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let user_id = AuthCheck::default()
         .check(&parts, &mut conn)
         .await?
@@ -412,10 +412,10 @@ pub async fn handle_crate_owner_invitation(
     ),
 )]
 pub async fn accept_crate_owner_invitation_with_token(
-    state: AppState,
+    ctx: ServerContext,
     Path(token): Path<String>,
 ) -> AppResult<Json<HandleResponse>> {
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let invitation = CrateOwnerInvitation::find_by_token(&token, &conn).await?;
 
     let crate_id = invitation.crate_id;
