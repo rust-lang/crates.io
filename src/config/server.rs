@@ -47,7 +47,6 @@ pub struct Server {
     pub ownership_invitations_expiration: chrono::Duration,
     pub metrics: MetricsConfig,
     pub datadog: DatadogConfig,
-    pub cdn_user_agent: String,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
     /// status codes to `200 OK` for all endpoints that are relevant for cargo.
@@ -153,8 +152,6 @@ impl Server {
             ownership_invitations_expiration: chrono::Duration::days(30),
             metrics: MetricsConfig::from_env()?,
             datadog: DatadogConfig::from_env()?,
-            cdn_user_agent: var("WEB_CDN_USER_AGENT")?
-                .unwrap_or_else(|| "Amazon CloudFront".into()),
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             frontend: FrontendConfig::from_env()?,

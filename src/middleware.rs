@@ -64,10 +64,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
             state.clone(),
             crates_io_session::attach_session,
         ))
-        .layer(from_fn_with_state(
-            state.clone(),
-            require_user_agent::require_user_agent,
-        ))
+        .layer(from_fn(require_user_agent::require_user_agent))
         .layer(from_fn_with_state(state.clone(), block_traffic::middleware))
         .layer(from_fn(common_headers::add_common_headers))
         .layer(conditional_layer(config.frontend.serve_html, || {

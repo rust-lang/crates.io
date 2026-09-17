@@ -603,7 +603,6 @@ fn simple_config() -> config::Server {
         ownership_invitations_expiration: chrono::Duration::days(30),
         metrics: Default::default(),
         datadog: DatadogConfig::default(),
-        cdn_user_agent: "Amazon CloudFront".to_string(),
 
         // The middleware has its own unit tests to verify its functionality.
         // Here, we can test what would happen if we toggled the status code
