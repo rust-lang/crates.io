@@ -30,6 +30,10 @@
       extends: ['schedule:weekly'],
     },
     {
+      matchDepNames: ['jdx/mise'],
+      extends: ['schedule:weekly'],
+    },
+    {
       matchDepNames: ['@percy/cli'],
       extends: ['schedule:weekly'],
     },
