@@ -28,6 +28,7 @@ impl BackfillTargetMetadata {
 
 impl BackgroundJob for BackfillTargetMetadata {
     const JOB_NAME: &'static str = "backfill_target_metadata";
+    const QUEUE: &'static str = "backfill";
     const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;

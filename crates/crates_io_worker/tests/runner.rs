@@ -317,6 +317,41 @@ async fn jobs_can_be_deduplicated() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[tokio::test]
+async fn queue_with_zero_workers_is_disabled() -> anyhow::Result<()> {
+    #[derive(Serialize, Deserialize)]
+    struct TestJob;
+
+    impl BackgroundJob for TestJob {
+        const JOB_NAME: &'static str = "test";
+        const QUEUE: &'static str = "disabled";
+
+        type Context = ();
+
+        async fn run(self, _ctx: Self::Context) -> anyhow::Result<()> {
+            Ok(())
+        }
+    }
+
+    let test_database = TestDatabase::new();
+
+    let pool = pool(test_database.url())?;
+    let mut conn = pool.get().await?;
+
+    let runner = Runner::new(pool, ())
+        .configure_queue(TestJob::QUEUE, |queue| queue.num_workers(0))
+        .register_job_type::<TestJob>()
+        .shutdown_when_queue_empty();
+
+    let job_id = assert_some!(TestJob.enqueue(&conn).await?);
+
+    runner.start().wait_for_shutdown().await;
+
+    assert!(job_exists(job_id, &mut conn).await?);
+
+    Ok(())
+}
+
 /// A database trigger should emit a `NOTIFY` on the `background_jobs` channel
 /// whenever a job is enqueued, so that listening workers can wake up
 /// immediately instead of waiting for the next poll.

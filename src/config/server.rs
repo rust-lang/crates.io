@@ -30,6 +30,7 @@ pub struct Server {
     pub bind: BindConfig,
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
+    pub backfill_workers: usize,
     pub storage: StorageConfig,
     pub cdn_log_storage: CdnLogStorageConfig,
     pub cdn_log_queue: CdnLogQueueConfig,
@@ -100,6 +101,7 @@ impl Server {
     /// - `TOKEN_ENCRYPTION_KEY`: Key for encrypting Oauth tokens (64 hex characters).
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
+    /// - `BACKFILL_WORKERS`: Number of workers for the backfill queue. Defaults to 0.
     /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
     ///   and uses the value as the error message returned to users.
     /// - `GIT_ARCHIVE_REPO_URL`: HTTPS URL (e.g. `https://github.com/<org>/<repo>.git`) of a git
@@ -131,6 +133,7 @@ impl Server {
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
+            backfill_workers: var_parsed("BACKFILL_WORKERS")?.unwrap_or(0),
             storage,
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
             cdn_log_queue: CdnLogQueueConfig::from_env()?,
