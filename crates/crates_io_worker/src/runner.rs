@@ -169,6 +169,8 @@ impl<Context> Default for Queue<Context> {
 
 impl<Context> Queue<Context> {
     /// Sets the number of workers to spawn for this queue.
+    ///
+    /// Setting this to zero disables the queue.
     pub fn num_workers(&mut self, num_workers: usize) -> &mut Self {
         self.num_workers = num_workers;
         self
