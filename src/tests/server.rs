@@ -21,6 +21,13 @@ async fn user_agent_is_required() {
     let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
+
+    let req = Request::get("/api/v1/crates")
+        .header(header::USER_AGENT, "Amazon CloudFront")
+        .body("")
+        .unwrap();
+    let resp = anon.run::<()>(req).await;
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
 
 #[tokio::test(flavor = "multi_thread")]
