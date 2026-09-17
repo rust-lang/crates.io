@@ -26,7 +26,19 @@
   ],
   packageRules: [
     {
-      matchDepNames: ['@percy/cli', 'tj-actions/changed-files'],
+      matchManagers: ['github-actions'],
+      extends: ['schedule:weekly'],
+    },
+    {
+      matchDepNames: ['jdx/mise'],
+      extends: ['schedule:weekly'],
+    },
+    {
+      matchDepNames: ['@chromatic-com/storybook', '@percy/cli', '@percy/playwright', 'chromatic'],
+      extends: ['schedule:weekly'],
+    },
+    {
+      matchDepNames: ['@catppuccin/palette', '/^@fontsource\\//', '/^@iconify-json\\//'],
       extends: ['schedule:weekly'],
     },
     {
@@ -34,6 +46,7 @@
       // setup does not support the new version yet.
       matchDepNames: ['pnpm'],
       minimumReleaseAge: '24 hours',
+      extends: ['schedule:weekly'],
     },
     {
       matchManagers: ['custom.regex'],
