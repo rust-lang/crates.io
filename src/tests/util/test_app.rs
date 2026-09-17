@@ -580,6 +580,7 @@ fn simple_config() -> config::Server {
         },
         max_blocking_threads: None,
         db,
+        backfill_workers: 0,
         storage,
         cdn_log_queue: CdnLogQueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),

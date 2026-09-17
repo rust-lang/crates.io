@@ -137,6 +137,9 @@ pub fn run() -> anyhow::Result<()> {
         .configure_queue("downloads", |queue| queue.num_workers(1))
         .configure_queue("repository", |queue| queue.num_workers(1))
         .configure_queue("cloudfront", |queue| queue.num_workers(1))
+        .configure_queue("backfill", |queue| {
+            queue.num_workers(environment.config.backfill_workers)
+        })
         .register_crates_io_job_types();
 
     runtime.block_on(async {
