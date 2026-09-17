@@ -1,4 +1,5 @@
 mod analyze_crates;
+mod backfill_target_metadata;
 mod build_crate_zips;
 mod default_versions;
 mod delete_crate;
@@ -19,6 +20,7 @@ mod yank_version;
 #[derive(clap::Subcommand, Debug)]
 pub enum Command {
     AnalyzeCrates(analyze_crates::Options),
+    BackfillTargetMetadata(backfill_target_metadata::Options),
     BuildCrateZips(build_crate_zips::Options),
     RenderOgImages(render_og_images::Opts),
     DeleteCrate(delete_crate::Opts),
@@ -51,6 +53,7 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
 
     match command {
         Command::AnalyzeCrates(opts) => analyze_crates::run(opts).await,
+        Command::BackfillTargetMetadata(opts) => backfill_target_metadata::run(opts).await,
         Command::BuildCrateZips(opts) => build_crate_zips::run(opts).await,
         Command::RenderOgImages(opts) => render_og_images::run(opts).await,
         Command::DeleteCrate(opts) => delete_crate::run(opts).await,

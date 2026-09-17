@@ -13,6 +13,7 @@ use object_store::{
 };
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
+use std::ops::Range;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWriteExt};
@@ -283,6 +284,18 @@ impl Storage {
         }
 
         attributes
+    }
+
+    /// Downloads the complete object identified by `key`.
+    #[instrument(skip(self))]
+    pub async fn download(&self, key: &StorageKey<'_>) -> Result<Bytes> {
+        self.store.get(&key.path()).await?.bytes().await
+    }
+
+    /// Downloads a byte range from the object identified by `key`.
+    #[instrument(skip(self))]
+    pub async fn download_range(&self, key: &StorageKey<'_>, range: Range<u64>) -> Result<Bytes> {
+        self.store.get_range(&key.path(), range).await
     }
 
     #[instrument(skip(self))]
@@ -711,6 +724,20 @@ mod tests {
         let key = StorageKey::DbDumpTar;
         s.upload_stream(&key, &b"fake db dump"[..]).await.unwrap();
         assert_none!(cache_tags_metadata(&s, &key).await);
+    }
+
+    #[tokio::test]
+    async fn download_object_and_range() {
+        let storage = Storage::from_config(&StorageConfig::in_memory());
+        let key = StorageKey::for_crate_zip("foo", "1.2.3");
+        let contents = Bytes::from_static(b"prefix payload suffix");
+        storage.upload(&key, contents.clone().into()).await.unwrap();
+
+        assert_eq!(storage.download(&key).await.unwrap(), contents);
+        assert_eq!(
+            storage.download_range(&key, 7..14).await.unwrap(),
+            "payload"
+        );
     }
 
     #[tokio::test]

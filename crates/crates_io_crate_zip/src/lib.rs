@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::io::{Read, Seek, Write};
+use std::ops::Range;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
 
@@ -35,6 +36,16 @@ pub struct Manifest {
     pub files: Vec<FileEntry>,
 }
 
+impl Manifest {
+    /// Returns the package manifest entry, including historical lowercase names.
+    pub fn cargo_toml(&self) -> anyhow::Result<&FileEntry> {
+        self.files
+            .iter()
+            .find(|file| file.path.eq_ignore_ascii_case(CARGO_TOML))
+            .context("ZIP manifest contains no `Cargo.toml` entry")
+    }
+}
+
 /// A single file recorded in a [`Manifest`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FileEntry {
@@ -51,6 +62,66 @@ pub struct FileEntry {
     pub compression: String,
     /// Lowercase hex sha256 of the uncompressed contents.
     pub sha256: String,
+}
+
+impl FileEntry {
+    /// Returns the byte range containing this entry's compressed data.
+    pub fn data_range(&self) -> anyhow::Result<Range<u64>> {
+        let end = self
+            .data_offset
+            .checked_add(self.compressed_size)
+            .with_context(|| format!("Data range overflow for `{}`", self.path))?;
+
+        Ok(self.data_offset..end)
+    }
+
+    /// Decodes and verifies this entry's compressed data.
+    pub fn decode(&self, compressed: &[u8]) -> anyhow::Result<Vec<u8>> {
+        let compressed_size = u64::try_from(compressed.len())?;
+        if compressed_size != self.compressed_size {
+            bail!(
+                "Expected {} compressed bytes for `{}`, got {compressed_size}",
+                self.compressed_size,
+                self.path
+            );
+        }
+
+        let reader: Box<dyn Read> = match self.compression.as_str() {
+            "deflate" => Box::new(flate2::read::DeflateDecoder::new(compressed)),
+            "store" => Box::new(compressed),
+            compression => bail!(
+                "Unsupported compression `{compression}` for `{}`",
+                self.path
+            ),
+        };
+        let limit = self
+            .uncompressed_size
+            .checked_add(1)
+            .with_context(|| format!("Uncompressed size overflow for `{}`", self.path))?;
+        let mut reader = reader.take(limit);
+        let mut contents = Vec::new();
+        reader
+            .read_to_end(&mut contents)
+            .with_context(|| format!("Failed to decompress `{}`", self.path))?;
+
+        let uncompressed_size = u64::try_from(contents.len())?;
+        if uncompressed_size != self.uncompressed_size {
+            let qualifier = (uncompressed_size > self.uncompressed_size)
+                .then_some("at least ")
+                .unwrap_or_default();
+            bail!(
+                "Expected {} uncompressed bytes for `{}`, got {qualifier}{uncompressed_size}",
+                self.uncompressed_size,
+                self.path
+            );
+        }
+
+        if hex::encode(Sha256::digest(&contents)) != self.sha256 {
+            bail!("SHA-256 mismatch for `{}`", self.path);
+        }
+
+        Ok(contents)
+    }
 }
 
 /// Builds a deterministic zip from a `.crate` (gzipped tarball) and returns its
