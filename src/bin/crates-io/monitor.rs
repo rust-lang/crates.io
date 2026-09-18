@@ -1,6 +1,4 @@
-//! Checks application invariants and reports the results to configured monitoring providers.
-//!
-//! PagerDuty reporting can be disabled with `PAGERDUTY_ENABLED=false`.
+//! Checks application invariants and reports the results to Datadog when configured.
 //!
 //! Usage:
 //!     cargo run -- monitor
@@ -12,9 +10,7 @@ use crates_io::worker::jobs;
 use crates_io::{db, schema::*};
 use crates_io_database::fns::canon_crate_name;
 use crates_io_datadog::{DatadogClient, ServiceCheck, ServiceCheckStatus};
-use crates_io_env_vars::{required_var, var, var_parsed};
-use crates_io_pagerduty as pagerduty;
-use crates_io_pagerduty::PagerdutyClient;
+use crates_io_env_vars::{var, var_parsed};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
@@ -46,13 +42,6 @@ struct CheckResult {
 
 #[tokio::main]
 pub async fn run() -> Result<()> {
-    let pagerduty = if var_parsed("PAGERDUTY_ENABLED")?.unwrap_or(true) {
-        let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?.into();
-        Some(PagerdutyClient::new(service_key))
-    } else {
-        None
-    };
-
     let datadog_service_checks_enabled = var_parsed("DD_SERVICE_CHECKS_ENABLED")?.unwrap_or(false);
     let datadog_client = if datadog_service_checks_enabled {
         let http_client = Client::builder()
@@ -81,26 +70,16 @@ pub async fn run() -> Result<()> {
         println!("{}", format_check_result(result));
     }
 
-    let datadog_reporting = async {
-        if let Some(datadog) = datadog_client {
-            let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
-            let datadog_tags = common_tags(&domain_name);
-            if let Err(error) =
-                report_to_datadog(&datadog, &results, &domain_name, &datadog_tags).await
-            {
-                eprintln!("Failed to submit Datadog service checks: {error:#}");
-            }
+    if let Some(datadog) = datadog_client {
+        let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
+        let datadog_tags = common_tags(&domain_name);
+        if let Err(error) = report_to_datadog(&datadog, &results, &domain_name, &datadog_tags).await
+        {
+            eprintln!("Failed to submit Datadog service checks: {error:#}");
         }
-    };
-
-    if let Some(pagerduty) = pagerduty {
-        let pagerduty_reporting = report_to_pagerduty(&pagerduty, &results);
-        let (_, pagerduty_result) = tokio::join!(datadog_reporting, pagerduty_reporting);
-        pagerduty_result
-    } else {
-        datadog_reporting.await;
-        Ok(())
     }
+
+    Ok(())
 }
 
 /// Checks for old background jobs that are not currently running.
@@ -226,26 +205,6 @@ async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<CheckResult> 
     Ok(result)
 }
 
-/// Converts a provider-independent result into a PagerDuty event.
-fn pagerduty_event(result: &CheckResult) -> pagerduty::Event {
-    let incident_key = match result.id {
-        CheckId::BackgroundJobs => "background_jobs",
-        CheckId::UpdateDownloads => "update_downloads_stalled",
-        CheckId::SpamAttack => "spam_attack",
-    };
-
-    match result.status {
-        CheckStatus::Healthy => pagerduty::Event::Resolve {
-            incident_key: incident_key.into(),
-            description: Some(result.message.clone()),
-        },
-        CheckStatus::Unhealthy => pagerduty::Event::Trigger {
-            incident_key: Some(incident_key.into()),
-            description: result.message.clone(),
-        },
-    }
-}
-
 /// Converts a provider-independent result into a Datadog service check.
 fn datadog_service_check(result: &CheckResult, host_name: &str, tags: &[String]) -> ServiceCheck {
     let check = match result.id {
@@ -290,16 +249,6 @@ async fn report_to_datadog(
     datadog.submit_service_checks(&checks).await
 }
 
-/// Reports monitor results to PagerDuty.
-async fn report_to_pagerduty(pagerduty: &PagerdutyClient, results: &[CheckResult]) -> Result<()> {
-    for result in results {
-        let event = pagerduty_event(result);
-        pagerduty.send(&event).await?;
-    }
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -338,47 +287,6 @@ mod tests {
                 message: "no spam attack detected".into(),
             },
         ]
-    }
-
-    #[test]
-    fn maps_results_to_pagerduty_events() {
-        let results = check_results();
-        let events: Vec<_> = results.iter().map(pagerduty_event).collect();
-
-        assert_json_snapshot!(events, @r#"
-        [
-          {
-            "event_type": "trigger",
-            "incident_key": "background_jobs",
-            "description": "background jobs unhealthy"
-          },
-          {
-            "event_type": "resolve",
-            "incident_key": "background_jobs",
-            "description": "background jobs healthy"
-          },
-          {
-            "event_type": "trigger",
-            "incident_key": "update_downloads_stalled",
-            "description": "update downloads unhealthy"
-          },
-          {
-            "event_type": "resolve",
-            "incident_key": "update_downloads_stalled",
-            "description": "update downloads healthy"
-          },
-          {
-            "event_type": "trigger",
-            "incident_key": "spam_attack",
-            "description": "spam attack detected"
-          },
-          {
-            "event_type": "resolve",
-            "incident_key": "spam_attack",
-            "description": "no spam attack detected"
-          }
-        ]
-        "#);
     }
 
     #[test]

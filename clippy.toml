@@ -1,1 +1,1 @@
-doc-valid-idents = ["CloudFront", "PostgreSQL", "PagerDuty", "OpenGraph", "SvelteKit", "OpenID", "CommonMark", "OAuth2", "ReDoS", ".."]
+doc-valid-idents = ["CloudFront", "PostgreSQL", "OpenGraph", "SvelteKit", "OpenID", "CommonMark", "OAuth2", "ReDoS", ".."]

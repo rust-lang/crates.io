@@ -1686,7 +1686,6 @@ dependencies = [
  "crates_io_linecount",
  "crates_io_markdown",
  "crates_io_og_image",
- "crates_io_pagerduty",
  "crates_io_real_ip",
  "crates_io_session",
  "crates_io_tarball",
@@ -2064,19 +2063,6 @@ dependencies = [
  "typst",
  "typst-kit",
  "typst-render",
-]
-
-[[package]]
-name = "crates_io_pagerduty"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "clap",
- "crates_io_version",
- "reqwest",
- "secrecy",
- "serde",
- "tokio",
 ]
 
 [[package]]
