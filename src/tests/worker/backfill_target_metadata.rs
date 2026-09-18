@@ -10,7 +10,7 @@ use crates_io_tarball::TarballBuilder;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use insta::{assert_json_snapshot, assert_snapshot};
+use insta::{assert_compact_json_snapshot, assert_json_snapshot, assert_snapshot};
 use std::io::Cursor;
 
 const CRATE_NAME: &str = "target-metadata";
@@ -89,6 +89,11 @@ async fn target_metadata(
         .unwrap()
 }
 
+async fn assert_error_metadata(conn: &mut AsyncPgConnection, version_id: i32) {
+    let metadata = assert_some!(target_metadata(conn, version_id).await);
+    assert_compact_json_snapshot!(metadata.0, @r#"{"status": "error"}"#);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn backfills_target_metadata() {
     let (app, _, user) = TestApp::full().with_user().await;
@@ -123,15 +128,15 @@ async fn backfills_target_metadata() {
     let metadata = assert_some!(target_metadata(&mut conn, version_id).await);
     assert_json_snapshot!(metadata.0, @r#"
     {
-      "build_script": {
+      "build": {
         "path": "build/custom.rs"
       },
-      "library": {
+      "lib": {
         "path": "src/lib.rs",
         "name": "target_metadata",
         "is_proc_macro": true
       },
-      "binaries": [
+      "bins": [
         {
           "path": "src/tool.rs",
           "name": "tool"
@@ -166,16 +171,16 @@ async fn preserves_missing_target_sources() {
     let metadata = assert_some!(target_metadata(&mut conn, version_id).await);
     assert_json_snapshot!(metadata.0, @r#"
     {
-      "build_script": {
+      "build": {
         "path": "build.rs",
         "exists": false
       },
-      "library": {
+      "lib": {
         "path": "src/lib.rs",
         "exists": false,
         "name": "target_metadata"
       },
-      "binaries": [
+      "bins": [
         {
           "path": "src/tool.rs",
           "exists": false,
@@ -212,4 +217,21 @@ async fn leaves_metadata_uncollected_when_the_zip_manifest_is_missing() {
 
     let error = run_failed_job(&app, &mut conn, version_id).await;
     assert_snapshot!(error, @"1 jobs failed");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn stores_error_for_invalid_target_metadata() {
+    let (app, _, user) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let version_id = create_version(&mut conn, user.as_model().id).await;
+    let cargo_toml = br#"
+        [package]
+        name = "target-metadata"
+        version = "1.0.0"
+        build = "../build.rs"
+    "#;
+    upload_source_archive(&app, cargo_toml, &[]).await;
+
+    run_job(&app, &conn, version_id).await;
+    assert_error_metadata(&mut conn, version_id).await;
 }
