@@ -48,13 +48,13 @@ impl Rights {
                     }
                 }
                 Owner::Team(ref team) => {
-                    if let Some(ref auth) = auth {
+                    if let (Some(auth), Some(gh_login)) = (&auth, &user.gh_login) {
                         // Phones home to GitHub to ask if this User is a member of the given team.
                         // Note that we're assuming that the given user is the one interested in
                         // the answer. If this is not the case, then we could accidentally leak
                         // private membership information here.
                         let is_team_member = match gh_client
-                            .team_membership(team.org_id, team.github_id, &user.gh_login, auth)
+                            .team_membership(team.org_id, team.github_id, gh_login, auth)
                             .await
                         {
                             Ok(membership) => membership.is_some_and(|m| m.is_active()),
