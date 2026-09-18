@@ -3,11 +3,9 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::{
-    Crate, Email, OauthGithub, Owner, OwnerKind, PublicUser, Team, User, users_by_username,
-};
-use crate::models::{
-    CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
-    krate::NewOwnerInvite, token::EndpointScope,
+    Crate, CrateOwner, Email, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
+    OauthGithub, Owner, OwnerKind, PublicUser, Team, User, krate::NewOwnerInvite,
+    token::EndpointScope, users_by_username,
 };
 use crate::schema::{oauth_github, users};
 use crate::server::ServerContext;
@@ -713,13 +711,16 @@ pub async fn create_or_update_github_team(
     let org_id = team.organization.id;
     let gh_login = &req_user.gh_login;
 
-    let is_team_member = gh_client
-        .team_membership(org_id, team.id, gh_login, &auth)
-        .await?
-        .is_some_and(|m| m.is_active());
+    let can_add_team = if let Some(gh_login) = gh_login {
+        let is_team_member = gh_client
+            .team_membership(org_id, team.id, gh_login, &auth)
+            .await?
+            .is_some_and(|m| m.is_active());
 
-    let can_add_team =
-        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &auth).await?;
+        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &auth).await?
+    } else {
+        false
+    };
 
     if !can_add_team {
         return Err(custom(
