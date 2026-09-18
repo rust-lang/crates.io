@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use bon::Builder;
 use chrono::{DateTime, Utc};
-use crates_io_cargo_toml::target_metadata::TargetMetadata;
+use crates_io_cargo_toml::target_metadata::TargetMetadataAnalysis;
 use crates_io_index::features::FeaturesMap;
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::{Pg, PgValue};
@@ -16,22 +16,10 @@ use serde::Deserialize;
 use crate::models::{Crate, PublicUser, TrustpubData};
 use crate::schema::{readme_renderings, users, versions};
 
-/// Target metadata stored in the `versions.target_metadata` JSONB column.
+/// Target metadata analysis stored in the `versions.target_metadata` JSONB column.
 #[derive(Clone, Debug, Eq, PartialEq, FromSqlRow, AsExpression)]
 #[diesel(sql_type = Jsonb)]
-pub struct VersionTargetMetadata(pub TargetMetadata);
-
-impl From<TargetMetadata> for VersionTargetMetadata {
-    fn from(metadata: TargetMetadata) -> Self {
-        Self(metadata)
-    }
-}
-
-impl From<VersionTargetMetadata> for TargetMetadata {
-    fn from(metadata: VersionTargetMetadata) -> Self {
-        metadata.0
-    }
-}
+pub struct VersionTargetMetadata(pub TargetMetadataAnalysis);
 
 impl ToSql<Jsonb, Pg> for VersionTargetMetadata {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
@@ -75,8 +63,6 @@ pub struct Version {
     pub repository: Option<String>,
     pub trustpub_data: Option<TrustpubData>,
     pub linecounts: Option<serde_json::Value>,
-    /// Build script, library, and binary targets derived from the package source.
-    pub target_metadata: Option<VersionTargetMetadata>,
     /// SHA256 checksum of the zip source archive,
     /// or `None` if it has not been built yet.
     pub zip_sha256: Option<Vec<u8>>,

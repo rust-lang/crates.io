@@ -21,6 +21,7 @@ pub struct LibraryMetadata {
     /// The target name used by Cargo.
     pub name: String,
     /// Whether the library is a procedural macro.
+    #[serde(default, skip_serializing_if = "is_false")]
     pub is_proc_macro: bool,
 }
 
@@ -38,11 +39,41 @@ pub struct BinaryMetadata {
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TargetMetadata {
     /// The package build script.
-    pub build_script: Option<SourceFile>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub build: Option<SourceFile>,
     /// The package library target, if declared or inferred.
-    pub library: Option<LibraryMetadata>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lib: Option<LibraryMetadata>,
     /// The package binary targets.
-    pub binaries: Vec<BinaryMetadata>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bins: Vec<BinaryMetadata>,
+}
+
+/// The stored outcome of package target metadata analysis.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum TargetMetadataAnalysis {
+    /// Target metadata analysis failed permanently.
+    Error {
+        /// The error outcome marker.
+        status: ErrorStatus,
+    },
+    /// Target metadata analysis completed successfully.
+    Success(TargetMetadata),
+}
+
+impl From<TargetMetadata> for TargetMetadataAnalysis {
+    fn from(metadata: TargetMetadata) -> Self {
+        Self::Success(metadata)
+    }
+}
+
+/// The status stored for a failed target metadata analysis.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ErrorStatus {
+    /// Target metadata analysis failed permanently.
+    Error,
 }
 
 impl TargetMetadata {
@@ -63,7 +94,7 @@ impl TargetMetadata {
         let fs = PathsFileSystem::new(paths);
         manifest.complete_from_abstract_filesystem(&fs)?;
 
-        let build_script = manifest
+        let build = manifest
             .package
             .as_ref()
             .and_then(|package| match package.build.as_ref() {
@@ -75,28 +106,24 @@ impl TargetMetadata {
             .map(|path| source_file(path, &fs))
             .transpose()?;
 
-        let library = manifest
+        let lib = manifest
             .lib
             .as_ref()
             .map(|library| library_metadata(library, &fs))
             .transpose()?;
 
-        let binaries = manifest
+        let bins = manifest
             .bin
             .iter()
             .map(|binary| binary_metadata(binary, &fs))
             .collect::<Result<_, _>>()?;
 
-        Ok(Self {
-            build_script,
-            library,
-            binaries,
-        })
+        Ok(Self { build, lib, bins })
     }
 
     /// Returns an error if a target source is missing from the file inventory.
     pub fn require_existing_sources(&self) -> Result<(), Error> {
-        if let Some(source) = &self.build_script
+        if let Some(source) = &self.build
             && !source.exists
         {
             return Err(Error::MissingSourceFile {
@@ -105,7 +132,7 @@ impl TargetMetadata {
             });
         }
 
-        if let Some(library) = &self.library
+        if let Some(library) = &self.lib
             && !library.source.exists
         {
             return Err(Error::MissingSourceFile {
@@ -114,7 +141,7 @@ impl TargetMetadata {
             });
         }
 
-        if let Some(binary) = self.binaries.iter().find(|binary| !binary.source.exists) {
+        if let Some(binary) = self.bins.iter().find(|binary| !binary.source.exists) {
             return Err(Error::MissingSourceFile {
                 target: format!("binary target `{}`", binary.name),
                 path: binary.source.path.clone(),
@@ -238,4 +265,8 @@ fn default_true() -> bool {
 
 fn is_true(value: &bool) -> bool {
     *value
+}
+
+fn is_false(value: &bool) -> bool {
+    !value
 }

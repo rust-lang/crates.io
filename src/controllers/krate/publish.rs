@@ -532,7 +532,7 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
         let edition = edition.map(|edition| edition.as_str());
 
         let tar_sha256 = Sha256::digest(&tarball_bytes);
-        let target_metadata = VersionTargetMetadata::from(tarball_info.target_metadata);
+        let target_metadata = VersionTargetMetadata(tarball_info.target_metadata.into());
 
         // Persist the new version of this crate
         let new_version = NewVersion::builder(krate.id, &version_string)

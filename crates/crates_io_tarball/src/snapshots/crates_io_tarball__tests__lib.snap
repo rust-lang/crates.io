@@ -69,8 +69,8 @@ TarballInfo {
         ),
     },
     target_metadata: TargetMetadata {
-        build_script: None,
-        library: Some(
+        build: None,
+        lib: Some(
             LibraryMetadata {
                 source: SourceFile {
                     path: "src/lib.rs",
@@ -80,7 +80,7 @@ TarballInfo {
                 is_proc_macro: false,
             },
         ),
-        binaries: [],
+        bins: [],
     },
     vcs_info: None,
 }
