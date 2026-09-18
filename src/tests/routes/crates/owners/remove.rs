@@ -147,11 +147,51 @@ async fn remove_reused_github_login(login: &str) {
     assert_eq!(owner_ids, [cookie.as_model().id]);
 }
 
+/// Different namespace selections reject the whole batch, even with an overlapping owner.
+#[tokio::test(flavor = "multi_thread")]
+async fn unprefixed_removal_with_conflicting_owners() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let alice = app.db_new_user("alice").await;
+    let bob = UserBuilder::new()
+        .with_username("bob")
+        .with_gh_login("alice");
+    let bob = app.db_new_user_from_builder(bob).await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    for user in [&alice, &bob] {
+        CrateOwner::builder()
+            .crate_id(krate.id)
+            .user_id(user.as_model().id)
+            .created_by(cookie.as_model().id)
+            .build()
+            .insert(&conn)
+            .await
+            .unwrap();
+    }
+
+    let logins = ["crates.io:alice", "ALICE"];
+    let response = cookie.remove_named_owners("foo", &logins).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `ALICE` matches different owners. Use `crates.io:ALICE` or `github:ALICE` to select which owner to remove."}]}"#);
+    assert_eq!(krate.owners(&conn).await.unwrap().len(), 3);
+
+    let response = cookie.remove_named_owner("foo", "crates.io:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(krate.owners(&conn).await.unwrap().len(), 2);
+
+    let response = cookie.remove_named_owner("foo", "github:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(krate.owners(&conn).await.unwrap().len(), 1);
+}
+
 async fn remove_distinct_login_user(login: &str) -> (Response<OwnerResp>, usize) {
     remove_distinct_login_users(&[login]).await
 }
 
-/// Removes a batch from a crate with distinct crates.io and GitHub usernames.
+/// Removes owners with distinct names, ignoring a non-owner with opposing names.
 async fn remove_distinct_login_users(logins: &[&str]) -> (Response<OwnerResp>, usize) {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
@@ -160,6 +200,10 @@ async fn remove_distinct_login_users(logins: &[&str]) -> (Response<OwnerResp>, u
         .with_username("crates-user")
         .with_gh_login("github-user");
     let user2 = app.db_new_user_from_builder(user2).await;
+    let non_owner = UserBuilder::new()
+        .with_username("github-user")
+        .with_gh_login("crates-user");
+    app.db_new_user_from_builder(non_owner).await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -215,25 +259,22 @@ async fn prefixed_removal_of_all_individual_owners() {
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_verbatim() {
     let (response, owner_count) = remove_distinct_login_user("crates-user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates-user`"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_case_insensitive() {
     let (response, owner_count) = remove_distinct_login_user("CRATES-USER").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `CRATES-USER`"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_separator_variant() {
     let (response, owner_count) = remove_distinct_login_user("crates_user").await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `crates_user`"}]}"#);
-    assert_eq!(owner_count, 2);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(owner_count, 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]

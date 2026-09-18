@@ -3,9 +3,9 @@ use crate::owners::expire_invitation;
 use crate::util::github::next_gh_id;
 use crate::util::{RequestHelper, Response, TestApp};
 use crate::{OwnerResp, new_team};
-use crates_io::models::CrateOwner;
 use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::schema::{crate_owner_invitations, emails, teams};
+use crates_io::models::{CrateOwner, NewOauthGithub};
+use crates_io::schema::{crate_owner_invitations, emails, oauth_github, teams};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
@@ -81,7 +81,7 @@ async fn reused_github_login_invites_highest_github_id() {
         .expect_build(&mut conn)
         .await;
 
-    let response = cookie.add_named_owner("foo", "shared").await;
+    let response = cookie.add_named_owner("foo", "github:shared").await;
     assert_snapshot!(response.status(), @"200 OK");
 
     let invitees = invited_user_ids(&mut conn, krate.id).await;
@@ -116,7 +116,7 @@ async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
         .await
         .unwrap();
 
-    let response = cookie.add_named_owner("foo", "SHARED").await;
+    let response = cookie.add_named_owner("foo", "github:SHARED").await;
     assert_snapshot!(response.status(), @"200 OK");
 
     let invitees = invited_user_ids(&mut conn, krate.id).await;
@@ -143,9 +143,9 @@ async fn owner_lookup_error_precedes_duplicate_check() {
         .await
         .unwrap();
 
-    let response = cookie.add_named_owner("foo", "INACTIVE").await;
+    let response = cookie.add_named_owner("foo", "github:INACTIVE").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `INACTIVE`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find GitHub user with login `INACTIVE`"}]}"#);
     assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
 }
 
@@ -208,39 +208,161 @@ async fn invite_distinct_login_user(login: &str) -> Response<OwnerResp> {
     cookie.add_named_owner(&krate.name, login).await
 }
 
+/// A reused GitHub login requires choosing between the two crates.io accounts.
+#[tokio::test(flavor = "multi_thread")]
+async fn unprefixed_username_matches_different_accounts() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let alice = app.db_new_user("alice").await;
+    let bob = UserBuilder::new()
+        .with_username("bob")
+        .with_gh_login("alice");
+    let bob = app.db_new_user_from_builder(bob).await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "ALICE").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `ALICE` matches different accounts. Use `crates.io:alice` for https://crates.io/users/alice, or `github:alice` for https://crates.io/users/bob (linked to https://github.com/alice)."}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
+
+    let response = cookie.add_named_owner("foo", "crates.io:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert_eq!(invitees, [alice.as_model().id]);
+
+    let response = cookie.add_named_owner("foo", "github:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert_eq!(invitees, [alice.as_model().id, bob.as_model().id]);
+}
+
+/// Confirmation uses the requested name rather than suggesting other linked logins.
+#[tokio::test(flavor = "multi_thread")]
+async fn unprefixed_confirmation_uses_requested_username() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let alice = UserBuilder::new()
+        .with_username("alice")
+        .with_gh_login("shared");
+    let alice = app.db_new_user_from_builder(alice).await;
+    let bob = UserBuilder::new()
+        .with_username("bob")
+        .with_gh_login("shared");
+    app.db_new_user_from_builder(bob).await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "ALICE").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `ALICE` refers to https://crates.io/users/alice, which is NOT linked to https://github.com/ALICE. To explicitly select this account, use `crates.io:alice`."}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
+
+    let response = cookie.add_named_owner("foo", "crates.io:alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let invitees = invited_user_ids(&mut conn, krate.id).await;
+    assert_eq!(invitees, [alice.as_model().id]);
+}
+
+/// An account without a GitHub link requires an explicit crates.io prefix.
+#[tokio::test(flavor = "multi_thread")]
+async fn unprefixed_invitation_without_github_account() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let alice = app.db_new_user("alice").await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+    diesel::delete(oauth_github::table.filter(oauth_github::user_id.eq(alice.as_model().id)))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let response = cookie.add_named_owner("foo", "alice").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `alice` refers to https://crates.io/users/alice, which is NOT linked to https://github.com/alice. To explicitly select this account, use `crates.io:alice`."}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
+}
+
+/// An additional linked GitHub account can resolve the name, ignoring case.
+#[tokio::test(flavor = "multi_thread")]
+async fn unprefixed_invitation_resolves_additional_github_account() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    let alice = UserBuilder::new()
+        .with_username("alice")
+        .with_gh_login("other-login");
+    let alice = app.db_new_user_from_builder(alice).await;
+    let user_id = alice.as_model().id;
+    NewOauthGithub::builder()
+        .user_id(user_id)
+        .account_id(i64::from(next_gh_id()))
+        .login("ALICE")
+        .encrypted_token(&[])
+        .build()
+        .insert(&conn)
+        .await
+        .unwrap();
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "alice").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(invited_user_ids(&mut conn, krate.id).await, [user_id]);
+}
+
+/// Canonical crates.io separators do not make distinct GitHub logins equivalent.
+#[tokio::test(flavor = "multi_thread")]
+async fn unprefixed_matching_names_with_different_separator() {
+    let (app, _, cookie) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+    app.db_new_user("alice-smith").await;
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = cookie.add_named_owner("foo", "alice_smith").await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `alice_smith` refers to https://crates.io/users/alice-smith, which is NOT linked to https://github.com/alice_smith. To explicitly select this account, use `crates.io:alice-smith`."}]}"#);
+    assert!(invited_user_ids(&mut conn, krate.id).await.is_empty());
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_verbatim() {
     let response = invite_distinct_login_user("crates-user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `crates-user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `crates-user` refers to https://crates.io/users/crates-user, which is NOT linked to https://github.com/crates-user. To explicitly select this account, use `crates.io:crates-user`."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_case_insensitive() {
     let response = invite_distinct_login_user("CRATES-USER").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `CRATES-USER`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `CRATES-USER` refers to https://crates.io/users/crates-user, which is NOT linked to https://github.com/CRATES-USER. To explicitly select this account, use `crates.io:crates-user`."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_crates_io_username_separator_variant() {
     let response = invite_distinct_login_user("crates_user").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `crates_user`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `crates_user` refers to https://crates.io/users/crates-user, which is NOT linked to https://github.com/crates_user. To explicitly select this account, use `crates.io:crates-user`."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_github_login_verbatim() {
     let response = invite_distinct_login_user("github-user").await;
-    assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `github-user`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unprefixed_github_login_case_insensitive() {
     let response = invite_distinct_login_user("GITHUB-USER").await;
-    assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"msg":"Crates.io user crates-user has been invited to be an owner of crate foo","ok":true}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `GITHUB-USER`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -733,7 +855,7 @@ async fn invite_with_invalid_email() -> anyhow::Result<()> {
         .await?;
 
     let response = owner
-        .add_named_owners("foo", &["valid_user", "github_user"])
+        .add_named_owners("foo", &["valid_user", "github:github_user"])
         .await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"user `invalid_user` has an invalid email address"}]}"#);
@@ -766,6 +888,14 @@ async fn no_invite_emails_for_txn_rollback() {
     let response = token.add_named_owners("crate_name", &usernames).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
+
+    let user = UserBuilder::new()
+        .with_username("bananas")
+        .with_gh_login("oranges");
+    app.db_new_user_from_builder(user).await;
+    let response = token.add_named_owners("crate_name", &usernames).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The username `bananas` refers to https://crates.io/users/bananas, which is NOT linked to https://github.com/bananas. To explicitly select this account, use `crates.io:bananas`."}]}"#);
 
     // No emails should have been sent.
     assert_eq!(app.emails().await.len(), 0);

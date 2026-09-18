@@ -148,7 +148,7 @@ pub struct ModifyResponse {
 /// Adds crate owners.
 ///
 /// Supported owner names:
-/// - `username` for a GitHub user.
+/// - `username` for a crates.io user, with confirmation for ambiguous or mismatched accounts.
 /// - `crates.io:username` for a crates.io user.
 /// - `github:username` for a GitHub user.
 /// - `github:org:team` for a GitHub organization team.
@@ -263,7 +263,7 @@ pub async fn add_owners(
 /// Removes crate owners.
 ///
 /// Supported owner names:
-/// - `username` for a GitHub user.
+/// - `username` for a crates.io or GitHub user, if the owner selection is unambiguous.
 /// - `crates.io:username` for a crates.io user.
 /// - `github:username` for a GitHub user.
 /// - `github:org:team` for a GitHub organization team.
@@ -314,26 +314,60 @@ pub async fn remove_owners(
     let mut selected = Vec::new();
     for login in &body.owners {
         let normalized_login = login.to_lowercase();
-        let matching: Vec<_> = match Login::parse(login)? {
-            Login::CratesIo(username) => users_by_username(username)
-                .filter(users::id.eq_any(&user_ids))
-                .select(users::id)
-                .load::<i32>(&mut conn)
-                .await?
-                .into_iter()
-                .map(|id| (OwnerKind::User, id))
-                .collect(),
-            Login::GitHub(username) => oauth_github::table
-                .filter(oauth_github::user_id.eq_any(&user_ids))
-                .filter(lower(oauth_github::login).eq(lower(username)))
-                .filter(oauth_github::account_id.ne(-1))
-                .select(oauth_github::user_id)
-                .load::<i32>(&mut conn)
-                .await?
-                .into_iter()
-                .map(|id| (OwnerKind::User, id))
-                .collect(),
-            Login::GitHubTeam(_) | Login::Unprefixed(_) => owners
+        let parsed = Login::parse(login)?;
+        let matching: Vec<_> = match parsed {
+            Login::CratesIo(username) | Login::GitHub(username) | Login::Unprefixed(username) => {
+                let mut crates_io_conn = &*conn;
+                let crates_io = async {
+                    if matches!(parsed, Login::GitHub(_)) {
+                        Ok(Vec::new())
+                    } else {
+                        users_by_username(username)
+                            .filter(users::id.eq_any(&user_ids))
+                            .select(users::id)
+                            .load::<i32>(&mut crates_io_conn)
+                            .await
+                    }
+                };
+
+                let mut github_conn = &*conn;
+                let github = async {
+                    if matches!(parsed, Login::CratesIo(_)) {
+                        Ok(Vec::new())
+                    } else {
+                        oauth_github::table
+                            .filter(oauth_github::user_id.eq_any(&user_ids))
+                            .filter(lower(oauth_github::login).eq(lower(username)))
+                            .filter(oauth_github::account_id.ne(-1))
+                            .select(oauth_github::user_id)
+                            .distinct()
+                            .load::<i32>(&mut github_conn)
+                            .await
+                    }
+                };
+
+                let (mut crates_io, mut github) = tokio::try_join!(crates_io, github)?;
+
+                if !crates_io.is_empty() && !github.is_empty() {
+                    crates_io.sort_unstable();
+                    github.sort_unstable();
+
+                    if crates_io != github {
+                        return Err(bad_request(format_args!(
+                            "The username `{username}` matches different owners. \
+                             Use `crates.io:{username}` or `github:{username}` \
+                             to select which owner to remove."
+                        )));
+                    }
+                }
+
+                crates_io
+                    .into_iter()
+                    .chain(github)
+                    .map(|id| (OwnerKind::User, id))
+                    .collect()
+            }
+            Login::GitHubTeam(_) => owners
                 .iter()
                 .filter(|owner| owner.login().to_lowercase() == normalized_login)
                 .map(|owner| match owner {
@@ -458,9 +492,8 @@ async fn add_owner(
             })?;
             PublicUser::find(conn, account.user_id).await?
         }
-        Login::Unprefixed(username) => PublicUser::find_by_login(conn, username)
-            .await
-            .optional()?
+        Login::Unprefixed(username) => resolve_unprefixed_user(conn, username)
+            .await?
             .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?,
     };
 
@@ -470,6 +503,50 @@ async fn add_owner(
     }
 
     invite_user_owner(ctx, conn, req_user, krate, user).await
+}
+
+/// Resolves an unprefixed username or asks the caller to choose an explicit prefix.
+async fn resolve_unprefixed_user(
+    conn: &mut AsyncPgConnection,
+    username: &str,
+) -> AppResult<Option<PublicUser>> {
+    let user = users_by_username(username)
+        .left_join(oauth_github::table)
+        .select(PublicUser::as_select())
+        .first(conn)
+        .await
+        .optional()?;
+
+    let Some(user) = user else {
+        return Ok(None);
+    };
+
+    // Resolve the GitHub meaning too: reused logins can select a different user.
+    let github = OauthGithub::find_by_login(conn, username).await;
+    let github = github.optional()?;
+    let crates_io_name = &user.username;
+
+    if let Some(account) = github {
+        if account.user_id == user.id {
+            return Ok(Some(user));
+        }
+
+        let other = PublicUser::find(conn, account.user_id).await?;
+        let other_name = &other.username;
+        let github_name = &account.login;
+        return Err(bad_request(format_args!(
+            "The username `{username}` matches different accounts. \
+             Use `crates.io:{crates_io_name}` for https://crates.io/users/{crates_io_name}, \
+             or `github:{github_name}` for https://crates.io/users/{other_name} \
+             (linked to https://github.com/{github_name})."
+        )));
+    }
+
+    Err(bad_request(format_args!(
+        "The username `{username}` refers to https://crates.io/users/{crates_io_name}, \
+         which is NOT linked to https://github.com/{username}. \
+         To explicitly select this account, use `crates.io:{crates_io_name}`."
+    )))
 }
 
 /// Parsed owner login used by the owner endpoints.
