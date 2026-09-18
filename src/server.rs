@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::email::Emails;
-use crate::metrics::{InstanceMetrics, ServiceMetrics};
+use crate::metrics::{InstanceMetrics, ServerMetrics, ServiceMetrics};
 use crate::rate_limiter::{LimitedAction, RateLimiter, RateLimiterConfig};
 use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
@@ -71,6 +71,9 @@ pub struct ServerContextInner {
     /// Metrics related to this specific instance of the service
     #[builder(default = InstanceMetrics::new().expect("could not initialize instance metrics"))]
     pub instance_metrics: InstanceMetrics,
+
+    /// OpenTelemetry metrics recorded by the HTTP server
+    pub metrics: ServerMetrics,
 
     /// Rate limit select actions.
     pub rate_limiter: RateLimiter,
@@ -205,6 +208,8 @@ impl ServerContext {
                     .get_metric_with_label_values(&["follower"])
                     .map(|metric| metric.inc());
 
+                self.metrics.db_fallback("replica");
+
                 warn!("Replica is unavailable, falling back to primary ({error})");
                 self.primary_database.get().await
             }
@@ -231,6 +236,8 @@ impl ServerContext {
                     .database_fallback_used
                     .get_metric_with_label_values(&["primary"])
                     .map(|metric| metric.inc());
+
+                self.metrics.db_fallback("primary");
 
                 warn!("Primary is unavailable, falling back to replica ({error})");
                 read_only_pool.get().await

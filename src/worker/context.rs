@@ -1,6 +1,7 @@
 use crate::Emails;
 use crate::cloudfront::CloudFront;
 use crate::config::SharedConfig;
+use crate::metrics::WorkerMetrics;
 use crate::storage::Storage;
 use crate::typosquat;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
@@ -36,6 +37,9 @@ use tracing::{info, instrument};
 )]
 pub struct WorkerContextInner {
     pub config: Arc<SharedConfig>,
+
+    /// OpenTelemetry metrics recorded by the background worker.
+    pub metrics: WorkerMetrics,
 
     pub repository_config: RepositoryConfig,
     #[builder(skip)]

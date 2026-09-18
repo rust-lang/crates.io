@@ -18,6 +18,7 @@ mod dump_db;
 mod github_secret_scanning;
 mod issues;
 mod krate;
+mod metrics;
 mod middleware;
 mod not_found_error;
 mod openapi;

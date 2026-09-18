@@ -16,6 +16,8 @@ use crates_io::Emails;
 use crates_io::cloudfront::CloudFront;
 use crates_io::config::SharedConfig;
 use crates_io::db;
+use crates_io::metrics::consts::METER_NAME;
+use crates_io::metrics::{WorkerMetrics, meter_provider};
 use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{RunnerExt, WorkerContext};
@@ -56,6 +58,10 @@ pub fn run() -> anyhow::Result<()> {
     // increase the statement timeout a bit…
     config.db.primary.statement_timeout = Duration::from_secs(4 * 60 * 60);
 
+    let meter_provider = meter_provider(&config);
+    let meter = meter_provider.meter(METER_NAME);
+    let worker_metrics = WorkerMetrics::new(&meter);
+
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -79,7 +85,9 @@ pub fn run() -> anyhow::Result<()> {
 
     let user_agent = crates_io_version::user_agent();
     let http_client = Client::builder().user_agent(user_agent).build()?;
-    let datadog = config.datadog.client(http_client.clone()).map(Arc::new);
+    let datadog = (!config.metrics.otlp_enabled)
+        .then(|| config.datadog.client(http_client.clone()).map(Arc::new))
+        .flatten();
 
     let cloudfront = CloudFront::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));
@@ -103,9 +111,11 @@ pub fn run() -> anyhow::Result<()> {
     let sync_github_app = build_sync_github_app()?;
 
     let deadpool = db::create_pool(&config.db.primary);
+    worker_metrics.track_db_pool("worker", &deadpool);
 
     let ctx = WorkerContext::builder()
         .config(Arc::new(config))
+        .metrics(worker_metrics)
         .repository_config(repository_config)
         .maybe_cloudfront(cloudfront)
         .maybe_fastly(fastly)
@@ -143,7 +153,12 @@ pub fn run() -> anyhow::Result<()> {
 
     runtime.block_on(async {
         let handle = runner.start();
-        crates_io::metrics::datadog::spawn(&ctx.config, ctx.deadpool.clone(), datadog);
+        crates_io::metrics::datadog::spawn(
+            &ctx.config,
+            ctx.deadpool.clone(),
+            ctx.metrics.clone(),
+            datadog,
+        );
 
         info!("Runner booted, running jobs");
         handle.wait_for_shutdown().await

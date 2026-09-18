@@ -2,6 +2,48 @@
 
 use crates_io_env_vars::var;
 
+/// Returns whether the process is running on Heroku, as indicated by `HEROKU`.
+pub fn is_heroku() -> anyhow::Result<bool> {
+    Ok(var("HEROKU")?.is_some())
+}
+
+/// Returns the dyno name from `DYNO`, or `None` when unset.
+///
+/// An example value may be: `"web.1"`.
+pub fn dyno() -> anyhow::Result<Option<String>> {
+    var("DYNO")
+}
+
+/// Returns the dyno UUID from `HEROKU_DYNO_ID`, or `None` when unset.
+///
+/// An example value may be: `"1vac4117-c29f-4312-521e-ba4d8638c1ac"`.
+pub fn dyno_id() -> anyhow::Result<Option<String>> {
+    var("HEROKU_DYNO_ID")
+}
+
+/// Returns the release identifier from `HEROKU_RELEASE_VERSION`, or `None` when
+/// unset.
+///
+/// An example value may be: `"v42"`.
+pub fn release_version() -> anyhow::Result<Option<String>> {
+    var("HEROKU_RELEASE_VERSION")
+}
+
+/// Returns the application UUID from `HEROKU_APP_ID`, or `None` when unset.
+///
+/// An example value may be: `"9daa2797-e49b-4624-932f-ec3f9688e3da"`.
+pub fn app_id() -> anyhow::Result<Option<String>> {
+    var("HEROKU_APP_ID")
+}
+
+/// Returns the release timestamp from `HEROKU_RELEASE_CREATED_AT`, or `None`
+/// when unset.
+///
+/// An example value may be: `"2015-04-02T18:00:42Z"`.
+pub fn release_created_at() -> anyhow::Result<Option<String>> {
+    var("HEROKU_RELEASE_CREATED_AT")
+}
+
 /// Returns the Git SHA of the currently deployed commit.
 ///
 /// This function tries `HEROKU_BUILD_COMMIT` first (the current standard),

@@ -7,6 +7,8 @@ use crates_io::config::{
     FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig, RateLimitsConfig,
     SharedConfig,
 };
+use crates_io::metrics::consts::METER_NAME;
+use crates_io::metrics::{ServerMetrics, WorkerMetrics};
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{NewEmail, User};
@@ -30,6 +32,7 @@ use crates_io_worker::Runner;
 use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
+use opentelemetry::metrics::{Meter, MeterProvider, noop::NoopMeterProvider};
 use regex::regex;
 use std::collections::HashMap;
 use std::{rc::Rc, sync::Arc, time::Duration};
@@ -122,6 +125,7 @@ impl TestApp {
 
         TestAppBuilder {
             config: simple_config(),
+            meter: NoopMeterProvider::new().meter(METER_NAME),
             index: None,
             index_location: None,
             build_job_runner: false,
@@ -295,6 +299,7 @@ impl TestApp {
 
 pub struct TestAppBuilder {
     config: SharedConfig,
+    meter: Meter,
     index: Option<UpstreamIndex>,
     index_location: Option<Url>,
     build_job_runner: bool,
@@ -360,9 +365,15 @@ impl TestAppBuilder {
             .oidc_key_stores(self.oidc_key_stores)
             .emails(emails)
             .storage_from_config(&self.config.storage)
+            .metrics(ServerMetrics::new(&self.meter))
             .rate_limiter_from_config(self.config.rate_limits.actions.clone())
             .config(Arc::new(self.config))
             .build();
+
+        ctx.metrics.track_db_pool("primary", &ctx.primary_database);
+        if let Some(pool) = &ctx.replica_database {
+            ctx.metrics.track_db_pool("replica", pool);
+        }
 
         let router = crates_io::build_handler(ctx.clone());
 
@@ -378,8 +389,12 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
+            let worker_metrics = WorkerMetrics::new(&self.meter);
+            worker_metrics.track_db_pool("worker", &ctx.primary_database);
+
             let worker_ctx = WorkerContext::builder()
                 .config(ctx.config.clone())
+                .metrics(worker_metrics)
                 .repository_config(repository_config)
                 .storage(ctx.storage.clone())
                 .deadpool(ctx.primary_database.clone())
@@ -447,6 +462,11 @@ impl TestAppBuilder {
 
     pub fn with_config(mut self, f: impl FnOnce(&mut SharedConfig)) -> Self {
         f(&mut self.config);
+        self
+    }
+
+    pub fn with_meter(mut self, meter: Meter) -> Self {
+        self.meter = meter;
         self
     }
 

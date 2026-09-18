@@ -14,8 +14,12 @@ pub async fn update_metrics(
 ) -> Response {
     let start_instant = Instant::now();
 
+    let req_scheme = request_scheme(&req);
+    let req_method = req.method().clone();
+
     let metrics = &ctx.instance_metrics;
     let _guard = GaugeGuard::inc_for(&metrics.requests_in_flight);
+    let _guard2 = ctx.metrics.active_request(&req_method, req_scheme);
 
     let response = next.run(req).await;
 
@@ -37,6 +41,20 @@ pub async fn update_metrics(
         .inc();
 
     response
+}
+
+fn request_scheme(req: &Request) -> &'static str {
+    let forwarded_scheme = req
+        .headers()
+        .get("x-forwarded-proto")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(',').next())
+        .map(str::trim);
+
+    match forwarded_scheme.or_else(|| req.uri().scheme_str()) {
+        Some(scheme) if scheme.eq_ignore_ascii_case("https") => "https",
+        _ => "http",
+    }
 }
 
 /// A struct that stores a reference to an `IntGauge` so it can be decremented when dropped.

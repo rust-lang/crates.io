@@ -4,8 +4,9 @@
 //! instances of the application. They're not suited for instance-level metrics (like "how many
 //! requests were processed" or "how many connections are left in the database pool").
 //!
-//! Service-level metrics should **never** be updated around the codebase: instead all the updates
-//! should happen inside the `gather` method. A database connection is available inside the method.
+//! Service-level metrics should **never** be updated around the codebase. Database-backed values
+//! are loaded into a complete [`ServiceMetricsSnapshot`] and recorded together by the `record`
+//! method.
 //!
 //! As a rule of thumb, if the metric is not straight up fetched from the database it's probably an
 //! instance-level metric, and you should add it to `src/metrics/instance.rs`.
@@ -34,15 +35,24 @@ metrics! {
     namespace: "cratesio_service",
 }
 
-impl ServiceMetrics {
-    pub(crate) async fn gather(
-        &self,
-        conn: &mut AsyncPgConnection,
-    ) -> AppResult<Vec<MetricFamily>> {
-        self.crates_total
-            .set(crates::table.select(count_star()).first(conn).await?);
-        self.versions_total
-            .set(versions::table.select(count_star()).first(conn).await?);
+/// A complete snapshot of service-level metrics queried from the database.
+#[derive(Debug)]
+pub struct ServiceMetricsSnapshot {
+    /// Number of crates ever published.
+    pub crates_total: i64,
+
+    /// Number of versions ever published.
+    pub versions_total: i64,
+
+    /// Number of queued background jobs grouped by `(priority, job)`.
+    pub background_jobs: HashMap<(String, String), i64>,
+}
+
+impl ServiceMetricsSnapshot {
+    /// Loads a complete snapshot from the database.
+    pub async fn load(conn: &mut AsyncPgConnection) -> AppResult<Self> {
+        let crates_total = crates::table.select(count_star()).first(conn).await?;
+        let versions_total = versions::table.select(count_star()).first(conn).await?;
 
         let queued_jobs = background_jobs::table
             .group_by((background_jobs::job_type, background_jobs::priority))
@@ -54,11 +64,29 @@ impl ServiceMetrics {
             .load::<(String, i16, i64)>(conn)
             .await?;
 
-        let mut counts: HashMap<(String, String), i64> = queued_jobs
+        let background_jobs = queued_jobs
             .into_iter()
             .map(|(job, priority, count)| ((priority.to_string(), job), count))
             .collect();
 
+        Ok(Self {
+            crates_total,
+            versions_total,
+            background_jobs,
+        })
+    }
+}
+
+impl ServiceMetrics {
+    /// Records `snapshot` and gathers the Prometheus metric families.
+    pub(crate) fn record(
+        &self,
+        snapshot: ServiceMetricsSnapshot,
+    ) -> prometheus::Result<Vec<MetricFamily>> {
+        self.crates_total.set(snapshot.crates_total);
+        self.versions_total.set(snapshot.versions_total);
+
+        let mut counts = snapshot.background_jobs;
         for family in self.background_jobs.collect() {
             for metric in family.get_metric() {
                 let priority = label_value(metric, "priority");
@@ -130,7 +158,8 @@ mod tests {
         enqueue(&mut conn, "job_b", 10).await?;
 
         let metrics = ServiceMetrics::new()?;
-        let counts = job_counts(&metrics.gather(&mut conn).await?);
+        let snapshot = ServiceMetricsSnapshot::load(&mut conn).await?;
+        let counts = job_counts(&metrics.record(snapshot)?);
         assert_some_eq!(counts.get(&("0".into(), "job_a".into())), &1);
         assert_some_eq!(counts.get(&("10".into(), "job_b".into())), &1);
 
@@ -140,7 +169,8 @@ mod tests {
             .await?;
 
         // `job_a` must still be reported, now at zero, instead of disappearing.
-        let counts = job_counts(&metrics.gather(&mut conn).await?);
+        let snapshot = ServiceMetricsSnapshot::load(&mut conn).await?;
+        let counts = job_counts(&metrics.record(snapshot)?);
         assert_some_eq!(counts.get(&("0".into(), "job_a".into())), &0);
         assert_some_eq!(counts.get(&("10".into(), "job_b".into())), &1);
 

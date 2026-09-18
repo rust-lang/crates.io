@@ -1,43 +1,51 @@
-//! Submits the `cratesio_service` metrics to Datadog's
-//! [submit metrics API][api] (`POST /api/v2/series`).
+//! Records service metrics and optionally submits the legacy Prometheus values
+//! to Datadog's [submit metrics API][api] (`POST /api/v2/series`).
 //!
-//! [`spawn`] starts a background task that periodically gathers the service
-//! metrics and submits them. The rest of the module encodes the gathered
-//! Prometheus families into the JSON payload the API expects.
+//! [`spawn`] starts the background task. The rest of the module encodes the
+//! gathered Prometheus families into the JSON payload the API expects.
 //!
 //! [api]: https://docs.datadoghq.com/api/latest/metrics/
 
 use crate::config::SharedConfig;
 use crate::datadog::common_tags;
-use crate::metrics::ServiceMetrics;
+use crate::metrics::{ServiceMetrics, ServiceMetricsSnapshot, WorkerMetrics};
 use anyhow::{Context, anyhow};
 use crates_io_datadog::{DatadogClient, MetricType as DatadogMetricType, Point, Resource, Series};
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use prometheus::proto::{MetricFamily, MetricType};
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{info, warn};
 
-/// Interval between metric submissions.
-const SUBMIT_INTERVAL: Duration = Duration::from_secs(5);
+/// Interval between service metric collections.
+const COLLECT_INTERVAL: Duration = Duration::from_secs(5);
 
-/// Spawns a background task that periodically submits the service metrics to
-/// Datadog.
+/// Spawns a background task that periodically records service metrics.
 ///
 /// This must run in exactly one process. Today that is guaranteed by the single
-/// `background_worker` dyno; scaling the worker horizontally would make every
-/// instance submit the same series (identical host and tags per environment),
-/// causing last-write-wins collisions.
+/// `background_worker` dyno. Scaling the worker horizontally would report the
+/// same service-wide values from every instance.
 pub fn spawn(
     config: &SharedConfig,
     deadpool: Pool<AsyncPgConnection>,
-    datadog: Option<Arc<DatadogClient>>,
+    worker_metrics: WorkerMetrics,
+    mut datadog: Option<Arc<DatadogClient>>,
 ) {
-    let Some(datadog) = datadog else {
+    if config.metrics.otlp_enabled {
+        info!("OTLP metrics selected, skipping direct Datadog metrics submission");
+        datadog = None;
+    } else if datadog.is_none() {
         info!("Datadog API key not configured, skipping Datadog metrics submission");
-        return;
-    };
+    }
+
+    let legacy = datadog.and_then(|datadog| {
+        ServiceMetrics::new()
+            .map(|metrics| (datadog, metrics))
+            .inspect_err(|err| warn!("Failed to initialize service metrics: {err}"))
+            .ok()
+    });
 
     let domain_name = config.domain_name.clone();
     let mut common_tags = common_tags(&domain_name);
@@ -46,39 +54,35 @@ pub fn spawn(
     }
     let resources = vec![Resource::builder().kind("host").name(domain_name).build()];
 
-    let service_metrics = match ServiceMetrics::new() {
-        Ok(metrics) => metrics,
-        Err(err) => {
-            warn!("Failed to initialize service metrics: {err}");
-            return;
-        }
-    };
-
     tokio::spawn(async move {
+        let mut observed_queues = HashSet::new();
+
         loop {
             let result = submit(
                 &deadpool,
-                &service_metrics,
-                &datadog,
+                &worker_metrics,
+                &mut observed_queues,
+                legacy.as_ref(),
                 &resources,
                 &common_tags,
             )
             .await;
 
             if let Err(err) = result {
-                warn!("Failed to submit Datadog metrics: {err}");
+                warn!("Failed to record service metrics: {err}");
             }
 
-            tokio::time::sleep(SUBMIT_INTERVAL).await;
+            tokio::time::sleep(COLLECT_INTERVAL).await;
         }
     });
 }
 
-/// Gathers the service metrics and submits them to Datadog.
+/// Records the service metrics and optionally submits them directly to Datadog.
 async fn submit(
     deadpool: &Pool<AsyncPgConnection>,
-    service_metrics: &ServiceMetrics,
-    datadog: &DatadogClient,
+    worker_metrics: &WorkerMetrics,
+    observed_queues: &mut HashSet<(String, String)>,
+    legacy: Option<&(Arc<DatadogClient>, ServiceMetrics)>,
     resources: &[Resource],
     common_tags: &[String],
 ) -> anyhow::Result<()> {
@@ -87,16 +91,33 @@ async fn submit(
         .await
         .context("Failed to acquire database connection")?;
 
-    let families = service_metrics
-        .gather(&mut conn)
+    let snapshot = ServiceMetricsSnapshot::load(&mut conn)
         .await
         .map_err(|err| anyhow!("{err}"))
+        .context("Failed to gather service metrics")?;
+
+    worker_metrics.record_service_totals(snapshot.crates_total, snapshot.versions_total);
+
+    observed_queues.extend(snapshot.background_jobs.keys().cloned());
+    for queue in observed_queues.iter() {
+        let count = snapshot.background_jobs.get(queue).copied().unwrap_or(0);
+        worker_metrics.record_background_jobs(queue, count);
+    }
+
+    let Some((datadog, service_metrics)) = legacy else {
+        return Ok(());
+    };
+
+    let families = service_metrics
+        .record(snapshot)
         .context("Failed to gather service metrics")?;
 
     let timestamp = chrono::Utc::now().timestamp();
     let series = families_to_series(&families, timestamp, resources, common_tags);
 
-    datadog.submit_metrics(&series).await?;
+    if let Err(err) = datadog.submit_metrics(&series).await {
+        warn!("Failed to submit Datadog metrics: {err}");
+    }
 
     Ok(())
 }

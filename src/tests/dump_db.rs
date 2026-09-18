@@ -1,18 +1,31 @@
 use crate::builders::CrateBuilder;
 use crate::util::TestApp;
 use bytes::Buf;
+use claims::assert_gt;
+use crates_io::metrics::consts::{
+    DB_DUMP_SIZE_BYTES, DB_DUMP_UPLOAD_DURATION_NS, FORMAT, METER_NAME,
+};
 use crates_io::worker::jobs::DumpDb;
 use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};
 use object_store::ObjectStoreExt;
+use opentelemetry::KeyValue;
+use opentelemetry::metrics::MeterProvider;
+use opentelemetry_sdk::metrics::data::{AggregatedMetrics, MetricData};
+use opentelemetry_sdk::metrics::{InMemoryMetricExporter, PeriodicReader, SdkMeterProvider};
 use regex::regex;
 use std::io::{Cursor, Read};
 use tar::Archive;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump_db_job() -> anyhow::Result<()> {
-    let (app, _, _, token) = TestApp::full().with_token().await;
+    let exporter = InMemoryMetricExporter::default();
+    let reader = PeriodicReader::builder(exporter.clone()).build();
+    let provider = SdkMeterProvider::builder().with_reader(reader).build();
+    let meter = provider.meter(METER_NAME);
+
+    let (app, _, _, token) = TestApp::full().with_meter(meter).with_token().await;
     let mut conn = app.db_conn().await;
 
     CrateBuilder::new("test-crate", token.as_model().user_id)
@@ -22,6 +35,13 @@ async fn test_dump_db_job() -> anyhow::Result<()> {
     DumpDb::for_schema(app.db_schema()).enqueue(&conn).await?;
 
     app.run_pending_background_jobs().await;
+    provider.force_flush()?;
+
+    for metric in [DB_DUMP_SIZE_BYTES, DB_DUMP_UPLOAD_DURATION_NS] {
+        for format in ["tar.gz", "zip"] {
+            assert_gt!(metric_value(&exporter, metric, format), 0);
+        }
+    }
 
     assert_snapshot!(app.stored_files().await.join("\n"), @r"
     db-dump.tar.gz
@@ -106,6 +126,26 @@ async fn test_dump_db_job() -> anyhow::Result<()> {
     "#);
 
     Ok(())
+}
+
+fn metric_value(exporter: &InMemoryMetricExporter, name: &str, format: &str) -> u64 {
+    let batches = exporter.get_finished_metrics().unwrap();
+    let format = KeyValue::new(FORMAT, format.to_owned());
+    let metric = batches
+        .iter()
+        .flat_map(|batch| batch.scope_metrics())
+        .flat_map(|scope| scope.metrics())
+        .find(|metric| metric.name() == name)
+        .unwrap();
+    let AggregatedMetrics::U64(MetricData::Gauge(gauge)) = metric.data() else {
+        panic!("database dump metrics should be u64 gauges");
+    };
+
+    gauge
+        .data_points()
+        .find(|point| point.attributes().any(|attribute| attribute == &format))
+        .unwrap()
+        .value()
 }
 
 fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {

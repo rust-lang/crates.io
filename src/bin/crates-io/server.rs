@@ -1,6 +1,8 @@
 use crates_io::config::SharedConfig;
+use crates_io::metrics::consts::METER_NAME;
+use crates_io::metrics::{LogEncoder, ServerMetrics};
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{Emails, ServerContext, metrics::LogEncoder};
+use crates_io::{Emails, ServerContext};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -25,6 +27,8 @@ pub fn run() -> anyhow::Result<()> {
     let _span = info_span!("server.run");
 
     let config = SharedConfig::from_environment()?;
+    let meter_provider = crates_io::metrics::meter_provider(&config);
+    let meter = meter_provider.meter(METER_NAME);
 
     let emails = Emails::from_environment(&config);
 
@@ -41,9 +45,15 @@ pub fn run() -> anyhow::Result<()> {
         .trustpub_providers(&list("TRUSTPUB_PROVIDERS")?)
         .emails(emails)
         .storage_from_config(&config.storage)
+        .metrics(ServerMetrics::new(&meter))
         .rate_limiter_from_config(config.rate_limits.actions.clone())
         .config(Arc::new(config))
         .build();
+
+    ctx.metrics.track_db_pool("primary", &ctx.primary_database);
+    if let Some(pool) = &ctx.replica_database {
+        ctx.metrics.track_db_pool("replica", pool);
+    }
 
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(ctx.clone());
