@@ -75,8 +75,6 @@ pub struct Version {
     pub repository: Option<String>,
     pub trustpub_data: Option<TrustpubData>,
     pub linecounts: Option<serde_json::Value>,
-    /// Build script, library, and binary targets derived from the package source.
-    pub target_metadata: Option<VersionTargetMetadata>,
     /// SHA256 checksum of the zip source archive,
     /// or `None` if it has not been built yet.
     pub zip_sha256: Option<Vec<u8>>,
