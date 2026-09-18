@@ -173,8 +173,7 @@ async fn preserves_missing_target_sources() {
       "library": {
         "path": "src/lib.rs",
         "exists": false,
-        "name": "target_metadata",
-        "is_proc_macro": false
+        "name": "target_metadata"
       },
       "binaries": [
         {

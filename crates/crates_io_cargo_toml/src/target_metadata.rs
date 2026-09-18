@@ -21,6 +21,7 @@ pub struct LibraryMetadata {
     /// The target name used by Cargo.
     pub name: String,
     /// Whether the library is a procedural macro.
+    #[serde(default, skip_serializing_if = "is_false")]
     pub is_proc_macro: bool,
 }
 
@@ -38,14 +39,41 @@ pub struct BinaryMetadata {
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TargetMetadata {
     /// The package build script.
-    #[serde(rename = "build_script")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<SourceFile>,
     /// The package library target, if declared or inferred.
-    #[serde(rename = "library")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lib: Option<LibraryMetadata>,
     /// The package binary targets.
-    #[serde(rename = "binaries")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bins: Vec<BinaryMetadata>,
+}
+
+/// The stored outcome of package target metadata analysis.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum TargetMetadataAnalysis {
+    /// Target metadata analysis failed permanently.
+    Error {
+        /// The error outcome marker.
+        status: ErrorStatus,
+    },
+    /// Target metadata analysis completed successfully.
+    Success(TargetMetadata),
+}
+
+impl From<TargetMetadata> for TargetMetadataAnalysis {
+    fn from(metadata: TargetMetadata) -> Self {
+        Self::Success(metadata)
+    }
+}
+
+/// The status stored for a failed target metadata analysis.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ErrorStatus {
+    /// Target metadata analysis failed permanently.
+    Error,
 }
 
 impl TargetMetadata {
@@ -237,4 +265,8 @@ fn default_true() -> bool {
 
 fn is_true(value: &bool) -> bool {
     *value
+}
+
+fn is_false(value: &bool) -> bool {
+    !value
 }

@@ -1,8 +1,8 @@
 use crates_io_cargo_toml::{
     Manifest,
-    target_metadata::{Error, SourceFile, TargetMetadata},
+    target_metadata::{Error, SourceFile, TargetMetadata, TargetMetadataAnalysis},
 };
-use serde_json::json;
+use serde_json::{Value, json};
 use std::str::FromStr;
 
 fn extract(manifest: &str, files: &[&str]) -> Result<TargetMetadata, Error> {
@@ -14,25 +14,47 @@ fn extract_error(manifest: &str) -> String {
     extract(manifest, &["Cargo.toml"]).unwrap_err().to_string()
 }
 
+fn to_json(value: impl serde::Serialize) -> Value {
+    serde_json::to_value(value).unwrap()
+}
+
+fn from_json<T: serde::de::DeserializeOwned>(value: Value) -> T {
+    serde_json::from_value(value).unwrap()
+}
+
 #[test]
-fn serializes_target_metadata() {
-    let expected = json!({
-        "build_script": { "path": "build.rs" },
-        "library": null,
-        "binaries": [],
-    });
-    let metadata: TargetMetadata = serde_json::from_value(expected.clone()).unwrap();
-    let json = serde_json::to_value(&metadata).unwrap();
+fn serializes_compact_target_metadata() {
+    let expected = json!({ "build": { "path": "build.rs" } });
+    let metadata: TargetMetadata = from_json(expected.clone());
 
     assert!(metadata.build.as_ref().unwrap().exists);
-    assert_eq!(json, expected);
+    assert_eq!(to_json(metadata), expected);
+    let empty: TargetMetadata = from_json(json!({}));
+    assert_eq!(empty, TargetMetadata::default());
 
     let missing = json!({
         "path": "custom/build.rs",
         "exists": false,
     });
-    let missing: SourceFile = serde_json::from_value(missing).unwrap();
+    let missing: SourceFile = from_json(missing);
     assert!(!missing.exists);
+}
+
+#[test]
+fn serializes_target_metadata_analysis() {
+    let error_json = json!({ "status": "error" });
+    let error: TargetMetadataAnalysis = from_json(error_json.clone());
+    assert_eq!(to_json(error), error_json);
+
+    let build_only_json = json!({ "build": { "path": "build.rs" } });
+    let build_only: TargetMetadataAnalysis = from_json(build_only_json.clone());
+    assert_eq!(to_json(build_only), build_only_json);
+
+    let empty_success = TargetMetadataAnalysis::Success(TargetMetadata::default());
+    assert_eq!(to_json(&empty_success), json!({}));
+    for json in [json!({ "status": "unknown" }), json!({ "unknown": true })] {
+        assert_eq!(from_json::<TargetMetadataAnalysis>(json), empty_success);
+    }
 }
 
 #[test]
@@ -63,15 +85,15 @@ fn extracts_custom_and_inferred_targets() {
     ];
 
     let metadata = extract(manifest, &files).unwrap();
-    let json = serde_json::to_value(metadata).unwrap();
+    let json = to_json(metadata);
     let expected = json!({
-        "build_script": { "path": "tools/build.rs" },
-        "library": {
+        "build": { "path": "tools/build.rs" },
+        "lib": {
             "path": "source/lib.rs",
             "name": "custom_library",
             "is_proc_macro": true,
         },
-        "binaries": [
+        "bins": [
             { "path": "commands/custom.rs", "name": "custom-binary" },
             { "path": "src/bin/helper.rs", "name": "helper" },
             { "path": "src/main.rs", "name": "target-demo" },
@@ -100,11 +122,9 @@ fn explicit_binary_disables_automatic_discovery_for_edition_2015() {
     ];
 
     let metadata = extract(manifest, &files).unwrap();
-    let json = serde_json::to_value(metadata).unwrap();
+    let json = to_json(metadata);
     let expected = json!({
-        "build_script": null,
-        "library": null,
-        "binaries": [{
+        "bins": [{
             "path": "commands/custom.rs",
             "name": "custom-binary",
         }],
@@ -126,15 +146,15 @@ fn infers_default_targets() {
     let files = ["Cargo.toml", "build.rs", "src/lib.rs", "src/main.rs"];
 
     let metadata = extract(manifest, &files).unwrap();
-    let json = serde_json::to_value(metadata).unwrap();
+    let json = to_json(metadata);
     let expected = json!({
-        "build_script": { "path": "build.rs" },
-        "library": {
+        "build": { "path": "build.rs" },
+        "lib": {
             "path": "src/lib.rs",
             "name": "target_demo",
             "is_proc_macro": true,
         },
-        "binaries": [{
+        "bins": [{
             "path": "src/main.rs",
             "name": "target-demo",
         }],
@@ -160,16 +180,15 @@ fn preserves_missing_declared_targets() {
         "#;
 
     let metadata = extract(manifest, &["Cargo.toml"]).unwrap();
-    let json = serde_json::to_value(metadata).unwrap();
+    let json = to_json(metadata);
     let expected = json!({
-        "build_script": { "path": "tools/build.rs", "exists": false },
-        "library": {
+        "build": { "path": "tools/build.rs", "exists": false },
+        "lib": {
             "path": "source/lib.rs",
             "exists": false,
             "name": "target_demo",
-            "is_proc_macro": false,
         },
-        "binaries": [{
+        "bins": [{
             "path": "tools/tool.rs",
             "exists": false,
             "name": "tool",
@@ -189,12 +208,8 @@ fn respects_disabled_build_scripts() {
         "#;
 
     let metadata = extract(manifest, &["Cargo.toml", "build.rs"]).unwrap();
-    let json = serde_json::to_value(metadata).unwrap();
-    let expected = json!({
-        "build_script": null,
-        "library": null,
-        "binaries": [],
-    });
+    let json = to_json(metadata);
+    let expected = json!({});
 
     assert_eq!(json, expected);
 }
@@ -272,11 +287,9 @@ fn normalizes_inventory_paths_for_directory_style_binaries() {
     let files = ["Cargo.toml", "./src/bin/other/../helper/main.rs"];
 
     let metadata = extract(manifest, &files).unwrap();
-    let json = serde_json::to_value(metadata).unwrap();
+    let json = to_json(metadata);
     let expected = json!({
-        "build_script": null,
-        "library": null,
-        "binaries": [{
+        "bins": [{
             "path": "src/bin/helper/main.rs",
             "name": "helper",
         }],
