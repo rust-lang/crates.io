@@ -1,4 +1,4 @@
-use crate::app::AppState;
+use crate::server::ServerContext;
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{AppResult, custom, forbidden, not_found};
 use crate::util::no_store;
@@ -12,11 +12,11 @@ use secrecy::ExposeSecret;
 
 /// Handles the `GET /api/private/metrics/{kind}` endpoint.
 pub async fn prometheus(
-    app: AppState,
+    ctx: ServerContext,
     Path(kind): Path<String>,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, String)> {
-    if let Some(expected_token) = &app.config.metrics.authorization_token {
+    if let Some(expected_token) = &ctx.config.metrics.authorization_token {
         let provided_token = req
             .headers
             .get(header::AUTHORIZATION)
@@ -35,10 +35,10 @@ pub async fn prometheus(
 
     let metrics = match kind.as_str() {
         "service" => {
-            let mut conn = app.db_read().await?;
-            app.service_metrics.gather(&mut conn).await?
+            let mut conn = ctx.db_read().await?;
+            ctx.service_metrics.gather(&mut conn).await?
         }
-        "instance" => spawn_blocking(move || app.instance_metrics.gather(&app)).await??,
+        "instance" => spawn_blocking(move || ctx.instance_metrics.gather(&ctx)).await??,
         _ => return Err(not_found()),
     };
 

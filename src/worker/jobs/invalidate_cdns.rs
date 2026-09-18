@@ -1,11 +1,9 @@
-use std::sync::Arc;
-
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 
 /// A background job that invalidates the given paths or cache tags on all CDNs used by crates.io.
@@ -59,7 +57,7 @@ impl InvalidateCdns {
 impl BackgroundJob for InvalidateCdns {
     const JOB_NAME: &'static str = "invalidate_cdns";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         // We won't parallelise: most crate deletions are for new crates with one (or very few)

@@ -1,6 +1,6 @@
 use crate::email::EmailMessage;
 use crate::schema::{emails, oauth_github, users};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -8,7 +8,6 @@ use diesel_async::RunQueryDsl;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::sync::Arc;
 use tracing::{debug, info, warn};
 
 /// See <https://github.com/rust-lang/team/pull/1197>.
@@ -21,7 +20,7 @@ impl BackgroundJob for SyncAdmins {
     const JOB_NAME: &'static str = "sync_admins";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Syncing admins from rust-lang/team repo…");
@@ -202,7 +201,7 @@ impl BackgroundJob for SyncAdmins {
 }
 
 async fn send_email(
-    ctx: &Environment,
+    ctx: &WorkerContext,
     address: &str,
     context: &minijinja::Value,
 ) -> anyhow::Result<()> {

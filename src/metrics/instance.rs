@@ -8,7 +8,7 @@
 //!
 //! * Continuously as things happen in the instance: every time something worth recording happens
 //!   the application updates the value of the metrics, accessing the metric through
-//!   `req.app().instance_metrics.$metric_name`.
+//!   `req.server_context().instance_metrics.$metric_name`.
 //!
 //! * When metrics are scraped by Prometheus: every `N` seconds Prometheus sends a request to the
 //!   instance asking what the value of the metrics are, and you can update metrics when that
@@ -17,8 +17,8 @@
 //! As a rule of thumb, if the metric requires a database query to be updated it's probably a
 //! service-level metric, and you should add it to `src/metrics/service.rs` instead.
 
-use crate::app::App;
 use crate::metrics::macros::metrics;
+use crate::server::ServerContext;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use prometheus::{
@@ -50,10 +50,10 @@ metrics! {
 }
 
 impl InstanceMetrics {
-    pub fn gather(&self, app: &App) -> prometheus::Result<Vec<MetricFamily>> {
+    pub fn gather(&self, ctx: &ServerContext) -> prometheus::Result<Vec<MetricFamily>> {
         // Database pool stats
-        self.refresh_pool_stats("async_primary", &app.primary_database)?;
-        if let Some(follower) = &app.replica_database {
+        self.refresh_pool_stats("async_primary", &ctx.primary_database)?;
+        if let Some(follower) = &ctx.replica_database {
             self.refresh_pool_stats("async_follower", follower)?;
         }
 

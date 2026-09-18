@@ -1,7 +1,7 @@
-pub mod app;
 pub mod block_traffic;
 pub mod cargo_compat;
 mod common_headers;
+pub mod context;
 mod debug;
 mod frontend_html;
 pub mod log_request;
@@ -26,10 +26,10 @@ use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::timeout::{RequestBodyTimeoutLayer, TimeoutLayer};
 
 use crate::Env;
-use crate::app::AppState;
+use crate::server::ServerContext;
 
-pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
-    let config = &state.config;
+pub fn apply_axum_middleware(ctx: ServerContext, router: Router<()>) -> Router {
+    let config = &ctx.config;
     let env = config.env;
 
     // The middleware stacks here have been split for compile performance
@@ -46,7 +46,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         .layer(from_fn(log_request::log_requests))
         .layer(CatchPanicLayer::new())
         .layer(from_fn_with_state(
-            state.clone(),
+            ctx.clone(),
             update_metrics::update_metrics,
         ))
         // Optionally print debug information for each request
@@ -57,15 +57,15 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
 
     let middlewares_2 = tower::ServiceBuilder::new()
         .layer(from_fn_with_state(
-            state.config.cargo_compat_status_code_config,
+            ctx.config.cargo_compat_status_code_config,
             cargo_compat::middleware,
         ))
         .layer(from_fn_with_state(
-            state.clone(),
+            ctx.clone(),
             crates_io_session::attach_session,
         ))
         .layer(from_fn(require_user_agent::require_user_agent))
-        .layer(from_fn_with_state(state.clone(), block_traffic::middleware))
+        .layer(from_fn_with_state(ctx.clone(), block_traffic::middleware))
         .layer(from_fn(common_headers::add_common_headers))
         .layer(conditional_layer(config.frontend.serve_html, || {
             from_fn(svelte_redirect::redirect)
@@ -77,9 +77,9 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
             from_fn(static_or_continue::serve_svelte)
         }))
         .layer(conditional_layer(config.frontend.serve_html, || {
-            from_fn_with_state(state.clone(), frontend_html::serve)
+            from_fn_with_state(ctx.clone(), frontend_html::serve)
         }))
-        .layer(AddExtensionLayer::new(state.clone()));
+        .layer(AddExtensionLayer::new(ctx.clone()));
 
     router
         .layer(middlewares_2)

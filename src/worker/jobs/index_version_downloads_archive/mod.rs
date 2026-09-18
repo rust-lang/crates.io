@@ -1,6 +1,6 @@
-use std::{collections::BTreeSet, sync::Arc};
+use std::collections::BTreeSet;
 
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use crates_io_database::models::CloudFrontDistribution;
 use crates_io_worker::BackgroundJob;
@@ -20,12 +20,12 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
     const JOB_NAME: &'static str = "index_version_downloads_archive";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Indexing old version downloads…");
 
-        let Some(downloads_archive_store) = env.downloads_archive_store.as_ref() else {
+        let Some(downloads_archive_store) = ctx.downloads_archive_store.as_ref() else {
             warn!("No downloads archive store configured");
             return Ok(());
         };
@@ -55,15 +55,15 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
         info!("index.json generated and uploaded");
 
         info!("Invalidating CDN caches…");
-        let conn = env.deadpool.get().await?;
+        let conn = ctx.deadpool.get().await?;
         let dist = CloudFrontDistribution::Static;
 
-        let result = env.invalidate_cdns(&conn, dist, INDEX_PATH).await;
+        let result = ctx.invalidate_cdns(&conn, dist, INDEX_PATH).await;
         if let Err(error) = result {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
-        let result = env.invalidate_cdns(&conn, dist, INDEX_JSON_PATH);
+        let result = ctx.invalidate_cdns(&conn, dist, INDEX_JSON_PATH);
         if let Err(error) = result.await {
             warn!("Failed to invalidate CDN caches: {error}");
         }

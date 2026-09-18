@@ -1,6 +1,6 @@
-use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
+use crate::server::ServerContext;
 use crate::util::errors::{BoxedAppError, custom};
 use axum::extract::{Extension, MatchedPath, Request};
 use axum::middleware::Next;
@@ -11,19 +11,19 @@ use regex::Regex;
 pub async fn middleware(
     Extension(real_ip): Extension<RealIp>,
     matched_path: Option<MatchedPath>,
-    state: AppState,
+    ctx: ServerContext,
     req: Request,
     next: Next,
 ) -> Response {
-    if let Err(rejection) = block_by_ip(&real_ip, &state, req.headers()) {
+    if let Err(rejection) = block_by_ip(&real_ip, &ctx, req.headers()) {
         return rejection.into_response();
     }
 
-    if let Err(rejection) = block_by_header(&state, &req) {
+    if let Err(rejection) = block_by_header(&ctx, &req) {
         return rejection.into_response();
     }
 
-    if let Err(rejection) = block_routes(matched_path.as_ref(), &state) {
+    if let Err(rejection) = block_routes(matched_path.as_ref(), &ctx) {
         return rejection.into_response();
     }
 
@@ -86,8 +86,8 @@ impl TryFrom<&str> for BlockCriteria {
 ///
 /// Values of the headers must start and end with `/` to be interpreted as a regex. Values
 /// interpreted as strings must match exactly, in full.
-pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), impl IntoResponse> {
-    let blocked_traffic = &state.config.block.traffic;
+pub fn block_by_header(ctx: &ServerContext, req: &Request) -> Result<(), impl IntoResponse> {
+    let blocked_traffic = &ctx.config.block.traffic;
 
     for (header_name, blocked_values) in blocked_traffic {
         let has_blocked_value = req.headers().get_all(header_name).iter().any(|value| {
@@ -100,7 +100,7 @@ pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), impl IntoR
             let cause = format!("blocked due to contents of header {header_name}");
             req.request_log().add("cause", cause);
 
-            return Err(rejection_response_from(state, req.headers()));
+            return Err(rejection_response_from(ctx, req.headers()));
         }
     }
 
@@ -109,18 +109,18 @@ pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), impl IntoR
 
 pub fn block_by_ip(
     real_ip: &RealIp,
-    state: &AppState,
+    ctx: &ServerContext,
     headers: &HeaderMap,
 ) -> Result<(), impl IntoResponse> {
-    if state.config.block.ips.contains(real_ip) {
-        return Err(rejection_response_from(state, headers));
+    if ctx.config.block.ips.contains(real_ip) {
+        return Err(rejection_response_from(ctx, headers));
     }
 
     Ok(())
 }
 
-fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> impl IntoResponse {
-    let domain_name = &state.config.domain_name;
+fn rejection_response_from(ctx: &ServerContext, headers: &HeaderMap) -> impl IntoResponse {
+    let domain_name = &ctx.config.domain_name;
 
     // Heroku should always set this header
     let request_id = headers
@@ -142,10 +142,10 @@ fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> impl IntoRe
 /// environment variable.
 pub fn block_routes(
     matched_path: Option<&MatchedPath>,
-    state: &AppState,
+    ctx: &ServerContext,
 ) -> Result<(), BoxedAppError> {
     if let Some(matched_path) = matched_path
-        && state.config.block.routes.contains(matched_path.as_str())
+        && ctx.config.block.routes.contains(matched_path.as_str())
     {
         let body = "This route is temporarily blocked. See https://status.crates.io.";
         return Err(custom(StatusCode::SERVICE_UNAVAILABLE, body));

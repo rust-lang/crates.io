@@ -6,18 +6,17 @@
 //! background job definitions.
 
 use crates_io_worker::Runner;
-use std::sync::Arc;
 
-mod environment;
+mod context;
 pub mod jobs;
 
-pub use self::environment::Environment;
+pub use self::context::WorkerContext;
 
 pub trait RunnerExt {
     fn register_crates_io_job_types(self) -> Self;
 }
 
-impl RunnerExt for Runner<Arc<Environment>> {
+impl RunnerExt for Runner<WorkerContext> {
     fn register_crates_io_job_types(self) -> Self {
         self.register_job_type::<jobs::AnalyzeCrateFile>()
             .register_job_type::<jobs::ArchiveIndexBranch>()

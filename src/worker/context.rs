@@ -26,8 +26,15 @@ use std::time::Instant;
 use tokio::sync::OnceCell;
 use tracing::{info, instrument};
 
+/// Components shared across background worker jobs.
+#[doc(hidden)]
 #[derive(Builder)]
-pub struct Environment {
+#[builder(
+    builder_type(name = WorkerContextBuilder, vis = "pub"),
+    state_mod(name = worker_context_builder, vis = "pub"),
+    finish_fn(name = build_inner, vis = "")
+)]
+pub struct WorkerContextInner {
     pub config: Arc<SharedConfig>,
 
     pub repository_config: RepositoryConfig,
@@ -53,7 +60,7 @@ pub struct Environment {
     typosquat_cache: OnceCell<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
-impl Environment {
+impl WorkerContext {
     #[instrument(skip_all)]
     pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let lock_start = Instant::now();
@@ -133,6 +140,27 @@ impl Environment {
             .await
             .as_ref()
             .map_err(|e| e.clone())
+    }
+}
+
+/// Components shared across background worker jobs.
+#[derive(Clone, derive_more::Deref)]
+pub struct WorkerContext(Arc<WorkerContextInner>);
+
+impl WorkerContext {
+    /// Creates a builder for a worker context.
+    pub fn builder() -> WorkerContextBuilder {
+        WorkerContextInner::builder()
+    }
+}
+
+impl<S: worker_context_builder::State> WorkerContextBuilder<S> {
+    /// Finishes building the worker context.
+    pub fn build(self) -> WorkerContext
+    where
+        S: worker_context_builder::IsComplete,
+    {
+        WorkerContext(Arc::new(self.build_inner()))
     }
 }
 

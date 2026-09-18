@@ -18,10 +18,10 @@ use serde::{Deserialize, Serialize};
 use tracing::{Instrument, info_span};
 use utoipa::IntoParams;
 
-use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
 use crate::models::{Crate, CrateOwner, OwnerKind, TopVersions};
 use crate::schema::*;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableCrate;
 
@@ -87,7 +87,7 @@ pub struct CrateListMeta {
     ),
 )]
 pub async fn list_crates(
-    app: AppState,
+    ctx: ServerContext,
     params: CrateListQueryParams,
     req: Parts,
 ) -> AppResult<(Option<TypedHeader<CacheControl>>, Json<CrateListResponse>)> {
@@ -106,7 +106,7 @@ pub async fn list_crates(
     // function out to cover the different use cases, and create unit tests
     // for them.
 
-    let mut conn = app.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     use diesel::sql_types::Float;
     use seek::*;

@@ -1,11 +1,10 @@
 use crate::tasks::spawn_blocking;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::{Context, anyhow};
 use crates_io_github::parse_github_slug;
 use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::time::Instant;
 use tokio::process::Command;
 use tracing::{info, instrument, warn};
@@ -57,28 +56,28 @@ impl BackgroundJob for ArchiveIndexBranch {
     const JOB_NAME: &'static str = "archive_index_branch";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     /// Mirrors a snapshot branch from the crate index to the configured archive
     /// repository. No-op when no archive URL is configured.
     ///
     /// Each invocation works against a fresh, ephemeral bare clone of the
     /// snapshot branch in a `TempDir`. The job does not share state with the
-    /// long-lived bare clone behind `Environment::lock_index()`.
+    /// long-lived bare clone behind `WorkerContext::lock_index()`.
     #[instrument(skip_all, fields(branch = self.branch))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
-        let Some(archive_url) = env.config.index_archive_url.as_ref() else {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let Some(archive_url) = ctx.config.index_archive_url.as_ref() else {
             info!("`index_archive_url` not configured, skipping archive push");
             return Ok(());
         };
 
-        let Some(index_sync_github_app) = env.index_sync_github_app.as_ref() else {
+        let Some(index_sync_github_app) = ctx.index_sync_github_app.as_ref() else {
             let error =
                 anyhow!("`index_archive_url` is set but index sync GitHub App is not configured");
             return Err(error);
         };
 
-        let clone_url = clone_url(&env.repository_config.index_location)?;
+        let clone_url = clone_url(&ctx.repository_config.index_location)?;
         info!(
             "Cloning snapshot branch ({branch}) from the index repository ({clone_url})",
             branch = self.branch

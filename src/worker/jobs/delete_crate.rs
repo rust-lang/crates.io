@@ -1,11 +1,10 @@
 use crate::storage::{StorageKey, crate_cache_tag};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tokio::try_join;
 use tracing::info;
 
@@ -19,7 +18,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
     const JOB_NAME: &'static str = "delete_crate_from_storage";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;

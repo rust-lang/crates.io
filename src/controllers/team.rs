@@ -1,5 +1,5 @@
-use crate::app::AppState;
 use crate::models::Team;
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::views::EncodableTeam;
 use axum::Json;
@@ -29,12 +29,12 @@ pub struct TeamGetResponse {
     ),
 )]
 pub async fn find_team(
-    state: AppState,
+    ctx: ServerContext,
     Path(name): Path<String>,
 ) -> AppResult<Json<TeamGetResponse>> {
     use crate::schema::teams::dsl::login;
 
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
     let team: Team = Team::query()
         .filter(login.eq(&name))
         .first(&mut conn)

@@ -3,9 +3,9 @@
 //! Crate level functionality is located in `krate::downloads`.
 
 use super::CrateVersionPath;
-use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
+use crate::server::ServerContext;
 use crate::storage::StorageKey;
 use crate::util::errors::{AppResult, bad_request};
 use crate::util::{RequestUtils, redirect};
@@ -44,13 +44,13 @@ pub struct UrlResponse {
     ),
 )]
 pub async fn download_version(
-    app: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<Response> {
     let wants_json = req.wants_json();
     let key = StorageKey::for_crate_file(&path.name, &path.version);
-    let redirect_url = app.storage.location(&key);
+    let redirect_url = ctx.storage.location(&key);
     let response = if wants_json {
         json!({ "url": redirect_url }).into_response()
     } else {
@@ -94,11 +94,11 @@ pub struct DownloadsResponse {
     ),
 )]
 pub async fn get_version_downloads(
-    app: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
     params: DownloadsQueryParams,
 ) -> AppResult<Json<DownloadsResponse>> {
-    let mut conn = app.db_read().await?;
+    let mut conn = ctx.db_read().await?;
     let version = path.load_version(&conn).await?;
 
     let cutoff_end_date = params

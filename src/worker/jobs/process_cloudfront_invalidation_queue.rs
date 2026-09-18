@@ -1,12 +1,11 @@
 use crate::cloudfront::{CloudFront, CloudFrontError};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::sync::Arc;
 use tokio::time::Duration;
 use tracing::{info, instrument, warn};
 
@@ -114,7 +113,7 @@ impl BackgroundJob for ProcessCloudfrontInvalidationQueue {
     const DEDUPLICATED: bool = true;
     const QUEUE: &'static str = "cloudfront";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all)]
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {

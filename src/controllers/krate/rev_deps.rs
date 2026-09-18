@@ -1,7 +1,7 @@
-use crate::app::AppState;
 use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::controllers::krate::CratePath;
 use crate::models::{CrateName, PublicUser, ReverseDependency, Version, VersionOwnerAction};
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::views::{EncodableDependency, EncodableVersion};
 use axum::Json;
@@ -42,11 +42,11 @@ pub struct RevDepsMeta {
     ),
 )]
 pub async fn list_reverse_dependencies(
-    app: AppState,
+    ctx: ServerContext,
     path: CratePath,
     req: Parts,
 ) -> AppResult<Json<RevDepsResponse>> {
-    let mut conn = app.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     let pagination_options = PaginationOptions::builder()
         .limit_page_numbers()

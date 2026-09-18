@@ -1,6 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::StorageKey;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use chrono::{Duration, Utc};
 use crates_io_database::models::CloudFrontDistribution;
 use crates_io_worker::BackgroundJob;
@@ -8,7 +8,6 @@ use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{info, warn};
 
 /// Items younger than this will always be included in the feed.
@@ -31,7 +30,7 @@ impl BackgroundJob for SyncCrateFeed {
     const JOB_NAME: &'static str = "sync_crate_feed";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;

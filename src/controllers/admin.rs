@@ -1,8 +1,8 @@
 use crate::{
-    app::AppState,
     auth::AuthCheck,
     models::{OwnerKind, User, users_by_username},
     schema::*,
+    server::ServerContext,
     util::errors::{AppResult, custom},
     util::no_store,
 };
@@ -63,11 +63,11 @@ struct DatabaseCrateInfo {
 
 /// Handles the `GET /api/private/admin_list/{username}` endpoint.
 pub async fn list(
-    state: AppState,
+    ctx: ServerContext,
     Path(username): Path<String>,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<AdminListResponse>)> {
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let logged_in_user = auth.user();

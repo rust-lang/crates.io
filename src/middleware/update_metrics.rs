@@ -1,4 +1,4 @@
-use crate::app::AppState;
+use crate::server::ServerContext;
 use axum::extract::{MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::Response;
@@ -7,14 +7,14 @@ use prometheus::IntGauge;
 use std::time::Instant;
 
 pub async fn update_metrics(
-    state: AppState,
+    ctx: ServerContext,
     matched_path: Option<MatchedPath>,
     req: Request,
     next: Next,
 ) -> Response {
     let start_instant = Instant::now();
 
-    let metrics = &state.instance_metrics;
+    let metrics = &ctx.instance_metrics;
     let _guard = GaugeGuard::inc_for(&metrics.requests_in_flight);
 
     let response = next.run(req).await;

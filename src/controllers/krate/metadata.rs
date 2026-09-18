@@ -4,13 +4,13 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use crate::app::AppState;
 use crate::controllers::krate::CratePath;
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, Keyword, PublicUser, TopVersions, Version,
     VersionOwnerAction,
 };
 use crate::schema::*;
+use crate::server::ServerContext;
 use crate::util::errors::{
     AppResult, BoxedAppError, bad_request, crate_not_found, version_not_found,
 };
@@ -74,11 +74,11 @@ pub struct CrateGetResponse {
     ),
 )]
 pub async fn find_new_crate(
-    app: AppState,
+    ctx: ServerContext,
     params: FindQueryParams,
 ) -> AppResult<Json<CrateGetResponse>> {
     let name = "new".to_string();
-    find_crate(app, CratePath { name }, params).await
+    find_crate(ctx, CratePath { name }, params).await
 }
 
 /// Gets crate metadata.
@@ -94,11 +94,11 @@ pub async fn find_new_crate(
     ),
 )]
 pub async fn find_crate(
-    app: AppState,
+    ctx: ServerContext,
     path: CratePath,
     params: FindQueryParams,
 ) -> AppResult<Json<CrateGetResponse>> {
-    let mut conn = app.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     let include = params
         .include

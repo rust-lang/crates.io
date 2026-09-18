@@ -6,13 +6,13 @@ use std::sync::Arc;
 use utoipa_axum::routes;
 
 use crate::Env;
-use crate::app::AppState;
 use crate::controllers::*;
 use crate::openapi::{self, BaseOpenApi};
+use crate::server::ServerContext;
 use crate::util::errors::not_found;
 
 #[allow(deprecated)]
-pub fn build_axum_router(state: AppState) -> Router<()> {
+pub fn build_axum_router(ctx: ServerContext) -> Router<()> {
     let (router, openapi) = BaseOpenApi::router()
         // Route used by both `cargo search` and the frontend
         .routes(routes!(krate::search::list_crates))
@@ -127,7 +127,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     // In production, for crates.io, cargo gets the index from
     // https://github.com/rust-lang/crates.io-index directly
     // or from the sparse index CDN https://index.crates.io.
-    if state.config.env == Env::Development {
+    if ctx.config.env == Env::Development {
         router = router.route(
             "/git/index/{*path}",
             get(git::http_backend).post(git::http_backend),
@@ -143,5 +143,5 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
             Method::HEAD => StatusCode::NOT_FOUND.into_response(),
             _ => not_found().into_response(),
         })
-        .with_state(state)
+        .with_state(ctx)
 }

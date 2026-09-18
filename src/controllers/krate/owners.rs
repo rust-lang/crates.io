@@ -10,10 +10,10 @@ use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope,
 };
 use crate::schema::{oauth_github, users};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden};
 use crate::views::EncodableOwner;
 use crate::worker::jobs::SendEmail;
-use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
@@ -48,8 +48,8 @@ pub struct UsersResponse {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
-    let conn = state.db_read().await?;
+pub async fn list_owners(ctx: ServerContext, path: CratePath) -> AppResult<Json<UsersResponse>> {
+    let conn = ctx.db_read().await?;
 
     let krate = path.load_crate(&conn).await?;
 
@@ -86,8 +86,11 @@ pub struct TeamsResponse {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json<TeamsResponse>> {
-    let conn = state.db_read().await?;
+pub async fn get_team_owners(
+    ctx: ServerContext,
+    path: CratePath,
+) -> AppResult<Json<TeamsResponse>> {
+    let conn = ctx.db_read().await?;
     let krate = path.load_crate(&conn).await?;
 
     let mut teams = Team::owning(&krate, &conn).await?;
@@ -113,8 +116,11 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
-    let conn = state.db_read().await?;
+pub async fn get_user_owners(
+    ctx: ServerContext,
+    path: CratePath,
+) -> AppResult<Json<UsersResponse>> {
+    let conn = ctx.db_read().await?;
 
     let krate = path.load_crate(&conn).await?;
 
@@ -163,7 +169,7 @@ pub struct ModifyResponse {
     ),
 )]
 pub async fn add_owners(
-    app: AppState,
+    ctx: ServerContext,
     path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
@@ -178,7 +184,7 @@ pub async fn add_owners(
         ));
     }
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
         .for_crate(&path.name)
@@ -191,13 +197,13 @@ pub async fn add_owners(
 
     let owners = krate.owners(&conn).await?;
 
-    check_owner_permissions(&app, user, &owners).await?;
+    check_owner_permissions(&ctx, user, &owners).await?;
 
     let msg = conn
         .transaction(async |conn| {
             let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
-                match add_owner(&app, conn, user, &krate, &owners, login).await {
+                match add_owner(&ctx, conn, user, &krate, &owners, login).await {
                     // A user must accept the invitation through their account
                     // or with the emailed token.
                     Ok(NewOwnerInvite::User(invitee, token)) => {
@@ -214,7 +220,7 @@ pub async fn add_owners(
                                     invitee.username
                                 ))
                             })?;
-                            let email = render_owner_invite_email(&app, user, &krate, &token);
+                            let email = render_owner_invite_email(&ctx, user, &krate, &token);
 
                             match email {
                                 Ok(email) => {
@@ -278,12 +284,12 @@ pub async fn add_owners(
     ),
 )]
 pub async fn remove_owners(
-    app: AppState,
+    ctx: ServerContext,
     path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<ModifyResponse>> {
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
         .for_crate(&path.name)
@@ -296,7 +302,7 @@ pub async fn remove_owners(
 
     let owners = krate.owners(&conn).await?;
 
-    check_owner_permissions(&app, user, &owners).await?;
+    check_owner_permissions(&ctx, user, &owners).await?;
 
     let user_ids: Vec<_> = owners
         .iter()
@@ -377,11 +383,15 @@ pub struct ChangeOwnersRequest {
 }
 
 /// Checks whether the user has permission to modify the crate's owners.
-async fn check_owner_permissions(app: &App, user: &User, owners: &[Owner]) -> AppResult<()> {
+async fn check_owner_permissions(
+    ctx: &ServerContext,
+    user: &User,
+    owners: &[Owner],
+) -> AppResult<()> {
     const TEAM_MEMBER_ERROR: &str = "team members don't have permission to modify owners";
     const NOT_OWNER_ERROR: &str = "only owners have permission to modify owners";
 
-    match Rights::get(user, &*app.github, owners, &app.config.token_encryption).await? {
+    match Rights::get(user, &*ctx.github, owners, &ctx.config.token_encryption).await? {
         Rights::Full => Ok(()),
         Rights::Publish => Err(forbidden(TEAM_MEMBER_ERROR)),
         Rights::None => Err(forbidden(NOT_OWNER_ERROR)),
@@ -390,7 +400,7 @@ async fn check_owner_permissions(app: &App, user: &User, owners: &[Owner]) -> Ap
 
 /// Renders an owner invitation email with a token for accepting the invitation.
 fn render_owner_invite_email(
-    app: &App,
+    ctx: &ServerContext,
     inviter: &User,
     krate: &Crate,
     token: &SecretString,
@@ -399,7 +409,7 @@ fn render_owner_invite_email(
         "owner_invite",
         context! {
             inviter => inviter.username,
-            domain => app.emails.domain,
+            domain => ctx.emails.domain,
             crate_name => krate.name,
             token => token.expose_secret()
         },
@@ -409,7 +419,7 @@ fn render_owner_invite_email(
 /// Invites `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
 async fn add_owner(
-    app: &App,
+    ctx: &ServerContext,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
@@ -424,8 +434,8 @@ async fn add_owner(
                 return Err(bad_request(format_args!("`{login}` is already an owner")).into());
             }
 
-            let github = &*app.github;
-            let encryption = &app.config.token_encryption;
+            let github = &*ctx.github;
+            let encryption = &ctx.config.token_encryption;
             return add_github_team_owner(github, conn, req_user, krate, team, encryption).await;
         }
         Login::CratesIo(username) => {
@@ -459,7 +469,7 @@ async fn add_owner(
         return Err(bad_request(format_args!("`{login}` is already an owner")).into());
     }
 
-    invite_user_owner(app, conn, req_user, krate, user).await
+    invite_user_owner(ctx, conn, req_user, krate, user).await
 }
 
 /// Parsed owner login used by the owner endpoints.
@@ -515,14 +525,14 @@ struct GitHubTeamLogin<'a> {
 
 /// Creates an owner invitation for a resolved user.
 async fn invite_user_owner(
-    app: &App,
+    ctx: &ServerContext,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
     user: PublicUser,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // Users are invited and must accept before being added
-    let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
+    let expires_at = Utc::now() + ctx.config.ownership_invitations_expiration;
     let invite = NewCrateOwnerInvitation {
         invited_user_id: user.id,
         invited_by_user_id: req_user.id,

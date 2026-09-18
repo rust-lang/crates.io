@@ -2,9 +2,9 @@
 
 use super::CrateVersionPath;
 use super::update::{authenticate, perform_version_yank_update};
-use crate::app::AppState;
 use crate::controllers::helpers::OkResponse;
 use crate::rate_limiter::LimitedAction;
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use http::request::Parts;
 
@@ -35,11 +35,11 @@ use http::request::Parts;
     ),
 )]
 pub async fn yank_version(
-    app: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<OkResponse> {
-    modify_yank(path, app, req, true).await
+    modify_yank(path, ctx, req, true).await
 }
 
 /// Unyank a crate version.
@@ -59,34 +59,33 @@ pub async fn yank_version(
     ),
 )]
 pub async fn unyank_version(
-    app: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<OkResponse> {
-    modify_yank(path, app, req, false).await
+    modify_yank(path, ctx, req, false).await
 }
 
 /// Changes `yanked` flag on a crate version record
 async fn modify_yank(
     path: CrateVersionPath,
-    state: AppState,
+    ctx: ServerContext,
     req: Parts,
     yanked: bool,
 ) -> AppResult<OkResponse> {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&conn).await?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 
-    state
-        .rate_limiter
+    ctx.rate_limiter
         .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
         .await?;
 
     perform_version_yank_update(
-        &state,
+        &ctx,
         &mut conn,
         &mut version,
         &krate,

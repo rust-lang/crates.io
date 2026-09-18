@@ -1,6 +1,6 @@
 use crate::config::CdnLogQueueConfig;
 use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::ProcessCdnLog;
 use anyhow::Context;
 use aws_credential_types::Credentials;
@@ -10,7 +10,6 @@ use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{debug, info, instrument, warn};
 
 /// A background job that processes messages from the CDN log queue.
@@ -29,7 +28,7 @@ pub struct ProcessCdnLogQueue {
 impl BackgroundJob for ProcessCdnLogQueue {
     const JOB_NAME: &'static str = "process_cdn_log_queue";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Processing messages from the CDN log queue…");
@@ -64,7 +63,7 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
 /// Processes messages from the CDN log queue.
 ///
 /// This function is separate from the [`BackgroundJob`] implementation so that it
-/// can be tested without needing to construct a full [Environment] struct.
+/// can be tested without needing to construct a full [`WorkerContext`].
 async fn run(
     queue: &impl SqsQueue,
     max_messages: usize,
@@ -233,6 +232,7 @@ mod tests {
     use insta::assert_snapshot;
     use parking_lot::Mutex;
     use serde_json::json;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_process_cdn_log_queue() {

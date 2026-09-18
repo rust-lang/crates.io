@@ -1,5 +1,5 @@
-use crate::app::AppState;
 use crate::controllers::version::CrateVersionPath;
+use crate::server::ServerContext;
 use crate::storage::StorageKey;
 use crate::util::{RequestUtils, redirect};
 use axum::Json;
@@ -28,9 +28,13 @@ pub struct UrlResponse {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
+pub async fn get_version_readme(
+    ctx: ServerContext,
+    path: CrateVersionPath,
+    req: Parts,
+) -> Response {
     let key = StorageKey::for_readme(&path.name, &path.version);
-    let url = app.storage.location(&key);
+    let url = ctx.storage.location(&key);
     let response = if req.wants_json() {
         Json(UrlResponse { url }).into_response()
     } else {

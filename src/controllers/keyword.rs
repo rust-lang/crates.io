@@ -1,7 +1,7 @@
-use crate::app::AppState;
 use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::controllers::helpers::{Paginate, pagination::Paginated};
 use crate::models::Keyword;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, not_found};
 use crate::views::EncodableKeyword;
 use axum::Json;
@@ -54,7 +54,7 @@ pub struct KeywordListMeta {
     ),
 )]
 pub async fn list_keywords(
-    state: AppState,
+    ctx: ServerContext,
     params: KeywordListQueryParams,
     req: Parts,
 ) -> AppResult<Json<KeywordListResponse>> {
@@ -69,7 +69,7 @@ pub async fn list_keywords(
 
     let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
 
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
     let data: Paginated<Keyword> = query.load(&mut conn).await?;
     let total = data.total();
     let keywords = data.into_iter().map(Keyword::into).collect();
@@ -100,7 +100,7 @@ pub struct KeywordGetResponse {
 )]
 pub async fn find_keyword(
     Path(name): Path<String>,
-    state: AppState,
+    ctx: ServerContext,
 ) -> AppResult<Json<KeywordGetResponse>> {
     // If the name is not a valid keyword it cannot exist in the database, so we
     // skip the lookup and return a regular "not found" response. This also
@@ -112,7 +112,7 @@ pub async fn find_keyword(
         return Err(not_found());
     }
 
-    let conn = state.db_read().await?;
+    let conn = ctx.db_read().await?;
     let kw = Keyword::find_by_keyword(&conn, &name).await?;
     let keyword = EncodableKeyword::from(kw);
     Ok(Json(KeywordGetResponse { keyword }))

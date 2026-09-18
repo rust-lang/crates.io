@@ -4,10 +4,10 @@ use crate::schema::api_tokens;
 use crate::views::EncodableApiTokenWithToken;
 use anyhow::Context;
 
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::middleware::real_ip::RealIp;
 use crate::models::token::{CrateScope, EndpointScope};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, bad_request, custom};
 use crate::util::no_store;
 use crate::util::token::PlainToken;
@@ -71,11 +71,11 @@ pub struct ApiTokenListResponse {
     ),
 )]
 pub async fn list_api_tokens(
-    app: AppState,
+    ctx: ServerContext,
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, ErasedJson)> {
-    let mut conn = app.db_read_prefer_primary().await?;
+    let mut conn = ctx.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     let user = auth.user();
 
@@ -130,7 +130,7 @@ pub struct CreateResponse {
     ),
 )]
 pub async fn create_api_token(
-    app: AppState,
+    ctx: ServerContext,
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
 ) -> AppResult<Json<CreateResponse>> {
@@ -138,7 +138,7 @@ pub async fn create_api_token(
         return Err(bad_request("name must have a value"));
     }
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default().check(&parts, &mut conn).await?;
 
     if auth.api_token_id().is_some() {
@@ -150,7 +150,7 @@ pub async fn create_api_token(
     let user = auth.user();
 
     // Check if token creation is disabled
-    if let Some(disable_message) = &app.config.disable_token_creation {
+    if let Some(disable_message) = &ctx.config.disable_token_creation {
         let client_ip = parts.extensions.get::<RealIp>().map(|ip| ip.to_string());
         let client_ip = client_ip.as_deref().unwrap_or("unknown");
 
@@ -222,13 +222,13 @@ pub async fn create_api_token(
         let context = context! {
             token_name => &new.api_token.name,
             user_name => &user.username,
-            domain => app.emails.domain,
+            domain => ctx.emails.domain,
         };
 
         // At this point the token has been created so failing to send the
         // email should not cause an error response to be returned to the
         // caller.
-        if let Err(e) = send_creation_email(&app.emails, &recipient, context).await {
+        if let Err(e) = send_creation_email(&ctx.emails, &recipient, context).await {
             error!("Failed to send token creation email: {e}")
         }
     }
@@ -266,11 +266,11 @@ pub struct ApiTokenGetResponse {
     ),
 )]
 pub async fn find_api_token(
-    app: AppState,
+    ctx: ServerContext,
     Path(id): Path<i32>,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<ApiTokenGetResponse>)> {
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
     let api_token = ApiToken::belonging_to(user)
@@ -301,11 +301,11 @@ pub async fn find_api_token(
     ),
 )]
 pub async fn revoke_api_token(
-    app: AppState,
+    ctx: ServerContext,
     Path(id): Path<i32>,
     req: Parts,
 ) -> AppResult<ErasedJson> {
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
     diesel::update(ApiToken::belonging_to(user).find(id))
@@ -331,8 +331,8 @@ pub async fn revoke_api_token(
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Response> {
-    let mut conn = app.db_write().await?;
+pub async fn revoke_current_api_token(ctx: ServerContext, req: Parts) -> AppResult<Response> {
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let api_token_id = auth
         .api_token_id()

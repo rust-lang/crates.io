@@ -3,11 +3,11 @@
 //! The endpoint for downloading a crate and exposing version specific
 //! download counts are located in `version::downloads`.
 
-use crate::app::AppState;
 use crate::controllers::krate::CratePath;
 use crate::models::download::Version;
 use crate::models::{PublicUser, Version as FullVersion, VersionDownload, VersionOwnerAction};
 use crate::schema::{oauth_github, users, version_downloads, version_owner_actions, versions};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::views::{EncodableVersion, EncodableVersionDownload};
 use axum::Json;
@@ -83,11 +83,11 @@ pub struct ExtraDownload {
     ),
 )]
 pub async fn get_crate_downloads(
-    state: AppState,
+    ctx: ServerContext,
     path: CratePath,
     params: DownloadsQueryParams,
 ) -> AppResult<Json<DownloadsResponse>> {
-    let mut conn = state.db_read().await?;
+    let mut conn = ctx.db_read().await?;
 
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;

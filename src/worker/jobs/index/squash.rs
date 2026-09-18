@@ -1,4 +1,4 @@
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::ArchiveIndexBranch;
 use anyhow::{Context, anyhow};
 use chrono::Utc;
@@ -6,14 +6,13 @@ use crates_io_github::{CreateCommit, GitHubAuth, parse_github_slug};
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::sync::Arc;
 use std::time::Instant;
 use tracing::{info, instrument, warn};
 
 const MASTER_REF: &str = "refs/heads/master";
 
-async fn enqueue_archive_job(env: &Environment, branch: &str) -> anyhow::Result<()> {
-    let conn = env.deadpool.get().await?;
+async fn enqueue_archive_job(ctx: &WorkerContext, branch: &str) -> anyhow::Result<()> {
+    let conn = ctx.deadpool.get().await?;
     ArchiveIndexBranch::new(branch).enqueue(&conn).await?;
     Ok(())
 }
@@ -49,21 +48,21 @@ impl BackgroundJob for SquashIndex {
     // bare repo.
     const QUEUE: &'static str = "repository";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all)]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Squashing the index into a single commit via the GitHub API");
 
-        let index_sync_github_app = env
+        let index_sync_github_app = ctx
             .index_sync_github_app
             .as_ref()
             .ok_or_else(|| anyhow!("index sync GitHub App is not configured"))?;
 
-        let (owner, repo) = parse_github_slug(&env.repository_config.index_location)
+        let (owner, repo) = parse_github_slug(&ctx.repository_config.index_location)
             .context("Failed to parse index URL as `owner/repo`")?;
 
-        let github = env.github.as_ref();
+        let github = ctx.github.as_ref();
 
         let original_head = github
             .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
@@ -121,7 +120,7 @@ impl BackgroundJob for SquashIndex {
 
         info!("The index has been successfully squashed.");
 
-        if let Err(error) = enqueue_archive_job(&env, &snapshot_branch).await {
+        if let Err(error) = enqueue_archive_job(&ctx, &snapshot_branch).await {
             warn!("Failed to enqueue `ArchiveIndexBranch` job for `{snapshot_branch}`: {error}");
         }
 

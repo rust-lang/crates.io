@@ -1,13 +1,12 @@
 use crate::index::get_index_data;
 use crate::tasks::spawn_blocking;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_index::Repository;
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::time::Instant;
 use tokio::runtime::Handle;
 use tracing::{debug, info, instrument, warn};
@@ -30,22 +29,22 @@ impl BackgroundJob for SyncToGitIndex {
     const DEDUPLICATED: bool = true;
     const QUEUE: &'static str = "repository";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
 
         let crate_name = self.krate;
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
 
         let new = get_index_data(&crate_name, &mut conn)
             .await
             .context("Failed to get index data")?;
 
         spawn_blocking(move || {
-            let repo = env.lock_index()?;
+            let repo = ctx.lock_index()?;
             let old = repo.read_entry(&crate_name)?;
 
             let commit_and_push_start = Instant::now();
@@ -101,10 +100,10 @@ impl BackgroundJob for BulkSyncToGitIndex {
     const JOB_NAME: &'static str = "bulk_sync_to_git_index";
     const QUEUE: &'static str = "repository";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all, fields(num_crates = self.crate_names.len()))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!(commit_message = ?self.commit_message, "Syncing {} crates to git index", self.crate_names.len());
 
         let crate_names = self.crate_names;
@@ -112,7 +111,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
 
         let handle = Handle::current();
         spawn_blocking(move || {
-            let repo = env.lock_index()?;
+            let repo = ctx.lock_index()?;
             let mut builder = repo.commit_builder(commit_message)?;
             let mut num_changes = 0;
 
@@ -120,7 +119,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
                 // Fetch index data using async database queries
                 let new = handle
                     .block_on(async {
-                        let mut conn = env.deadpool.get().await?;
+                        let mut conn = ctx.deadpool.get().await?;
                         get_index_data(crate_name, &mut conn).await
                     })
                     .with_context(|| format!("Failed to get index data for `{crate_name}`"))?;
@@ -175,27 +174,27 @@ impl BackgroundJob for SyncToSparseIndex {
     const PRIORITY: i16 = 100;
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
 
         let crate_name = self.krate;
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
 
         let content = get_index_data(&crate_name, &mut conn)
             .await
             .context("Failed to get index data")?;
 
-        let future = env.storage.sync_index(&crate_name, content);
+        let future = ctx.storage.sync_index(&crate_name, content);
         future.await.context("Failed to sync index data")?;
 
         let path = Repository::relative_index_file_for_url(&crate_name);
 
-        if let Some(fastly) = env.fastly() {
-            let domain_name = &env.config.domain_name;
+        if let Some(fastly) = ctx.fastly() {
+            let domain_name = &ctx.config.domain_name;
             let domains = [
                 format!("index.{}", domain_name),
                 format!("fastly-index.{}", domain_name),
@@ -211,7 +210,7 @@ impl BackgroundJob for SyncToSparseIndex {
             }
         }
 
-        if env.cloudfront().is_some() {
+        if ctx.cloudfront().is_some() {
             info!(%path, "Queuing index file invalidation on CloudFront");
 
             let dist = CloudFrontDistribution::Index;

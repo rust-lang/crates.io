@@ -1,10 +1,10 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, PublicUser, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, oauth_github, users, versions};
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::util::no_store;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
@@ -31,10 +31,10 @@ use serde::Serialize;
     ),
 )]
 pub async fn get_authenticated_user(
-    app: AppState,
+    ctx: ServerContext,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<EncodableMe>)> {
-    let mut conn = app.db_read_prefer_primary().await?;
+    let mut conn = ctx.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
         .check(&req, &mut conn)
         .await?
@@ -116,10 +116,10 @@ pub struct UpdatesResponseMeta {
     ),
 )]
 pub async fn get_authenticated_user_updates(
-    app: AppState,
+    ctx: ServerContext,
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<UpdatesResponse>)> {
-    let mut conn = app.db_read_prefer_primary().await?;
+    let mut conn = ctx.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let user = auth.user();

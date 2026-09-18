@@ -1,5 +1,5 @@
-use crate::app::AppState;
 use crate::auth::AuthHeader;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, custom};
 use crates_io_database::schema::trustpub_tokens;
 use crates_io_trustpub::access_token::AccessToken;
@@ -23,7 +23,7 @@ use secrecy::ExposeSecret;
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn revoke_trustpub_token(app: AppState, auth: AuthHeader) -> AppResult<StatusCode> {
+pub async fn revoke_trustpub_token(ctx: ServerContext, auth: AuthHeader) -> AppResult<StatusCode> {
     let token = auth.token().expose_secret();
     let Ok(token) = token.parse::<AccessToken>() else {
         let message = "Invalid `Authorization` header: Failed to parse token";
@@ -32,7 +32,7 @@ pub async fn revoke_trustpub_token(app: AppState, auth: AuthHeader) -> AppResult
 
     let hashed_token = token.sha256();
 
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     diesel::delete(trustpub_tokens::table)
         .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))

@@ -1,6 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::{Storage, StorageKey};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crate::worker::jobs::GenerateOgImage;
 use anyhow::Context;
 use async_compression::tokio::bufread::GzipDecoder;
@@ -13,7 +13,6 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::{AsyncReadExt, BufReader};
 use tokio_util::io::StreamReader;
@@ -28,17 +27,17 @@ impl BackgroundJob for AnalyzeCrateFile {
     const JOB_NAME: &'static str = "analyze_crate_file";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all, fields(version_id = ?self.version_id))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let version_id = self.version_id;
 
         info!("Starting crate file analysis… (version_id={version_id})");
 
         let start = Instant::now();
 
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
 
         let Some((krate, version)) = get_crate_version_info(version_id, &conn).await? else {
             warn!("version_id={version_id} not found in database, skipping analysis");
@@ -46,7 +45,7 @@ impl BackgroundJob for AnalyzeCrateFile {
         };
 
         info!("Loading and analyzing crate file for {krate}@{version}… (version_id={version_id})");
-        let linecount_stats = analyze_crate_tarball(&krate, &version, &env.storage).await?;
+        let linecount_stats = analyze_crate_tarball(&krate, &version, &ctx.storage).await?;
 
         update_version_linecount_stats(version_id, &linecount_stats, &mut conn).await?;
 

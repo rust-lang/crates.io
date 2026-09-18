@@ -1,9 +1,9 @@
 //! Endpoint for triggering a docs.rs rebuild
 
 use super::CrateVersionPath;
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::authorization::Rights;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, custom, server_error};
 use crate::worker::jobs;
 use crates_io_worker::BackgroundJob as _;
@@ -28,11 +28,11 @@ use tracing::error;
     ),
 )]
 pub async fn rebuild_version_docs(
-    app: AppState,
+    ctx: ServerContext,
     path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<StatusCode> {
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     // validate if version & crate exist
@@ -41,8 +41,8 @@ pub async fn rebuild_version_docs(
     // Check that the user is an owner of the crate, or a team member (= publish rights)
     let user = auth.user();
     let owners = krate.owners(&conn).await?;
-    let encryption = &app.config.token_encryption;
-    if Rights::get(user, &*app.github, &owners, encryption).await? < Rights::Publish {
+    let encryption = &ctx.config.token_encryption;
+    if Rights::get(user, &*ctx.github, &owners, encryption).await? < Rights::Publish {
         return Err(custom(
             StatusCode::FORBIDDEN,
             "user doesn't have permission to trigger a docs rebuild",

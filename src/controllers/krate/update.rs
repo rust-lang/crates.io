@@ -1,4 +1,3 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::CratePath;
 use crate::email::EmailMessage;
@@ -6,6 +5,7 @@ use crate::middleware::real_ip::RealIp;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, User};
 use crate::schema::*;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, crate_not_found, custom};
 use crate::views::EncodableCrate;
 use anyhow::Context;
@@ -56,13 +56,13 @@ pub struct PatchResponse {
     ),
 )]
 pub async fn update_crate(
-    app: AppState,
+    ctx: ServerContext,
     path: CratePath,
     req: Parts,
     Extension(real_ip): Extension<RealIp>,
     Json(body): Json<PatchRequest>,
 ) -> AppResult<Json<PatchResponse>> {
-    let mut conn = app.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     // Check that the crate exists
     let krate = path.load_crate(&conn).await?;
@@ -78,14 +78,14 @@ pub async fn update_crate(
 
     // Update crate settings in a transaction
     conn.transaction(async |conn| {
-        update_inner(conn, &app, &krate, auth.user(), &real_ip, body).await
+        update_inner(conn, &ctx, &krate, auth.user(), &real_ip, body).await
     })
     .await
 }
 
 async fn update_inner(
     conn: &mut diesel_async::AsyncPgConnection,
-    app: &AppState,
+    ctx: &ServerContext,
     krate: &Crate,
     user: &User,
     real_ip: &RealIp,
@@ -141,7 +141,7 @@ async fn update_inner(
                     trustpub_only,
                 };
 
-                if let Err(err) = email.send(app, email_address).await {
+                if let Err(err) = email.send(ctx, email_address).await {
                     warn!("Failed to send trustpub_only notification to {email_address}: {err}");
                 }
             }
@@ -206,12 +206,11 @@ struct TrustpubOnlyChangedEmail<'a> {
 }
 
 impl TrustpubOnlyChangedEmail<'_> {
-    async fn send(&self, state: &AppState, email_address: &str) -> anyhow::Result<()> {
+    async fn send(&self, ctx: &ServerContext, email_address: &str) -> anyhow::Result<()> {
         let email = EmailMessage::from_template("trustpub_only_changed", self);
         let email = email.context("Failed to render email template")?;
 
-        state
-            .emails
+        ctx.emails
             .send(email_address, email)
             .await
             .context("Failed to send email")

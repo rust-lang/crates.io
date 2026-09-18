@@ -1,9 +1,9 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
 use crate::models::{Email, NewEmail};
 use crate::schema::users;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use axum::Json;
 use axum::extract::Path;
@@ -52,12 +52,12 @@ pub struct User {
     ),
 )]
 pub async fn update_user(
-    state: AppState,
+    ctx: ServerContext,
     Path(param_user_id): Path<i32>,
     req: Parts,
     Json(user_update): Json<UserUpdate>,
 ) -> AppResult<OkResponse> {
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
     let user = auth.user();
@@ -83,13 +83,13 @@ pub async fn update_user(
                     "unsubscribe_notifications",
                     context! {
                         user_name => user.username,
-                        domain => state.emails.domain
+                        domain => ctx.emails.domain
                     },
                 );
 
                 match email {
                     Ok(email) => {
-                        if let Err(error) = state.emails.send(&email_address, email).await {
+                        if let Err(error) = ctx.emails.send(&email_address, email).await {
                             warn!(
                                 "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
                             );
@@ -128,14 +128,14 @@ pub async fn update_user(
             "user_confirm",
             context! {
                 user_name => user.username,
-                domain => state.emails.domain,
+                domain => ctx.emails.domain,
                 token => token.expose_secret()
             },
         );
 
         match email {
             Ok(email) => {
-                let _ = state.emails.send(user_email, email).await;
+                let _ = ctx.emails.send(user_email, email).await;
             }
             Err(error) => {
                 warn!("Failed to render user confirmation email template: {error}");

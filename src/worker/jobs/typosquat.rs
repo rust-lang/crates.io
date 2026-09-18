@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use typomania::Package;
@@ -7,7 +5,7 @@ use typomania::Package;
 use crate::Emails;
 use crate::email::EmailMessage;
 use crate::typosquat::{Cache, Crate};
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use anyhow::Context;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
@@ -30,16 +28,16 @@ impl BackgroundJob for CheckTyposquat {
     const JOB_NAME: &'static str = "check_typosquat";
     const DEDUPLICATED: bool = true;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
-    #[instrument(skip(env), err)]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    #[instrument(skip(ctx), err)]
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let crate_name = self.name;
 
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
 
-        let cache = env.typosquat_cache(&mut conn).await?;
-        check(&env.emails, cache, &mut conn, &crate_name).await
+        let cache = ctx.typosquat_cache(&mut conn).await?;
+        check(&ctx.emails, cache, &mut conn, &crate_name).await
     }
 }
 
@@ -122,6 +120,7 @@ mod tests {
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
     use lettre::Address;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn integration() -> anyhow::Result<()> {

@@ -1,6 +1,6 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::trustpub::emails::{ConfigDeletedEmail, ConfigType};
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
@@ -30,11 +30,11 @@ use tracing::warn;
     ),
 )]
 pub async fn delete_trustpub_gitlab_config(
-    state: AppState,
+    ctx: ServerContext,
     Path(id): Path<i32>,
     parts: Parts,
 ) -> AppResult<StatusCode> {
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     // First, find the config and crate to get the crate name for scope validation
     let (config, krate) = trustpub_configs_gitlab::table
@@ -92,7 +92,7 @@ pub async fn delete_trustpub_gitlab_config(
             config,
         };
 
-        if let Err(err) = send_notification_email(&state, email_address, context).await {
+        if let Err(err) = send_notification_email(&ctx, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");
         }
     }
@@ -101,15 +101,14 @@ pub async fn delete_trustpub_gitlab_config(
 }
 
 async fn send_notification_email(
-    state: &AppState,
+    ctx: &ServerContext,
     email_address: &str,
     context: ConfigDeletedEmail<'_>,
 ) -> anyhow::Result<()> {
     let email = context.render();
     let email = email.context("Failed to render email template")?;
 
-    state
-        .emails
+    ctx.emails
         .send(email_address, email)
         .await
         .context("Failed to send email")

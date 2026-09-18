@@ -1,8 +1,8 @@
-use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
 use crate::models::Email;
+use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::util::errors::{BoxedAppError, bad_request};
 use axum::extract::Path;
@@ -29,10 +29,10 @@ use secrecy::ExposeSecret;
     ),
 )]
 pub async fn confirm_user_email(
-    state: AppState,
+    ctx: ServerContext,
     Path(token): Path<String>,
 ) -> AppResult<OkResponse> {
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     let updated_rows = diesel::update(emails::table.filter(emails::token.eq(&token)))
         .set(emails::verified.eq(true))
@@ -65,11 +65,11 @@ pub async fn confirm_user_email(
     ),
 )]
 pub async fn resend_email_verification(
-    state: AppState,
+    ctx: ServerContext,
     Path(param_user_id): Path<i32>,
     req: Parts,
 ) -> AppResult<OkResponse> {
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
     // need to check if current user matches user to be updated
@@ -90,14 +90,13 @@ pub async fn resend_email_verification(
             "user_confirm",
             context! {
                 user_name => auth.user().username,
-                domain => state.emails.domain,
+                domain => ctx.emails.domain,
                 token => email.token.expose_secret()
             },
         )
         .map_err(|_| bad_request("Failed to render email template"))?;
 
-        state
-            .emails
+        ctx.emails
             .send(&email.email, email_message)
             .await
             .map_err(BoxedAppError::from)

@@ -1,5 +1,5 @@
 use super::json;
-use crate::app::AppState;
+use crate::server::ServerContext;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, server_error};
 use axum::Json;
 use chrono::{DateTime, Utc};
@@ -34,7 +34,7 @@ use tracing::warn;
     ),
 )]
 pub async fn exchange_trustpub_token(
-    state: AppState,
+    ctx: ServerContext,
     json: json::ExchangeRequest,
 ) -> AppResult<Json<json::ExchangeResponse>> {
     let unverified_jwt = json.jwt;
@@ -43,7 +43,7 @@ pub async fn exchange_trustpub_token(
         .map_err(|_err| bad_request("Failed to decode JWT"))?;
 
     let unverified_issuer = unverified_token_data.claims.iss;
-    let Some(keystore) = state.oidc_key_stores.get(&unverified_issuer) else {
+    let Some(keystore) = ctx.oidc_key_stores.get(&unverified_issuer) else {
         return Err(unsupported_issuer(&unverified_issuer));
     };
 
@@ -64,8 +64,8 @@ pub async fn exchange_trustpub_token(
     };
 
     match unverified_issuer.as_str() {
-        GITHUB_ISSUER_URL => handle_github_token(&state, &unverified_jwt, &key).await,
-        GITLAB_ISSUER_URL => handle_gitlab_token(&state, &unverified_jwt, &key).await,
+        GITHUB_ISSUER_URL => handle_github_token(&ctx, &unverified_jwt, &key).await,
+        GITLAB_ISSUER_URL => handle_gitlab_token(&ctx, &unverified_jwt, &key).await,
         _ => Err(unsupported_issuer(&unverified_issuer)),
     }
 }
@@ -92,17 +92,17 @@ async fn insert_jti(conn: &mut AsyncPgConnection, jti: &str, exp: DateTime<Utc>)
 }
 
 async fn handle_github_token(
-    state: &AppState,
+    ctx: &ServerContext,
     unverified_jwt: &str,
     key: &DecodingKey,
 ) -> AppResult<Json<json::ExchangeResponse>> {
-    let audience = &state.config.trustpub_audience;
+    let audience = &ctx.config.trustpub_audience;
     let signed_claims = GitHubClaims::decode(unverified_jwt, audience, key).map_err(|err| {
         warn!("Failed to decode JWT: {err}");
         bad_request("Failed to decode JWT")
     })?;
 
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     conn.transaction(async |conn| handle_github_token_inner(conn, signed_claims).await)
         .await
@@ -243,17 +243,17 @@ async fn handle_github_token_inner(
 }
 
 async fn handle_gitlab_token(
-    state: &AppState,
+    ctx: &ServerContext,
     unverified_jwt: &str,
     key: &DecodingKey,
 ) -> AppResult<Json<json::ExchangeResponse>> {
-    let audience = &state.config.trustpub_audience;
+    let audience = &ctx.config.trustpub_audience;
     let signed_claims = GitLabClaims::decode(unverified_jwt, audience, key).map_err(|err| {
         warn!("Failed to decode JWT: {err}");
         bad_request("Failed to decode JWT")
     })?;
 
-    let mut conn = state.db_write().await?;
+    let mut conn = ctx.db_write().await?;
 
     conn.transaction(async |conn| handle_gitlab_token_inner(conn, signed_claims).await)
         .await

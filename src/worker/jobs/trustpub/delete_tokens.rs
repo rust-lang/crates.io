@@ -1,10 +1,9 @@
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_database::schema::trustpub_tokens;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 /// A background job that deletes expired temporary access
 /// tokens from the database.
@@ -14,7 +13,7 @@ pub struct DeleteExpiredTokens;
 impl BackgroundJob for DeleteExpiredTokens {
     const JOB_NAME: &'static str = "trustpub::delete_expired_tokens";
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let mut conn = ctx.deadpool.get().await?;

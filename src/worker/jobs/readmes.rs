@@ -3,7 +3,7 @@
 use crate::models::Version;
 use crate::storage::StorageKey;
 use crate::tasks::spawn_blocking;
-use crate::worker::Environment;
+use crate::worker::WorkerContext;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
@@ -11,7 +11,6 @@ use diesel::result::DatabaseErrorKind;
 use diesel::result::Error::DatabaseError;
 use diesel_async::AsyncConnection;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::{info, instrument, warn};
 
 #[derive(Constructor, Serialize, Deserialize)]
@@ -27,10 +26,10 @@ impl BackgroundJob for RenderAndUploadReadme {
     const JOB_NAME: &'static str = "render_and_upload_readme";
     const PRIORITY: i16 = 50;
 
-    type Context = Arc<Environment>;
+    type Context = WorkerContext;
 
     #[instrument(skip_all, fields(krate.name))]
-    async fn run(self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
         use diesel_async::RunQueryDsl;
@@ -51,7 +50,7 @@ impl BackgroundJob for RenderAndUploadReadme {
             return Ok(());
         }
 
-        let mut conn = env.deadpool.get().await?;
+        let mut conn = ctx.deadpool.get().await?;
         conn.transaction(async |conn| {
             match Version::record_readme_rendering(self.version_id, conn).await {
                 Ok(_) => {}
@@ -90,7 +89,7 @@ impl BackgroundJob for RenderAndUploadReadme {
             tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
             let key = StorageKey::for_readme(&crate_name, &vers);
-            env.storage.upload(&key, rendered.into()).await?;
+            ctx.storage.upload(&key, rendered.into()).await?;
 
             Ok(())
         })
