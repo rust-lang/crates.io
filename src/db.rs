@@ -1,7 +1,10 @@
+use crate::Env;
 use crate::certs::CRUNCHY;
+use crate::config::{DatabasePools, DbPoolConfig};
+use deadpool_runtime::Runtime;
 use diesel::{ConnectionResult, QueryResult};
-use diesel_async::pooled_connection::ManagerConfig;
-use diesel_async::pooled_connection::deadpool::{Hook, HookError};
+use diesel_async::pooled_connection::deadpool::{Hook, HookError, Pool};
+use diesel_async::pooled_connection::{AsyncDieselConnectionManager, ManagerConfig};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use native_tls::{Certificate, TlsConnector};
 use postgres_native_tls::MakeTlsConnector;
@@ -9,21 +12,38 @@ use secrecy::ExposeSecret;
 use std::time::Duration;
 use url::Url;
 
-use crate::config;
-
 pub async fn oneoff_connection_with_config(
-    config: &config::DatabasePools,
+    config: &DatabasePools,
 ) -> ConnectionResult<AsyncPgConnection> {
     let url = connection_url(&config.primary);
     establish_async_connection(&url, config.primary.enforce_tls).await
 }
 
 pub async fn oneoff_connection() -> anyhow::Result<AsyncPgConnection> {
-    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?)?;
+    let config = DatabasePools::full_from_environment(Env::from_environment()?)?;
     Ok(oneoff_connection_with_config(&config).await?)
 }
 
-pub fn connection_url(config: &config::DbPoolConfig) -> String {
+pub fn create_pool(config: &DbPoolConfig) -> Pool<AsyncPgConnection> {
+    let connection_config = ConnectionConfig {
+        statement_timeout: config.statement_timeout,
+        read_only: config.read_only_mode,
+    };
+
+    let url = connection_url(config);
+    let manager_config = make_manager_config(config.enforce_tls);
+    let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
+
+    Pool::builder(manager)
+        .runtime(Runtime::Tokio1)
+        .max_size(config.pool_size)
+        .wait_timeout(Some(config.connection_timeout))
+        .post_create(connection_config)
+        .build()
+        .unwrap()
+}
+
+pub fn connection_url(config: &DbPoolConfig) -> String {
     let mut url = Url::parse(config.url.expose_secret()).expect("Invalid database URL");
 
     if config.enforce_tls {

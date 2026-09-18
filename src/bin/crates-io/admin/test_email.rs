@@ -1,6 +1,6 @@
 use anyhow::Context;
 use chrono::{SecondsFormat, Utc};
-use crates_io::config::Server;
+use crates_io::config::SharedConfig;
 use crates_io::email::{EmailMessage, Emails};
 use minijinja::context;
 
@@ -35,7 +35,7 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let config = Server::from_environment().context("Failed to load server configuration")?;
+    let config = SharedConfig::from_environment().context("Failed to load app configuration")?;
     let emails = Emails::from_environment(&config);
 
     let publish_time = Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);

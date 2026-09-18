@@ -1,3 +1,4 @@
+use crates_io::config::SharedConfig;
 use crates_io::middleware::normalize_path::normalize_path;
 use crates_io::{App, Emails, metrics::LogEncoder};
 use std::{sync::Arc, time::Duration};
@@ -23,7 +24,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let _span = info_span!("server.run");
 
-    let config = crates_io::config::Server::from_environment()?;
+    let config = SharedConfig::from_environment()?;
 
     let emails = Emails::from_environment(&config);
 

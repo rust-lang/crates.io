@@ -1,5 +1,6 @@
 use crate::Emails;
 use crate::cloudfront::CloudFront;
+use crate::config::SharedConfig;
 use crate::storage::Storage;
 use crate::typosquat;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
@@ -27,7 +28,7 @@ use tracing::{info, instrument};
 
 #[derive(Builder)]
 pub struct Environment {
-    pub config: Arc<crate::config::Server>,
+    pub config: Arc<SharedConfig>,
 
     pub repository_config: RepositoryConfig,
     #[builder(skip)]

@@ -30,7 +30,7 @@ use crate::app::AppState;
 
 pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
     let config = &state.config;
-    let env = config.env();
+    let env = config.env;
 
     // The middleware stacks here have been split for compile performance
     // reasons. The type signatures of the `ServiceBuilder` were approaching

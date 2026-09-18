@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
-use crate::config;
-use crate::db::{ConnectionConfig, connection_url, make_manager_config};
+use crate::config::{DatabasePools, SharedConfig};
+use crate::db;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -15,10 +15,8 @@ use crates_io_github::GitHubClient;
 use crates_io_trustpub::github::GITHUB_ISSUER_URL;
 use crates_io_trustpub::gitlab::GITLAB_ISSUER_URL;
 use crates_io_trustpub::keystore::{OidcKeyStore, RealOidcKeyStore};
-use deadpool_runtime::Runtime;
 use derive_more::Deref;
 use diesel_async::AsyncPgConnection;
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
 use oauth2::basic::BasicClient;
 use oauth2::{EndpointNotSet, EndpointSet};
@@ -53,8 +51,7 @@ pub struct App {
     #[builder(default)]
     pub oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
 
-    /// The server configuration
-    pub config: Arc<config::Server>,
+    pub config: Arc<SharedConfig>,
 
     /// Backend used to send emails
     pub emails: Emails,
@@ -77,7 +74,7 @@ pub struct App {
 impl<S: app_builder::State> AppBuilder<S> {
     pub fn github_oauth_from_config(
         self,
-        config: &config::Server,
+        config: &SharedConfig,
     ) -> AppBuilder<app_builder::SetGithubOauth<S>>
     where
         S::GithubOauth: app_builder::IsUnset,
@@ -133,14 +130,14 @@ impl<S: app_builder::State> AppBuilder<S> {
 
     pub fn databases_from_config(
         self,
-        config: &config::DatabasePools,
+        config: &DatabasePools,
     ) -> AppBuilder<app_builder::SetReplicaDatabase<app_builder::SetPrimaryDatabase<S>>>
     where
         S::PrimaryDatabase: app_builder::IsUnset,
         S::ReplicaDatabase: app_builder::IsUnset,
     {
-        let primary_database = create_database_pool(&config.primary);
-        let replica_database = config.replica.as_ref().map(create_database_pool);
+        let primary_database = db::create_pool(&config.primary);
+        let replica_database = config.replica.as_ref().map(db::create_pool);
 
         self.primary_database(primary_database)
             .maybe_replica_database(replica_database)
@@ -165,25 +162,6 @@ impl<S: app_builder::State> AppBuilder<S> {
     {
         self.rate_limiter(RateLimiter::new(config))
     }
-}
-
-pub fn create_database_pool(config: &config::DbPoolConfig) -> DeadpoolPool<AsyncPgConnection> {
-    let connection_config = ConnectionConfig {
-        statement_timeout: config.statement_timeout,
-        read_only: config.read_only_mode,
-    };
-
-    let url = connection_url(config);
-    let manager_config = make_manager_config(config.enforce_tls);
-    let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
-
-    DeadpoolPool::builder(manager)
-        .runtime(Runtime::Tokio1)
-        .max_size(config.pool_size)
-        .wait_timeout(Some(config.connection_timeout))
-        .post_create(connection_config)
-        .build()
-        .unwrap()
 }
 
 impl App {

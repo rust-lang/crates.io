@@ -3,9 +3,9 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    self, Base, BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig,
-    DbPoolConfig, FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig,
-    RateLimitsConfig,
+    BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
+    FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig, RateLimitsConfig,
+    SharedConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -294,7 +294,7 @@ impl TestApp {
 }
 
 pub struct TestAppBuilder {
-    config: config::Server,
+    config: SharedConfig,
     index: Option<UpstreamIndex>,
     index_location: Option<Url>,
     build_job_runner: bool,
@@ -446,7 +446,7 @@ impl TestAppBuilder {
         (app, anon, user, token)
     }
 
-    pub fn with_config(mut self, f: impl FnOnce(&mut config::Server)) -> Self {
+    pub fn with_config(mut self, f: impl FnOnce(&mut SharedConfig)) -> Self {
         f(&mut self.config);
         self
     }
@@ -550,9 +550,7 @@ impl TestAppBuilder {
     }
 }
 
-fn simple_config() -> config::Server {
-    let base = Base { env: Env::Test };
-
+fn simple_config() -> SharedConfig {
     let db = DatabasePools {
         primary: DbPoolConfig {
             // This value is supposed be overridden by the
@@ -572,8 +570,8 @@ fn simple_config() -> config::Server {
     let mut storage = StorageConfig::in_memory();
     storage.cdn_prefix = Some("static.crates.io".to_string());
 
-    config::Server {
-        base,
+    SharedConfig {
+        env: Env::Test,
         bind: BindConfig {
             ip: [127, 0, 0, 1].into(),
             port: 8888,

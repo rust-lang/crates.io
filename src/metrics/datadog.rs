@@ -7,7 +7,7 @@
 //!
 //! [api]: https://docs.datadoghq.com/api/latest/metrics/
 
-use crate::config::Server;
+use crate::config::SharedConfig;
 use crate::datadog::common_tags;
 use crate::metrics::ServiceMetrics;
 use anyhow::{Context, anyhow};
@@ -30,7 +30,7 @@ const SUBMIT_INTERVAL: Duration = Duration::from_secs(5);
 /// instance submit the same series (identical host and tags per environment),
 /// causing last-write-wins collisions.
 pub fn spawn(
-    config: &Server,
+    config: &SharedConfig,
     deadpool: Pool<AsyncPgConnection>,
     datadog: Option<Arc<DatadogClient>>,
 ) {
