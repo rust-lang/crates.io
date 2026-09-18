@@ -138,7 +138,7 @@ mockall = "=0.15.0"
 moka = { version = "=0.12.16", default-features = false, features = ["future"] }
 native-tls = "=0.2.18"
 oauth2 = { version = "=5.0.0", default-features = false }
-object_store = { version = "=0.14.1", features = ["aws"] }
+object_store = { version = "=0.14.2", features = ["aws"] }
 opentelemetry = { version = "=0.32.0", default-features = false, features = ["metrics"] }
 opentelemetry-otlp = { version = "=0.32.0", default-features = false, features = ["gzip-http", "http-proto", "internal-logs", "metrics", "reqwest-blocking-client", "zstd-http"] }
 opentelemetry_sdk = { version = "=0.32.1", default-features = false, features = ["metrics"] }
