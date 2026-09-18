@@ -24,7 +24,7 @@ fn serializes_target_metadata() {
     let metadata: TargetMetadata = serde_json::from_value(expected.clone()).unwrap();
     let json = serde_json::to_value(&metadata).unwrap();
 
-    assert!(metadata.build_script.as_ref().unwrap().exists);
+    assert!(metadata.build.as_ref().unwrap().exists);
     assert_eq!(json, expected);
 
     let missing = json!({
@@ -209,7 +209,7 @@ fn preserves_missing_default_build_script() {
         "#;
 
     let metadata = extract(manifest, &["Cargo.toml"]).unwrap();
-    let build_script = metadata.build_script.unwrap();
+    let build_script = metadata.build.unwrap();
     let expected = SourceFile {
         path: "build.rs".into(),
         exists: false,

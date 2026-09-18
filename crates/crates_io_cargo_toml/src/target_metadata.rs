@@ -38,11 +38,14 @@ pub struct BinaryMetadata {
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TargetMetadata {
     /// The package build script.
-    pub build_script: Option<SourceFile>,
+    #[serde(rename = "build_script")]
+    pub build: Option<SourceFile>,
     /// The package library target, if declared or inferred.
-    pub library: Option<LibraryMetadata>,
+    #[serde(rename = "library")]
+    pub lib: Option<LibraryMetadata>,
     /// The package binary targets.
-    pub binaries: Vec<BinaryMetadata>,
+    #[serde(rename = "binaries")]
+    pub bins: Vec<BinaryMetadata>,
 }
 
 impl TargetMetadata {
@@ -63,7 +66,7 @@ impl TargetMetadata {
         let fs = PathsFileSystem::new(paths);
         manifest.complete_from_abstract_filesystem(&fs)?;
 
-        let build_script = manifest
+        let build = manifest
             .package
             .as_ref()
             .and_then(|package| match package.build.as_ref() {
@@ -75,28 +78,24 @@ impl TargetMetadata {
             .map(|path| source_file(path, &fs))
             .transpose()?;
 
-        let library = manifest
+        let lib = manifest
             .lib
             .as_ref()
             .map(|library| library_metadata(library, &fs))
             .transpose()?;
 
-        let binaries = manifest
+        let bins = manifest
             .bin
             .iter()
             .map(|binary| binary_metadata(binary, &fs))
             .collect::<Result<_, _>>()?;
 
-        Ok(Self {
-            build_script,
-            library,
-            binaries,
-        })
+        Ok(Self { build, lib, bins })
     }
 
     /// Returns an error if a target source is missing from the file inventory.
     pub fn require_existing_sources(&self) -> Result<(), Error> {
-        if let Some(source) = &self.build_script
+        if let Some(source) = &self.build
             && !source.exists
         {
             return Err(Error::MissingSourceFile {
@@ -105,7 +104,7 @@ impl TargetMetadata {
             });
         }
 
-        if let Some(library) = &self.library
+        if let Some(library) = &self.lib
             && !library.source.exists
         {
             return Err(Error::MissingSourceFile {
@@ -114,7 +113,7 @@ impl TargetMetadata {
             });
         }
 
-        if let Some(binary) = self.binaries.iter().find(|binary| !binary.source.exists) {
+        if let Some(binary) = self.bins.iter().find(|binary| !binary.source.exists) {
             return Err(Error::MissingSourceFile {
                 target: format!("binary target `{}`", binary.name),
                 path: binary.source.path.clone(),
