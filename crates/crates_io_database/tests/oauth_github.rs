@@ -7,7 +7,6 @@ use diesel_async::AsyncPgConnection;
 async fn insert_user(conn: &AsyncPgConnection, username: &str, gh_id: i32, login: &str) -> i32 {
     let user_id = NewUser::builder()
         .username(username)
-        .gh_login(login)
         .gh_id(gh_id)
         .build()
         .insert(conn)

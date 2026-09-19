@@ -87,7 +87,7 @@ impl UpdateTest {
 
         // For now, we want to update the `User` record too
         let user_after_update = User::find(&conn, user_id).await?;
-        assert_eq!(user_after_update.gh_login, expected_username);
+        assert_eq!(user_after_update.gh_login.unwrap(), expected_username);
         assert_eq!(user_after_update.username, expected_username);
 
         if job_result.is_err() {
