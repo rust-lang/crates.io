@@ -19,7 +19,7 @@ describe('UnmaintainedBanner', () => {
 
     let banner = page.getByCSS('[data-test-unmaintained-banner]');
     await expect.element(banner).toBeVisible();
-    await expect.element(banner).toHaveTextContent('This crate has been marked as unmaintained');
+    await expect.element(banner).toMatchTextContent('This crate has been marked as unmaintained');
 
     let link = page.getByRole('link', { name: 'RUSTSEC-2021-0139' });
     await expect.element(link).toHaveAttribute('href', ADVISORY_URL);

@@ -43,13 +43,13 @@ describe('version-list/Row', () => {
     let secondVersion = createVersion({ num: '0.3.0-alpha.01' });
 
     let { unmount } = await render(Row, { version: firstVersion, crateName: 'foo' });
-    await expect.element(page.getByCSS('[data-test-release-track]')).toHaveTextContent('0.4');
-    await expect.element(page.getByCSS('[data-test-release-track-link]')).toHaveTextContent('0.4.0-alpha.01');
+    await expect.element(page.getByCSS('[data-test-release-track]')).toMatchTextContent('0.4');
+    await expect.element(page.getByCSS('[data-test-release-track-link]')).toMatchTextContent('0.4.0-alpha.01');
     await unmount();
 
     await render(Row, { version: secondVersion, crateName: 'foo' });
-    await expect.element(page.getByCSS('[data-test-release-track]')).toHaveTextContent('0.3');
-    await expect.element(page.getByCSS('[data-test-release-track-link]')).toHaveTextContent('0.3.0-alpha.01');
+    await expect.element(page.getByCSS('[data-test-release-track]')).toMatchTextContent('0.3');
+    await expect.element(page.getByCSS('[data-test-release-track-link]')).toMatchTextContent('0.3.0-alpha.01');
   });
 
   it('handle node-semver parsing errors', async () => {
@@ -57,8 +57,8 @@ describe('version-list/Row', () => {
     let version = createVersion({ num });
 
     await render(Row, { version, crateName: 'foo' });
-    await expect.element(page.getByCSS('[data-test-release-track]')).toHaveTextContent('?');
-    await expect.element(page.getByCSS('[data-test-release-track-link]')).toHaveTextContent(num);
+    await expect.element(page.getByCSS('[data-test-release-track]')).toMatchTextContent('?');
+    await expect.element(page.getByCSS('[data-test-release-track-link]')).toMatchTextContent(num);
   });
 
   it('pluralize "feature" only when appropriate', async () => {
