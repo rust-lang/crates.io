@@ -35,7 +35,7 @@ test('happy path', async ({ worker }) => {
 
   await expect.element(page.getByCSS('[data-test-email-input]')).toBeVisible();
   await expect.element(page.getByCSS('[data-test-no-email]')).not.toBeInTheDocument();
-  await expect.element(page.getByCSS('[data-test-email-address]')).toHaveTextContent('old@email.com');
+  await expect.element(page.getByCSS('[data-test-email-address]')).toMatchTextContent('old@email.com');
   await expect.element(page.getByCSS('[data-test-verified]')).toBeVisible();
   await expect.element(page.getByCSS('[data-test-not-verified]')).not.toBeInTheDocument();
   await expect.element(page.getByCSS('[data-test-verification-sent]')).not.toBeInTheDocument();
@@ -101,7 +101,7 @@ test('cancel button', async () => {
   await userEvent.fill(page.getByCSS('[data-test-input]'), 'new@email.com');
 
   await page.getByCSS('[data-test-cancel-button]').click();
-  await expect.element(page.getByCSS('[data-test-email-address]')).toHaveTextContent('old@email.com');
+  await expect.element(page.getByCSS('[data-test-email-address]')).toMatchTextContent('old@email.com');
   await expect.element(page.getByCSS('[data-test-verified]')).toBeVisible();
   await expect.element(page.getByCSS('[data-test-not-verified]')).not.toBeInTheDocument();
   await expect.element(page.getByCSS('[data-test-verification-sent]')).not.toBeInTheDocument();

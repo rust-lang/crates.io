@@ -19,7 +19,7 @@ describe('NativeReplacementBanner', () => {
 
     let banner = page.getByCSS('[data-test-native-replacement-banner]');
     await expect.element(banner).toBeVisible();
-    await expect.element(banner).toHaveTextContent('You might not need this dependency.');
+    await expect.element(banner).toMatchTextContent('You might not need this dependency.');
 
     let code = page.getByCSS('[data-test-native-replacement-banner] code');
     expect(code.elements()).toHaveLength(1);
