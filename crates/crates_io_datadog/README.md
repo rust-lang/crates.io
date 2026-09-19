@@ -1,7 +1,6 @@
 # `crates_io_datadog`
 
-This package implements functionality for submitting data to the
-[Datadog metrics API](https://docs.datadoghq.com/api/latest/metrics/) and
+This package implements functionality for submitting data to the Datadog
 [service checks API](https://docs.datadoghq.com/api/latest/service-checks/).
 
 `DatadogClient::builder()` requires a `reqwest::Client` and API key, and

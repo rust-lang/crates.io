@@ -109,18 +109,6 @@ async fn admin_list_is_not_cached() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn metrics_is_not_cached() {
-    let (_, anon) = TestApp::init()
-        .with_config(|config| config.metrics.authorization_token = Some("secret".into()))
-        .empty()
-        .await;
-    let mut request = anon.get_request("/api/private/metrics/service");
-    request.header("Authorization", "Bearer secret");
-    let response = anon.run::<()>(request).await;
-    response.assert_cache_control("no-store");
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn search_without_following_is_cacheable() {
     let (_, anon) = TestApp::init().empty().await;
     let response = anon.get::<()>("/api/v1/crates").await;

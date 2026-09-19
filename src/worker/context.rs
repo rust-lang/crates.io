@@ -8,7 +8,6 @@ use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use bon::Builder;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
-use crates_io_datadog::DatadogClient;
 use crates_io_docs_rs::DocsRsClient;
 use crates_io_fastly::Fastly;
 use crates_io_github::GitHubClient;
@@ -47,8 +46,6 @@ pub struct WorkerContextInner {
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
-    /// Shared client for reporting background job metrics to Datadog.
-    pub datadog: Option<Arc<DatadogClient>>,
     pub downloads_archive_store: Option<Box<dyn ObjectStore>>,
     pub deadpool: Pool<AsyncPgConnection>,
     pub emails: Emails,

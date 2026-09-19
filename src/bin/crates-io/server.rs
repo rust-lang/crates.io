@@ -1,16 +1,14 @@
 use crates_io::config::SharedConfig;
+use crates_io::metrics::ServerMetrics;
 use crates_io::metrics::consts::METER_NAME;
-use crates_io::metrics::{LogEncoder, ServerMetrics};
 use crates_io::middleware::normalize_path::normalize_path;
 use crates_io::{Emails, ServerContext};
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use axum::ServiceExt;
 use crates_io_env_vars::list;
 use crates_io_github::RealGitHubClient;
-use prometheus::Encoder;
 use reqwest::Client;
-use std::io::Write;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tokio::signal::unix::{SignalKind, signal};
@@ -54,9 +52,6 @@ pub fn run() -> anyhow::Result<()> {
     if let Some(pool) = &ctx.replica_database {
         ctx.metrics.track_db_pool("replica", pool);
     }
-
-    // Start the background thread periodically logging instance metrics.
-    log_instance_metrics_thread(ctx.clone());
 
     let axum_router = crates_io::build_handler(ctx.clone());
 
@@ -117,31 +112,4 @@ async fn shutdown_signal() {
         _ = interrupt => {},
         _ = terminate => {},
     }
-}
-
-fn log_instance_metrics_thread(ctx: ServerContext) {
-    // Only run the thread if the configuration is provided
-    let interval = match ctx.config.metrics.instance_log_every_seconds {
-        Some(secs) => Duration::from_secs(secs),
-        None => return,
-    };
-
-    std::thread::spawn(move || {
-        loop {
-            if let Err(err) = log_instance_metrics_inner(&ctx) {
-                error!("log_instance_metrics error: {err}");
-            }
-            std::thread::sleep(interval);
-        }
-    });
-}
-
-fn log_instance_metrics_inner(ctx: &ServerContext) -> anyhow::Result<()> {
-    let families = ctx.instance_metrics.gather(ctx)?;
-
-    let mut stdout = std::io::stdout();
-    LogEncoder::new().encode(&families, &mut stdout)?;
-    stdout.flush()?;
-
-    Ok(())
 }

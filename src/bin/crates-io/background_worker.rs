@@ -85,9 +85,6 @@ pub fn run() -> anyhow::Result<()> {
 
     let user_agent = crates_io_version::user_agent();
     let http_client = Client::builder().user_agent(user_agent).build()?;
-    let datadog = (!config.metrics.otlp_enabled)
-        .then(|| config.datadog.client(http_client.clone()).map(Arc::new))
-        .flatten();
 
     let cloudfront = CloudFront::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));
@@ -120,7 +117,6 @@ pub fn run() -> anyhow::Result<()> {
         .maybe_cloudfront(cloudfront)
         .maybe_fastly(fastly)
         .storage(storage)
-        .maybe_datadog(datadog.clone())
         .downloads_archive_store(downloads_archive_store)
         .deadpool(deadpool.clone())
         .emails(emails)
@@ -153,12 +149,7 @@ pub fn run() -> anyhow::Result<()> {
 
     runtime.block_on(async {
         let handle = runner.start();
-        crates_io::metrics::datadog::spawn(
-            &ctx.config,
-            ctx.deadpool.clone(),
-            ctx.metrics.clone(),
-            datadog,
-        );
+        crates_io::metrics::collector::spawn(ctx.deadpool.clone(), ctx.metrics.clone());
 
         info!("Runner booted, running jobs");
         handle.wait_for_shutdown().await
