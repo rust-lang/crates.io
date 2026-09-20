@@ -2,13 +2,12 @@ use crate::schema::{crates, versions};
 use crate::storage::StorageKey;
 use crate::worker::WorkerContext;
 use chrono::{Duration, Utc};
-use crates_io_database::models::CloudFrontDistribution;
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn};
+use tracing::info;
 
 /// Items younger than this will always be included in the feed.
 const ALWAYS_INCLUDE_AGE: Duration = Duration::hours(24);
@@ -71,16 +70,7 @@ impl BackgroundJob for SyncCrateFeed {
             ..Default::default()
         };
 
-        let path = key.path();
-
-        info!("Uploading feed to storage…");
-        let bytes = super::serialize_channel(&channel)?;
-        ctx.storage.upload(&key, bytes.into()).await?;
-
-        let dist = CloudFrontDistribution::Static;
-        if let Err(error) = ctx.invalidate_cdns(&conn, dist, path.as_ref()).await {
-            warn!("Failed to invalidate CDN caches: {error}");
-        }
+        super::publish_channel(&ctx, &conn, &key, &channel).await?;
 
         info!("Finished syncing updates feed");
         Ok(())
