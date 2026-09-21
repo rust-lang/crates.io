@@ -1,5 +1,6 @@
 use bon::Builder;
 use chrono::{DateTime, Utc};
+use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
@@ -34,10 +35,19 @@ pub struct OauthGithub {
 }
 
 impl OauthGithub {
-    /// Selects up to `limit` accounts to sync, ordered by oldest sync time first.
+    /// Selects up to `limit` accounts to sync, prioritizing accounts whose case-insensitive
+    /// login matches an account with a higher GitHub ID, then oldest sync time first.
     pub async fn sync_batch(mut conn: &AsyncPgConnection, limit: i64) -> QueryResult<Vec<Self>> {
+        let newer_account = diesel::alias!(oauth_github as newer_account);
+        let login_matches =
+            lower(newer_account.field(oauth_github::login)).eq(lower(oauth_github::login));
+        let higher_id = newer_account
+            .field(oauth_github::account_id)
+            .gt(oauth_github::account_id);
+        let conflicting_login = exists(newer_account.filter(login_matches).filter(higher_id));
+
         oauth_github::table
-            .order(oauth_github::last_sync.asc())
+            .order((conflicting_login.desc(), oauth_github::last_sync.asc()))
             .limit(limit)
             .load(&mut conn)
             .await

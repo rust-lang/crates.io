@@ -57,7 +57,7 @@ pub enum Command {
     SyncUpdatesFeed,
     TrustpubCleanup,
     UpdateDownloads,
-    /// Sync the oldest batch of users with GitHub
+    /// Sync a batch of GitHub accounts, prioritizing conflicting logins, then oldest syncs
     UpdateUserBatch {
         #[arg(long = "dry-run")]
         dry_run: bool,
@@ -183,10 +183,9 @@ pub async fn run(command: Command) -> Result<()> {
             dry_run,
             batch_size,
         } => {
-            let oldest_oauth_github_records =
-                OauthGithub::sync_batch(&conn, batch_size as i64).await?;
+            let accounts = OauthGithub::sync_batch(&conn, batch_size as i64).await?;
 
-            for oauth_github in oldest_oauth_github_records {
+            for oauth_github in accounts {
                 let job = jobs::UpdateUserFromGithub {
                     dry_run,
                     account_id: oauth_github.account_id,

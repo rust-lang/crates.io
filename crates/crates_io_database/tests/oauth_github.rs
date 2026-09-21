@@ -85,3 +85,37 @@ async fn oauth_github_sync_batch() {
         assert_eq!(ids, expected_ids, "batch size {batch_size}");
     }
 }
+
+/// Older GitHub accounts with conflicting logins take priority regardless of sync time.
+#[tokio::test]
+async fn oauth_github_sync_batch_prioritizes_conflicting_logins() {
+    let test_db = TestDatabase::new();
+    let mut conn = test_db.async_connect().await;
+    let now = Utc::now();
+
+    for (id, login, days_since_sync) in [
+        (1, "shared-name", 1),
+        (2, "SHARED-NAME", 2),
+        (3, "Shared-Name", 5),
+        (4, "unrelated", 6),
+        (5, "shared_name", 7),
+    ] {
+        insert_user(&conn, &format!("user-{id}"), id, login).await;
+        diesel::update(oauth_github::table.find(i64::from(id)))
+            .set(oauth_github::last_sync.eq(now - TimeDelta::days(days_since_sync)))
+            .execute(&mut conn)
+            .await
+            .unwrap();
+    }
+
+    for (batch_size, expected_ids) in [
+        (0, vec![]),
+        (1, vec![2]),
+        (3, vec![2, 1, 5]),
+        (10, vec![2, 1, 5, 4, 3]),
+    ] {
+        let accounts = OauthGithub::sync_batch(&conn, batch_size).await.unwrap();
+        let ids: Vec<_> = accounts.iter().map(|account| account.account_id).collect();
+        assert_eq!(ids, expected_ids, "batch size {batch_size}");
+    }
+}
