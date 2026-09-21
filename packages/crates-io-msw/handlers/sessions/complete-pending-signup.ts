@@ -26,6 +26,7 @@ export default http.post('/api/private/session/signup', async ({ request, respon
 
   let user = await db.user.create({
     login: pendingSignup.login,
+    name: pendingSignup.name,
     email,
     emailVerified: false,
     emailVerificationToken: 'pending-signup',

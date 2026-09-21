@@ -12,6 +12,7 @@ const schema = v.pipe(
     id: v.optional(v.number()),
 
     login: v.string(),
+    name: v.optional(v.nullable(v.string()), null),
     email: v.optional(v.nullable(v.string()), null),
   }),
   v.transform(function (input) {

@@ -1634,6 +1634,8 @@ export interface components {
             email: string | null;
             /** @description The GitHub account login. */
             login: string;
+            /** @description The GitHub account display name, if set. */
+            name: string | null;
         };
         Slug: {
             /**

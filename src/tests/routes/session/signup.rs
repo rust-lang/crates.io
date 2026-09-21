@@ -66,8 +66,27 @@ async fn get_returns_safe_signup_details() {
 
     let response = anon.run::<Value>(request).await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.json(), @r#"{"signup":{"email":"ghost@example.com","login":"ghost"}}"#);
+    assert_snapshot!(response.json(), @r#"{"signup":{"email":"ghost@example.com","login":"ghost","name":"Ghost"}}"#);
     response.assert_cache_control("no-store");
+}
+
+/// Verifies that an absent GitHub display name is returned as an explicit null.
+#[tokio::test(flavor = "multi_thread")]
+async fn get_returns_null_for_missing_name() {
+    let (app, anon) = TestApp::init().empty().await;
+    let mut pending_signup = pending_signup(Utc::now());
+    pending_signup.github_user.name = None;
+    let values = HashMap::from([(
+        PENDING_SIGNUP_KEY.into(),
+        serde_json::to_string(&pending_signup).unwrap(),
+    )]);
+    let cookie = encode_session_header(app.as_inner().session_key(), values);
+    let mut request = anon.request_builder(Method::GET, "/api/private/session/signup");
+    request.header(header::COOKIE, &cookie);
+
+    let response = anon.run::<Value>(request).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(response.json(), @r#"{"signup":{"email":"ghost@example.com","login":"ghost","name":null}}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
