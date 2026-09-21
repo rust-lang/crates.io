@@ -544,9 +544,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudfront"
-version = "1.130.0"
+version = "1.132.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0439bc3170591c53c0a1aa2313a2359fbeebbeb74057a8dc4095d7fb0922bc2"
+checksum = "d30a404856176425fa743ad681f99da24d345c4a8ffb17ec44ebb278c1b799a3"
 dependencies = [
  "arc-swap",
  "aws-credential-types",
@@ -570,9 +570,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sqs"
-version = "1.109.0"
+version = "1.111.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f7d3bb146e70822f9b4ddc49f2d54873ade9c2954427029310473a1537a6ae8"
+checksum = "a2f03f27e4c84c425cb0aad20f91a55e4a6ef3398e4b380331329a1240ec6595"
 dependencies = [
  "arc-swap",
  "aws-credential-types",
