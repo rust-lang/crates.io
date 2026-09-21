@@ -557,7 +557,7 @@ pub enum EncodableOwner {
         )]
         avatar: Option<String>,
 
-        /// Whether a linked GitHub username exactly matches the crates.io username.
+        /// Whether GitHub lookup of the crates.io username resolves to this user.
         github_username_matches: bool,
     },
 
@@ -815,7 +815,7 @@ pub struct EncodablePublicUser {
     #[schema(example = "https://github.com/ghost", deprecated)]
     pub url: String,
 
-    /// Whether a linked GitHub username exactly matches the crates.io username.
+    /// Whether GitHub lookup of the crates.io username resolves to this user.
     pub github_username_matches: bool,
 
     /// The date and time the user was created.
