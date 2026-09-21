@@ -265,8 +265,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(@vitest/browser@5.0.1)(vitest@5.0.1)
       chromatic:
-        specifier: 18.8.1
-        version: 18.8.1
+        specifier: 18.9.4
+        version: 18.9.4
       magic-string:
         specifier: 1.4.1
         version: 1.4.1
@@ -2502,8 +2502,8 @@ packages:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
 
-  chromatic@18.8.1:
-    resolution: {integrity: sha512-ATJyUUuUrK1GA3bPNHPHgwQtqw/cSapC/hReF53EBO0HT0yYCl5jEeWBQP64+bAlZTK7zTSjzKe4109qbdKTvQ==}
+  chromatic@18.9.4:
+    resolution: {integrity: sha512-+/socRBceUAk19XwvnnJTgkgw6YJ5Fh58HoWM5ipiLwTnZS82r/cCM164ROKYVajeuCeo3ROsH+6nVHAylin5g==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -5034,7 +5034,7 @@ snapshots:
   '@chromatic-com/storybook@5.3.1(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.7)(react@19.3.0))':
     dependencies:
       '@neoconfetti/react': 1.0.0
-      chromatic: 18.8.1
+      chromatic: 18.9.4
       jsonfile: 6.2.1
       storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.7)(react@19.3.0)
       strip-ansi: 7.2.0
@@ -7174,7 +7174,7 @@ snapshots:
   chownr@3.0.0:
     optional: true
 
-  chromatic@18.8.1:
+  chromatic@18.9.4:
     dependencies:
       semver: 7.8.5
 
