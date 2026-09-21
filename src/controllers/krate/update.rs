@@ -142,7 +142,7 @@ async fn update_inner(
                 };
 
                 if let Err(err) = email.send(ctx, email_address).await {
-                    warn!("Failed to send trustpub_only notification to {email_address}: {err}");
+                    warn!("Failed to send trustpub_only notification to {email_address}: {err:#}");
                 }
             }
         }

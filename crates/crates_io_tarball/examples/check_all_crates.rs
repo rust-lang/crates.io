@@ -87,7 +87,9 @@ async fn process_path(path: &Path, pb: &ProgressBar) {
     pb.suspend(|| match result {
         Ok(result) => debug!(%pkg_name, path = %path.display(), ?result),
         Err(error) => {
-            warn!(%pkg_name, path = %path.display(), "Failed to process tarball: {error}")
+            // Convert to anyhow so `{error:#}` includes the source chain.
+            let error = anyhow::Error::new(error);
+            warn!(%pkg_name, path = %path.display(), "Failed to process tarball: {error:#}")
         }
     })
 }

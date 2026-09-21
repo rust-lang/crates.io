@@ -109,7 +109,9 @@ impl BackgroundJob for GenerateOgImage {
             && let Some(cdn_domain) = &ctx.config.storage.cdn_prefix
             && let Err(error) = fastly.purge_both_domains(cdn_domain, &og_image_path).await
         {
-            warn!("Failed to invalidate Fastly CDN for {crate_name}: {error}");
+            // Convert to anyhow so `{error:#}` includes the source chain.
+            let error = anyhow::Error::new(error);
+            warn!("Failed to invalidate Fastly CDN for {crate_name}: {error:#}");
         }
 
         info!("CDN invalidation completed for crate {crate_name}");

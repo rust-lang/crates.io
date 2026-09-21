@@ -73,7 +73,7 @@ impl BackgroundJob for DumpDb {
         let dist = CloudFrontDistribution::Static;
 
         if let Err(error) = ctx.invalidate_cdns(&conn, dist, &tar_key.cdn_path()).await {
-            warn!("Failed to invalidate CDN caches: {error}");
+            warn!("Failed to invalidate CDN caches: {error:#}");
         }
 
         info!("Uploading zip file…");
@@ -88,7 +88,7 @@ impl BackgroundJob for DumpDb {
 
         info!("Invalidating CDN caches…");
         if let Err(error) = ctx.invalidate_cdns(&conn, dist, &zip_key.cdn_path()).await {
-            warn!("Failed to invalidate CDN caches: {error}");
+            warn!("Failed to invalidate CDN caches: {error:#}");
         }
 
         Ok(())

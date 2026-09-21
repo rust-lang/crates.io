@@ -222,7 +222,7 @@ impl From<GitHubError> for BoxedAppError {
                      GitHub org memberships.",
             ),
             GitHubError::NotFound(_) => not_found(),
-            _ => internal(format!("didn't get a 200 result from github: {error}")),
+            _ => internal(format!("didn't get a 200 result from github: {error:#}")),
         }
     }
 }

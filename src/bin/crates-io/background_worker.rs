@@ -132,7 +132,7 @@ pub fn run() -> anyhow::Result<()> {
         let ctx = ctx.clone();
         move || {
             if let Err(err) = ctx.lock_index() {
-                warn!("Failed to clone index: {err}");
+                warn!("Failed to clone index: {err:#}");
             };
         }
     });

@@ -101,7 +101,7 @@ pub async fn create_trustpub_github_config(
     };
     let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
         let login = &auth_user.gh_login;
-        warn!("Failed to decrypt GitHub token for user {login}: {err}");
+        warn!("Failed to decrypt GitHub token for user {login}: {err:#}");
         server_error("Internal server error")
     })?;
     let gh_auth = GitHubAuth::bearer(gh_auth);
@@ -145,7 +145,7 @@ pub async fn create_trustpub_github_config(
         };
 
         if let Err(err) = send_notification_email(&ctx, email_address, context).await {
-            warn!("Failed to send trusted publishing notification to {email_address}: {err}");
+            warn!("Failed to send trusted publishing notification to {email_address}: {err:#}");
         }
     }
 

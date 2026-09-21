@@ -202,9 +202,11 @@ impl BackgroundJob for SyncToSparseIndex {
 
             for domain in domains {
                 if let Err(error) = fastly.purge(&domain, &path).await {
+                    // Convert to anyhow so `{error:#}` includes the source chain.
+                    let error = anyhow::Error::new(error);
                     warn!(
                         domain,
-                        path, "Failed to invalidate sparse index on Fastly: {error}"
+                        path, "Failed to invalidate sparse index on Fastly: {error:#}"
                     );
                 }
             }

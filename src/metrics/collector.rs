@@ -22,7 +22,7 @@ pub fn spawn(deadpool: Pool<AsyncPgConnection>, metrics: WorkerMetrics) {
 
         loop {
             if let Err(error) = record(&deadpool, &metrics, &mut observed_queues).await {
-                warn!("Failed to record service metrics: {error}");
+                warn!("Failed to record service metrics: {error:#}");
             }
 
             tokio::time::sleep(COLLECT_INTERVAL).await;
