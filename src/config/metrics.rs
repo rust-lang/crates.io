@@ -1,5 +1,4 @@
-use crates_io_env_vars::{var, var_parsed};
-use secrecy::SecretString;
+use crates_io_env_vars::var;
 
 #[derive(Debug, Default)]
 pub struct MetricsConfig {
@@ -8,18 +7,6 @@ pub struct MetricsConfig {
     /// Selected when either `OTEL_EXPORTER_OTLP_ENDPOINT` or
     /// `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` is present.
     pub otlp_enabled: bool,
-
-    /// Authorization token needed to query the metrics endpoints. If missing,
-    /// querying metrics is completely disabled.
-    ///
-    /// Read from the `METRICS_AUTHORIZATION_TOKEN` environment variable.
-    pub authorization_token: Option<SecretString>,
-
-    /// How frequently instance metrics are logged, in seconds. If missing,
-    /// instance metrics are not logged.
-    ///
-    /// Read from the `INSTANCE_METRICS_LOG_EVERY_SECONDS` environment variable.
-    pub instance_log_every_seconds: Option<u64>,
 }
 
 impl MetricsConfig {
@@ -27,13 +14,7 @@ impl MetricsConfig {
         let otlp_endpoint = var("OTEL_EXPORTER_OTLP_ENDPOINT")?;
         let metrics_endpoint = var("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT")?;
         let otlp_enabled = otlp_endpoint.is_some() || metrics_endpoint.is_some();
-        let authorization_token = var("METRICS_AUTHORIZATION_TOKEN")?.map(Into::into);
-        let instance_log_every_seconds = var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?;
 
-        Ok(Self {
-            otlp_enabled,
-            authorization_token,
-            instance_log_every_seconds,
-        })
+        Ok(Self { otlp_enabled })
     }
 }
