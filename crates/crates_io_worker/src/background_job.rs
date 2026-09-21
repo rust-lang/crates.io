@@ -1,8 +1,8 @@
-use crate::errors::EnqueueError;
 use crate::schema::background_jobs;
 use diesel::dsl::{exists, not};
+use diesel::result::Error::SerializationError;
 use diesel::sql_types::{Int2, Jsonb, Text};
-use diesel::{ExpressionMethods, IntoSql, OptionalExtension, QueryDsl};
+use diesel::{ExpressionMethods, IntoSql, OptionalExtension, QueryDsl, QueryResult};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -40,9 +40,11 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     fn enqueue<'a>(
         &'a self,
         conn: &'a AsyncPgConnection,
-    ) -> impl Future<Output = Result<Option<i64>, EnqueueError>> + Send + 'a {
+    ) -> impl Future<Output = QueryResult<Option<i64>>> + Send + 'a {
         async move {
-            let data = serde_json::to_value(self).map_err(EnqueueError::SerializationError)?;
+            let data = serde_json::to_value(self)
+                .map_err(Into::into)
+                .map_err(SerializationError)?;
             let priority = Self::PRIORITY;
 
             if Self::DEDUPLICATED {
@@ -61,7 +63,7 @@ async fn enqueue_deduplicated(
     job_type: &str,
     data: Value,
     priority: i16,
-) -> Result<Option<i64>, EnqueueError> {
+) -> QueryResult<Option<i64>> {
     let similar_jobs = background_jobs::table
         .select(background_jobs::id)
         .filter(background_jobs::job_type.eq(job_type))
@@ -77,7 +79,7 @@ async fn enqueue_deduplicated(
     ))
     .filter(not(exists(similar_jobs)));
 
-    let id = diesel::insert_into(background_jobs::table)
+    diesel::insert_into(background_jobs::table)
         .values(deduplicated_select)
         .into_columns((
             background_jobs::job_type,
@@ -87,9 +89,7 @@ async fn enqueue_deduplicated(
         .returning(background_jobs::id)
         .get_result::<i64>(&mut conn)
         .await
-        .optional()?;
-
-    Ok(id)
+        .optional()
 }
 
 async fn enqueue_simple(
@@ -97,8 +97,8 @@ async fn enqueue_simple(
     job_type: &str,
     data: Value,
     priority: i16,
-) -> Result<i64, EnqueueError> {
-    let id = diesel::insert_into(background_jobs::table)
+) -> QueryResult<i64> {
+    diesel::insert_into(background_jobs::table)
         .values((
             background_jobs::job_type.eq(job_type),
             background_jobs::data.eq(data),
@@ -106,7 +106,5 @@ async fn enqueue_simple(
         ))
         .returning(background_jobs::id)
         .get_result(&mut conn)
-        .await?;
-
-    Ok(id)
+        .await
 }

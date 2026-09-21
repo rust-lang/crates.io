@@ -204,12 +204,6 @@ impl From<std::io::Error> for BoxedAppError {
     }
 }
 
-impl From<crates_io_worker::EnqueueError> for BoxedAppError {
-    fn from(err: crates_io_worker::EnqueueError) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
 impl From<JoinError> for BoxedAppError {
     fn from(err: JoinError) -> BoxedAppError {
         Box::new(err)
