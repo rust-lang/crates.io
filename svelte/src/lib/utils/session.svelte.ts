@@ -211,13 +211,18 @@ export class SessionState {
       return;
     }
 
+    await this.completeLogin();
+
+    await invalidateAll();
+  }
+
+  /** Loads the current user after the server establishes an authenticated session. */
+  async completeLogin(): Promise<void> {
     localStorage.setItem(LOGIN_KEY, '1');
 
     let user = await loadUser(this.#client);
     this.currentUser = user;
     this.state = user ? 'logged-in' : 'logged-out';
-
-    await invalidateAll();
   }
 
   async logout(): Promise<void> {
