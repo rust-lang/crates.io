@@ -219,7 +219,7 @@ async fn post_rejects_signed_in_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn post_creates_user_and_signs_in() {
-    let (app, anon) = TestApp::init().empty().await;
+    let (app, anon) = TestApp::full().empty().await;
     let cookie = pending_signup_header(&app, Utc::now());
     let body = json!({ "signup": { "email": "new-user@example.com" } });
     let mut request = anon
@@ -271,6 +271,8 @@ async fn post_creates_user_and_signs_in() {
         .await
         .unwrap();
     assert_eq!(email, "new-user@example.com");
+    assert!(app.emails().await.is_empty());
+    app.run_pending_background_jobs().await;
     assert_eq!(app.emails().await.len(), 1);
 
     let set_cookie = response.headers().get(header::SET_COOKIE).unwrap();

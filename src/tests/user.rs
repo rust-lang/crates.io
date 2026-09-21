@@ -228,7 +228,7 @@ async fn test_email_get_and_put() -> anyhow::Result<()> {
 async fn test_confirm_user_email() -> anyhow::Result<()> {
     use crates_io::schema::emails;
 
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
@@ -258,6 +258,13 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
         .first(&mut conn)
         .await?;
 
+    assert!(app.emails().await.is_empty());
+    app.run_pending_background_jobs().await;
+    let sent = app.emails().await;
+    assert_eq!(sent.len(), 1);
+    assert!(sent[0].contains("To: potato2@example.com"));
+    assert!(sent[0].contains(&format!("/confirm/{email_token}")));
+
     user.confirm_email(&email_token).await;
 
     let json = user.show_me().await;
@@ -276,7 +283,7 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     use crates_io::schema::emails;
     use diesel::update;
 
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
@@ -318,7 +325,7 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
 // `GitHubUser`'s `login` to `users.username`.
 #[tokio::test(flavor = "multi_thread")]
 async fn also_write_to_users_username() -> anyhow::Result<()> {
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let encryption = TokenEncryption::for_testing();
     let gh_id = next_gh_id();
@@ -349,7 +356,7 @@ async fn also_write_to_users_username() -> anyhow::Result<()> {
 // the GitHub info to both the `users` and `oauth_github` tables.
 #[tokio::test(flavor = "multi_thread")]
 async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
-    let (app, _) = TestApp::init().empty().await;
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn().await;
     let encryption = TokenEncryption::for_testing();
     let gh_id = next_gh_id();
