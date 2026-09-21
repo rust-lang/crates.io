@@ -19,7 +19,7 @@ pub fn init() -> Option<ClientInitGuard> {
     let config = match SentryConfig::from_environment() {
         Ok(config) => config,
         Err(error) => {
-            warn!("Failed to read Sentry configuration from environment: {error}");
+            warn!("Failed to read Sentry configuration from environment: {error:#}");
             return None;
         }
     };
