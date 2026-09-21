@@ -1050,10 +1050,18 @@ expression: response.json()
           "login": {
             "description": "The GitHub account login.",
             "type": "string"
+          },
+          "name": {
+            "description": "The GitHub account display name, if set.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
           "login",
+          "name",
           "email"
         ],
         "type": "object"

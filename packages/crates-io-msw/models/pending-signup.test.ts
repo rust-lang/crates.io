@@ -17,6 +17,7 @@ test('happy path', async ({ expect }) => {
       "email": null,
       "id": 1,
       "login": "ghost",
+      "name": null,
     }
   `);
 });

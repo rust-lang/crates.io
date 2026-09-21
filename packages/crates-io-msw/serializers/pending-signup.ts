@@ -7,6 +7,7 @@ type ApiSignupDetails = components['schemas']['SignupDetails'];
 export function serializePendingSignup(pendingSignup: PendingSignup): ApiSignupDetails {
   return {
     login: pendingSignup.login,
+    name: pendingSignup.name,
     email: pendingSignup.email,
   };
 }

@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns the first pending signup', async function () {
-  await db.pendingSignup.create({ login: 'first', email: null });
+  await db.pendingSignup.create({ login: 'first', name: 'First User', email: null });
   await db.pendingSignup.create({ login: 'second', email: 'second@crates.io' });
 
   let response = await fetch('/api/private/session/signup');
@@ -14,6 +14,7 @@ test('returns the first pending signup', async function () {
       "signup": {
         "email": null,
         "login": "first",
+        "name": "First User",
       },
     }
   `);
@@ -32,4 +33,13 @@ test('returns an error without a pending signup', async function () {
       ],
     }
   `);
+});
+
+test('returns null for a missing name', async function () {
+  await db.pendingSignup.create({ login: 'ghost' });
+
+  let response = await fetch('/api/private/session/signup');
+
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ signup: { login: 'ghost', name: null, email: null } });
 });

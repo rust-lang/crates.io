@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('creates a user and session from the pending signup', async function () {
-  await db.pendingSignup.create({ login: 'ghost', email: 'ghost@example.com' });
+  await db.pendingSignup.create({ login: 'ghost', name: 'Ghost', email: 'ghost@example.com' });
 
   let response = await fetch('/api/private/session/signup', {
     method: 'POST',
@@ -23,7 +23,7 @@ test('creates a user and session from the pending signup', async function () {
         "id": 1,
         "is_admin": false,
         "login": "ghost",
-        "name": "User 1",
+        "name": "Ghost",
         "publish_notifications": true,
         "url": "https://github.com/ghost",
       },
@@ -96,4 +96,16 @@ test('preserves the pending signup when the email is invalid', async function ()
 
   expect(db.pendingSignup.findFirst()?.login).toBe('ghost');
   expect(db.mswSession.findFirst()).toBeFalsy();
+});
+
+test('preserves a missing name when completing signup', async function () {
+  await db.pendingSignup.create({ login: 'ghost', name: null });
+
+  let response = await fetch('/api/private/session/signup', {
+    method: 'POST',
+    body: JSON.stringify({ signup: { email: 'ghost@example.com' } }),
+  });
+
+  expect(response.status).toBe(200);
+  expect((await response.json()).user.name).toBeNull();
 });

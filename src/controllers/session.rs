@@ -129,6 +129,9 @@ impl PendingSignup {
 pub struct SignupDetails {
     /// The GitHub account login.
     login: String,
+    /// The GitHub account display name, if set.
+    #[schema(required = true)]
+    name: Option<String>,
     /// The email address suggested by GitHub, if one is available.
     #[schema(required = true)]
     email: Option<String>,
@@ -207,6 +210,7 @@ pub async fn get_pending_signup(
     let json = Json(SignupResponse {
         signup: SignupDetails {
             login: pending_signup.github_user.login,
+            name: pending_signup.github_user.name,
             email: pending_signup.github_user.email,
         },
     });
