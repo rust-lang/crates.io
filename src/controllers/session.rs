@@ -10,11 +10,13 @@ use crate::util::errors::{AppResult, BoxedAppError, bad_request, not_found, serv
 use crate::util::no_store;
 use crate::util::oauth::ReqwestClient;
 use crate::views::EncodableMe;
+use crate::worker::jobs::SendEmail;
 use axum::Json;
 use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
 use crates_io_github::{GitHubAuth, GitHubUser};
 use crates_io_session::SessionExtension;
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
@@ -486,10 +488,10 @@ async fn update_user(
 /// Inserts a new user into the database.
 ///
 /// This method also inserts the email address into the `emails` table
-/// and sends a confirmation email to the user.
+/// and queues a confirmation email to the user.
 ///
-/// Should be called in a transaction so the `users`, `oauth_github`, and `emails` records are
-/// inserted together.
+/// Should be called in a transaction so the `users`, `oauth_github`, `emails`, and
+/// `background_jobs` records are inserted together.
 async fn create_user(
     gh_user: &GitHubUser,
     encrypted_token: &[u8],
@@ -515,7 +517,7 @@ async fn create_user(
 
     new_oauth_github.insert(conn).await?;
 
-    // Since this is a new user, send an account verification email
+    // Since this is a new user, queue an account verification email
     if let Some(user_email) = gh_user.email.as_deref() {
         let new_email = NewEmail::builder()
             .user_id(user_id)
@@ -523,6 +525,12 @@ async fn create_user(
             .build();
 
         if let Some(token) = new_email.insert_if_missing(conn).await? {
+            let Ok(recipient) = user_email.parse() else {
+                // GitHub can return an invalid email address. Allow account creation so
+                // the user can fix their address later.
+                return Ok(user_id);
+            };
+
             let email = EmailMessage::from_template(
                 "user_confirm",
                 context! {
@@ -534,10 +542,7 @@ async fn create_user(
 
             match email {
                 Ok(email) => {
-                    // Swallows any error. Users might insert an invalid email address, but
-                    // they should still be allowed to create an account; they will need to
-                    // fix their email address later.
-                    let _ = emails.send(user_email, email).await;
+                    SendEmail::new(recipient, email).enqueue(conn).await?;
                 }
                 Err(error) => {
                     warn!("Failed to render user confirmation email template: {error}");
@@ -581,11 +586,13 @@ pub async fn end_session(session: SessionExtension) -> OkResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::schema::background_jobs;
     use crate::views::{EncodablePrivateUser, OwnedCrate};
     use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
     use crates_io_test_db::TestDatabase;
     use diesel_async::RunQueryDsl;
     use insta::assert_json_snapshot;
+    use std::assert_matches;
 
     fn github_user() -> GitHubUser {
         GitHubUser {
@@ -674,6 +681,56 @@ mod tests {
         assert_some!(user_id);
         assert_eq!(count_users(&mut conn).await, 1);
         assert_eq!(count_oauth_github(&mut conn).await, 1);
+    }
+
+    /// Rolling back signup must discard the delivery job without sending an email.
+    #[tokio::test]
+    async fn signup_rollback_does_not_send_email() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let result: QueryResult<()> = conn
+            .transaction(async |conn| {
+                create_user(&github_user(), &[], &emails, conn).await?;
+                Err(diesel::result::Error::RollbackTransaction)
+            })
+            .await;
+
+        assert_matches!(result, Err(diesel::result::Error::RollbackTransaction));
+        assert_eq!(count_users(&mut conn).await, 0);
+        assert_eq!(count_oauth_github(&mut conn).await, 0);
+        assert_eq!(count_email_jobs(&mut conn).await, 0);
+        assert!(emails.mails_in_memory().await.unwrap().is_empty());
+    }
+
+    /// A private GitHub email must not prevent signup or queue a delivery.
+    #[tokio::test]
+    async fn signup_without_email_does_not_enqueue_email() {
+        let emails = Emails::new_in_memory();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+        let gh_user = GitHubUser {
+            email: None,
+            ..github_user()
+        };
+
+        let user_id =
+            assert_ok!(save_user_to_database(false, &gh_user, &[], &emails, &mut conn).await);
+
+        assert_some!(user_id);
+        assert_eq!(count_users(&mut conn).await, 1);
+        assert_eq!(count_email_jobs(&mut conn).await, 0);
+    }
+
+    /// Counts queued confirmation email deliveries.
+    async fn count_email_jobs(conn: &mut AsyncPgConnection) -> i64 {
+        background_jobs::table
+            .filter(background_jobs::job_type.eq("send_email"))
+            .count()
+            .get_result(conn)
+            .await
+            .unwrap()
     }
 
     #[tokio::test]
@@ -795,5 +852,13 @@ mod tests {
             result.is_ok(),
             "Creating a User from a GitHub user failed when it shouldn't have, {result:?}"
         );
+        assert_eq!(count_users(&mut conn).await, 1);
+        assert_eq!(count_email_jobs(&mut conn).await, 0);
+        let stored_email: String = crate::schema::emails::table
+            .select(crate::schema::emails::email)
+            .first(&mut conn)
+            .await
+            .unwrap();
+        assert_eq!(Some(stored_email), gh_user.email);
     }
 }
