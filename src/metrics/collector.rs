@@ -49,7 +49,8 @@ async fn record(
 
     observed_queues.extend(snapshot.background_jobs.keys().cloned());
     for queue in observed_queues.iter() {
-        let count = snapshot.background_jobs.get(queue).copied().unwrap_or(0);
+        let stats = snapshot.background_jobs.get(queue);
+        let count = stats.map(|stats| stats.count).unwrap_or(0);
         metrics.record_background_jobs(queue, count);
     }
 
