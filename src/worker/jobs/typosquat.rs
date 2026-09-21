@@ -90,7 +90,7 @@ async fn check(
                 {
                     error!(
                         ?recipient,
-                        "Failed to send possible typosquat notification: {error}"
+                        "Failed to send possible typosquat notification: {error:#}"
                     );
                 }
             }
