@@ -38,7 +38,7 @@ async fn publish_channel(
 
     let dist = CloudFrontDistribution::Static;
     if let Err(error) = ctx.invalidate_cdns(conn, dist, path.as_ref()).await {
-        warn!("Failed to invalidate CDN caches: {error}");
+        warn!("Failed to invalidate CDN caches: {error:#}");
     }
 
     Ok(())
