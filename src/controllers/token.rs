@@ -229,7 +229,7 @@ pub async fn create_api_token(
         // email should not cause an error response to be returned to the
         // caller.
         if let Err(e) = send_creation_email(&ctx.emails, &recipient, context).await {
-            error!("Failed to send token creation email: {e}")
+            error!("Failed to send token creation email: {e:#}")
         }
     }
 
