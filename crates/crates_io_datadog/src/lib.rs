@@ -333,10 +333,10 @@ mod tests {
                         "tags": ["env:test", "service:crates_io"]
                     },
                     {
-                        "check": "crates_io.spam_attack.detected",
+                        "check": "crates_io.update_downloads.healthy",
                         "host_name": "crates.io",
                         "status": 2,
-                        "message": "Spam crate published",
+                        "message": "Stalled update_downloads job",
                         "tags": ["env:test", "service:crates_io"]
                     }
                 ]"#
@@ -354,9 +354,9 @@ mod tests {
                 "No stalled background jobs",
             ),
             service_check(
-                "crates_io.spam_attack.detected",
+                "crates_io.update_downloads.healthy",
                 ServiceCheckStatus::Critical,
-                "Spam crate published",
+                "Stalled update_downloads job",
             ),
         ];
         let client = client_with_server(&server);
