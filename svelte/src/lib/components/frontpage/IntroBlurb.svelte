@@ -38,7 +38,7 @@
 
 <style>
   .blurb {
-    margin: var(--space-l) var(--space-s);
+    margin: var(--space-m) var(--space-s);
     display: flex;
     gap: var(--space-l);
 
@@ -57,6 +57,6 @@
     flex: 4;
     display: flex;
     flex-direction: column;
-    gap: var(--space-s);
+    gap: var(--space-xs);
   }
 </style>

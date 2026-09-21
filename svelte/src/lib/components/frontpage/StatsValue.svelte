@@ -24,11 +24,11 @@
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     justify-items: end;
-    --icon-size: var(--space-xl-2xl);
+    --icon-size: var(--space-xl);
   }
 
   .value {
-    font-size: var(--space-m-l);
+    font-size: var(--space-m);
     font-weight: bold;
     line-height: 1em;
   }
@@ -37,7 +37,7 @@
     grid-column: 1;
     grid-row: 2;
     color: light-dark(#545454, #adc0cd);
-    font-size: var(--space-s);
+    font-size: 0.875rem;
     font-weight: normal;
     line-height: 1.6;
   }
