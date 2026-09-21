@@ -103,7 +103,11 @@ async fn establish_async_connection(
 
     let connector = MakeTlsConnector::new(connector);
     let result = tokio_postgres::connect(url, connector).await;
-    let (client, conn) = result.map_err(|err| BadConnection(err.to_string()))?;
+    let (client, conn) = result.map_err(|error| {
+        // Convert to anyhow so `{error:#}` includes the source chain.
+        let error = anyhow::Error::new(error);
+        BadConnection(format!("{error:#}"))
+    })?;
     AsyncPgConnection::try_from_client_and_connection(client, conn).await
 }
 
