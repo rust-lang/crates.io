@@ -58,7 +58,7 @@ pub async fn exchange_trustpub_token(
             return Err(bad_request("Invalid JWT key ID"));
         }
         Err(err) => {
-            warn!("Failed to load OIDC key set: {err}");
+            warn!("Failed to load OIDC key set: {err:#}");
             return Err(server_error("Failed to load OIDC key set"));
         }
     };
