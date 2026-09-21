@@ -134,7 +134,7 @@ async fn delete_oauth_github_from_user(
 
 async fn get_admins(conn: &mut AsyncPgConnection) -> QueryResult<Vec<String>> {
     users::table
-        .select(users::gh_login)
+        .select(users::username)
         .filter(users::is_admin.eq(true))
         .order(users::id.asc())
         .get_results(conn)

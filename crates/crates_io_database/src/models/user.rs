@@ -7,7 +7,7 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-use crate::fns::{canon_username, lower};
+use crate::fns::canon_username;
 use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
@@ -60,17 +60,6 @@ impl PublicUser {
     pub async fn find(mut conn: &AsyncPgConnection, id: i32) -> QueryResult<Self> {
         Self::query()
             .filter(users::id.eq(id))
-            .first(&mut conn)
-            .await
-    }
-
-    /// Finds a GitHub login case-insensitively, preferring the highest GitHub ID.
-    /// Accounts with the legacy ID `-1` are excluded.
-    pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<Self> {
-        Self::query()
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
-            .filter(users::gh_id.ne(-1))
-            .order(users::gh_id.desc())
             .first(&mut conn)
             .await
     }
