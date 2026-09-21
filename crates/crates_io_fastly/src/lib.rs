@@ -17,13 +17,8 @@ pub enum Error {
     #[error("Invalid API token format")]
     InvalidApiToken(#[from] InvalidHeaderValue),
 
-    #[error("Failed to `POST {url}`{}: {source}", status.map(|s| format!(" (status: {})", s)).unwrap_or_default())]
-    PurgeFailed {
-        url: String,
-        status: Option<reqwest::StatusCode>,
-        #[source]
-        source: reqwest::Error,
-    },
+    #[error("Failed to purge Fastly cache")]
+    PurgeFailed(#[source] reqwest::Error),
 }
 
 #[derive(Debug)]
@@ -115,11 +110,7 @@ impl Fastly {
             .header("Fastly-Key", self.token_header_value()?)
             .send()
             .await
-            .map_err(|source| Error::PurgeFailed {
-                url: url.clone(),
-                status: None,
-                source,
-            })?;
+            .map_err(Error::PurgeFailed)?;
 
         let status = response.status();
 
@@ -138,11 +129,7 @@ impl Fastly {
                     "invalidation request to Fastly failed"
                 );
 
-                Err(Error::PurgeFailed {
-                    url,
-                    status: Some(status),
-                    source: error,
-                })
+                Err(Error::PurgeFailed(error))
             }
         }
     }
@@ -267,10 +254,8 @@ mod tests {
 
         std::assert_matches!(
             result,
-            Err(Error::PurgeFailed {
-                status: Some(reqwest::StatusCode::SERVICE_UNAVAILABLE),
-                ..
-            })
+            Err(Error::PurgeFailed(source))
+                if source.status() == Some(reqwest::StatusCode::SERVICE_UNAVAILABLE)
         );
     }
 }
