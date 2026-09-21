@@ -51,7 +51,8 @@ async fn record(
     for queue in observed_queues.iter() {
         let stats = snapshot.background_jobs.get(queue);
         let count = stats.map(|stats| stats.count).unwrap_or(0);
-        metrics.record_background_jobs(queue, count);
+        let oldest_age = stats.map(|stats| stats.oldest_age).unwrap_or_default();
+        metrics.record_background_jobs(queue, count, oldest_age);
     }
 
     Ok(())
