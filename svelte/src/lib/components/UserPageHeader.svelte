@@ -63,7 +63,9 @@
               provider={account.provider}
               handle={account.login}
               href={buildUrl(account)}
-              mismatched={account.provider === 'github' && !user.github_username_matches}
+              mismatchedUsername={account.provider === 'github' && !user.github_username_matches
+                ? user.login
+                : undefined}
             />
           {/each}
         </div>
