@@ -145,7 +145,7 @@ pub async fn create_trustpub_github_config(
         };
 
         if let Err(err) = send_notification_email(&ctx, email_address, context).await {
-            warn!("Failed to send trusted publishing notification to {email_address}: {err}");
+            warn!("Failed to send trusted publishing notification to {email_address}: {err:#}");
         }
     }
 
