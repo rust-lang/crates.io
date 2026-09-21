@@ -101,7 +101,7 @@ pub async fn create_trustpub_github_config(
     };
     let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
         let login = &auth_user.gh_login;
-        warn!("Failed to decrypt GitHub token for user {login}: {err}");
+        warn!("Failed to decrypt GitHub token for user {login}: {err:#}");
         server_error("Internal server error")
     })?;
     let gh_auth = GitHubAuth::bearer(gh_auth);
