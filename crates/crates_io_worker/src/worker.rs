@@ -54,7 +54,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                     }
                 }
                 Err(error) => {
-                    error!("Failed to run job: {error}");
+                    error!("Failed to run job: {error:#}");
                     sleep(self.poll_interval).await;
                 }
             }
@@ -108,7 +108,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                     storage::delete_successful_job(conn, job_id).await?
                 }
                 Err(error) => {
-                    warn!("Failed to run job: {error}");
+                    warn!("Failed to run job: {error:#}");
                     storage::update_failed_job(conn, job_id).await;
                 }
             }
