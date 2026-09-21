@@ -166,7 +166,7 @@ async fn alert_revoke_token(
         let result = send_trustpub_notification_emails(&actual_crate_ids, alert, ctx, conn).await;
         if let Err(error) = result {
             warn!(
-                "Failed to send trusted publishing token exposure notifications for crates {actual_crate_ids:?}: {error}",
+                "Failed to send trusted publishing token exposure notifications for crates {actual_crate_ids:?}: {error:#}",
             );
         }
 
@@ -209,7 +209,7 @@ async fn alert_revoke_token(
     if let Err(error) = send_notification_email(&token, alert, ctx, conn).await {
         warn!(
             token_id = %token.id, user_id = %token.user_id,
-            "Failed to send email notification: {error}",
+            "Failed to send email notification: {error:#}",
         )
     }
 
