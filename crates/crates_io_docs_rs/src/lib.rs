@@ -62,7 +62,7 @@ impl RealDocsRsClient {
             Ok(Some(url)) => url,
             Ok(None) => Url::parse(DEFAULT_BASE_URL).unwrap(),
             Err(err) => {
-                warn!("Failed to parse DOCS_RS_BASE_URL: {err}");
+                warn!("Failed to parse DOCS_RS_BASE_URL: {err:#}");
                 return None;
             }
         };
