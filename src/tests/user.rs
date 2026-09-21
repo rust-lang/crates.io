@@ -31,8 +31,8 @@ async fn public_user_github_username_matches() {
     let (app, _, matching_user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let mismatching_user = app.db_new_user("bar").await;
-    OauthGithubBuilder::for_user(mismatching_user.as_model())
+    let case_variant_user = app.db_new_user("bar").await;
+    OauthGithubBuilder::for_user(case_variant_user.as_model())
         .with_login("BAR")
         .insert(&conn)
         .await;
@@ -47,8 +47,7 @@ async fn public_user_github_username_matches() {
 
     for (user_id, expected) in [
         (matching_user.as_model().id, true),
-        // TODO: Expect true because GitHub usernames are case-insensitive.
-        (mismatching_user.as_model().id, false),
+        (case_variant_user.as_model().id, true),
         (unlinked_user_id, false),
         (separator_user.as_model().id, false),
     ] {
@@ -83,8 +82,7 @@ async fn public_user_github_username_matches_reused_login() {
         assert_eq!(account.user_id, newer.as_model().id);
 
         let user = PublicUser::find(&conn, older.as_model().id).await.unwrap();
-        // TODO: Expect false because GitHub lookup resolves to a different user.
-        assert!(user.github_username_matches, "{login}");
+        assert!(!user.github_username_matches, "{login}");
     }
 }
 

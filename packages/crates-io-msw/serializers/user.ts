@@ -1,6 +1,8 @@
 import type { components } from '@crates-io/api-client';
 import type { User } from '../models/index.js';
 
+import { db } from '../index.js';
+
 type ApiUser = components['schemas']['User'];
 type ApiAuthenticatedUser = components['schemas']['AuthenticatedUser'];
 type ApiLinkedAccount = components['schemas']['LinkedAccount'];
@@ -41,8 +43,23 @@ export function serializeUser(
     };
   }
 
+  let username = user.login.toLowerCase();
+  let githubAccountId: bigint | undefined;
+  let githubUserId: number | undefined;
+  for (let candidate of db.user.findMany()) {
+    for (let account of candidate.githubAccounts) {
+      if (account.login.toLowerCase() !== username) continue;
+
+      let accountId = BigInt(account.accountId);
+      if (githubAccountId === undefined || accountId > githubAccountId) {
+        githubAccountId = accountId;
+        githubUserId = candidate.id;
+      }
+    }
+  }
+
   return {
     ...serialized,
-    github_username_matches: user.githubAccounts.some(account => account.login === user.login),
+    github_username_matches: githubUserId === user.id,
   };
 }

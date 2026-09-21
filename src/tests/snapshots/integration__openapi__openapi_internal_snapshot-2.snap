@@ -891,7 +891,7 @@ expression: response.json()
                 ]
               },
               "github_username_matches": {
-                "description": "Whether a linked GitHub username exactly matches the crates.io username.",
+                "description": "Whether GitHub lookup of the crates.io username resolves to this user.",
                 "type": "boolean"
               },
               "id": {
@@ -1220,7 +1220,7 @@ expression: response.json()
             ]
           },
           "github_username_matches": {
-            "description": "Whether a linked GitHub username exactly matches the crates.io username.",
+            "description": "Whether GitHub lookup of the crates.io username resolves to this user.",
             "type": "boolean"
           },
           "id": {
