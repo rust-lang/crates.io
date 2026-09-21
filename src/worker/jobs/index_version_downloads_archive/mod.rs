@@ -60,12 +60,12 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 
         let result = ctx.invalidate_cdns(&conn, dist, INDEX_PATH).await;
         if let Err(error) = result {
-            warn!("Failed to invalidate CDN caches: {error}");
+            warn!("Failed to invalidate CDN caches: {error:#}");
         }
 
         let result = ctx.invalidate_cdns(&conn, dist, INDEX_JSON_PATH);
         if let Err(error) = result.await {
-            warn!("Failed to invalidate CDN caches: {error}");
+            warn!("Failed to invalidate CDN caches: {error:#}");
         }
 
         info!("CDN caches invalidated");
