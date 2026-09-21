@@ -15,7 +15,6 @@ futures-util = "=0.3.34"
 sentry-core = { version = "=0.49.2", features = ["client"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
-thiserror = "=2.0.20"
 tokio = { version = "=1.53.1", features = ["macros", "rt", "sync", "time"]}
 tracing = "=0.1.44"
 

@@ -16,7 +16,7 @@ use crates_io_validation::{
     MAX_VERSION_LENGTH, validate_crate_name, validate_dependency_name, validate_feature,
     validate_feature_name,
 };
-use crates_io_worker::{BackgroundJob, EnqueueError};
+use crates_io_worker::BackgroundJob;
 use diesel::dsl::{exists, now, select};
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
@@ -740,7 +740,7 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
 async fn enqueue_or_log<J: BackgroundJob>(
     job: &J,
     conn: &AsyncPgConnection,
-) -> Result<Option<i64>, EnqueueError> {
+) -> QueryResult<Option<i64>> {
     job.enqueue(conn).await.or_else(|error| {
         error!("Failed to enqueue `{}` job: {error}", J::JOB_NAME);
         Ok(None)
