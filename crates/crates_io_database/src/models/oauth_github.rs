@@ -34,6 +34,15 @@ pub struct OauthGithub {
 }
 
 impl OauthGithub {
+    /// Selects up to `limit` accounts to sync, ordered by oldest sync time first.
+    pub async fn sync_batch(mut conn: &AsyncPgConnection, limit: i64) -> QueryResult<Vec<Self>> {
+        oauth_github::table
+            .order(oauth_github::last_sync.asc())
+            .limit(limit)
+            .load(&mut conn)
+            .await
+    }
+
     /// Finds a linked GitHub account by its case-insensitive login.
     /// If several accounts match, returns the one with the highest account ID.
     pub async fn find_by_login(mut conn: &AsyncPgConnection, login: &str) -> QueryResult<Self> {

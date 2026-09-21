@@ -1,7 +1,9 @@
+use chrono::{TimeDelta, Utc};
 use crates_io_database::models::{NewOauthGithub, NewUser, OauthGithub};
+use crates_io_database::schema::oauth_github;
 use crates_io_test_db::TestDatabase;
-use diesel::OptionalExtension;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// Creates a user and linked GitHub account.
 async fn insert_user(conn: &AsyncPgConnection, username: &str, gh_id: i32, login: &str) -> i32 {
@@ -58,4 +60,28 @@ async fn oauth_github_find_by_login_uses_highest_account_id() {
     let account = OauthGithub::find_by_login(&conn, "shared").await.unwrap();
     assert_eq!(account.account_id, 2);
     assert_eq!(account.user_id, user_id);
+}
+
+/// Sync batches select the least recently synced accounts up to the requested limit.
+#[tokio::test]
+async fn oauth_github_sync_batch() {
+    let test_db = TestDatabase::new();
+    let mut conn = test_db.async_connect().await;
+    let now = Utc::now();
+
+    for (id, days_since_sync) in [(1, 1), (2, 3), (3, 2)] {
+        let login = format!("user-{id}");
+        insert_user(&conn, &login, id, &login).await;
+        diesel::update(oauth_github::table.find(i64::from(id)))
+            .set(oauth_github::last_sync.eq(now - TimeDelta::days(days_since_sync)))
+            .execute(&mut conn)
+            .await
+            .unwrap();
+    }
+
+    for (batch_size, expected_ids) in [(0, vec![]), (2, vec![2, 3]), (10, vec![2, 3, 1])] {
+        let accounts = OauthGithub::sync_batch(&conn, batch_size).await.unwrap();
+        let ids: Vec<_> = accounts.iter().map(|account| account.account_id).collect();
+        assert_eq!(ids, expected_ids, "batch size {batch_size}");
+    }
 }
