@@ -8,9 +8,8 @@ use crates_io::config::DatadogConfig;
 use crates_io::datadog::common_tags;
 use crates_io::worker::jobs;
 use crates_io::{db, schema::*};
-use crates_io_database::fns::canon_crate_name;
 use crates_io_datadog::{DatadogClient, ServiceCheck, ServiceCheckStatus};
-use crates_io_env_vars::{var, var_parsed};
+use crates_io_env_vars::var_parsed;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
@@ -22,7 +21,6 @@ use reqwest::Client;
 enum CheckId {
     BackgroundJobs,
     UpdateDownloads,
-    SpamAttack,
 }
 
 /// The outcome of evaluating a monitor invariant.
@@ -63,7 +61,6 @@ pub async fn run() -> Result<()> {
     let results = [
         check_failing_background_jobs(conn).await?,
         check_stalled_update_downloads(conn).await?,
-        check_spam_attack(conn).await?,
     ];
 
     for result in &results {
@@ -165,52 +162,11 @@ async fn check_stalled_update_downloads(conn: &mut AsyncPgConnection) -> Result<
     })
 }
 
-/// Checks for known spam patterns
-async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<CheckResult> {
-    println!("Checking for crates indicating someone is spamming us");
-
-    let bad_crate_names = var("SPAM_CRATE_NAMES")?;
-    let bad_crate_names: Vec<_> = bad_crate_names
-        .as_ref()
-        .map(|s| s.split(',').collect())
-        .unwrap_or_default();
-
-    let mut event_description = None;
-
-    let bad_crate: Option<String> = crates::table
-        .filter(canon_crate_name(crates::name).eq_any(bad_crate_names))
-        .select(crates::name)
-        .first(conn)
-        .await
-        .optional()?;
-
-    if let Some(bad_crate) = bad_crate {
-        event_description = Some(format!("Crate named {bad_crate} published"));
-    }
-
-    let result = if let Some(event_description) = event_description {
-        CheckResult {
-            id: CheckId::SpamAttack,
-            status: CheckStatus::Unhealthy,
-            message: format!("{event_description}, possible spam attack underway"),
-        }
-    } else {
-        CheckResult {
-            id: CheckId::SpamAttack,
-            status: CheckStatus::Healthy,
-            message: "No spam crates detected".into(),
-        }
-    };
-
-    Ok(result)
-}
-
 /// Converts a provider-independent result into a Datadog service check.
 fn datadog_service_check(result: &CheckResult, host_name: &str, tags: &[String]) -> ServiceCheck {
     let check = match result.id {
         CheckId::BackgroundJobs => "crates_io.background_jobs.healthy",
         CheckId::UpdateDownloads => "crates_io.update_downloads.healthy",
-        CheckId::SpamAttack => "crates_io.spam_attack.detected",
     };
     let status = match result.status {
         CheckStatus::Healthy => ServiceCheckStatus::Ok,
@@ -254,7 +210,7 @@ mod tests {
     use super::*;
     use insta::assert_json_snapshot;
 
-    fn check_results() -> [CheckResult; 6] {
+    fn check_results() -> [CheckResult; 4] {
         [
             CheckResult {
                 id: CheckId::BackgroundJobs,
@@ -275,16 +231,6 @@ mod tests {
                 id: CheckId::UpdateDownloads,
                 status: CheckStatus::Healthy,
                 message: "update downloads healthy".into(),
-            },
-            CheckResult {
-                id: CheckId::SpamAttack,
-                status: CheckStatus::Unhealthy,
-                message: "spam attack detected".into(),
-            },
-            CheckResult {
-                id: CheckId::SpamAttack,
-                status: CheckStatus::Healthy,
-                message: "no spam attack detected".into(),
             },
         ]
     }
@@ -334,26 +280,6 @@ mod tests {
             "host_name": "crates.io",
             "status": 0,
             "message": "update downloads healthy",
-            "tags": [
-              "env:test",
-              "service:crates_io"
-            ]
-          },
-          {
-            "check": "crates_io.spam_attack.detected",
-            "host_name": "crates.io",
-            "status": 2,
-            "message": "spam attack detected",
-            "tags": [
-              "env:test",
-              "service:crates_io"
-            ]
-          },
-          {
-            "check": "crates_io.spam_attack.detected",
-            "host_name": "crates.io",
-            "status": 0,
-            "message": "no spam attack detected",
             "tags": [
               "env:test",
               "service:crates_io"

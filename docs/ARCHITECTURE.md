@@ -20,7 +20,7 @@ The backend is written in Rust and builds one `crates-io` executable from the co
 
 - **`crates-io server`** is the API server. It handles every HTTP request to `crates.io`, serves the frontend assets, and uses the [axum](https://crates.io/crates/axum) web framework. This is the only process users talk to directly.
 - **`crates-io background-worker`** runs asynchronous jobs pulled from the job queue. Anything that is slow, fallible, or shouldn't block an API response happens here.
-- **`crates-io monitor`** is a small process that periodically checks the health of the system and reports the results to Datadog, including a backlog of stalled jobs, download counts that have stopped updating, or a spam attack.
+- **`crates-io monitor`** is a small process that periodically checks the health of the system and reports the results to Datadog, including a backlog of stalled jobs or download counts that have stopped updating.
 - **Administrative commands**, such as **`crates-io migrate`**, handle operational tasks like deleting a crate, re-rendering READMEs, or enqueueing a job by hand. The release phase runs database migrations with `crates-io migrate`.
 
 ## PostgreSQL and migrations
