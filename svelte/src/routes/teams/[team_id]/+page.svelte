@@ -42,7 +42,7 @@
   </div>
 </div>
 
-<CrateList crates={data.cratesResponse.crates} style="margin-bottom: var(--space-s)" />
+<CrateList crates={data.cratesResponse.crates} class="mb-s" />
 
 <Pagination {pagination} />
 

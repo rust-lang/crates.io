@@ -169,7 +169,7 @@
     </div>
   </div>
 
-  <CrateList crates={cratesResponse.crates} style="margin-bottom: var(--space-s);" />
+  <CrateList crates={cratesResponse.crates} class="mb-s" />
 
   <Pagination {pagination} />
 {:else}
