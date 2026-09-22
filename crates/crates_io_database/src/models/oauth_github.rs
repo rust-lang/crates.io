@@ -35,8 +35,9 @@ pub struct OauthGithub {
 }
 
 impl OauthGithub {
-    /// Selects up to `limit` accounts to sync, prioritizing accounts whose case-insensitive
-    /// login matches an account with a higher GitHub ID, then oldest sync time first.
+    /// Selects up to `limit` accounts to sync, prioritizing non-enterprise accounts whose
+    /// case-insensitive login matches an account with a higher GitHub ID, then oldest sync time
+    /// first.
     pub async fn sync_batch(mut conn: &AsyncPgConnection, limit: i64) -> QueryResult<Vec<Self>> {
         let newer_account = diesel::alias!(oauth_github as newer_account);
         let login_matches =
@@ -45,9 +46,10 @@ impl OauthGithub {
             .field(oauth_github::account_id)
             .gt(oauth_github::account_id);
         let conflicting_login = exists(newer_account.filter(login_matches).filter(higher_id));
+        let prioritized = conflicting_login.and(oauth_github::login.not_like("%\\_%"));
 
         oauth_github::table
-            .order((conflicting_login.desc(), oauth_github::last_sync.asc()))
+            .order((prioritized.desc(), oauth_github::last_sync.asc()))
             .limit(limit)
             .load(&mut conn)
             .await
