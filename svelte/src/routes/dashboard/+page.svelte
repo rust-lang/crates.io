@@ -9,6 +9,7 @@
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
+  import Panel from '$lib/components/Panel.svelte';
 
   type Version = components['schemas']['Version'];
 
@@ -91,7 +92,7 @@
       Latest Updates
     </h2>
 
-    <div class="feed">
+    <Panel class="my-s">
       <ul class="feed-list" data-test-feed-list>
         {#each feed as version (version.id)}
           <li class="feed-row">
@@ -118,7 +119,7 @@
           </button>
         </div>
       {/if}
-    </div>
+    </Panel>
   </div>
 </div>
 
@@ -213,13 +214,6 @@
     @media only screen and (max-width: 750px) {
       order: 0;
     }
-  }
-
-  .feed {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-    margin: var(--space-s) 0;
   }
 
   .feed-list {

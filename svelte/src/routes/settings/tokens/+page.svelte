@@ -13,6 +13,7 @@
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
+  import Panel from '$lib/components/Panel.svelte';
   import PatternDescription from '$lib/components/PatternDescription.svelte';
   import SettingsPage from '$lib/components/SettingsPage.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
@@ -118,117 +119,119 @@
   </p>
 
   {#if sortedTokens.length !== 0}
-    <ul role="list" class="token-list">
-      {#each sortedTokens as token (token.id)}
-        <li class="row" class:expired={isExpired(token)} data-test-api-token={token.id}>
-          <h3 class="name" data-test-name>
-            {token.name}
-          </h3>
+    <Panel class="my-m">
+      <ul role="list" class="token-list">
+        {#each sortedTokens as token (token.id)}
+          <li class="row" class:expired={isExpired(token)} data-test-api-token={token.id}>
+            <h3 class="name" data-test-name>
+              {token.name}
+            </h3>
 
-          {#if token.endpoint_scopes || token.crate_scopes}
-            <div class="scopes text--small">
-              {#if token.endpoint_scopes}
-                <div class="endpoint-scopes" data-test-endpoint-scopes>
-                  Scopes:
-                  {#each formatScopes(token.endpoint_scopes) as part, i (i)}
-                    {#if part.type === 'element'}
-                      <strong>
-                        <Tooltip text={scopeDescription(part.value)} />
+            {#if token.endpoint_scopes || token.crate_scopes}
+              <div class="scopes text--small">
+                {#if token.endpoint_scopes}
+                  <div class="endpoint-scopes" data-test-endpoint-scopes>
+                    Scopes:
+                    {#each formatScopes(token.endpoint_scopes) as part, i (i)}
+                      {#if part.type === 'element'}
+                        <strong>
+                          <Tooltip text={scopeDescription(part.value)} />
+                          {part.value}
+                        </strong>
+                      {:else}
                         {part.value}
-                      </strong>
-                    {:else}
-                      {part.value}
-                    {/if}
-                  {/each}
-                </div>
-              {/if}
+                      {/if}
+                    {/each}
+                  </div>
+                {/if}
 
-              {#if token.crate_scopes}
-                <div class="crate-scopes" data-test-crate-scopes>
-                  Crates:
-                  {#each formatScopes(token.crate_scopes) as part, i (i)}
-                    {#if part.type === 'element'}
-                      <strong>
-                        <Tooltip><PatternDescription pattern={part.value} /></Tooltip>
+                {#if token.crate_scopes}
+                  <div class="crate-scopes" data-test-crate-scopes>
+                    Crates:
+                    {#each formatScopes(token.crate_scopes) as part, i (i)}
+                      {#if part.type === 'element'}
+                        <strong>
+                          <Tooltip><PatternDescription pattern={part.value} /></Tooltip>
+                          {part.value}
+                        </strong>
+                      {:else}
                         {part.value}
-                      </strong>
-                    {:else}
-                      {part.value}
-                    {/if}
-                  {/each}
-                </div>
-              {/if}
-            </div>
-          {/if}
-
-          <div class="metadata text--small">
-            <div title={token.last_used_at ?? undefined} class="last-used-at" data-test-last-used-at>
-              {#if token.last_used_at}
-                Last used {formatDistanceToNow(token.last_used_at, { addSuffix: true })}
-              {:else}
-                Never used
-              {/if}
-            </div>
-
-            <div title={token.created_at} class="created-at" data-test-created-at>
-              Created {formatDistanceToNow(token.created_at, { addSuffix: true })}
-            </div>
-
-            {#if token.expired_at}
-              <div title={token.expired_at} class="expired-at" data-test-expired-at>
-                {isExpired(token) ? 'Expired' : 'Expires'}
-                {formatDistanceToNow(token.expired_at, { addSuffix: true })}
-              </div>
-            {/if}
-          </div>
-
-          {#if pendingToken?.id === token.id}
-            <div class="new-token">
-              <div class="new-token-explainer">
-                Make sure to copy your API token now. You won't be able to see it again!
-              </div>
-
-              <div class="token-display">
-                <span class="token-value" data-test-token>{pendingToken.token}</span>
-
-                {#if isClipboardSupported}
-                  <CopyButton copyText={pendingToken.token} class="copy-button button-reset">
-                    <span class="sr-only">Copy</span>
-                    <Icon class="i-mdi:content-copy copy-button-icon" />
-                  </CopyButton>
+                      {/if}
+                    {/each}
+                  </div>
                 {/if}
               </div>
-            </div>
-          {/if}
-
-          <div class="actions">
-            <!-- eslint-disable svelte/no-navigation-without-resolve -->
-            <a
-              href={`${resolve('/settings/tokens/new')}?from=${token.id}`}
-              class="regenerate-button button button--small"
-              data-test-regenerate-token-button
-            >
-              Regenerate
-            </a>
-            <!-- eslint-enable svelte/no-navigation-without-resolve -->
-            {#if !isExpired(token)}
-              <button
-                type="button"
-                class="revoke-button button button--tan button--small"
-                disabled={revokingTokenIds.has(token.id)}
-                data-test-revoke-token-button
-                onclick={() => revokeToken(token)}
-              >
-                Revoke
-              </button>
-              {#if revokingTokenIds.has(token.id)}
-                <LoadingSpinner class="spinner" />
-              {/if}
             {/if}
-          </div>
-        </li>
-      {/each}
-    </ul>
+
+            <div class="metadata text--small">
+              <div title={token.last_used_at ?? undefined} class="last-used-at" data-test-last-used-at>
+                {#if token.last_used_at}
+                  Last used {formatDistanceToNow(token.last_used_at, { addSuffix: true })}
+                {:else}
+                  Never used
+                {/if}
+              </div>
+
+              <div title={token.created_at} class="created-at" data-test-created-at>
+                Created {formatDistanceToNow(token.created_at, { addSuffix: true })}
+              </div>
+
+              {#if token.expired_at}
+                <div title={token.expired_at} class="expired-at" data-test-expired-at>
+                  {isExpired(token) ? 'Expired' : 'Expires'}
+                  {formatDistanceToNow(token.expired_at, { addSuffix: true })}
+                </div>
+              {/if}
+            </div>
+
+            {#if pendingToken?.id === token.id}
+              <div class="new-token">
+                <div class="new-token-explainer">
+                  Make sure to copy your API token now. You won't be able to see it again!
+                </div>
+
+                <div class="token-display">
+                  <span class="token-value" data-test-token>{pendingToken.token}</span>
+
+                  {#if isClipboardSupported}
+                    <CopyButton copyText={pendingToken.token} class="copy-button button-reset">
+                      <span class="sr-only">Copy</span>
+                      <Icon class="i-mdi:content-copy copy-button-icon" />
+                    </CopyButton>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+
+            <div class="actions">
+              <!-- eslint-disable svelte/no-navigation-without-resolve -->
+              <a
+                href={`${resolve('/settings/tokens/new')}?from=${token.id}`}
+                class="regenerate-button button button--small"
+                data-test-regenerate-token-button
+              >
+                Regenerate
+              </a>
+              <!-- eslint-enable svelte/no-navigation-without-resolve -->
+              {#if !isExpired(token)}
+                <button
+                  type="button"
+                  class="revoke-button button button--tan button--small"
+                  disabled={revokingTokenIds.has(token.id)}
+                  data-test-revoke-token-button
+                  onclick={() => revokeToken(token)}
+                >
+                  Revoke
+                </button>
+                {#if revokingTokenIds.has(token.id)}
+                  <LoadingSpinner class="spinner" />
+                {/if}
+              {/if}
+            </div>
+          </li>
+        {/each}
+      </ul>
+    </Panel>
   {:else}
     <div class="empty-state">
       <div class="empty-state-label">You have not generated any API tokens yet.</div>
@@ -261,12 +264,9 @@
   }
 
   .token-list {
-    margin: var(--space-m) 0;
+    margin: 0;
     padding: 0;
     list-style: none;
-    border-radius: var(--space-3xs);
-    background-color: light-dark(white, #141413);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
 
     > * {
       padding: var(--space-m);

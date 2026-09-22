@@ -9,6 +9,7 @@
   import CrateHeader from '$lib/components/CrateHeader.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
+  import Panel from '$lib/components/Panel.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import UserAvatar from '$lib/components/UserAvatar.svelte';
   import { getNotifications } from '$lib/notifications.svelte';
@@ -205,21 +206,23 @@
 </div>
 
 {#if addOwnerVisible}
-  <form class="add-owner-form" onsubmit={addOwner}>
-    <label class="add-owner-label" for="new-owner-username">Username</label>
-    <input
-      type="text"
-      id="new-owner-username"
-      bind:value={username}
-      placeholder="Username"
-      class="add-owner-input"
-      name="username"
-    />
-    <button type="submit" disabled={!username} class="button button--small" data-test-save-button>Add</button>
-  </form>
+  <Panel class="mb-s">
+    <form class="add-owner-form" onsubmit={addOwner}>
+      <label class="add-owner-label" for="new-owner-username">Username</label>
+      <input
+        type="text"
+        id="new-owner-username"
+        bind:value={username}
+        placeholder="Username"
+        class="add-owner-input"
+        name="username"
+      />
+      <button type="submit" disabled={!username} class="button button--small" data-test-save-button>Add</button>
+    </form>
+  </Panel>
 {/if}
 
-<div class="list" data-test-owners>
+<Panel data-test-owners>
   {#each teamOwners as team (team.id)}
     {@const href = ownerHref(team)}
     <div class="row" data-test-owner-team={team.login}>
@@ -273,7 +276,7 @@
       </button>
     </div>
   {/each}
-</div>
+</Panel>
 
 <div class="header">
   <h2>Trusted Publishing</h2>
@@ -303,8 +306,8 @@
   </div>
 {/if}
 
-<div class="trustpub">
-  <table data-test-trusted-publishing>
+<Panel>
+  <table class="trustpub-table" data-test-trusted-publishing>
     <thead>
       <tr>
         <th>Publisher</th>
@@ -434,7 +437,7 @@
       </div>
     </label>
   {/if}
-</div>
+</Panel>
 
 <h2 class="header">Danger Zone</h2>
 <div>
@@ -464,10 +467,6 @@
     flex-wrap: wrap;
     gap: var(--space-s);
     padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-    margin-bottom: var(--space-s);
   }
 
   .add-owner-label {
@@ -478,22 +477,16 @@
     width: 400px;
   }
 
-  .list {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+  .row {
+    padding: var(--space-s) var(--space-m);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 
-    > * {
-      padding: var(--space-s) var(--space-m);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    > * + * {
-      border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
-    }
+  .row + .row {
+    border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
   }
 
   .email-column {
@@ -501,13 +494,7 @@
     color: var(--main-color-light);
   }
 
-  .trustpub {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-  }
-
-  .trustpub table {
+  .trustpub-table {
     width: 100%;
     border-spacing: 0;
 

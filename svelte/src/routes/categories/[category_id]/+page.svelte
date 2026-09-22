@@ -6,6 +6,7 @@
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
+  import Panel from '$lib/components/Panel.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
   import { getSearchFormContext } from '$lib/search-form.svelte';
@@ -67,7 +68,7 @@
 {#if data.category.subcategories?.length}
   <div>
     <h2>Subcategories</h2>
-    <div class="subcategories mb-s">
+    <Panel class="mb-s">
       {#each data.category.subcategories as subcategory (subcategory.id)}
         <div class="subcategory">
           <div>
@@ -84,7 +85,7 @@
           </div>
         </div>
       {/each}
-    </div>
+    </Panel>
   </div>
 {/if}
 
@@ -118,17 +119,11 @@
     margin: 0;
   }
 
-  .subcategories {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-  }
-
-  .subcategories > .subcategory {
+  .subcategory {
     padding: var(--space-s);
   }
 
-  .subcategories > .subcategory + .subcategory {
+  .subcategory + .subcategory {
     border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #424242);
   }
 
