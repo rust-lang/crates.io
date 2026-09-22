@@ -217,7 +217,8 @@ function unicornRules() {
     'unicorn/prefer-structured-clone': 'error',
     // Switch statements in JavaScript are quite error-prone.
     'unicorn/prefer-switch': 'off',
-    'unicorn/prefer-ternary': 'error',
+    // Guard clauses and multi-line returns are clearer than ternaries.
+    'unicorn/prefer-ternary': 'off',
     // Svelte component `<script>` blocks instantiate synchronously, so top-level
     // await is not appropriate there.
     'unicorn/prefer-top-level-await': 'off',
