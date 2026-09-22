@@ -15,7 +15,7 @@
 <CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
 
 {#if data.total > 0}
-  <div class="results-meta">
+  <div class="mb-s">
     <ResultsCount
       start={pagination.currentPageStart}
       end={pagination.currentPageEnd}
@@ -42,10 +42,6 @@
 {/if}
 
 <style>
-  .results-meta {
-    margin-bottom: var(--space-s);
-  }
-
   .list {
     list-style: none;
     margin: 0 0 var(--space-s);

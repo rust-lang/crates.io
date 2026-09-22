@@ -18,7 +18,7 @@
 
 <PageHeader title="All Keywords" />
 
-<div class="results-meta">
+<div class="results-meta mb-s">
   <ResultsCount
     start={pagination.currentPageStart}
     end={pagination.currentPageEnd}
@@ -54,7 +54,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-s);
   }
 
   .list {
