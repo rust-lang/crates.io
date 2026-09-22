@@ -10,7 +10,7 @@
 
 <PageHeader title="Pending Owner Invites" />
 
-<div class="list">
+<div class="list mb-s">
   {#if data.invites.length !== 0}
     <ul>
       {#each data.invites as invite (invite.crate_id)}
@@ -29,7 +29,6 @@
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-    margin-bottom: var(--space-s);
   }
 
   ul {

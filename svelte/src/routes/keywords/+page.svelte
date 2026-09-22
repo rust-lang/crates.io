@@ -35,7 +35,7 @@
   </div>
 </div>
 
-<div class="list">
+<div class="list mb-s">
   {#each data.keywords.keywords as keyword (keyword.id)}
     <div class="row" data-test-keyword={keyword.id}>
       <a href={resolve('/keywords/[keyword_id]', { keyword_id: keyword.id })}>{keyword.id}</a>
@@ -60,7 +60,6 @@
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-    margin-bottom: var(--space-s);
   }
 
   .list > * {

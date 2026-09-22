@@ -9,7 +9,7 @@
 
 <PageHeader title="All Valid Category Slugs" />
 
-<dl class="list">
+<dl class="list mb-s">
   {#each data.categorySlugs as category (category.id)}
     <dt data-test-category-slug={category.slug}>{category.slug}</dt>
     <dd data-test-category-description={category.slug}>{category.description}</dd>
@@ -21,7 +21,6 @@
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-    margin-bottom: var(--space-s);
   }
 
   .list dt {
