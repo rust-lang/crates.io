@@ -2,7 +2,7 @@ use anyhow::Result;
 use chrono::NaiveDate;
 use crates_io::db;
 use crates_io::models::OauthGithub;
-use crates_io::schema::{background_jobs, crates, oauth_github};
+use crates_io::schema::{background_jobs, crates};
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
@@ -57,7 +57,7 @@ pub enum Command {
     SyncUpdatesFeed,
     TrustpubCleanup,
     UpdateDownloads,
-    /// Sync the oldest batch of users with GitHub
+    /// Sync a batch of GitHub accounts, prioritizing conflicting logins, then oldest syncs
     UpdateUserBatch {
         #[arg(long = "dry-run")]
         dry_run: bool,
@@ -183,13 +183,9 @@ pub async fn run(command: Command) -> Result<()> {
             dry_run,
             batch_size,
         } => {
-            let oldest_oauth_github_records = oauth_github::table
-                .order(oauth_github::last_sync.asc())
-                .limit(batch_size as i64)
-                .load::<OauthGithub>(&mut conn)
-                .await?;
+            let accounts = OauthGithub::sync_batch(&conn, batch_size as i64).await?;
 
-            for oauth_github in oldest_oauth_github_records {
+            for oauth_github in accounts {
                 let job = jobs::UpdateUserFromGithub {
                     dry_run,
                     account_id: oauth_github.account_id,
