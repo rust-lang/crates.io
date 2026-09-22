@@ -4,6 +4,9 @@ pub const METER_NAME: &str = "crates.io";
 /// The queued background jobs instrument name.
 pub const BACKGROUND_JOBS: &str = "crates_io.background_jobs";
 
+/// The oldest outstanding background job age instrument name.
+pub const BACKGROUND_JOBS_OLDEST_AGE: &str = "crates_io.background_jobs.oldest_age";
+
 /// The total crates instrument name.
 pub const CRATES_TOTAL: &str = "crates_io.crates_total";
 
