@@ -35,8 +35,7 @@
   <UserAvatar
     user={{ avatar: team.avatar, kind: 'team', login: team.login, name: team.name }}
     size="medium"
-    class="team-page-avatar"
-    style="margin-right: var(--space-m)"
+    class="team-page-avatar me-m"
     data-test-avatar
   />
   <div>
