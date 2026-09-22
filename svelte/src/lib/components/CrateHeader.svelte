@@ -5,6 +5,7 @@
   import { page } from '$app/state';
 
   import CrateFollowButton from '$lib/components/CrateFollowButton.svelte';
+  import KeywordPill from '$lib/components/KeywordPill.svelte';
   import * as NavTabs from '$lib/components/nav-tabs';
   import Tooltip from '$lib/components/Tooltip.svelte';
   import { getSession } from '$lib/utils/session.svelte';
@@ -104,9 +105,7 @@
     <ul class="keywords" aria-label="Keywords">
       {#each keywords as keyword (keyword.id)}
         <li>
-          <a href={resolve('/keywords/[keyword_id]', { keyword_id: keyword.id })} data-test-keyword={keyword.id}>
-            <span class="hash" aria-hidden="true">#</span>{keyword.id}
-          </a>
+          <KeywordPill keyword={keyword.id} />
         </li>
       {/each}
     </ul>
@@ -199,28 +198,6 @@
     padding: 0;
     font-size: calc(0.85 * var(--space-s));
     overflow: hidden;
-
-    a {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-4xs);
-      padding: var(--space-4xs) var(--space-xs);
-      color: var(--main-color-light);
-      background: var(--main-bg);
-      border-radius: 99999px;
-      white-space: nowrap;
-      transition: color var(--transition-fast);
-
-      &:hover {
-        color: var(--main-color);
-      }
-    }
-  }
-
-  .hash {
-    font-family: var(--font-monospace);
-    color: var(--main-color-light);
-    opacity: 0.65;
   }
 
   .follow-button {
