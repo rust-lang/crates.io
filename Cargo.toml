@@ -146,7 +146,7 @@ p256 = "=0.14.0"
 parking_lot = "=0.12.5"
 paste = "=1.0.15"
 postgres-native-tls = "=0.5.3"
-rand = "=0.10.2"
+rand = "=0.10.3"
 regex = "=1.13.1"
 reqwest = { version = "=0.13.5", features = ["gzip", "json", "stream"] }
 rss = { version = "=2.1.2", default-features = false, features = ["atom"] }
