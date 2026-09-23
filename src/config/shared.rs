@@ -7,7 +7,6 @@ use crate::config::CdnLogQueueConfig;
 use crate::config::bind::BindConfig;
 use crate::config::block::BlockConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
-use crate::config::datadog::DatadogConfig;
 use crate::config::fastly::FastlyConfig;
 use crate::config::features::FeaturesConfig;
 use crate::config::frontend::FrontendConfig;
@@ -47,7 +46,6 @@ pub struct SharedConfig {
     pub allowed_origins: AllowedOrigins,
     pub ownership_invitations_expiration: chrono::Duration,
     pub metrics: MetricsConfig,
-    pub datadog: DatadogConfig,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
     /// status codes to `200 OK` for all endpoints that are relevant for cargo.
@@ -152,7 +150,6 @@ impl SharedConfig {
             allowed_origins,
             ownership_invitations_expiration: chrono::Duration::days(30),
             metrics: MetricsConfig::from_env()?,
-            datadog: DatadogConfig::from_env()?,
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             frontend: FrontendConfig::from_env()?,
