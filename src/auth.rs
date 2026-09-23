@@ -9,7 +9,6 @@ use crate::util::errors::{
 };
 use crate::util::token::HashedToken;
 use axum::extract::FromRequestParts;
-use chrono::Utc;
 use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
 use http::request::Parts;
@@ -372,15 +371,8 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
 
 /// Rejects active account locks for authentication and session authorization.
 pub fn ensure_not_locked(user: &User) -> AppResult<()> {
-    if let Some(reason) = &user.account_lock_reason {
-        let still_locked = user
-            .account_lock_until
-            .map(|until| until > Utc::now())
-            .unwrap_or(true);
-
-        if still_locked {
-            return Err(account_locked(reason, user.account_lock_until));
-        }
+    if let Some((reason, until)) = user.is_locked() {
+        return Err(account_locked(reason, until));
     }
 
     Ok(())

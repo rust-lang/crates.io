@@ -1,5 +1,6 @@
-use claims::assert_err_eq;
-use crates_io_database::models::{NewUser, PublicUser, users_by_username};
+use chrono::{Duration, Utc};
+use claims::{assert_err_eq, assert_lt, assert_none, assert_some};
+use crates_io_database::models::{NewUser, PublicUser, User, users_by_username};
 use crates_io_database::schema::users;
 use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
@@ -57,4 +58,68 @@ async fn find_public_user_by_id() {
 
     let missing = PublicUser::find(&conn, 0).await;
     assert_err_eq!(missing, diesel::result::Error::NotFound);
+}
+
+#[tokio::test]
+async fn is_locked() {
+    let test_db = TestDatabase::new();
+    let mut conn = test_db.async_connect().await;
+    let user = NewUser::builder()
+        .gh_id(1)
+        .gh_login("github-user")
+        .username("crates-user")
+        .build();
+    let id = user.insert(&conn).await.unwrap();
+
+    // A newly created user is not locked.
+    let user = User::find(&conn, id).await.unwrap();
+    assert_none!(user.is_locked());
+
+    // A user with a reason and no expiry is locked indefinitely.
+    diesel::update(users::table)
+        .set(users::account_lock_reason.eq("locked indefinitely"))
+        .filter(users::id.eq(id))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+    let user = User::find(&conn, id).await.unwrap();
+    let (reason, until) = assert_some!(user.is_locked());
+    assert_eq!(reason, "locked indefinitely");
+    assert_none!(until);
+
+    // A user with a reason and an expiry in the future is also locked.
+    let set_until = Utc::now() + Duration::days(365);
+    diesel::update(users::table)
+        .set((
+            users::account_lock_reason.eq("locked definitely"),
+            users::account_lock_until.eq(Some(set_until)),
+        ))
+        .filter(users::id.eq(id))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+    let user = User::find(&conn, id).await.unwrap();
+    let (reason, until) = assert_some!(user.is_locked());
+    assert_eq!(reason, "locked definitely");
+
+    // Note that the different precision with which PostgreSQL stores timestamps
+    // compared to chrono means that we can't do a straight equality check for
+    // `until`. Instead, we'll check that the difference is < 1 second, which is
+    // more than enough wiggle room.
+    let until = assert_some!(until);
+    assert_lt!(until - set_until, Duration::seconds(1));
+
+    // A user with a reason and an expiry in the past is not locked.
+    let set_until = Utc::now() - Duration::days(365);
+    diesel::update(users::table)
+        .set((
+            users::account_lock_reason.eq("locked in the past"),
+            users::account_lock_until.eq(Some(set_until)),
+        ))
+        .filter(users::id.eq(id))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+    let user = User::find(&conn, id).await.unwrap();
+    assert_none!(user.is_locked());
 }
