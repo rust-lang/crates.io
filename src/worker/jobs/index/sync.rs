@@ -44,7 +44,7 @@ impl BackgroundJob for SyncToGitIndex {
             .context("Failed to get index data")?;
 
         spawn_blocking(move || {
-            let repo = ctx.lock_index()?;
+            let repo = ctx.lock_and_refresh_index()?;
             let old = repo.read_entry(&crate_name)?;
 
             let commit_and_push_start = Instant::now();
@@ -111,7 +111,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
 
         let handle = Handle::current();
         spawn_blocking(move || {
-            let repo = ctx.lock_index()?;
+            let repo = ctx.lock_and_refresh_index()?;
             let mut builder = repo.commit_builder(commit_message)?;
             let mut num_changes = 0;
 

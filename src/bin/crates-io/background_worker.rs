@@ -131,7 +131,7 @@ pub fn run() -> anyhow::Result<()> {
     std::thread::spawn({
         let ctx = ctx.clone();
         move || {
-            if let Err(err) = ctx.lock_index() {
+            if let Err(err) = ctx.lock_and_refresh_index() {
                 warn!("Failed to clone index: {err:#}");
             };
         }

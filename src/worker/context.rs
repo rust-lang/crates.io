@@ -63,7 +63,7 @@ pub struct WorkerContextInner {
 
 impl WorkerContext {
     #[instrument(skip_all)]
-    pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
+    pub fn lock_and_refresh_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let lock_start = Instant::now();
         let mut repo = self.repository.lock();
         info!(duration = lock_start.elapsed().as_nanos(), "Index locked");
