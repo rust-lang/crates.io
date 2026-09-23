@@ -1,5 +1,6 @@
 use crate::{TestApp, util::RequestHelper};
 use chrono::{DateTime, Duration, Utc};
+use crates_io::controllers::user::me::authenticated_user;
 use insta::assert_snapshot;
 
 const URL: &str = "/api/v1/me";
@@ -31,6 +32,20 @@ async fn account_locked_indefinitely() {
     let response = user.get::<()>(URL).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This account is indefinitely locked. Reason: test lock reason"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn authenticated_user_rejects_locked_account() {
+    let (app, _anon, user) = TestApp::init().with_user().await;
+    let user_id = user.as_model().id;
+    lock_account(&app, user_id, None).await;
+
+    let mut conn = app.db_conn().await;
+    let error = authenticated_user(&mut conn, user_id).await.unwrap_err();
+
+    let response = error.response();
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(error, @"This account is indefinitely locked. Reason: test lock reason");
 }
 
 #[tokio::test(flavor = "multi_thread")]

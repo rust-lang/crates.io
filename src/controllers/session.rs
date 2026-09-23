@@ -360,15 +360,15 @@ pub async fn authorize_session(
 
     match user_id {
         Some(user_id) => {
-            session.remove(PENDING_SIGNUP_KEY);
-            session.insert("user_id".to_string(), user_id.to_string());
-
             // Since the user wasn't signed in at the point the authorisation
             // middleware executed, we need to add the appropriate metadata to
             // the request log here.
             req.request_log().add("uid", user_id);
 
             let Json(user) = super::user::me::authenticated_user(&mut conn, user_id).await?;
+
+            session.remove(PENDING_SIGNUP_KEY);
+            session.insert("user_id".to_string(), user_id.to_string());
             Ok(Json(AuthorizeResponse::SignedIn(user)))
         }
         None => {
