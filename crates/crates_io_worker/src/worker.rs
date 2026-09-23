@@ -8,10 +8,10 @@ use diesel_async::{AsyncConnection, AsyncPgConnection};
 use futures_util::FutureExt;
 use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::Notify;
 use tokio::time::sleep;
-use tracing::{Instrument, debug, error, info_span, warn};
+use tracing::{Instrument, debug, error, info, info_span, warn};
 
 pub struct Worker<Context> {
     pub(crate) connection_pool: Pool<AsyncPgConnection>,
@@ -82,15 +82,16 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                 return Ok(None);
             };
 
-            let span = info_span!("job", job.id = %job.id, job.typ = %job.job_type);
-
             let job_id = job.id;
-            debug!("Running job…");
+            let job_type = job.job_type;
 
-            let future = with_sentry_transaction(&job.job_type, async || {
+            let span = info_span!("job", job.id = %job_id, job.typ = %job_type);
+            info!(parent: &span, "Background job {job_type} ({job_id}) started");
+
+            let future = with_sentry_transaction(&job_type, async || {
                 let run_task_fn = job_registry
-                    .get(&job.job_type)
-                    .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
+                    .get(&job_type)
+                    .ok_or_else(|| anyhow!("Unknown job type {}", job_type))?;
 
                 AssertUnwindSafe(run_task_fn(context, job.data))
                     .catch_unwind()
@@ -99,16 +100,26 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                     .flatten()
             });
 
+            let start = Instant::now();
             let result = future.instrument(span.clone()).await;
+            let duration = start.elapsed();
 
             let _enter = span.enter();
             match result {
                 Ok(_) => {
-                    debug!("Deleting successful job…");
+                    info!(
+                        job.outcome = "success",
+                        duration = duration.as_nanos(),
+                        "Background job {job_type} ({job_id}) completed",
+                    );
                     storage::delete_successful_job(conn, job_id).await?
                 }
                 Err(error) => {
-                    warn!("Failed to run job: {error:#}");
+                    warn!(
+                        job.outcome = "failure",
+                        duration = duration.as_nanos(),
+                        "Background job {job_type} ({job_id}) failed: {error:#}",
+                    );
                     storage::update_failed_job(conn, job_id).await;
                 }
             }
