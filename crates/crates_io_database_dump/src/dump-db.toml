@@ -257,7 +257,6 @@ expires_at = "private"
 
 [users.columns]
 id = "public"
-gh_login = "public"
 name = "public"
 gh_id = "public"
 username = "public"
