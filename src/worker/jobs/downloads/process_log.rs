@@ -10,6 +10,7 @@ use diesel::prelude::*;
 use diesel::{QueryResult, select};
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use futures_util::TryStreamExt;
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
@@ -18,8 +19,10 @@ use object_store::{ObjectStore, ObjectStoreExt};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+use std::io::Error;
 use std::sync::Arc;
 use tokio::io::BufReader;
+use tokio_util::io::StreamReader;
 use tracing::{debug, info, instrument, warn};
 
 /// A background job that loads a CDN log file from an object store (aka. S3),
@@ -137,10 +140,10 @@ async fn run(
 /// Loads the given log file from the object store and counts the number of
 /// downloads for each crate and version.
 async fn load_and_count(path: &Path, store: Arc<dyn ObjectStore>) -> anyhow::Result<DownloadsMap> {
-    let meta = store.head(path).await;
-    let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
-
-    let reader = object_store::buffered::BufReader::new(store, &meta);
+    let result = store.get(path).await;
+    let result = result.with_context(|| format!("Failed to load {path:?}"))?;
+    let stream = result.into_stream().map_err(Error::other);
+    let reader = BufReader::new(StreamReader::new(stream));
     let decompressor = Decompressor::from_extension(reader, path.extension())?;
     let reader = BufReader::new(decompressor);
 
