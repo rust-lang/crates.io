@@ -92,7 +92,6 @@ impl<'a> UserBuilder<'a> {
 
     pub fn new_user(self) -> NewUser<'a> {
         NewUser::builder()
-            .gh_id(self.gh_id.unwrap_or_else(next_gh_id))
             .username(self.username)
             .maybe_name(self.display_name)
             .build()

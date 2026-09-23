@@ -521,7 +521,6 @@ async fn create_user(
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i32> {
     let new_user = NewUser::builder()
-        .gh_id(gh_user.id)
         .username(&gh_user.login)
         .maybe_name(gh_user.name.as_deref())
         .build();
