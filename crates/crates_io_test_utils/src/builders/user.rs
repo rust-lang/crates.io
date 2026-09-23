@@ -159,7 +159,6 @@ impl<'a> UserBuilder<'a> {
         };
 
         let id = NewUser::builder()
-            .gh_id(gh_id)
             .username(self.username)
             .maybe_name(self.display_name)
             .is_admin(self.is_admin)

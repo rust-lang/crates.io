@@ -9,8 +9,8 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 async fn remove_owners_by_identity() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
-    let user1 = insert_user(&mut conn, "first", 101).await;
-    let user2 = insert_user(&mut conn, "second", 102).await;
+    let user1 = insert_user(&mut conn, "first").await;
+    let user2 = insert_user(&mut conn, "second").await;
     let team1 = insert_team(&mut conn, "first", 201).await;
     let team2 = insert_team(&mut conn, "second", 202).await;
     let team3 = insert_team(&mut conn, "non-owner", 203).await;
@@ -77,8 +77,8 @@ struct OwnerRow {
 }
 
 /// Inserts a user and returns its assigned ID.
-async fn insert_user(conn: &mut AsyncPgConnection, name: &str, gh_id: i32) -> i32 {
-    let user = NewUser::builder().username(name).gh_id(gh_id).build();
+async fn insert_user(conn: &mut AsyncPgConnection, name: &str) -> i32 {
+    let user = NewUser::builder().username(name).build();
     user.insert(conn).await.unwrap()
 }
 
