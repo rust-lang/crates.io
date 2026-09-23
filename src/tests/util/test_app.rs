@@ -3,7 +3,7 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::MOCK_GITHUB_DATA;
 use claims::assert_some;
 use crates_io::config::{
-    BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DatadogConfig, DbPoolConfig,
+    BindConfig, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
     FeaturesConfig, FrontendConfig, GitHubOAuthConfig, PublishLimitsConfig, RateLimitsConfig,
     SharedConfig,
 };
@@ -619,7 +619,6 @@ fn simple_config() -> SharedConfig {
         allowed_origins: Default::default(),
         ownership_invitations_expiration: chrono::Duration::days(30),
         metrics: Default::default(),
-        datadog: DatadogConfig::default(),
 
         // The middleware has its own unit tests to verify its functionality.
         // Here, we can test what would happen if we toggled the status code

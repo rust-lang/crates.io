@@ -3,7 +3,7 @@
 ## Repository Layout
 
 - `/src/` - Backend Rust application code
-  - `/src/bin/crates-io/` - Combined backend entry point for the server, background worker, monitor, and administrative commands
+  - `/src/bin/crates-io/` - Combined backend entry point for the server, background worker, and administrative commands
   - `/src/controllers/` - API controllers organized by domain (`krate/`, `user/`, `version/`, `trustpub/`, `github/`, `admin/`)
   - `/src/worker/jobs/` - Background job implementations (crate analysis, README rendering, OG image generation, database dumps)
   - `/src/middleware/` - Request processing middleware (auth, rate limiting, logging, error handling)
@@ -50,12 +50,6 @@ Run the background worker:
 
 ```bash
 cargo run -- background-worker
-```
-
-Run the monitor:
-
-```bash
-cargo run -- monitor
 ```
 
 Run an administrative command, such as database migrations:

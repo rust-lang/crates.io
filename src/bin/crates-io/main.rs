@@ -3,7 +3,6 @@ extern crate tracing;
 
 mod admin;
 mod background_worker;
-mod monitor;
 mod server;
 
 #[derive(clap::Parser, Debug)]
@@ -13,7 +12,6 @@ enum Command {
     Admin(admin::Command),
     Server,
     BackgroundWorker,
-    Monitor,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -23,7 +21,6 @@ fn main() -> anyhow::Result<()> {
         Command::Admin(command) => admin::run(command),
         Command::Server => server::run(),
         Command::BackgroundWorker => background_worker::run(),
-        Command::Monitor => monitor::run(),
     }
 }
 

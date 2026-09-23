@@ -1674,7 +1674,6 @@ dependencies = [
  "crates_io_crate_zip",
  "crates_io_database",
  "crates_io_database_dump",
- "crates_io_datadog",
  "crates_io_docs_rs",
  "crates_io_encryption",
  "crates_io_env_vars",
@@ -1881,21 +1880,6 @@ dependencies = [
  "toml 1.1.6+spec-1.1.0",
  "tracing",
  "zip",
-]
-
-[[package]]
-name = "crates_io_datadog"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "bon",
- "claims",
- "insta",
- "mockito",
- "reqwest",
- "secrecy",
- "serde",
- "tokio",
 ]
 
 [[package]]
