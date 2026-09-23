@@ -1,6 +1,7 @@
 <script lang="ts">
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
+  import Panel from '$lib/components/Panel.svelte';
 
   let { data } = $props();
 </script>
@@ -9,18 +10,18 @@
 
 <PageHeader title="All Valid Category Slugs" />
 
-<dl class="list mb-s">
-  {#each data.categorySlugs as category (category.id)}
-    <dt data-test-category-slug={category.slug}>{category.slug}</dt>
-    <dd data-test-category-description={category.slug}>{category.description}</dd>
-  {/each}
-</dl>
+<Panel class="mb-s">
+  <dl class="list">
+    {#each data.categorySlugs as category (category.id)}
+      <dt data-test-category-slug={category.slug}>{category.slug}</dt>
+      <dd data-test-category-description={category.slug}>{category.description}</dd>
+    {/each}
+  </dl>
+</Panel>
 
 <style>
   .list {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    margin: 0;
   }
 
   .list dt {

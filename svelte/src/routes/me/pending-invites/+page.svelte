@@ -1,6 +1,7 @@
 <script lang="ts">
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
+  import Panel from '$lib/components/Panel.svelte';
   import PendingOwnerInviteRow from '$lib/components/PendingOwnerInviteRow.svelte';
 
   let { data } = $props();
@@ -10,7 +11,7 @@
 
 <PageHeader title="Pending Owner Invites" />
 
-<div class="list mb-s">
+<Panel class="mb-s">
   {#if data.invites.length !== 0}
     <ul>
       {#each data.invites as invite (invite.crate_id)}
@@ -22,15 +23,9 @@
   {:else}
     <p data-test-empty-state>You don't seem to have any pending invitations.</p>
   {/if}
-</div>
+</Panel>
 
 <style>
-  .list {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-  }
-
   ul {
     list-style: none;
     margin: 0;

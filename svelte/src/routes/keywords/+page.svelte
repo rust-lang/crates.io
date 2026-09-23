@@ -4,6 +4,7 @@
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import Pagination from '$lib/components/Pagination.svelte';
+  import Panel from '$lib/components/Panel.svelte';
   import ResultsCount from '$lib/components/ResultsCount.svelte';
   import * as SortDropdown from '$lib/components/sort-dropdown';
   import { calculatePagination } from '$lib/utils/pagination';
@@ -35,7 +36,7 @@
   </div>
 </div>
 
-<div class="list mb-s">
+<Panel class="mb-s">
   {#each data.keywords.keywords as keyword (keyword.id)}
     <div class="row" data-test-keyword={keyword.id}>
       <a href={resolve('/keywords/[keyword_id]', { keyword_id: keyword.id })}>{keyword.id}</a>
@@ -45,7 +46,7 @@
       </span>
     </div>
   {/each}
-</div>
+</Panel>
 
 <Pagination {pagination} />
 
@@ -56,17 +57,11 @@
     justify-content: space-between;
   }
 
-  .list {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-  }
-
-  .list > * {
+  .row {
     padding: var(--space-s);
   }
 
-  .list > * + * {
+  .row + .row {
     border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #424242);
   }
 </style>
