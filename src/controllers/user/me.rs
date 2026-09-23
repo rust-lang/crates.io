@@ -70,6 +70,8 @@ pub async fn authenticated_user(
             .boxed()
     )?;
 
+    crate::auth::ensure_not_locked(&user)?;
+
     let owned_crates = owned_crates
         .into_iter()
         .map(|(id, name, email_notifications)| OwnedCrate {

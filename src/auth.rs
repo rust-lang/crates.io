@@ -345,7 +345,8 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
     return Err(forbidden("this action requires authentication"));
 }
 
-fn ensure_not_locked(user: &User) -> AppResult<()> {
+/// Rejects active account locks for authentication and session authorization.
+pub fn ensure_not_locked(user: &User) -> AppResult<()> {
     if let Some(reason) = &user.account_lock_reason {
         let still_locked = user
             .account_lock_until
