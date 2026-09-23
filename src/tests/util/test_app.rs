@@ -636,6 +636,7 @@ fn simple_config() -> SharedConfig {
         banner_message: None,
         features: FeaturesConfig {
             explicit_signup_enabled: true,
+            git_index_lazy_fetch_enabled: false,
         },
         fastly: None,
         sync_git_index: false,

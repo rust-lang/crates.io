@@ -34,6 +34,7 @@ impl BackgroundJob for SyncToGitIndex {
     /// Regenerates or removes an index file for a single crate.
     #[instrument(skip_all, fields(krate.name = self.krate))]
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
+        let lazy_fetch = ctx.config.features.git_index_lazy_fetch_enabled;
         info!("Syncing to git index");
 
         let crate_name = self.krate;
@@ -44,30 +45,49 @@ impl BackgroundJob for SyncToGitIndex {
             .context("Failed to get index data")?;
 
         spawn_blocking(move || {
-            let repo = ctx.lock_and_refresh_index()?;
+            let mut repo = if lazy_fetch {
+                ctx.lock_index()?
+            } else {
+                ctx.lock_and_refresh_index()?
+            };
             let old = repo.read_entry(&crate_name)?;
 
             let commit_and_push_start = Instant::now();
-            match (old, new) {
+            let builder = match (old, new) {
                 (None, Some(new)) => {
                     let msg = format!("Create crate `{crate_name}`");
                     let mut builder = repo.commit_builder(msg)?;
                     builder.upsert_entry(&crate_name, new.as_bytes())?;
-                    builder.commit_and_push()?;
+                    Some(builder)
                 }
                 (Some(old), Some(new)) if old != new.as_bytes() => {
                     let msg = format!("Update crate `{crate_name}`");
                     let mut builder = repo.commit_builder(msg)?;
                     builder.upsert_entry(&crate_name, new.as_bytes())?;
-                    builder.commit_and_push()?;
+                    Some(builder)
                 }
                 (Some(_old), None) => {
                     let msg = format!("Delete crate `{crate_name}`");
                     let mut builder = repo.commit_builder(msg)?;
                     builder.remove_entry(&crate_name)?;
-                    builder.commit_and_push()?;
+                    Some(builder)
                 }
-                _ => debug!("Skipping sync because index is up-to-date"),
+                _ => {
+                    debug!("Skipping sync because index is up-to-date");
+                    None
+                }
+            };
+
+            if let Some(builder) = builder {
+                let push_result = if lazy_fetch {
+                    builder.commit_and_push_with_lease()
+                } else {
+                    builder.commit_and_push()
+                };
+                if push_result.is_err() {
+                    repo.mark_stale();
+                }
+                push_result?;
             }
             info!(
                 duration = commit_and_push_start.elapsed().as_nanos(),

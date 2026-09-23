@@ -42,7 +42,7 @@ pub struct WorkerContextInner {
 
     pub repository_config: RepositoryConfig,
     #[builder(skip)]
-    repository: Mutex<Option<Repository>>,
+    repository: Mutex<CachedIndex>,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
@@ -61,29 +61,53 @@ pub struct WorkerContextInner {
     typosquat_cache: OnceCell<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
+/// The worker's local index clone and whether it must fetch before reuse.
+#[derive(Default)]
+struct CachedIndex {
+    repository: Option<Repository>,
+    stale: bool,
+}
+
 impl WorkerContext {
+    /// Locks the cached index and fetches the remote tip before returning it.
     #[instrument(skip_all)]
     pub fn lock_and_refresh_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
+        let mut repo = self.lock_index_repository()?;
+        repo.refresh()?;
+        Ok(repo)
+    }
+
+    /// Locks the cached index, fetching only if it has been marked stale.
+    #[instrument(skip_all)]
+    pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
+        let mut repo = self.lock_index_repository()?;
+        if repo.index.stale {
+            repo.refresh()?;
+        }
+        Ok(repo)
+    }
+
+    /// Acquires the clone lock and initializes the clone on first use.
+    fn lock_index_repository(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let lock_start = Instant::now();
-        let mut repo = self.repository.lock();
+        let mut index = self.repository.lock();
         info!(duration = lock_start.elapsed().as_nanos(), "Index locked");
 
-        if repo.is_none() {
+        if index.repository.is_none() {
             info!("Cloning index");
             let clone_start = Instant::now();
 
             // The worker only ever reads the current tip and commits/pushes on
             // top of it, so a shallow clone is sufficient and avoids fetching
             // the large index history.
-            *repo = Some(Repository::open_shallow(&self.repository_config)?);
+            index.repository = Some(Repository::open_shallow(&self.repository_config)?);
+            index.stale = false;
 
             let clone_duration = clone_start.elapsed();
             info!(duration = clone_duration.as_nanos(), "Index cloned");
         }
 
-        let repo_lock = RepositoryLock { repo };
-        repo_lock.reset_head()?;
-        Ok(repo_lock)
+        Ok(RepositoryLock { index })
     }
 
     pub(crate) fn cloudfront(&self) -> Option<&CloudFront> {
@@ -166,19 +190,34 @@ impl<S: worker_context_builder::State> WorkerContextBuilder<S> {
 }
 
 pub struct RepositoryLock<'a> {
-    repo: MutexGuard<'a, Option<Repository>>,
+    index: MutexGuard<'a, CachedIndex>,
+}
+
+impl RepositoryLock<'_> {
+    /// Marks the clone for refresh when next reused.
+    pub fn mark_stale(&mut self) {
+        self.index.stale = true;
+    }
+
+    /// Refreshes the clone and retains the stale mark if fetching fails.
+    fn refresh(&mut self) -> anyhow::Result<()> {
+        self.mark_stale();
+        self.reset_head()?;
+        self.index.stale = false;
+        Ok(())
+    }
 }
 
 impl Deref for RepositoryLock<'_> {
     type Target = Repository;
 
     fn deref(&self) -> &Self::Target {
-        self.repo.as_ref().unwrap()
+        self.index.repository.as_ref().unwrap()
     }
 }
 
 impl DerefMut for RepositoryLock<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.repo.as_mut().unwrap()
+        self.index.repository.as_mut().unwrap()
     }
 }

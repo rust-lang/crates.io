@@ -2,6 +2,7 @@ use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use claims::{assert_ok, assert_ok_eq};
 use crates_io::models::Crate;
+use crates_io::schema::background_jobs;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -198,4 +199,75 @@ async fn bulk_sync_to_git_index_noop() {
     app.run_pending_background_jobs().await;
 
     assert_eq!(upstream.list_commits().unwrap(), before);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn lazy_fetch_pushes_successive_updates() {
+    let (app, _, _, token) = TestApp::full()
+        .with_git_index()
+        .with_config(|config| config.features.git_index_lazy_fetch_enabled = true)
+        .with_token()
+        .await;
+    let upstream = app.upstream_index();
+
+    let body = PublishBuilder::new("serde", "1.0.0").body();
+    let response = token.put::<()>("/api/v1/crates/new", body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    app.run_pending_background_jobs().await;
+    assert_ok_eq!(
+        upstream.list_commits(),
+        vec!["Initial Commit", "Create crate `serde`"]
+    );
+
+    let body = PublishBuilder::new("serde", "1.1.0").body();
+    let response = token.put::<()>("/api/v1/crates/new", body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    app.run_pending_background_jobs().await;
+
+    assert_ok_eq!(
+        upstream.list_commits(),
+        vec![
+            "Initial Commit",
+            "Create crate `serde`",
+            "Update crate `serde`",
+        ]
+    );
+    assert_eq!(app.crates_from_index_head("serde").len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn lazy_fetch_refreshes_after_rejected_push() {
+    let (app, _, _, token) = TestApp::full()
+        .with_git_index()
+        .with_config(|config| config.features.git_index_lazy_fetch_enabled = true)
+        .with_token()
+        .await;
+    let upstream = app.upstream_index();
+    let mut conn = app.db_conn().await;
+
+    let body = PublishBuilder::new("serde", "1.0.0").body();
+    let response = token.put::<()>("/api/v1/crates/new", body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    app.run_pending_background_jobs().await;
+
+    let body = PublishBuilder::new("serde", "1.1.0").body();
+    let response = token.put::<()>("/api/v1/crates/new", body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    upstream.write_file("config.json", "{}\n").unwrap();
+
+    assert_snapshot!(app.try_run_pending_background_jobs().await.unwrap_err(), @"1 jobs failed");
+    assert_ok_eq!(upstream.read_file("config.json"), "{}\n".to_string());
+    assert_eq!(app.crates_from_index_head("serde").len(), 1);
+
+    let retry_time = chrono::Utc::now().naive_utc() - chrono::Duration::minutes(3);
+    let updated = diesel::update(background_jobs::table.filter(background_jobs::retries.gt(0)))
+        .set(background_jobs::last_retry.eq(retry_time))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(updated, 1);
+    app.run_pending_background_jobs().await;
+
+    assert_ok_eq!(upstream.read_file("config.json"), "{}\n".to_string());
+    assert_eq!(app.crates_from_index_head("serde").len(), 2);
 }
