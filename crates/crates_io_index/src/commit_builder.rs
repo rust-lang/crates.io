@@ -7,11 +7,11 @@ use tracing::{info, instrument};
 ///
 /// Obtain one via [`Repository::commit_builder`] or
 /// [`Repository::commit_builder_to`]. Stage changes through [`Self::upsert_entry`]
-/// and [`Self::remove_entry`], then call [`Self::commit_and_push`] to write the
-/// commit and push it to the target branch. Dropping the builder without
-/// calling `commit_and_push` discards the staged operations; any blobs that
-/// were written to the ODB become unreachable and will be cleaned up by
-/// `git gc`.
+/// and [`Self::remove_entry`], then call [`Self::commit_and_push`] or
+/// [`Self::commit_and_push_with_lease`] to write the commit and push it to the
+/// target branch. Dropping the builder without either call discards the staged
+/// operations; any blobs that were written to the ODB become unreachable and
+/// will be cleaned up by `git gc`.
 ///
 /// ### Limitation
 ///
@@ -67,7 +67,24 @@ impl<'a> CommitBuilder<'a> {
     /// Returns `Ok(())` without creating a commit if the resulting tree is
     /// identical to the parent commit's tree (no effective changes).
     #[instrument(skip_all, fields(message = %self.msg, branch = %self.branch))]
-    pub fn commit_and_push(mut self) -> anyhow::Result<()> {
+    pub fn commit_and_push(self) -> anyhow::Result<()> {
+        self.finish(false)
+    }
+
+    /// Pushes a commit only if the remote branch still points at the local
+    /// parent commit. The local HEAD advances only after the push succeeds.
+    /// If updating local HEAD fails after the push, the remote may have
+    /// advanced despite an error; callers should refresh before retrying.
+    ///
+    /// Returns `Ok(())` without creating a commit if the resulting tree is
+    /// identical to the parent commit's tree (no effective changes).
+    #[instrument(skip_all, fields(message = %self.msg, branch = %self.branch))]
+    pub fn commit_and_push_with_lease(self) -> anyhow::Result<()> {
+        self.finish(true)
+    }
+
+    /// Builds one commit and advances local HEAD before or after the push.
+    fn finish(mut self, with_lease: bool) -> anyhow::Result<()> {
         let gitrepo = self.repo.git_repo();
         let parent = gitrepo.find_commit(self.repo.head_oid()?)?;
         let parent_tree = parent.tree().context("Failed to load parent tree")?;
@@ -84,13 +101,28 @@ impl<'a> CommitBuilder<'a> {
 
         let sig = gitrepo.signature()?;
         let tree = gitrepo.find_tree(tree_oid)?;
-        gitrepo.commit(Some("HEAD"), &sig, &sig, &self.msg, &tree, &[&parent])?;
+        let update_ref = if with_lease { None } else { Some("HEAD") };
+        let commit_oid = gitrepo.commit(update_ref, &sig, &sig, &self.msg, &tree, &[&parent])?;
 
-        self.repo.run_command(Command::new("git").args([
-            "push",
-            "origin",
-            &format!("HEAD:{}", self.branch),
-        ]))
+        let branch = format!("refs/heads/{}", self.branch);
+        let refspec = format!("{commit_oid}:{branch}");
+        let mut command = Command::new("git");
+        command.arg("push");
+        if with_lease {
+            let lease = format!("--force-with-lease={branch}:{}", parent.id());
+            command.arg(lease);
+        }
+        command.args(["origin", &refspec]);
+        self.repo.run_command(&mut command)?;
+
+        if with_lease {
+            let head_ref = "refs/heads/master";
+            gitrepo
+                .reference_matching(head_ref, commit_oid, true, parent.id(), "push with lease")
+                .context("Failed to update local index head after push")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -99,7 +131,7 @@ mod tests {
     use crate::repo::{Repository, RepositoryConfig};
     use crate::testing::UpstreamIndex;
     use crate::{Credentials, commit_builder::CommitBuilder};
-    use claims::assert_ok_eq;
+    use claims::{assert_err, assert_ok_eq};
 
     fn setup() -> (UpstreamIndex, Repository) {
         let upstream = UpstreamIndex::new().unwrap();
@@ -108,6 +140,16 @@ mod tests {
             credentials: Credentials::Missing,
         };
         let repo = Repository::open(&config).unwrap();
+        (upstream, repo)
+    }
+
+    fn setup_shallow() -> (UpstreamIndex, Repository) {
+        let upstream = UpstreamIndex::new().unwrap();
+        let config = RepositoryConfig {
+            index_location: upstream.url(),
+            credentials: Credentials::Missing,
+        };
+        let repo = Repository::open_shallow(&config).unwrap();
         (upstream, repo)
     }
 
@@ -232,5 +274,63 @@ mod tests {
         let side = bare.find_reference("refs/heads/side").unwrap();
         let commit = bare.find_commit(side.target().unwrap()).unwrap();
         assert_eq!(commit.message().unwrap(), "Sideways");
+    }
+
+    #[test]
+    fn leased_push_advances_local_and_remote_heads() {
+        let (upstream, repo) = setup_shallow();
+        let before = repo.head_oid().unwrap();
+
+        let mut builder = commit_builder(&repo, "Create crate `serde`");
+        builder.upsert_entry("serde", b"hello\n").unwrap();
+        builder.commit_and_push_with_lease().unwrap();
+
+        let after = repo.head_oid().unwrap();
+        assert_ne!(after, before);
+        assert_eq!(upstream.branch_oid("master").unwrap(), after);
+        assert_ok_eq!(upstream.read_file("se/rd/serde"), "hello\n".to_string());
+    }
+
+    #[test]
+    fn leased_push_rejects_advanced_remote_without_advancing_local_head() {
+        let (upstream, repo) = setup_shallow();
+        let before = repo.head_oid().unwrap();
+        upstream.write_file("config.json", "{}\n").unwrap();
+        let remote = upstream.branch_oid("master").unwrap();
+
+        let mut builder = commit_builder(&repo, "Create crate `serde`");
+        builder.upsert_entry("serde", b"hello\n").unwrap();
+        assert_err!(builder.commit_and_push_with_lease());
+
+        assert_eq!(repo.head_oid().unwrap(), before);
+        assert_eq!(upstream.branch_oid("master").unwrap(), remote);
+        assert_ok_eq!(upstream.crate_exists("serde"), false);
+    }
+
+    #[test]
+    fn leased_push_rejects_remote_rewind_without_advancing_local_head() {
+        let upstream = UpstreamIndex::new().unwrap();
+        let initial = upstream.branch_oid("master").unwrap();
+        upstream.write_file("config.json", "{}\n").unwrap();
+        let config = RepositoryConfig {
+            index_location: upstream.url(),
+            credentials: Credentials::Missing,
+        };
+        let repo = Repository::open_shallow(&config).unwrap();
+        let before = repo.head_oid().unwrap();
+        upstream
+            .repository
+            .lock()
+            .unwrap()
+            .reference("refs/heads/master", initial, true, "rewind")
+            .unwrap();
+
+        let mut builder = commit_builder(&repo, "Create crate `serde`");
+        builder.upsert_entry("serde", b"hello\n").unwrap();
+        assert_err!(builder.commit_and_push_with_lease());
+
+        assert_eq!(repo.head_oid().unwrap(), before);
+        assert_eq!(upstream.branch_oid("master").unwrap(), initial);
+        assert_ok_eq!(upstream.crate_exists("serde"), false);
     }
 }
