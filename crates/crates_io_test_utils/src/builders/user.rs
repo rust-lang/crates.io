@@ -23,7 +23,7 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
-    gh_id: Option<i32>,
+    pub gh_id: Option<i32>,
     pub gh_login: &'a str,
 }
 
@@ -35,7 +35,7 @@ impl<'a> UserBuilder<'a> {
             username: "octocat",
             display_name: None,
             gh_login: "octocat",
-            gh_id: None,
+            gh_id: Some(next_gh_id()),
         }
     }
 
@@ -68,11 +68,16 @@ impl<'a> UserBuilder<'a> {
     }
 
     pub fn build(self) -> User {
+        let gh_id = match self.gh_id {
+            Some(-1) | None => None,
+            Some(id) => Some(id as i64),
+        };
+
         User {
             id: 1,
             gh_login: Some(self.gh_login.into()),
             name: self.display_name.map(ToString::to_string),
-            gh_id: self.gh_id.unwrap_or(123),
+            gh_id,
             gh_avatar: None,
             gh_encrypted_token: None,
             account_lock_reason: None,
@@ -113,7 +118,7 @@ impl<'a> OauthGithubBuilder<'a> {
     pub fn for_user(user: &'a User) -> Self {
         Self {
             user_id: user.id,
-            account_id: user.gh_id as i64,
+            account_id: next_gh_id() as i64,
             encrypted_token: &ENCRYPTED_TOKEN,
             login: user.gh_login.as_ref().unwrap_or(&user.username),
             avatar: None,
@@ -129,6 +134,10 @@ impl<'a> OauthGithubBuilder<'a> {
 
     pub fn with_login(self, login: &'a str) -> Self {
         Self { login, ..self }
+    }
+
+    pub fn with_account_id(self, account_id: i64) -> Self {
+        Self { account_id, ..self }
     }
 
     pub async fn insert(self, mut conn: &AsyncPgConnection) {

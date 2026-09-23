@@ -168,18 +168,24 @@ impl TestApp {
         let conn = self.db_conn().await;
 
         let gh_login = builder.gh_login.to_string();
+        let gh_id = builder.gh_id;
 
         let new_user = builder.new_user();
         let email = format!("{}@example.com", new_user.username);
         let id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
 
-        if user.gh_id != -1 {
+        if let Some(gh_id) = gh_id
+            && gh_id != -1
+        {
             OauthGithubBuilder::for_user(&user)
                 .with_login(&gh_login)
+                .with_account_id(gh_id.into())
                 .insert(&conn)
                 .await;
         }
+
+        let user = User::find(&conn, id).await.unwrap();
 
         let new_email = NewEmail::builder()
             .user_id(id)
