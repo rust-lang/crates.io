@@ -62,7 +62,7 @@
             <UserAvatar
               user={{ ...currentUser, kind: 'user' }}
               size="small"
-              style="margin-right: var(--space-2xs);"
+              class="me-2xs"
               aria-hidden="true"
               data-test-avatar
             />

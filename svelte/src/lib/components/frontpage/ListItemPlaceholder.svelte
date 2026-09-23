@@ -16,14 +16,7 @@
   <div class="left">
     <Placeholder width="150px" height="16px" radius="8px" opacity={0.25} />
     {#if withSubtitle}
-      <Placeholder
-        class="subtitle"
-        width="90px"
-        height="13px"
-        radius="6.5px"
-        opacity={0.2}
-        style="margin-top: var(--space-3xs)"
-      />
+      <Placeholder class="subtitle mt-3xs" width="90px" height="13px" radius="6.5px" opacity={0.2} />
     {/if}
   </div>
   {#if withTrailing}

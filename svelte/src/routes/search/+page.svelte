@@ -149,7 +149,7 @@
     Try Again
   </button>
 {:else if cratesResponse && cratesResponse.meta.total > 0 && pagination}
-  <div class="results-meta">
+  <div class="results-meta mb-s">
     <ResultsCount
       start={pagination.currentPageStart}
       end={pagination.currentPageEnd}
@@ -169,7 +169,7 @@
     </div>
   </div>
 
-  <CrateList crates={cratesResponse.crates} style="margin-bottom: var(--space-s);" />
+  <CrateList crates={cratesResponse.crates} class="mb-s" />
 
   <Pagination {pagination} />
 {:else}
@@ -183,7 +183,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-s);
   }
 
   .try-again-button {

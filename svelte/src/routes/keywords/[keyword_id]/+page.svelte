@@ -38,7 +38,7 @@
 
 <PageHeader title="All Crates" suffix="for keyword '{data.keyword}'" />
 
-<div class="results-meta">
+<div class="results-meta mb-s">
   <ResultsCount
     start={pagination.currentPageStart}
     end={pagination.currentPageEnd}
@@ -58,7 +58,7 @@
   </div>
 </div>
 
-<CrateList crates={data.cratesResponse.crates} style="margin-bottom: var(--space-s);" />
+<CrateList crates={data.cratesResponse.crates} class="mb-s" />
 
 <Pagination {pagination} />
 
@@ -67,6 +67,5 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-s);
   }
 </style>

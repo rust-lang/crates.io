@@ -118,7 +118,7 @@
   {/if}
 </div>
 
-<NavTabs.Root aria-label="{crate.name} crate subpages" style="margin-bottom: var(--space-s)">
+<NavTabs.Root aria-label="{crate.name} crate subpages" class="mb-s">
   <NavTabs.Tab href={readmeHref} data-test-readme-tab>Readme</NavTabs.Tab>
   <NavTabs.Tab href={codeHref} active={codeActive} data-test-code-tab>Code</NavTabs.Tab>
   <NavTabs.Tab href={versionsHref} data-test-versions-tab>

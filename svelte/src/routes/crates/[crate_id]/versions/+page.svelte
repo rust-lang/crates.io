@@ -80,7 +80,7 @@
 
 <CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
 
-<div class="results-meta">
+<div class="results-meta mb-2xs">
   <span class="page-description text--small" data-test-page-description>
     <strong>{versions.length}</strong>
     of
@@ -137,7 +137,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-2xs);
 
     @media only screen and (max-width: 550px) {
       display: block;

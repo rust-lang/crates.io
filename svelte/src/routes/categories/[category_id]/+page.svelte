@@ -67,7 +67,7 @@
 {#if data.category.subcategories?.length}
   <div>
     <h2>Subcategories</h2>
-    <div class="subcategories">
+    <div class="subcategories mb-s">
       {#each data.category.subcategories as subcategory (subcategory.id)}
         <div class="subcategory">
           <div>
@@ -89,7 +89,7 @@
 {/if}
 
 <h2>Crates</h2>
-<div class="results-meta">
+<div class="results-meta mb-s">
   <ResultsCount
     start={pagination.currentPageStart}
     end={pagination.currentPageEnd}
@@ -109,7 +109,7 @@
   </div>
 </div>
 
-<CrateList crates={data.cratesResponse.crates} style="margin-bottom: var(--space-s);" />
+<CrateList crates={data.cratesResponse.crates} class="mb-s" />
 
 <Pagination {pagination} />
 
@@ -122,7 +122,6 @@
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
-    margin-bottom: var(--space-s);
   }
 
   .subcategories > .subcategory {
@@ -141,6 +140,5 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-s);
   }
 </style>
