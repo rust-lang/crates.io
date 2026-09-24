@@ -52,7 +52,7 @@
 <PageTitle title="{data.category.category} - Categories" />
 
 <PageHeader>
-  <h1 class="heading">
+  <h1 class="m-0">
     {#each data.category.parent_categories ?? [] as parent (parent.id)}
       <a href={resolve('/categories/[category_id]', { category_id: parent.slug })}>
         {parent.category}
@@ -115,10 +115,6 @@
 <Pagination {pagination} />
 
 <style>
-  .heading {
-    margin: 0;
-  }
-
   .subcategory {
     padding: var(--space-s);
   }

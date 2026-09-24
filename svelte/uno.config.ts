@@ -24,10 +24,10 @@ export default defineConfig({
       /^([mp])([tbsexy]?)-([a-z0-9-]+)$/,
       ([, kind, side, size]) => {
         let suffix = sideSuffixes[side];
-        if (suffix === undefined || !spaceTokens.has(size)) return;
+        if (suffix === undefined || (size !== '0' && !spaceTokens.has(size))) return;
 
         let property = kind === 'm' ? 'margin' : 'padding';
-        return { [`${property}${suffix}`]: `var(--space-${size})` };
+        return { [`${property}${suffix}`]: size === '0' ? '0' : `var(--space-${size})` };
       },
     ],
   ],
