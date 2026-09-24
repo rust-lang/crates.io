@@ -3,6 +3,10 @@ import { serializePendingSignup } from '../../serializers/pending-signup.js';
 import { http } from '../../utils/openapi-http.js';
 
 export default http.get('/api/private/session/signup', ({ response }) => {
+  if (db.mswSession.findFirst()) {
+    return response('4XX').json({ errors: [{ detail: 'You are already signed in.' }] }, { status: 400 });
+  }
+
   let pendingSignup = db.pendingSignup.findFirst();
   if (!pendingSignup) {
     let detail = 'Your signup session is missing or has expired. Please authenticate with GitHub again.';
