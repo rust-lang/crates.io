@@ -2,10 +2,11 @@ import type { operations } from '@crates-io/api-client';
 import type { NotificationsContext } from '$lib/notifications.svelte';
 
 import { createContext } from 'svelte';
-import { invalidateAll } from '$app/navigation';
+import { goto, invalidateAll } from '$app/navigation';
 import { resolve } from '$app/paths';
+import { page } from '$app/state';
 import { createClient } from '@crates-io/api-client';
-import { SvelteDate } from 'svelte/reactivity';
+import { SvelteDate, SvelteURLSearchParams } from 'svelte/reactivity';
 
 import * as localStorage from './local-storage';
 
@@ -206,8 +207,19 @@ export class SessionState {
     }
 
     if (data.status === 'signup_required') {
-      this.#notifications?.error('Signup is currently not possible.');
       this.state = 'logged-out';
+
+      // `/signup` can show an expired session error with a login button. Refresh the page without adding a history entry.
+      if (page.route.id === '/signup') {
+        await invalidateAll();
+        return;
+      }
+
+      let returnTo = page.url.pathname + page.url.search + page.url.hash;
+      let targetUrl = `${resolve('/signup')}?${new SvelteURLSearchParams({ returnTo })}`;
+
+      // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() does not accept query parameters.
+      await goto(targetUrl, { invalidateAll: true });
       return;
     }
 
