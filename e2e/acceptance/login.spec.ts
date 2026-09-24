@@ -1,33 +1,7 @@
-import type { Page } from '@playwright/test';
-
+import { MOCK_CODE, MOCK_STATE, setupGitHubOAuthRoutes } from '@/e2e/fixtures/github-oauth';
 import { expect, test } from '@/e2e/helper';
 import { serializeUser } from '@crates-io/msw/serializers/user';
 import { http } from '@crates-io/msw/utils/openapi-http';
-
-const MOCK_CODE = '901dd10e07c7e9fa1cd5';
-const MOCK_STATE = 'fYcUY3FMdUUz00FC7vLT7A';
-
-async function setupGitHubOAuthRoutes(page: Page) {
-  // Intercept `/api/private/session/begin` at the context level (applies to popups too)
-  await page.context().route('**/api/private/session/begin', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        url: `https://github.com/login/oauth/authorize?client_id=test&state=${MOCK_STATE}&scope=read:org`,
-        state: MOCK_STATE,
-      }),
-    });
-  });
-
-  // Intercept GitHub OAuth URL at the context level (applies to popups too)
-  await page.context().route('https://github.com/login/oauth/authorize*', route => {
-    let url = new URL(route.request().url());
-    let state = url.searchParams.get('state');
-    let redirectUrl = new URL(`/github-redirect.html?code=${MOCK_CODE}&state=${state}`, page.url());
-    route.fulfill({ status: 302, headers: { Location: redirectUrl.toString() } });
-  });
-}
 
 test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
   test('successful login', async ({ page, msw }) => {
@@ -54,21 +28,6 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await page.goto('/');
     await page.click('[data-test-login-button]');
     await expect(page.locator('[data-test-user-menu] [data-test-toggle]')).toHaveText('John Doe');
-  });
-
-  test('shows an error when signup is required', async ({ page, msw }) => {
-    await setupGitHubOAuthRoutes(page);
-
-    msw.worker.use(
-      http.post('/api/private/session/authorize', ({ response }) => response(200).json({ status: 'signup_required' })),
-    );
-
-    await page.goto('/');
-    await page.click('[data-test-login-button]');
-    await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
-      'Signup is currently not possible.',
-    );
-    expect(await page.evaluate(() => localStorage.getItem('isLoggedIn'))).toBeNull();
   });
 
   test('failed login', async ({ page, msw }) => {
