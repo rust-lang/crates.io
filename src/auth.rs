@@ -270,14 +270,14 @@ async fn authenticate_via_cookie(
         return Ok(None);
     };
 
+    parts.request_log().add("uid", id);
+
     let user = User::find(conn, id).await.map_err(|err| {
         parts.request_log().add("cause", err);
         internal("user_id from cookie not found in database")
     })?;
 
     ensure_not_locked(&user)?;
-
-    parts.request_log().add("uid", id);
 
     Ok(Some(CookieAuthentication { user }))
 }
@@ -303,15 +303,15 @@ async fn authenticate_via_token(
             forbidden("authentication failed")
         })?;
 
+    parts.request_log().add("uid", token.user_id);
+    parts.request_log().add("tokenid", token.id);
+
     let user = User::find(conn, token.user_id).await.map_err(|err| {
         parts.request_log().add("cause", err);
         internal("user_id from token not found in database")
     })?;
 
     ensure_not_locked(&user)?;
-
-    parts.request_log().add("uid", token.user_id);
-    parts.request_log().add("tokenid", token.id);
 
     Ok(Some(TokenAuthentication { user, token }))
 }
