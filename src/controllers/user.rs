@@ -1,5 +1,6 @@
 pub mod email_notifications;
 pub mod email_verification;
+pub mod lock;
 pub mod me;
 pub mod other;
 pub mod update;

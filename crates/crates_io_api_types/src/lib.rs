@@ -885,6 +885,17 @@ impl EncodableLinkedAccount {
 }
 
 #[derive(Deserialize, Serialize, Debug, utoipa::ToSchema)]
+#[schema(as = UserLock)]
+pub struct EncodableUserLock {
+    /// The reason for the lock.
+    pub reason: String,
+
+    /// When the account is locked until. If null, then the account is locked
+    /// indefinitely.
+    pub until: Option<DateTime<Utc>>,
+}
+
+#[derive(Deserialize, Serialize, Debug, utoipa::ToSchema)]
 pub struct EncodableAuditAction {
     /// The action that was performed.
     #[schema(example = "publish")]

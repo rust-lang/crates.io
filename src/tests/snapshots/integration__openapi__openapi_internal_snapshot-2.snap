@@ -1260,6 +1260,26 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "UserLock": {
+        "properties": {
+          "reason": {
+            "description": "The reason for the lock.",
+            "type": "string"
+          },
+          "until": {
+            "description": "When the account is locked until. If null, then the account is locked\nindefinitely.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "Version": {
         "properties": {
           "audit_actions": {
@@ -7188,6 +7208,76 @@ expression: response.json()
         "summary": "Update user settings.",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/users/{user}/lock": {
+      "get": {
+        "operationId": "get",
+        "parameters": [
+          {
+            "description": "crates.io username",
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "lock": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "$ref": "#/components/schemas/UserLock"
+                        }
+                      ]
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Get the lock status of the given user.",
+        "tags": [
+          "users",
+          "admin"
         ]
       }
     }
