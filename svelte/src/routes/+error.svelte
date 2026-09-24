@@ -72,6 +72,11 @@
     margin: var(--space-m) 0;
   }
 
+  .title {
+    text-align: center;
+    line-height: 1.3;
+  }
+
   .link {
     font-weight: 500;
 
