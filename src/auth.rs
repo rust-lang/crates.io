@@ -69,6 +69,7 @@ pub struct AuthCheck {
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
     allow_any_crate_scope: bool,
+    require_admin: bool,
 }
 
 impl AuthCheck {
@@ -81,6 +82,7 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_admin: false,
         }
     }
 
@@ -91,6 +93,17 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_admin: false,
+        }
+    }
+
+    pub fn require_admin(&self) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: self.allow_any_crate_scope,
+            require_admin: true,
         }
     }
 
@@ -100,6 +113,7 @@ impl AuthCheck {
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_admin: self.require_admin,
         }
     }
 
@@ -109,6 +123,7 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_admin: self.require_admin,
         }
     }
 
@@ -122,6 +137,7 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: true,
+            require_admin: self.require_admin,
         }
     }
 
@@ -132,6 +148,15 @@ impl AuthCheck {
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
+
+        if self.require_admin && !auth.user().is_admin {
+            let error_message = "Admin access is required";
+            parts.request_log().add("cause", error_message);
+
+            return Err(forbidden(
+                "this action can only be performed by a crates.io admin",
+            ));
+        }
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
