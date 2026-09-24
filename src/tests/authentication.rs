@@ -44,3 +44,36 @@ async fn cookie_auth_cannot_find_user() {
     let error = anon.run::<()>(request).await;
     assert_eq!(error.status(), StatusCode::INTERNAL_SERVER_ERROR);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn cookie_auth_require_admin() {
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let session_key = app.as_inner().session_key();
+
+    // Build a URL for an admin-only route.
+    let url = format!("/api/v1/users/{}/lock", user.as_model().username);
+
+    // An anonymous request must fail.
+    let response = anon.get::<()>(&url).await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+
+    // Similarly, a request from the user we created above — who is not an admin
+    // — must fail.
+    let cookie = encode_session_header(session_key, user.as_model().id);
+    let mut request = anon.request_builder(Method::GET, &url);
+    request.header(header::COOKIE, &cookie);
+
+    let error = user.run::<()>(request).await;
+    assert_eq!(error.status(), StatusCode::FORBIDDEN);
+
+    // Finally, we should be able to create an admin and then their request will
+    // succeed.
+    let admin = app.db_new_admin_user("admin").await;
+
+    let cookie = encode_session_header(session_key, admin.as_model().id);
+    let mut request = anon.request_builder(Method::GET, &url);
+    request.header(header::COOKIE, &cookie);
+
+    let error = admin.run::<()>(request).await;
+    assert_eq!(error.status(), StatusCode::OK);
+}
