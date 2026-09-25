@@ -62,7 +62,7 @@ export const test = base.extend<AppOptions & AppFixtures>({
       };
 
       await use({ worker, db, authenticateAs });
-      await db.reset();
+      db.reset();
       await worker.disable();
     },
     { auto: true, scope: 'test' },

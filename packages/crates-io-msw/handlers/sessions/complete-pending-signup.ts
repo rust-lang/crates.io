@@ -31,9 +31,9 @@ export default http.post('/api/private/session/signup', async ({ request, respon
     emailVerified: false,
     emailVerificationToken: 'pending-signup',
   });
-  await db.mswSession.deleteMany(q => q.where(() => true));
+  db.mswSession.deleteMany(q => q.where(() => true));
   await db.mswSession.create({ user });
-  await db.pendingSignup.deleteMany(q => q.where(() => true));
+  db.pendingSignup.deleteMany(q => q.where(() => true));
 
   return response(200).json({
     user: serializeUser(user, { removePrivateData: false }),
