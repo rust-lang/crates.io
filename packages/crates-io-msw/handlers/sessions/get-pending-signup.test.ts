@@ -35,6 +35,17 @@ test('returns an error without a pending signup', async function () {
   `);
 });
 
+test('returns an error for an authenticated user', async function () {
+  let user = await db.user.create({ name: 'Existing User' });
+  await db.mswSession.create({ user });
+  await db.pendingSignup.create({ login: 'ghost' });
+
+  let response = await fetch('/api/private/session/signup');
+
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'You are already signed in.' }] });
+});
+
 test('returns null for a missing name', async function () {
   await db.pendingSignup.create({ login: 'ghost' });
 
