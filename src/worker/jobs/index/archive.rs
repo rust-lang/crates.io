@@ -63,7 +63,7 @@ impl BackgroundJob for ArchiveIndexBranch {
     ///
     /// Each invocation works against a fresh, ephemeral bare clone of the
     /// snapshot branch in a `TempDir`. The job does not share state with the
-    /// long-lived bare clone behind `WorkerContext::lock_index()`.
+    /// long-lived bare clone behind `WorkerContext::lock_and_refresh_index()`.
     #[instrument(skip_all, fields(branch = self.branch))]
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
         let Some(archive_url) = ctx.config.index_archive_url.as_ref() else {
