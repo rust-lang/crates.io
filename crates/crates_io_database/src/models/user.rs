@@ -46,7 +46,8 @@ pub fn users_by_username<'a>(username: &'a str) -> _ {
 pub struct PublicUser {
     pub id: i32,
     pub name: Option<String>,
-    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = github_username_matches())]
@@ -84,7 +85,8 @@ pub struct User {
     pub id: i32,
     pub name: Option<String>,
     pub gh_id: i32,
-    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = oauth_github::encrypted_token.nullable())]
@@ -130,7 +132,6 @@ impl User {
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
-    pub gh_login: &'a str,
     pub username: &'a str,
     pub name: Option<&'a str>,
 }
@@ -165,7 +166,6 @@ impl NewUser<'_> {
             .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
             .do_update()
             .set((
-                users::gh_login.eq(excluded(users::gh_login)),
                 users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
             ))

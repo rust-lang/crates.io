@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS lower_gh_login;

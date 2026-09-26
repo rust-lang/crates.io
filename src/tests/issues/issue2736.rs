@@ -2,7 +2,7 @@ use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use claims::assert_none;
 use crates_io::models::CrateOwner;
-use crates_io_database::schema::users;
+use crates_io_database::schema::oauth_github;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
@@ -36,10 +36,10 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     // - When `foo` now logs in to crates.io, it's a different account than their old `foo` crates.io account because of the new GitHub ID (and if it wasn't, this would be a security problem)
     let foo2 = app.db_new_user("foo").await;
 
-    let github_ids = users::table
-        .filter(users::gh_login.eq("foo"))
-        .select(users::gh_id)
-        .load::<i32>(&mut conn)
+    let github_ids = oauth_github::table
+        .filter(oauth_github::login.eq("foo"))
+        .select(oauth_github::account_id)
+        .load::<i64>(&mut conn)
         .await?;
 
     assert_eq!(github_ids.len(), 2);
