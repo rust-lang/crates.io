@@ -1436,11 +1436,11 @@ expression: response.json()
           "published_by": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/User",
                 "description": "The user who published this version.\n\nThis field may be `null` if the version was published before crates.io\nstarted recording this information."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -1468,11 +1468,11 @@ expression: response.json()
           "trustpub_data": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/TrustpubData",
                 "description": "Information about the trusted publisher that published this version, if any.\n\nStatus: **Unstable**\n\nThis field is filled if the version was published via trusted publishing\n(e.g., GitHub Actions) rather than a regular API token.\n\nThe exact structure of this field depends on the `provider` field\ninside it."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -2440,8 +2440,7 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "crate": {
-                    "description": "The crate settings to update.",
-                    "oneOf": [
+                    "allOf": [
                       {
                         "properties": {
                           "trustpub_only": {
@@ -2452,6 +2451,10 @@ expression: response.json()
                             ]
                           }
                         },
+                        "type": "object"
+                      },
+                      {
+                        "description": "The crate settings to update.",
                         "type": "object"
                       }
                     ]

@@ -1863,7 +1863,7 @@ export interface components {
              * @example 1.0.0
              */
             num: string;
-            published_by: null | components["schemas"]["User"];
+            published_by: components["schemas"]["User"] | null;
             /**
              * @description The API path to download the crate's README file as HTML code.
              * @example /api/v1/crates/serde/1.0.0/readme
@@ -1880,7 +1880,7 @@ export interface components {
              * @example 1.31
              */
             rust_version: string | null;
-            trustpub_data: null | components["schemas"]["TrustpubData"];
+            trustpub_data: components["schemas"]["TrustpubData"] | null;
             /**
              * Format: date-time
              * @description The date and time this version was last updated (i.e. yanked or unyanked).
@@ -2101,7 +2101,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": ({
+                    "application/json": (({
                         /** @description The crates that the authenticated user owns. */
                         owned_crates: {
                             /** @deprecated */
@@ -2120,7 +2120,7 @@ export interface operations {
                         }[];
                         /** @description The authenticated user. */
                         user: components["schemas"]["AuthenticatedUser"];
-                    } & {
+                    } & Record<string, never>) & {
                         /** @enum {string} */
                         status: "signed_in";
                     }) | {
@@ -2242,7 +2242,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description User-controlled signup details. */
                     signup: {
                         /**
                          * Format: email
@@ -2250,7 +2249,7 @@ export interface operations {
                          * @example new-user@example.com
                          */
                         email: string;
-                    };
+                    } & Record<string, never>;
                 };
             };
         };
@@ -2915,11 +2914,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description The crate settings to update. */
                     crate: {
                         /** @description Whether this crate can only be published via Trusted Publishing. */
                         trustpub_only?: boolean | null;
-                    };
+                    } & Record<string, never>;
                 };
             };
         };
