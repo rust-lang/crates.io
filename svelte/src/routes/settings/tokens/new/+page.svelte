@@ -1,8 +1,11 @@
 <script lang="ts">
+  import type { SvelteDate } from 'svelte/reactivity';
+
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
+  import Expiry from '$lib/components/Expiry.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
@@ -62,52 +65,16 @@
 
   let name = $state(existingToken?.name ?? '');
   let nameInvalid = $state(false);
-  let expirySelection = $state('90');
-  let expiryDateInput = $state('');
-  let expiryDateInvalid = $state(false);
+  let expiry: SvelteDate | undefined = $state();
+  let expiryInvalid = $state(false);
   let scopes = $state<string[]>(existingToken?.endpoint_scopes ?? []);
   let scopesInvalid = $state(false);
   let crateScopes = $state<CratePattern[]>(existingToken?.crate_scopes?.map(p => new CratePattern(p)) ?? []);
   let isSaving = $state(false);
 
-  let today = $derived(new Date().toISOString().slice(0, 10));
-
-  let expiryDate = $derived.by(() => {
-    if (expirySelection === 'none') return null;
-
-    let now = new Date();
-
-    if (expirySelection === 'custom') {
-      if (!expiryDateInput) return null;
-
-      let timeSuffix = now.toISOString().slice(10);
-      return new Date(expiryDateInput + timeSuffix);
-    }
-
-    return new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + Number(expirySelection),
-      now.getHours(),
-      now.getMinutes(),
-      now.getSeconds(),
-    );
-  });
-
-  let expiryDescription = $derived(
-    expirySelection === 'none'
-      ? 'The token will never expire'
-      : `The token will expire on ${expiryDate?.toLocaleDateString(undefined, { dateStyle: 'long' })}`,
-  );
-
   function toggleScope(scope: string): void {
     scopes = scopes.includes(scope) ? scopes.filter(it => it !== scope) : [...scopes, scope];
     scopesInvalid = false;
-  }
-
-  function updateExpirySelection(event: Event): void {
-    expiryDateInput = expiryDate?.toISOString().slice(0, 10) ?? '';
-    expirySelection = (event.target as HTMLSelectElement).value;
   }
 
   function addCratePattern(): void {
@@ -120,7 +87,6 @@
 
   function validate(): boolean {
     nameInvalid = !name;
-    expiryDateInvalid = expirySelection === 'custom' && !expiryDateInput;
     scopesInvalid = scopes.length === 0;
     let crateScopesValid = crateScopes
       .map(pattern => {
@@ -130,7 +96,7 @@
       })
       .every(Boolean);
 
-    return !nameInvalid && !expiryDateInvalid && !scopesInvalid && crateScopesValid;
+    return !nameInvalid && !expiryInvalid && !scopesInvalid && crateScopesValid;
   }
 
   async function handleSubmit(event: SubmitEvent): Promise<void> {
@@ -152,7 +118,7 @@
             name,
             endpoint_scopes: scopes,
             crate_scopes: crateScopePatterns,
-            expired_at: expiryDate?.toISOString() ?? null,
+            expired_at: expiry?.toISOString() ?? null,
           },
         },
       });
@@ -208,39 +174,7 @@
       <label for="{id}-expiry" class="form-group-name">Expiration</label>
 
       <div class="select-group">
-        <select
-          id="{id}-expiry"
-          disabled={isSaving}
-          class="expiry-select base-input"
-          data-test-expiry
-          onchange={updateExpirySelection}
-        >
-          <option value="none">No expiration</option>
-          <option value="7">7 days</option>
-          <option value="30">30 days</option>
-          <option value="60">60 days</option>
-          <option value="90" selected>90 days</option>
-          <option value="365">365 days</option>
-          <option value="custom">Custom...</option>
-        </select>
-
-        {#if expirySelection === 'custom'}
-          <input
-            type="date"
-            bind:value={expiryDateInput}
-            min={today}
-            disabled={isSaving}
-            aria-invalid={expiryDateInvalid}
-            aria-label="Custom expiration date"
-            class="expiry-date-input base-input"
-            data-test-expiry-date
-            oninput={() => (expiryDateInvalid = false)}
-          />
-        {:else}
-          <span class="expiry-description" data-test-expiry-description>
-            {expiryDescription}
-          </span>
-        {/if}
+        <Expiry bind:date={expiry} bind:invalid={expiryInvalid} {id} disabled={isSaving} noun="token" />
       </div>
     </div>
 
@@ -394,37 +328,6 @@
   .name-input {
     max-width: 440px;
     width: 100%;
-  }
-
-  .expiry-select {
-    --dropdown-icon-light: icon('i-mdi:menu-down', 'black');
-    --dropdown-icon-dark: icon('i-mdi:menu-down', 'white');
-
-    padding-right: var(--space-m);
-    background-image: var(--dropdown-icon-light);
-    background-repeat: no-repeat;
-    background-position: calc(100% - var(--space-3xs)) center;
-    background-size: 20px;
-    appearance: none;
-
-    :global([data-color-scheme='system']) & {
-      @media (prefers-color-scheme: dark) {
-        background-image: var(--dropdown-icon-dark);
-      }
-    }
-
-    :global([data-color-scheme='dark']) & {
-      background-image: var(--dropdown-icon-dark);
-    }
-  }
-
-  .expiry-date-input {
-    margin-left: var(--space-2xs);
-  }
-
-  .expiry-description {
-    margin-left: var(--space-2xs);
-    font-size: 0.9em;
   }
 
   .scopes-list {
