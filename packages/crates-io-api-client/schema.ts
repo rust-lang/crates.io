@@ -1558,7 +1558,7 @@ export interface components {
              * @example https://avatars2.githubusercontent.com/u/1234567?v=4
              */
             avatar: string | null;
-            /** @description Whether a linked GitHub username exactly matches the crates.io username. */
+            /** @description Whether GitHub lookup of the crates.io username resolves to this user. */
             github_username_matches: boolean;
             /**
              * Format: int32
@@ -1719,7 +1719,7 @@ export interface components {
              *     deleted before June 19, 2026, this field will be empty.
              */
             created_at: string | null;
-            /** @description Whether a linked GitHub username exactly matches the crates.io username. */
+            /** @description Whether GitHub lookup of the crates.io username resolves to this user. */
             github_username_matches: boolean;
             /**
              * Format: int32

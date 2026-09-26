@@ -18,7 +18,7 @@
     /** The username displayed in the page heading. */
     login: string;
 
-    /** Whether a linked GitHub username exactly matches the crates.io username. */
+    /** Whether GitHub lookup of the crates.io username resolves to this user. */
     github_username_matches: boolean;
 
     /** The user's optional display name. */
