@@ -123,6 +123,23 @@ impl User {
             .await
             .optional()
     }
+
+    /// Checks if the user account is locked, and if so, returns the reason and
+    /// when the account is locked until, or `None` if the account is locked
+    /// indefinitely.
+    pub fn is_locked(&self) -> Option<(&str, Option<DateTime<Utc>>)> {
+        if let Some(reason) = &self.account_lock_reason {
+            let until = self.account_lock_until;
+
+            let still_locked = until.map(|until| until > Utc::now()).unwrap_or(true);
+
+            if still_locked {
+                return Some((reason, until));
+            }
+        }
+
+        None
+    }
 }
 
 /// Represents a new user record insertable to the `users` table

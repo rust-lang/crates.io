@@ -9,7 +9,6 @@ use crate::util::errors::{
 };
 use crate::util::token::HashedToken;
 use axum::extract::FromRequestParts;
-use chrono::Utc;
 use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
 use http::request::Parts;
@@ -69,6 +68,7 @@ pub struct AuthCheck {
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
     allow_any_crate_scope: bool,
+    require_admin: bool,
 }
 
 impl AuthCheck {
@@ -81,6 +81,7 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_admin: false,
         }
     }
 
@@ -91,6 +92,17 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_admin: false,
+        }
+    }
+
+    pub fn require_admin(&self) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: self.allow_any_crate_scope,
+            require_admin: true,
         }
     }
 
@@ -100,6 +112,7 @@ impl AuthCheck {
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_admin: self.require_admin,
         }
     }
 
@@ -109,6 +122,7 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_admin: self.require_admin,
         }
     }
 
@@ -122,6 +136,7 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: true,
+            require_admin: self.require_admin,
         }
     }
 
@@ -132,6 +147,15 @@ impl AuthCheck {
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
+
+        if self.require_admin && !auth.user().is_admin {
+            let error_message = "Admin access is required";
+            parts.request_log().add("cause", error_message);
+
+            return Err(forbidden(
+                "this action can only be performed by a crates.io admin",
+            ));
+        }
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
@@ -347,15 +371,8 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
 
 /// Rejects active account locks for authentication and session authorization.
 pub fn ensure_not_locked(user: &User) -> AppResult<()> {
-    if let Some(reason) = &user.account_lock_reason {
-        let still_locked = user
-            .account_lock_until
-            .map(|until| until > Utc::now())
-            .unwrap_or(true);
-
-        if still_locked {
-            return Err(account_locked(reason, user.account_lock_until));
-        }
+    if let Some((reason, until)) = user.is_locked() {
+        return Err(account_locked(reason, until));
     }
 
     Ok(())

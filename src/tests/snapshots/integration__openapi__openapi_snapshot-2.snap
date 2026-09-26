@@ -1260,6 +1260,26 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "UserLock": {
+        "properties": {
+          "reason": {
+            "description": "The reason for the lock.",
+            "type": "string"
+          },
+          "until": {
+            "description": "When the account is locked until. If null, then the account is locked\nindefinitely.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "Version": {
         "properties": {
           "audit_actions": {

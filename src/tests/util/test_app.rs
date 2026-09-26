@@ -159,6 +159,31 @@ impl TestApp {
         self.db_new_user_from_builder(builder).await
     }
 
+    /// Create a new admin user with a verified e-mail address in the database
+    /// and return a mock user session.
+    pub async fn db_new_admin_user(&self, username: &str) -> MockCookieUser {
+        use crates_io::schema::users;
+        use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
+
+        let builder = UserBuilder::new().with_username(username);
+        let user = self.db_new_user_from_builder(builder).await;
+
+        // The cleaner way to do this would be to extend the user builder to be
+        // able to set the is_admin field on insert. Realistically, though, we
+        // don't actually need to do that anywhere other than the test suite, so
+        // let's just hack it here and move on.
+        let mut conn = self.db_conn().await;
+        diesel::update(users::table)
+            .set(users::is_admin.eq(true))
+            .filter(users::id.eq(user.user.id))
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        user
+    }
+
     /// Create a new user from a builder with a verified email address in the
     /// database (`<username>@example.com`) and return a mock user session.
     pub async fn db_new_user_from_builder(&self, builder: UserBuilder<'_>) -> MockCookieUser {
