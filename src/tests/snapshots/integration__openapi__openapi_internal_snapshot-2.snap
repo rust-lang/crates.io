@@ -1865,54 +1865,46 @@ expression: response.json()
                     {
                       "allOf": [
                         {
-                          "allOf": [
-                            {
-                              "properties": {
-                                "owned_crates": {
-                                  "description": "The crates that the authenticated user owns.",
-                                  "items": {
-                                    "properties": {
-                                      "email_notifications": {
-                                        "deprecated": true,
-                                        "type": "boolean"
-                                      },
-                                      "id": {
-                                        "description": "The opaque identifier of the crate.",
-                                        "example": 123,
-                                        "format": "int32",
-                                        "type": "integer"
-                                      },
-                                      "name": {
-                                        "description": "The name of the crate.",
-                                        "example": "serde",
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "id",
-                                      "name",
-                                      "email_notifications"
-                                    ],
-                                    "type": "object"
+                          "properties": {
+                            "owned_crates": {
+                              "description": "The crates that the authenticated user owns.",
+                              "items": {
+                                "properties": {
+                                  "email_notifications": {
+                                    "deprecated": true,
+                                    "type": "boolean"
                                   },
-                                  "type": "array"
+                                  "id": {
+                                    "description": "The opaque identifier of the crate.",
+                                    "example": 123,
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "name": {
+                                    "description": "The name of the crate.",
+                                    "example": "serde",
+                                    "type": "string"
+                                  }
                                 },
-                                "user": {
-                                  "$ref": "#/components/schemas/AuthenticatedUser",
-                                  "description": "The authenticated user."
-                                }
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "email_notifications"
+                                ],
+                                "type": "object"
                               },
-                              "required": [
-                                "user",
-                                "owned_crates"
-                              ],
-                              "type": "object"
+                              "type": "array"
                             },
-                            {
-                              "description": "The GitHub OAuth flow signed in a crates.io user.",
-                              "type": "object"
+                            "user": {
+                              "$ref": "#/components/schemas/AuthenticatedUser",
+                              "description": "The authenticated user."
                             }
-                          ]
+                          },
+                          "required": [
+                            "user",
+                            "owned_crates"
+                          ],
+                          "type": "object"
                         },
                         {
                           "properties": {
@@ -1928,8 +1920,7 @@ expression: response.json()
                           ],
                           "type": "object"
                         }
-                      ],
-                      "description": "The GitHub OAuth flow signed in a crates.io user."
+                      ]
                     },
                     {
                       "description": "The GitHub account needs a crates.io account.",
@@ -2142,27 +2133,19 @@ expression: response.json()
                 "description": "Request to complete a pending signup.",
                 "properties": {
                   "signup": {
-                    "allOf": [
-                      {
-                        "description": "User-controlled details for a pending signup.",
-                        "properties": {
-                          "email": {
-                            "description": "The email address to associate with the new account.",
-                            "example": "new-user@example.com",
-                            "format": "email",
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "email"
-                        ],
-                        "type": "object"
-                      },
-                      {
-                        "description": "User-controlled signup details.",
-                        "type": "object"
+                    "description": "User-controlled details for a pending signup.",
+                    "properties": {
+                      "email": {
+                        "description": "The email address to associate with the new account.",
+                        "example": "new-user@example.com",
+                        "format": "email",
+                        "type": "string"
                       }
-                    ]
+                    },
+                    "required": [
+                      "email"
+                    ],
+                    "type": "object"
                   }
                 },
                 "required": [
@@ -3113,24 +3096,17 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "crate": {
-                    "allOf": [
-                      {
-                        "properties": {
-                          "trustpub_only": {
-                            "description": "Whether this crate can only be published via Trusted Publishing.",
-                            "type": [
-                              "boolean",
-                              "null"
-                            ]
-                          }
-                        },
-                        "type": "object"
-                      },
-                      {
-                        "description": "The crate settings to update.",
-                        "type": "object"
+                    "description": "The crate settings to update.",
+                    "properties": {
+                      "trustpub_only": {
+                        "description": "Whether this crate can only be published via Trusted Publishing.",
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
                       }
-                    ]
+                    },
+                    "type": "object"
                   }
                 },
                 "required": [

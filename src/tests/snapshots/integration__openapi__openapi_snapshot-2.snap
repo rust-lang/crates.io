@@ -2440,24 +2440,17 @@ expression: response.json()
               "schema": {
                 "properties": {
                   "crate": {
-                    "allOf": [
-                      {
-                        "properties": {
-                          "trustpub_only": {
-                            "description": "Whether this crate can only be published via Trusted Publishing.",
-                            "type": [
-                              "boolean",
-                              "null"
-                            ]
-                          }
-                        },
-                        "type": "object"
-                      },
-                      {
-                        "description": "The crate settings to update.",
-                        "type": "object"
+                    "description": "The crate settings to update.",
+                    "properties": {
+                      "trustpub_only": {
+                        "description": "Whether this crate can only be published via Trusted Publishing.",
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
                       }
-                    ]
+                    },
+                    "type": "object"
                   }
                 },
                 "required": [
