@@ -18,12 +18,12 @@ use tracing::{info, warn};
 
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct PatchRequest {
-    /// The crate settings to update.
     #[serde(rename = "crate")]
     #[schema(inline)]
     pub krate: PatchRequestCrate,
 }
 
+/// The crate settings to update.
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct PatchRequestCrate {
     /// Whether this crate can only be published via Trusted Publishing.

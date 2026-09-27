@@ -91,7 +91,6 @@ pub struct AuthorizeBody {
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum AuthorizeResponse {
-    /// The GitHub OAuth flow signed in a crates.io user.
     SignedIn(#[schema(inline)] EncodableMe),
     /// The GitHub account needs a crates.io account.
     SignupRequired,
@@ -146,7 +145,6 @@ pub struct SignupResponse {
 /// Request to complete a pending signup.
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CompletePendingSignupRequest {
-    /// User-controlled signup details.
     #[schema(inline)]
     signup: CompletePendingSignupData,
 }
