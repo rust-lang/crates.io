@@ -15,7 +15,7 @@
 
 use axum::response::IntoResponse;
 use derive_more::Display;
-use std::any::{Any, TypeId};
+use std::any::{Any, TypeId, type_name};
 use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
@@ -131,7 +131,13 @@ impl<E: Error + Send + 'static> AppError for E {
     fn response(&self) -> axum::response::Response {
         sentry::capture_error(self);
 
-        server_error_response(self.to_string())
+        let error = std::iter::successors(Some(self as &dyn Error), |e| (*e).source())
+            .map(|e| e.to_string())
+            .collect::<Vec<_>>()
+            .join(": ");
+
+        let error = ErrorField::new(type_name::<E>(), error);
+        server_error_response(error)
     }
 }
 
@@ -236,7 +242,8 @@ impl AppError for InternalAppError {
     fn response(&self) -> axum::response::Response {
         sentry::capture_message(&self.description, sentry::Level::Error);
 
-        server_error_response(self.description.to_string())
+        let error = ErrorField::new(type_name::<Self>(), &self.description);
+        server_error_response(error)
     }
 }
 
@@ -246,10 +253,10 @@ pub fn internal<S: ToString>(error: S) -> BoxedAppError {
     })
 }
 
-fn server_error_response(error: String) -> axum::response::Response {
+fn server_error_response(error: ErrorField) -> axum::response::Response {
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        Extension(ErrorField(error)),
+        Extension(error),
         "Internal Server Error",
     )
         .into_response()
