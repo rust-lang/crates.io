@@ -28,12 +28,14 @@ async fn test_wrong_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path() {
-    let (app, _anon, user) = TestApp::init().with_user().await;
+    let (app, _anon, user) = TestApp::full().with_user().await;
 
     let url = format!("/api/v1/users/{}/resend", user.as_model().id);
     let response = user.put::<()>(&url, "").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
+    assert!(app.emails().await.is_empty());
+    app.run_pending_background_jobs().await;
     assert_snapshot!(app.emails_snapshot().await);
 }
