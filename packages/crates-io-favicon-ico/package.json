@@ -1,0 +1,29 @@
+{
+  "name": "@crates-io/favicon-ico",
+  "version": "0.0.0",
+  "private": true,
+  "homepage": "https://github.com/rust-lang/crates.io#readme",
+  "bugs": {
+    "url": "https://github.com/rust-lang/crates.io/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-lang/crates.io.git"
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "sharp": "0.35.4"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "vitest": "5.0.2"
+  }
+}

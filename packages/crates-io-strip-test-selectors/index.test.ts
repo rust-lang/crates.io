@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import stripTestSelectors from './strip-test-selectors.js';
+import stripTestSelectors from './index.js';
 
 interface PreprocessResult {
   code: string;

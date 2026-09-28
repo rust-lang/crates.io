@@ -104,6 +104,25 @@ importers:
         specifier: 5.0.2
         version: 5.0.2(@types/node@24.13.6)(@vitest/browser-playwright@5.0.2)(@vitest/coverage-v8@5.0.2)(@vitest/ui@5.0.2)(msw@2.15.0(@types/node@24.13.6)(typescript@6.0.3))(vite@8.3.1(@types/node@24.13.6)(jiti@2.7.0))
 
+  packages/crates-io-favicon-ico:
+    dependencies:
+      sharp:
+        specifier: 0.35.4
+        version: 0.35.4(@types/node@24.13.6)
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.6
+        version: 24.13.6
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vite:
+        specifier: 8.3.1
+        version: 8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vitest:
+        specifier: 5.0.2
+        version: 5.0.2(@types/node@24.13.6)(@vitest/browser-playwright@5.0.2)(@vitest/coverage-v8@5.0.2)(@vitest/ui@5.0.2)(msw@2.15.0(@types/node@24.13.6)(typescript@6.0.3))(vite@8.3.1(@types/node@24.13.6)(jiti@2.7.0))
+
   packages/crates-io-file-tree-icons:
     devDependencies:
       '@catppuccin/palette':
@@ -147,14 +166,42 @@ importers:
         specifier: 5.0.2
         version: 5.0.2(@types/node@24.13.6)(@vitest/browser-playwright@5.0.2)(@vitest/coverage-v8@5.0.2)(@vitest/ui@5.0.2)(msw@2.15.0(@types/node@24.13.6)(typescript@6.0.3))(vite@8.3.1(@types/node@24.13.6)(jiti@2.7.0))
 
+  packages/crates-io-strip-test-selectors:
+    dependencies:
+      magic-string:
+        specifier: 1.4.2
+        version: 1.4.2
+      svelte:
+        specifier: 5.57.1
+        version: 5.57.1(@typescript-eslint/types@8.70.1)
+      zimmerframe:
+        specifier: 1.1.5
+        version: 1.1.5
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.6
+        version: 24.13.6
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 5.0.2
+        version: 5.0.2(@types/node@24.13.6)(@vitest/browser-playwright@5.0.2)(@vitest/coverage-v8@5.0.2)(@vitest/ui@5.0.2)(msw@2.15.0(@types/node@24.13.6)(typescript@6.0.3))(vite@8.3.1(@types/node@24.13.6)(jiti@2.7.0))
+
   svelte:
     dependencies:
       '@crates-io/api-client':
         specifier: workspace:*
         version: link:../packages/crates-io-api-client
+      '@crates-io/favicon-ico':
+        specifier: workspace:*
+        version: link:../packages/crates-io-favicon-ico
       '@crates-io/file-tree-icons':
         specifier: workspace:*
         version: link:../packages/crates-io-file-tree-icons
+      '@crates-io/strip-test-selectors':
+        specifier: workspace:*
+        version: link:../packages/crates-io-strip-test-selectors
       '@floating-ui/dom':
         specifier: 1.8.0
         version: 1.8.0
@@ -267,18 +314,12 @@ importers:
       chromatic:
         specifier: 18.9.5
         version: 18.9.5
-      magic-string:
-        specifier: 1.4.2
-        version: 1.4.2
       msw:
         specifier: 2.15.0
         version: 2.15.0(@types/node@24.13.6)(typescript@6.0.3)
       playwright:
         specifier: 1.63.0
         version: 1.63.0
-      sharp:
-        specifier: 0.35.4
-        version: 0.35.4(@types/node@24.13.6)
       storybook:
         specifier: 10.6.0
         version: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
@@ -303,9 +344,6 @@ importers:
       vitest-browser-svelte:
         specifier: 3.1.0
         version: 3.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vitest@5.0.2)
-      zimmerframe:
-        specifier: 1.1.5
-        version: 1.1.5
 
 packages:
 

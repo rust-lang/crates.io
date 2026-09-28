@@ -5,8 +5,8 @@ import { walk } from 'zimmerframe';
 /**
  * Removes `data-test-*` and `data-testid` attributes from `.svelte` markup.
  *
- * Returns a Svelte preprocessor that always strips when invoked. The decision
- * to invoke it lives in `svelte.config.js`.
+ * Returns a Svelte preprocessor that always strips when invoked. The caller
+ * decides when to invoke it.
  *
  * @returns {import('svelte/compiler').PreprocessorGroup}
  */

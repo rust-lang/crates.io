@@ -2,6 +2,7 @@ import type { LogType, PluginOption, ProxyOptions } from 'vite';
 
 import { fileURLToPath } from 'node:url';
 
+import faviconIco from '@crates-io/favicon-ico';
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import { sveltekit } from '@sveltejs/kit/vite';
 import UnoCSS from '@unocss/vite';
@@ -9,8 +10,6 @@ import { playwright } from '@vitest/browser-playwright';
 import { createLogger } from 'vite';
 import { analyzer } from 'vite-bundle-analyzer';
 import { defineConfig } from 'vitest/config';
-
-import faviconIco from './src/build/favicon-ico.js';
 
 const __TEST__ = Boolean(process.env.PLAYWRIGHT || process.env.VITEST);
 const API_HOST = process.env.API_HOST ?? 'https://crates.io';

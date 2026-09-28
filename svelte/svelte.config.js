@@ -1,7 +1,6 @@
+import stripTestSelectors from '@crates-io/strip-test-selectors';
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-
-import stripTestSelectors from './src/build/strip-test-selectors.js';
 
 const preprocess = [vitePreprocess()];
 
