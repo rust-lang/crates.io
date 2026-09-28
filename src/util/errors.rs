@@ -129,8 +129,6 @@ pub type AppResult<T> = Result<T, BoxedAppError>;
 
 impl<E: Error + Send + 'static> AppError for E {
     fn response(&self) -> axum::response::Response {
-        error!("Internal Server Error: {self}");
-
         sentry::capture_error(self);
 
         server_error_response(self.to_string())
@@ -236,8 +234,6 @@ struct InternalAppError {
 
 impl AppError for InternalAppError {
     fn response(&self) -> axum::response::Response {
-        error!("Internal Server Error: {}", self.description);
-
         sentry::capture_message(&self.description, sentry::Level::Error);
 
         server_error_response(self.description.to_string())
