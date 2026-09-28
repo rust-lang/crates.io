@@ -36,17 +36,13 @@ frontend_lint:
   - pnpm-lock.yaml
   - '**/*.{css,html,json,json5,mjs,js,ts,svelte,yml,yaml}'
 
-msw_test:
+js_packages_test:
   - .github/workflows/**
-  - packages/crates-io-api-client/**
-  - packages/crates-io-msw/**
-  - pnpm-lock.yaml
-
-api_client_test:
-  - .github/workflows/**
-  - packages/crates-io-api-client/**
+  - packages/**
   - src/tests/snapshots/integration__openapi__openapi_internal_snapshot-2.snap
+  - package.json
   - pnpm-lock.yaml
+  - pnpm-workspace.yaml
 
 e2e_test:
   - .github/workflows/**

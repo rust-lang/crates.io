@@ -41,8 +41,7 @@ jobs:
       backend-migrations: ${{ steps.changed-files.outputs.backend_migrations_any_modified }}
       backend-test: ${{ steps.changed-files.outputs.backend_test_any_modified }}
       frontend-lint: ${{ steps.changed-files.outputs.frontend_lint_any_modified }}
-      msw-test: ${{ steps.changed-files.outputs.msw_test_any_modified }}
-      api-client-test: ${{ steps.changed-files.outputs.api_client_test_any_modified }}
+      js-packages-test: ${{ steps.changed-files.outputs.js_packages_test_any_modified }}
       e2e-test: ${{ steps.changed-files.outputs.e2e_test_any_modified }}
       svelte: ${{ steps.changed-files.outputs.svelte_any_modified }}
       zizmor: ${{ steps.changed-files.outputs.zizmor_any_modified }}
@@ -182,11 +181,11 @@ jobs:
       - run: pnpm prettier:check
       - run: pnpm --recursive --if-present run typecheck
 
-  msw-test:
-    name: Frontend / Test (@crates-io/msw)
+  js-packages-test:
+    name: Frontend / Test (JS packages)
     runs-on: ubuntu-26.04
     needs: filter-jobs
-    if: needs.filter-jobs.outputs.msw-test == 'true'
+    if: needs.filter-jobs.outputs.js-packages-test == 'true'
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -204,31 +203,7 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpm --filter "@crates-io/msw" test
-
-  api-client-test:
-    name: Frontend / Test (@crates-io/api-client)
-    runs-on: ubuntu-26.04
-    needs: filter-jobs
-    if: needs.filter-jobs.outputs.api-client-test == 'true'
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        with:
-          version: 12.6.0
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          cache: pnpm
-          node-version-file: package.json
-
-      - run: pnpm install
-
-      - run: pnpm --filter "@crates-io/api-client" test
+      - run: pnpm -r --filter './packages/*' test
 
   e2e-test:
     name: Frontend / Test (playwright)
