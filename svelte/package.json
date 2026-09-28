@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@crates-io/api-client": "workspace:*",
+    "@crates-io/favicon-ico": "workspace:*",
     "@crates-io/file-tree-icons": "workspace:*",
     "@crates-io/strip-test-selectors": "workspace:*",
     "@floating-ui/dom": "1.8.0",
@@ -65,7 +66,6 @@
     "chromatic": "18.9.5",
     "msw": "2.15.0",
     "playwright": "1.63.0",
-    "sharp": "0.35.4",
     "storybook": "10.6.0",
     "svelte": "5.57.1",
     "svelte-check": "4.7.6",
