@@ -46,7 +46,8 @@ pub fn users_by_username<'a>(username: &'a str) -> _ {
 pub struct PublicUser {
     pub id: i32,
     pub name: Option<String>,
-    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = github_username_matches())]
@@ -84,7 +85,8 @@ pub struct User {
     pub id: i32,
     pub name: Option<String>,
     pub gh_id: i32,
-    pub gh_login: String,
+    #[diesel(select_expression = oauth_github::login.nullable())]
+    pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
     pub gh_avatar: Option<String>,
     #[diesel(select_expression = oauth_github::encrypted_token.nullable())]

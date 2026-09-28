@@ -527,6 +527,22 @@ pub struct EncodableCrateLinks {
     pub reverse_dependencies: String,
 }
 
+/// The `url` fields in the API responses that return `User` or `AuthenticatedUser` have been
+/// deprecated in favor of the `linked_accounts` field that will support more than just GitHub. For
+/// consumers of the API that are still using the deprecated `url` field, we're providing a URL for
+/// the user in question, as best we can.
+///
+/// If we have a linked `oauth_github` record for this user, then we can provide the GitHub URL in
+/// the `url` field as we have in the past. If we don't have a linked `oauth_github` record for
+/// this user, that means their GitHub account has been deleted and linking to GitHub would
+/// definitely be wrong. In that case, link to their crates.io user page because it's at least a
+/// valid location.
+fn deprecated_url_best_effort(gh_login: Option<&str>, crates_io_login: &str) -> String {
+    gh_login
+        .map(|gh_login| format!("https://github.com/{gh_login}"))
+        .unwrap_or_else(|| format!("https://crates.io/users/{crates_io_login}"))
+}
+
 /// A user or team that owns a crate.
 #[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 #[schema(as = Owner)]
@@ -592,7 +608,7 @@ impl EncodableOwner {
     pub fn from_user(user: PublicUser) -> Self {
         Self::User {
             github_username_matches: user.github_username_matches,
-            url: format!("https://github.com/{}", user.gh_login),
+            url: deprecated_url_best_effort(user.gh_login.as_deref(), &user.username),
             id: user.id,
             login: user.username,
             avatar: user.gh_avatar,
@@ -771,7 +787,8 @@ impl EncodablePrivateUser {
             created_at,
             ..
         } = user;
-        let url = format!("https://github.com/{gh_login}");
+
+        let url = deprecated_url_best_effort(gh_login.as_deref(), &username);
 
         EncodablePrivateUser {
             id,
@@ -840,7 +857,9 @@ impl From<PublicUser> for EncodablePublicUser {
             created_at,
             ..
         } = user;
-        let url = format!("https://github.com/{gh_login}");
+
+        let url = deprecated_url_best_effort(gh_login.as_deref(), &username);
+
         EncodablePublicUser {
             id,
             avatar: gh_avatar,
@@ -1331,5 +1350,33 @@ mod tests {
         let json = serde_json::to_string(&inv).unwrap();
         assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
         assert_some!(json.as_str().find(r#""expires_at":"2020-10-24T16:30:00Z""#));
+    }
+
+    #[test]
+    fn deprecated_url_fields() {
+        let user_with_github = PublicUser {
+            id: 1,
+            name: Some("Display Name".into()),
+            gh_login: Some("github-user".into()),
+            gh_avatar: Some("https://example.com/avatar.png".into()),
+            github_username_matches: false,
+            username: "crates-io-user".into(),
+            created_at: None,
+        };
+        let encoded_user_with_github = EncodablePublicUser::from(user_with_github.clone());
+        assert_eq!(
+            encoded_user_with_github.url,
+            "https://github.com/github-user"
+        );
+
+        let user_deleted_github = PublicUser {
+            gh_login: None,
+            ..user_with_github
+        };
+        let encoded_user_deleted_github = EncodablePublicUser::from(user_deleted_github);
+        assert_eq!(
+            encoded_user_deleted_github.url,
+            "https://crates.io/users/crates-io-user"
+        );
     }
 }
