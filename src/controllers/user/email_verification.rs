@@ -5,12 +5,15 @@ use crate::models::Email;
 use crate::server::ServerContext;
 use crate::util::errors::AppResult;
 use crate::util::errors::{BoxedAppError, bad_request};
+use crate::worker::jobs::SendEmail;
 use axum::extract::Path;
 use crates_io_database::schema::emails;
+use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
+use lettre::Address;
 use minijinja::context;
 use secrecy::ExposeSecret;
 
@@ -86,6 +89,11 @@ pub async fn resend_email_verification(
             .optional()?
             .ok_or_else(|| bad_request("Email could not be found"))?;
 
+        let recipient: Address = email
+            .email
+            .parse()
+            .map_err(|_| bad_request("invalid email address"))?;
+
         let email_message = EmailMessage::from_template(
             "user_confirm",
             context! {
@@ -96,10 +104,11 @@ pub async fn resend_email_verification(
         )
         .map_err(|_| bad_request("Failed to render email template"))?;
 
-        ctx.emails
-            .send(&email.email, email_message)
-            .await
-            .map_err(BoxedAppError::from)
+        SendEmail::new(recipient, email_message)
+            .enqueue(conn)
+            .await?;
+
+        Ok::<_, BoxedAppError>(())
     })
     .await?;
 
