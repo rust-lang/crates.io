@@ -23,7 +23,19 @@ use std::time::Instant;
 use tracing::{Level, event};
 
 #[derive(Clone, Debug)]
-pub struct ErrorField(pub String);
+pub struct ErrorField {
+    kind: &'static str,
+    message: String,
+}
+
+impl ErrorField {
+    pub fn new(kind: &'static str, message: impl Into<String>) -> Self {
+        Self {
+            kind,
+            message: message.into(),
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct CauseField(pub String);
@@ -84,6 +96,10 @@ pub async fn log_requests(
         serde_json::to_string(&metadata).unwrap_or_default()
     };
 
+    let error = response.extensions().get::<ErrorField>();
+    let error_kind = error.map(|e| e.kind);
+    let error_message = error.map(|e| e.message.as_str());
+
     event!(
         target: "http",
         Level::INFO,
@@ -98,7 +114,8 @@ pub async fn log_requests(
         http.request.headers.hashed_cookie = hashed_cookie_header,
         http.status_code = status.as_u16(),
         cause = response.extensions().get::<CauseField>().map(|e| e.0.as_str()),
-        error.message = response.extensions().get::<ErrorField>().map(|e| e.0.as_str()),
+        error.kind = error_kind,
+        error.message = error_message,
         %custom_metadata,
         "{method} {url} → {status} ({duration:?})",
     );
