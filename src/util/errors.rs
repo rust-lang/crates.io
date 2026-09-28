@@ -30,7 +30,6 @@ use tracing::error;
 
 mod json;
 
-use crate::email::EmailError;
 use crate::util::diesel::is_read_only_error;
 use crates_io_github::GitHubError;
 pub use json::ApiErrorResponse;
@@ -156,19 +155,6 @@ impl From<DieselError> for BoxedAppError {
                 service_unavailable()
             }
             _ => Box::new(err),
-        }
-    }
-}
-
-impl From<EmailError> for BoxedAppError {
-    fn from(error: EmailError) -> Self {
-        match error {
-            EmailError::AddressError(error) => Box::new(error),
-            EmailError::MessageBuilderError(error) => Box::new(error),
-            EmailError::TransportError(error) => {
-                error!("Failed to send email: {error}");
-                server_error("Failed to send the email")
-            }
         }
     }
 }
