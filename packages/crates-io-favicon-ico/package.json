@@ -21,7 +21,7 @@
     "sharp": "0.35.4"
   },
   "devDependencies": {
-    "@types/node": "24.13.6",
+    "@types/node": "24.19.0",
     "typescript": "6.0.3",
     "vite": "8.3.1",
     "vitest": "5.0.2"
