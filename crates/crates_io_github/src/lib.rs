@@ -164,6 +164,15 @@ pub trait GitHubClient: Send + Sync {
         force: bool,
         auth: &GitHubAuth,
     ) -> Result<GitRef>;
+
+    /// Deletes a git ref. `ref_name` may be fully qualified or omit `refs/`.
+    async fn delete_ref(
+        &self,
+        owner: &str,
+        repo: &str,
+        ref_name: &str,
+        auth: &GitHubAuth,
+    ) -> Result<()>;
 }
 
 #[derive(Debug)]
@@ -396,6 +405,20 @@ impl GitHubClient for RealGitHubClient {
         let body = Body { sha, force };
         self._mutate(reqwest::Method::PATCH, &path, &body, auth)
             .await
+    }
+
+    async fn delete_ref(
+        &self,
+        owner: &str,
+        repo: &str,
+        ref_name: &str,
+        auth: &GitHubAuth,
+    ) -> Result<()> {
+        let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
+        let path = format!("/repos/{owner}/{repo}/git/refs/{ref_path}");
+        let request = self.request_builder(reqwest::Method::DELETE, &path, auth)?;
+        request.send().await?.error_for_status()?;
+        Ok(())
     }
 }
 
@@ -803,6 +826,27 @@ mod tests {
 
         assert_eq!(got.ref_name, "refs/heads/master");
         assert_eq!(got.object.sha, new_sha);
+    }
+
+    #[tokio::test]
+    async fn delete_ref_sends_authenticated_request() {
+        let mut server = mock_server().await;
+        let path = "/repos/rust-lang/crates.io-index/git/refs/heads/snapshot-2026-04-24";
+        let _mock = server
+            .mock("DELETE", path)
+            .match_header("authorization", "Bearer test-token")
+            .with_status(204)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let auth = GitHubAuth::bearer("test-token");
+        let ref_name = "refs/heads/snapshot-2026-04-24";
+        client
+            .delete_ref("rust-lang", "crates.io-index", ref_name, &auth)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
