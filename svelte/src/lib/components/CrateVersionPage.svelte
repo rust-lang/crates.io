@@ -215,7 +215,7 @@
   }
 
   .docs {
-    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    --shadow: 0 2px 3px var(--surface-shadow-color-muted);
 
     margin-bottom: var(--space-l);
     padding: var(--space-m) var(--space-l);

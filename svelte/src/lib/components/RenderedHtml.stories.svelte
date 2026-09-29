@@ -93,6 +93,6 @@
     padding: var(--space-m) var(--space-l);
     background-color: var(--surface);
     border-radius: var(--space-3xs);
-    box-shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    box-shadow: 0 2px 3px var(--surface-shadow-color-muted);
   }
 </style>

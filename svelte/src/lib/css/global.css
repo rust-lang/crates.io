@@ -71,6 +71,8 @@
 
     --surface: light-dark(white, #141413);
     --surface-hover: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --surface-shadow-color: light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --surface-shadow-color-muted: light-dark(hsla(51, 50%, 44%, 0.35), #232321);
 
     --input-background-error: light-dark(#fff2f2, #170808);
     --border-color-error: red;

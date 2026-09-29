@@ -175,7 +175,7 @@
   .tree-panel {
     background-color: var(--surface);
     border-radius: var(--space-3xs);
-    box-shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    box-shadow: 0 2px 3px var(--surface-shadow-color-muted);
     overflow: hidden;
   }
 
@@ -185,7 +185,7 @@
     min-width: 0;
     background-color: var(--surface);
     border-radius: var(--space-3xs);
-    box-shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    box-shadow: 0 2px 3px var(--surface-shadow-color-muted);
     overflow: hidden;
   }
 

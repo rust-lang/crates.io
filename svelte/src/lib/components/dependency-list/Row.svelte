@@ -133,7 +133,7 @@
     --hover-bg-color: var(--surface-hover);
     --range-color: light-dark(var(--grey900), #d1cfc7);
     --crate-color: light-dark(var(--grey700), #d1cfc7);
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --shadow: 0 1px 3px var(--surface-shadow-color);
 
     display: flex;
     align-items: center;

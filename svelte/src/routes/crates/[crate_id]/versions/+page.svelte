@@ -161,7 +161,7 @@
   }
 
   .load-more {
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --shadow: 0 1px 3px var(--surface-shadow-color);
 
     padding: 0 var(--space-m);
 

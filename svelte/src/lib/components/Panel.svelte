@@ -17,6 +17,6 @@
   .panel {
     background-color: var(--surface);
     border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    box-shadow: 0 1px 3px var(--surface-shadow-color);
   }
 </style>
