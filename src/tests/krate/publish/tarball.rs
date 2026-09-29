@@ -1,7 +1,7 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use axum::body::Body;
-use bytes::{BufMut, BytesMut};
+use bytes::{BufMut, Bytes, BytesMut};
 use claims::assert_ok;
 use crates_io_tarball::TarballBuilder;
 use futures_util::stream;
@@ -197,19 +197,28 @@ async fn empty_body() {
 async fn request_body_read_error() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
-    let body = Body::from_stream(stream::once(async {
-        Err::<bytes::Bytes, _>(std::io::Error::new(
-            std::io::ErrorKind::UnexpectedEof,
-            "end of file before message length reached",
-        ))
-    }));
-    let request = token
-        .request_builder(Method::PUT, "/api/v1/crates/new")
-        .map(|_| body);
+    let read_error = std::io::Error::new(
+        std::io::ErrorKind::UnexpectedEof,
+        "end of file before message length reached",
+    );
+    let body = Body::from_stream(stream::once(async { Err::<Bytes, _>(read_error) }));
+    let url = "/api/v1/crates/new";
+    let request = token.request_builder(Method::PUT, url).map(|_| body);
 
     let response = token.run::<()>(request).await;
-    assert_snapshot!(response.status(), @"500 Internal Server Error");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to read request body"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_utf8_manifest() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+    let upload = PublishBuilder::new("foo", "1.0.0").custom_manifest(Bytes::from_static(b"\xff"));
+
+    let response = token.publish_crate(upload).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is malformed"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 

@@ -768,13 +768,10 @@ async fn read_json_metadata<R: AsyncRead + Unpin>(
     reader: &mut R,
     max_length: u32,
 ) -> Result<PublishMetadata, BoxedAppError> {
-    let json_len = reader.read_u32_le().await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            bad_request("invalid metadata length")
-        } else {
-            e.into()
-        }
-    })?;
+    let json_len = reader
+        .read_u32_le()
+        .await
+        .map_err(|e| map_body_read_error(e, "invalid metadata length"))?;
 
     if json_len > max_length {
         let message = "JSON metadata blob too large";
@@ -783,12 +780,8 @@ async fn read_json_metadata<R: AsyncRead + Unpin>(
 
     let mut json_bytes = vec![0; json_len as usize];
     reader.read_exact(&mut json_bytes).await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            let message = format!("invalid metadata length for remaining payload: {json_len}");
-            bad_request(message)
-        } else {
-            e.into()
-        }
+        let message = format_args!("invalid metadata length for remaining payload: {json_len}");
+        map_body_read_error(e, message)
     })?;
 
     serde_json::from_slice(&json_bytes)
@@ -800,13 +793,10 @@ async fn read_tarball_bytes<R: AsyncRead + Unpin>(
     reader: &mut R,
     max_length: u32,
 ) -> Result<Bytes, BoxedAppError> {
-    let tarball_len = reader.read_u32_le().await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            bad_request("invalid tarball length")
-        } else {
-            e.into()
-        }
-    })?;
+    let tarball_len = reader
+        .read_u32_le()
+        .await
+        .map_err(|e| map_body_read_error(e, "invalid tarball length"))?;
 
     if tarball_len > max_length {
         let message = format!("max upload size is: {max_length}");
@@ -815,15 +805,20 @@ async fn read_tarball_bytes<R: AsyncRead + Unpin>(
 
     let mut tarball_bytes = vec![0; tarball_len as usize];
     reader.read_exact(&mut tarball_bytes).await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            let message = format!("invalid tarball length for remaining payload: {tarball_len}");
-            bad_request(message)
-        } else {
-            e.into()
-        }
+        let message = format_args!("invalid tarball length for remaining payload: {tarball_len}");
+        map_body_read_error(e, message)
     })?;
 
     Ok(Bytes::from(tarball_bytes))
+}
+
+/// Maps failures while reading the publish request body to client errors.
+fn map_body_read_error(error: std::io::Error, incomplete_length: impl ToString) -> BoxedAppError {
+    if error.kind() == std::io::ErrorKind::UnexpectedEof {
+        bad_request(incomplete_length)
+    } else {
+        bad_request("failed to read request body")
+    }
 }
 
 #[instrument(skip_all)]
@@ -1062,7 +1057,7 @@ impl From<TarballError> for BoxedAppError {
             TarballError::Malformed(_err) => {
                 bad_request("uploaded tarball is malformed or too large when decompressed")
             }
-            TarballError::MalformedPaxSize | TarballError::SizeMismatch => {
+            TarballError::MalformedPaxSize | TarballError::SizeMismatch | TarballError::IO(_) => {
                 bad_request("uploaded tarball is malformed")
             }
             TarballError::TooManyEntries { max } => {
@@ -1071,7 +1066,6 @@ impl From<TarballError> for BoxedAppError {
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
             error @ (TarballError::UnexpectedEntry { .. }
             | TarballError::MetadataFileTooLarge { .. }) => bad_request(error.to_string()),
-            TarballError::IO(err) => err.into(),
             TarballError::MissingManifest => {
                 bad_request("uploaded tarball is missing a `Cargo.toml` manifest file")
             }
