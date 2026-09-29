@@ -17,7 +17,7 @@
 <style>
   .boxed {
     padding: var(--space-m);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     margin-bottom: var(--space-s);
     border-radius: 5px;
   }

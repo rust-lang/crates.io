@@ -140,7 +140,7 @@
     --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
 
     padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     margin-bottom: var(--space-s);
     border-radius: 5px;
     box-shadow: var(--shadow);

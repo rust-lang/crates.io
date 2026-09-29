@@ -225,7 +225,7 @@ ${detail}
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
@@ -253,7 +253,7 @@ ${detail}
 
   .detail {
     padding: var(--space-2xs);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
     resize: vertical;
@@ -267,7 +267,7 @@ ${detail}
 
   .vulnerability-report {
     padding: var(--space-s) var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
     width: 100%;

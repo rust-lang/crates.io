@@ -130,7 +130,7 @@
 <style>
   .row {
     --bg-color: var(--grey200);
-    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --hover-bg-color: var(--surface-hover);
     --range-color: light-dark(var(--grey900), #d1cfc7);
     --crate-color: light-dark(var(--grey700), #d1cfc7);
     --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
@@ -140,7 +140,7 @@
     position: relative;
     font-size: 18px;
     padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);

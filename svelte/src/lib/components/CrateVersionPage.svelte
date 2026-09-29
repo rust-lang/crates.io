@@ -219,7 +219,7 @@
 
     margin-bottom: var(--space-l);
     padding: var(--space-m) var(--space-l);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
 

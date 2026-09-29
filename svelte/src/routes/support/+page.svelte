@@ -65,7 +65,7 @@
     height: inherit;
     min-height: var(--space-2xl);
     padding: var(--space-xs) var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     color: light-dark(#525252, #f9f7ec);
     text-decoration: none;
     border-radius: var(--space-3xs);

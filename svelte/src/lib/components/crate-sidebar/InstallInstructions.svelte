@@ -125,7 +125,7 @@
     cursor: pointer;
 
     &:hover {
-      background-color: light-dark(white, #141413);
+      background-color: var(--surface);
     }
   }
 

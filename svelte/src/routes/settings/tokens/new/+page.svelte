@@ -431,7 +431,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
@@ -468,7 +468,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 

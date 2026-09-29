@@ -134,7 +134,7 @@
     min-height: 0;
     overflow: auto;
     font-size: calc(0.85 * var(--space-s));
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
   }
 
   .code :global(diffs-container) {

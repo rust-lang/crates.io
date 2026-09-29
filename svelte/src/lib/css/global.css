@@ -66,6 +66,9 @@
     --main-bg: light-dark(#f9f7ec, hsl(0, 1%, 19%));
     --main-bg-dark: light-dark(#edebdd, #141413);
     --gray-border: light-dark(#d5d3cb, #666561);
+
+    --surface: light-dark(white, #141413);
+    --surface-hover: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
     --link-color: light-dark(#00ac5b, #04da75);
     --link-hover-color: light-dark(#007940, #00f27f);
 

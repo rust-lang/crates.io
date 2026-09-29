@@ -79,7 +79,7 @@
     width: 100%;
     height: var(--space-2xl);
     padding: 0 var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     color: light-dark(#525252, #f9f7ec);
     text-decoration: none;
     border-radius: var(--space-3xs);

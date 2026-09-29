@@ -25,7 +25,7 @@
     margin: 0;
     text-align: left;
     padding: 0;
-    background: light-dark(white, #141413);
+    background: var(--surface);
     border: 1px solid var(--gray-border);
     list-style: none;
     overflow: hidden;

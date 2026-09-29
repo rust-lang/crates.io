@@ -360,7 +360,7 @@
     padding: var(--space-xl-2xl);
     border: 2px light-dark(black, white) dashed;
     border-radius: var(--space-3xs);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     box-shadow: 0 2px 3px light-dark(hsla(51, 50%, 45%, 0.35), #232321);
   }
 

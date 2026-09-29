@@ -109,7 +109,7 @@
     display: flex;
     flex-wrap: wrap;
     padding: var(--space-s-m) var(--space-m-l);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
   }
