@@ -182,24 +182,38 @@ impl RealGitHubClient {
         Self { client, base_url }
     }
 
+    /// Builds an authenticated request while preserving the base URL path.
+    fn request_builder(
+        &self,
+        method: reqwest::Method,
+        path: &str,
+        auth: &GitHubAuth,
+    ) -> Result<RequestBuilder> {
+        let url = self
+            .base_url
+            .join(path.trim_start_matches('/'))
+            .map_err(|error| GitHubError::Other(error.into()))?;
+        info!("GitHub request: {method} {url}");
+
+        let request = self
+            .client
+            .request(method, url)
+            .header(header::ACCEPT, "application/vnd.github.v3+json")
+            .header(header::USER_AGENT, "crates.io (https://crates.io)");
+
+        Ok(auth.apply(request))
+    }
+
     /// Does all the nonsense for sending a GET to GitHub.
     async fn request<T>(&self, url: &str, auth: &GitHubAuth) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        let url = self
-            .base_url
-            .join(url.trim_start_matches('/'))
-            .map_err(|e| GitHubError::Other(e.into()))?;
-        info!("GitHub request: GET {url}");
-
-        let request = self
-            .client
-            .get(url)
-            .header(header::ACCEPT, "application/vnd.github.v3+json")
-            .header(header::USER_AGENT, "crates.io (https://crates.io)");
-
-        let response = auth.apply(request).send().await?.error_for_status()?;
+        let response = self
+            .request_builder(reqwest::Method::GET, url, auth)?
+            .send()
+            .await?
+            .error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
@@ -221,20 +235,12 @@ impl RealGitHubClient {
         B: Serialize + ?Sized,
         T: DeserializeOwned,
     {
-        let url = self
-            .base_url
-            .join(url.trim_start_matches('/'))
-            .map_err(|e| GitHubError::Other(e.into()))?;
-        info!("GitHub request: {method} {url}");
-
-        let request = self
-            .client
-            .request(method, url)
-            .header(header::ACCEPT, "application/vnd.github.v3+json")
-            .header(header::USER_AGENT, "crates.io (https://crates.io)")
-            .json(body);
-
-        let response = auth.apply(request).send().await?.error_for_status()?;
+        let response = self
+            .request_builder(method, url, auth)?
+            .json(body)
+            .send()
+            .await?
+            .error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
