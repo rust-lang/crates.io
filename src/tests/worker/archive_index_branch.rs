@@ -4,6 +4,7 @@ use crates_io::schema::background_jobs;
 use crates_io::worker::jobs;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_worker::BackgroundJob;
+use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use git2::ErrorCode;
 use insta::assert_snapshot;
@@ -37,21 +38,38 @@ async fn archive_index_branch() {
         .empty()
         .await;
 
-    let conn = app.db_conn().await;
+    let mut conn = app.db_conn().await;
     seed_snapshot_branch(app.upstream_index());
     let expected_oid = app.upstream_index().branch_oid(SNAPSHOT_BRANCH).unwrap();
 
     let job = jobs::ArchiveIndexBranch::new(SNAPSHOT_BRANCH);
     assert_ok!(job.enqueue(&conn).await);
-    app.run_pending_background_jobs().await;
+    // Cleanup cannot parse the local `file://` source URL, so that job fails.
+    let error = app.try_run_pending_background_jobs().await.unwrap_err();
+    assert_eq!(error.to_string(), "1 jobs failed");
 
     assert_eq!(archive.branch_oid(SNAPSHOT_BRANCH).unwrap(), expected_oid);
-    let archive_repo = archive.repository.lock().unwrap();
-    let error = archive_repo
-        .find_reference("refs/heads/temp")
-        .err()
+    {
+        let archive_repo = archive.repository.lock().unwrap();
+        let error = archive_repo
+            .find_reference("refs/heads/temp")
+            .err()
+            .unwrap();
+        assert_eq!(error.code(), ErrorCode::NotFound);
+    }
+
+    let (job_type, data): (String, serde_json::Value) = background_jobs::table
+        .select((background_jobs::job_type, background_jobs::data))
+        .get_result(&mut conn)
+        .await
         .unwrap();
-    assert_eq!(error.code(), ErrorCode::NotFound);
+    assert_eq!(job_type, jobs::DeleteArchivedIndexBranch::JOB_NAME);
+    assert_eq!(data, serde_json::json!({ "branch": SNAPSHOT_BRANCH }));
+
+    diesel::delete(background_jobs::table)
+        .execute(&mut conn)
+        .await
+        .unwrap();
 }
 
 /// With no `index_archive_url` configured, the job should succeed as a no-op
