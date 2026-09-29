@@ -180,7 +180,7 @@ function unicornRules() {
     'unicorn/prefer-includes': 'error',
     'unicorn/prefer-iterator-to-array-at-end': 'error',
     'unicorn/prefer-keyboard-event-key': 'error',
-    'unicorn/prefer-logical-operator-over-ternary': 'error',
+    'unicorn/prefer-logical-operator-over-ternary': 'off',
     'unicorn/prefer-math-abs': 'error',
     'unicorn/prefer-math-min-max': 'error',
     'unicorn/prefer-math-trunc': 'error',
