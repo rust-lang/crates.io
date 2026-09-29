@@ -129,7 +129,7 @@
 
   .input-lg,
   .input-sm {
-    --search-form-focus-shadow: 0 0 0 var(--space-3xs) var(--yellow500);
+    --search-form-focus-shadow: 0 0 0 var(--space-3xs) var(--focus-ring-color);
 
     border: none;
     color: light-dark(black, var(--main-color));

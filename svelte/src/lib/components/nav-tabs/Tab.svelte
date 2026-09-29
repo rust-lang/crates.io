@@ -45,7 +45,7 @@
     &:focus-visible {
       outline: none;
       margin: -3px;
-      border: 3px solid var(--yellow500);
+      border: 3px solid var(--focus-ring-color);
       position: relative;
       transition: border-bottom-color var(--transition-instant);
       z-index: 1;

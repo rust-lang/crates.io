@@ -75,7 +75,7 @@
     &:focus-visible {
       outline: none;
       box-shadow:
-        0 0 0 3px var(--yellow500),
+        0 0 0 3px var(--focus-ring-color),
         var(--shadow);
     }
 

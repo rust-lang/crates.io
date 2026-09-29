@@ -74,6 +74,8 @@
     --border-color-error: red;
     --text-error: red;
 
+    --focus-ring-color: var(--yellow500);
+
     --link-color: light-dark(#00ac5b, #04da75);
     --link-hover-color: light-dark(#007940, #00f27f);
 

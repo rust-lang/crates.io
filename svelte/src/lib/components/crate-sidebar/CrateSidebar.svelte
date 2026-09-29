@@ -331,7 +331,7 @@
     cursor: pointer;
 
     &:focus {
-      outline: 2px solid var(--yellow500);
+      outline: 2px solid var(--focus-ring-color);
       outline-offset: 1px;
       border-radius: var(--space-3xs);
     }
@@ -364,7 +364,7 @@
     }
 
     &:focus {
-      outline: 2px solid var(--yellow500);
+      outline: 2px solid var(--focus-ring-color);
       outline-offset: 1px;
       border-radius: var(--space-3xs);
     }
