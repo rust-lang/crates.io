@@ -9,15 +9,6 @@ function exec(command, options = {}) {
   });
 }
 
-function isClaudeAvailable() {
-  try {
-    exec('which claude');
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function parseGitHubCompareUrl(url) {
   let compareMatch = url.match(/compare\/([a-f0-9]+)\.\.\.([a-f0-9]+)/);
   if (!compareMatch) {
@@ -128,7 +119,7 @@ function formatMigrations(migrations) {
   return output;
 }
 
-function generateChangelog(commits, migrations, url) {
+function generateChangelog(commits, migrations, url, provider) {
   let commitList = formatCommits(commits);
   let migrationInfo = formatMigrations(migrations);
 
@@ -168,24 +159,27 @@ ${migrationInfo}
 Generate only the deployment announcement, no additional explanation.`;
 
   try {
-    return exec('claude', { input: prompt }).trim();
+    let command = provider === 'codex' ? 'codex exec --sandbox read-only -' : 'claude';
+    return exec(command, { input: prompt }).trim();
   } catch (error) {
-    throw new Error(`Failed to generate changelog with Claude CLI: ${error.message}`, { cause: error });
+    let name = provider === 'codex' ? 'Codex' : 'Claude';
+    throw new Error(`Failed to generate changelog with ${name} CLI: ${error.message}`, { cause: error });
   }
 }
 
 function main() {
-  let url = process.argv[2];
-
-  if (!url) {
-    console.error('Usage: script/generate-deploy-changelog.mjs <github-compare-url>');
+  if (process.argv.length !== 4 || !['--claude', '--codex'].includes(process.argv[2])) {
+    console.error('Usage: script/generate-deploy-changelog.mjs <--claude|--codex> <github-compare-url>');
     console.error(
-      'Example: script/generate-deploy-changelog.mjs https://github.com/rust-lang/crates.io/compare/f4990229...3c279fb5',
+      'Example: script/generate-deploy-changelog.mjs --codex https://github.com/rust-lang/crates.io/compare/f4990229...3c279fb5',
     );
     process.exit(1);
   }
 
   try {
+    let provider = process.argv[2].slice(2);
+    let url = process.argv[3];
+
     let { from, to } = parseGitHubCompareUrl(url);
     let commits = getCommits(from, to);
 
@@ -200,12 +194,10 @@ function main() {
     console.log(formatCommits(commits));
     console.log(formatMigrations(migrations));
 
-    if (isClaudeAvailable()) {
-      console.log(`\n${'='.repeat(80)}`);
-      console.log('Generating deployment changelog...\n');
-      let changelog = generateChangelog(commits, migrations, url);
-      console.log(changelog);
-    }
+    console.log(`\n${'='.repeat(80)}`);
+    console.log('Generating deployment changelog...\n');
+    let changelog = generateChangelog(commits, migrations, url, provider);
+    console.log(changelog);
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
