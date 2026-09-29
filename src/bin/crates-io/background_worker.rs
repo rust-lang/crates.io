@@ -43,7 +43,7 @@ pub fn run() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
-    crates_io::util::tracing::init();
+    crates_io::util::tracing::init()?;
 
     let _span = info_span!("swirl.run");
 

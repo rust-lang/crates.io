@@ -1,5 +1,6 @@
 use crates_io_env_vars::var;
 use sentry::integrations::tracing::EventFilter;
+use serde_json::Value;
 use std::backtrace::Backtrace;
 use std::panic::{self, PanicHookInfo};
 use tracing::{Level, Metadata, error, warn};
@@ -14,7 +15,9 @@ use tracing_subscriber::{EnvFilter, Layer, prelude::*};
 ///
 /// This function also sets up the Sentry error reporting integration for the
 /// `tracing` framework, which is hardcoded to include all `INFO` level events.
-pub fn init() {
+///
+/// Returns an error if the Heroku release version cannot be read in JSON mode.
+pub fn init() -> anyhow::Result<()> {
     init_with_default_level(LevelFilter::INFO)
 }
 
@@ -29,7 +32,7 @@ fn log_panic(info: &PanicHookInfo<'_>) {
     );
 }
 
-fn init_with_default_level(level: LevelFilter) {
+fn init_with_default_level(level: LevelFilter) -> anyhow::Result<()> {
     let env_filter = EnvFilter::builder()
         .with_default_directive(level.into())
         .from_env_lossy();
@@ -41,11 +44,7 @@ fn init_with_default_level(level: LevelFilter) {
         .unwrap_or_default();
 
     let log_layer = match log_format.as_deref() {
-        Some("json") => json_subscriber::fmt::layer()
-            .flatten_event(true)
-            .with_flat_span_list(true)
-            .with_filter(env_filter)
-            .boxed(),
+        Some("json") => json_layer()?.with_filter(env_filter).boxed(),
         _ => tracing_subscriber::fmt::layer()
             .compact()
             .without_time()
@@ -67,6 +66,29 @@ fn init_with_default_level(level: LevelFilter) {
         log_panic(info);
         previous_hook(info);
     }));
+
+    Ok(())
+}
+
+/// Builds the JSON log layer with the Heroku release version on each event.
+fn json_layer() -> anyhow::Result<json_subscriber::fmt::Layer> {
+    let mut layer = json_subscriber::fmt::layer()
+        .flatten_event(true)
+        .with_flat_span_list(true);
+
+    let inner = layer.inner_layer_mut();
+
+    if let Some(v) = crates_io_heroku::dyno_id()? {
+        inner.add_static_field("heroku.dyno.id", Value::String(v));
+    }
+    if let Some(v) = crates_io_heroku::release_version()? {
+        inner.add_static_field("heroku.release.version", Value::String(v));
+    }
+    if let Some(v) = crates_io_heroku::commit()? {
+        inner.add_static_field("heroku.release.commit", Value::String(v));
+    }
+
+    Ok(layer)
 }
 
 pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
