@@ -27,6 +27,7 @@ impl RunnerExt for Runner<WorkerContext> {
             .register_job_type::<jobs::CheckTyposquat>()
             .register_job_type::<jobs::CleanProcessedLogFiles>()
             .register_job_type::<jobs::DailyDbMaintenance>()
+            .register_job_type::<jobs::DeleteArchivedIndexBranch>()
             .register_job_type::<jobs::DeleteCrateFromStorage>()
             .register_job_type::<jobs::DocsRsQueueRebuild>()
             .register_job_type::<jobs::DumpDb>()

@@ -1,6 +1,7 @@
 mod archive_index_branch;
 mod backfill_target_metadata;
 mod build_crate_zip;
+mod delete_archived_index_branch;
 mod generate_og_image;
 mod git;
 mod normalize_index;
