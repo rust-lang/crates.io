@@ -182,12 +182,6 @@ impl From<serde_json::Error> for BoxedAppError {
     }
 }
 
-impl From<std::io::Error> for BoxedAppError {
-    fn from(err: std::io::Error) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
 impl From<JoinError> for BoxedAppError {
     fn from(err: JoinError) -> BoxedAppError {
         Box::new(err)
@@ -295,7 +289,7 @@ mod tests {
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(
-            BoxedAppError::from(::std::io::Error::other(""))
+            (Box::new(std::io::Error::other("")) as BoxedAppError)
                 .response()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
