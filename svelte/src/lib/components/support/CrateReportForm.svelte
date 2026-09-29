@@ -234,8 +234,8 @@ ${detail}
     }
 
     &.invalid {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
 
     > * + * {
@@ -260,8 +260,8 @@ ${detail}
     width: 100%;
 
     &.invalid {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
   }
 

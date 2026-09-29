@@ -436,8 +436,8 @@
     border-radius: var(--space-3xs);
 
     &.invalid {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
 
     > li + li {
@@ -502,8 +502,8 @@
     }
 
     &.invalid input {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
 
     > button {
@@ -534,7 +534,7 @@
     align-self: center;
 
     .invalid & {
-      color: red;
+      color: var(--text-error);
     }
   }
 
