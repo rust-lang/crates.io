@@ -422,7 +422,7 @@ mod tests {
             index_location: upstream.url(),
             credentials: Credentials::Missing,
         };
-        let repo = Repository::open(&config).unwrap();
+        let repo = Repository::open_shallow(&config).unwrap();
         (upstream, repo)
     }
 
