@@ -333,7 +333,7 @@
     &:focus {
       outline: 2px solid var(--focus-ring-color);
       outline-offset: 1px;
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
   }
 
@@ -366,7 +366,7 @@
     &:focus {
       outline: 2px solid var(--focus-ring-color);
       outline-offset: 1px;
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
 
     :global(.icon) {

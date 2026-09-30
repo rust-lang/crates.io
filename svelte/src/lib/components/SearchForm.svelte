@@ -103,7 +103,7 @@
 
 <style>
   .form {
-    --border-radius: 5000px;
+    --border-radius: var(--border-radius-pill);
     --submit-icon-size: 1.5em;
     --submit-button-padding-left: var(--space-3xs);
     --submit-button-padding-right: var(--space-2xs);

@@ -40,7 +40,7 @@
     padding: var(--space-xs);
     border-left-style: solid;
     border-left-width: 4px;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
   }
 
   .alert :global(.icon) {

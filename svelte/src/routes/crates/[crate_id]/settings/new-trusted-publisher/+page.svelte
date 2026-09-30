@@ -498,7 +498,7 @@
   }
 
   .add-button {
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     :global(.spinner) {
       margin-left: var(--space-2xs);
@@ -506,7 +506,7 @@
   }
 
   .cancel-button {
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
   }
 
   .gitlab-wip-notice {

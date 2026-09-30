@@ -26,7 +26,7 @@
   .link {
     display: block;
     padding: var(--space-2xs) var(--space-xs);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     color: var(--main-color-light);
     transition: all var(--transition-medium) ease-in;
 

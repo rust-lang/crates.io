@@ -68,7 +68,7 @@
     background-color: var(--surface);
     color: light-dark(#525252, #f9f7ec);
     text-decoration: none;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     transition: background-color var(--transition-slow);
 

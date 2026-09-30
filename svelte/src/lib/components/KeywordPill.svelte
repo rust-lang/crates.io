@@ -25,7 +25,7 @@
     padding: var(--space-4xs) var(--space-xs);
     color: var(--main-color-light);
     background: var(--main-bg);
-    border-radius: 99999px;
+    border-radius: var(--border-radius-pill);
     white-space: nowrap;
     transition: color var(--transition-fast);
 

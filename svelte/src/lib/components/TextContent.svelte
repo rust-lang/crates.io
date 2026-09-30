@@ -51,14 +51,14 @@
       padding: var(--space-xs);
       background-color: light-dark(#f6f8fa, #161b22);
       font-size: 85%;
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
 
     :global(p),
     :global(li) {
       :global(code) {
         background-color: light-dark(#f6f8fa, #383836);
-        border-radius: var(--space-3xs);
+        border-radius: var(--border-radius-small);
         font-size: 85%;
         margin: 0;
         padding: var(--space-4xs) var(--space-3xs);

@@ -220,7 +220,7 @@
     margin-bottom: var(--space-l);
     padding: var(--space-m) var(--space-l);
     background-color: var(--surface);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
 
     @media only screen and (max-width: 550px) {

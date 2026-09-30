@@ -71,7 +71,7 @@
     font-size: 18px;
     padding: var(--space-s) var(--space-m);
     background-color: var(--surface);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
 

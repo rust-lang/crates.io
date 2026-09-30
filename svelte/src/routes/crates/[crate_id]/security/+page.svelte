@@ -92,7 +92,7 @@
   .row {
     margin-top: var(--space-2xs);
     background-color: var(--surface);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     padding: var(--space-m) var(--space-l);
     list-style: none;
     overflow-wrap: break-word;

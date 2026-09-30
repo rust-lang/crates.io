@@ -16,7 +16,7 @@
 <style>
   .panel {
     background-color: var(--surface);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: 0 1px 3px var(--surface-shadow-color);
   }
 </style>

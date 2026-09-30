@@ -227,7 +227,7 @@ ${detail}
     margin: 0;
     background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     input {
       align-self: center;
@@ -255,7 +255,7 @@ ${detail}
     padding: var(--space-2xs);
     background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     resize: vertical;
     width: 100%;
 
@@ -269,7 +269,7 @@ ${detail}
     padding: var(--space-s) var(--space-s);
     background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     width: 100%;
 
     :first-child {
@@ -291,7 +291,7 @@ ${detail}
   }
 
   .report-button {
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     font-weight: normal;
 
     &:focus {

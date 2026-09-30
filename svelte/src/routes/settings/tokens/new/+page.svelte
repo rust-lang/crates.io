@@ -433,7 +433,7 @@
     margin: 0;
     background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     &.invalid {
       background: var(--input-background-error);
@@ -470,7 +470,7 @@
     margin: 0;
     background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     > li + li {
       border-top: inherit;
@@ -498,7 +498,7 @@
       margin: calc(-1 * var(--space-4xs)) 0;
       padding: var(--space-3xs) var(--space-2xs);
       border: 1px solid var(--gray-border);
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
 
     &.invalid input {

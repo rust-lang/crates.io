@@ -319,7 +319,7 @@
     font-size: 18px;
     padding: var(--space-s) var(--space-m);
     background-color: var(--surface);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
 
@@ -367,11 +367,11 @@
       background: none;
       border: none;
       padding: 0;
-      border-radius: 99999px;
+      border-radius: var(--border-radius-pill);
       color: var(--grey600);
 
       &:hover {
-        border-radius: 99999px;
+        border-radius: var(--border-radius-pill);
         color: var(--grey900);
         background-color: white;
       }

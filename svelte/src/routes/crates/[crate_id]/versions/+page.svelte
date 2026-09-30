@@ -166,7 +166,7 @@
     padding: 0 var(--space-m);
 
     button {
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
       box-shadow: var(--shadow);
       cursor: pointer;
       position: relative;

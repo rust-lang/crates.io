@@ -110,7 +110,7 @@
     line-height: 1.5em;
     color: var(--main-color);
     background: transparent;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     border: solid var(--space-4xs) var(--gray-border);
 
     span {

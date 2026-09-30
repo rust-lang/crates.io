@@ -172,7 +172,7 @@
     overflow: hidden;
 
     background: light-dark(oklch(0.9 0.02 24), oklch(0.25 0.03 24));
-    border-radius: 99999px;
+    border-radius: var(--border-radius-pill);
     padding: var(--space-4xs) var(--space-2xs);
     font-size: calc(0.9 * var(--space-xs));
     font-weight: 600;

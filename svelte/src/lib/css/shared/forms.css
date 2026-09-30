@@ -17,7 +17,7 @@
     padding: var(--space-2xs);
     background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     &[aria-invalid='true'] {
       background: var(--input-background-error);

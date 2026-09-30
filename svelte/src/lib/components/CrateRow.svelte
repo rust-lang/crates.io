@@ -110,7 +110,7 @@
     flex-wrap: wrap;
     padding: var(--space-s-m) var(--space-m-l);
     background-color: var(--surface);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
   }
 

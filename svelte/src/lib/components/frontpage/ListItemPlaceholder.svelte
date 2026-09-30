@@ -40,7 +40,7 @@
     padding: 0 var(--space-s);
     background-color: var(--surface);
     color: light-dark(#525252, #f9f7ec);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     cursor: wait;
   }

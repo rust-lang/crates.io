@@ -55,6 +55,9 @@
     --transition-x-fast: 50ms;
     --transition-instant: 0ms;
 
+    --border-radius-small: var(--space-3xs);
+    --border-radius-pill: 99999px;
+
     --font-heading: 'Fira Sans', sans-serif;
     --font-body: var(--font-heading);
     --font-monospace:

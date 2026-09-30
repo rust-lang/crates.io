@@ -301,12 +301,12 @@
 
   .regenerate-button {
     flex-grow: 1;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
   }
 
   .revoke-button {
     flex-grow: 1;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
   }
 
   .actions > :global(.spinner) {
@@ -328,7 +328,7 @@
     background: var(--main-color);
     color: light-dark(white, #141413);
     font-family: var(--font-monospace);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     margin-top: var(--space-xs);
   }
 
@@ -359,7 +359,7 @@
     margin: var(--space-m) 0;
     padding: var(--space-xl-2xl);
     border: 2px light-dark(black, white) dashed;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     background-color: var(--surface);
     box-shadow: 0 2px 3px light-dark(hsla(51, 50%, 45%, 0.35), #232321);
   }
