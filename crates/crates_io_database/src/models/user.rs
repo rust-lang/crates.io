@@ -98,6 +98,7 @@ pub struct User {
     pub publish_notifications: bool,
     pub username: String,
     pub created_at: Option<DateTime<Utc>>,
+    pub session_epoch: i32,
 }
 
 impl User {

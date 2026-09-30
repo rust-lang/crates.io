@@ -65,12 +65,13 @@ pub use test_app::TestApp;
 ///
 /// The implementation matches roughly what is happening inside of our
 /// session middleware.
-pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String {
+pub fn encode_session_header(session_key: &cookie::Key, user_id: i32, epoch: i32) -> String {
     let cookie_name = "cargo_session";
 
     // build session data map
     let mut map = HashMap::new();
     map.insert("user_id".into(), user_id.to_string());
+    map.insert("epoch".into(), epoch.to_string());
 
     // encode the map into a cookie value string
     let encoded = crates_io_session::encode(&map);
@@ -292,7 +293,7 @@ pub struct MockCookieUser {
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let session_key = &self.app.as_inner().session_key();
-        let cookie = encode_session_header(session_key, self.user.id);
+        let cookie = encode_session_header(session_key, self.user.id, self.user.session_epoch);
 
         let mut request = req(method, path);
         request.header(header::COOKIE, &cookie);

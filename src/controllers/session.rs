@@ -1,4 +1,5 @@
 use crate::controllers::helpers::OkResponse;
+use crate::controllers::user::me::AuthenticatedUser;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
@@ -246,7 +247,7 @@ pub async fn complete_pending_signup(
     github_user.email = Some(body.signup.email.to_string());
 
     let mut conn = ctx.db_write().await?;
-    let (user_id, user) = conn
+    let (user_id, user, session_epoch) = conn
         .transaction(async |conn| {
             let user_id = create_user(
                 &github_user,
@@ -255,14 +256,21 @@ pub async fn complete_pending_signup(
                 conn,
             )
             .await?;
-            let user = super::user::me::authenticated_user(conn, user_id).await?;
-            Ok::<_, BoxedAppError>((user_id, user))
+
+            let AuthenticatedUser {
+                user,
+                session_epoch,
+            } = super::user::me::authenticated_user(conn, user_id).await?;
+
+            Ok::<_, BoxedAppError>((user_id, user, session_epoch))
         })
         .await?;
 
     session.remove(PENDING_SIGNUP_KEY);
     session.insert("user_id".to_string(), user_id.to_string());
-    Ok(user)
+    session.insert("epoch".to_string(), session_epoch.to_string());
+
+    Ok(Json(user))
 }
 
 /// Cancel a pending signup.
@@ -363,16 +371,21 @@ pub async fn authorize_session(
             // the request log here.
             req.request_log().add("uid", user_id);
 
-            let Json(user) = super::user::me::authenticated_user(&mut conn, user_id).await?;
+            let AuthenticatedUser {
+                user,
+                session_epoch,
+            } = super::user::me::authenticated_user(&mut conn, user_id).await?;
 
             session.remove(PENDING_SIGNUP_KEY);
             session.insert("user_id".to_string(), user_id.to_string());
+            session.insert("epoch".to_string(), session_epoch.to_string());
             Ok(Json(AuthorizeResponse::SignedIn(user)))
         }
         None => {
             let pending_signup = PendingSignup::new(ghuser, encrypted_token);
             let pending_signup = serde_json::to_string(&pending_signup)?;
             session.remove("user_id");
+            session.remove("epoch");
             session.insert(PENDING_SIGNUP_KEY.to_string(), pending_signup);
             Ok(Json(AuthorizeResponse::SignupRequired))
         }
