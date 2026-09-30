@@ -11,7 +11,7 @@ use crate::config::fastly::FastlyConfig;
 use crate::config::features::FeaturesConfig;
 use crate::config::frontend::FrontendConfig;
 use crate::config::github::GitHubOAuthConfig;
-use crate::config::metrics::MetricsConfig;
+use crate::config::otel::OtelConfig;
 use crate::config::publish_limits::PublishLimitsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
@@ -45,7 +45,7 @@ pub struct SharedConfig {
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
     pub ownership_invitations_expiration: chrono::Duration,
-    pub metrics: MetricsConfig,
+    pub otel: OtelConfig,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
     /// status codes to `200 OK` for all endpoints that are relevant for cargo.
@@ -149,7 +149,7 @@ impl SharedConfig {
             domain_name,
             allowed_origins,
             ownership_invitations_expiration: chrono::Duration::days(30),
-            metrics: MetricsConfig::from_env()?,
+            otel: OtelConfig::from_env()?,
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             frontend: FrontendConfig::from_env()?,

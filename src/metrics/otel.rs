@@ -11,7 +11,7 @@ use uuid::Uuid;
 ///
 /// A no-op provider is returned when OTLP is disabled or cannot be initialized.
 pub fn meter_provider(config: &config::SharedConfig) -> Box<dyn MeterProvider + Send + Sync> {
-    if !config.metrics.otlp_enabled {
+    if !config.otel.metrics_enabled {
         return Box::new(NoopMeterProvider::new());
     }
 
