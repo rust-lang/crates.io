@@ -28,7 +28,7 @@
 
 <style>
   .link {
-    --shadow: 0 2px 3px var(--surface-shadow-color-muted);
+    --shadow: var(--surface-shadow-muted);
     --placeholder-bg: light-dark(hsla(59, 19%, 50%, 1), hsl(60, 14%, 85%));
     --placeholder-bg2: light-dark(hsla(59, 19%, 50%, 0.7), hsla(59, 5%, 50%, 0.7));
 

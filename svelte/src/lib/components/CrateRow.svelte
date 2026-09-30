@@ -104,7 +104,7 @@
 
 <style>
   .crate-row {
-    --shadow: 0 1px 3px var(--surface-shadow-color);
+    --shadow: var(--surface-shadow);
 
     display: flex;
     flex-wrap: wrap;

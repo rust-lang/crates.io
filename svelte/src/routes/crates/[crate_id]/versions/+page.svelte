@@ -161,7 +161,7 @@
   }
 
   .load-more {
-    --shadow: 0 1px 3px var(--surface-shadow-color);
+    --shadow: var(--surface-shadow);
 
     padding: 0 var(--space-m);
 

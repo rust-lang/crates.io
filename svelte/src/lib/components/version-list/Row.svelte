@@ -311,7 +311,7 @@
     --bg-color: light-dark(var(--grey200), #242422);
     --hover-bg-color: var(--surface-hover);
     --fg-color: light-dark(var(--grey700), #ccc);
-    --shadow: 0 1px 3px var(--surface-shadow-color);
+    --shadow: var(--surface-shadow);
 
     display: flex;
     align-items: center;

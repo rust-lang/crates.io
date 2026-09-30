@@ -137,7 +137,7 @@
 
 <style>
   .header {
-    --shadow: 0 2px 3px var(--surface-shadow-color-muted);
+    --shadow: var(--surface-shadow-muted);
 
     padding: var(--space-s) var(--space-m);
     background-color: var(--surface);

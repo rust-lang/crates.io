@@ -65,7 +65,7 @@
   .row {
     --hover-bg-color: var(--surface-hover);
     --crate-color: light-dark(var(--grey700), var(--grey600));
-    --shadow: 0 1px 3px var(--surface-shadow-color);
+    --shadow: var(--surface-shadow);
 
     position: relative;
     font-size: 18px;

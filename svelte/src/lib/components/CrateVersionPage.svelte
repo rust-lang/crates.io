@@ -215,7 +215,7 @@
   }
 
   .docs {
-    --shadow: 0 2px 3px var(--surface-shadow-color-muted);
+    --shadow: var(--surface-shadow-muted);
 
     margin-bottom: var(--space-l);
     padding: var(--space-m) var(--space-l);

@@ -72,7 +72,7 @@
 
 <style>
   .box {
-    --shadow: 0 2px 3px var(--surface-shadow-color-muted);
+    --shadow: var(--surface-shadow-muted);
 
     display: flex;
     align-items: center;
@@ -102,7 +102,7 @@
 
     &:active {
       transform: translateY(2px);
-      --shadow: inset 0 0 0 1px hsla(51, 50%, 44%, 0.15);
+      --shadow: var(--surface-shadow-pressed);
     }
   }
 
