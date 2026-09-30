@@ -40,9 +40,6 @@ use url::Url;
 const DEFAULT_POOL_SIZE: usize = 10;
 
 pub fn run() -> anyhow::Result<()> {
-    // Initialize logging
-    crates_io::util::tracing::init()?;
-
     let _span = info_span!("swirl.run");
 
     info!("Booting runner");

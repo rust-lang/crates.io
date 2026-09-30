@@ -19,6 +19,9 @@ fn main() -> anyhow::Result<()> {
 
     let _sentry = crates_io::sentry::init();
 
+    // Initialize logging
+    crates_io::util::tracing::init()?;
+
     match Command::parse() {
         Command::Admin(command) => admin::run(command),
         Command::Server => server::run(),

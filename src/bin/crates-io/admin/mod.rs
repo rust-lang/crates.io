@@ -43,9 +43,6 @@ pub enum Command {
 
 #[tokio::main]
 pub async fn run(command: Command) -> anyhow::Result<()> {
-    // Initialize logging
-    crates_io::util::tracing::init()?;
-
     let span = info_span!("admin.command", command = tracing::field::Empty);
     span.record("command", tracing::field::debug(&command));
 

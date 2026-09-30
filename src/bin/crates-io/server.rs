@@ -17,9 +17,6 @@ use tower::Layer;
 const CORE_THREADS: usize = 4;
 
 pub fn run() -> anyhow::Result<()> {
-    // Initialize logging
-    crates_io::util::tracing::init()?;
-
     let _span = info_span!("server.run");
 
     let config = SharedConfig::from_environment()?;
