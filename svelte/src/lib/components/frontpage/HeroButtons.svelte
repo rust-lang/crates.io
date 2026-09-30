@@ -24,9 +24,9 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--space-s);
-    border-bottom: 5px solid var(--gray-border);
+    border-bottom: 1px solid var(--gray-border);
     margin-top: var(--space-s);
-    padding-bottom: var(--space-l);
+    padding-bottom: var(--space-m);
   }
 
   .hero-button {
