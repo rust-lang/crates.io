@@ -215,12 +215,12 @@
   }
 
   .docs {
-    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    --shadow: var(--surface-shadow-muted);
 
     margin-bottom: var(--space-l);
     padding: var(--space-m) var(--space-l);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
+    background-color: var(--surface);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
 
     @media only screen and (max-width: 550px) {
@@ -293,7 +293,7 @@
     font-size: 20px;
     font-weight: 300;
     overflow-wrap: break-word;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
 
     code {
       font-size: 18px;

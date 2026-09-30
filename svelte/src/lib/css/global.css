@@ -55,10 +55,21 @@
     --transition-x-fast: 50ms;
     --transition-instant: 0ms;
 
+    --border-radius-small: var(--space-3xs);
+    --border-radius-pill: 99999px;
+
+    --input-max-width-compact: 440px;
+    --form-max-width: 600px;
+
     --font-heading: 'Fira Sans', sans-serif;
     --font-body: var(--font-heading);
     --font-monospace:
       'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --line-height-body: 1.5;
+
+    --list-row-font-size: 18px;
+    --list-row-metadata-font-size: 13px;
+    --list-row-metadata-letter-spacing: 0.7px;
 
     --main-color: light-dark(#383838, #f9f7ec);
     --main-color-light: light-dark(#858585, #a6a6a6);
@@ -66,6 +77,24 @@
     --main-bg: light-dark(#f9f7ec, hsl(0, 1%, 19%));
     --main-bg-dark: light-dark(#edebdd, #141413);
     --gray-border: light-dark(#d5d3cb, #666561);
+    --divider-color: light-dark(hsla(51, 90%, 42%, 0.25), #424242);
+    --divider-color-muted: light-dark(hsla(51, 90%, 42%, 0.25), #232321);
+
+    --surface: light-dark(white, #141413);
+    --surface-hover: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --surface-shadow-color: light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --surface-shadow-color-muted: light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    --surface-shadow: 0 1px 3px var(--surface-shadow-color);
+    --surface-shadow-muted: 0 2px 3px var(--surface-shadow-color-muted);
+    --surface-shadow-pressed: inset 0 0 0 1px hsla(51, 50%, 44%, 0.15);
+
+    --input-background-error: light-dark(#fff2f2, #170808);
+    --border-color-error: red;
+    --text-error: red;
+
+    --focus-ring-color: var(--yellow500);
+    --focus-ring-shadow: 0 0 0 3px var(--focus-ring-color);
+
     --link-color: light-dark(#00ac5b, #04da75);
     --link-hover-color: light-dark(#007940, #00f27f);
 

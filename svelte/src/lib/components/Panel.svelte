@@ -15,8 +15,8 @@
 
 <style>
   .panel {
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    background-color: var(--surface);
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--surface-shadow);
   }
 </style>

@@ -166,7 +166,7 @@
     overflow: hidden;
     text-wrap: auto;
     padding: var(--space-2xs) var(--space-xs);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     z-index: 2;
 
     :global(strong) {

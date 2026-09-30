@@ -105,7 +105,7 @@
 
     dl {
       margin: 0 0 0 var(--space-m);
-      line-height: 1.5;
+      line-height: var(--line-height-body);
       font-size: 110%;
 
       dt {
@@ -123,7 +123,7 @@
     }
 
     p {
-      line-height: 1.5;
+      line-height: var(--line-height-body);
     }
 
     @media only screen and (max-width: 550px) {

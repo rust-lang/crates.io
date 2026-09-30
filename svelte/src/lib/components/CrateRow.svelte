@@ -104,13 +104,13 @@
 
 <style>
   .crate-row {
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --shadow: var(--surface-shadow);
 
     display: flex;
     flex-wrap: wrap;
     padding: var(--space-s-m) var(--space-m-l);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
+    background-color: var(--surface);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
   }
 
@@ -167,7 +167,7 @@
 
   .description {
     margin-top: calc(var(--space-xs) / 2);
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .stats {

@@ -25,10 +25,10 @@
     margin: 0;
     text-align: left;
     padding: 0;
-    background: light-dark(white, #141413);
+    background: var(--surface);
     border: 1px solid var(--gray-border);
     list-style: none;
     overflow: hidden;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
   }
 </style>

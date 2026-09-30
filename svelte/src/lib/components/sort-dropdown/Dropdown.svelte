@@ -36,7 +36,7 @@
       font-size: 85%;
       padding: var(--space-2xs);
       border: none;
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
 
     & :global(.icon) {

@@ -161,12 +161,12 @@
   }
 
   .load-more {
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --shadow: var(--surface-shadow);
 
     padding: 0 var(--space-m);
 
     button {
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
       box-shadow: var(--shadow);
       cursor: pointer;
       position: relative;

@@ -72,12 +72,12 @@
   }
 
   .row + .row {
-    border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #424242);
+    border-top: 1px solid var(--divider-color);
   }
 
   .description {
     margin-top: var(--space-2xs);
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .categories-footer {

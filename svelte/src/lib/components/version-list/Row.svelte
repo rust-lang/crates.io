@@ -309,17 +309,17 @@
 <style>
   .row {
     --bg-color: light-dark(var(--grey200), #242422);
-    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --hover-bg-color: var(--surface-hover);
     --fg-color: light-dark(var(--grey700), #ccc);
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --shadow: var(--surface-shadow);
 
     display: flex;
     align-items: center;
     position: relative;
-    font-size: 18px;
+    font-size: var(--list-row-font-size);
     padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
+    background-color: var(--surface);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
 
@@ -330,9 +330,7 @@
     }
 
     &.focused {
-      box-shadow:
-        0 0 0 3px var(--yellow500),
-        var(--shadow);
+      box-shadow: var(--focus-ring-shadow), var(--shadow);
     }
 
     &.latest {
@@ -367,11 +365,11 @@
       background: none;
       border: none;
       padding: 0;
-      border-radius: 99999px;
+      border-radius: var(--border-radius-pill);
       color: var(--grey600);
 
       &:hover {
-        border-radius: 99999px;
+        border-radius: var(--border-radius-pill);
         color: var(--grey900);
         background-color: white;
       }
@@ -497,8 +495,8 @@
     margin-left: var(--space-m);
     color: light-dark(var(--grey600), #d1cfc7);
     text-transform: uppercase;
-    letter-spacing: 0.7px;
-    font-size: 13px;
+    letter-spacing: var(--list-row-metadata-letter-spacing);
+    font-size: var(--list-row-metadata-font-size);
     --icon-size: 1.25em;
 
     :global(a) {

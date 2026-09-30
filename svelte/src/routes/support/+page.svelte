@@ -56,7 +56,7 @@
   }
 
   .link {
-    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    --shadow: var(--surface-shadow-muted);
 
     display: flex;
     align-items: center;
@@ -65,18 +65,16 @@
     height: inherit;
     min-height: var(--space-2xl);
     padding: var(--space-xs) var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     color: light-dark(#525252, #f9f7ec);
     text-decoration: none;
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     transition: background-color var(--transition-slow);
 
     &:focus-visible {
       outline: none;
-      box-shadow:
-        0 0 0 3px var(--yellow500),
-        var(--shadow);
+      box-shadow: var(--focus-ring-shadow), var(--shadow);
     }
 
     &:hover,
@@ -88,7 +86,7 @@
 
     &:active {
       transform: translateY(2px);
-      --shadow: inset 0 0 0 1px hsla(51, 50%, 44%, 0.15);
+      --shadow: var(--surface-shadow-pressed);
     }
 
     strong {

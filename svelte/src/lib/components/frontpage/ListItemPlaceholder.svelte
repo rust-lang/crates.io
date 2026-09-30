@@ -28,7 +28,7 @@
 
 <style>
   .link {
-    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+    --shadow: var(--surface-shadow-muted);
     --placeholder-bg: light-dark(hsla(59, 19%, 50%, 1), hsl(60, 14%, 85%));
     --placeholder-bg2: light-dark(hsla(59, 19%, 50%, 0.7), hsla(59, 5%, 50%, 0.7));
 
@@ -38,9 +38,9 @@
     height: var(--space-2xl);
     margin: 8px 0;
     padding: 0 var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     color: light-dark(#525252, #f9f7ec);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     cursor: wait;
   }

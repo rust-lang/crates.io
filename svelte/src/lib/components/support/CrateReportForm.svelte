@@ -217,7 +217,7 @@ ${detail}
   }
 
   .crate-input {
-    max-width: 440px;
+    max-width: var(--input-max-width-compact);
     width: 100%;
   }
 
@@ -225,17 +225,17 @@ ${detail}
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     input {
       align-self: center;
     }
 
     &.invalid {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
 
     > * + * {
@@ -253,23 +253,23 @@ ${detail}
 
   .detail {
     padding: var(--space-2xs);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     resize: vertical;
     width: 100%;
 
     &.invalid {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
   }
 
   .vulnerability-report {
     padding: var(--space-s) var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     width: 100%;
 
     :first-child {
@@ -291,7 +291,7 @@ ${detail}
   }
 
   .report-button {
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     font-weight: normal;
 
     &:focus {

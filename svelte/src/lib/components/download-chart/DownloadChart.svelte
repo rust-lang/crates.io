@@ -127,7 +127,7 @@
     display: grid;
     place-items: center;
     border: solid 1px var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
     min-height: 400px;
   }
 

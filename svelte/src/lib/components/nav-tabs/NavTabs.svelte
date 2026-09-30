@@ -20,7 +20,7 @@
     --nav-tabs-border-width: 2px;
     --nav-tabs-padding-h: var(--space-s);
     --nav-tabs-padding-v: var(--space-2xs);
-    --nav-tabs-radius: var(--space-3xs);
+    --nav-tabs-radius: var(--border-radius-small);
 
     display: flex;
     list-style: none;

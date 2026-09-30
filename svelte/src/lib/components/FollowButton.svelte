@@ -37,7 +37,7 @@
     justify-content: center;
     gap: var(--space-3xs);
     border: 1px solid var(--gray-border);
-    border-radius: 99999px;
+    border-radius: var(--border-radius-pill);
     font-size: var(--space-xs);
     font-weight: 500;
     padding: var(--space-3xs) var(--space-xs);

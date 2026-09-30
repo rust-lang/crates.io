@@ -77,7 +77,7 @@
 
 <style>
   .tree {
-    --trees-bg-override: light-dark(white, #141413);
+    --trees-bg-override: var(--surface);
     --trees-font-family-override: var(--font-body);
 
     height: 100%;

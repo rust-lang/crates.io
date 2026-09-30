@@ -331,9 +331,9 @@
     cursor: pointer;
 
     &:focus {
-      outline: 2px solid var(--yellow500);
+      outline: 2px solid var(--focus-ring-color);
       outline-offset: 1px;
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
   }
 
@@ -364,9 +364,9 @@
     }
 
     &:focus {
-      outline: 2px solid var(--yellow500);
+      outline: 2px solid var(--focus-ring-color);
       outline-offset: 1px;
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
 
     :global(.icon) {
@@ -383,7 +383,7 @@
   .categories {
     margin: 0;
     padding-left: 20px;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .report-button,

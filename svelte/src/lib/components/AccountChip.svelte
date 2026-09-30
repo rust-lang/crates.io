@@ -55,7 +55,7 @@
     max-width: 100%;
     min-width: 0;
     border: 1px solid var(--gray-border);
-    border-radius: 99999px;
+    border-radius: var(--border-radius-pill);
     padding: 0.375em 0.625em;
     font-size: var(--space-xs);
     color: var(--main-color);

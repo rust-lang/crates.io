@@ -36,6 +36,6 @@
   }
 
   .list > dd + dt {
-    border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #424242);
+    border-top: 1px solid var(--divider-color);
   }
 </style>

@@ -36,7 +36,7 @@
     padding: var(--space-s);
 
     & + & {
-      border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
+      border-top: 1px solid var(--divider-color-muted);
     }
   }
 

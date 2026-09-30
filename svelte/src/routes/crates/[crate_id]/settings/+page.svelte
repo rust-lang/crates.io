@@ -486,7 +486,7 @@
   }
 
   .row + .row {
-    border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
+    border-top: 1px solid var(--divider-color-muted);
   }
 
   .email-column {
@@ -499,7 +499,7 @@
     border-spacing: 0;
 
     tbody > tr > td {
-      border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
+      border-top: 1px solid var(--divider-color-muted);
     }
 
     th,
@@ -510,7 +510,7 @@
 
     .details {
       font-size: 0.85em;
-      line-height: 1.5;
+      line-height: var(--line-height-body);
 
       .owner-id {
         color: var(--main-color-light);
@@ -531,7 +531,7 @@
       }
 
       tbody > tr:not(:first-child) > td:first-child {
-        border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
+        border-top: 1px solid var(--divider-color-muted);
       }
 
       tbody > tr > td {
@@ -566,7 +566,7 @@
     column-gap: var(--space-xs);
     padding: var(--space-s) var(--space-m);
     cursor: pointer;
-    border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
+    border-top: 1px solid var(--divider-color-muted);
   }
 
   .checkbox {

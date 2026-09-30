@@ -392,7 +392,7 @@
   }
 
   .name-input {
-    max-width: 440px;
+    max-width: var(--input-max-width-compact);
     width: 100%;
   }
 
@@ -431,13 +431,13 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     &.invalid {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
 
     > li + li {
@@ -468,9 +468,9 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     > li + li {
       border-top: inherit;
@@ -498,12 +498,12 @@
       margin: calc(-1 * var(--space-4xs)) 0;
       padding: var(--space-3xs) var(--space-2xs);
       border: 1px solid var(--gray-border);
-      border-radius: var(--space-3xs);
+      border-radius: var(--border-radius-small);
     }
 
     &.invalid input {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
 
     > button {
@@ -534,7 +534,7 @@
     align-self: center;
 
     .invalid & {
-      color: red;
+      color: var(--text-error);
     }
   }
 

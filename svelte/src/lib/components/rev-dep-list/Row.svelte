@@ -63,15 +63,15 @@
 
 <style>
   .row {
-    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --hover-bg-color: var(--surface-hover);
     --crate-color: light-dark(var(--grey700), var(--grey600));
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, 0.35), #232321);
+    --shadow: var(--surface-shadow);
 
     position: relative;
-    font-size: 18px;
+    font-size: var(--list-row-font-size);
     padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
+    background-color: var(--surface);
+    border-radius: var(--border-radius-small);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
 
@@ -82,9 +82,7 @@
     }
 
     &.focused {
-      box-shadow:
-        0 0 0 3px var(--yellow500),
-        var(--shadow);
+      box-shadow: var(--focus-ring-shadow), var(--shadow);
     }
   }
 
@@ -127,8 +125,8 @@
   .range {
     color: var(--grey600);
     text-transform: uppercase;
-    letter-spacing: 0.7px;
-    font-size: 13px;
+    letter-spacing: var(--list-row-metadata-letter-spacing);
+    font-size: var(--list-row-metadata-font-size);
   }
 
   .downloads {
@@ -152,7 +150,7 @@
     margin-top: var(--space-2xs);
     color: var(--crate-color);
     font-size: 90%;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
 
     @media only screen and (max-width: 550px) {
       margin-top: var(--space-xs);

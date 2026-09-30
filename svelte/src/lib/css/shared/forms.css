@@ -8,20 +8,20 @@
 
   .form-group-error {
     display: block;
-    color: red;
+    color: var(--text-error);
     font-size: 0.9em;
     margin-top: var(--space-2xs);
   }
 
   .base-input {
     padding: var(--space-2xs);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
 
     &[aria-invalid='true'] {
-      background: light-dark(#fff2f2, #170808);
-      border-color: red;
+      background: var(--input-background-error);
+      border-color: var(--border-color-error);
     }
   }
 }

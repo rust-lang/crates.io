@@ -91,8 +91,8 @@
 
   .row {
     margin-top: var(--space-2xs);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
+    background-color: var(--surface);
+    border-radius: var(--border-radius-small);
     padding: var(--space-m) var(--space-l);
     list-style: none;
     overflow-wrap: break-word;
@@ -100,12 +100,12 @@
 
   .no-results {
     padding: var(--space-l) var(--space-s);
-    background-color: light-dark(white, #141413);
+    background-color: var(--surface);
     text-align: center;
     font-size: 20px;
     font-weight: 300;
     overflow-wrap: break-word;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .affected-versions {

@@ -95,7 +95,7 @@
     color: var(--main-color-light);
     text-decoration: none;
     padding: var(--space-3xs) var(--space-2xs);
-    border-radius: var(--space-3xs);
+    border-radius: var(--border-radius-small);
   }
 
   a:hover {
