@@ -622,7 +622,7 @@ fn simple_config() -> SharedConfig {
         domain_name: "crates.io".into(),
         allowed_origins: Default::default(),
         ownership_invitations_expiration: chrono::Duration::days(30),
-        metrics: Default::default(),
+        otel: Default::default(),
 
         // The middleware has its own unit tests to verify its functionality.
         // Here, we can test what would happen if we toggled the status code
