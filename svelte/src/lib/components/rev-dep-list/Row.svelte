@@ -68,7 +68,7 @@
     --shadow: var(--surface-shadow);
 
     position: relative;
-    font-size: 18px;
+    font-size: var(--list-row-font-size);
     padding: var(--space-s) var(--space-m);
     background-color: var(--surface);
     border-radius: var(--border-radius-small);
@@ -125,8 +125,8 @@
   .range {
     color: var(--grey600);
     text-transform: uppercase;
-    letter-spacing: 0.7px;
-    font-size: 13px;
+    letter-spacing: var(--list-row-metadata-letter-spacing);
+    font-size: var(--list-row-metadata-font-size);
   }
 
   .downloads {

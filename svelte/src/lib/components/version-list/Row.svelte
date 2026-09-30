@@ -316,7 +316,7 @@
     display: flex;
     align-items: center;
     position: relative;
-    font-size: 18px;
+    font-size: var(--list-row-font-size);
     padding: var(--space-s) var(--space-m);
     background-color: var(--surface);
     border-radius: var(--border-radius-small);
@@ -495,8 +495,8 @@
     margin-left: var(--space-m);
     color: light-dark(var(--grey600), #d1cfc7);
     text-transform: uppercase;
-    letter-spacing: 0.7px;
-    font-size: 13px;
+    letter-spacing: var(--list-row-metadata-letter-spacing);
+    font-size: var(--list-row-metadata-font-size);
     --icon-size: 1.25em;
 
     :global(a) {

@@ -64,6 +64,10 @@
       'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     --line-height-body: 1.5;
 
+    --list-row-font-size: 18px;
+    --list-row-metadata-font-size: 13px;
+    --list-row-metadata-letter-spacing: 0.7px;
+
     --main-color: light-dark(#383838, #f9f7ec);
     --main-color-light: light-dark(#858585, #a6a6a6);
     --main-shadow-color: light-dark(var(--green900), hsl(111, 10%, 8%));

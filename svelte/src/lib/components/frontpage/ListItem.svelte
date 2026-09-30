@@ -122,7 +122,7 @@
 
   .subtitle {
     margin-top: var(--space-3xs);
-    font-size: 13px;
+    font-size: var(--list-row-metadata-font-size);
     color: light-dark(rgb(118, 131, 138), #cccac2);
   }
 
@@ -137,7 +137,7 @@
   .downloads {
     flex-shrink: 0;
     margin-left: var(--space-2xs);
-    font-size: 13px;
+    font-size: var(--list-row-metadata-font-size);
     color: light-dark(rgb(118, 131, 138), #cccac2);
   }
 
