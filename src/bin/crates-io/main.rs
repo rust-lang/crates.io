@@ -17,6 +17,8 @@ enum Command {
 fn main() -> anyhow::Result<()> {
     use clap::Parser;
 
+    let _sentry = crates_io::sentry::init();
+
     match Command::parse() {
         Command::Admin(command) => admin::run(command),
         Command::Server => server::run(),

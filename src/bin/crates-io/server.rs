@@ -17,8 +17,6 @@ use tower::Layer;
 const CORE_THREADS: usize = 4;
 
 pub fn run() -> anyhow::Result<()> {
-    let _sentry = crates_io::sentry::init();
-
     // Initialize logging
     crates_io::util::tracing::init()?;
 

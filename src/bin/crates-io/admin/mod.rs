@@ -43,8 +43,6 @@ pub enum Command {
 
 #[tokio::main]
 pub async fn run(command: Command) -> anyhow::Result<()> {
-    let _sentry = crates_io::sentry::init();
-
     // Initialize logging
     crates_io::util::tracing::init()?;
 

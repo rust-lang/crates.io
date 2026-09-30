@@ -40,8 +40,6 @@ use url::Url;
 const DEFAULT_POOL_SIZE: usize = 10;
 
 pub fn run() -> anyhow::Result<()> {
-    let _sentry = crates_io::sentry::init();
-
     // Initialize logging
     crates_io::util::tracing::init()?;
 
