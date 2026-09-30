@@ -286,6 +286,6 @@
     margin-top: var(--space-xs);
     color: var(--crate-color);
     font-size: 90%;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 </style>

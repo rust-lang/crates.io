@@ -510,7 +510,7 @@
 
     .details {
       font-size: 0.85em;
-      line-height: 1.5;
+      line-height: var(--line-height-body);
 
       .owner-id {
         color: var(--main-color-light);

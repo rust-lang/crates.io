@@ -260,7 +260,7 @@
   }
 
   .explainer {
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .token-list {

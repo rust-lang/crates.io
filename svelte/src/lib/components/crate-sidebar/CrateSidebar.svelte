@@ -383,7 +383,7 @@
   .categories {
     margin: 0;
     padding-left: 20px;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .report-button,

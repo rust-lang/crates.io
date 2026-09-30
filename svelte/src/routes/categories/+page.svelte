@@ -77,7 +77,7 @@
 
   .description {
     margin-top: var(--space-2xs);
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .categories-footer {

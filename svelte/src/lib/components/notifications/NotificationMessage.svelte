@@ -128,7 +128,7 @@
     min-height: 0;
     padding: 0.5rem 1rem;
     word-break: break-word;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .notification__content :global(a) {

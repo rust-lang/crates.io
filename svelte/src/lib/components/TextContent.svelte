@@ -29,7 +29,7 @@
     --icon-warning: icon('i-octicon:alert-16');
     --icon-caution: icon('i-octicon:stop-16');
 
-    line-height: 1.5;
+    line-height: var(--line-height-body);
     overflow-wrap: break-word;
 
     > :global(:first-child) {

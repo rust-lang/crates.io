@@ -150,7 +150,7 @@
     margin-top: var(--space-2xs);
     color: var(--crate-color);
     font-size: 90%;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
 
     @media only screen and (max-width: 550px) {
       margin-top: var(--space-xs);

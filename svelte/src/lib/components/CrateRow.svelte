@@ -167,7 +167,7 @@
 
   .description {
     margin-top: calc(var(--space-xs) / 2);
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .stats {

@@ -24,7 +24,7 @@
 
 <style>
   .error-message {
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .try-again-button {

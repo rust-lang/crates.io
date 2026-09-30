@@ -50,7 +50,7 @@
 
   .intro {
     flex: 6;
-    line-height: 1.5;
+    line-height: var(--line-height-body);
   }
 
   .stats {
