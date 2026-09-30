@@ -16,10 +16,9 @@ use tower::Layer;
 
 const CORE_THREADS: usize = 4;
 
-pub fn run() -> anyhow::Result<()> {
+pub fn run(config: SharedConfig) -> anyhow::Result<()> {
     let _span = info_span!("server.run");
 
-    let config = SharedConfig::from_environment()?;
     let meter_provider = crates_io::metrics::meter_provider(&config);
     let meter = meter_provider.meter(METER_NAME);
 

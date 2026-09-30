@@ -1,3 +1,5 @@
+use crates_io::config::SharedConfig;
+
 mod analyze_crates;
 mod backfill_target_metadata;
 mod build_crate_zips;
@@ -42,7 +44,7 @@ pub enum Command {
 }
 
 #[tokio::main]
-pub async fn run(command: Command) -> anyhow::Result<()> {
+pub async fn run(config: SharedConfig, command: Command) -> anyhow::Result<()> {
     let span = info_span!("admin.command", command = tracing::field::Empty);
     span.record("command", tracing::field::debug(&command));
 
@@ -56,7 +58,7 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
         Command::Populate(opts) => populate::run(opts).await,
         Command::RenderReadmes(opts) => render_readmes::run(opts).await,
         Command::SyncIndex(opts) => sync_index::run(opts).await,
-        Command::TestEmail(opts) => test_email::run(opts).await,
+        Command::TestEmail(opts) => test_email::run(config, opts).await,
         Command::VerifyToken(opts) => verify_token::run(opts).await,
         Command::Migrate(opts) => migrate::run(opts).await,
         Command::UploadIndex(opts) => upload_index::run(opts).await,

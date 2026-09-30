@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate tracing;
 
+use crates_io::config::SharedConfig;
+
 mod admin;
 mod background_worker;
 mod server;
@@ -22,10 +24,12 @@ fn main() -> anyhow::Result<()> {
     // Initialize logging
     crates_io::util::tracing::init()?;
 
+    let config = SharedConfig::from_environment()?;
+
     match Command::parse() {
-        Command::Admin(command) => admin::run(command),
-        Command::Server => server::run(),
-        Command::BackgroundWorker => background_worker::run(),
+        Command::Admin(command) => admin::run(config, command),
+        Command::Server => server::run(config),
+        Command::BackgroundWorker => background_worker::run(config),
     }
 }
 

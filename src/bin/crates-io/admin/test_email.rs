@@ -34,8 +34,7 @@ pub struct Opts {
     publisher_info: String,
 }
 
-pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let config = SharedConfig::from_environment().context("Failed to load app configuration")?;
+pub async fn run(config: SharedConfig, opts: Opts) -> anyhow::Result<()> {
     let emails = Emails::from_environment(&config);
 
     let publish_time = Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
