@@ -145,7 +145,7 @@
     - heading "Owners" [level=2]
     - list
   - heading "Stats Overview" [level=3]
-  - text: /\d+,\d+ Downloads all time 1 Versions published/
+  - text: /[\d,]+ Recent downloads \d+,\d+ Downloads all time 1 Versions published/
   - heading /Downloads over the last \d+ days/ [level=4]
   - text: Display as
   - button "Stacked"
