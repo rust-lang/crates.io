@@ -35,14 +35,7 @@ fn options(config: SentryConfig) -> ClientOptions {
 
         let op = ctx.operation();
         if op == "http.server" {
-            let is_download_endpoint =
-                ctx.name().starts_with("GET /api/v1/crates/") && ctx.name().ends_with("/download");
-
-            if is_download_endpoint {
-                // Reduce the sample rate for the download endpoint, since we have significantly
-                // more traffic on that endpoint compared to the rest
-                return config.traces_sample_rate / 100.;
-            } else if ctx.name() == "PUT /api/v1/crates/new" {
+            if ctx.name() == "PUT /api/v1/crates/new" {
                 // Record all traces for crate publishing
                 return 1.;
             }
