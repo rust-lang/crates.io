@@ -58,6 +58,9 @@
     --border-radius-small: var(--space-3xs);
     --border-radius-pill: 99999px;
 
+    --input-max-width-compact: 440px;
+    --form-max-width: 600px;
+
     --font-heading: 'Fira Sans', sans-serif;
     --font-body: var(--font-heading);
     --font-monospace:

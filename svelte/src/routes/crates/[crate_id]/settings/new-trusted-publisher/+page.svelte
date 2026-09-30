@@ -443,7 +443,7 @@
 
 <style>
   .form {
-    max-width: 600px;
+    max-width: var(--form-max-width);
     margin: var(--space-m) auto;
   }
 
@@ -461,7 +461,7 @@
     --dropdown-icon-light: icon('i-mdi:menu-down', 'black');
     --dropdown-icon-dark: icon('i-mdi:menu-down', 'white');
 
-    max-width: 600px;
+    max-width: var(--form-max-width);
     width: 100%;
     padding-right: var(--space-m);
     background-image: var(--dropdown-icon-light);
@@ -487,7 +487,7 @@
   }
 
   .input {
-    max-width: 600px;
+    max-width: var(--form-max-width);
     width: 100%;
   }
 

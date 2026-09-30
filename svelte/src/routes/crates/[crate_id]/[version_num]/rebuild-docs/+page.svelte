@@ -90,7 +90,7 @@
 
 <style>
   .content {
-    max-width: 600px;
+    max-width: var(--form-max-width);
     margin: var(--space-xl) auto;
 
     h1 {

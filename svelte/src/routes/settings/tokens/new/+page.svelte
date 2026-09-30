@@ -392,7 +392,7 @@
   }
 
   .name-input {
-    max-width: 440px;
+    max-width: var(--input-max-width-compact);
     width: 100%;
   }
 
