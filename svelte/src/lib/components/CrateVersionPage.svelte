@@ -145,6 +145,16 @@
       <h3 data-test-crate-stats-label>Stats Overview</h3>
     {/if}
 
+    {#if crate.recent_downloads != null}
+      <div class="stat" data-test-recent-downloads>
+        <span class="num">
+          <span class="stat-icon"><Icon class="i-mdi:download" /></span>
+          <span class="num__align">{numberFormat.format(crate.recent_downloads)}</span>
+        </span>
+        <span class="text--small">Recent downloads</span>
+      </div>
+    {/if}
+
     <div class="stat">
       <span class="num">
         <span class="stat-icon"><Icon class="i-mdi:download" /></span>
