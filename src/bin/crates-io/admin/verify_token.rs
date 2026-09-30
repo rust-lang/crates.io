@@ -2,6 +2,7 @@ use anyhow::Context;
 use crates_io::models::ApiToken;
 use crates_io::util::token::HashedToken;
 use crates_io::{db, models::User};
+use secrecy::{ExposeSecret, SecretString};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -12,7 +13,7 @@ use crates_io::{db, models::User};
         find a user with that API token, the error will be displayed."
 )]
 pub struct Opts {
-    api_token: String,
+    api_token: SecretString,
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
@@ -20,7 +21,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .await
         .context("Failed to connect to the database")?;
 
-    let token = HashedToken::parse(&opts.api_token)?;
+    let token = HashedToken::parse(opts.api_token.expose_secret())?;
     let token = ApiToken::find_by_api_token(&mut conn, &token).await?;
     let user = User::find(&conn, token.user_id).await?;
     println!("The token belongs to crates.io user {}", user.username);
