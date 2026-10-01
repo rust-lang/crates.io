@@ -6,7 +6,7 @@ use crate::views::{EncodableLinkedAccount, EncodablePublicUser};
 use axum::Json;
 use axum::extract::{FromRequestParts, Path};
 use axum_extra::extract::Query;
-use bigdecimal::{BigDecimal, ToPrimitive};
+use crates_io_database::fns::to_bigint;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
@@ -161,10 +161,10 @@ pub async fn get_user_stats(
         .inner_join(crates::table)
         .inner_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
         .filter(crate_owners::owner_id.eq(user_id))
-        .select(sum(crate_downloads::downloads))
-        .first::<Option<BigDecimal>>(&mut conn)
+        .select(to_bigint(sum(crate_downloads::downloads)))
+        .first::<Option<i64>>(&mut conn)
         .await?
-        .map(|d| d.to_u64().unwrap_or(u64::MAX))
+        .map(|d| u64::try_from(d).unwrap_or(u64::MAX))
         .unwrap_or(0);
 
     Ok(Json(StatsResponse { total_downloads }))
