@@ -14,6 +14,9 @@ use std::sync::Arc;
 pub static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
+/// Separates session keys and values and pads the encoded payload.
+const FIELD_SEPARATOR: u8 = 0xff;
+
 /// Request extension holding the session data
 #[derive(Clone, FromRequestParts)]
 #[from_request(via(Extension))]
@@ -88,7 +91,7 @@ pub fn decode(cookie: Cookie<'_>) -> HashMap<String, String> {
     let bytes = general_purpose::STANDARD
         .decode(cookie.value().as_bytes())
         .unwrap_or_default();
-    let mut parts = bytes.split(|&a| a == 0xff);
+    let mut parts = bytes.split(|&a| a == FIELD_SEPARATOR);
     while let (Some(key), Some(value)) = (parts.next(), parts.next()) {
         if key.is_empty() {
             break;
@@ -104,14 +107,14 @@ pub fn encode(h: &HashMap<String, String>) -> String {
     let mut ret = Vec::new();
     for (i, (k, v)) in h.iter().enumerate() {
         if i != 0 {
-            ret.push(0xff)
+            ret.push(FIELD_SEPARATOR)
         }
         ret.extend(k.bytes());
-        ret.push(0xff);
+        ret.push(FIELD_SEPARATOR);
         ret.extend(v.bytes());
     }
     while ret.len() * 8 % 6 != 0 {
-        ret.push(0xff);
+        ret.push(FIELD_SEPARATOR);
     }
     general_purpose::STANDARD.encode(&ret[..])
 }
