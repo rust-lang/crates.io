@@ -6,12 +6,13 @@
 //! Requests to the download endpoint are always allowed, to support versions of cargo older than
 //! 0.17 (released alongside rustc 1.17).
 
+use crate::headers::XRequestId;
 use crate::middleware::log_request::RequestLogExt;
 use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum_extra::TypedHeader;
-use axum_extra::headers::UserAgent;
+use axum_extra::headers::{HeaderMapExt, UserAgent};
 use http::StatusCode;
 
 const CLOUDFRONT_USER_AGENT: &str = "Amazon CloudFront";
@@ -32,11 +33,8 @@ pub async fn require_user_agent(
     if !has_user_agent && !is_download {
         req.request_log().add("cause", "no user agent");
 
-        let request_id = req
-            .headers()
-            .get("x-request-id")
-            .map(|header| header.to_str().unwrap_or_default())
-            .unwrap_or_default();
+        let request_id = req.headers().typed_get::<XRequestId>();
+        let request_id = request_id.as_ref().map_or("", XRequestId::as_str);
 
         let body = format!(include_str!("no_user_agent_message.txt"), request_id);
 
