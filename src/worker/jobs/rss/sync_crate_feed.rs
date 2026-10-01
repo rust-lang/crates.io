@@ -42,20 +42,10 @@ impl BackgroundJob for SyncCrateFeed {
 
         let key = StorageKey::CrateFeed { name };
 
-        let link = rss::extension::atom::Link {
-            href: ctx.storage.location(&key),
-            rel: "self".to_string(),
-            mime_type: Some("application/rss+xml".to_string()),
-            ..Default::default()
-        };
-
         let items = version_updates
             .into_iter()
             .map(|u| u.into_rss_item(name, domain))
             .collect();
-
-        let namespaces = vec![("crates".to_string(), "https://crates.io/".to_string())];
-        let namespaces = namespaces.into_iter().collect();
 
         let channel = rss::Channel {
             title: format!("crates.io: {name} releases"),
@@ -63,11 +53,8 @@ impl BackgroundJob for SyncCrateFeed {
             description: format!(
                 "Recent releases of the {name} crate on the crates.io package registry"
             ),
-            language: Some("en".to_string()),
-            atom_ext: Some(rss::extension::atom::AtomExtension { links: vec![link] }),
-            namespaces,
             items,
-            ..Default::default()
+            ..super::channel_defaults(ctx.storage.location(&key))
         };
 
         super::publish_channel(&ctx, &conn, &key, &channel).await?;

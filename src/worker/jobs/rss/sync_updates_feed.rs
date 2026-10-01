@@ -36,30 +36,17 @@ impl BackgroundJob for SyncUpdatesFeed {
         let conn = ctx.deadpool.get().await?;
         let version_updates = load_version_updates(&conn).await?;
 
-        let link = rss::extension::atom::Link {
-            href: ctx.storage.location(&key),
-            rel: "self".to_string(),
-            mime_type: Some("application/rss+xml".to_string()),
-            ..Default::default()
-        };
-
         let items = version_updates
             .into_iter()
             .map(|u| u.into_rss_item(domain))
             .collect();
 
-        let namespaces = vec![("crates".to_string(), "https://crates.io/".to_string())];
-        let namespaces = namespaces.into_iter().collect();
-
         let channel = rss::Channel {
             title: "crates.io: recent updates".to_string(),
             link: format!("https://{domain}/"),
             description: "Recent version publishes on the crates.io package registry".to_string(),
-            language: Some("en".to_string()),
-            atom_ext: Some(rss::extension::atom::AtomExtension { links: vec![link] }),
-            namespaces,
             items,
-            ..Default::default()
+            ..super::channel_defaults(ctx.storage.location(&key))
         };
 
         super::publish_channel(&ctx, &conn, &key, &channel).await?;
