@@ -12,6 +12,7 @@ use crates_io_database::models::{
     Team, TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
 };
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 #[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 #[schema(as = Category)]
@@ -409,8 +410,7 @@ impl EncodableCrate {
 
         let default_version = default_version.map(ToString::to_string);
         if default_version.is_none() {
-            let message = format!("Crate `{name}` has no default version");
-            sentry_core::capture_message(&message, sentry_core::Level::Info);
+            warn!(krate.name = %name, "Crate `{name}` has no default version");
         }
         let yanked = yanked.unwrap_or_default();
 
