@@ -4,7 +4,7 @@
 //! download counts are located in `version::downloads`.
 
 use crate::controllers::krate::CratePath;
-use crate::models::download::Version;
+use crate::models::download::{DOWNLOAD_HISTORY_DAYS, Version};
 use crate::models::{PublicUser, Version as FullVersion, VersionDownload, VersionOwnerAction};
 use crate::schema::{oauth_github, users, version_downloads, version_owner_actions, versions};
 use crate::server::ServerContext;
@@ -112,7 +112,7 @@ pub async fn get_crate_downloads(
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
     let (downloads, extra_downloads, versions_and_publishers, actions) = tokio::try_join!(
         VersionDownload::belonging_to(latest_five)
-            .filter(version_downloads::date.gt(date(now - 90.days())))
+            .filter(version_downloads::date.gt(date(now - DOWNLOAD_HISTORY_DAYS.days())))
             .select(VersionDownload::as_select())
             .order((
                 version_downloads::date.asc(),
@@ -125,7 +125,7 @@ pub async fn get_crate_downloads(
                 to_char(version_downloads::date, "YYYY-MM-DD"),
                 sum_downloads,
             ))
-            .filter(version_downloads::date.gt(date(now - 90.days())))
+            .filter(version_downloads::date.gt(date(now - DOWNLOAD_HISTORY_DAYS.days())))
             .group_by(version_downloads::date)
             .order(version_downloads::date.asc())
             .load::<ExtraDownload>(&mut &*conn)

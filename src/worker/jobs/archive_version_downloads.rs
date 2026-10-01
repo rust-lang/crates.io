@@ -1,4 +1,5 @@
 use super::IndexVersionDownloadsArchive;
+use crate::models::download::DOWNLOAD_HISTORY_DAYS;
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
 use crate::worker::WorkerContext;
@@ -40,7 +41,8 @@ impl ArchiveVersionDownloads {
 
 impl Default for ArchiveVersionDownloads {
     fn default() -> Self {
-        Self::before(Utc::now().date_naive() - chrono::Duration::days(90))
+        let history = chrono::Duration::days(i64::from(DOWNLOAD_HISTORY_DAYS));
+        Self::before(Utc::now().date_naive() - history)
     }
 }
 

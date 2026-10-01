@@ -4,6 +4,9 @@ use crate::schema::{version_downloads, versions};
 use chrono::NaiveDate;
 use diesel::prelude::*;
 
+/// Default window in days for download statistics and archiving.
+pub const DOWNLOAD_HISTORY_DAYS: i32 = 90;
+
 #[derive(HasQuery, Identifiable, Associations, Debug, Clone, Copy)]
 #[diesel(
     primary_key(version_id, date),

@@ -4,6 +4,7 @@
 
 use super::CrateVersionPath;
 use crate::models::VersionDownload;
+use crate::models::download::DOWNLOAD_HISTORY_DAYS;
 use crate::schema::*;
 use crate::server::ServerContext;
 use crate::storage::StorageKey;
@@ -106,7 +107,7 @@ pub async fn get_version_downloads(
         .unwrap_or_else(|| Utc::now().date_naive());
 
     let cutoff_start_date = cutoff_end_date
-        .checked_sub_signed(Duration::days(89))
+        .checked_sub_signed(Duration::days(i64::from(DOWNLOAD_HISTORY_DAYS - 1)))
         .ok_or_else(|| bad_request("before_date is too early"))?;
 
     let version_downloads = VersionDownload::belonging_to(&version)
