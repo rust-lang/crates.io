@@ -1,5 +1,8 @@
 use crate::TestApp;
-use crate::util::{MockRequestExt, MockTokenUser, RequestHelper, Response};
+use crate::util::{
+    MockRequestExt, MockTokenUser, RequestHelper, Response,
+    encode_session_header_with_explicit_epoch,
+};
 
 use crate::builders::PublishBuilder;
 use crate::util::encode_session_header;
@@ -39,7 +42,7 @@ async fn cookie_auth_cannot_find_user() {
     let (app, anon) = TestApp::init().empty().await;
 
     let session_key = app.as_inner().session_key();
-    let cookie = encode_session_header(session_key, -1, 0);
+    let cookie = encode_session_header(session_key, -1, Some(0));
 
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
@@ -65,22 +68,44 @@ async fn user_session_epoch() {
 
     // Set up a cookie with the default epoch.
     let session_key = app.as_inner().session_key();
-    let default_cookie = encode_session_header(session_key, user_id, session_epoch);
+    let default_cookie = encode_session_header(session_key, user_id, Some(session_epoch));
 
-    // Validate that a request succeeds for this user.
+    // Also set up a cookie with no epoch, which should be functionally
+    // equivalent to the above cookie.
+    let epochless_cookie = encode_session_header(session_key, user_id, None);
+
+    // Validate that a request succeeds for this user, both with and without an
+    // epoch.
     let mut request = anon.get_request(URL);
     request.header(header::COOKIE, &default_cookie);
 
     let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
 
+    let mut request = anon.get_request(URL);
+    request.header(header::COOKIE, &epochless_cookie);
+
+    let response = anon.run::<()>(request).await;
+    assert_eq!(response.status(), StatusCode::OK);
+
     // Validate that a request for a future epoch fails.
-    let future_cookie = encode_session_header(session_key, user_id, session_epoch + 1);
+    let future_cookie = encode_session_header(session_key, user_id, Some(session_epoch + 1));
     let mut request = anon.get_request(URL);
     request.header(header::COOKIE, &future_cookie);
 
     let response = anon.run::<()>(request.clone()).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
+
+    // Validate that requests with various invalid epochs fail.
+    for epoch in ["", "foobar", " ", " 0", "0 "] {
+        let invalid_epoch_cookie =
+            encode_session_header_with_explicit_epoch(session_key, user_id, Some(epoch));
+        let mut request = anon.get_request(URL);
+        request.header(header::COOKIE, &invalid_epoch_cookie);
+
+        let response = anon.run::<()>(request.clone()).await;
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
 
     // Now increment the user epoch.
     diesel::update(users::table)
@@ -90,9 +115,16 @@ async fn user_session_epoch() {
         .await
         .unwrap();
 
-    // And validate that a request with the default epoch now fails.
+    // And validate that requests without an epoch, or with the default epoch
+    // now fail.
     let mut request = anon.get_request(URL);
     request.header(header::COOKIE, &default_cookie);
+
+    let response = anon.run::<()>(request).await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+
+    let mut request = anon.get_request(URL);
+    request.header(header::COOKIE, &epochless_cookie);
 
     let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
