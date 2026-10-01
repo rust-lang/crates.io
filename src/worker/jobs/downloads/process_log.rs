@@ -1,5 +1,5 @@
 use crate::config::CdnLogStorageConfig;
-use crate::worker::WorkerContext;
+use crate::worker::{QUEUE_DOWNLOADS, WorkerContext};
 use anyhow::Context;
 use chrono::NaiveDate;
 use crates_io_cdn_logs::{Decompressor, DownloadsMap, count_downloads};
@@ -38,7 +38,7 @@ pub struct ProcessCdnLog {
 impl BackgroundJob for ProcessCdnLog {
     const JOB_NAME: &'static str = "process_cdn_log";
     const DEDUPLICATED: bool = true;
-    const QUEUE: &'static str = "downloads";
+    const QUEUE: &'static str = QUEUE_DOWNLOADS;
 
     type Context = WorkerContext;
 

@@ -1,5 +1,5 @@
 use crate::cloudfront::{CloudFront, CloudFrontError};
-use crate::worker::WorkerContext;
+use crate::worker::{QUEUE_CLOUDFRONT, WorkerContext};
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_worker::BackgroundJob;
@@ -111,7 +111,7 @@ impl ProcessCloudfrontInvalidationQueue {
 impl BackgroundJob for ProcessCloudfrontInvalidationQueue {
     const JOB_NAME: &'static str = "process_cloudfront_invalidation_queue";
     const DEDUPLICATED: bool = true;
-    const QUEUE: &'static str = "cloudfront";
+    const QUEUE: &'static str = QUEUE_CLOUDFRONT;
 
     type Context = WorkerContext;
 

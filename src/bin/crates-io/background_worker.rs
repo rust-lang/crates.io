@@ -20,7 +20,9 @@ use crates_io::metrics::consts::METER_NAME;
 use crates_io::metrics::{WorkerMetrics, meter_provider};
 use crates_io::ssh;
 use crates_io::storage::Storage;
-use crates_io::worker::{RunnerExt, WorkerContext};
+use crates_io::worker::{
+    QUEUE_BACKFILL, QUEUE_CLOUDFRONT, QUEUE_DOWNLOADS, QUEUE_REPOSITORY, RunnerExt, WorkerContext,
+};
 use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_fastly::Fastly;
@@ -132,10 +134,10 @@ pub fn run(mut config: SharedConfig) -> anyhow::Result<()> {
 
     let runner = Runner::new(deadpool, ctx.clone())
         .configure_default_queue(|queue| queue.num_workers(5))
-        .configure_queue("downloads", |queue| queue.num_workers(1))
-        .configure_queue("repository", |queue| queue.num_workers(1))
-        .configure_queue("cloudfront", |queue| queue.num_workers(1))
-        .configure_queue("backfill", |queue| {
+        .configure_queue(QUEUE_DOWNLOADS, |queue| queue.num_workers(1))
+        .configure_queue(QUEUE_REPOSITORY, |queue| queue.num_workers(1))
+        .configure_queue(QUEUE_CLOUDFRONT, |queue| queue.num_workers(1))
+        .configure_queue(QUEUE_BACKFILL, |queue| {
             queue.num_workers(ctx.config.backfill_workers)
         })
         .register_crates_io_job_types();

@@ -1,7 +1,7 @@
 use crate::index::get_index_data;
 use crate::tasks::spawn_blocking;
-use crate::worker::WorkerContext;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
+use crate::worker::{QUEUE_REPOSITORY, WorkerContext};
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_index::Repository;
@@ -27,7 +27,7 @@ impl BackgroundJob for SyncToGitIndex {
     const JOB_NAME: &'static str = "sync_to_git_index";
     const PRIORITY: i16 = 100;
     const DEDUPLICATED: bool = true;
-    const QUEUE: &'static str = "repository";
+    const QUEUE: &'static str = QUEUE_REPOSITORY;
 
     type Context = WorkerContext;
 
@@ -98,7 +98,7 @@ impl BulkSyncToGitIndex {
 
 impl BackgroundJob for BulkSyncToGitIndex {
     const JOB_NAME: &'static str = "bulk_sync_to_git_index";
-    const QUEUE: &'static str = "repository";
+    const QUEUE: &'static str = QUEUE_REPOSITORY;
 
     type Context = WorkerContext;
 

@@ -1,5 +1,5 @@
-use crate::worker::WorkerContext;
 use crate::worker::jobs::ArchiveIndexBranch;
+use crate::worker::{QUEUE_REPOSITORY, WorkerContext};
 use anyhow::{Context, anyhow};
 use chrono::Utc;
 use crates_io_github::{CreateCommit, GitHubAuth, parse_github_slug};
@@ -46,7 +46,7 @@ impl BackgroundJob for SquashIndex {
     // Same queue as `SyncToGitIndex`, etc. so index-writing jobs serialize
     // against each other, even though this job does not touch the local
     // bare repo.
-    const QUEUE: &'static str = "repository";
+    const QUEUE: &'static str = QUEUE_REPOSITORY;
 
     type Context = WorkerContext;
 
