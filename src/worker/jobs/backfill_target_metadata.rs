@@ -1,6 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::{Storage, StorageKey};
-use crate::worker::WorkerContext;
+use crate::worker::{QUEUE_BACKFILL, WorkerContext};
 use anyhow::Context;
 use crates_io_cargo_toml::Manifest as CargoManifest;
 use crates_io_cargo_toml::target_metadata::{ErrorStatus, TargetMetadata, TargetMetadataAnalysis};
@@ -27,7 +27,7 @@ impl BackfillTargetMetadata {
 
 impl BackgroundJob for BackfillTargetMetadata {
     const JOB_NAME: &'static str = "backfill_target_metadata";
-    const QUEUE: &'static str = "backfill";
+    const QUEUE: &'static str = QUEUE_BACKFILL;
     const DEDUPLICATED: bool = true;
 
     type Context = WorkerContext;

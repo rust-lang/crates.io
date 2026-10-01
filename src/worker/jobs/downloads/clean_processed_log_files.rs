@@ -1,5 +1,5 @@
 use crate::schema::processed_log_files;
-use crate::worker::WorkerContext;
+use crate::worker::{QUEUE_DOWNLOADS, WorkerContext};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -15,7 +15,7 @@ pub struct CleanProcessedLogFiles;
 impl BackgroundJob for CleanProcessedLogFiles {
     const JOB_NAME: &'static str = "clean_processed_log_files";
     const DEDUPLICATED: bool = true;
-    const QUEUE: &'static str = "downloads";
+    const QUEUE: &'static str = QUEUE_DOWNLOADS;
 
     type Context = WorkerContext;
 

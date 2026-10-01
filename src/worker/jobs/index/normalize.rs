@@ -1,5 +1,5 @@
 use crate::tasks::spawn_blocking;
-use crate::worker::WorkerContext;
+use crate::worker::{QUEUE_REPOSITORY, WorkerContext};
 use crates_io_index::{Crate, DependencyKind};
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
@@ -13,7 +13,7 @@ pub struct NormalizeIndex {
 
 impl BackgroundJob for NormalizeIndex {
     const JOB_NAME: &'static str = "normalize_index";
-    const QUEUE: &'static str = "repository";
+    const QUEUE: &'static str = QUEUE_REPOSITORY;
 
     type Context = WorkerContext;
 

@@ -12,6 +12,18 @@ pub mod jobs;
 
 pub use self::context::WorkerContext;
 
+/// Queue for processing CDN download logs.
+pub const QUEUE_DOWNLOADS: &str = "downloads";
+
+/// Queue for serializing Git index writes.
+pub const QUEUE_REPOSITORY: &str = "repository";
+
+/// Queue for processing CloudFront invalidations.
+pub const QUEUE_CLOUDFRONT: &str = "cloudfront";
+
+/// Queue for metadata backfill jobs.
+pub const QUEUE_BACKFILL: &str = "backfill";
+
 pub trait RunnerExt {
     fn register_crates_io_job_types(self) -> Self;
 }
