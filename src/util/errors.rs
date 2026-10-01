@@ -129,8 +129,6 @@ pub type AppResult<T> = Result<T, BoxedAppError>;
 
 impl<E: Error + Send + 'static> AppError for E {
     fn response(&self) -> axum::response::Response {
-        sentry::capture_error(self);
-
         let error = std::iter::successors(Some(self as &dyn Error), |e| (*e).source())
             .map(|e| e.to_string())
             .collect::<Vec<_>>()
@@ -234,8 +232,6 @@ struct InternalAppError {
 
 impl AppError for InternalAppError {
     fn response(&self) -> axum::response::Response {
-        sentry::capture_message(&self.description, sentry::Level::Error);
-
         let error = ErrorField::new(type_name::<Self>(), &self.description);
         server_error_response(error)
     }

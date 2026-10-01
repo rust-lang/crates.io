@@ -8,8 +8,7 @@ use anyhow::Context;
 use crates_io_index::features::split_features;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use sentry::Level;
-use tracing::{debug, instrument};
+use tracing::{debug, instrument, warn};
 
 #[instrument(skip_all, fields(krate.name = ?name))]
 pub async fn get_index_data(
@@ -35,11 +34,10 @@ pub async fn get_index_data(
     // This can sometimes happen when we delete versions upon owner request
     // but don't realize that the crate is now left with no versions at all.
     //
-    // In this case we will delete the crate from the index and log a warning to
-    // Sentry to clean this up in the database.
+    // In this case we will delete the crate from the index and log a warning
+    // so the database can be cleaned up.
     if crates.is_empty() {
-        let message = format!("Crate `{name}` has no versions left");
-        sentry::capture_message(&message, Level::Warning);
+        warn!(krate.name = %name, "Crate `{name}` has no versions left");
 
         return Ok(None);
     }

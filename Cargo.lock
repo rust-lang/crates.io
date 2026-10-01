@@ -1750,9 +1750,9 @@ dependencies = [
  "hex",
  "indexmap",
  "semver",
- "sentry-core",
  "serde",
  "serde_json",
+ "tracing",
  "url",
  "utoipa",
 ]
