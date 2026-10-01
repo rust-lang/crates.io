@@ -1,3 +1,4 @@
+use crate::headers::XRequestId;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
 use crate::server::ServerContext;
@@ -5,6 +6,7 @@ use crate::util::errors::{BoxedAppError, custom};
 use axum::extract::{Extension, MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use axum_extra::headers::HeaderMapExt;
 use http::{HeaderMap, StatusCode};
 use regex::Regex;
 
@@ -123,10 +125,8 @@ fn rejection_response_from(ctx: &ServerContext, headers: &HeaderMap) -> impl Int
     let domain_name = &ctx.config.domain_name;
 
     // Heroku should always set this header
-    let request_id = headers
-        .get("x-request-id")
-        .map(|val| val.to_str().unwrap_or_default())
-        .unwrap_or_default();
+    let request_id = headers.typed_get::<XRequestId>();
+    let request_id = request_id.as_ref().map_or("", XRequestId::as_str);
 
     let body = format!(
         "We are unable to process your request at this time. \
