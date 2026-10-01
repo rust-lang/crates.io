@@ -73,7 +73,7 @@ async fn user_session_epoch() {
     request.header(header::COOKIE, &default_cookie);
 
     let response = anon.run::<()>(request).await;
-    assert_eq!(StatusCode::OK, response.status());
+    assert_eq!(response.status(), StatusCode::OK);
 
     // Validate that a request for a future epoch also succeeds.
     let future_cookie = encode_session_header(session_key, user_id, session_epoch + 1);
@@ -81,7 +81,7 @@ async fn user_session_epoch() {
     request.header(header::COOKIE, &future_cookie);
 
     let response = anon.run::<()>(request.clone()).await;
-    assert_eq!(StatusCode::OK, response.status());
+    assert_eq!(response.status(), StatusCode::OK);
 
     // Now increment the user epoch.
     diesel::update(users::table)
@@ -96,5 +96,5 @@ async fn user_session_epoch() {
     request.header(header::COOKIE, &default_cookie);
 
     let response = anon.run::<()>(request).await;
-    assert_eq!(StatusCode::FORBIDDEN, response.status());
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 }
