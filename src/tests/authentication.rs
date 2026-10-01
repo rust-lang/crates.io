@@ -3,6 +3,9 @@ use crate::util::{MockRequestExt, MockTokenUser, RequestHelper, Response};
 
 use crate::builders::PublishBuilder;
 use crate::util::encode_session_header;
+use crates_io::{models::User, schema::users};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::{Method, StatusCode, header};
 use insta::assert_snapshot;
 
@@ -48,10 +51,6 @@ async fn cookie_auth_cannot_find_user() {
 // Ensure that cookies with older epochs than the user session epoch are rejected.
 #[tokio::test(flavor = "multi_thread")]
 async fn user_session_epoch() {
-    use crates_io_database::{models::User, schema::users};
-    use diesel::prelude::*;
-    use diesel_async::RunQueryDsl;
-
     // Note that, although we're creating a user, we're actually going to use
     // the anonymous user for all requests below so we control the session
     // cookie.
