@@ -30,6 +30,8 @@ doc_markdown = "warn"
 # The `.then(...).unwrap_or_default()` form is often more compact than the
 # `if`/`else` that rustfmt produces for the equivalent condition.
 obfuscated_if_else = "allow"
+# False positives in derive macros: https://github.com/rust-lang/rust-clippy/issues/17525
+redundant_field_names = "allow"
 todo = "warn"
 too_long_first_doc_paragraph = "warn"
 
