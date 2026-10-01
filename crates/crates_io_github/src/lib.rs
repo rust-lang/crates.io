@@ -15,11 +15,18 @@ use serde::de::DeserializeOwned;
 use std::str;
 
 use async_trait::async_trait;
+use header::HeaderName;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
 type Result<T> = std::result::Result<T, GitHubError>;
+
+/// Remaining requests in the current GitHub rate-limit window.
+const RATE_LIMIT_REMAINING: HeaderName = HeaderName::from_static("x-ratelimit-remaining");
+
+/// Maximum requests in the current GitHub rate-limit window.
+const RATE_LIMIT_LIMIT: HeaderName = HeaderName::from_static("x-ratelimit-limit");
 
 /// Authentication mode for a request to the GitHub API.
 ///
@@ -225,8 +232,8 @@ impl RealGitHubClient {
             .error_for_status()?;
 
         let headers = response.headers();
-        let remaining = headers.get("x-ratelimit-remaining");
-        let limit = headers.get("x-ratelimit-limit");
+        let remaining = headers.get(RATE_LIMIT_REMAINING);
+        let limit = headers.get(RATE_LIMIT_LIMIT);
         debug!("GitHub rate limit remaining: {remaining:?}/{limit:?}");
 
         response.json().await.map_err(Into::into)
@@ -252,8 +259,8 @@ impl RealGitHubClient {
             .error_for_status()?;
 
         let headers = response.headers();
-        let remaining = headers.get("x-ratelimit-remaining");
-        let limit = headers.get("x-ratelimit-limit");
+        let remaining = headers.get(RATE_LIMIT_REMAINING);
+        let limit = headers.get(RATE_LIMIT_LIMIT);
         debug!("GitHub rate limit remaining: {remaining:?}/{limit:?}");
 
         response.json().await.map_err(Into::into)

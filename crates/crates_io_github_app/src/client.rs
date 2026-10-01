@@ -1,6 +1,7 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use chrono::{DateTime, TimeDelta, Utc};
+use header::HeaderName;
 use jsonwebtoken::EncodingKey;
 use reqwest::{Client, StatusCode, header};
 use secrecy::{ExposeSecret, SecretString};
@@ -14,6 +15,9 @@ use crate::jwt::build_jwt;
 
 const DEFAULT_BASE_URL: &str = "https://api.github.com";
 const USER_AGENT: &str = "crates.io (https://crates.io)";
+
+/// Header selecting the GitHub REST API version.
+const GITHUB_API_VERSION_HEADER: HeaderName = HeaderName::from_static("x-github-api-version");
 
 /// Value of the `X-GitHub-Api-Version` header.
 ///
@@ -136,7 +140,7 @@ impl GitHubAppClient {
             .bearer_auth(jwt.expose_secret())
             .header(header::ACCEPT, "application/vnd.github+json")
             .header(header::USER_AGENT, USER_AGENT)
-            .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
+            .header(GITHUB_API_VERSION_HEADER, GITHUB_API_VERSION)
             .send()
             .await
             .context("installation lookup request failed")?
@@ -175,7 +179,7 @@ impl GitHubAppClient {
             .bearer_auth(jwt.expose_secret())
             .header(header::ACCEPT, "application/vnd.github+json")
             .header(header::USER_AGENT, USER_AGENT)
-            .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
+            .header(GITHUB_API_VERSION_HEADER, GITHUB_API_VERSION)
             .send()
             .await
             .context("access token request failed")?;
