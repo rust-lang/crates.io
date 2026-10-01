@@ -1,4 +1,5 @@
 use crate::controllers;
+use crate::controllers::session::{EPOCH_KEY, USER_ID_KEY};
 use crate::controllers::util::RequestPartsExt;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::{CrateScope, EndpointScope};
@@ -265,7 +266,7 @@ async fn authenticate_via_cookie(
         .get::<SessionExtension>()
         .expect("missing cookie session");
 
-    let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
+    let user_id_from_session = session.get(USER_ID_KEY).and_then(|s| s.parse::<i32>().ok());
     let Some(id) = user_id_from_session else {
         return Ok(None);
     };
@@ -382,7 +383,7 @@ pub fn ensure_not_locked(user: &User) -> AppResult<()> {
 /// to investigate further, since the session cookie is signed.
 fn parse_epoch_from_session(session: &SessionExtension, parts: &Parts) -> AppResult<i32> {
     Ok(session
-        .get("epoch")
+        .get(EPOCH_KEY)
         .map(|epoch_str| {
             epoch_str.parse().map_err(|_| {
                 parts

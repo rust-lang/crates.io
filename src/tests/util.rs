@@ -32,6 +32,7 @@ use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::{DateTime, Utc};
 use cookie::Cookie;
+use crates_io::controllers::session::{EPOCH_KEY, USER_ID_KEY};
 use crates_io::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crates_io::util::token::PlainToken;
 use futures_util::FutureExt;
@@ -90,9 +91,9 @@ pub fn encode_session_header_with_explicit_epoch(
 
     // build session data map
     let mut map = HashMap::new();
-    map.insert("user_id".into(), user_id.to_string());
+    map.insert(USER_ID_KEY.into(), user_id.to_string());
     if let Some(epoch) = epoch {
-        map.insert("epoch".into(), epoch.to_string());
+        map.insert(EPOCH_KEY.to_string(), epoch.to_string());
     }
 
     // encode the map into a cookie value string

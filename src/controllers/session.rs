@@ -28,6 +28,15 @@ use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 
+/// Session key containing the authenticated user ID.
+pub const USER_ID_KEY: &str = "user_id";
+
+/// Session key containing the authenticated user's session epoch.
+pub const EPOCH_KEY: &str = "epoch";
+
+/// Session key containing the GitHub OAuth CSRF token.
+const GITHUB_OAUTH_STATE_KEY: &str = "github_oauth_state";
+
 /// Session key containing serialized pending-signup state.
 pub const PENDING_SIGNUP_KEY: &str = "pending_signup";
 const PENDING_SIGNUP_LIFETIME: chrono::TimeDelta = chrono::TimeDelta::minutes(30);
@@ -72,7 +81,7 @@ pub async fn begin_session(ctx: ServerContext, session: SessionExtension) -> Jso
         .url();
 
     let state = state.secret().to_string();
-    session.insert("github_oauth_state".to_string(), state.clone());
+    session.insert(GITHUB_OAUTH_STATE_KEY.to_string(), state.clone());
 
     let url = url.to_string();
     Json(BeginResponse { url, state })
@@ -200,7 +209,7 @@ pub async fn get_pending_signup(
     if !ctx.config.features.explicit_signup_enabled {
         return Err(not_found());
     }
-    if session.get("user_id").is_some() {
+    if session.get(USER_ID_KEY).is_some() {
         return Err(bad_request("You are already signed in."));
     }
 
@@ -238,7 +247,7 @@ pub async fn complete_pending_signup(
     if !ctx.config.features.explicit_signup_enabled {
         return Err(not_found());
     }
-    if session.get("user_id").is_some() {
+    if session.get(USER_ID_KEY).is_some() {
         return Err(bad_request("You are already signed in."));
     }
 
@@ -267,8 +276,8 @@ pub async fn complete_pending_signup(
         .await?;
 
     session.remove(PENDING_SIGNUP_KEY);
-    session.insert("user_id".to_string(), user_id.to_string());
-    session.insert("epoch".to_string(), session_epoch.to_string());
+    session.insert(USER_ID_KEY.to_string(), user_id.to_string());
+    session.insert(EPOCH_KEY.to_string(), session_epoch.to_string());
 
     Ok(Json(user))
 }
@@ -319,7 +328,7 @@ pub async fn authorize_session(
 ) -> AppResult<Json<AuthorizeResponse>> {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
-    let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
+    let session_state = session.remove(GITHUB_OAUTH_STATE_KEY).map(CsrfToken::new);
     if session_state.is_none_or(|session_state| body.state.secret() != session_state.secret()) {
         return Err(bad_request("invalid state parameter"));
     }
@@ -377,15 +386,15 @@ pub async fn authorize_session(
             } = super::user::me::authenticated_user(&mut conn, user_id).await?;
 
             session.remove(PENDING_SIGNUP_KEY);
-            session.insert("user_id".to_string(), user_id.to_string());
-            session.insert("epoch".to_string(), session_epoch.to_string());
+            session.insert(USER_ID_KEY.to_string(), user_id.to_string());
+            session.insert(EPOCH_KEY.to_string(), session_epoch.to_string());
             Ok(Json(AuthorizeResponse::SignedIn(user)))
         }
         None => {
             let pending_signup = PendingSignup::new(ghuser, encrypted_token);
             let pending_signup = serde_json::to_string(&pending_signup)?;
-            session.remove("user_id");
-            session.remove("epoch");
+            session.remove(USER_ID_KEY);
+            session.remove(EPOCH_KEY);
             session.insert(PENDING_SIGNUP_KEY.to_string(), pending_signup);
             Ok(Json(AuthorizeResponse::SignupRequired))
         }
@@ -593,7 +602,7 @@ async fn find_user_by_gh_id(mut conn: &AsyncPgConnection, gh_id: i32) -> QueryRe
     ),
 )]
 pub async fn end_session(session: SessionExtension) -> OkResponse {
-    session.remove("user_id");
+    session.remove(USER_ID_KEY);
     session.remove(PENDING_SIGNUP_KEY);
     OkResponse::new()
 }
