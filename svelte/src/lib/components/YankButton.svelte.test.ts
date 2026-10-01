@@ -5,7 +5,7 @@ import { describe, expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 
-import { defer } from '$lib/utils/deferred';
+import { defer } from '#lib/utils/deferred.ts';
 import { test } from '../../test/msw';
 import YankButtonTestWrapper from './YankButtonTestWrapper.svelte';
 

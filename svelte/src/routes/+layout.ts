@@ -1,8 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 
-import { loadPlaygroundCrates } from '$lib/utils/playground';
-import { loadUser } from '$lib/utils/session.svelte';
-import { loadSiteMetadata } from '$lib/utils/site-metadata';
+import { loadPlaygroundCrates } from '#lib/utils/playground.ts';
+import { loadUser } from '#lib/utils/session.svelte.ts';
+import { loadSiteMetadata } from '#lib/utils/site-metadata.ts';
 
 export const ssr = false;
 

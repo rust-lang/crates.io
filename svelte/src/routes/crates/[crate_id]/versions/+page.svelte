@@ -5,11 +5,11 @@
   import { createClient } from '@crates-io/api-client';
   import { format } from 'date-fns';
 
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import * as SortDropdown from '$lib/components/sort-dropdown';
-  import Row from '$lib/components/version-list/Row.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import * as SortDropdown from '#lib/components/sort-dropdown/index.ts';
+  import Row from '#lib/components/version-list/Row.svelte';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   type Version = components['schemas']['Version'];
   type Owner = components['schemas']['Owner'];

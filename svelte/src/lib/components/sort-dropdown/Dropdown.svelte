@@ -2,8 +2,8 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import * as Dropdown from '$lib/components/dropdown';
-  import Icon from '$lib/components/Icon.svelte';
+  import * as Dropdown from '#lib/components/dropdown/index.ts';
+  import Icon from '#lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     current: string;

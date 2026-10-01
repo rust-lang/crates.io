@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CrateVersionPage from '$lib/components/CrateVersionPage.svelte';
+  import CrateVersionPage from '#lib/components/CrateVersionPage.svelte';
 
   let { data } = $props();
 

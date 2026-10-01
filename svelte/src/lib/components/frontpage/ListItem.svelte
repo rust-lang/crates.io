@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { formatShortNum } from '$lib/utils/format-short-num';
+  import Icon from '#lib/components/Icon.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { formatShortNum } from '#lib/utils/format-short-num.ts';
 
   interface Props extends HTMLAttributes<HTMLAnchorElement> {
     title: string;

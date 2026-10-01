@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Placeholder from '$lib/components/Placeholder.svelte';
+  import Placeholder from '#lib/components/Placeholder.svelte';
 
   let radius = 'var(--space-3xs)';
   let text = { width: '100%', height: '16px', opacity: 0.3, class: 'mt-xs' };

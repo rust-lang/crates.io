@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { ColorScheme } from '$lib/color-scheme.svelte';
+  import type { ColorScheme } from '#lib/color-scheme.svelte.ts';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import { getColorScheme } from '$lib/color-scheme.svelte';
-  import Icon from '$lib/components/Icon.svelte';
+  import { getColorScheme } from '#lib/color-scheme.svelte.ts';
+  import Icon from '#lib/components/Icon.svelte';
   import * as Dropdown from './dropdown';
 
   type Props = HTMLAttributes<HTMLDivElement>;

@@ -1,13 +1,13 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
 
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Pagination from '$lib/components/Pagination.svelte';
-  import Panel from '$lib/components/Panel.svelte';
-  import ResultsCount from '$lib/components/ResultsCount.svelte';
-  import * as SortDropdown from '$lib/components/sort-dropdown';
-  import { calculatePagination } from '$lib/utils/pagination';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Pagination from '#lib/components/Pagination.svelte';
+  import Panel from '#lib/components/Panel.svelte';
+  import ResultsCount from '#lib/components/ResultsCount.svelte';
+  import * as SortDropdown from '#lib/components/sort-dropdown/index.ts';
+  import { calculatePagination } from '#lib/utils/pagination.ts';
 
   let { data } = $props();
 

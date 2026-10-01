@@ -1,22 +1,22 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
-  import type { DocsRsStatus } from '$lib/utils/docs-rs';
-  import type { PlaygroundCrate } from '$lib/utils/playground';
+  import type { DocsRsStatus } from '#lib/utils/docs-rs.ts';
+  import type { PlaygroundCrate } from '#lib/utils/playground.ts';
 
   import { resolve } from '$app/paths';
   import { format, formatDistanceToNow, formatISO } from 'date-fns';
   import prettyBytes from 'pretty-bytes';
   import { MediaQuery } from 'svelte/reactivity';
 
-  import CopyButton from '$lib/components/CopyButton.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-  import LicenseExpression from '$lib/components/LicenseExpression.svelte';
-  import OwnersList from '$lib/components/OwnersList.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { formatShortNum } from '$lib/utils/format-short-num';
-  import { buildPlaygroundLink } from '$lib/utils/playground';
-  import { getPurl } from '$lib/utils/purl';
-  import { getSession } from '$lib/utils/session.svelte';
+  import CopyButton from '#lib/components/CopyButton.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import LicenseExpression from '#lib/components/LicenseExpression.svelte';
+  import OwnersList from '#lib/components/OwnersList.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { formatShortNum } from '#lib/utils/format-short-num.ts';
+  import { buildPlaygroundLink } from '#lib/utils/playground.ts';
+  import { getPurl } from '#lib/utils/purl.ts';
+  import { getSession } from '#lib/utils/session.svelte.ts';
   import Edition from './Edition.svelte';
   import InstallInstructions from './InstallInstructions.svelte';
   import Link, { simplifyUrl } from './Link.svelte';

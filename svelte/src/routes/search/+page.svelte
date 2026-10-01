@@ -5,16 +5,16 @@
   import { page } from '$app/state';
   import { createClient } from '@crates-io/api-client';
 
-  import Alert from '$lib/components/Alert.svelte';
-  import CrateList from '$lib/components/CrateList.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Pagination from '$lib/components/Pagination.svelte';
-  import ResultsCount from '$lib/components/ResultsCount.svelte';
-  import * as SortDropdown from '$lib/components/sort-dropdown';
-  import { getSearchFormContext } from '$lib/search-form.svelte';
-  import { calculatePagination } from '$lib/utils/pagination';
-  import { hasMultiCategoryFilter, processSearchQuery } from '$lib/utils/search';
+  import Alert from '#lib/components/Alert.svelte';
+  import CrateList from '#lib/components/CrateList.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Pagination from '#lib/components/Pagination.svelte';
+  import ResultsCount from '#lib/components/ResultsCount.svelte';
+  import * as SortDropdown from '#lib/components/sort-dropdown/index.ts';
+  import { getSearchFormContext } from '#lib/search-form.svelte.ts';
+  import { calculatePagination } from '#lib/utils/pagination.ts';
+  import { hasMultiCategoryFilter, processSearchQuery } from '#lib/utils/search.ts';
 
   const MAX_PAGES = 20;
 

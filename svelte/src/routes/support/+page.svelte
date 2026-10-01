@@ -1,9 +1,9 @@
 <script lang="ts">
   import { page } from '$app/state';
 
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import CrateReportForm from '$lib/components/support/CrateReportForm.svelte';
-  import TextContent from '$lib/components/TextContent.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import CrateReportForm from '#lib/components/support/CrateReportForm.svelte';
+  import TextContent from '#lib/components/TextContent.svelte';
 
   const SUPPORTS = [
     {

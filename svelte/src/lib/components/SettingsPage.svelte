@@ -4,7 +4,7 @@
 
   import { resolve } from '$app/paths';
 
-  import * as SideMenu from '$lib/components/side-menu';
+  import * as SideMenu from '#lib/components/side-menu/index.ts';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     children: Snippet;

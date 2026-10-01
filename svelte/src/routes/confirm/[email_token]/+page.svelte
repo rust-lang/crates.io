@@ -4,8 +4,8 @@
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
-  import { getNotifications } from '$lib/notifications.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   let { data } = $props();
 

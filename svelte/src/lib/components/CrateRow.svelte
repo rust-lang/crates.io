@@ -5,10 +5,10 @@
   import { resolve } from '$app/paths';
   import { formatDistanceToNow, formatISO } from 'date-fns';
 
-  import CopyButton from '$lib/components/CopyButton.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { truncateText } from '$lib/utils/truncate-text';
+  import CopyButton from '#lib/components/CopyButton.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { truncateText } from '#lib/utils/truncate-text.ts';
 
   type Crate = components['schemas']['Crate'];
 

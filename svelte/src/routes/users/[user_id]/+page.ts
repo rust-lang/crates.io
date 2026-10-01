@@ -3,7 +3,7 @@ import type { paths } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { isLoggedIn } from '$lib/utils/session.svelte';
+import { isLoggedIn } from '#lib/utils/session.svelte.ts';
 
 export async function load({ fetch, params, parent, url }) {
   let client = createClient({ fetch });

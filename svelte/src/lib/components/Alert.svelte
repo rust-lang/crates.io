@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '#lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     variant: 'note' | 'success' | 'tip' | 'important' | 'warning' | 'caution';

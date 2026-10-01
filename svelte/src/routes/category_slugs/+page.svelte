@@ -1,7 +1,7 @@
 <script lang="ts">
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Panel from '$lib/components/Panel.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Panel from '#lib/components/Panel.svelte';
 
   let { data } = $props();
 </script>

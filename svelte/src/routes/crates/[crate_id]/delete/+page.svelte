@@ -3,10 +3,10 @@
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
-  import Alert from '$lib/components/Alert.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
+  import Alert from '#lib/components/Alert.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   let { data } = $props();
 

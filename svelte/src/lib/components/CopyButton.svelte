@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLButtonAttributes } from 'svelte/elements';
 
-  import { getNotifications } from '$lib/notifications.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Props extends HTMLButtonAttributes {
     copyText: string;

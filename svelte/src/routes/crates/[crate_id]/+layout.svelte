@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PageTitle from '$lib/components/PageTitle.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
 
   let { data, children } = $props();
 </script>

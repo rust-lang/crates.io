@@ -3,10 +3,10 @@
 
   import { invalidateAll } from '$app/navigation';
 
-  import CrateLists from '$lib/components/frontpage/CrateLists.svelte';
-  import ErrorState from '$lib/components/frontpage/ErrorState.svelte';
-  import HeroButtons from '$lib/components/frontpage/HeroButtons.svelte';
-  import IntroBlurb from '$lib/components/frontpage/IntroBlurb.svelte';
+  import CrateLists from '#lib/components/frontpage/CrateLists.svelte';
+  import ErrorState from '#lib/components/frontpage/ErrorState.svelte';
+  import HeroButtons from '#lib/components/frontpage/HeroButtons.svelte';
+  import IntroBlurb from '#lib/components/frontpage/IntroBlurb.svelte';
 
   let { data }: PageProps = $props();
 

@@ -1,11 +1,11 @@
 import type { components } from '@crates-io/api-client';
-import type { PlaygroundCrate } from '$lib/utils/playground';
+import type { PlaygroundCrate } from '#lib/utils/playground.ts';
 
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 
-import { defer } from '$lib/utils/deferred';
+import { defer } from '#lib/utils/deferred.ts';
 import CrateSidebarTestWrapper from './CrateSidebarTestWrapper.svelte';
 
 type Crate = components['schemas']['Crate'];

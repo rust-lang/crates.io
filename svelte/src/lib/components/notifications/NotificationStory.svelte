@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { NotificationsContext } from '$lib/notifications.svelte';
+  import type { NotificationsContext } from '#lib/notifications.svelte.ts';
   import type { Snippet } from 'svelte';
 
-  import { getNotifications } from '$lib/notifications.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Props {
     children: Snippet<[NotificationsContext]>;

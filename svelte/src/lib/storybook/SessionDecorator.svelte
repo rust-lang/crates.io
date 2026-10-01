@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { AuthenticatedUser } from '$lib/utils/session.svelte';
+  import type { AuthenticatedUser } from '#lib/utils/session.svelte.ts';
   import type { Snippet } from 'svelte';
 
   import { createClient } from '@crates-io/api-client';
 
-  import { SessionState, setSession } from '$lib/utils/session.svelte';
+  import { SessionState, setSession } from '#lib/utils/session.svelte.ts';
 
   let { children, user }: { children: Snippet; user?: AuthenticatedUser } = $props();
 

@@ -4,11 +4,11 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
-  import CrateFollowButton from '$lib/components/CrateFollowButton.svelte';
-  import KeywordPill from '$lib/components/KeywordPill.svelte';
-  import * as NavTabs from '$lib/components/nav-tabs';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import CrateFollowButton from '#lib/components/CrateFollowButton.svelte';
+  import KeywordPill from '#lib/components/KeywordPill.svelte';
+  import * as NavTabs from '#lib/components/nav-tabs/index.ts';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];

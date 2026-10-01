@@ -3,7 +3,7 @@
   import { createClient } from '@crates-io/api-client';
   import { formatDistanceToNow } from 'date-fns';
 
-  import { getNotifications } from '$lib/notifications.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Invite {
     crate_id: number;

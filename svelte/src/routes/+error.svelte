@@ -3,8 +3,8 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
-  import Ferris from '$lib/components/Ferris.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import Ferris from '#lib/components/Ferris.svelte';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   let session = getSession();
 

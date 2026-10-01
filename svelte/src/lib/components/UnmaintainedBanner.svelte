@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Unmaintained } from '$lib/utils/rustsec';
+  import type { Unmaintained } from '#lib/utils/rustsec.ts';
 
-  import Alert from '$lib/components/Alert.svelte';
+  import Alert from '#lib/components/Alert.svelte';
 
   interface Props {
     unmaintained: Unmaintained;

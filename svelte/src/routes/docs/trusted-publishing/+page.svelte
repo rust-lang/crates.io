@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { highlightSyntax } from '$lib/attachments/highlight';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import TextContent from '$lib/components/TextContent.svelte';
+  import { highlightSyntax } from '#lib/attachments/highlight.ts';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import TextContent from '#lib/components/TextContent.svelte';
 
   // Defined as a variable to avoid Svelte parsing issues with
   // curly braces and backslash escapes in inline code blocks.

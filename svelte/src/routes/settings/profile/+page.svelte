@@ -1,14 +1,14 @@
 <script lang="ts">
   import { createClient } from '@crates-io/api-client';
 
-  import EmailInput from '$lib/components/EmailInput.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import SettingsPage from '$lib/components/SettingsPage.svelte';
-  import UserAvatar from '$lib/components/UserAvatar.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import EmailInput from '#lib/components/EmailInput.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import SettingsPage from '#lib/components/SettingsPage.svelte';
+  import UserAvatar from '#lib/components/UserAvatar.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   let session = getSession();
   let notifications = getNotifications();

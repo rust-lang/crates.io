@@ -1,8 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { loadNativeReplacements } from '$lib/data/native-replacements';
-import { loadCrateDescriptions } from '$lib/utils/crate-descriptions';
+import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
+import { loadCrateDescriptions } from '#lib/utils/crate-descriptions.ts';
 
 export async function load({ fetch, params }) {
   let client = createClient({ fetch });

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import Row from '$lib/components/dependency-list/Row.svelte';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
+  import Row from '#lib/components/dependency-list/Row.svelte';
 
   let { data } = $props();
 

@@ -8,17 +8,17 @@
   import { formatDistanceToNow } from 'date-fns';
   import { SvelteSet } from 'svelte/reactivity';
 
-  import CopyButton from '$lib/components/CopyButton.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Panel from '$lib/components/Panel.svelte';
-  import PatternDescription from '$lib/components/PatternDescription.svelte';
-  import SettingsPage from '$lib/components/SettingsPage.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
-  import { scopeDescription } from '$lib/utils/token-scopes';
+  import CopyButton from '#lib/components/CopyButton.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Panel from '#lib/components/Panel.svelte';
+  import PatternDescription from '#lib/components/PatternDescription.svelte';
+  import SettingsPage from '#lib/components/SettingsPage.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
+  import { scopeDescription } from '#lib/utils/token-scopes.ts';
   import { getTokenPageState } from './+layout.svelte';
 
   type ApiToken = components['schemas']['ApiToken'];

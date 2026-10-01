@@ -2,7 +2,7 @@
   import { micromark } from 'micromark';
   import { gfm, gfmHtml } from 'micromark-extension-gfm';
 
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
 
   let { data } = $props();
 

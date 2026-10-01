@@ -1,9 +1,9 @@
 <script lang="ts">
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import Pagination from '$lib/components/Pagination.svelte';
-  import ResultsCount from '$lib/components/ResultsCount.svelte';
-  import Row from '$lib/components/rev-dep-list/Row.svelte';
-  import { calculatePagination } from '$lib/utils/pagination';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
+  import Pagination from '#lib/components/Pagination.svelte';
+  import ResultsCount from '#lib/components/ResultsCount.svelte';
+  import Row from '#lib/components/rev-dep-list/Row.svelte';
+  import { calculatePagination } from '#lib/utils/pagination.ts';
 
   const MAX_PAGES = 20;
 

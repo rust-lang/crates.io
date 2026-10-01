@@ -1,4 +1,4 @@
-import type { ManifestFile } from '$lib/utils/zip-archive';
+import type { ManifestFile } from '#lib/utils/zip-archive.ts';
 
 import { describe, expect, it } from 'vitest';
 

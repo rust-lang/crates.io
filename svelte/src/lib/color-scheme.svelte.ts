@@ -1,7 +1,7 @@
 import { createContext } from 'svelte';
 import { MediaQuery } from 'svelte/reactivity';
 
-import * as storage from '$lib/utils/local-storage';
+import * as storage from '#lib/utils/local-storage.ts';
 
 export type ColorScheme = 'light' | 'dark' | 'system';
 export type ResolvedScheme = 'light' | 'dark';

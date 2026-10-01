@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getSession } from '$lib/utils/session.svelte';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   let { children } = $props();
 

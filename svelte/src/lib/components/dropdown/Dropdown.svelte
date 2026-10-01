@@ -3,7 +3,7 @@
   import type { HTMLAttributes } from 'svelte/elements';
   import type { DropdownContext } from './context';
 
-  import { clickOutside } from '$lib/attachments/click-outside';
+  import { clickOutside } from '#lib/attachments/click-outside.ts';
   import { setDropdown } from './context';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {

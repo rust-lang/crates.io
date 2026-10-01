@@ -1,6 +1,6 @@
 <script module lang="ts">
   import type { components } from '@crates-io/api-client';
-  import type { PlaygroundCrate } from '$lib/utils/playground';
+  import type { PlaygroundCrate } from '#lib/utils/playground.ts';
 
   import { defineMeta } from '@storybook/addon-svelte-csf';
 

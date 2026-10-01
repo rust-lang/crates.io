@@ -1,8 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 
-import { cdnBase } from '$lib/utils/cdn';
-import { loadSiteMetadata } from '$lib/utils/site-metadata';
-import { loadManifest } from '$lib/utils/zip-archive';
+import { cdnBase } from '#lib/utils/cdn.ts';
+import { loadSiteMetadata } from '#lib/utils/site-metadata.ts';
+import { loadManifest } from '#lib/utils/zip-archive.ts';
 
 export async function load({ fetch, params }) {
   let { data } = await loadSiteMetadata(createClient({ fetch }));

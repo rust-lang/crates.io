@@ -4,7 +4,7 @@
 
   import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 
-  import { getTooltipContext } from '$lib/tooltip.svelte';
+  import { getTooltipContext } from '#lib/tooltip.svelte.ts';
 
   interface BaseProps {
     side?: 'top' | 'bottom' | 'left' | 'right';

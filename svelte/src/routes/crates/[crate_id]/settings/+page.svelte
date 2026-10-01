@@ -5,15 +5,15 @@
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
-  import Alert from '$lib/components/Alert.svelte';
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Panel from '$lib/components/Panel.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import UserAvatar from '$lib/components/UserAvatar.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import Alert from '#lib/components/Alert.svelte';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Panel from '#lib/components/Panel.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import UserAvatar from '#lib/components/UserAvatar.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   type Owner = components['schemas']['Owner'];
   type GitHubConfig = components['schemas']['GitHubConfig'];

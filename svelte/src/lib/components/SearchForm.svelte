@@ -2,8 +2,8 @@
   import { afterNavigate, goto } from '$app/navigation';
   import { resolve } from '$app/paths';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import { getSearchFormContext } from '$lib/search-form.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import { getSearchFormContext } from '#lib/search-form.svelte.ts';
 
   interface Props {
     size?: 'big';
