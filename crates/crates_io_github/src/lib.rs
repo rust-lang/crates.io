@@ -164,6 +164,15 @@ pub trait GitHubClient: Send + Sync {
         force: bool,
         auth: &GitHubAuth,
     ) -> Result<GitRef>;
+
+    /// Deletes a git ref. `ref_name` may be fully qualified or omit `refs/`.
+    async fn delete_ref(
+        &self,
+        owner: &str,
+        repo: &str,
+        ref_name: &str,
+        auth: &GitHubAuth,
+    ) -> Result<()>;
 }
 
 #[derive(Debug)]
@@ -182,24 +191,38 @@ impl RealGitHubClient {
         Self { client, base_url }
     }
 
+    /// Builds an authenticated request while preserving the base URL path.
+    fn request_builder(
+        &self,
+        method: reqwest::Method,
+        path: &str,
+        auth: &GitHubAuth,
+    ) -> Result<RequestBuilder> {
+        let url = self
+            .base_url
+            .join(path.trim_start_matches('/'))
+            .map_err(|error| GitHubError::Other(error.into()))?;
+        info!("GitHub request: {method} {url}");
+
+        let request = self
+            .client
+            .request(method, url)
+            .header(header::ACCEPT, "application/vnd.github.v3+json")
+            .header(header::USER_AGENT, "crates.io (https://crates.io)");
+
+        Ok(auth.apply(request))
+    }
+
     /// Does all the nonsense for sending a GET to GitHub.
     async fn request<T>(&self, url: &str, auth: &GitHubAuth) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        let url = self
-            .base_url
-            .join(url.trim_start_matches('/'))
-            .map_err(|e| GitHubError::Other(e.into()))?;
-        info!("GitHub request: GET {url}");
-
-        let request = self
-            .client
-            .get(url)
-            .header(header::ACCEPT, "application/vnd.github.v3+json")
-            .header(header::USER_AGENT, "crates.io (https://crates.io)");
-
-        let response = auth.apply(request).send().await?.error_for_status()?;
+        let response = self
+            .request_builder(reqwest::Method::GET, url, auth)?
+            .send()
+            .await?
+            .error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
@@ -221,20 +244,12 @@ impl RealGitHubClient {
         B: Serialize + ?Sized,
         T: DeserializeOwned,
     {
-        let url = self
-            .base_url
-            .join(url.trim_start_matches('/'))
-            .map_err(|e| GitHubError::Other(e.into()))?;
-        info!("GitHub request: {method} {url}");
-
-        let request = self
-            .client
-            .request(method, url)
-            .header(header::ACCEPT, "application/vnd.github.v3+json")
-            .header(header::USER_AGENT, "crates.io (https://crates.io)")
-            .json(body);
-
-        let response = auth.apply(request).send().await?.error_for_status()?;
+        let response = self
+            .request_builder(method, url, auth)?
+            .json(body)
+            .send()
+            .await?
+            .error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
@@ -390,6 +405,20 @@ impl GitHubClient for RealGitHubClient {
         let body = Body { sha, force };
         self._mutate(reqwest::Method::PATCH, &path, &body, auth)
             .await
+    }
+
+    async fn delete_ref(
+        &self,
+        owner: &str,
+        repo: &str,
+        ref_name: &str,
+        auth: &GitHubAuth,
+    ) -> Result<()> {
+        let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
+        let path = format!("/repos/{owner}/{repo}/git/refs/{ref_path}");
+        let request = self.request_builder(reqwest::Method::DELETE, &path, auth)?;
+        request.send().await?.error_for_status()?;
+        Ok(())
     }
 }
 
@@ -797,6 +826,27 @@ mod tests {
 
         assert_eq!(got.ref_name, "refs/heads/master");
         assert_eq!(got.object.sha, new_sha);
+    }
+
+    #[tokio::test]
+    async fn delete_ref_sends_authenticated_request() {
+        let mut server = mock_server().await;
+        let path = "/repos/rust-lang/crates.io-index/git/refs/heads/snapshot-2026-04-24";
+        let _mock = server
+            .mock("DELETE", path)
+            .match_header("authorization", "Bearer test-token")
+            .with_status(204)
+            .expect(1)
+            .create_async()
+            .await;
+
+        let client = client_with_server(&server);
+        let auth = GitHubAuth::bearer("test-token");
+        let ref_name = "refs/heads/snapshot-2026-04-24";
+        client
+            .delete_ref("rust-lang", "crates.io-index", ref_name, &auth)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]

@@ -1,5 +1,6 @@
 use crate::tasks::spawn_blocking;
 use crate::worker::WorkerContext;
+use crate::worker::jobs::DeleteArchivedIndexBranch;
 use anyhow::{Context, anyhow};
 use crates_io_github::parse_github_slug;
 use crates_io_worker::BackgroundJob;
@@ -258,6 +259,11 @@ impl BackgroundJob for ArchiveIndexBranch {
 
         info!("Archived snapshot branch ({branch})", branch = self.branch,);
 
+        let branch = &self.branch;
+        if let Err(error) = enqueue_branch_deletion(&ctx, branch).await {
+            warn!("Failed to enqueue `DeleteArchivedIndexBranch` job for `{branch}`: {error:#}");
+        }
+
         Ok(())
     }
 }
@@ -290,6 +296,14 @@ fn clone_url(configured: &Url) -> anyhow::Result<Url> {
     format!("https://github.com/{owner}/{repo}.git")
         .parse()
         .context("Failed to build HTTPS clone URL")
+}
+
+/// Enqueues source index branch deletion after a successful archive push.
+async fn enqueue_branch_deletion(ctx: &WorkerContext, branch: &str) -> anyhow::Result<()> {
+    let conn = ctx.deadpool.get().await?;
+    let job = DeleteArchivedIndexBranch::new(branch);
+    job.enqueue(&conn).await?;
+    Ok(())
 }
 
 #[cfg(test)]
