@@ -14,7 +14,7 @@ const ARCHIVE = `${BASE}/crates/${CRATE}/${CRATE}-${VERSION}.zip`;
 const MANIFEST = `${ARCHIVE}.json`;
 
 let server = setupServer(...handlers);
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => server.resetHandlers());
 afterEach(() => db.reset());
 afterAll(() => server.close());

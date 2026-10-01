@@ -8,6 +8,7 @@ export async function init() {
   if (import.meta.env.VITE_MSW_ENABLED) {
     let { http, passthrough } = await import('msw');
     let { setupWorker } = await import('msw/browser');
+    let { HttpNetworkFrame } = await import('msw/experimental');
     let { handlers, db } = await import('@crates-io/msw');
     let { loadFixtures } = await import('@crates-io/msw/fixtures');
 
@@ -23,9 +24,9 @@ export async function init() {
 
     await worker.start({
       serviceWorker: { url: asset('/mockServiceWorker.js') },
-      onUnhandledRequest(request, print) {
-        if (!request.url.startsWith(globalThis.location.origin)) {
-          print.error();
+      onUnhandledFrame({ frame, defaults }) {
+        if (frame instanceof HttpNetworkFrame && !frame.data.request.url.startsWith(globalThis.location.origin)) {
+          defaults.error();
         }
       },
     });
