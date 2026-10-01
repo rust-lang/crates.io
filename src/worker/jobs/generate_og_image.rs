@@ -4,7 +4,6 @@ use crate::storage::StorageKey;
 use crate::worker::WorkerContext;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
-use bigdecimal::ToPrimitive;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
 use crates_io_og_image::{OgImageAuthorData, OgImageData};
 use crates_io_worker::BackgroundJob;
@@ -152,8 +151,7 @@ impl QueryRow {
         self.total_code_lines
             .as_ref()
             .and_then(serde_json::Value::as_u64)
-            .as_ref()
-            .and_then(ToPrimitive::to_u32)
+            .and_then(|lines| u32::try_from(lines).ok())
     }
 }
 
