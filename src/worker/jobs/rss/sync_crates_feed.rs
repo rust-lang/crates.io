@@ -118,24 +118,13 @@ impl NewCrate {
             permalink: true,
         };
 
-        let name_extension = rss::extension::Extension {
-            name: "crates:name".into(),
-            value: Some(self.name),
-            ..Default::default()
-        };
-
-        let extensions = vec![("name".to_string(), vec![name_extension])];
-        let extensions = extensions.into_iter().collect();
-        let extensions = vec![("crates".to_string(), extensions)];
-        let extensions = extensions.into_iter().collect();
-
         rss::Item {
             guid: Some(guid),
             title: Some(title),
             link: Some(link),
             description: self.description,
             pub_date: Some(pub_date),
-            extensions,
+            extensions: super::crates_extensions([("name", self.name)]),
             ..Default::default()
         }
     }

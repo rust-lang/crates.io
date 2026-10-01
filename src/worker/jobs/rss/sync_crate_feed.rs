@@ -129,32 +129,15 @@ impl VersionUpdate {
             permalink: true,
         };
 
-        let name_extension = rss::extension::Extension {
-            name: "crates:name".into(),
-            value: Some(name.to_string()),
-            ..Default::default()
-        };
-
-        let version_extension = rss::extension::Extension {
-            name: "crates:version".into(),
-            value: Some(self.version),
-            ..Default::default()
-        };
-
-        let extensions = vec![
-            ("name".to_string(), vec![name_extension]),
-            ("version".to_string(), vec![version_extension]),
-        ];
-        let extensions = extensions.into_iter().collect();
-        let extensions = vec![("crates".to_string(), extensions)];
-        let extensions = extensions.into_iter().collect();
-
         rss::Item {
             guid: Some(guid),
             title: Some(title),
             link: Some(link),
             pub_date: Some(pub_date),
-            extensions,
+            extensions: super::crates_extensions([
+                ("name", name.to_string()),
+                ("version", self.version),
+            ]),
             ..Default::default()
         }
     }
