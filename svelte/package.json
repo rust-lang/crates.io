@@ -49,7 +49,7 @@
     "@iconify-json/simple-icons": "1.2.97",
     "@storybook/addon-a11y": "10.6.0",
     "@storybook/addon-docs": "10.6.0",
-    "@storybook/addon-svelte-csf": "5.1.4",
+    "@storybook/addon-svelte-csf": "5.1.5",
     "@storybook/addon-vitest": "10.6.0",
     "@storybook/sveltekit": "10.6.0",
     "@sveltejs/adapter-static": "3.0.10",
