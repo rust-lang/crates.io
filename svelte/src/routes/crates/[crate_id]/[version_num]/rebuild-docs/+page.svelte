@@ -15,6 +15,7 @@
 
   let crateName = $derived(data.crate.name);
   let versionNum = $derived(data.version.num);
+  let versionsUrl = $derived(resolve('/crates/[crate_id]/versions', { crate_id: crateName }));
 
   async function confirmRebuild() {
     isRebuilding = true;
@@ -29,7 +30,7 @@
       }
 
       notifications.success('Docs rebuild task was enqueued successfully!');
-      await goto(resolve(`/crates/${crateName}/versions`));
+      await goto(versionsUrl);
     } catch (error) {
       let reason = error instanceof Error && error.message ? error.message : 'Failed to enqueue docs rebuild task.';
       notifications.error(`Error: ${reason}`);
@@ -84,7 +85,7 @@
         Confirm Rebuild
       {/if}
     </button>
-    <a href={resolve(`/crates/${crateName}/versions`)} class="button button--tan" data-test-cancel-button>Cancel</a>
+    <a href={versionsUrl} class="button button--tan" data-test-cancel-button>Cancel</a>
   </div>
 </div>
 
