@@ -2,7 +2,6 @@ use crate::builders::{DependencyBuilder, PublishBuilder};
 use crate::routes::crates::versions::yank_unyank::YankRequestHelper;
 use crate::util::{RequestHelper, Response, TestApp};
 use axum::RequestPartsExt;
-use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
 use claims::{assert_none, assert_some};
 use crates_io::controllers::krate::delete::{DOWNLOADS_PER_MONTH_LIMIT, DeleteQueryParams};
@@ -366,7 +365,7 @@ async fn adjust_downloads(
     crate_id: i32,
     downloads: u64,
 ) -> QueryResult<()> {
-    let downloads = downloads.to_i64().unwrap_or(i64::MAX);
+    let downloads = i64::try_from(downloads).unwrap_or(i64::MAX);
 
     diesel::update(crate_downloads::table)
         .filter(crate_downloads::crate_id.eq(crate_id))

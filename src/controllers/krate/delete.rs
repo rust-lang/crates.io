@@ -9,7 +9,6 @@ use crate::util::errors::{AppResult, BoxedAppError, custom};
 use crate::worker::jobs;
 use axum::extract::rejection::QueryRejection;
 use axum::extract::{FromRequestParts, Query};
-use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
 use crates_io_database::schema::deleted_crates;
 use crates_io_worker::BackgroundJob;
@@ -190,11 +189,11 @@ async fn get_crate_downloads(mut conn: &AsyncPgConnection, crate_id: i32) -> Que
         .await
         .optional()?;
 
-    Ok(downloads.unwrap_or_default().to_u64().unwrap_or(u64::MAX))
+    Ok(u64::try_from(downloads.unwrap_or_default()).unwrap_or(u64::MAX))
 }
 
 pub fn max_downloads(age: &TimeDelta) -> u64 {
-    let age_days = age.num_days().to_u64().unwrap_or(u64::MAX);
+    let age_days = u64::try_from(age.num_days()).unwrap_or(u64::MAX);
     let age_months = age_days.div_ceil(30);
     DOWNLOADS_PER_MONTH_LIMIT * age_months
 }
