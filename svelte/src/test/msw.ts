@@ -10,7 +10,7 @@ export let test = testBase.extend<{ _mswWorker: Worker; worker: Worker }>({
       let worker = setupWorker();
       await worker.start({ quiet: true, onUnhandledRequest: 'error' });
       await use(worker);
-      worker.stop();
+      await worker.stop();
     },
     { scope: 'worker' },
   ],
