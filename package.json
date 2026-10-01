@@ -38,7 +38,7 @@
     "@eslint/compat": "2.1.1",
     "@eslint/js": "10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
-    "@msw/playwright": "0.6.7",
+    "@msw/playwright": "0.7.0",
     "@percy/cli": "1.32.11",
     "@percy/playwright": "1.1.2",
     "@playwright/test": "1.63.0",
