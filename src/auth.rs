@@ -399,7 +399,7 @@ fn parse_epoch_from_session(session: &SessionExtension, parts: &Parts) -> AppRes
 /// Rejects session cookies from older epochs than the current user session
 /// epoch.
 fn ensure_valid_epoch(user: &User, epoch: i32) -> AppResult<()> {
-    if epoch < user.session_epoch {
+    if epoch != user.session_epoch {
         Err(forbidden("this action requires authentication"))
     } else {
         Ok(())

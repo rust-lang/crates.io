@@ -75,13 +75,13 @@ async fn user_session_epoch() {
     let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
 
-    // Validate that a request for a future epoch also succeeds.
+    // Validate that a request for a future epoch fails.
     let future_cookie = encode_session_header(session_key, user_id, session_epoch + 1);
     let mut request = anon.get_request(URL);
     request.header(header::COOKIE, &future_cookie);
 
     let response = anon.run::<()>(request.clone()).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     // Now increment the user epoch.
     diesel::update(users::table)
