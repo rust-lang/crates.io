@@ -21,6 +21,9 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::ExposeSecret;
 use tracing::warn;
 
+/// Lifetime of access tokens issued by either Trusted Publishing provider.
+const ACCESS_TOKEN_LIFETIME: chrono::TimeDelta = chrono::TimeDelta::minutes(30);
+
 /// Exchange an OIDC token for a temporary access token.
 #[utoipa::path(
     post,
@@ -230,7 +233,7 @@ async fn handle_github_token_inner(
     };
 
     let new_token_model = NewToken {
-        expires_at: chrono::Utc::now() + chrono::Duration::minutes(30),
+        expires_at: chrono::Utc::now() + ACCESS_TOKEN_LIFETIME,
         hashed_token: &new_token.sha256(),
         crate_ids: &crate_ids,
         trustpub_data: Some(&trustpub_data),
@@ -393,7 +396,7 @@ async fn handle_gitlab_token_inner(
     };
 
     let new_token_model = NewToken {
-        expires_at: chrono::Utc::now() + chrono::Duration::minutes(30),
+        expires_at: chrono::Utc::now() + ACCESS_TOKEN_LIFETIME,
         hashed_token: &new_token.sha256(),
         crate_ids: &crate_ids,
         trustpub_data: Some(&trustpub_data),
