@@ -1,5 +1,8 @@
 use diesel::define_sql_function;
-use diesel::sql_types::{Array, Date, Double, Integer, Interval, SingleValue, Text, Timestamptz};
+use diesel::sql_types::{
+    Array, BigInt, Date, Double, Integer, Interval, Nullable, Numeric, SingleValue, Text,
+    Timestamptz,
+};
 
 define_sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 define_sql_function!(fn canon_crate_name(x: Text) -> Text);
@@ -12,6 +15,11 @@ define_sql_function! {
     fn interval_part(x: Text, y: Interval) -> Double;
 }
 define_sql_function!(fn floor(x: Double) -> Integer);
+define_sql_function! {
+    /// Rounds a PostgreSQL `numeric` to `bigint`, failing on overflow.
+    #[sql_name = "int8"]
+    fn to_bigint(value: Nullable<Numeric>) -> Nullable<BigInt>;
+}
 define_sql_function!(fn greatest<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn least<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn split_part(string: Text, delimiter: Text, n: Integer) -> Text);
