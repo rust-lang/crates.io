@@ -8,7 +8,7 @@ export let test = testBase.extend<{ _mswWorker: Worker; worker: Worker }>({
     // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
       let worker = setupWorker();
-      await worker.start({ quiet: true, onUnhandledRequest: 'error' });
+      await worker.start({ quiet: true, onUnhandledFrame: 'error' });
       await use(worker);
       await worker.stop();
     },

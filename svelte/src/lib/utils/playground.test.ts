@@ -26,7 +26,7 @@ describe('buildPlaygroundLink', () => {
 
 describe('loadPlaygroundCrates', () => {
   let server = setupServer();
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
