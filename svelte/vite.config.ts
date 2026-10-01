@@ -7,6 +7,7 @@ import { enhancedImages } from '@sveltejs/enhanced-img';
 import { sveltekit } from '@sveltejs/kit/vite';
 import UnoCSS from '@unocss/vite';
 import { playwright } from '@vitest/browser-playwright';
+import { msw } from 'msw/vite';
 import { createLogger } from 'vite';
 import { analyzer } from 'vite-bundle-analyzer';
 import { defineConfig } from 'vitest/config';
@@ -19,6 +20,10 @@ const proxyLogger = createLogger('info', { prefix: '[proxy]' });
 const faviconSource = fileURLToPath(new URL('src/lib/assets/cargo.png', import.meta.url));
 
 const plugins: PluginOption[] = [UnoCSS(), enhancedImages(), faviconIco({ source: faviconSource }), sveltekit()];
+plugins.push({
+  ...msw({ mode: 'worker-only' }),
+  apply: 'serve',
+});
 if (process.env.BUNDLE_ANALYSIS) {
   plugins.push(analyzer({ analyzerMode: 'static' }));
 }

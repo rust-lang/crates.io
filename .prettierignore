@@ -14,8 +14,7 @@ packages/crates-io-file-tree-icons/sprite.gen.js
 # pnpm manages this file's formatting.
 pnpm-lock.yaml
 
-# Static assets are served as-is and include vendored files like
-# `mockServiceWorker.js` that we should not reformat.
+# Static assets are served as-is and should not be reformatted.
 /svelte/static/
 
 # `src/app.html` contains an inline `window.onerror` bootstrap whose CSP
