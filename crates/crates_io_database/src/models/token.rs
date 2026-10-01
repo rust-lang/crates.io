@@ -81,10 +81,12 @@ pub struct ApiToken {
 }
 
 impl ApiToken {
+    /// Finds an active API token and updates its last-used timestamp when possible.
+    /// Returns `None` if the token does not exist, is revoked, or has expired.
     pub async fn find_by_api_token(
         conn: &mut AsyncPgConnection,
         token: &HashedToken,
-    ) -> QueryResult<ApiToken> {
+    ) -> QueryResult<Option<ApiToken>> {
         let tokens = api_tokens::table
             .filter(api_tokens::revoked.eq(false))
             .filter(
@@ -103,10 +105,15 @@ impl ApiToken {
                     .returning(ApiToken::as_returning())
                     .get_result(conn)
                     .await
+                    .optional()
             })
             .await;
         let Ok(_) = token else {
-            return tokens.select(ApiToken::as_select()).first(conn).await;
+            return tokens
+                .select(ApiToken::as_select())
+                .first(conn)
+                .await
+                .optional();
         };
         token
     }

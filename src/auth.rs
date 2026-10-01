@@ -296,10 +296,9 @@ async fn authenticate_via_token(
 
     let token = ApiToken::find_by_api_token(conn, &token)
         .await
-        .map_err(|e| {
-            let cause = format!("invalid token caused by {e}");
-            parts.request_log().add("cause", cause);
-
+        .inspect_err(|err| parts.request_log().add("cause", err))?
+        .ok_or_else(|| {
+            parts.request_log().add("cause", "API token not found");
             forbidden("authentication failed")
         })?;
 
