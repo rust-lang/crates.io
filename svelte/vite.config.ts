@@ -90,10 +90,9 @@ let sveltekitPlugin = sveltekit({
 });
 
 const plugins: PluginOption[] = [UnoCSS(), enhancedImages(), faviconIco({ source: faviconSource }), sveltekitPlugin];
-plugins.push({
-  ...msw({ mode: 'worker-only' }),
-  apply: 'serve',
-});
+if (process.env.NODE_ENV !== 'production') {
+  plugins.push(msw({ mode: 'worker-only' }));
+}
 if (process.env.BUNDLE_ANALYSIS) {
   plugins.push(analyzer({ analyzerMode: 'static' }));
 }
