@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
+import { loadConfig } from '@sveltejs/load-config';
 import prettier from 'eslint-config-prettier';
 import preferLet from 'eslint-plugin-prefer-let';
 import storybook from 'eslint-plugin-storybook';
@@ -11,7 +12,17 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 
-import svelteConfig from './svelte/svelte.config.js';
+const loadedSvelteConfig = await loadConfig(fileURLToPath(new URL('svelte', import.meta.url)), { traverse: false });
+
+if (!loadedSvelteConfig || 'error' in loadedSvelteConfig) {
+  throw loadedSvelteConfig?.error ?? new Error('Svelte configuration not found');
+}
+
+// Resolved adapter and prerender options contain functions that ESLint cannot cache.
+const svelteConfig = {
+  compilerOptions: loadedSvelteConfig.config.compilerOptions,
+  extensions: loadedSvelteConfig.config.extensions,
+};
 
 const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
 
