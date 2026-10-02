@@ -1,4 +1,4 @@
-import { base } from '$app/paths';
+import { resolve } from '$app/paths';
 
 // Inlined as a base64 data URI so the icon needs no separate request and
 // never breaks: search clients fetch and cache it once at install time, so a
@@ -13,7 +13,7 @@ export function GET({ url }) {
     <ShortName>crates.io</ShortName>
     <Description>Search for crates in the official Rust package registry</Description>
     <Image width="64" height="64">${icon}</Image>
-    <Url type="text/html" method="get" template="${url.origin}${base}/search?q={searchTerms}"/>
+    <Url type="text/html" method="get" template="${new URL(resolve('/search'), url)}?q={searchTerms}"/>
 </OpenSearchDescription>
 `;
 
