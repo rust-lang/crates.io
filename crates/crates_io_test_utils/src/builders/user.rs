@@ -81,6 +81,7 @@ impl<'a> UserBuilder<'a> {
             publish_notifications: true,
             username: self.username.into(),
             created_at: None,
+            session_epoch: 0,
         }
     }
 

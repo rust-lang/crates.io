@@ -40,14 +40,17 @@ pub async fn get_authenticated_user(
         .await?
         .user_id();
 
-    Ok((no_store(), authenticated_user(&mut conn, user_id).await?))
+    Ok((
+        no_store(),
+        Json(authenticated_user(&mut conn, user_id).await?.user),
+    ))
 }
 
 /// Loads the profile of the user with the given id.
 pub async fn authenticated_user(
     conn: &mut AsyncPgConnection,
     user_id: i32,
-) -> AppResult<Json<EncodableMe>> {
+) -> AppResult<AuthenticatedUser> {
     let ((user, verified, email, verification_sent), owned_crates) = tokio::try_join!(
         users::table
             .find(user_id)
@@ -83,10 +86,20 @@ pub async fn authenticated_user(
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    Ok(Json(EncodableMe {
-        user: EncodablePrivateUser::from(user, email, verified, verification_sent),
-        owned_crates,
-    }))
+    let session_epoch = user.session_epoch;
+    Ok(AuthenticatedUser {
+        user: EncodableMe {
+            user: EncodablePrivateUser::from(user, email, verified, verification_sent),
+            owned_crates,
+        },
+        session_epoch,
+    })
+}
+
+#[derive(Debug)]
+pub struct AuthenticatedUser {
+    pub user: EncodableMe,
+    pub session_epoch: i32,
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]

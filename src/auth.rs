@@ -279,6 +279,19 @@ async fn authenticate_via_cookie(
 
     ensure_not_locked(&user)?;
 
+    // Check the session cookie epoch against the current user epoch.
+    let epoch = parse_epoch_from_session(session, parts)?;
+    if let Err(e) = ensure_valid_epoch(&user, epoch) {
+        parts.request_log().add(
+            "cause",
+            format!(
+                "user epoch rejected: session cookie had epoch {epoch}, but user epoch is {}",
+                user.session_epoch
+            ),
+        );
+        return Err(e);
+    }
+
     Ok(Some(CookieAuthentication { user }))
 }
 
@@ -358,6 +371,38 @@ pub fn ensure_not_locked(user: &User) -> AppResult<()> {
     }
 
     Ok(())
+}
+
+/// Parses the epoch out of the session cookie.
+///
+/// If no epoch exists, we'll treat it as epoch 0 for compatibility with older
+/// session cookies.
+///
+/// If the epoch exists but is invalid, we'll fail authentication, and may want
+/// to investigate further, since the session cookie is signed.
+fn parse_epoch_from_session(session: &SessionExtension, parts: &Parts) -> AppResult<i32> {
+    Ok(session
+        .get("epoch")
+        .map(|epoch_str| {
+            epoch_str.parse().map_err(|_| {
+                parts
+                    .request_log()
+                    .add("cause", format!("cannot parse epoch: {epoch_str}"));
+                forbidden("this action requires authentication")
+            })
+        })
+        .transpose()?
+        .unwrap_or(0))
+}
+
+/// Rejects session cookies from older epochs than the current user session
+/// epoch.
+fn ensure_valid_epoch(user: &User, epoch: i32) -> AppResult<()> {
+    if epoch != user.session_epoch {
+        Err(forbidden("this action requires authentication"))
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(test)]

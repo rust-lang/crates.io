@@ -266,6 +266,7 @@ account_lock_reason = "private"
 account_lock_until = "private"
 is_admin = "private"
 publish_notifications = "private"
+session_epoch = "private"
 
 [version_downloads]
 dependencies = ["versions"]
