@@ -9,11 +9,13 @@ async function retrySignupLoad(page: Page, msw: AppFixtures['msw'], message: str
 
   await page.goto('/signup');
   await expect(page.locator('[data-test-title]')).toHaveText(message);
+  await expect(page.locator('[data-test-login-button]')).toBeVisible();
 
   // Restore the normal response so Try Again can load the pending signup.
   msw.worker.resetHandlers();
   await page.getByRole('button', { name: 'Try Again' }).click();
   await expect(page.getByLabel('Username')).toHaveValue('ghost');
+  await expect(page.locator('[data-test-login-button]')).not.toBeVisible();
 }
 
 test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
@@ -36,6 +38,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     // GitHub authorization requires account creation, so we are redirected to signup instead of being signed in.
     await page.click('[data-test-login]');
     await expect(page.getByRole('heading', { name: 'Create your crates.io account' })).toBeVisible();
+    await expect(page.locator('[data-test-login-button]')).not.toBeVisible();
     await expect(page.getByLabel('Username')).toHaveValue('ghost');
     await expect(page.getByLabel('Username')).not.toBeEditable();
     await expect(page.getByLabel('Display name')).toHaveValue('Ghost');
@@ -120,10 +123,12 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     await expect(page.getByLabel('Username')).toHaveValue('fresh');
     await expect(page.getByLabel('Display name')).toHaveValue('Fresh User');
     await expect(page.getByLabel('Email address')).toHaveValue('fresh@example.com');
+    await expect(page.locator('[data-test-login-button]')).not.toBeVisible();
 
     // Cancellation takes us to the `returnTo` destination.
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page).toHaveURL('/support?source=signup#help');
+    await expect(page.locator('[data-test-login-button]')).toBeVisible();
 
     // Going back in the browser history returns to the signup URL, which now shows a message that the signup session is missing.
     await page.goBack();
@@ -180,6 +185,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Create account' }).click();
     await expect(page.getByRole('alert')).toHaveText('Could not complete signup. Please try again.');
+    await expect(page.locator('[data-test-login-button]')).not.toBeVisible();
     await expect(page.getByLabel('Email address')).toHaveValue('chosen@example.com');
   });
 
@@ -199,6 +205,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Create account' }).click();
     await expect(page.getByRole('alert')).toHaveText('Signup validation failed');
+    await expect(page.locator('[data-test-login-button]')).not.toBeVisible();
     await expect(page.getByLabel('Email address')).toHaveValue('chosen@example.com');
   });
 
@@ -234,6 +241,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     // A failed `DELETE` should keep the form and its entered email available for another attempt.
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByRole('alert')).toHaveText('Cancellation failed');
+    await expect(page.locator('[data-test-login-button]')).not.toBeVisible();
     await expect(page.getByLabel('Email address')).toHaveValue('chosen@example.com');
 
     msw.worker.resetHandlers();

@@ -14,9 +14,10 @@
 
   interface Props {
     hero?: boolean;
+    showLogin?: boolean;
   }
 
-  let { hero = false }: Props = $props();
+  let { hero = false, showLogin = true }: Props = $props();
 
   let session = getSession();
 
@@ -117,7 +118,7 @@
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Root>
-      {:else}
+      {:else if showLogin}
         <button
           type="button"
           class="login-button button-reset"
@@ -138,46 +139,48 @@
     <div class="menu">
       <ColorSchemeMenu class="color-scheme-menu" />
 
-      <Dropdown.Root>
-        <Dropdown.Trigger class="button-reset">Menu</Dropdown.Trigger>
-        <Dropdown.Menu class="current-user-links">
-          {#if currentUser}
-            <Dropdown.Item>
-              <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
-            </Dropdown.Item>
-            <Dropdown.Item><a href={resolve('/dashboard')}>Dashboard</a></Dropdown.Item>
-            <Dropdown.Item><a href={resolve('/settings')} data-test-me-link>Account Settings</a></Dropdown.Item>
-            <Dropdown.Item><a href={resolve('/me/pending-invites')}>Owner Invites</a></Dropdown.Item>
-            <Dropdown.Item style="border-top: 1px solid var(--gray-border)">
-              <button
-                type="button"
-                class="logout-menu-item button-reset"
-                disabled={isLoggingOut}
-                onclick={() => session.logout()}
-              >
-                {#if isLoggingOut}
-                  <LoadingSpinner class="spinner" />
-                {/if}
-                Sign Out
-              </button>
-            </Dropdown.Item>
-          {:else}
-            <Dropdown.Item>
-              <button
-                type="button"
-                class="login-menu-item button-reset"
-                disabled={isLoggingIn}
-                onclick={() => session.login()}
-              >
-                {#if isLoggingIn}
-                  <LoadingSpinner class="spinner" />
-                {/if}
-                Log in with GitHub
-              </button>
-            </Dropdown.Item>
-          {/if}
-        </Dropdown.Menu>
-      </Dropdown.Root>
+      {#if currentUser || showLogin}
+        <Dropdown.Root>
+          <Dropdown.Trigger class="button-reset">Menu</Dropdown.Trigger>
+          <Dropdown.Menu class="current-user-links">
+            {#if currentUser}
+              <Dropdown.Item>
+                <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
+              </Dropdown.Item>
+              <Dropdown.Item><a href={resolve('/dashboard')}>Dashboard</a></Dropdown.Item>
+              <Dropdown.Item><a href={resolve('/settings')} data-test-me-link>Account Settings</a></Dropdown.Item>
+              <Dropdown.Item><a href={resolve('/me/pending-invites')}>Owner Invites</a></Dropdown.Item>
+              <Dropdown.Item style="border-top: 1px solid var(--gray-border)">
+                <button
+                  type="button"
+                  class="logout-menu-item button-reset"
+                  disabled={isLoggingOut}
+                  onclick={() => session.logout()}
+                >
+                  {#if isLoggingOut}
+                    <LoadingSpinner class="spinner" />
+                  {/if}
+                  Sign Out
+                </button>
+              </Dropdown.Item>
+            {:else}
+              <Dropdown.Item>
+                <button
+                  type="button"
+                  class="login-menu-item button-reset"
+                  disabled={isLoggingIn}
+                  onclick={() => session.login()}
+                >
+                  {#if isLoggingIn}
+                    <LoadingSpinner class="spinner" />
+                  {/if}
+                  Log in with GitHub
+                </button>
+              </Dropdown.Item>
+            {/if}
+          </Dropdown.Menu>
+        </Dropdown.Root>
+      {/if}
     </div>
   </div>
 </header>
