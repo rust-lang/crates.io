@@ -1,8 +1,8 @@
 <script lang="ts">
   import { browser } from '$app/environment';
 
-  import CopyButton from '$lib/components/CopyButton.svelte';
-  import Icon from '$lib/components/Icon.svelte';
+  import CopyButton from '#lib/components/CopyButton.svelte';
+  import Icon from '#lib/components/Icon.svelte';
 
   interface Props {
     crate: string;

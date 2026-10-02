@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { HTMLImgAttributes } from 'svelte/elements';
 
-  import avatarPlaceholder from '$lib/assets/avatar-placeholder.svg';
+  import avatarPlaceholder from '#lib/assets/avatar-placeholder.svg';
 
   type Size = 'small' | 'medium-small' | 'medium';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import TextContent from '$lib/components/TextContent.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import TextContent from '#lib/components/TextContent.svelte';
 </script>
 
 <PageHeader title="Data Access Policy" />

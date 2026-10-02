@@ -4,8 +4,8 @@
 
   import { untrack } from 'svelte';
 
-  import { getColorScheme } from '$lib/color-scheme.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  import { getColorScheme } from '#lib/color-scheme.svelte.ts';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
   import { loadChart } from './chartjs';
   import { toChartData } from './data';
 

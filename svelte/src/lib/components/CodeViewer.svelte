@@ -7,7 +7,7 @@
   import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
   import WorkerUrl from '@pierre/diffs/worker/worker.js?worker&url';
 
-  import { registerCustomExtensions } from '$lib/utils/syntax-language';
+  import { registerCustomExtensions } from '#lib/utils/syntax-language.ts';
 
   interface Props {
     content: { path: string; text: string; meta: string; cacheKey: string } | null;

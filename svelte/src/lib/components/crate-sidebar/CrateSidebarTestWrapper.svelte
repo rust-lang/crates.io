@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
-  import type { DocsRsStatus } from '$lib/utils/docs-rs';
-  import type { PlaygroundCrate } from '$lib/utils/playground';
+  import type { DocsRsStatus } from '#lib/utils/docs-rs.ts';
+  import type { PlaygroundCrate } from '#lib/utils/playground.ts';
 
   import { createClient } from '@crates-io/api-client';
 
-  import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
-  import { SessionState, setSession } from '$lib/utils/session.svelte';
+  import { NotificationsState, setNotifications } from '#lib/notifications.svelte.ts';
+  import { SessionState, setSession } from '#lib/utils/session.svelte.ts';
   import CrateSidebar from './CrateSidebar.svelte';
 
   type Crate = components['schemas']['Crate'];

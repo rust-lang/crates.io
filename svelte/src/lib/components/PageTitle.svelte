@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getPageTitle } from '$lib/page-title.svelte';
+  import { getPageTitle } from '#lib/page-title.svelte.ts';
 
   let { title }: { title: string } = $props();
 

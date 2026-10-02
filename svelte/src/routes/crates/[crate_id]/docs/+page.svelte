@@ -3,7 +3,7 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
-  import { getNotifications } from '$lib/notifications.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   let notifications = getNotifications();
 

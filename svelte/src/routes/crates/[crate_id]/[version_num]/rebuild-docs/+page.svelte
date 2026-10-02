@@ -3,8 +3,8 @@
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   let { data } = $props();
 

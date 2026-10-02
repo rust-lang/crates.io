@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-import { enrichAdvisories, fetchAdvisories } from '$lib/utils/rustsec';
+import { enrichAdvisories, fetchAdvisories } from '#lib/utils/rustsec.ts';
 
 export async function load({ fetch, params }) {
   let crateName = params.crate_id;

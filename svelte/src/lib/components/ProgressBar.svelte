@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getProgressContext } from '$lib/progress.svelte';
+  import { getProgressContext } from '#lib/progress.svelte.ts';
 
   let progress = getProgressContext();
 </script>

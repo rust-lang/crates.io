@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getTooltipContext } from '$lib/tooltip.svelte';
+  import { getTooltipContext } from '#lib/tooltip.svelte.ts';
 
   let tooltipContext = getTooltipContext();
 </script>

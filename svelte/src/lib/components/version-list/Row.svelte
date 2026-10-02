@@ -7,15 +7,15 @@
   import prettyBytes from 'pretty-bytes';
   import semverParse from 'semver/functions/parse';
 
-  import Edition from '$lib/components/crate-sidebar/Edition.svelte';
-  import Msrv from '$lib/components/crate-sidebar/Msrv.svelte';
-  import * as Dropdown from '$lib/components/dropdown';
-  import Icon from '$lib/components/Icon.svelte';
-  import LicenseExpression from '$lib/components/LicenseExpression.svelte';
-  import PrivilegedAction from '$lib/components/PrivilegedAction.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import UserAvatar from '$lib/components/UserAvatar.svelte';
-  import YankButton from '$lib/components/YankButton.svelte';
+  import Edition from '#lib/components/crate-sidebar/Edition.svelte';
+  import Msrv from '#lib/components/crate-sidebar/Msrv.svelte';
+  import * as Dropdown from '#lib/components/dropdown/index.ts';
+  import Icon from '#lib/components/Icon.svelte';
+  import LicenseExpression from '#lib/components/LicenseExpression.svelte';
+  import PrivilegedAction from '#lib/components/PrivilegedAction.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import UserAvatar from '#lib/components/UserAvatar.svelte';
+  import YankButton from '#lib/components/YankButton.svelte';
 
   const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
 

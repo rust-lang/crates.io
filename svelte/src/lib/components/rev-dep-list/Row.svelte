@@ -4,8 +4,8 @@
 
   import { resolve } from '$app/paths';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import Placeholder from '$lib/components/Placeholder.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import Placeholder from '#lib/components/Placeholder.svelte';
 
   type Dependency = components['schemas']['Dependency'] & {
     dependentCrateName: string;

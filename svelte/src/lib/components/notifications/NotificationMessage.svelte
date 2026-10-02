@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { Notification } from '$lib/notifications.svelte';
+  import type { Notification } from '#lib/notifications.svelte.ts';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Props {
     notification: Notification;

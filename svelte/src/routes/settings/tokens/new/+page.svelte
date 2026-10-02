@@ -3,14 +3,14 @@
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import PatternDescription from '$lib/components/PatternDescription.svelte';
-  import SettingsPage from '$lib/components/SettingsPage.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
-  import { scopeDescription } from '$lib/utils/token-scopes';
+  import Icon from '#lib/components/Icon.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import PatternDescription from '#lib/components/PatternDescription.svelte';
+  import SettingsPage from '#lib/components/SettingsPage.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
+  import { scopeDescription } from '#lib/utils/token-scopes.ts';
   import { getTokenPageState } from '../+layout.svelte';
 
   const ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'trusted-publishing', 'yank'];

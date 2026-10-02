@@ -1,16 +1,16 @@
 <script lang="ts">
-  import type { ManifestFile } from '$lib/utils/zip-archive';
+  import type { ManifestFile } from '#lib/utils/zip-archive.ts';
 
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import prettyBytes from 'pretty-bytes';
 
-  import { getColorScheme } from '$lib/color-scheme.svelte';
-  import CodeViewer from '$lib/components/CodeViewer.svelte';
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import FileTree from '$lib/components/FileTree.svelte';
-  import { loadFile } from '$lib/utils/zip-archive';
+  import { getColorScheme } from '#lib/color-scheme.svelte.ts';
+  import CodeViewer from '#lib/components/CodeViewer.svelte';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
+  import FileTree from '#lib/components/FileTree.svelte';
+  import { loadFile } from '#lib/utils/zip-archive.ts';
 
   type FileState =
     | { kind: 'loading' }

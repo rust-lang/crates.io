@@ -4,12 +4,12 @@
   import { resolve } from '$app/paths';
   import { formatDistanceToNow } from 'date-fns';
 
-  import CrateDownloadsList from '$lib/components/CrateDownloadsList.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Panel from '$lib/components/Panel.svelte';
+  import CrateDownloadsList from '#lib/components/CrateDownloadsList.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Panel from '#lib/components/Panel.svelte';
 
   type Version = components['schemas']['Version'];
 

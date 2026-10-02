@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
-  import NotificationContainer from '$lib/components/notifications/NotificationContainer.svelte';
-  import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
+  import NotificationContainer from '#lib/components/notifications/NotificationContainer.svelte';
+  import { NotificationsState, setNotifications } from '#lib/notifications.svelte.ts';
 
   let { children }: { children: Snippet } = $props();
 

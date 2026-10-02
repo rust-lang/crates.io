@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { ResolvedScheme } from '$lib/color-scheme.svelte';
+  import type { ResolvedScheme } from '#lib/color-scheme.svelte.ts';
 
-  import { highlightSyntax } from '$lib/attachments/highlight';
-  import { renderMermaids } from '$lib/attachments/mermaid';
-  import { getColorScheme } from '$lib/color-scheme.svelte';
-  import TextContent from '$lib/components/TextContent.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
+  import { highlightSyntax } from '#lib/attachments/highlight.ts';
+  import { renderMermaids } from '#lib/attachments/mermaid.ts';
+  import { getColorScheme } from '#lib/color-scheme.svelte.ts';
+  import TextContent from '#lib/components/TextContent.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Props {
     html: string;

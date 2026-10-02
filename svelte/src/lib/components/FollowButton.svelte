@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Icon from '$lib/components/Icon.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
 
   interface Props {
     /** Which follow state the button represents. */

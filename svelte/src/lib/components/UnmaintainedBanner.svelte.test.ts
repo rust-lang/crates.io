@@ -1,4 +1,4 @@
-import type { Unmaintained } from '$lib/utils/rustsec';
+import type { Unmaintained } from '#lib/utils/rustsec.ts';
 
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';

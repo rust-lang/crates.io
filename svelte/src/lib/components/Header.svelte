@@ -2,7 +2,7 @@
   import { resolve } from '$app/paths';
   import { format } from 'date-fns/format';
 
-  import { getSession } from '$lib/utils/session.svelte';
+  import { getSession } from '#lib/utils/session.svelte.ts';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import * as Dropdown from './dropdown';
   import Icon from './Icon.svelte';
@@ -38,7 +38,7 @@
 <header class="header" class:hero>
   <div class="header-inner">
     <a href={resolve('/')} class="index-link">
-      <enhanced:img src="$lib/assets/cargo.png?w=38;76;114" role="none" alt="" class="logo" sizes="38px" />
+      <enhanced:img src="#lib/assets/cargo.png?w=38;76;114" role="none" alt="" class="logo" sizes="38px" />
       crates.io
     </a>
 

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
 
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import TextContent from '$lib/components/TextContent.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import TextContent from '#lib/components/TextContent.svelte';
 </script>
 
 <PageHeader title="Publishing Rate Limits" />

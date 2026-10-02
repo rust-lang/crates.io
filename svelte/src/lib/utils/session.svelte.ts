@@ -1,5 +1,5 @@
 import type { operations } from '@crates-io/api-client';
-import type { NotificationsContext } from '$lib/notifications.svelte';
+import type { NotificationsContext } from '#lib/notifications.svelte.ts';
 
 import { createContext } from 'svelte';
 import { invalidateAll } from '$app/navigation';

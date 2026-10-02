@@ -1,7 +1,7 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
-  import { calculatePagination } from '$lib/utils/pagination';
+  import { calculatePagination } from '#lib/utils/pagination.ts';
   import Pagination from './Pagination.svelte';
 
   const { Story } = defineMeta({

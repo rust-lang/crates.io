@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { parseLicense } from '$lib/utils/license';
+  import { parseLicense } from '#lib/utils/license.ts';
 
   interface Props {
     license: string;

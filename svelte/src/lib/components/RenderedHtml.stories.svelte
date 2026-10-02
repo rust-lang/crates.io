@@ -1,7 +1,7 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
-  import { loadMermaid } from '$lib/attachments/mermaid';
+  import { loadMermaid } from '#lib/attachments/mermaid.ts';
   import RenderedHtml from './RenderedHtml.svelte';
 
   const { Story } = defineMeta({

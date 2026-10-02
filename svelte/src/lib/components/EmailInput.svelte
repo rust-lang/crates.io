@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { AuthenticatedUser } from '$lib/utils/session.svelte';
+  import type { AuthenticatedUser } from '#lib/utils/session.svelte.ts';
   import type { HTMLAttributes } from 'svelte/elements';
 
   import { createClient } from '@crates-io/api-client';
 
-  import { getNotifications } from '$lib/notifications.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     /** MUST be passed with `bind:user` since this component mutates the user object directly after saving. */

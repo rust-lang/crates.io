@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createClient } from '@crates-io/api-client';
 
-  import FollowButton from '$lib/components/FollowButton.svelte';
-  import { getNotifications } from '$lib/notifications.svelte';
+  import FollowButton from '#lib/components/FollowButton.svelte';
+  import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Props {
     /** The name of the crate to follow/unfollow. */

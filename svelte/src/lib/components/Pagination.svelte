@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { PaginationState } from '$lib/utils/pagination';
+  import type { PaginationState } from '#lib/utils/pagination.ts';
 
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
+  import Icon from '#lib/components/Icon.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
 
   interface Props {
     pagination: PaginationState;

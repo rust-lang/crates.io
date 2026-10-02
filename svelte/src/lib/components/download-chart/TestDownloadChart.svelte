@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { DownloadChartData } from './data';
 
-  import { setColorScheme } from '$lib/color-scheme.svelte';
+  import { setColorScheme } from '#lib/color-scheme.svelte.ts';
   import DownloadChart from './DownloadChart.svelte';
 
   interface Props {

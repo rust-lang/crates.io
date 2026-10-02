@@ -1,9 +1,9 @@
 import { createClient } from '@crates-io/api-client';
 
-import { loadNativeReplacements } from '$lib/data/native-replacements';
-import { loadDocsRsStatus } from '$lib/utils/docs-rs';
-import { loadReadme } from '$lib/utils/readme';
-import { loadUnmaintained } from '$lib/utils/rustsec';
+import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
+import { loadDocsRsStatus } from '#lib/utils/docs-rs.ts';
+import { loadReadme } from '#lib/utils/readme.ts';
+import { loadUnmaintained } from '#lib/utils/rustsec.ts';
 
 export async function load({ fetch, params }) {
   let crateName = params.crate_id;

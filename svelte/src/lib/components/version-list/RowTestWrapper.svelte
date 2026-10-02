@@ -3,9 +3,9 @@
 
   import { createClient } from '@crates-io/api-client';
 
-  import TooltipContainer from '$lib/components/TooltipContainer.svelte';
-  import { setTooltipContext } from '$lib/tooltip.svelte';
-  import { SessionState, setSession } from '$lib/utils/session.svelte';
+  import TooltipContainer from '#lib/components/TooltipContainer.svelte';
+  import { setTooltipContext } from '#lib/tooltip.svelte.ts';
+  import { SessionState, setSession } from '#lib/utils/session.svelte.ts';
   import Row from './Row.svelte';
 
   type Version = components['schemas']['Version'];

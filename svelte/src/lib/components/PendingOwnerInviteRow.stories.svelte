@@ -1,7 +1,7 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
-  import NotificationDecorator from '$lib/storybook/NotificationDecorator.svelte';
+  import NotificationDecorator from '#lib/storybook/NotificationDecorator.svelte';
   import PendingOwnerInviteRow from './PendingOwnerInviteRow.svelte';
 
   const { Story } = defineMeta({

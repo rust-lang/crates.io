@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
-  import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
+  import { SearchFormContext, setSearchFormContext } from '#lib/search-form.svelte.ts';
 
   let { children }: { children: Snippet } = $props();
 

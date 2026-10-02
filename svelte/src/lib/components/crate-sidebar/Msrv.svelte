@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { normalizeMsrv } from '$lib/utils/msrv';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { normalizeMsrv } from '#lib/utils/msrv.ts';
 
   interface Props {
     msrv: string;

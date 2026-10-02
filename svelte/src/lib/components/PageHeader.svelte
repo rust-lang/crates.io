@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     title?: string;

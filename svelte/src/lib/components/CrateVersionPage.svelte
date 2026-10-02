@@ -1,24 +1,24 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
-  import type { DownloadChartData } from '$lib/components/download-chart/data';
-  import type { NativeReplacement } from '$lib/data/native-replacements';
-  import type { DocsRsStatus } from '$lib/utils/docs-rs';
-  import type { PlaygroundCrate } from '$lib/utils/playground';
-  import type { Unmaintained } from '$lib/utils/rustsec';
+  import type { DownloadChartData } from '#lib/components/download-chart/data.ts';
+  import type { NativeReplacement } from '#lib/data/native-replacements.ts';
+  import type { DocsRsStatus } from '#lib/utils/docs-rs.ts';
+  import type { PlaygroundCrate } from '#lib/utils/playground.ts';
+  import type { Unmaintained } from '#lib/utils/rustsec.ts';
 
   import { resolve } from '$app/paths';
 
-  import { loadMermaid } from '$lib/attachments/mermaid';
-  import CrateSidebar from '$lib/components/crate-sidebar/CrateSidebar.svelte';
-  import CrateHeader from '$lib/components/CrateHeader.svelte';
-  import DownloadChart from '$lib/components/download-chart/DownloadChart.svelte';
-  import * as Dropdown from '$lib/components/dropdown';
-  import Icon from '$lib/components/Icon.svelte';
-  import NativeReplacementBanner from '$lib/components/NativeReplacementBanner.svelte';
-  import ReadmePlaceholder from '$lib/components/ReadmePlaceholder.svelte';
-  import RenderedHtml from '$lib/components/RenderedHtml.svelte';
-  import UnmaintainedBanner from '$lib/components/UnmaintainedBanner.svelte';
-  import { loadReadme } from '$lib/utils/readme';
+  import { loadMermaid } from '#lib/attachments/mermaid.ts';
+  import CrateSidebar from '#lib/components/crate-sidebar/CrateSidebar.svelte';
+  import CrateHeader from '#lib/components/CrateHeader.svelte';
+  import DownloadChart from '#lib/components/download-chart/DownloadChart.svelte';
+  import * as Dropdown from '#lib/components/dropdown/index.ts';
+  import Icon from '#lib/components/Icon.svelte';
+  import NativeReplacementBanner from '#lib/components/NativeReplacementBanner.svelte';
+  import ReadmePlaceholder from '#lib/components/ReadmePlaceholder.svelte';
+  import RenderedHtml from '#lib/components/RenderedHtml.svelte';
+  import UnmaintainedBanner from '#lib/components/UnmaintainedBanner.svelte';
+  import { loadReadme } from '#lib/utils/readme.ts';
 
   type Crate = components['schemas']['Crate'];
   type Version = components['schemas']['Version'];

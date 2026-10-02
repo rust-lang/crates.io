@@ -1,13 +1,13 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
-  import type { NativeReplacement } from '$lib/data/native-replacements';
+  import type { NativeReplacement } from '#lib/data/native-replacements.ts';
 
   import { resolve } from '$app/paths';
 
-  import Icon from '$lib/components/Icon.svelte';
-  import Placeholder from '$lib/components/Placeholder.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { renderSimpleMarkdown } from '$lib/utils/markdown';
+  import Icon from '#lib/components/Icon.svelte';
+  import Placeholder from '#lib/components/Placeholder.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { renderSimpleMarkdown } from '#lib/utils/markdown.ts';
 
   type Dependency = components['schemas']['Dependency'];
 

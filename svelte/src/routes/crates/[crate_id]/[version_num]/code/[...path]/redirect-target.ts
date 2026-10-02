@@ -1,4 +1,4 @@
-import type { ManifestFile } from '$lib/utils/zip-archive';
+import type { ManifestFile } from '#lib/utils/zip-archive.ts';
 
 /** Files preferred as the initial selection, in priority order. */
 const DEFAULT_FILE_PRIORITY = ['src/lib.rs', 'src/main.rs', 'Cargo.toml'];

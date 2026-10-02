@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '#lib/components/Icon.svelte';
   import Placeholder from '../Placeholder.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
 
-  import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
+  import { NotificationsState, setNotifications } from '#lib/notifications.svelte.ts';
   import EmailInput from './EmailInput.svelte';
   import NotificationContainer from './notifications/NotificationContainer.svelte';
 

@@ -2,8 +2,8 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import Tooltip from '$lib/components/Tooltip.svelte';
-  import { getSession } from '$lib/utils/session.svelte';
+  import Tooltip from '#lib/components/Tooltip.svelte';
+  import { getSession } from '#lib/utils/session.svelte.ts';
 
   /**
    * A component that wraps elements (probably mostly buttons in practice) that

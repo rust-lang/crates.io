@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { NativeReplacement } from '$lib/data/native-replacements';
+  import type { NativeReplacement } from '#lib/data/native-replacements.ts';
 
-  import Alert from '$lib/components/Alert.svelte';
-  import { renderSimpleMarkdown } from '$lib/utils/markdown';
+  import Alert from '#lib/components/Alert.svelte';
+  import { renderSimpleMarkdown } from '#lib/utils/markdown.ts';
 
   interface Props {
     replacement: NativeReplacement;

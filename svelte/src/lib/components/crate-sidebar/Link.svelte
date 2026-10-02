@@ -20,7 +20,7 @@
 <script lang="ts">
   import type { HTMLAttributes } from 'svelte/elements';
 
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '#lib/components/Icon.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     title: string;

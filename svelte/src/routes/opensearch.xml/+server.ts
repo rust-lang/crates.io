@@ -3,7 +3,7 @@ import { base } from '$app/paths';
 // Inlined as a base64 data URI so the icon needs no separate request and
 // never breaks: search clients fetch and cache it once at install time, so a
 // stable, self-contained value avoids stale/404 icon references across deploys.
-import icon from '$lib/assets/cargo.png?w=64&format=png&quality=80&inline&imagetools';
+import icon from '#lib/assets/cargo.png?w=64&format=png&quality=80&inline&imagetools';
 
 export const prerender = true;
 

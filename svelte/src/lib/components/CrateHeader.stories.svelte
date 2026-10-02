@@ -3,7 +3,7 @@
 
   import { defineMeta } from '@storybook/addon-svelte-csf';
 
-  import SessionDecorator from '$lib/storybook/SessionDecorator.svelte';
+  import SessionDecorator from '#lib/storybook/SessionDecorator.svelte';
   import CrateHeader from './CrateHeader.svelte';
 
   const { Story } = defineMeta({

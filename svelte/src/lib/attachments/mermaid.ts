@@ -1,4 +1,4 @@
-import type { NotificationsContext } from '$lib/notifications.svelte';
+import type { NotificationsContext } from '#lib/notifications.svelte.ts';
 import type { Mermaid } from 'mermaid';
 
 let mermaidPromise: Promise<void> | null = null;

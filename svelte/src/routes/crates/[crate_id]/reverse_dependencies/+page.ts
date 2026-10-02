@@ -3,7 +3,7 @@ import type { components } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { loadCrateDescriptions } from '$lib/utils/crate-descriptions';
+import { loadCrateDescriptions } from '#lib/utils/crate-descriptions.ts';
 
 const PER_PAGE = 10;
 

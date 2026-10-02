@@ -1,11 +1,11 @@
 <script lang="ts">
-  import CrateList from '$lib/components/CrateList.svelte';
-  import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageTitle from '$lib/components/PageTitle.svelte';
-  import Pagination from '$lib/components/Pagination.svelte';
-  import ResultsCount from '$lib/components/ResultsCount.svelte';
-  import * as SortDropdown from '$lib/components/sort-dropdown';
-  import { calculatePagination } from '$lib/utils/pagination';
+  import CrateList from '#lib/components/CrateList.svelte';
+  import PageHeader from '#lib/components/PageHeader.svelte';
+  import PageTitle from '#lib/components/PageTitle.svelte';
+  import Pagination from '#lib/components/Pagination.svelte';
+  import ResultsCount from '#lib/components/ResultsCount.svelte';
+  import * as SortDropdown from '#lib/components/sort-dropdown/index.ts';
+  import { calculatePagination } from '#lib/utils/pagination.ts';
 
   const MAX_PAGES = 20;
 

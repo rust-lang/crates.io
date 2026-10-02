@@ -1,4 +1,4 @@
-import type { NativeReplacement } from '$lib/data/native-replacements';
+import type { NativeReplacement } from '#lib/data/native-replacements.ts';
 
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';

@@ -3,24 +3,24 @@
   import { navigating, page } from '$app/state';
   import { createClient } from '@crates-io/api-client';
 
-  import favicon from '$lib/assets/cargo.png?w=48&format=png&quality=80&imagetools';
-  import appleTouchIcon from '$lib/assets/cargo.png?w=180&format=png&quality=80&imagetools';
-  import { ColorSchemeState, setColorScheme } from '$lib/color-scheme.svelte';
-  import Footer from '$lib/components/Footer.svelte';
-  import Header from '$lib/components/Header.svelte';
-  import NotificationContainer from '$lib/components/notifications/NotificationContainer.svelte';
-  import ProgressBar from '$lib/components/ProgressBar.svelte';
-  import TooltipContainer from '$lib/components/TooltipContainer.svelte';
-  import DismissedBannerMessages from '$lib/dismissed-banner-messages.svelte';
-  import { NotificationsState, setNotifications } from '$lib/notifications.svelte';
-  import { PageTitleState, setPageTitle } from '$lib/page-title.svelte';
-  import { ProgressState, setProgressContext } from '$lib/progress.svelte';
-  import { SearchFormContext, setSearchFormContext } from '$lib/search-form.svelte';
-  import { setTooltipContext } from '$lib/tooltip.svelte';
-  import { SessionState, setSession } from '$lib/utils/session.svelte';
+  import favicon from '#lib/assets/cargo.png?w=48&format=png&quality=80&imagetools';
+  import appleTouchIcon from '#lib/assets/cargo.png?w=180&format=png&quality=80&imagetools';
+  import { ColorSchemeState, setColorScheme } from '#lib/color-scheme.svelte.ts';
+  import Footer from '#lib/components/Footer.svelte';
+  import Header from '#lib/components/Header.svelte';
+  import NotificationContainer from '#lib/components/notifications/NotificationContainer.svelte';
+  import ProgressBar from '#lib/components/ProgressBar.svelte';
+  import TooltipContainer from '#lib/components/TooltipContainer.svelte';
+  import DismissedBannerMessages from '#lib/dismissed-banner-messages.svelte.ts';
+  import { NotificationsState, setNotifications } from '#lib/notifications.svelte.ts';
+  import { PageTitleState, setPageTitle } from '#lib/page-title.svelte.ts';
+  import { ProgressState, setProgressContext } from '#lib/progress.svelte.ts';
+  import { SearchFormContext, setSearchFormContext } from '#lib/search-form.svelte.ts';
+  import { setTooltipContext } from '#lib/tooltip.svelte.ts';
+  import { SessionState, setSession } from '#lib/utils/session.svelte.ts';
 
   import 'virtual:uno.css';
-  import '$lib/css/global.css';
+  import '#lib/css/global.css';
 
   let { children, data } = $props();
   let propsId = $props.id();

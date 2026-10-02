@@ -5,7 +5,7 @@
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  import * as Dropdown from '$lib/components/dropdown';
+  import * as Dropdown from '#lib/components/dropdown/index.ts';
 
   interface Props extends HTMLLiAttributes {
     query: Record<string, string>;

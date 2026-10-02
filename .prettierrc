@@ -16,7 +16,7 @@
     "^\\$app/",
     "<THIRD_PARTY_MODULES>",
     "",
-    "^\\$lib/",
+    "^#lib/",
     "^[.]"
   ],
   "importOrderParserPlugins": ["typescript"],
