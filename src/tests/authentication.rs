@@ -128,4 +128,11 @@ async fn user_session_epoch() {
 
     let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
+
+    // But requests with the future epoch now succeed.
+    let mut request = anon.get_request(URL);
+    request.header(header::COOKIE, &future_cookie);
+
+    let response = anon.run::<()>(request).await;
+    assert_eq!(response.status(), StatusCode::OK);
 }
