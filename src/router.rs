@@ -64,6 +64,7 @@ pub fn build_axum_router(ctx: ServerContext) -> Router<()> {
         .routes(routes!(team::find_team))
         .routes(routes!(user::me::get_authenticated_user))
         .routes(routes!(user::me::get_authenticated_user_updates))
+        .routes(routes!(user::lock::get))
         .routes(routes!(token::list_api_tokens, token::create_api_token))
         .routes(routes!(token::find_api_token, token::revoke_api_token))
         .routes(routes!(token::revoke_current_api_token))
