@@ -45,6 +45,9 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 15.4.0
         version: 15.4.0
+      '@sveltejs/load-config':
+        specifier: 0.2.3
+        version: 0.2.3
       '@types/node':
         specifier: 24.19.0
         version: 24.19.0

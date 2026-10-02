@@ -18,5 +18,5 @@ pnpm-lock.yaml
 /svelte/static/
 
 # `src/app.html` contains an inline `window.onerror` bootstrap whose CSP
-# hash (pinned in `svelte.config.js`) is sensitive to whitespace.
+# hash (pinned in `vite.config.ts`) is sensitive to whitespace.
 /svelte/src/app.html

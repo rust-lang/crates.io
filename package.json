@@ -43,6 +43,7 @@
     "@percy/playwright": "1.1.2",
     "@playwright/test": "1.63.0",
     "@sinonjs/fake-timers": "15.4.0",
+    "@sveltejs/load-config": "0.2.3",
     "@types/node": "24.19.0",
     "@types/sinonjs__fake-timers": "15.0.1",
     "eslint": "10.11.0",
