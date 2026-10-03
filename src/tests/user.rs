@@ -1,5 +1,5 @@
 use crate::TestApp;
-use crate::builders::OauthGithubBuilder;
+use crate::builders::{OauthGithubBuilder, UserBuilder};
 use crate::util::github::next_gh_id;
 use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
@@ -25,23 +25,31 @@ impl crate::util::MockCookieUser {
     }
 }
 
+/// Checks matching, case-only differences, distinct separators, and missing GitHub links.
 #[tokio::test(flavor = "multi_thread")]
 async fn public_user_github_username_matches() {
     let (app, _, matching_user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let mismatching_user = app.db_new_user("bar").await;
-    OauthGithubBuilder::for_user(mismatching_user.as_model())
+    let case_variant_user = app.db_new_user("bar").await;
+    OauthGithubBuilder::for_user(case_variant_user.as_model())
         .with_login("BAR")
         .insert(&conn)
         .await;
 
     let unlinked_user_id = crate::new_user("baz").insert(&conn).await.unwrap();
 
+    let separator_user = app.db_new_user("foo-bar").await;
+    OauthGithubBuilder::for_user(separator_user.as_model())
+        .with_login("foo_bar")
+        .insert(&conn)
+        .await;
+
     for (user_id, expected) in [
         (matching_user.as_model().id, true),
-        (mismatching_user.as_model().id, false),
+        (case_variant_user.as_model().id, true),
         (unlinked_user_id, false),
+        (separator_user.as_model().id, false),
     ] {
         let user = PublicUser::query()
             .filter(users::id.eq(user_id))
@@ -51,6 +59,48 @@ async fn public_user_github_username_matches() {
 
         assert_eq!(user.github_username_matches, expected);
     }
+}
+
+/// A reused GitHub login can resolve to another user despite a matching cached link.
+#[tokio::test(flavor = "multi_thread")]
+async fn public_user_github_username_matches_reused_login() {
+    for login in ["alice", "ALICE"] {
+        let (app, _) = TestApp::init().empty().await;
+        let conn = app.db_conn().await;
+        let older_gh_id = next_gh_id();
+        let newer = UserBuilder::new().with_username("bob").with_gh_login(login);
+        let newer = app.db_new_user_from_builder(newer).await;
+        let older = UserBuilder::new()
+            .with_username("alice")
+            .with_gh_id(older_gh_id);
+        let older = app.db_new_user_from_builder(older).await;
+
+        assert!(newer.as_model().gh_id > older.as_model().gh_id);
+        assert!(newer.as_model().id < older.as_model().id);
+
+        let account = OauthGithub::find_by_login(&conn, "alice").await.unwrap();
+        assert_eq!(account.user_id, newer.as_model().id);
+
+        let user = PublicUser::find(&conn, older.as_model().id).await.unwrap();
+        assert!(!user.github_username_matches, "{login}");
+    }
+}
+
+/// A lower-ID GitHub account with a stale login does not invalidate the selected account.
+#[tokio::test(flavor = "multi_thread")]
+async fn public_user_github_username_matches_highest_account_id() {
+    let (app, _) = TestApp::init().empty().await;
+    let conn = app.db_conn().await;
+    let older_gh_id = next_gh_id();
+    let newer = app.db_new_user("alice").await;
+    let older = UserBuilder::new()
+        .with_username("bob")
+        .with_gh_login("ALICE")
+        .with_gh_id(older_gh_id);
+    app.db_new_user_from_builder(older).await;
+
+    let user = PublicUser::find(&conn, newer.as_model().id).await.unwrap();
+    assert!(user.github_username_matches);
 }
 
 #[tokio::test(flavor = "multi_thread")]

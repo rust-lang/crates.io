@@ -1,8 +1,8 @@
 use bon::Builder;
 use chrono::{DateTime, Utc};
-use diesel::dsl::{exists, sql};
+use diesel::dsl::{AliasedFields, sql};
 use diesel::prelude::*;
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Integer, Text};
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
@@ -12,7 +12,7 @@ use crate::models::{Crate, CrateOwner, Email, OwnerKind};
 use crate::schema::{crate_owners, emails, oauth_github, users};
 
 // Diesel validates a correlated subquery against the outer query source. `PublicUser` already
-// joins `oauth_github`, so reusing that table in this `EXISTS` expression would make it appear
+// joins `oauth_github`, so reusing that table in this subquery would make it appear
 // twice and fail `AppearsInFromClause` validation. This alias gives the subquery a distinct
 // query-source identity.
 diesel::alias!(
@@ -20,13 +20,21 @@ diesel::alias!(
         oauth_github as matching_github_account;
 );
 
+/// Whether GitHub lookup of the crates.io username resolves to this user.
+/// Logins are compared case-insensitively, preferring the highest GitHub account ID.
 #[diesel::dsl::auto_type]
 pub fn github_username_matches() -> _ {
     let account = MATCHING_GITHUB_ACCOUNT;
-    let belongs_to_user = account.field(oauth_github::user_id).eq(users::id);
-    let username_matches = account.field(oauth_github::login).eq(users::username);
+    let github_login: lower<Text, AliasedFields<MatchingGithubAccount, oauth_github::login>> =
+        lower(account.field(oauth_github::login));
+    let username: lower<Text, users::username> = lower(users::username);
+    let github_user = account
+        .filter(github_login.eq(username))
+        .order(account.field(oauth_github::account_id).desc())
+        .select(account.field(oauth_github::user_id))
+        .limit(1_i64);
 
-    exists(account.filter(belongs_to_user).filter(username_matches))
+    users::id.eq_any(github_user)
 }
 
 /// Finds users whose crates.io username matches the given name.
