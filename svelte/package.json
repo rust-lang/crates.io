@@ -44,7 +44,7 @@
     "shiki": "4.4.3"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "5.3.1",
+    "@chromatic-com/storybook": "5.4.0",
     "@crates-io/msw": "workspace:*",
     "@iconify-json/heroicons": "1.2.3",
     "@iconify-json/mdi": "1.2.3",
