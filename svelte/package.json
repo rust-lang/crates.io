@@ -66,7 +66,7 @@
     "@unocss/vite": "66.10.5",
     "@vitest/browser-playwright": "5.0.3",
     "@vitest/coverage-v8": "5.0.3",
-    "chromatic": "18.9.5",
+    "chromatic": "18.10.1",
     "msw": "3.0.1",
     "playwright": "1.63.0",
     "storybook": "10.6.1",
