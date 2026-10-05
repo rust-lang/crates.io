@@ -15,4 +15,4 @@ secrecy = "=0.10.3"
 
 [dev-dependencies]
 claims = "=0.8.0"
-insta = { version = "=1.48.0", features = ["glob", "json", "redactions"] }
+insta = { version = "=1.49.0", features = ["glob", "json", "redactions"] }
