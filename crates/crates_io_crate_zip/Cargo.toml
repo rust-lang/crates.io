@@ -20,4 +20,4 @@ zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
 [dev-dependencies]
 claims = "=0.8.0"
 crates_io_tarball = { path = "../crates_io_tarball", features = ["builder"] }
-insta = "=1.48.0"
+insta = "=1.49.0"
