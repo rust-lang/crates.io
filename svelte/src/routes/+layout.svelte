@@ -26,6 +26,7 @@
   let propsId = $props.id();
 
   let isIndex = $derived(page.route.id === '/');
+  let isSignupFormVisible = $derived(page.route.id === '/signup' && page.error === null);
 
   let colorScheme = new ColorSchemeState();
   setColorScheme(colorScheme);
@@ -121,7 +122,7 @@
 <NotificationContainer position="top-right" />
 <TooltipContainer />
 
-<Header hero={isIndex} />
+<Header hero={isIndex} showLogin={!isSignupFormVisible} />
 
 <main class="main">
   <div class="inner-main width-limit">
