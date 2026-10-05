@@ -224,8 +224,8 @@
   }
 
   .width-limit {
-    width: 960px;
-    @media only screen and (max-width: 960px) {
+    width: 1920px;
+    @media only screen and (max-width: 1920px) {
       width: 100%;
     }
   }
