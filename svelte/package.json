@@ -33,7 +33,7 @@
     "@fontsource/fira-sans": "5.3.0",
     "@pierre/diffs": "1.5.1",
     "@pierre/trees": "1.0.0-beta.6",
-    "@shikijs/themes": "4.4.3",
+    "@shikijs/themes": "4.5.0",
     "chart.js": "4.5.1",
     "date-fns": "4.4.0",
     "mermaid": "12.0.0",
@@ -41,7 +41,7 @@
     "micromark-extension-gfm": "3.0.0",
     "pretty-bytes": "7.2.0",
     "semver": "7.8.5",
-    "shiki": "4.4.3"
+    "shiki": "4.5.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "5.3.1",
