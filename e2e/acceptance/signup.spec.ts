@@ -19,7 +19,7 @@ async function retrySignupLoad(page: Page, msw: AppFixtures['msw'], message: str
 }
 
 test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
-  test('completes signup and returns to the requested page', async ({ page, msw, a11y }) => {
+  test('completes signup and returns to the requested page', async ({ page, msw, percy, a11y }) => {
     await setupGitHubOAuthRoutes(page);
 
     msw.worker.use(
@@ -46,6 +46,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     await expect(page.getByLabel('Email address')).toHaveValue('ghost@example.com');
     expect(await page.evaluate(() => localStorage.getItem('isLoggedIn'))).toBeNull();
     await a11y.audit();
+    await percy.snapshot();
 
     // Reload the page to ensure that the form is still populated with the pending signup data.
     await page.reload();
