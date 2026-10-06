@@ -173,7 +173,7 @@ typomania = { version = "=0.2.0", default-features = false }
 url = "=2.5.8"
 utoipa = { version = "=6.0.0", features = ["chrono"] }
 utoipa-axum = "=0.3.0"
-uuid = { version = "=1.26.1", features = ["v4"] }
+uuid = { version = "=1.27.0", features = ["v4"] }
 
 [dev-dependencies]
 bytes = "=1.12.1"
