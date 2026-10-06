@@ -22,7 +22,7 @@
     "openapi-fetch": "0.17.0"
   },
   "devDependencies": {
-    "msw": "3.0.1",
+    "msw": "3.0.2",
     "openapi-typescript": "7.13.0",
     "vitest": "5.0.3"
   }
