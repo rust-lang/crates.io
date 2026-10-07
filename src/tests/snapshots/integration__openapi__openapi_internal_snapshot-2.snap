@@ -2470,7 +2470,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations": {
       "get": {
-        "description": "If a `crate_name` parameter is specified, return the outstanding, active invitations for that\ncrate, if the currenty authenticated user is an owner of the crate.\n\nIf no parameters are specified, return the outstanding, active invitations that the\nauthenticated user has received.",
+        "description": "If a `crate_name` parameter is specified, return the outstanding, active invitations for that\ncrate, if the currently authenticated user is an owner of the crate.\n\nIf no parameters are specified, return the outstanding, active invitations that the\nauthenticated user has received.",
         "operationId": "list_crate_owner_invitations",
         "parameters": [
           {
