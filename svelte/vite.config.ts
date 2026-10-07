@@ -47,8 +47,6 @@ let sveltekitPlugin = sveltekit({
     // serializer captures hrefs that still resolve when the snapshot is
     // rendered at a different URL.
     ...(process.env.PLAYWRIGHT && { relative: false }),
-  },
-  prerender: {
     origin: `https://${process.env.DOMAIN_NAME ?? 'crates.io'}`,
   },
   csp: {
