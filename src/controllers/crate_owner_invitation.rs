@@ -118,7 +118,10 @@ impl TryFrom<CrateOwnerInvitationListQueryParams> for ListFilter {
         } else if let Some(id) = params.invitee_id {
             ListFilter::InviteeId(id)
         } else {
-            return Err(bad_request("missing or invalid filter"));
+            return Err(bad_request(
+                "At least one valid filter is required. \
+                Valid filters include: `crate_name`, `invitee_id`",
+            ));
         };
 
         Ok(filter)
@@ -162,7 +165,10 @@ async fn prepare_list(
             }
             ListFilter::InviteeId(invitee_id) => {
                 if invitee_id != user.id {
-                    let detail = "only the invitee can query their pending invitations";
+                    let detail = format!(
+                        "you may only query your own pending invitations. Your user ID is {}",
+                        user.id
+                    );
                     return Err(forbidden(detail));
                 }
                 Box::new(crate_owner_invitations::invited_user_id.eq(invitee_id))

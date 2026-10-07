@@ -175,7 +175,8 @@ async fn invitation_list_with_no_filter() {
         resp.json(),
         json!({
             "errors": [{
-                "detail": "missing or invalid filter",
+                "detail": "At least one valid filter is required. \
+                Valid filters include: `crate_name`, `invitee_id`",
             }],
         })
     );
