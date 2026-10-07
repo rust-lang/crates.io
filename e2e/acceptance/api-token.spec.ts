@@ -128,7 +128,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.click('[data-test-new-token-button]');
     await expect(page).toHaveURL('/settings/tokens/new');
 
-    await page.fill('[data-test-name]', 'the new token');
+    await page.fill('input[data-test-name]', 'the new token');
     await page.click('[data-test-scope="publish-update"]');
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
@@ -153,7 +153,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.click('[data-test-new-token-button]');
     await expect(page).toHaveURL('/settings/tokens/new');
 
-    await page.fill('[data-test-name]', 'the new token');
+    await page.fill('input[data-test-name]', 'the new token');
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
 
