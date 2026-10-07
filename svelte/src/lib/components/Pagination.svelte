@@ -14,7 +14,7 @@
   let { pagination }: Props = $props();
 
   function buildPageUrl(pageNum: number): string {
-    let params = new SvelteURLSearchParams(page.url.searchParams);
+    let params = new SvelteURLSearchParams(page.url.search);
     params.set('page', String(pageNum));
     return `?${params.toString()}`;
   }
