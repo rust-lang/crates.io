@@ -67,13 +67,22 @@ pub async fn deprecated_private_list_crate_owner_invitations(
     list_crate_owner_invitations(ctx, params, req).await
 }
 
-/// List active crate owner invitations for a crate or user that the currently authenticated user
-/// is allowed to see.
+/// List crate owner invitations according to the specified parameters that the currently
+/// authenticated user is allowed to see.
+///
+/// If a `crate_name` parameter is specified, return the outstanding, active invitations for that
+/// crate, if the currenty authenticated user is an owner of the crate.
+///
+/// If no parameters are specified, return the outstanding, active invitations that the
+/// authenticated user has received.
 #[utoipa::path(
     get,
     path = "/api/v1/crate_owner_invitations",
     params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
-    security(("cookie" = [])),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "owners",
     extensions(("x-internal" = json!(true))),
     responses(
@@ -88,7 +97,7 @@ pub async fn list_crate_owner_invitations(
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
     let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
     let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
@@ -316,7 +325,7 @@ pub struct HandleResponse {
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
     params(
-        ("crate_id" = i32, Path, description = "ID of the crate"),
+        ("crate_id" = i32, Path, description = "ID of the crate. This can be found in the response for `/api/v1/crate_owner_invitations`."),
     ),
     request_body = inline(OwnerInvitation),
     security(

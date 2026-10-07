@@ -191,8 +191,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List active crate owner invitations for a crate or user that the currently authenticated user
-         *     is allowed to see.
+         * List crate owner invitations according to the specified parameters that the currently
+         *     authenticated user is allowed to see.
+         * @description If a `crate_name` parameter is specified, return the outstanding, active invitations for that
+         *     crate, if the currenty authenticated user is an owner of the crate.
+         *
+         *     If no parameters are specified, return the outstanding, active invitations that the
+         *     authenticated user has received.
          */
         get: operations["list_crate_owner_invitations"];
         put?: never;
@@ -1353,7 +1358,8 @@ export interface components {
         CrateOwnerInvitation: {
             /**
              * Format: int32
-             * @description The ID of the crate that the user was invited to be an owner of.
+             * @description The ID of the crate that the user was invited to be an owner of. To accept or reject this
+             *     invitation, use this value in a `/api/v1/me/crate_owner_invitations/{crate_id}` request.
              * @example 123
              */
             crate_id: number;
@@ -4365,7 +4371,9 @@ export interface operations {
                             accepted: boolean;
                             /**
                              * Format: int32
-                             * @description The opaque identifier for the crate this invitation is for.
+                             * @description The ID of the crate that the user was invited to be an owner of. This can be found in the
+                             *     list of invitations for this owner, returned from a request to
+                             *     `/api/v1/crate_owner_invitations?invitee_id={owner_id}`.
                              * @example 42
                              */
                             crate_id: number;
@@ -4398,7 +4406,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of the crate */
+                /** @description ID of the crate. This can be found in the response for `/api/v1/crate_owner_invitations`. */
                 crate_id: number;
             };
             cookie?: never;
@@ -4414,7 +4422,9 @@ export interface operations {
                         accepted: boolean;
                         /**
                          * Format: int32
-                         * @description The opaque identifier for the crate this invitation is for.
+                         * @description The ID of the crate that the user was invited to be an owner of. This can be found in the
+                         *     list of invitations for this owner, returned from a request to
+                         *     `/api/v1/crate_owner_invitations?invitee_id={owner_id}`.
                          * @example 42
                          */
                         crate_id: number;
@@ -4438,7 +4448,9 @@ export interface operations {
                             accepted: boolean;
                             /**
                              * Format: int32
-                             * @description The opaque identifier for the crate this invitation is for.
+                             * @description The ID of the crate that the user was invited to be an owner of. This can be found in the
+                             *     list of invitations for this owner, returned from a request to
+                             *     `/api/v1/crate_owner_invitations?invitee_id={owner_id}`.
                              * @example 42
                              */
                             crate_id: number;
