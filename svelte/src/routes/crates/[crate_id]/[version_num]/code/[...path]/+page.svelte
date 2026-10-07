@@ -89,7 +89,7 @@
       path,
     });
 
-    void goto(href, { keepFocus: true, noScroll: true });
+    void goto(href, { reset: false });
   }
 
   function updateLineHash(hash: string) {
@@ -102,7 +102,7 @@
     });
     let lineHref = (hash ? `${href}${hash}` : href) as typeof href;
 
-    void goto(lineHref, { keepFocus: true, noScroll: true, replaceState: true });
+    void goto(lineHref, { reset: false, replaceState: true });
   }
 </script>
 
