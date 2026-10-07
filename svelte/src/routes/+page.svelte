@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
 
-  import { invalidateAll } from '$app/navigation';
+  import { refreshAll } from '$app/navigation';
 
   import CrateLists from '#lib/components/frontpage/CrateLists.svelte';
   import ErrorState from '#lib/components/frontpage/ErrorState.svelte';
@@ -14,7 +14,7 @@
 
   async function retry() {
     isFirstLoad = false;
-    await invalidateAll();
+    await refreshAll();
   }
 </script>
 

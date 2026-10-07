@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto, refreshAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { createClient } from '@crates-io/api-client';
@@ -43,7 +43,7 @@
       if (result.error) {
         let detail = result.error.errors[0]?.detail ?? SIGNUP_ERROR_MESSAGE;
         if (result.response.status === 400) {
-          await invalidateAll();
+          await refreshAll();
         }
         errorMessage = detail;
         return;

@@ -2,7 +2,7 @@ import type { operations } from '@crates-io/api-client';
 import type { NotificationsContext } from '#lib/notifications.svelte.ts';
 
 import { createContext } from 'svelte';
-import { goto, invalidateAll } from '$app/navigation';
+import { goto, refreshAll } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { page } from '$app/state';
 import { createClient } from '@crates-io/api-client';
@@ -211,7 +211,7 @@ export class SessionState {
 
       // `/signup` can show an expired session error with a login button. Refresh the page without adding a history entry.
       if (page.route.id === '/signup') {
-        await invalidateAll();
+        await refreshAll();
         return;
       }
 
@@ -225,7 +225,7 @@ export class SessionState {
 
     await this.completeLogin();
 
-    await invalidateAll();
+    await refreshAll();
   }
 
   /** Loads the current user after the server establishes an authenticated session. */

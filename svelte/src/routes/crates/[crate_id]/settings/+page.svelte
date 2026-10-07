@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { components } from '@crates-io/api-client';
 
-  import { invalidateAll } from '$app/navigation';
+  import { refreshAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
 
@@ -112,7 +112,7 @@
 
       if (name.split(':').length === 3) {
         notifications.success(`Team ${name} was added as a crate owner`);
-        await invalidateAll();
+        await refreshAll();
       } else {
         notifications.success(`An invite has been sent to ${name}`);
       }
