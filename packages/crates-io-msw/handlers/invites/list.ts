@@ -5,7 +5,7 @@ import { notFoundError } from '../../utils/handlers.js';
 import { http } from '../../utils/openapi-http.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.get('/api/private/crate_owner_invitations', ({ request, response }) => {
+export default http.get('/api/v1/crate_owner_invitations', ({ request, response }) => {
   let url = new URL(request.url);
 
   let { user } = getSession();

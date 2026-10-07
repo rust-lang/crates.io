@@ -90,7 +90,7 @@ impl MockCookieUser {
 
     /// As the currently logged in user, lists my pending invitations.
     async fn list_invitations(&self) -> InvitationListResponse {
-        let url = "/api/private/crate_owner_invitations";
+        let url = "/api/v1/crate_owner_invitations";
         let query = format!("invitee_id={}", self.as_model().id);
         self.get_with_query(url, &query).await.good()
     }
@@ -440,6 +440,30 @@ async fn test_unknown_crate() {
     let response = user.get::<()>("/api/v1/crates/unknown/owner_user").await;
     assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
+}
+
+// The frontend has been moved to use `/api/v1/crate_owner_invitations` but
+// `/api/private/crate_owner_invitations` needs to still work until the next deploy.
+#[tokio::test(flavor = "multi_thread")]
+async fn private_invitation_url_still_accessible_for_ui_transition() {
+    let (_, _, user) = TestApp::init().with_user().await;
+
+    let response = user
+        .get_with_query::<()>(
+            "/api/private/crate_owner_invitations",
+            &format!("invitee_id={}", user.as_model().id),
+        )
+        .await;
+
+    assert_snapshot!(response.status(), @"200 OK");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn api_token_cannot_list_invitations() {
+    let (_, _, _, token) = TestApp::init().with_token().await;
+
+    let response = token.get::<()>("/api/v1/crate_owner_invitations").await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
 }
 
 /// Given a user inviting a different user to be a crate

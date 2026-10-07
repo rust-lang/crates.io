@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/private/crate_owner_invitations.rs
+source: src/tests/routes/crate_owner_invitations.rs
 expression: invitations
 ---
 {

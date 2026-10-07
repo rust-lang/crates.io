@@ -41,10 +41,37 @@ pub struct CrateOwnerInvitationListQueryParams {
     invitee_id: Option<i32>,
 }
 
-/// List all crate owner invitations for a crate or user.
+// The frontend has been moved to use `/api/v1/crate_owner_invitations` but
+// `/api/private/crate_owner_invitations` needs to still work until the next deploy.
+
+/// List all crate owner invitations for a crate or user. Moved to be part of the public API.
+#[deprecated]
 #[utoipa::path(
     get,
     path = "/api/private/crate_owner_invitations",
+    params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
+    security(("cookie" = [])),
+    tag = "owners",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(PrivateListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn deprecated_private_list_crate_owner_invitations(
+    ctx: ServerContext,
+    params: CrateOwnerInvitationListQueryParams,
+    req: Parts,
+) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
+    list_crate_owner_invitations(ctx, params, req).await
+}
+
+/// List active crate owner invitations for a crate or user that the currently authenticated user
+/// is allowed to see.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crate_owner_invitations",
     params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
     security(("cookie" = [])),
     tag = "owners",

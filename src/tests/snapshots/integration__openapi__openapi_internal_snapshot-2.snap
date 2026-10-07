@@ -1583,7 +1583,8 @@ expression: response.json()
   "paths": {
     "/api/private/crate_owner_invitations": {
       "get": {
-        "operationId": "list_crate_owner_invitations",
+        "deprecated": true,
+        "operationId": "deprecated_private_list_crate_owner_invitations",
         "parameters": [
           {
             "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",
@@ -1710,7 +1711,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "List all crate owner invitations for a crate or user.",
+        "summary": "List all crate owner invitations for a crate or user. Moved to be part of the public API.",
         "tags": [
           "owners"
         ]
@@ -2464,6 +2465,141 @@ expression: response.json()
         "summary": "Marks the email belonging to the given token as verified.",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/crate_owner_invitations": {
+      "get": {
+        "operationId": "list_crate_owner_invitations",
+        "parameters": [
+          {
+            "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",
+            "in": "query",
+            "name": "crate_name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The ID of the user who was invited to be a crate owner.\n\nThis parameter needs to match the authenticated user's ID.",
+            "in": "query",
+            "name": "invitee_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "invitations": {
+                      "description": "The list of crate owner invitations.",
+                      "items": {
+                        "$ref": "#/components/schemas/CrateOwnerInvitation"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query parameter string to fetch the next page of results.",
+                          "example": "?seek=c0ffee",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "next_page"
+                      ],
+                      "type": "object"
+                    },
+                    "users": {
+                      "description": "The list of users referenced in the crate owner invitations.",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "invitations",
+                    "users",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "List active crate owner invitations for a crate or user that the currently authenticated user\nis allowed to see.",
+        "tags": [
+          "owners"
         ]
       }
     },

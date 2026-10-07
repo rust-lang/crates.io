@@ -1,6 +1,6 @@
 //! This module should contain all tests that test a single webserver route.
 //!
-//! Each `/api/v1` (or `/api/private`) sub-API should have its own module, with
+//! Each `/api/v1` sub-API should have its own module, with
 //! submodules divided by the specific endpoint (e.g. `list`, `create`, `read`,
 //! `update`, `delete`).
 //!
@@ -13,10 +13,10 @@
 
 pub mod categories;
 pub mod category_slugs;
+mod crate_owner_invitations;
 pub mod crates;
 pub mod keywords;
 pub mod me;
-mod private;
 pub mod session;
 mod site_metadata;
 pub mod summary;

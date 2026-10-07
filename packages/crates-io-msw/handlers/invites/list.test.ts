@@ -28,7 +28,7 @@ test('happy path (invitee_id)', async function () {
     inviter: inviter2,
   });
 
-  let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?invitee_id=${user.id}`);
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
@@ -90,7 +90,7 @@ test('happy path with empty response (invitee_id)', async function () {
   let user = await db.user.create({});
   await db.mswSession.create({ user });
 
-  let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?invitee_id=${user.id}`);
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
@@ -115,13 +115,13 @@ test('happy path with pagination (invitee_id)', async function () {
     await db.crateOwnerInvitation.create({ crate, invitee: user, inviter });
   }
 
-  let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?invitee_id=${user.id}`);
   expect(response.status).toBe(200);
   let responseJSON = await response.json();
   expect(responseJSON['invitations'].length).toBe(10);
   expect(responseJSON.meta['next_page']).toBeTruthy();
 
-  response = await fetch(`/api/private/crate_owner_invitations${responseJSON.meta['next_page']}`);
+  response = await fetch(`/api/v1/crate_owner_invitations${responseJSON.meta['next_page']}`);
   expect(response.status).toBe(200);
   responseJSON = await response.json();
   expect(responseJSON['invitations'].length).toBe(5);
@@ -154,7 +154,7 @@ test('happy path (crate_name)', async function () {
     inviter: inviter2,
   });
 
-  let response = await fetch(`/api/private/crate_owner_invitations?crate_name=ember-rs`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?crate_name=ember-rs`);
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
@@ -196,7 +196,7 @@ test('happy path (crate_name)', async function () {
 });
 
 test('returns 403 if unauthenticated', async function () {
-  let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=42`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?invitee_id=42`);
   expect(response.status).toBe(403);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
@@ -213,7 +213,7 @@ test('returns 400 if query params are missing', async function () {
   let user = await db.user.create({});
   await db.mswSession.create({ user });
 
-  let response = await fetch(`/api/private/crate_owner_invitations`);
+  let response = await fetch(`/api/v1/crate_owner_invitations`);
   expect(response.status).toBe(400);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
@@ -230,7 +230,7 @@ test("returns 404 if crate can't be found", async function () {
   let user = await db.user.create({});
   await db.mswSession.create({ user });
 
-  let response = await fetch(`/api/private/crate_owner_invitations?crate_name=foo`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?crate_name=foo`);
   expect(response.status).toBe(404);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
@@ -247,7 +247,7 @@ test('returns 403 if requesting for other user', async function () {
   let user = await db.user.create({});
   await db.mswSession.create({ user });
 
-  let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id + 1}`);
+  let response = await fetch(`/api/v1/crate_owner_invitations?invitee_id=${user.id + 1}`);
   expect(response.status).toBe(403);
   expect(await response.json()).toMatchInlineSnapshot(`
     {
