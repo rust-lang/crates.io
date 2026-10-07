@@ -1,6 +1,6 @@
 import type { operations } from '@crates-io/api-client';
 
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
