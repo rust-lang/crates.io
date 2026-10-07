@@ -58,7 +58,7 @@
     return homepage && (!repository || simplifyUrl(repository) !== simplifyUrl(homepage));
   });
 
-  let reportUrl = $derived(`${resolve('/support')}?crate=${encodeURIComponent(crate.name)}&inquire=crate-violation`);
+  let reportUrl = $derived(resolve(`/support?crate=${encodeURIComponent(crate.name)}&inquire=crate-violation`));
 
   let purl = $derived(getPurl(crate.name, version.num));
 
@@ -255,7 +255,6 @@
     {/await}
 
     {#if session.currentUser}
-      <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a href={reportUrl} data-test-id="link-crate-report" class="report-button button button--red button--small">
         Report crate
       </a>
