@@ -102,7 +102,7 @@
     });
     let lineHref = (hash ? `${href}${hash}` : href) as typeof href;
 
-    void goto(lineHref, { reset: false, replaceState: true });
+    void goto(lineHref, { reset: false, replace: true });
   }
 </script>
 

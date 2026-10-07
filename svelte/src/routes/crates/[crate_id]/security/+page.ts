@@ -9,6 +9,6 @@ export async function load({ fetch, params }) {
     let advisories = await fetchAdvisories(fetch, crateName);
     return { advisories: enrichAdvisories(advisories) };
   } catch {
-    error(500, { message: `${crateName}: Failed to load advisories`, tryAgain: true });
+    error(500, `${crateName}: Failed to load advisories`, { tryAgain: true });
   }
 }

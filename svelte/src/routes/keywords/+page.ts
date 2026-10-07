@@ -17,7 +17,7 @@ export async function load({ fetch, url }) {
 }
 
 function loadKeywordsError(status: number): never {
-  error(status, { message: 'Failed to load keywords', tryAgain: true });
+  error(status, 'Failed to load keywords', { tryAgain: true });
 }
 
 async function loadKeywords(

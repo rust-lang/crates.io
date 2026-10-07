@@ -26,9 +26,9 @@ export async function load({ fetch, params, url }) {
 
 function loadTeamError(login: string, status: number): never {
   if (status === 404) {
-    error(404, { message: `${login}: Team not found` });
+    error(404, `${login}: Team not found`);
   } else {
-    error(status, { message: `${login}: Failed to load team data`, tryAgain: true });
+    error(status, `${login}: Failed to load team data`, { tryAgain: true });
   }
 }
 

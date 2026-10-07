@@ -42,5 +42,5 @@ async function loadDependencies(client: ReturnType<typeof createClient>, name: s
 }
 
 function loadDependenciesError(name: string, status: number): never {
-  error(status, { message: `${name}: Failed to load dependencies`, tryAgain: true });
+  error(status, `${name}: Failed to load dependencies`, { tryAgain: true });
 }

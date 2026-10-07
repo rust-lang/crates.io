@@ -37,6 +37,6 @@
       notifications.error('Unknown error in email confirmation');
     }
 
-    await goto(resolve('/'), { replaceState: true });
+    await goto(resolve('/'), { replace: true });
   });
 </script>

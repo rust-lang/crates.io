@@ -6,7 +6,7 @@ export async function load({ fetch, parent }) {
   let user = await userPromise;
 
   if (!user) {
-    error(401, { message: 'This page requires authentication', loginNeeded: true });
+    error(401, 'This page requires authentication', { loginNeeded: true });
   }
 
   let client = createClient({ fetch });
@@ -28,7 +28,7 @@ export async function load({ fetch, parent }) {
 }
 
 function loadError(status: number): never {
-  error(status, { message: 'Failed to load dashboard data', tryAgain: true });
+  error(status, 'Failed to load dashboard data', { tryAgain: true });
 }
 
 type Client = ReturnType<typeof createClient>;

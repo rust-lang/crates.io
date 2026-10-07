@@ -51,7 +51,7 @@
 
       await session.completeLogin();
       // eslint-disable-next-line svelte/no-navigation-without-resolve -- returnTo is validated against the current origin.
-      await goto(returnTo, { invalidateAll: true });
+      await goto(returnTo, { refreshAll: true });
     } catch {
       errorMessage = SIGNUP_ERROR_MESSAGE;
     } finally {

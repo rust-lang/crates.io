@@ -17,7 +17,7 @@ export async function load({ fetch, parent }) {
 }
 
 function loadError(status: number): never {
-  error(status, { message: 'Failed to load crate data', tryAgain: true });
+  error(status, 'Failed to load crate data', { tryAgain: true });
 }
 
 async function loadGitHubConfigs(client: ReturnType<typeof createClient>, crateName: string) {

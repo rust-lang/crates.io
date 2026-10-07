@@ -21,12 +21,12 @@ export async function load({ fetch, params, parent }) {
       params: { path: { name: crateName } },
     });
   } catch {
-    error(500, { message: `${crate.name}: Failed to load version data`, tryAgain: true });
+    error(500, `${crate.name}: Failed to load version data`, { tryAgain: true });
   }
 
   let status = response.response.status;
   if (response.error) {
-    error(status, { message: `${crate.name}: Failed to load version data`, tryAgain: true });
+    error(status, `${crate.name}: Failed to load version data`, { tryAgain: true });
   }
 
   let versions = response.data.versions;
@@ -40,5 +40,5 @@ export async function load({ fetch, params, parent }) {
     redirect(302, resolve('/crates/[crate_id]/[version_num]', { crate_id: crateName, version_num: versionNum }));
   }
 
-  error(404, { message: `${crate.name}: No matching version found for ${range}` });
+  error(404, `${crate.name}: No matching version found for ${range}`);
 }

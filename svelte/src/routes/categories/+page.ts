@@ -17,7 +17,7 @@ export async function load({ fetch, url }) {
 }
 
 function loadCategoriesError(status: number): never {
-  error(status, { message: 'Failed to load categories', tryAgain: true });
+  error(status, 'Failed to load categories', { tryAgain: true });
 }
 
 async function loadCategories(

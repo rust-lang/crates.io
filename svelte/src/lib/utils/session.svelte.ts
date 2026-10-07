@@ -216,7 +216,7 @@ export class SessionState {
       }
 
       let returnTo = page.url.pathname + page.url.search + page.url.hash;
-      await goto(resolve(`/signup?${new SvelteURLSearchParams({ returnTo })}`), { invalidateAll: true });
+      await goto(resolve(`/signup?${new SvelteURLSearchParams({ returnTo })}`), { refreshAll: true });
       return;
     }
 
