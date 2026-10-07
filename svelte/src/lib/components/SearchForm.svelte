@@ -30,8 +30,7 @@
 
   function search(event: SubmitEvent) {
     event.preventDefault();
-    // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() doesn't support query params
-    goto(`${resolve('/search')}?q=${encodeURIComponent(searchFormContext.value)}`, { keepFocus: true });
+    goto(resolve(`/search?q=${encodeURIComponent(searchFormContext.value)}`), { keepFocus: true });
   }
 
   function handleKeydown(event: KeyboardEvent) {

@@ -216,10 +216,7 @@ export class SessionState {
       }
 
       let returnTo = page.url.pathname + page.url.search + page.url.hash;
-      let targetUrl = `${resolve('/signup')}?${new SvelteURLSearchParams({ returnTo })}`;
-
-      // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() does not accept query parameters.
-      await goto(targetUrl, { invalidateAll: true });
+      await goto(resolve(`/signup?${new SvelteURLSearchParams({ returnTo })}`), { invalidateAll: true });
       return;
     }
 

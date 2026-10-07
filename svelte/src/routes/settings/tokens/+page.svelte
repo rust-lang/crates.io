@@ -204,15 +204,13 @@
             {/if}
 
             <div class="actions">
-              <!-- eslint-disable svelte/no-navigation-without-resolve -->
               <a
-                href={`${resolve('/settings/tokens/new')}?from=${token.id}`}
+                href={resolve(`/settings/tokens/new?from=${token.id}`)}
                 class="regenerate-button button button--small"
                 data-test-regenerate-token-button
               >
                 Regenerate
               </a>
-              <!-- eslint-enable svelte/no-navigation-without-resolve -->
               {#if !isExpired(token)}
                 <button
                   type="button"

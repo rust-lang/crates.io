@@ -23,7 +23,7 @@
 <div class="lists" data-test-lists>
   <ListSection
     title="New Crates"
-    href={`${resolve('/crates')}?sort=new`}
+    href={resolve('/crates?sort=new')}
     items={summary?.new_crates}
     withSubtitle
     withTrailing
@@ -42,7 +42,7 @@
 
   <ListSection
     title="Most Downloaded"
-    href={`${resolve('/crates')}?sort=downloads`}
+    href={resolve('/crates?sort=downloads')}
     items={summary?.most_downloaded}
     withSubtitle
     withTrailing
@@ -61,7 +61,7 @@
 
   <ListSection
     title="Just Updated"
-    href={`${resolve('/crates')}?sort=recent-updates`}
+    href={resolve('/crates?sort=recent-updates')}
     items={summary?.just_updated}
     withSubtitle
     withTrailing
@@ -83,7 +83,7 @@
 
   <ListSection
     title="Most Recent Downloads"
-    href={`${resolve('/crates')}?sort=recent-downloads`}
+    href={resolve('/crates?sort=recent-downloads')}
     items={summary?.most_recently_downloaded}
     withSubtitle
     withTrailing
