@@ -84,32 +84,6 @@ impl From<Category> for EncodableCategory {
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
-#[schema(as = LegacyCrateOwnerInvitation)]
-pub struct EncodableCrateOwnerInvitationV1 {
-    /// The ID of the user who was invited to be a crate owner.
-    #[schema(example = 42)]
-    pub invitee_id: i32,
-    /// The ID of the user who sent the invitation.
-    #[schema(example = 3)]
-    pub inviter_id: i32,
-    /// The username of the user who sent the invitation.
-    #[schema(example = "ghost")]
-    pub invited_by_username: String,
-    /// The name of the crate that the user was invited to be an owner of.
-    #[schema(example = "serde")]
-    pub crate_name: String,
-    /// The ID of the crate that the user was invited to be an owner of.
-    #[schema(example = 123)]
-    pub crate_id: i32,
-    /// The date and time this invitation was created.
-    #[schema(example = "2019-12-13T13:46:41Z")]
-    pub created_at: DateTime<Utc>,
-    /// The date and time this invitation will expire.
-    #[schema(example = "2020-01-13T13:46:41Z")]
-    pub expires_at: DateTime<Utc>,
-}
-
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
 #[schema(as = CrateOwnerInvitation)]
 pub struct EncodableCrateOwnerInvitation {
     /// The ID of the user who was invited to be a crate owner.
@@ -1326,30 +1300,6 @@ mod tests {
         let json = serde_json::to_string(&crt).unwrap();
         assert_some!(json.as_str().find(r#""updated_at":"2017-01-06T14:23:11Z""#));
         assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:12Z""#));
-    }
-
-    #[test]
-    fn crate_owner_invitation_serializes_to_rfc3339() {
-        let inv = EncodableCrateOwnerInvitationV1 {
-            invitee_id: 1,
-            inviter_id: 2,
-            invited_by_username: "".to_string(),
-            crate_name: "".to_string(),
-            crate_id: 123,
-            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
-                .unwrap()
-                .and_hms_opt(14, 23, 11)
-                .unwrap()
-                .and_utc(),
-            expires_at: NaiveDate::from_ymd_opt(2020, 10, 24)
-                .unwrap()
-                .and_hms_opt(16, 30, 00)
-                .unwrap()
-                .and_utc(),
-        };
-        let json = serde_json::to_string(&inv).unwrap();
-        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
-        assert_some!(json.as_str().find(r#""expires_at":"2020-10-24T16:30:00Z""#));
     }
 
     #[test]

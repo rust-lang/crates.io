@@ -39,13 +39,6 @@ async fn me_token_is_not_cached() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn me_crate_owner_invitations_is_not_cached() {
-    let (_, _, user) = TestApp::init().with_user().await;
-    let response = user.get::<()>("/api/v1/me/crate_owner_invitations").await;
-    response.assert_cache_control("no-store");
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn private_crate_owner_invitations_is_not_cached() {
     let (_, _, user) = TestApp::init().with_user().await;
     let id = user.as_model().id;

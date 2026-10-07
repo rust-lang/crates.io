@@ -9,10 +9,7 @@ use crate::server::ServerContext;
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
 use crate::util::no_store;
-use crate::views::{
-    EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
-    InvitationResponse,
-};
+use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::TypedHeader;
@@ -27,71 +24,6 @@ use http::request::Parts;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-
-#[derive(Serialize, utoipa::ToSchema)]
-pub struct LegacyListResponse {
-    /// The list of crate owner invitations.
-    crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
-
-    /// The list of users referenced in the crate owner invitations.
-    users: Vec<EncodablePublicUser>,
-}
-
-/// List all crate owner invitations for the authenticated user.
-#[utoipa::path(
-    get,
-    path = "/api/v1/me/crate_owner_invitations",
-    security(("cookie" = [])),
-    tag = "owners",
-    extensions(("x-internal" = json!(true))),
-    responses(
-        (status = 200, description = "Successful Response", body = inline(LegacyListResponse)),
-        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
-        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
-    ),
-)]
-pub async fn list_crate_owner_invitations_for_user(
-    ctx: ServerContext,
-    req: Parts,
-) -> AppResult<(TypedHeader<CacheControl>, Json<LegacyListResponse>)> {
-    let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-
-    let user_id = auth.user_id();
-
-    let PrivateListResponse {
-        invitations, users, ..
-    } = prepare_list(&ctx, &req, auth, ListFilter::InviteeId(user_id), &conn).await?;
-
-    // The schema for the private endpoints is converted to the schema used by v1 endpoints.
-    let crate_owner_invitations = invitations
-        .into_iter()
-        .map(|private| {
-            Ok(EncodableCrateOwnerInvitationV1 {
-                invited_by_username: users
-                    .iter()
-                    .find(|u| u.id == private.inviter_id)
-                    .ok_or_else(|| internal(format!("missing user {}", private.inviter_id)))?
-                    .login
-                    .clone(),
-                invitee_id: private.invitee_id,
-                inviter_id: private.inviter_id,
-                crate_name: private.crate_name,
-                crate_id: private.crate_id,
-                created_at: private.created_at,
-                expires_at: private.expires_at,
-            })
-        })
-        .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
-
-    Ok((
-        no_store(),
-        Json(LegacyListResponse {
-            crate_owner_invitations,
-            users,
-        }),
-    ))
-}
 
 /// Query parameters for listing crate owner invitations.
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
