@@ -31,8 +31,9 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     await page.click('[data-test-semver-sort] a');
 
     await expect(page).toHaveURL(/sort=semver/);
-    versions = await page.locator('[data-test-version]').evaluateAll(el => el.map(it => it.dataset.testVersion));
-    expect(versions).toEqual(['0.3.0', '0.2.1', '0.2.0', '0.1.0']);
+    await expect
+      .poll(() => page.locator('[data-test-version]').evaluateAll(el => el.map(it => it.dataset.testVersion)))
+      .toEqual(['0.3.0', '0.2.1', '0.2.0', '0.1.0']);
   });
 
   test('shows correct release tracks label after yanking/unyanking', async ({ page, msw }) => {
