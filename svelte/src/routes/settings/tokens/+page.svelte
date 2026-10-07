@@ -2,7 +2,7 @@
   import type { components } from '@crates-io/api-client';
 
   import { onDestroy } from 'svelte';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { resolve } from '$app/paths';
   import { createClient } from '@crates-io/api-client';
   import { formatDistanceToNow } from 'date-fns';
