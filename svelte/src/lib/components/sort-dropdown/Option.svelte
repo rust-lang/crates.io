@@ -15,7 +15,7 @@
   let { query, children, ...restProps }: Props = $props();
 
   let url = $derived.by(() => {
-    let params = new SvelteURLSearchParams(page.url.searchParams);
+    let params = new SvelteURLSearchParams(page.url.search);
     for (let [key, value] of Object.entries(query)) {
       params.set(key, value);
     }

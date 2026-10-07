@@ -24,12 +24,12 @@
   let returnTo = $derived.by(() => {
     let url = page.url;
     try {
-      let destination = new URL(url.searchParams.get('returnTo') || '/', url);
+      let destination = new URL(url.searchParams.get('returnTo') || '/', url.href);
       if (destination.origin === url.origin) return destination;
     } catch {
       // Malformed destinations use the same fallback as external ones.
     }
-    return new URL('/', url);
+    return new URL('/', url.href);
   });
 
   async function submit(event: SubmitEvent) {
