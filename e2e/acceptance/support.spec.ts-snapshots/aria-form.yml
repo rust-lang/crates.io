@@ -96,4 +96,3 @@
     - listitem:
       - 'link "X: @cratesiostatus"':
         - /url: https://twitter.com/cratesiostatus
-- text: "crates.io: Rust Package Registry"
