@@ -28,9 +28,12 @@
     }
   });
 
-  function search(event: SubmitEvent) {
+  async function search(event: SubmitEvent) {
     event.preventDefault();
-    goto(resolve(`/search?q=${encodeURIComponent(searchFormContext.value)}`), { keepFocus: true });
+    // `reset: false` keeps focus in the search input, but also skips the scroll
+    // reset, so scroll to the top manually like a regular navigation would.
+    await goto(resolve(`/search?q=${encodeURIComponent(searchFormContext.value)}`), { reset: false });
+    globalThis.scrollTo(0, 0);
   }
 
   function handleKeydown(event: KeyboardEvent) {
