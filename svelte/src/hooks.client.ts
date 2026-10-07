@@ -18,12 +18,7 @@ export async function init() {
       http.get('https://code.cdn.mozilla.net/fonts/*', passthrough),
     );
 
-    // We need to dynamically import `$app/paths` here to avoid a race condition during app startup,
-    // resulting in a "ReferenceError: __SVELTEKIT_PAYLOAD__ is not defined" error.
-    let { asset } = await import('$app/paths');
-
     await worker.start({
-      serviceWorker: { url: asset('/mockServiceWorker.js') },
       onUnhandledFrame({ frame, defaults }) {
         if (frame instanceof HttpNetworkFrame && !frame.data.request.url.startsWith(globalThis.location.origin)) {
           defaults.error();
