@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { afterNavigate, goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
 
   import Icon from '#lib/components/Icon.svelte';
@@ -19,11 +20,11 @@
   // Svelte only sets the attribute on mount and never removes it, and
   // SvelteKit's `reset_focus()` refocuses any `[autofocus]` element after
   // each client-side navigation, which would steal focus back to the
-  // search bar on every nav once the attribute has been set.
-  let hasAutoFocused = false;
-  afterNavigate(() => {
-    if (autofocus && !hasAutoFocused) {
-      hasAutoFocused = true;
+  // search bar on every nav once the attribute has been set. `afterNavigate()`
+  // is not an option either, because SvelteKit can run the callbacks of the
+  // initial navigation before this component has mounted.
+  onMount(() => {
+    if (autofocus) {
       inputElement?.focus();
     }
   });
