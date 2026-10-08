@@ -71,7 +71,7 @@ pub async fn deprecated_private_list_crate_owner_invitations(
 /// authenticated user is allowed to see. At least one valid parameter is required.
 ///
 /// If a `crate_name` parameter is specified, return the outstanding, active invitations for that
-/// crate, if the currenty authenticated user is an owner of the crate.
+/// crate, if the currently authenticated user is an owner of the crate.
 ///
 /// If an `invitee_id` parameter is specified and equals the currently authenticated user, return
 /// the outstanding, active invitations that the authenticated user has received.
