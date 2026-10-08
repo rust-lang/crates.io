@@ -192,12 +192,12 @@ export interface paths {
         };
         /**
          * List crate owner invitations according to the specified parameters that the currently
-         *     authenticated user is allowed to see.
+         *     authenticated user is allowed to see. At least one valid parameter is required.
          * @description If a `crate_name` parameter is specified, return the outstanding, active invitations for that
-         *     crate, if the currenty authenticated user is an owner of the crate.
+         *     crate, if the currently authenticated user is an owner of the crate.
          *
-         *     If no parameters are specified, return the outstanding, active invitations that the
-         *     authenticated user has received.
+         *     If an `invitee_id` parameter is specified and equals the currently authenticated user, return
+         *     the outstanding, active invitations that the authenticated user has received.
          */
         get: operations["list_crate_owner_invitations"];
         put?: never;
