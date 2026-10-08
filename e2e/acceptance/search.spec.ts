@@ -104,6 +104,25 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
       await expect(page.locator('[data-test-search-input]')).toBeFocused();
     });
 
+    test('submitting the search form with Enter scrolls to the top', async ({ page, msw }) => {
+      await loadFixtures(msw.db);
+      await page.setViewportSize({ width: 1280, height: 400 });
+
+      await page.goto('/');
+      await expect(page.locator('[data-test-search-input]')).toBeFocused();
+      await expect(page.locator('[data-test-just-updated] [data-test-crate-link="0"]')).toBeVisible();
+
+      // Typing scrolls the focused input into view, so scroll down afterwards.
+      await page.keyboard.type('rust');
+      await page.evaluate(() => globalThis.scrollTo(0, 500));
+      await expect.poll(() => page.evaluate(() => globalThis.scrollY)).toBeGreaterThan(0);
+      await page.keyboard.press('Enter');
+
+      await expect(page).toHaveURL('/search?q=rust');
+      await expect.poll(() => page.evaluate(() => globalThis.scrollY)).toBe(0);
+      await expect(page.locator('[data-test-search-input]')).toBeFocused();
+    });
+
     test('focus is not stolen when navigating from the front page', async ({ page, msw }) => {
       let crate = await msw.db.crate.create({ name: 'nanomsg' });
       await msw.db.version.create({ crate, num: '0.6.1' });
