@@ -654,23 +654,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/me/crate_owner_invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all crate owner invitations for the authenticated user. */
-        get: operations["list_crate_owner_invitations_for_user"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/me/crate_owner_invitations/accept/{token}": {
         parameters: {
             query?: never;
@@ -1497,48 +1480,6 @@ export interface components {
              * @example http
              */
             keyword: string;
-        };
-        LegacyCrateOwnerInvitation: {
-            /**
-             * Format: int32
-             * @description The ID of the crate that the user was invited to be an owner of.
-             * @example 123
-             */
-            crate_id: number;
-            /**
-             * @description The name of the crate that the user was invited to be an owner of.
-             * @example serde
-             */
-            crate_name: string;
-            /**
-             * Format: date-time
-             * @description The date and time this invitation was created.
-             * @example 2019-12-13T13:46:41Z
-             */
-            created_at: string;
-            /**
-             * Format: date-time
-             * @description The date and time this invitation will expire.
-             * @example 2020-01-13T13:46:41Z
-             */
-            expires_at: string;
-            /**
-             * @description The username of the user who sent the invitation.
-             * @example ghost
-             */
-            invited_by_username: string;
-            /**
-             * Format: int32
-             * @description The ID of the user who was invited to be a crate owner.
-             * @example 42
-             */
-            invitee_id: number;
-            /**
-             * Format: int32
-             * @description The ID of the user who sent the invitation.
-             * @example 3
-             */
-            inviter_id: number;
         };
         /** @description This type contains public data for an external account of a crates.io user. */
         LinkedAccount: {
@@ -4269,49 +4210,6 @@ export interface operations {
                         }[];
                         /** @description The authenticated user. */
                         user: components["schemas"]["AuthenticatedUser"];
-                    };
-                };
-            };
-            /** @description Client Error */
-            "4XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Server Error */
-            "5XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    list_crate_owner_invitations_for_user: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description The list of crate owner invitations. */
-                        crate_owner_invitations: components["schemas"]["LegacyCrateOwnerInvitation"][];
-                        /** @description The list of users referenced in the crate owner invitations. */
-                        users: components["schemas"]["User"][];
                     };
                 };
             };
