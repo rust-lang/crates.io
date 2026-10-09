@@ -98,7 +98,6 @@ impl<'a> MarkdownRenderer<'a> {
             .multiline_block_quotes(true)
             .strikethrough(true)
             .table(true)
-            .tagfilter(true)
             .tasklist(true)
             .header_id_prefix("user-content-".to_string())
             .header_id_prefix_in_href(true)
@@ -359,18 +358,15 @@ mod tests {
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r"
-        <p>foo_readme</p>
-        &lt;script&gt;alert('Hello World')&lt;/script&gt;
-        ");
+        assert_snapshot!(markdown_to_html(text, None, ""), @"<p>foo_readme</p>");
     }
 
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r"
+        assert_snapshot!(markdown_to_html(text, None, ""), @"
         <p>foo_readme</p>
-        &lt;iframe&gt;alert('Hello World')&lt;/iframe&gt;
+        alert('Hello World')
         ");
     }
 
