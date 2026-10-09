@@ -3,7 +3,7 @@ import { createClient } from '@crates-io/api-client';
 import { error, redirect } from '@sveltejs/kit';
 import maxSatisfying from 'semver/ranges/max-satisfying';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 function cargoRangeToNpm(range: string): string {
   return range.replace(',', ' ');
@@ -17,23 +17,11 @@ export async function load({ fetch, params, parent }) {
 
   let client = createClient({ fetch });
 
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}/versions', {
-      params: { path: { name: crateName } },
-    });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    error(504, `${crate.name}: Failed to load version data`, { tryAgain: true });
-  }
+  let { versions } = await loadApi(
+    client.GET('/api/v1/crates/{name}/versions', { params: { path: { name: crateName } } }),
+    { message: `${crate.name}: Failed to load version data` },
+  );
 
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    error(status, `${crate.name}: Failed to load version data`, { details, tryAgain: isRetryableStatus(status) });
-  }
-
-  let versions = response.data.versions;
   let allVersionNums = versions.map(v => v.num);
   let unyankedVersionNums = versions.filter(v => !v.yanked).map(v => v.num);
 
