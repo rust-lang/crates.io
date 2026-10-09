@@ -1,9 +1,7 @@
-import type { paths } from '@crates-io/api-client';
-
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 export async function load({ fetch, parent, url }) {
   let { userPromise } = await parent();
@@ -19,31 +17,10 @@ export async function load({ fetch, parent, url }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'alpha';
 
-  let cratesResponse = await loadCrates(client, { page, per_page: perPage, sort, following: '1' });
+  let cratesResponse = await loadApi(
+    client.GET('/api/v1/crates', { params: { query: { page, per_page: perPage, sort, following: '1' } } }),
+    { message: 'Failed to load followed crates' },
+  );
 
   return { cratesResponse, page, perPage, sort };
-}
-
-function loadCratesError(status: number, details?: string): never {
-  error(status, 'Failed to load followed crates', { details, tryAgain: isRetryableStatus(status) });
-}
-
-async function loadCrates(
-  client: ReturnType<typeof createClient>,
-  query: paths['/api/v1/crates']['get']['parameters']['query'],
-) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch {
-    loadCratesError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadCratesError(status, details);
-  }
-
-  return response.data;
 }
