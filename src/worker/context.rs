@@ -16,6 +16,7 @@ use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepo;
 use crates_io_worker::BackgroundJob;
+use crates_io_zulip::ZulipClient;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use object_store::ObjectStore;
@@ -24,7 +25,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::OnceCell;
-use tracing::{info, instrument};
+use tracing::{info, instrument, warn};
 
 /// Components shared across background worker jobs.
 #[doc(hidden)]
@@ -54,6 +55,7 @@ pub struct WorkerContextInner {
     pub sync_github_app: Option<Arc<dyn GitHubApp>>,
     pub github: Arc<dyn GitHubClient>,
     pub docs_rs: Option<Box<dyn DocsRsClient>>,
+    pub zulip: Option<Box<dyn ZulipClient>>,
     pub og_image_generator: Option<OgImageGenerator>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
@@ -141,6 +143,21 @@ impl WorkerContext {
             .await
             .as_ref()
             .map_err(|e| e.clone())
+    }
+
+    /// Posts a message to the given Zulip channel and topic, if Zulip is
+    /// configured.
+    ///
+    /// Failures are only logged, since they must not fail the calling job.
+    pub(crate) async fn post_to_zulip(&self, channel: &str, topic: &str, content: &str) {
+        let Some(zulip) = &self.zulip else {
+            return;
+        };
+
+        let result = zulip.send_channel_message(channel, topic, content).await;
+        if let Err(error) = result {
+            warn!("Failed to post message to Zulip: {error:#}");
+        }
     }
 }
 

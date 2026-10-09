@@ -5,6 +5,7 @@ use crates_io::worker::jobs;
 use crates_io_github::{GitCommit, GitObject, GitRef, MockGitHubClient};
 use crates_io_worker::BackgroundJob;
 use diesel_async::RunQueryDsl;
+use insta::assert_snapshot;
 use url::Url;
 
 const OWNER: &str = "rust-lang";
@@ -140,6 +141,11 @@ async fn squash_index() {
     let conn = app.db_conn().await;
     assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
     app.run_pending_background_jobs().await;
+
+    assert_snapshot!(app.zulip_snapshot(), @"
+    #t-crates-io > index squashing: Squashing the index into a single commit…
+    #t-crates-io > index squashing: Squashed the index into a [single commit](https://github.com/rust-lang/crates.io-index/commit/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb) and moved the previous history to the `snapshot-[date]` branch.
+    ");
 }
 
 /// If `master` has moved between the initial read and the drift check, the
@@ -171,6 +177,11 @@ async fn squash_index_bails_on_master_drift() {
     assert_ok!(jobs::SquashIndex.enqueue(&conn).await);
     let err = app.try_run_pending_background_jobs().await.unwrap_err();
     assert_eq!(err.to_string(), "1 jobs failed");
+
+    assert_snapshot!(app.zulip_snapshot(), @"
+    #t-crates-io > index squashing: Squashing the index into a single commit…
+    #t-crates-io > index squashing: Squashing the index failed. See the logs for details.
+    ");
 
     // Drain the failed job so the `TestAppInner::drop` empty-queue
     // post-condition is satisfied.

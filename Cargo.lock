@@ -1672,6 +1672,7 @@ dependencies = [
  "crates_io_validation",
  "crates_io_version",
  "crates_io_worker",
+ "crates_io_zulip",
  "csv",
  "deadpool-runtime",
  "derive_more",
@@ -2198,6 +2199,27 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "crates_io_zulip"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bon",
+ "claims",
+ "clap",
+ "crates_io_version",
+ "mockall",
+ "mockito",
+ "reqwest",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -6406,6 +6428,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tokio-native-tls",

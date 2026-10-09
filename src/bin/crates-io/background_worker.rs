@@ -32,6 +32,7 @@ use crates_io_index::RepositoryConfig;
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepoImpl;
 use crates_io_worker::Runner;
+use crates_io_zulip::RealZulipClient;
 use object_store::prefix::PrefixStore;
 use reqwest::Client;
 use std::sync::Arc;
@@ -98,6 +99,15 @@ pub fn run(mut config: SharedConfig) -> anyhow::Result<()> {
 
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
 
+    let zulip = config.zulip.as_ref().map(|config| {
+        let client = RealZulipClient::builder()
+            .bot_email(&config.bot_email)
+            .api_key(config.api_key.clone())
+            .build();
+
+        Box::new(client) as _
+    });
+
     let github: Arc<dyn GitHubClient> = Arc::new(RealGitHubClient::new(http_client));
     let index_sync_github_app = build_index_sync_github_app(config.index_archive_url.as_ref())?;
     let sync_github_app = build_sync_github_app()?;
@@ -116,6 +126,7 @@ pub fn run(mut config: SharedConfig) -> anyhow::Result<()> {
         .deadpool(deadpool.clone())
         .emails(emails)
         .maybe_docs_rs(docs_rs)
+        .maybe_zulip(zulip)
         .team_repo(Box::new(team_repo))
         .maybe_index_sync_github_app(index_sync_github_app)
         .maybe_sync_github_app(sync_github_app)

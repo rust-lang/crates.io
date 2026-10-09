@@ -5,6 +5,7 @@ use crates_io::worker::jobs;
 use crates_io_github::{GitHubAuth, MockGitHubClient};
 use crates_io_worker::BackgroundJob;
 use diesel_async::RunQueryDsl;
+use insta::assert_snapshot;
 use secrecy::ExposeSecret;
 
 const INDEX_URL: &str = "https://github.com/rust-lang/crates.io-index.git";
@@ -36,6 +37,8 @@ async fn delete_archived_index_branch() {
     let job = jobs::DeleteArchivedIndexBranch::new("snapshot-test");
     assert_ok!(job.enqueue(&conn).await);
     app.run_pending_background_jobs().await;
+
+    assert_snapshot!(app.zulip_snapshot(), @"#t-crates-io > index squashing: Deleted the archived `snapshot-test` branch from the index repository.");
 }
 
 /// Rejects an unrelated branch before making a GitHub request.
@@ -58,6 +61,7 @@ async fn rejects_non_snapshot_branch() {
 
     let error = app.try_run_pending_background_jobs().await.unwrap_err();
     assert_eq!(error.to_string(), "1 jobs failed");
+    assert_snapshot!(app.zulip_snapshot(), @"");
 
     diesel::delete(background_jobs::table)
         .execute(&mut conn)

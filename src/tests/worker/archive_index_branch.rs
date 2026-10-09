@@ -66,6 +66,11 @@ async fn archive_index_branch() {
     assert_eq!(job_type, jobs::DeleteArchivedIndexBranch::JOB_NAME);
     assert_eq!(data, serde_json::json!({ "branch": SNAPSHOT_BRANCH }));
 
+    assert_snapshot!(app.zulip_snapshot(), @"
+    #t-crates-io > index squashing: Archiving the `snapshot-test` branch…
+    #t-crates-io > index squashing: The `snapshot-test` branch was copied to the archive repository.
+    ");
+
     diesel::delete(background_jobs::table)
         .execute(&mut conn)
         .await
@@ -86,6 +91,8 @@ async fn archive_index_branch_without_url_configured() {
     let job = jobs::ArchiveIndexBranch::new(SNAPSHOT_BRANCH);
     assert_ok!(job.enqueue(&conn).await);
     app.run_pending_background_jobs().await;
+
+    assert_snapshot!(app.zulip_snapshot(), @"");
 }
 
 /// With an archive URL configured but no index sync GitHub App wired into the
@@ -109,6 +116,11 @@ async fn archive_index_branch_without_index_sync_github_app() {
     let job = jobs::ArchiveIndexBranch::new(SNAPSHOT_BRANCH);
     assert_ok!(job.enqueue(&conn).await);
     assert_snapshot!(app.try_run_pending_background_jobs().await.unwrap_err(), @"1 jobs failed");
+
+    assert_snapshot!(app.zulip_snapshot(), @"
+    #t-crates-io > index squashing: Archiving the `snapshot-test` branch…
+    #t-crates-io > index squashing: Archiving the `snapshot-test` branch failed. See the logs for details.
+    ");
 
     diesel::delete(background_jobs::table)
         .execute(&mut conn)
@@ -135,6 +147,11 @@ async fn archive_index_branch_missing_branch() {
     let job = jobs::ArchiveIndexBranch::new("does-not-exist");
     assert_ok!(job.enqueue(&conn).await);
     assert_snapshot!(app.try_run_pending_background_jobs().await.unwrap_err(), @"1 jobs failed");
+
+    assert_snapshot!(app.zulip_snapshot(), @"
+    #t-crates-io > index squashing: Archiving the `does-not-exist` branch…
+    #t-crates-io > index squashing: Archiving the `does-not-exist` branch failed. See the logs for details.
+    ");
 
     // The archive repo must not have gained a matching branch; we expect a
     // `NotFound` error back with a stable message.

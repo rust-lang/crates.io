@@ -1,4 +1,5 @@
 use crate::worker::WorkerContext;
+use crate::worker::jobs::index::squash::{ZULIP_CHANNEL, ZULIP_TOPIC};
 use anyhow::{Context, anyhow};
 use crates_io_github::{GitHubAuth, parse_github_slug};
 use crates_io_worker::BackgroundJob;
@@ -49,6 +50,11 @@ impl BackgroundJob for DeleteArchivedIndexBranch {
         github.delete_ref(&owner, &repo, &ref_name, &auth).await?;
 
         info!("Deleted snapshot branch `{branch}` from index repository");
+
+        let message = format!("Deleted the archived `{branch}` branch from the index repository.");
+        ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, &message)
+            .await;
+
         Ok(())
     }
 }
