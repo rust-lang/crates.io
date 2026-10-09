@@ -21,7 +21,8 @@ export async function load({ fetch, params, parent }) {
       params: { path: { name: crateName } },
     });
   } catch {
-    error(500, `${crate.name}: Failed to load version data`, { tryAgain: true });
+    // Network errors are treated as `504 Gateway Timeout`
+    error(504, `${crate.name}: Failed to load version data`, { tryAgain: true });
   }
 
   let status = response.response.status;
