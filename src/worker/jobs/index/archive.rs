@@ -72,6 +72,12 @@ impl BackgroundJob for ArchiveIndexBranch {
             return Ok(());
         };
 
+        self.archive(&ctx, archive_url).await
+    }
+}
+
+impl ArchiveIndexBranch {
+    async fn archive(&self, ctx: &WorkerContext, archive_url: &Url) -> anyhow::Result<()> {
         let Some(index_sync_github_app) = ctx.index_sync_github_app.as_ref() else {
             let error =
                 anyhow!("`index_archive_url` is set but index sync GitHub App is not configured");
@@ -260,7 +266,7 @@ impl BackgroundJob for ArchiveIndexBranch {
         info!("Archived snapshot branch ({branch})", branch = self.branch,);
 
         let branch = &self.branch;
-        if let Err(error) = enqueue_branch_deletion(&ctx, branch).await {
+        if let Err(error) = enqueue_branch_deletion(ctx, branch).await {
             warn!("Failed to enqueue `DeleteArchivedIndexBranch` job for `{branch}`: {error:#}");
         }
 

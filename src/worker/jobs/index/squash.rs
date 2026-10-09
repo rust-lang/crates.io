@@ -52,80 +52,84 @@ impl BackgroundJob for SquashIndex {
 
     #[instrument(skip_all)]
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
-        info!("Squashing the index into a single commit via the GitHub API");
-
-        let index_sync_github_app = ctx
-            .index_sync_github_app
-            .as_ref()
-            .ok_or_else(|| anyhow!("index sync GitHub App is not configured"))?;
-
-        let (owner, repo) = parse_github_slug(&ctx.repository_config.index_location)
-            .context("Failed to parse index URL as `owner/repo`")?;
-
-        let github = ctx.github.as_ref();
-
-        let original_head = github
-            .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
-            .await?;
-        let original_sha = original_head.object.sha;
-        info!("Read original HEAD: {original_sha}");
-
-        let original_commit = github
-            .get_commit(&owner, &repo, &original_sha, &GitHubAuth::None)
-            .await?;
-        let tree_sha = original_commit.tree.sha;
-
-        let snapshot_branch = snapshot_branch_name();
-        let message = squash_commit_message(&original_sha, &snapshot_branch);
-
-        let token = index_sync_github_app.installation_token().await?;
-        let auth = GitHubAuth::bearer(token);
-
-        let squash_start = Instant::now();
-        let input = CreateCommit {
-            message: &message,
-            tree: &tree_sha,
-            parents: &[],
-        };
-        let new_commit = github.create_commit(&owner, &repo, &input, &auth).await?;
-        let new_sha = new_commit.sha;
-        let duration = squash_start.elapsed().as_nanos();
-        info!(duration, "Squash commit created: {new_sha}");
-
-        // Create the snapshot ref first so that if anything after this
-        // fails, `master` is still unmoved and the snapshot ref is
-        // harmless (it points at the same SHA as `master`).
-        let snapshot_ref = format!("refs/heads/{snapshot_branch}");
-        github
-            .create_ref(&owner, &repo, &snapshot_ref, &original_sha, &auth)
-            .await?;
-
-        // Best-effort drift check. GitHub has no CAS for refs, so the
-        // `repository` queue is the real primary defense; this only
-        // shrinks the race window.
-        let current_head = github
-            .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
-            .await?;
-        if current_head.object.sha != original_sha {
-            return Err(anyhow!(
-                "`{}` drifted during squash (was {original_sha}, now {})",
-                MASTER_REF,
-                current_head.object.sha
-            ));
-        }
-
-        github
-            .update_ref(&owner, &repo, MASTER_REF, &new_sha, true, &auth)
-            .await?;
-
-        info!("The index has been successfully squashed.");
-
-        if let Err(error) = enqueue_archive_job(&ctx, &snapshot_branch).await {
-            warn!("Failed to enqueue `ArchiveIndexBranch` job for `{snapshot_branch}`: {error}");
-        }
-
-        Ok(())
+        squash_index(&ctx).await
     }
+}
+
+async fn squash_index(ctx: &WorkerContext) -> anyhow::Result<()> {
+    info!("Squashing the index into a single commit via the GitHub API");
+
+    let index_sync_github_app = ctx
+        .index_sync_github_app
+        .as_ref()
+        .ok_or_else(|| anyhow!("index sync GitHub App is not configured"))?;
+
+    let (owner, repo) = parse_github_slug(&ctx.repository_config.index_location)
+        .context("Failed to parse index URL as `owner/repo`")?;
+
+    let github = ctx.github.as_ref();
+
+    let original_head = github
+        .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
+        .await?;
+    let original_sha = original_head.object.sha;
+    info!("Read original HEAD: {original_sha}");
+
+    let original_commit = github
+        .get_commit(&owner, &repo, &original_sha, &GitHubAuth::None)
+        .await?;
+    let tree_sha = original_commit.tree.sha;
+
+    let snapshot_branch = snapshot_branch_name();
+    let message = squash_commit_message(&original_sha, &snapshot_branch);
+
+    let token = index_sync_github_app.installation_token().await?;
+    let auth = GitHubAuth::bearer(token);
+
+    let squash_start = Instant::now();
+    let input = CreateCommit {
+        message: &message,
+        tree: &tree_sha,
+        parents: &[],
+    };
+    let new_commit = github.create_commit(&owner, &repo, &input, &auth).await?;
+    let new_sha = new_commit.sha;
+    let duration = squash_start.elapsed().as_nanos();
+    info!(duration, "Squash commit created: {new_sha}");
+
+    // Create the snapshot ref first so that if anything after this
+    // fails, `master` is still unmoved and the snapshot ref is
+    // harmless (it points at the same SHA as `master`).
+    let snapshot_ref = format!("refs/heads/{snapshot_branch}");
+    github
+        .create_ref(&owner, &repo, &snapshot_ref, &original_sha, &auth)
+        .await?;
+
+    // Best-effort drift check. GitHub has no CAS for refs, so the
+    // `repository` queue is the real primary defense; this only
+    // shrinks the race window.
+    let current_head = github
+        .get_ref(&owner, &repo, MASTER_REF, &GitHubAuth::None)
+        .await?;
+    if current_head.object.sha != original_sha {
+        return Err(anyhow!(
+            "`{}` drifted during squash (was {original_sha}, now {})",
+            MASTER_REF,
+            current_head.object.sha
+        ));
+    }
+
+    github
+        .update_ref(&owner, &repo, MASTER_REF, &new_sha, true, &auth)
+        .await?;
+
+    info!("The index has been successfully squashed.");
+
+    if let Err(error) = enqueue_archive_job(ctx, &snapshot_branch).await {
+        warn!("Failed to enqueue `ArchiveIndexBranch` job for `{snapshot_branch}`: {error}");
+    }
+
+    Ok(())
 }
 
 fn snapshot_branch_name() -> String {
