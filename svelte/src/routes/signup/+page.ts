@@ -1,23 +1,14 @@
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 /** Loads the details for an unfinished signup. */
 export async function load({ fetch }) {
   let client = createClient({ fetch });
-  let result;
-  try {
-    result = await client.GET('/api/private/session/signup');
-  } catch {
-    error(504, 'Failed to load signup details', { tryAgain: true });
-  }
 
-  if (result.error) {
-    let status = result.response.status;
-    let details = result.error.errors?.[0]?.detail;
-    error(status, 'Failed to load signup details', { details, tryAgain: isRetryableStatus(status) });
-  }
+  let { signup } = await loadApi(client.GET('/api/private/session/signup'), {
+    message: 'Failed to load signup details',
+  });
 
-  return { signup: result.data.signup };
+  return { signup };
 }
