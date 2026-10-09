@@ -1,0 +1,30 @@
+[package]
+name = "crates_io_zulip"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[features]
+mock = ["dep:mockall"]
+
+[dependencies]
+async-trait = "=0.1.92"
+bon = "=3.10.2"
+crates_io_version = { path = "../crates_io_version" }
+mockall = { version = "=0.15.0", optional = true }
+reqwest = { version = "=0.13.5", features = ["form"] }
+secrecy = "=0.10.3"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+url = "=2.5.8"
+
+[dev-dependencies]
+anyhow = "=1.0.104"
+claims = "=0.8.0"
+clap = { version = "=4.6.7", features = ["derive", "env"] }
+mockito = "=1.7.2"
+tokio = { version = "=1.53.2", features = ["macros", "rt-multi-thread"] }

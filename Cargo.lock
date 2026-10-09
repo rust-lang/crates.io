@@ -2201,6 +2201,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_zulip"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bon",
+ "claims",
+ "clap",
+ "crates_io_version",
+ "mockall",
+ "mockito",
+ "reqwest",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "crc-fast"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6406,6 +6427,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tokio-native-tls",
