@@ -18,8 +18,8 @@ export async function load({ fetch, url }) {
   return { keywords, page, perPage, sort };
 }
 
-function loadKeywordsError(status: number): never {
-  error(status, 'Failed to load keywords', { tryAgain: isRetryableStatus(status) });
+function loadKeywordsError(status: number, details?: string): never {
+  error(status, 'Failed to load keywords', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadKeywords(
@@ -36,7 +36,8 @@ async function loadKeywords(
 
   let status = response.response.status;
   if (response.error) {
-    loadKeywordsError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadKeywordsError(status, details);
   }
 
   return response.data;

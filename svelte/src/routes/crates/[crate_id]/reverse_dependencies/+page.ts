@@ -54,7 +54,8 @@ async function loadReverseDependencies(client: ReturnType<typeof createClient>, 
 
   let status = response.response.status;
   if (response.error) {
-    loadError(name, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(name, status, details);
   }
 
   return {
@@ -64,6 +65,6 @@ async function loadReverseDependencies(client: ReturnType<typeof createClient>, 
   };
 }
 
-function loadError(name: string, status: number): never {
-  error(status, `${name}: Failed to load dependents`, { tryAgain: isRetryableStatus(status) });
+function loadError(name: string, status: number, details?: string): never {
+  error(status, `${name}: Failed to load dependents`, { details, tryAgain: isRetryableStatus(status) });
 }

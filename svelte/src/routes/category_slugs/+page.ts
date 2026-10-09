@@ -11,8 +11,8 @@ export async function load({ fetch }) {
   return { categorySlugs };
 }
 
-function loadCategorySlugsError(status: number): never {
-  error(status, 'Failed to load category slugs', { tryAgain: isRetryableStatus(status) });
+function loadCategorySlugsError(status: number, details?: string): never {
+  error(status, 'Failed to load category slugs', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCategorySlugs(client: ReturnType<typeof createClient>) {
@@ -26,7 +26,8 @@ async function loadCategorySlugs(client: ReturnType<typeof createClient>) {
 
   let status = response.response.status;
   if (response.error) {
-    loadCategorySlugsError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCategorySlugsError(status, details);
   }
 
   return response.data.category_slugs;

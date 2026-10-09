@@ -24,16 +24,17 @@ async function loadVersion(client: ReturnType<typeof createClient>, name: string
 
   let status = response.response.status;
   if (response.error) {
-    loadVersionError(name, version, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadVersionError(name, version, status, details);
   }
 
   return response.data.version;
 }
 
-function loadVersionError(name: string, version: string, status: number): never {
+function loadVersionError(name: string, version: string, status: number, details?: string): never {
   if (status === 404) {
     error(404, `${name}: Version ${version} not found`);
   } else {
-    error(status, `${name}: Failed to load version data`, { tryAgain: isRetryableStatus(status) });
+    error(status, `${name}: Failed to load version data`, { details, tryAgain: isRetryableStatus(status) });
   }
 }

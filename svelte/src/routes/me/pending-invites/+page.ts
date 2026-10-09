@@ -30,7 +30,8 @@ async function loadInvites(client: Client, userId: number) {
 
   let status = response.response.status;
   if (response.error) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   let { invitations, users } = response.data;
@@ -45,6 +46,6 @@ async function loadInvites(client: Client, userId: number) {
   }));
 }
 
-function loadError(status: number): never {
-  error(status, 'Failed to load pending invites', { tryAgain: isRetryableStatus(status) });
+function loadError(status: number, details?: string): never {
+  error(status, 'Failed to load pending invites', { details, tryAgain: isRetryableStatus(status) });
 }

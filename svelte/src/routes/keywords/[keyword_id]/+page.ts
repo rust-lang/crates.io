@@ -20,8 +20,8 @@ export async function load({ fetch, url, params }) {
   return { keyword, cratesResponse, page, perPage, sort, maxPages: MAX_PAGES };
 }
 
-function loadCratesError(keyword: string, status: number): never {
-  error(status, `${keyword}: Failed to load crates`, { tryAgain: isRetryableStatus(status) });
+function loadCratesError(keyword: string, status: number, details?: string): never {
+  error(status, `${keyword}: Failed to load crates`, { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCrates(
@@ -39,7 +39,8 @@ async function loadCrates(
 
   let status = response.response.status;
   if (response.error) {
-    loadCratesError(keyword, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCratesError(keyword, status, details);
   }
 
   return response.data;

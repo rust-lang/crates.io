@@ -26,11 +26,11 @@ export async function load({ fetch, params, url }) {
   return { team, cratesResponse, page, perPage, sort };
 }
 
-function loadTeamError(login: string, status: number): never {
+function loadTeamError(login: string, status: number, details?: string): never {
   if (status === 404) {
     error(404, `${login}: Team not found`);
   } else {
-    error(status, `${login}: Failed to load team data`, { tryAgain: isRetryableStatus(status) });
+    error(status, `${login}: Failed to load team data`, { details, tryAgain: isRetryableStatus(status) });
   }
 }
 
@@ -45,7 +45,8 @@ async function loadTeam(client: ReturnType<typeof createClient>, login: string) 
 
   let status = response.response.status;
   if (response.error) {
-    loadTeamError(login, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadTeamError(login, status, details);
   }
 
   return response.data.team;
@@ -66,7 +67,8 @@ async function loadCrates(
 
   let status = response.response.status;
   if (response.error) {
-    loadTeamError(login, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadTeamError(login, status, details);
   }
 
   return response.data;

@@ -17,12 +17,13 @@ export async function load({ fetch }) {
 
   let status = response.response.status;
   if (!response.data) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   return { tokens: response.data.api_tokens };
 }
 
-function loadError(status: number): never {
-  error(status, 'Failed to load API tokens', { tryAgain: isRetryableStatus(status) });
+function loadError(status: number, details?: string): never {
+  error(status, 'Failed to load API tokens', { details, tryAgain: isRetryableStatus(status) });
 }

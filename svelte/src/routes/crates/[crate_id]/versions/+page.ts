@@ -29,7 +29,8 @@ export async function load({ fetch, params, url, depends }) {
 
   let status = response.response.status;
   if (response.error) {
-    loadVersionsError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadVersionsError(status, details);
   }
 
   let { versions, meta } = response.data;
@@ -43,6 +44,6 @@ export async function load({ fetch, params, url, depends }) {
   };
 }
 
-function loadVersionsError(status: number): never {
-  error(status, 'Failed to load versions', { tryAgain: isRetryableStatus(status) });
+function loadVersionsError(status: number, details?: string): never {
+  error(status, 'Failed to load versions', { details, tryAgain: isRetryableStatus(status) });
 }

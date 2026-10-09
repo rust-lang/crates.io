@@ -24,8 +24,8 @@ export async function load({ fetch, parent, url }) {
   return { cratesResponse, page, perPage, sort };
 }
 
-function loadCratesError(status: number): never {
-  error(status, 'Failed to load followed crates', { tryAgain: isRetryableStatus(status) });
+function loadCratesError(status: number, details?: string): never {
+  error(status, 'Failed to load followed crates', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCrates(
@@ -41,7 +41,8 @@ async function loadCrates(
 
   let status = response.response.status;
   if (response.error) {
-    loadCratesError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCratesError(status, details);
   }
 
   return response.data;

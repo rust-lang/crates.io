@@ -33,17 +33,18 @@ async function loadOwners(client: ReturnType<typeof createClient>, name: string)
 
   let status = response.response.status;
   if (response.error) {
-    loadCrateError(name, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCrateError(name, status, details);
   }
 
   return response.data.users;
 }
 
-function loadCrateError(name: string, status: number): never {
+function loadCrateError(name: string, status: number, details?: string): never {
   if (status === 404) {
     error(404, `Crate "${name}" not found`);
   } else {
-    error(status, `Failed to load crate data`, { tryAgain: isRetryableStatus(status) });
+    error(status, `Failed to load crate data`, { details, tryAgain: isRetryableStatus(status) });
   }
 }
 
@@ -63,7 +64,8 @@ async function loadCrate(client: ReturnType<typeof createClient>, name: string) 
 
   let status = response.response.status;
   if (response.error) {
-    loadCrateError(name, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCrateError(name, status, details);
   }
 
   let { crate, versions, keywords, categories } = response.data;
