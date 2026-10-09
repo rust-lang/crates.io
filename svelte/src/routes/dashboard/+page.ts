@@ -1,7 +1,7 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 export async function load({ fetch, parent }) {
   let { userPromise } = await parent();
@@ -13,11 +13,12 @@ export async function load({ fetch, parent }) {
 
   let client = createClient({ fetch });
 
-  let [myCrates, myFollowing, stats, updates] = await Promise.all([
-    loadCrates(client, { user_id: user.id }),
-    loadCrates(client, { following: '1' }),
-    loadStats(client, user.id),
-    loadUpdates(client),
+  let message = 'Failed to load dashboard data';
+  let [{ crates: myCrates }, { crates: myFollowing }, stats, updates] = await Promise.all([
+    loadApi(client.GET('/api/v1/crates', { params: { query: { user_id: user.id } } }), { message }),
+    loadApi(client.GET('/api/v1/crates', { params: { query: { following: '1' } } }), { message }),
+    loadApi(client.GET('/api/v1/users/{id}/stats', { params: { path: { id: user.id } } }), { message }),
+    loadApi(client.GET('/api/v1/me/updates'), { message }),
   ]);
 
   return {
@@ -27,61 +28,4 @@ export async function load({ fetch, parent }) {
     totalDownloads: stats.total_downloads,
     updates,
   };
-}
-
-function loadError(status: number, details?: string): never {
-  error(status, 'Failed to load dashboard data', { details, tryAgain: isRetryableStatus(status) });
-}
-
-type Client = ReturnType<typeof createClient>;
-
-async function loadCrates(client: Client, query: { user_id?: number; following?: string }) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch {
-    loadError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadError(status, details);
-  }
-
-  return response.data.crates;
-}
-
-async function loadStats(client: Client, userId: number) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/users/{id}/stats', { params: { path: { id: userId } } });
-  } catch {
-    loadError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadError(status, details);
-  }
-
-  return response.data;
-}
-
-async function loadUpdates(client: Client) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/me/updates');
-  } catch {
-    loadError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadError(status, details);
-  }
-
-  return response.data;
 }
