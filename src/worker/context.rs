@@ -25,7 +25,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::OnceCell;
-use tracing::{info, instrument};
+use tracing::{info, instrument, warn};
 
 /// Components shared across background worker jobs.
 #[doc(hidden)]
@@ -143,6 +143,21 @@ impl WorkerContext {
             .await
             .as_ref()
             .map_err(|e| e.clone())
+    }
+
+    /// Posts a message to the given Zulip channel and topic, if Zulip is
+    /// configured.
+    ///
+    /// Failures are only logged, since they must not fail the calling job.
+    pub(crate) async fn post_to_zulip(&self, channel: &str, topic: &str, content: &str) {
+        let Some(zulip) = &self.zulip else {
+            return;
+        };
+
+        let result = zulip.send_channel_message(channel, topic, content).await;
+        if let Err(error) = result {
+            warn!("Failed to post message to Zulip: {error:#}");
+        }
     }
 }
 

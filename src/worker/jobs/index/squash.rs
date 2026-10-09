@@ -11,6 +11,11 @@ use tracing::{info, instrument, warn};
 
 const MASTER_REF: &str = "refs/heads/master";
 
+/// Zulip channel and topic for progress messages of the index squash and its
+/// follow-up jobs.
+pub const ZULIP_CHANNEL: &str = "t-crates-io";
+pub const ZULIP_TOPIC: &str = "index squashing";
+
 async fn enqueue_archive_job(ctx: &WorkerContext, branch: &str) -> anyhow::Result<()> {
     let conn = ctx.deadpool.get().await?;
     ArchiveIndexBranch::new(branch).enqueue(&conn).await?;
@@ -52,7 +57,16 @@ impl BackgroundJob for SquashIndex {
 
     #[instrument(skip_all)]
     async fn run(self, ctx: Self::Context) -> anyhow::Result<()> {
-        squash_index(&ctx).await
+        let message = "Squashing the index into a single commit…";
+        ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, message).await;
+
+        let result = squash_index(&ctx).await;
+        if result.is_err() {
+            let message = "Squashing the index failed. See the logs for details.";
+            ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, message).await;
+        }
+
+        result
     }
 }
 
@@ -124,6 +138,13 @@ async fn squash_index(ctx: &WorkerContext) -> anyhow::Result<()> {
         .await?;
 
     info!("The index has been successfully squashed.");
+
+    let message = format!(
+        "Squashed the index into a [single commit](https://github.com/{owner}/{repo}/commit/{new_sha}) \
+        and moved the previous history to the `{snapshot_branch}` branch."
+    );
+    ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, &message)
+        .await;
 
     if let Err(error) = enqueue_archive_job(ctx, &snapshot_branch).await {
         warn!("Failed to enqueue `ArchiveIndexBranch` job for `{snapshot_branch}`: {error}");
