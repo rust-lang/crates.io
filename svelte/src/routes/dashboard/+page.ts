@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch, parent }) {
   let { userPromise } = await parent();
   let user = await userPromise;
@@ -28,7 +30,7 @@ export async function load({ fetch, parent }) {
 }
 
 function loadError(status: number): never {
-  error(status, 'Failed to load dashboard data', { tryAgain: true });
+  error(status, 'Failed to load dashboard data', { tryAgain: isRetryableStatus(status) });
 }
 
 type Client = ReturnType<typeof createClient>;

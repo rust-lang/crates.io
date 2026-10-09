@@ -3,6 +3,8 @@ import type { paths } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 const MAX_PAGES = 20;
 
 export async function load({ fetch, url, params }) {
@@ -19,7 +21,7 @@ export async function load({ fetch, url, params }) {
 }
 
 function loadCratesError(keyword: string, status: number): never {
-  error(status, `${keyword}: Failed to load crates`, { tryAgain: true });
+  error(status, `${keyword}: Failed to load crates`, { tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCrates(

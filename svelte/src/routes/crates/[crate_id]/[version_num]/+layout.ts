@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch, params }) {
   let client = createClient({ fetch });
 
@@ -32,6 +34,6 @@ function loadVersionError(name: string, version: string, status: number): never 
   if (status === 404) {
     error(404, `${name}: Version ${version} not found`);
   } else {
-    error(status, `${name}: Failed to load version data`, { tryAgain: true });
+    error(status, `${name}: Failed to load version data`, { tryAgain: isRetryableStatus(status) });
   }
 }

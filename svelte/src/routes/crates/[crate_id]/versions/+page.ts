@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 const DEFAULT_PER_PAGE = 100;
 
 export async function load({ fetch, params, url, depends }) {
@@ -42,5 +44,5 @@ export async function load({ fetch, params, url, depends }) {
 }
 
 function loadVersionsError(status: number): never {
-  error(status, 'Failed to load versions', { tryAgain: true });
+  error(status, 'Failed to load versions', { tryAgain: isRetryableStatus(status) });
 }

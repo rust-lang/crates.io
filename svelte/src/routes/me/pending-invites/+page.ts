@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 type Client = ReturnType<typeof createClient>;
 
 export async function load({ fetch, parent }) {
@@ -44,5 +46,5 @@ async function loadInvites(client: Client, userId: number) {
 }
 
 function loadError(status: number): never {
-  error(status, 'Failed to load pending invites', { tryAgain: true });
+  error(status, 'Failed to load pending invites', { tryAgain: isRetryableStatus(status) });
 }

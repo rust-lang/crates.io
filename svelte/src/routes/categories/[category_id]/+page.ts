@@ -3,6 +3,8 @@ import type { paths } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 const MAX_PAGES = 20;
 
 export async function load({ fetch, url, params }) {
@@ -29,7 +31,7 @@ function loadCategoryError(slug: string, status: number): never {
   if (status === 404) {
     error(404, `${slug}: Category not found`);
   } else {
-    error(status, `${slug}: Failed to load category data`, { tryAgain: true });
+    error(status, `${slug}: Failed to load category data`, { tryAgain: isRetryableStatus(status) });
   }
 }
 

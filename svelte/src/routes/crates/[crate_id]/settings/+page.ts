@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch, parent }) {
   let { crate, ownersPromise } = await parent();
 
@@ -17,7 +19,7 @@ export async function load({ fetch, parent }) {
 }
 
 function loadError(status: number): never {
-  error(status, 'Failed to load crate data', { tryAgain: true });
+  error(status, 'Failed to load crate data', { tryAgain: isRetryableStatus(status) });
 }
 
 async function loadGitHubConfigs(client: ReturnType<typeof createClient>, crateName: string) {

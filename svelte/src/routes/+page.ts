@@ -4,6 +4,8 @@ import { browser } from '$app/env';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 type SummaryResponse = operations['get_summary']['responses']['200']['content']['application/json'];
 
 let cachedSummary: SummaryResponse | undefined;
@@ -22,7 +24,7 @@ export async function load({ fetch }) {
 }
 
 function loadSummaryError(status: number): never {
-  error(status, 'Failed to load summary data', { tryAgain: true });
+  error(status, 'Failed to load summary data', { tryAgain: isRetryableStatus(status) });
 }
 
 async function loadSummary(client: ReturnType<typeof createClient>): Promise<SummaryResponse> {

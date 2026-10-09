@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch }) {
   let client = createClient({ fetch });
 
@@ -10,7 +12,7 @@ export async function load({ fetch }) {
 }
 
 function loadCategorySlugsError(status: number): never {
-  error(status, 'Failed to load category slugs', { tryAgain: true });
+  error(status, 'Failed to load category slugs', { tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCategorySlugs(client: ReturnType<typeof createClient>) {
