@@ -35,7 +35,7 @@ async function loadCrates(
 
   let status = response.response.status;
   if (!response.response.ok) {
-    let details = (response.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+    let details = response.error?.errors?.[0]?.detail;
     loadCratesError(status, details);
   }
 

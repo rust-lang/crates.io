@@ -37,7 +37,7 @@
       if (response.response.ok) {
         result = accepted ? 'accepted' : 'declined';
       } else {
-        let detail = (response.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+        let detail = response.error?.errors?.[0]?.detail;
         if (detail && !detail.startsWith('{')) {
           notifications.error(`Error in ${action} invite: ${detail}`);
         } else {

@@ -200,7 +200,7 @@ export class SessionState {
     });
 
     if (!data) {
-      let detail = (error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+      let detail = error?.errors?.[0]?.detail;
       this.#notifications?.error(detail ? `Failed to log in: ${detail}` : 'Failed to log in');
       this.state = 'logged-out';
       return;
