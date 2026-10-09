@@ -1,6 +1,7 @@
 use crate::tasks::spawn_blocking;
 use crate::worker::WorkerContext;
 use crate::worker::jobs::DeleteArchivedIndexBranch;
+use crate::worker::jobs::index::squash::{ZULIP_CHANNEL, ZULIP_TOPIC};
 use anyhow::{Context, anyhow};
 use crates_io_github::parse_github_slug;
 use crates_io_worker::BackgroundJob;
@@ -72,7 +73,20 @@ impl BackgroundJob for ArchiveIndexBranch {
             return Ok(());
         };
 
-        self.archive(&ctx, archive_url).await
+        let branch = &self.branch;
+        let message = format!("Archiving the `{branch}` branch…");
+        ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, &message)
+            .await;
+
+        let result = self.archive(&ctx, archive_url).await;
+        if result.is_err() {
+            let message =
+                format!("Archiving the `{branch}` branch failed. See the logs for details.");
+            ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, &message)
+                .await;
+        }
+
+        result
     }
 }
 
@@ -266,12 +280,29 @@ impl ArchiveIndexBranch {
         info!("Archived snapshot branch ({branch})", branch = self.branch,);
 
         let branch = &self.branch;
+        let message = copied_message(archive_url, branch);
+        ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, &message)
+            .await;
+
         if let Err(error) = enqueue_branch_deletion(ctx, branch).await {
             warn!("Failed to enqueue `DeleteArchivedIndexBranch` job for `{branch}`: {error:#}");
         }
 
         Ok(())
     }
+}
+
+/// Builds the Zulip message for a branch that was copied to the archive
+/// repository, linking to the branch if the repository is hosted on GitHub.
+fn copied_message(archive_url: &Url, branch: &str) -> String {
+    let branch = match parse_github_slug(archive_url) {
+        Ok((owner, repo)) => {
+            format!("[`{branch}` branch](https://github.com/{owner}/{repo}/tree/{branch})")
+        }
+        Err(_) => format!("`{branch}` branch"),
+    };
+
+    format!("The {branch} was copied to the archive repository.")
 }
 
 /// Returns a copy of `base` with `x-access-token` / `token` embedded as the
@@ -341,6 +372,18 @@ mod tests {
         let chunks = archive_push_chunks("a\nb\nc\nd\n", 2);
 
         assert_eq!(chunks, [chunk(0, 2, "b"), chunk(2, 4, "d")]);
+    }
+
+    #[test]
+    fn copied_message_github() {
+        let url: Url = "https://github.com/rust-lang/archive.git".parse().unwrap();
+        assert_snapshot!(copied_message(&url, "snapshot-test"), @"The [`snapshot-test` branch](https://github.com/rust-lang/archive/tree/snapshot-test) was copied to the archive repository.");
+    }
+
+    #[test]
+    fn copied_message_without_github() {
+        let url: Url = "file:///tmp/archive".parse().unwrap();
+        assert_snapshot!(copied_message(&url, "snapshot-test"), @"The `snapshot-test` branch was copied to the archive repository.");
     }
 
     #[test]
