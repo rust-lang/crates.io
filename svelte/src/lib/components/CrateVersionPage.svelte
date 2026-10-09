@@ -83,7 +83,41 @@
   function retryReadme() {
     retryReadmePromise = loadReadme(fetch, crate.name, version.num);
   }
+
+  // `forOnMount` is mainly useful for visits with a non-prefix URI fragment. Since the README is
+  // not rendered yet, the browser cannot scroll to the target automatically, so we need to trigger
+  // the scroll once the README is rendered.
+  function scrollToReadmeFragment(forOnMount = false) {
+    let id;
+    try {
+      id = decodeURIComponent(location.hash.slice(1));
+    } catch {
+      return;
+    }
+
+    if (!id) return;
+
+    let target = document.getElementById(id);
+    if (target) {
+      if (forOnMount) target.scrollIntoView();
+      return;
+    }
+
+    if (id) {
+      document.getElementById(`user-content-${id}`)?.scrollIntoView();
+    }
+  }
+
+  function handleReadmeClick(event: MouseEvent) {
+    let link = (event.target as Element).closest('a');
+    if (link?.href === location.href) {
+      scrollToReadmeFragment();
+    }
+  }
 </script>
+
+<svelte:window onhashchange={() => scrollToReadmeFragment()} />
+<svelte:document onclick={handleReadmeClick} />
 
 <CrateHeader {crate} {version} versionNum={requestedVersion} {keywords} {ownersPromise} />
 
@@ -105,7 +139,7 @@
       <ReadmePlaceholder />
     {:then readme}
       {#if readme}
-        <article aria-label="Readme" data-test-readme>
+        <article aria-label="Readme" {@attach () => scrollToReadmeFragment(true)} data-test-readme>
           <RenderedHtml html={readme} />
         </article>
       {:else}

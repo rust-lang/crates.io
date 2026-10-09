@@ -35,6 +35,17 @@ const README_HTML = `
 </div>
 </div>
 
+<div class="markdown-heading" dir="auto">
+<h2 tabindex="-1" class="heading-element" dir="auto">Table of Contents</h2>
+<a id="user-content-table-of-contents" class="anchor" aria-label="Permalink: Table of Contents" href="#table-of-contents"></a>
+</div>
+<ul dir="auto">
+<li><a href="#serde-in-action">Serde in action</a></li>
+<li><a href="#user-content-getting-help">Getting help</a></li>
+<li><a href="#tests-without-prefix">Tests without prefix</a></li>
+<li><a href="#%F0%9F%A6%80-is-all-we-need">🦀 is all we need</a></li>
+</ul>
+
 <p><strong>Serde is a framework for <em>ser</em>ializing and <em>de</em>serializing Rust data structures efficiently and generically.</strong></p>
 <hr>
 <p>You may be looking for:</p>
@@ -115,6 +126,10 @@ impl Stack {
 </li>
 </ol>
 </section>
+<h2><a href="#tests-without-prefix" id="tests-without-prefix" rel="nofollow noopener noreferrer"></a>Tests without prefix</h2>
+<h2><a href="#%F0%9F%A6%80-is-all-we-need" id="🦀-is-all-we-need" rel="nofollow noopener noreferrer"></a>🦀 is all we need</h2>
+
+<a href="/crates/syn#resource">Go to syn resource</a>
 
 <h3 align="center">
   <a>
@@ -138,7 +153,7 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await page.goto('/crates/serde');
     let readme = page.locator('[data-test-readme]');
     await expect(readme).toBeVisible();
-    await expect(readme.locator('ul > li')).toHaveCount(7);
+    await expect(readme.locator('ul > li')).toHaveCount(11);
     await expect(readme.locator('pre > code.language-rust:has(span.line)')).toHaveCount(2);
     await expect(readme.locator('pre > code.language-mermaid svg.flowchart')).toBeVisible();
 
@@ -171,5 +186,96 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
 
     await page.click('[data-test-retry-button]');
     await expect(page.locator('[data-test-readme]')).toHaveText('foo');
+  });
+
+  test('it scrolls to the anchor spot once rendered', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
+
+    // Unprefixed URI fragment that matches the prefixed one
+    // `/crates/serde#serde-in-action` -> `#user-content-serde-in-action`
+    {
+      await page.goto('/crates/serde#serde-in-action');
+      let readme = page.locator('[data-test-readme]');
+      await expect(readme).toBeVisible();
+      let serdeInAction = page.getByRole('heading', { name: 'Serde in action' });
+      await expect(serdeInAction).toBeInViewport();
+    }
+
+    // Exact match for the full prefixed URI fragment
+    // `/crates/serde#user-content-getting-help` -> `#user-content-getting-help`
+    {
+      await page.goto('/crates/serde#user-content-getting-help');
+      let readme = page.locator('[data-test-readme]');
+      await expect(readme).toBeVisible();
+      let gettingHelp = page.getByRole('heading', { name: 'Getting help' });
+      await expect(gettingHelp).toBeInViewport();
+    }
+
+    // Exact match for an unprefixed URI fragment
+    // `/crates/serde#tests-without-prefix` -> `#tests-without-prefix`
+    {
+      await page.goto('/crates/serde#tests-without-prefix');
+      let readme = page.locator('[data-test-readme]');
+      await expect(readme).toBeVisible();
+      let testsWithoutPrefix = page.getByRole('heading', { name: 'Tests without prefix' });
+      await expect(testsWithoutPrefix).toBeInViewport();
+    }
+
+    // Non-ASCII URI fragment
+    // `/crates/serde#%F0%9F%A6%80-is-all-we-need` -> `#🦀-is-all-we-need`
+    {
+      await page.goto('/crates/serde#%F0%9F%A6%80-is-all-we-need');
+      let readme = page.locator('[data-test-readme]');
+      await expect(readme).toBeVisible();
+      let rustIsAllWeNeed = page.getByRole('heading', { name: '🦀 is all we need' });
+      await expect(rustIsAllWeNeed).toBeInViewport();
+    }
+  });
+
+  test('it scrolls to the anchor spot when clicked', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
+    let crate2 = await msw.db.crate.create({ name: 'syn' });
+    await msw.db.version.create({
+      crate: crate2,
+      num: '1.0.0',
+      readme: `
+<h1>syn</h1>
+${README_HTML}
+<h2><a href="#resource" id="resource" rel="nofollow noopener noreferrer"></a>Resource</h2>
+`,
+    });
+
+    await page.goto('/crates/serde');
+    let readme = page.locator('[data-test-readme]');
+    await expect(readme).toBeVisible();
+
+    // Click on `/crates/serde#serde-in-action` should scroll to `#user-content-anchor`
+    await page.getByRole('link', { name: 'Serde in action' }).click();
+    let serdeInAction = page.getByRole('heading', { name: 'Serde in action' });
+    await expect(serdeInAction).toBeInViewport();
+
+    // Click on `/crates/serde#user-content-getting-help` should scroll to
+    // `#user-content-getting-help`
+    await page.getByRole('link', { name: 'Getting help' }).click();
+    let gettingHelp = page.getByRole('heading', { name: 'Getting help' });
+    await expect(gettingHelp).toBeInViewport();
+
+    // Click on `/crates/serde#tests-without-prefix` should scroll to `#tests-without-prefix`
+    await page.getByRole('link', { name: 'Tests without prefix' }).click();
+    let testsWithoutPrefix = page.getByRole('heading', { name: 'Tests without prefix' });
+    await expect(testsWithoutPrefix).toBeInViewport();
+
+    // Click on `/crates/serde#%F0%9F%A6%80-is-all-we-need` should scroll to `#🦀-is-all-we-need`
+    await page.getByRole('link', { name: '🦀 is all we need' }).click();
+    let rustIsAllWeNeed = page.getByRole('heading', { name: '🦀 is all we need' });
+    await expect(rustIsAllWeNeed).toBeInViewport();
+
+    // Click on `/crates/syn#resource` on page `/crates/serde` should work
+    await page.getByRole('link', { name: 'Go to syn resource' }).click();
+    await page.waitForURL('/crates/syn#resource');
+    let resource = page.getByRole('heading', { name: 'Resource' });
+    await expect(resource).toBeInViewport();
   });
 });
