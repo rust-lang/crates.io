@@ -22,7 +22,7 @@
       if (response.response.ok) {
         result = 'success';
       } else {
-        errorText = (response.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+        errorText = response.error?.errors?.[0]?.detail;
         result = 'error';
       }
     } catch {

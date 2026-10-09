@@ -25,7 +25,7 @@
       });
 
       if (!result.response.ok) {
-        let detail = (result.error as unknown as { errors?: { detail?: string }[] })?.errors?.[0]?.detail;
+        let detail = result.error?.errors?.[0]?.detail;
         throw new Error(detail ?? 'Failed to enqueue docs rebuild task.');
       }
 
