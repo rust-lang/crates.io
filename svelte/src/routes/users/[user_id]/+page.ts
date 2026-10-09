@@ -1,9 +1,6 @@
-import type { paths } from '@crates-io/api-client';
-
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 import { isLoggedIn } from '#lib/utils/session.svelte.ts';
 
 export async function load({ fetch, params, parent, url }) {
@@ -14,7 +11,14 @@ export async function load({ fetch, params, parent, url }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'alpha';
 
-  let { user, linked_accounts: linkedAccounts } = await loadUser(client, params.user_id);
+  let login = params.user_id;
+  let errorMessages = { message: `${login}: Failed to load user data`, notFound: `${login}: User not found` };
+  let { user, linked_accounts: linkedAccounts } = await loadApi(
+    client.GET('/api/v1/users/{user}', {
+      params: { path: { user: login }, query: { include: 'linked_accounts' } },
+    }),
+    errorMessages,
+  );
 
   // Check if the logged-in user is viewing their own profile, so that
   // yanked crates are included in the results. We gate the `parent()`
@@ -31,66 +35,14 @@ export async function load({ fetch, params, parent, url }) {
     isOwnProfile = currentUser?.id === user.id;
   }
 
-  let cratesResponse = await loadCrates(client, params.user_id, {
-    user_id: user.id,
-    page,
-    per_page: perPage,
-    sort,
-    include_yanked: isOwnProfile ? 'yes' : 'n',
-  });
+  let cratesResponse = await loadApi(
+    client.GET('/api/v1/crates', {
+      params: {
+        query: { user_id: user.id, page, per_page: perPage, sort, include_yanked: isOwnProfile ? 'yes' : 'n' },
+      },
+    }),
+    errorMessages,
+  );
 
   return { user, linkedAccounts, cratesResponse, page, perPage, sort };
-}
-
-function loadUserError(login: string, status: number, details?: string): never {
-  if (status === 404) {
-    error(404, `${login}: User not found`);
-  } else {
-    error(status, `${login}: Failed to load user data`, { details, tryAgain: isRetryableStatus(status) });
-  }
-}
-
-async function loadUser(client: ReturnType<typeof createClient>, login: string) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/users/{user}', {
-      params: {
-        path: { user: login },
-        query: { include: 'linked_accounts' },
-      },
-    });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadUserError(login, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadUserError(login, status, details);
-  }
-
-  return response.data;
-}
-
-async function loadCrates(
-  client: ReturnType<typeof createClient>,
-  login: string,
-  query: paths['/api/v1/crates']['get']['parameters']['query'],
-) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadUserError(login, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadUserError(login, status, details);
-  }
-
-  return response.data;
 }
