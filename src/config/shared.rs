@@ -14,6 +14,7 @@ use crate::config::github::GitHubOAuthConfig;
 use crate::config::otel::OtelConfig;
 use crate::config::publish_limits::PublishLimitsConfig;
 use crate::config::rate_limits::RateLimitsConfig;
+use crate::config::zulip::ZulipConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
 use crates_io_encryption::TokenEncryption;
@@ -66,6 +67,7 @@ pub struct SharedConfig {
 
     pub features: FeaturesConfig,
     pub fastly: Option<FastlyConfig>,
+    pub zulip: Option<ZulipConfig>,
 
     /// Whether to enqueue `SyncToGitIndex` jobs to update the
     /// git-based crate index.
@@ -158,6 +160,7 @@ impl SharedConfig {
             banner_message,
             features,
             fastly: FastlyConfig::from_env()?,
+            zulip: ZulipConfig::from_env()?,
             sync_git_index: true,
             index_archive_url: var_parsed("GIT_ARCHIVE_REPO_URL")?,
             postgres_bin_dir: var_parsed("POSTGRES_BIN_DIR")?,

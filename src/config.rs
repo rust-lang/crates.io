@@ -12,6 +12,7 @@ mod publish_limits;
 mod rate_limits;
 mod sentry;
 mod shared;
+mod zulip;
 
 pub use self::bind::BindConfig;
 pub use self::block::BlockConfig;
@@ -27,3 +28,4 @@ pub use self::publish_limits::PublishLimitsConfig;
 pub use self::rate_limits::RateLimitsConfig;
 pub use self::sentry::SentryConfig;
 pub use self::shared::SharedConfig;
+pub use self::zulip::ZulipConfig;

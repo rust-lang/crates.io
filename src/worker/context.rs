@@ -16,6 +16,7 @@ use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepo;
 use crates_io_worker::BackgroundJob;
+use crates_io_zulip::ZulipClient;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use object_store::ObjectStore;
@@ -54,6 +55,7 @@ pub struct WorkerContextInner {
     pub sync_github_app: Option<Arc<dyn GitHubApp>>,
     pub github: Arc<dyn GitHubClient>,
     pub docs_rs: Option<Box<dyn DocsRsClient>>,
+    pub zulip: Option<Box<dyn ZulipClient>>,
     pub og_image_generator: Option<OgImageGenerator>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.

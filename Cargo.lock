@@ -1672,6 +1672,7 @@ dependencies = [
  "crates_io_validation",
  "crates_io_version",
  "crates_io_worker",
+ "crates_io_zulip",
  "csv",
  "deadpool-runtime",
  "derive_more",

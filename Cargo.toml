@@ -110,6 +110,7 @@ crates_io_team_repo = { path = "crates/crates_io_team_repo" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub" }
 crates_io_validation = { path = "crates/crates_io_validation" }
 crates_io_version = { path = "crates/crates_io_version" }
+crates_io_zulip = { path = "crates/crates_io_zulip" }
 crates_io_worker = { path = "crates/crates_io_worker" }
 csv = "=1.4.0"
 chrono = { version = "=0.4.45", default-features = false, features = ["serde"] }
@@ -183,6 +184,7 @@ crates_io_github_app = { path = "crates/crates_io_github_app", features = ["mock
 crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] }
 crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"] }
+crates_io_zulip = { path = "crates/crates_io_zulip", features = ["mock"] }
 crates_io_test_db = { path = "crates/crates_io_test_db" }
 crates_io_test_utils = { path = "crates/crates_io_test_utils" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub", features = ["test-helpers"] }

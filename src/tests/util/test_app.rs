@@ -29,10 +29,12 @@ use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
 use crates_io_trustpub::github::test_helpers::AUDIENCE;
 use crates_io_trustpub::keystore::{MockOidcKeyStore, OidcKeyStore};
 use crates_io_worker::Runner;
+use crates_io_zulip::MockZulipClient;
 use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use opentelemetry::metrics::{Meter, MeterProvider, noop::NoopMeterProvider};
+use parking_lot::Mutex;
 use regex::regex;
 use std::collections::HashMap;
 use std::{rc::Rc, sync::Arc, time::Duration};
@@ -45,6 +47,7 @@ struct TestAppInner {
     router: axum::Router,
     index: Option<UpstreamIndex>,
     runner: Option<Runner<WorkerContext>>,
+    zulip_messages: Arc<Mutex<Vec<String>>>,
 
     primary_db_chaosproxy: Option<Arc<ChaosProxy>>,
     replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
@@ -250,6 +253,15 @@ impl TestApp {
             .join(SEPARATOR)
     }
 
+    /// Returns all Zulip messages sent by the background worker, one per line.
+    pub fn zulip_snapshot(&self) -> String {
+        let snapshot_branch_re = regex!(r"snapshot-\d{4}-\d{2}-\d{2}");
+
+        let messages = self.0.zulip_messages.lock().join("\n");
+        let messages = snapshot_branch_re.replace_all(&messages, "snapshot-[date]");
+        messages.to_string()
+    }
+
     pub async fn run_pending_background_jobs(&self) {
         self.try_run_pending_background_jobs()
             .await
@@ -381,6 +393,8 @@ impl TestAppBuilder {
 
         let router = crates_io::build_handler(ctx.clone());
 
+        let zulip_messages = Arc::new(Mutex::new(Vec::new()));
+
         let runner = if self.build_job_runner {
             let index_location = self
                 .index_location
@@ -393,6 +407,18 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
+            // Record all Zulip messages, allowing tests to analyze the messages
+            // sent by the background worker.
+            let mut zulip = MockZulipClient::new();
+            zulip.expect_send_channel_message().returning({
+                let zulip_messages = Arc::clone(&zulip_messages);
+                move |channel, topic, content| {
+                    let message = format!("#{channel} > {topic}: {content}");
+                    zulip_messages.lock().push(message);
+                    Ok(())
+                }
+            });
+
             let worker_metrics = WorkerMetrics::new(&self.meter);
             worker_metrics.track_db_pool("worker", &ctx.primary_database);
 
@@ -404,6 +430,7 @@ impl TestAppBuilder {
                 .deadpool(ctx.primary_database.clone())
                 .emails(ctx.emails.clone())
                 .maybe_docs_rs(self.docs_rs.map(|cl| Box::new(cl) as _))
+                .zulip(Box::new(zulip))
                 .team_repo(Box::new(self.team_repo))
                 .maybe_index_sync_github_app(self.index_sync_github_app.map(|a| Arc::new(a) as _))
                 .maybe_sync_github_app(self.sync_github_app.map(|a| Arc::new(a) as _))
@@ -426,6 +453,7 @@ impl TestAppBuilder {
             router,
             index: self.index,
             runner,
+            zulip_messages,
             primary_db_chaosproxy,
             replica_db_chaosproxy,
         };
@@ -642,6 +670,7 @@ fn simple_config() -> SharedConfig {
             explicit_signup_enabled: true,
         },
         fastly: None,
+        zulip: None,
         sync_git_index: false,
         index_archive_url: None,
         postgres_bin_dir: None,
