@@ -1,7 +1,6 @@
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 const DEFAULT_PER_PAGE = 100;
 
@@ -14,26 +13,15 @@ export async function load({ fetch, params, url, depends }) {
   let sort = url.searchParams.get('sort') ?? 'date';
   let perPage = Number(url.searchParams.get('per_page')) || DEFAULT_PER_PAGE;
 
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}/versions', {
+  let { versions, meta } = await loadApi(
+    client.GET('/api/v1/crates/{name}/versions', {
       params: {
         path: { name: crateName },
         query: { sort, per_page: perPage, include: 'release_tracks' },
       },
-    });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadVersionsError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadVersionsError(status, details);
-  }
-
-  let { versions, meta } = response.data;
+    }),
+    { message: 'Failed to load versions' },
+  );
   let releaseTracks = meta.release_tracks ?? {};
 
   return {
@@ -42,8 +30,4 @@ export async function load({ fetch, params, url, depends }) {
     releaseTracks,
     nextPage: meta.next_page ?? null,
   };
-}
-
-function loadVersionsError(status: number, details?: string): never {
-  error(status, 'Failed to load versions', { details, tryAgain: isRetryableStatus(status) });
 }
