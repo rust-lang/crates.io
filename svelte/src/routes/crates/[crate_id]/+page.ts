@@ -1,6 +1,7 @@
 import { createClient } from '@crates-io/api-client';
 
 import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
+import { loadApi } from '#lib/utils/api.ts';
 import { loadDocsRsStatus } from '#lib/utils/docs-rs.ts';
 import { loadReadme } from '#lib/utils/readme.ts';
 import { loadUnmaintained } from '#lib/utils/rustsec.ts';
@@ -29,15 +30,12 @@ export async function load({ fetch, params, parent }) {
  * versions plus the sum of the rest ("Other").
  */
 async function loadDownloads(client: ReturnType<typeof createClient>, name: string) {
-  let response = await client.GET('/api/v1/crates/{name}/downloads', {
-    params: { path: { name }, query: { include: 'versions' } },
-  });
-
-  if (response.error) {
-    throw new Error('Failed to load download data');
-  }
-
-  let { version_downloads, versions, meta } = response.data;
+  let { version_downloads, versions, meta } = await loadApi(
+    client.GET('/api/v1/crates/{name}/downloads', {
+      params: { path: { name }, query: { include: 'versions' } },
+    }),
+    { message: 'Failed to load download data' },
+  );
 
   return {
     versionDownloads: version_downloads,
