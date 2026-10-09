@@ -43,9 +43,9 @@ export async function load({ fetch, params, parent, url }) {
 
 function loadUserError(login: string, status: number): never {
   if (status === 404) {
-    error(404, { message: `${login}: User not found` });
+    error(404, `${login}: User not found`);
   } else {
-    error(status, { message: `${login}: Failed to load user data`, tryAgain: true });
+    error(status, `${login}: Failed to load user data`, { tryAgain: true });
   }
 }
 

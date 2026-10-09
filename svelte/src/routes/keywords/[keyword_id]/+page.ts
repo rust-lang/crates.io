@@ -19,7 +19,7 @@ export async function load({ fetch, url, params }) {
 }
 
 function loadCratesError(keyword: string, status: number): never {
-  error(status, { message: `${keyword}: Failed to load crates`, tryAgain: true });
+  error(status, `${keyword}: Failed to load crates`, { tryAgain: true });
 }
 
 async function loadCrates(

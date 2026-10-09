@@ -22,7 +22,7 @@ export async function load({ fetch }) {
 }
 
 function loadSummaryError(status: number): never {
-  error(status, { message: 'Failed to load summary data', tryAgain: true });
+  error(status, 'Failed to load summary data', { tryAgain: true });
 }
 
 async function loadSummary(client: ReturnType<typeof createClient>): Promise<SummaryResponse> {

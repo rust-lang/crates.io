@@ -30,8 +30,8 @@ async function loadVersion(client: ReturnType<typeof createClient>, name: string
 
 function loadVersionError(name: string, version: string, status: number): never {
   if (status === 404) {
-    error(404, { message: `${name}: Version ${version} not found` });
+    error(404, `${name}: Version ${version} not found`);
   } else {
-    error(status, { message: `${name}: Failed to load version data`, tryAgain: true });
+    error(status, `${name}: Failed to load version data`, { tryAgain: true });
   }
 }

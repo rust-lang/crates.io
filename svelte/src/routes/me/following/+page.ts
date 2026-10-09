@@ -8,7 +8,7 @@ export async function load({ fetch, parent, url }) {
   let user = await userPromise;
 
   if (!user) {
-    error(401, { message: 'This page requires authentication', loginNeeded: true });
+    error(401, 'This page requires authentication', { loginNeeded: true });
   }
 
   let client = createClient({ fetch });
@@ -23,7 +23,7 @@ export async function load({ fetch, parent, url }) {
 }
 
 function loadCratesError(status: number): never {
-  error(status, { message: 'Failed to load followed crates', tryAgain: true });
+  error(status, 'Failed to load followed crates', { tryAgain: true });
 }
 
 async function loadCrates(

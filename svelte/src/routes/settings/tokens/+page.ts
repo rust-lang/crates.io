@@ -22,5 +22,5 @@ export async function load({ fetch }) {
 }
 
 function loadError(status: number): never {
-  error(status, { message: 'Failed to load API tokens', tryAgain: true });
+  error(status, 'Failed to load API tokens', { tryAgain: true });
 }

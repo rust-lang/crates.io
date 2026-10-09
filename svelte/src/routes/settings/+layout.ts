@@ -5,6 +5,6 @@ export async function load({ parent }) {
   let user = await userPromise;
 
   if (!user) {
-    error(401, { message: 'This page requires authentication', loginNeeded: true });
+    error(401, 'This page requires authentication', { loginNeeded: true });
   }
 }

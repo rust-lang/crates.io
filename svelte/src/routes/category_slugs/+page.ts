@@ -10,7 +10,7 @@ export async function load({ fetch }) {
 }
 
 function loadCategorySlugsError(status: number): never {
-  error(status, { message: 'Failed to load category slugs', tryAgain: true });
+  error(status, 'Failed to load category slugs', { tryAgain: true });
 }
 
 async function loadCategorySlugs(client: ReturnType<typeof createClient>) {

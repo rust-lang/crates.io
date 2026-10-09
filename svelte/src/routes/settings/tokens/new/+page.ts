@@ -19,7 +19,7 @@ export async function load({ fetch, url }) {
   let status = response.response.status;
   if (!response.data) {
     if (status === 404) {
-      error(404, { message: 'Token not found' });
+      error(404, 'Token not found');
     }
     loadError(status);
   }
@@ -28,5 +28,5 @@ export async function load({ fetch, url }) {
 }
 
 function loadError(status: number): never {
-  error(status, { message: 'Failed to load token data', tryAgain: true });
+  error(status, 'Failed to load token data', { tryAgain: true });
 }

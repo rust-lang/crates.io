@@ -39,9 +39,9 @@ async function loadOwners(client: ReturnType<typeof createClient>, name: string)
 
 function loadCrateError(name: string, status: number): never {
   if (status === 404) {
-    error(404, { message: `Crate "${name}" not found` });
+    error(404, `Crate "${name}" not found`);
   } else {
-    error(status, { message: `Failed to load crate data`, tryAgain: true });
+    error(status, `Failed to load crate data`, { tryAgain: true });
   }
 }
 

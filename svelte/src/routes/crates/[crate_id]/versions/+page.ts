@@ -42,5 +42,5 @@ export async function load({ fetch, params, url, depends }) {
 }
 
 function loadVersionsError(status: number): never {
-  error(status, { message: 'Failed to load versions', tryAgain: true });
+  error(status, 'Failed to load versions', { tryAgain: true });
 }

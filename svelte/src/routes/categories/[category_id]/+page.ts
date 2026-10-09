@@ -27,9 +27,9 @@ export async function load({ fetch, url, params }) {
 
 function loadCategoryError(slug: string, status: number): never {
   if (status === 404) {
-    error(404, { message: `${slug}: Category not found` });
+    error(404, `${slug}: Category not found`);
   } else {
-    error(status, { message: `${slug}: Failed to load category data`, tryAgain: true });
+    error(status, `${slug}: Failed to load category data`, { tryAgain: true });
   }
 }
 

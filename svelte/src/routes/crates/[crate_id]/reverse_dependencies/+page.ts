@@ -64,5 +64,5 @@ async function loadReverseDependencies(client: ReturnType<typeof createClient>, 
 }
 
 function loadError(name: string, status: number): never {
-  error(status, { message: `${name}: Failed to load dependents` });
+  error(status, `${name}: Failed to load dependents`);
 }

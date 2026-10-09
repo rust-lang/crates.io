@@ -18,7 +18,7 @@ export async function load({ fetch, url }) {
 }
 
 function loadCratesError(status: number, details?: string): never {
-  error(status, { message: 'Failed to load crate list', details, tryAgain: true });
+  error(status, 'Failed to load crate list', { details, tryAgain: true });
 }
 
 async function loadCrates(
