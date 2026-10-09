@@ -129,7 +129,7 @@ futures-util = "=0.3.34"
 git2 = "=0.21.0"
 hex = "=0.4.3"
 http = "=1.5.0"
-hyper = { version = "=1.11.1", features = ["client", "http1"] }
+hyper = { version = "=1.12.0", features = ["client", "http1"] }
 indexmap = { version = "=2.14.2", features = ["serde"] }
 indicatif = "=0.18.6"
 json-subscriber = "=0.3.1"
