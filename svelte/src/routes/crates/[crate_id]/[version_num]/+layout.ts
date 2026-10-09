@@ -1,7 +1,6 @@
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 export async function load({ fetch, params }) {
   let client = createClient({ fetch });
@@ -9,32 +8,13 @@ export async function load({ fetch, params }) {
   let crateName = params.crate_id;
   let versionNum = params.version_num;
 
-  let version = await loadVersion(client, crateName, versionNum);
+  let { version } = await loadApi(
+    client.GET('/api/v1/crates/{name}/{version}', { params: { path: { name: crateName, version: versionNum } } }),
+    {
+      message: `${crateName}: Failed to load version data`,
+      notFound: `${crateName}: Version ${versionNum} not found`,
+    },
+  );
 
   return { requestedVersion: versionNum, version };
-}
-
-async function loadVersion(client: ReturnType<typeof createClient>, name: string, version: string) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}/{version}', { params: { path: { name, version } } });
-  } catch {
-    loadVersionError(name, version, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadVersionError(name, version, status, details);
-  }
-
-  return response.data.version;
-}
-
-function loadVersionError(name: string, version: string, status: number, details?: string): never {
-  if (status === 404) {
-    error(404, `${name}: Version ${version} not found`);
-  } else {
-    error(status, `${name}: Failed to load version data`, { details, tryAgain: isRetryableStatus(status) });
-  }
 }
