@@ -1,8 +1,7 @@
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
 import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 import { loadCrateDescriptions } from '#lib/utils/crate-descriptions.ts';
 
 export async function load({ fetch, params }) {
@@ -25,24 +24,10 @@ export async function load({ fetch, params }) {
 }
 
 async function loadDependencies(client: ReturnType<typeof createClient>, name: string, version: string) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}/{version}/dependencies', {
-      params: { path: { name, version } },
-    });
-  } catch {
-    loadDependenciesError(name, 504);
-  }
+  let { dependencies } = await loadApi(
+    client.GET('/api/v1/crates/{name}/{version}/dependencies', { params: { path: { name, version } } }),
+    { message: `${name}: Failed to load dependencies` },
+  );
 
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadDependenciesError(name, status, details);
-  }
-
-  return response.data.dependencies;
-}
-
-function loadDependenciesError(name: string, status: number, details?: string): never {
-  error(status, `${name}: Failed to load dependencies`, { details, tryAgain: isRetryableStatus(status) });
+  return dependencies;
 }
