@@ -18,7 +18,7 @@
   <AccountChip provider="github" handle="tbieniek" href="https://github.com/tbieniek" />
 
   <h1>Mismatched</h1>
-  <AccountChip provider="github" handle="Turbo87" href="https://github.com/Turbo87" mismatched />
+  <AccountChip provider="github" handle="Turbo87" href="https://github.com/Turbo87" mismatchedUsername="tbieniek" />
 
   <h1>Long Handle</h1>
   <div class="constrained">
@@ -27,7 +27,12 @@
 
   <h1>Long Mismatched Handle</h1>
   <div class="constrained">
-    <AccountChip provider="github" handle={LONG_HANDLE} href={`https://github.com/${LONG_HANDLE}`} mismatched />
+    <AccountChip
+      provider="github"
+      handle={LONG_HANDLE}
+      href={`https://github.com/${LONG_HANDLE}`}
+      mismatchedUsername="tbieniek"
+    />
   </div>
 </Story>
 
