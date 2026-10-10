@@ -22,7 +22,7 @@ impl BackgroundJob for NormalizeIndex {
 
         let dry_run = self.dry_run;
         spawn_blocking(move || {
-            let repo = ctx.lock_index()?;
+            let repo = ctx.lock_and_refresh_index()?;
 
             let entries = repo.list_entries()?;
             let num_entries = entries.len();
