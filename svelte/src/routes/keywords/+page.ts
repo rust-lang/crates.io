@@ -3,6 +3,8 @@ import type { paths } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch, url }) {
   let client = createClient({ fetch });
 
@@ -17,7 +19,7 @@ export async function load({ fetch, url }) {
 }
 
 function loadKeywordsError(status: number): never {
-  error(status, 'Failed to load keywords', { tryAgain: true });
+  error(status, 'Failed to load keywords', { tryAgain: isRetryableStatus(status) });
 }
 
 async function loadKeywords(

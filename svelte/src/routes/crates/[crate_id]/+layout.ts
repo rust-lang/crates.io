@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 // Match Ember.js behavior of accepting trailing slashes on crate URLs.
 // This can likely be removed once the Ember.js app is fully replaced.
 export const trailingSlash = 'ignore';
@@ -41,7 +43,7 @@ function loadCrateError(name: string, status: number): never {
   if (status === 404) {
     error(404, `Crate "${name}" not found`);
   } else {
-    error(status, `Failed to load crate data`, { tryAgain: true });
+    error(status, `Failed to load crate data`, { tryAgain: isRetryableStatus(status) });
   }
 }
 

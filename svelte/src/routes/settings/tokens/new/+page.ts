@@ -1,6 +1,8 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch, url }) {
   let tokenId = url.searchParams.get('from');
   if (!tokenId) return { existingToken: null };
@@ -28,5 +30,5 @@ export async function load({ fetch, url }) {
 }
 
 function loadError(status: number): never {
-  error(status, 'Failed to load token data', { tryAgain: true });
+  error(status, 'Failed to load token data', { tryAgain: isRetryableStatus(status) });
 }

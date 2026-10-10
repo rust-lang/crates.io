@@ -3,6 +3,8 @@ import type { paths } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 export async function load({ fetch, url }) {
   let client = createClient({ fetch });
 
@@ -18,7 +20,7 @@ export async function load({ fetch, url }) {
 }
 
 function loadCratesError(status: number, details?: string): never {
-  error(status, 'Failed to load crate list', { details, tryAgain: true });
+  error(status, 'Failed to load crate list', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCrates(

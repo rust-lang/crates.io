@@ -3,6 +3,7 @@ import type { components } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
 import { loadCrateDescriptions } from '#lib/utils/crate-descriptions.ts';
 
 const PER_PAGE = 10;
@@ -64,5 +65,5 @@ async function loadReverseDependencies(client: ReturnType<typeof createClient>, 
 }
 
 function loadError(name: string, status: number): never {
-  error(status, `${name}: Failed to load dependents`);
+  error(status, `${name}: Failed to load dependents`, { tryAgain: isRetryableStatus(status) });
 }

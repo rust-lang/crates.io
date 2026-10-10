@@ -3,6 +3,8 @@ import { createClient } from '@crates-io/api-client';
 import { error, redirect } from '@sveltejs/kit';
 import maxSatisfying from 'semver/ranges/max-satisfying';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
+
 function cargoRangeToNpm(range: string): string {
   return range.replace(',', ' ');
 }
@@ -27,7 +29,7 @@ export async function load({ fetch, params, parent }) {
 
   let status = response.response.status;
   if (response.error) {
-    error(status, `${crate.name}: Failed to load version data`, { tryAgain: true });
+    error(status, `${crate.name}: Failed to load version data`, { tryAgain: isRetryableStatus(status) });
   }
 
   let versions = response.data.versions;

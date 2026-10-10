@@ -75,7 +75,7 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
     await expect(page.locator('[data-test-title]')).toHaveText(`${foo.name}: Failed to load dependents`);
-    await expect(page.locator('[data-test-go-back]')).toBeVisible();
-    await expect(page.locator('[data-test-try-again]')).not.toBeVisible();
+    await expect(page.locator('[data-test-go-back]')).not.toBeVisible();
+    await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
 });

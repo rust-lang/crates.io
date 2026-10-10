@@ -3,6 +3,7 @@ import type { paths } from '@crates-io/api-client';
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
+import { isRetryableStatus } from '#lib/utils/api.ts';
 import { isLoggedIn } from '#lib/utils/session.svelte.ts';
 
 export async function load({ fetch, params, parent, url }) {
@@ -45,7 +46,7 @@ function loadUserError(login: string, status: number): never {
   if (status === 404) {
     error(404, `${login}: User not found`);
   } else {
-    error(status, `${login}: Failed to load user data`, { tryAgain: true });
+    error(status, `${login}: Failed to load user data`, { tryAgain: isRetryableStatus(status) });
   }
 }
 

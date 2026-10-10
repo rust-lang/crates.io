@@ -2,6 +2,7 @@ import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
 import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
+import { isRetryableStatus } from '#lib/utils/api.ts';
 import { loadCrateDescriptions } from '#lib/utils/crate-descriptions.ts';
 
 export async function load({ fetch, params }) {
@@ -42,5 +43,5 @@ async function loadDependencies(client: ReturnType<typeof createClient>, name: s
 }
 
 function loadDependenciesError(name: string, status: number): never {
-  error(status, `${name}: Failed to load dependencies`, { tryAgain: true });
+  error(status, `${name}: Failed to load dependencies`, { tryAgain: isRetryableStatus(status) });
 }

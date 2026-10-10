@@ -84,11 +84,11 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
     await expect(page.locator('[data-test-title]')).toHaveText('Failed to load crate list');
     await expect(page.locator('[data-test-details]')).toHaveText(detail);
-    await expect(page.locator('[data-test-try-again]')).toBeVisible();
-    await expect(page.locator('[data-test-go-back]')).not.toBeVisible();
+    await expect(page.locator('[data-test-try-again]')).not.toBeVisible();
+    await expect(page.locator('[data-test-go-back]')).toBeVisible();
 
     await msw.worker.resetHandlers();
-    await page.click('[data-test-try-again]');
+    await page.reload();
     await expect(page.locator('[data-test-404-page]')).not.toBeVisible();
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(23);
   });
