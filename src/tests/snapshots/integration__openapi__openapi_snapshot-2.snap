@@ -517,7 +517,7 @@ expression: response.json()
       "CrateOwnerInvitation": {
         "properties": {
           "crate_id": {
-            "description": "The ID of the crate that the user was invited to be an owner of.",
+            "description": "The ID of the crate that the user was invited to be an owner of. To accept or reject this\ninvitation, use this value in a `/api/v1/me/crate_owner_invitations/{crate_id}` request.",
             "example": 123,
             "format": "int32",
             "type": "integer"
@@ -4291,7 +4291,7 @@ expression: response.json()
                           "type": "boolean"
                         },
                         "crate_id": {
-                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "description": "The ID of the crate that the user was invited to be an owner of. This can be found in the\nlist of invitations for this owner, returned from a request to\n`/api/v1/crate_owner_invitations?invitee_id={owner_id}`.",
                           "example": 42,
                           "format": "int32",
                           "type": "integer"
@@ -4345,7 +4345,7 @@ expression: response.json()
         "operationId": "handle_crate_owner_invitation",
         "parameters": [
           {
-            "description": "ID of the crate",
+            "description": "ID of the crate. This can be found in the response for `/api/v1/crate_owner_invitations`.",
             "in": "path",
             "name": "crate_id",
             "required": true,
@@ -4368,7 +4368,7 @@ expression: response.json()
                         "type": "boolean"
                       },
                       "crate_id": {
-                        "description": "The opaque identifier for the crate this invitation is for.",
+                        "description": "The ID of the crate that the user was invited to be an owner of. This can be found in the\nlist of invitations for this owner, returned from a request to\n`/api/v1/crate_owner_invitations?invitee_id={owner_id}`.",
                         "example": 42,
                         "format": "int32",
                         "type": "integer"
@@ -4404,7 +4404,7 @@ expression: response.json()
                           "type": "boolean"
                         },
                         "crate_id": {
-                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "description": "The ID of the crate that the user was invited to be an owner of. This can be found in the\nlist of invitations for this owner, returned from a request to\n`/api/v1/crate_owner_invitations?invitee_id={owner_id}`.",
                           "example": 42,
                           "format": "int32",
                           "type": "integer"

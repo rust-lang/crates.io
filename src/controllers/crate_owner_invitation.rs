@@ -41,12 +41,48 @@ pub struct CrateOwnerInvitationListQueryParams {
     invitee_id: Option<i32>,
 }
 
-/// List all crate owner invitations for a crate or user.
+// The frontend has been moved to use `/api/v1/crate_owner_invitations` but
+// `/api/private/crate_owner_invitations` needs to still work until the next deploy.
+
+/// List all crate owner invitations for a crate or user. Moved to be part of the public API.
+#[deprecated]
 #[utoipa::path(
     get,
     path = "/api/private/crate_owner_invitations",
     params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
     security(("cookie" = [])),
+    tag = "owners",
+    extensions(("x-internal" = json!(true))),
+    responses(
+        (status = 200, description = "Successful Response", body = inline(PrivateListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn deprecated_private_list_crate_owner_invitations(
+    ctx: ServerContext,
+    params: CrateOwnerInvitationListQueryParams,
+    req: Parts,
+) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
+    list_crate_owner_invitations(ctx, params, req).await
+}
+
+/// List crate owner invitations according to the specified parameters that the currently
+/// authenticated user is allowed to see. At least one valid parameter is required.
+///
+/// If a `crate_name` parameter is specified, return the outstanding, active invitations for that
+/// crate, if the currently authenticated user is an owner of the crate.
+///
+/// If an `invitee_id` parameter is specified and equals the currently authenticated user, return
+/// the outstanding, active invitations that the authenticated user has received.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crate_owner_invitations",
+    params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "owners",
     extensions(("x-internal" = json!(true))),
     responses(
@@ -61,7 +97,7 @@ pub async fn list_crate_owner_invitations(
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
     let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
     let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
@@ -82,7 +118,10 @@ impl TryFrom<CrateOwnerInvitationListQueryParams> for ListFilter {
         } else if let Some(id) = params.invitee_id {
             ListFilter::InviteeId(id)
         } else {
-            return Err(bad_request("missing or invalid filter"));
+            return Err(bad_request(
+                "At least one valid filter is required. \
+                Valid filters include: `crate_name`, `invitee_id`",
+            ));
         };
 
         Ok(filter)
@@ -126,7 +165,10 @@ async fn prepare_list(
             }
             ListFilter::InviteeId(invitee_id) => {
                 if invitee_id != user.id {
-                    let detail = "only the invitee can query their pending invitations";
+                    let detail = format!(
+                        "you may only query your own pending invitations. Your user ID is {}",
+                        user.id
+                    );
                     return Err(forbidden(detail));
                 }
                 Box::new(crate_owner_invitations::invited_user_id.eq(invitee_id))
@@ -289,7 +331,7 @@ pub struct HandleResponse {
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
     params(
-        ("crate_id" = i32, Path, description = "ID of the crate"),
+        ("crate_id" = i32, Path, description = "ID of the crate. This can be found in the response for `/api/v1/crate_owner_invitations`."),
     ),
     request_body = inline(OwnerInvitation),
     security(
