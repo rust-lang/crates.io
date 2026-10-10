@@ -70,8 +70,8 @@ importers:
         specifier: 3.23.0
         version: 3.23.0(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2))(svelte@5.57.1(@typescript-eslint/types@8.71.0))
       eslint-plugin-unicorn:
-        specifier: 76.0.0
-        version: 76.0.0(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2))
+        specifier: 77.0.0
+        version: 77.0.0(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2))
       globals:
         specifier: 17.13.0
         version: 17.13.0
@@ -2833,8 +2833,8 @@ packages:
       svelte:
         optional: true
 
-  eslint-plugin-unicorn@76.0.0:
-    resolution: {integrity: sha512-3ywJrCMHKYhcBP5yFzGaOOX3dY7+iR3hvpuoS/0EnhRFgVWLejly+t4fOdJvWQxJdHZl1C+QBW7hybXPDld4Pw==}
+  eslint-plugin-unicorn@77.0.0:
+    resolution: {integrity: sha512-aayznMCKTXlPAsoyUjRok862sz3BJAfxpQX/t79AT/uVQTmWsCx3FXfXo+9hfhL8aR2mMZQYyXoDZo3/ly6lJw==}
     engines: {node: '>=22'}
     peerDependencies:
       eslint: '>=10.4'
@@ -7146,7 +7146,7 @@ snapshots:
     transitivePeerDependencies:
       - ts-node
 
-  eslint-plugin-unicorn@76.0.0(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2)):
+  eslint-plugin-unicorn@77.0.0(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2)):
     dependencies:
       '@eslint-community/eslint-utils': 4.10.1(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2))
       '@eslint/css-tree': 4.1.1

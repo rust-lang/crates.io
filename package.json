@@ -51,7 +51,7 @@
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-storybook": "10.6.1",
     "eslint-plugin-svelte": "3.23.0",
-    "eslint-plugin-unicorn": "76.0.0",
+    "eslint-plugin-unicorn": "77.0.0",
     "globals": "17.13.0",
     "msw": "3.0.2",
     "prettier": "3.9.9",
