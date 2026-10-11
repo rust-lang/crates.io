@@ -1,10 +1,10 @@
 #![doc = include_str!("../README.md")]
 
-use crates_io_env_vars::var;
+use crates_io_env_vars::{var, var_bool};
 
 /// Returns whether the process is running on Heroku, as indicated by `HEROKU`.
 pub fn is_heroku() -> anyhow::Result<bool> {
-    Ok(var("HEROKU")?.is_some())
+    Ok(var_bool("HEROKU")?.unwrap_or(false))
 }
 
 /// Returns the dyno name from `DYNO`, or `None` when unset.

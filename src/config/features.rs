@@ -1,4 +1,4 @@
-use crates_io_env_vars::var_parsed;
+use crates_io_env_vars::var_bool;
 
 #[derive(Debug, Default)]
 pub struct FeaturesConfig {
@@ -16,9 +16,9 @@ pub struct FeaturesConfig {
 
 impl FeaturesConfig {
     pub fn from_env() -> anyhow::Result<Self> {
-        let explicit_signup_enabled = var_parsed("EXPLICIT_SIGNUP_ENABLED")?.unwrap_or(false);
+        let explicit_signup_enabled = var_bool("EXPLICIT_SIGNUP_ENABLED")?.unwrap_or(false);
         let git_index_lazy_fetch_enabled =
-            var_parsed("GIT_INDEX_LAZY_FETCH_ENABLED")?.unwrap_or(false);
+            var_bool("GIT_INDEX_LAZY_FETCH_ENABLED")?.unwrap_or(false);
         Ok(Self {
             explicit_signup_enabled,
             git_index_lazy_fetch_enabled,

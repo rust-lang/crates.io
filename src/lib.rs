@@ -44,8 +44,8 @@ pub mod worker;
 /// in development, or for testing.
 ///
 /// The app's `config.env` value is set by [`Env::from_environment()`] to `Production` if the
-/// environment variable `HEROKU` is set and `Development` otherwise. It is set to `Test`
-/// unconditionally by the test harness.
+/// environment variable `HEROKU` is set to a true value and `Development` otherwise. It is set
+/// to `Test` unconditionally by the test harness.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,
@@ -56,9 +56,11 @@ pub enum Env {
 impl Env {
     /// Detects the environment from the `HEROKU` environment variable.
     pub fn from_environment() -> anyhow::Result<Self> {
-        Ok(match crates_io_env_vars::var("HEROKU")? {
-            Some(_) => Self::Production,
-            None => Self::Development,
+        let heroku = crates_io_env_vars::var_bool("HEROKU")?.unwrap_or(false);
+        Ok(if heroku {
+            Self::Production
+        } else {
+            Self::Development
         })
     }
 }
