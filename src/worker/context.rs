@@ -64,6 +64,10 @@ pub struct WorkerContextInner {
 }
 
 impl WorkerContext {
+    /// Locks the worker's index clone, cloning it on first use.
+    ///
+    /// The clone is not fetched, so callers that need the current remote tip
+    /// must call [`Repository::fetch_and_reset`] themselves.
     #[instrument(skip_all)]
     pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let lock_start = Instant::now();
@@ -83,9 +87,7 @@ impl WorkerContext {
             info!(duration = clone_duration.as_nanos(), "Index cloned");
         }
 
-        let repo_lock = RepositoryLock { repo };
-        repo_lock.fetch_and_reset()?;
-        Ok(repo_lock)
+        Ok(RepositoryLock { repo })
     }
 
     pub(crate) fn cloudfront(&self) -> Option<&CloudFront> {

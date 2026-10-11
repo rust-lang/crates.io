@@ -45,6 +45,7 @@ impl BackgroundJob for SyncToGitIndex {
 
         spawn_blocking(move || {
             let repo = ctx.lock_index()?;
+            repo.fetch_and_reset()?;
             let old = repo.read_entry(&crate_name)?;
 
             let commit_and_push_start = Instant::now();
@@ -112,6 +113,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
         let handle = Handle::current();
         spawn_blocking(move || {
             let repo = ctx.lock_index()?;
+            repo.fetch_and_reset()?;
             let mut builder = repo.commit_builder(commit_message)?;
             let mut num_changes = 0;
 
