@@ -222,7 +222,7 @@ pub async fn create_api_token(
         let context = context! {
             token_name => &new.api_token.name,
             user_name => &user.username,
-            domain => ctx.emails.domain,
+            domain => &ctx.emails.domain,
         };
 
         // At this point the token has been created so failing to send the

@@ -556,7 +556,7 @@ async fn create_user(
                 "user_confirm",
                 context! {
                     user_name => new_user.username,
-                    domain => emails.domain,
+                    domain => &emails.domain,
                     token => token.expose_secret()
                 },
             );

@@ -440,9 +440,9 @@ fn render_owner_invite_email(
     EmailMessage::from_template(
         "owner_invite",
         context! {
-            inviter => inviter.username,
-            domain => ctx.emails.domain,
-            crate_name => krate.name,
+            inviter => &inviter.username,
+            domain => &ctx.emails.domain,
+            crate_name => &krate.name,
             token => token.expose_secret()
         },
     )

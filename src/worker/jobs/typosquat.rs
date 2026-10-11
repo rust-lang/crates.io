@@ -80,7 +80,7 @@ async fn check(
                 .collect();
 
             let email_context = context! {
-                domain => emails.domain,
+                domain => &emails.domain,
                 crate_name => name,
                 squats => squats_data
             };

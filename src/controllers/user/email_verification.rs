@@ -97,8 +97,8 @@ pub async fn resend_email_verification(
         let email_message = EmailMessage::from_template(
             "user_confirm",
             context! {
-                user_name => auth.user().username,
-                domain => ctx.emails.domain,
+                user_name => &auth.user().username,
+                domain => &ctx.emails.domain,
                 token => email.token.expose_secret()
             },
         )

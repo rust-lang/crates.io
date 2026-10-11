@@ -233,10 +233,10 @@ async fn send_notification_email(
     let email = EmailMessage::from_template(
         "token_exposed",
         context! {
-            domain => ctx.config.domain_name,
+            domain => &ctx.config.domain_name,
             reporter => "GitHub",
-            source => alert.source,
-            token_name => token.name,
+            source => &alert.source,
+            token_name => &token.name,
             url => &alert.url,
         },
     )?;
@@ -295,11 +295,11 @@ async fn send_trustpub_notification_emails(
         let message = EmailMessage::from_template(
             "trustpub_token_exposed",
             context! {
-                domain => ctx.config.domain_name,
+                domain => &ctx.config.domain_name,
                 reporter => "GitHub",
-                source => alert.source,
-                crate_names,
-                url => alert.url
+                source => &alert.source,
+                crate_names => &crate_names,
+                url => &alert.url
             },
         );
 

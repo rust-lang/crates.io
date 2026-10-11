@@ -47,7 +47,7 @@ pub async fn run(config: SharedConfig, opts: Opts) -> anyhow::Result<()> {
             version => opts.version,
             publish_time => publish_time,
             publisher_info => opts.publisher_info,
-            domain => emails.domain
+            domain => &emails.domain
         },
     )
     .context("Failed to render email template")?;

@@ -88,9 +88,9 @@ async fn handle_expiring_token(
         let email = EmailMessage::from_template(
             "expiry_notification",
             context! {
-                name => user.username,
+                name => &user.username,
                 token_id => token.id,
-                token_name => token.name,
+                token_name => &token.name,
                 expiry_date => token.expired_at.unwrap().to_rfc3339_opts(SecondsFormat::Secs, true)
             },
         )?;

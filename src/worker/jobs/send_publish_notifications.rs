@@ -109,9 +109,9 @@ impl BackgroundJob for SendPublishNotificationsJob {
                     recipient => recipient,
                     krate => krate,
                     version => version,
-                    publish_time => publish_time,
+                    publish_time => &publish_time,
                     publisher_info => publisher_info,
-                    domain => ctx.config.domain_name
+                    domain => &ctx.config.domain_name
                 },
             );
 

@@ -102,7 +102,7 @@ pub async fn serve(ctx: ServerContext, request: Request, next: Next) -> Response
                 let env = template_env.clone().await;
                 let html = env
                     .get_template(TEMPLATE_NAME)?
-                    .render(minijinja::context! { og_image_url})?;
+                    .render(minijinja::context! { og_image_url => &og_image_url })?;
 
                 Ok(html)
             })
