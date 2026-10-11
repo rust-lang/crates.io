@@ -22,7 +22,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let config = RepositoryConfig::from_environment()?;
     let (repo, files) = spawn_blocking(move || {
         let repo = Repository::open(&config)?;
-        repo.reset_head()?;
+        repo.fetch_and_reset()?;
         println!("HEAD is at {}", repo.head_oid()?);
 
         let files = repo.get_files_modified_since(opts.incremental_commit.as_deref())?;

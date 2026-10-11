@@ -67,7 +67,7 @@ pub struct Repository {
     credentials: Credentials,
     /// Whether the local clone only contains the tip commit (`--depth 1`).
     ///
-    /// Shallow clones keep [`Self::reset_head`] fetches shallow too, so the
+    /// Shallow clones keep [`Self::fetch_and_reset`] fetches shallow too, so the
     /// local commit history stays pinned to the tip instead of retaining one
     /// more commit per fetch.
     shallow: bool,
@@ -332,7 +332,7 @@ impl Repository {
     /// Fetches any changes from the `origin` remote and force-updates the
     /// local `refs/heads/master` ref to the fetched tip.
     #[instrument(skip_all)]
-    pub fn reset_head(&self) -> anyhow::Result<()> {
+    pub fn fetch_and_reset(&self) -> anyhow::Result<()> {
         let original_head = self.head_oid()?;
 
         let fetch_start = Instant::now();
@@ -353,7 +353,7 @@ impl Repository {
             .refname_to_id("FETCH_HEAD")
             .context("Failed to resolve FETCH_HEAD")?;
         self.repository
-            .reference("refs/heads/master", fetch_head, true, "reset_head")
+            .reference("refs/heads/master", fetch_head, true, "fetch_and_reset")
             .context("Failed to update refs/heads/master")?;
 
         let head = self.head_oid()?;
@@ -436,7 +436,7 @@ mod tests {
     fn read_entry_present() {
         let (upstream, repo) = setup();
         upstream.write_file("se/rd/serde", "hello\n").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         let entry = repo.read_entry("serde").unwrap();
         assert_some_eq!(entry, b"hello\n".to_vec());
@@ -457,7 +457,7 @@ mod tests {
     fn read_entry_ignores_top_level_files() {
         let (upstream, repo) = setup();
         upstream.write_file("config.json", "{}").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         assert_none!(repo.read_entry("config.json").unwrap());
     }
@@ -475,7 +475,7 @@ mod tests {
         upstream.write_file("2/ab", "").unwrap();
         upstream.write_file("3/a/abc", "").unwrap();
         upstream.write_file("se/rd/serde", "").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         let mut entries = repo.list_entries().unwrap();
         entries.sort();
@@ -487,7 +487,7 @@ mod tests {
         let (upstream, repo) = setup();
         upstream.write_file("config.json", "{}").unwrap();
         upstream.write_file("se/rd/serde", "").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         assert_ok_eq!(repo.list_entries(), vec!["serde".to_string()]);
     }
@@ -517,7 +517,7 @@ mod tests {
 
         // New upstream commits are picked up by the (shallow) fetch.
         upstream.write_file("ra/yo/rayon", "rayon\n").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
         assert_some_eq!(repo.read_entry("rayon").unwrap(), b"rayon\n".to_vec());
     }
 
@@ -546,7 +546,7 @@ mod tests {
             .write_file(".github/workflows/ci.yml", "name: CI\n")
             .unwrap();
         upstream.write_file("se/rd/serde", "").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         assert_ok_eq!(repo.list_entries(), vec!["serde".to_string()]);
     }

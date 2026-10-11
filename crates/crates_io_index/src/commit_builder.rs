@@ -146,7 +146,7 @@ mod tests {
     fn remove_commits_deletion() {
         let (upstream, repo) = setup();
         upstream.write_file("se/rd/serde", "hello\n").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         let mut builder = commit_builder(&repo, "Delete crate `serde`");
         builder.remove_entry("serde").unwrap();
@@ -163,7 +163,7 @@ mod tests {
     fn upsert_with_identical_content_does_not_commit() {
         let (upstream, repo) = setup();
         upstream.write_file("se/rd/serde", "hello\n").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
         let before = upstream.list_commits().unwrap();
 
         let mut builder = commit_builder(&repo, "no-op upsert");
@@ -177,7 +177,7 @@ mod tests {
     fn multi_entry_changes_produce_single_commit() {
         let (upstream, repo) = setup();
         upstream.write_file("ol/d_/old_crate", "old\n").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
         let before_count = upstream.list_commits().unwrap().len();
 
         let mut builder = commit_builder(&repo, "Bulk update");
@@ -198,7 +198,7 @@ mod tests {
     fn top_level_files_are_preserved_across_commits() {
         let (upstream, repo) = setup();
         upstream.write_file("config.json", "{}").unwrap();
-        repo.reset_head().unwrap();
+        repo.fetch_and_reset().unwrap();
 
         let mut builder = commit_builder(&repo, "Create crate `serde`");
         builder.upsert_entry("serde", b"serde\n").unwrap();
