@@ -77,7 +77,7 @@ impl VisibilityConfig {
     where
         W: std::io::Write,
     {
-        use minijinja::Environment;
+        use minijinja::{Environment, value::Serde};
 
         let mut env = Environment::new();
         env.add_template("dump-export.sql", include_str!("dump-export.sql.j2"))
@@ -91,14 +91,14 @@ impl VisibilityConfig {
         let export_sql = env
             .get_template("dump-export.sql")
             .unwrap()
-            .render(&context)
+            .render(Serde(&context))
             .context("Failed to render dump-export.sql file")?;
 
         debug!("Rendering dump-import.sql file…");
         let import_sql = env
             .get_template("dump-import.sql")
             .unwrap()
-            .render(&context)
+            .render(Serde(&context))
             .context("Failed to render dump-import.sql file")?;
 
         debug!("Writing dump-export.sql file…");
