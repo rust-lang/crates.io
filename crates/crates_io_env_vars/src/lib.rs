@@ -77,6 +77,25 @@ where
     required(var_parsed(key), key)
 }
 
+/// Reads an environment variable for the current process, and parses it as a
+/// boolean if it is set.
+///
+/// The accepted values match those of clap's `BoolishValueParser`, compared
+/// case-insensitively: `y`, `yes`, `t`, `true`, `on`, and `1` for `true`, and
+/// `n`, `no`, `f`, `false`, `off`, and `0` for `false`.
+#[track_caller]
+pub fn var_bool(key: &str) -> anyhow::Result<Option<bool>> {
+    let Some(content) = var(key)? else {
+        return Ok(None);
+    };
+
+    match content.to_lowercase().as_str() {
+        "y" | "yes" | "t" | "true" | "on" | "1" => Ok(Some(true)),
+        "n" | "no" | "f" | "false" | "off" | "0" => Ok(Some(false)),
+        _ => Err(anyhow!("Failed to parse {key} environment variable")),
+    }
+}
+
 fn required<T>(res: anyhow::Result<Option<T>>, key: &str) -> anyhow::Result<T> {
     match res {
         Ok(opt) => opt.ok_or_else(|| anyhow!("Failed to find required {key} environment variable")),
@@ -199,6 +218,33 @@ mod tests {
             error.to_string(),
             "Failed to find required CRATES_IO_ENV_VARS_TEST_VAR environment variable"
         );
+    }
+
+    #[test]
+    fn test_var_bool() {
+        let _guard = MUTEX.lock().unwrap();
+
+        for value in ["y", "yes", "t", "true", "on", "1", "TRUE", "Yes"] {
+            unsafe { std::env::set_var(TEST_VAR, value) };
+            assert_some_eq!(assert_ok!(var_bool(TEST_VAR)), true, "{value}");
+        }
+
+        for value in ["n", "no", "f", "false", "off", "0", "FALSE", "No"] {
+            unsafe { std::env::set_var(TEST_VAR, value) };
+            assert_some_eq!(assert_ok!(var_bool(TEST_VAR)), false, "{value}");
+        }
+
+        for value in ["", "maybe", " true"] {
+            unsafe { std::env::set_var(TEST_VAR, value) };
+            let error = assert_err!(var_bool(TEST_VAR));
+            assert_eq!(
+                error.to_string(),
+                "Failed to parse CRATES_IO_ENV_VARS_TEST_VAR environment variable"
+            );
+        }
+
+        unsafe { std::env::remove_var(TEST_VAR) };
+        assert_none!(assert_ok!(var_bool(TEST_VAR)));
     }
 
     #[test]
