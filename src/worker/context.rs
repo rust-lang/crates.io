@@ -84,7 +84,7 @@ impl WorkerContext {
         }
 
         let repo_lock = RepositoryLock { repo };
-        repo_lock.reset_head()?;
+        repo_lock.fetch_and_reset()?;
         Ok(repo_lock)
     }
 
