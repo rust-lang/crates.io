@@ -14,7 +14,7 @@ mod ser;
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
 
-pub use crate::commit_builder::CommitBuilder;
+pub use crate::commit_builder::{CommitAndPushError, CommitBuilder};
 pub use crate::credentials::Credentials;
 pub use crate::data::{Crate, Dependency, DependencyKind};
 pub use crate::repo::{Repository, RepositoryConfig};

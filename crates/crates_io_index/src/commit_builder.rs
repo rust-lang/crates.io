@@ -66,9 +66,11 @@ impl<'a> CommitBuilder<'a> {
     /// Returns `Ok(())` without creating a commit if the resulting tree is
     /// identical to the parent commit's tree (no effective changes).
     #[instrument(skip_all, fields(message = %self.msg))]
-    pub fn commit_and_push(mut self) -> anyhow::Result<()> {
+    pub fn commit_and_push(mut self) -> Result<(), CommitAndPushError> {
         let gitrepo = self.repo.git_repo();
-        let parent = gitrepo.find_commit(self.repo.head_oid()?)?;
+        let parent = gitrepo
+            .find_commit(self.repo.head_oid()?)
+            .context("Failed to find HEAD commit")?;
         let parent_tree = parent.tree().context("Failed to load parent tree")?;
 
         let tree_oid = self
@@ -81,9 +83,11 @@ impl<'a> CommitBuilder<'a> {
             return Ok(());
         }
 
-        let sig = gitrepo.signature()?;
-        let tree = gitrepo.find_tree(tree_oid)?;
-        let commit = gitrepo.commit(None, &sig, &sig, &self.msg, &tree, &[&parent])?;
+        let sig = gitrepo.signature().context("Failed to read signature")?;
+        let tree = gitrepo.find_tree(tree_oid).context("Failed to find tree")?;
+        let commit = gitrepo
+            .commit(None, &sig, &sig, &self.msg, &tree, &[&parent])
+            .context("Failed to create commit")?;
 
         let parent = parent.id();
         let lease = format!("--force-with-lease={MASTER_REF}:{parent}");
@@ -91,7 +95,7 @@ impl<'a> CommitBuilder<'a> {
         let mut command = Command::new("git");
         command.args(["push", &lease, "origin", &refspec]);
         let push = self.repo.run_command(&mut command);
-        push.context("Failed to push the commit")?;
+        push.map_err(CommitAndPushError::Push)?;
 
         gitrepo
             .reference_matching(MASTER_REF, commit, true, parent, "commit_and_push")
@@ -99,6 +103,18 @@ impl<'a> CommitBuilder<'a> {
 
         Ok(())
     }
+}
+
+/// Error returned by [`CommitBuilder::commit_and_push`].
+#[derive(Debug, thiserror::Error)]
+pub enum CommitAndPushError {
+    /// The `git push` command failed, for example because the remote `master`
+    /// no longer points at the parent commit.
+    #[error("Failed to push the commit")]
+    Push(#[source] anyhow::Error),
+
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }
 
 #[cfg(test)]
