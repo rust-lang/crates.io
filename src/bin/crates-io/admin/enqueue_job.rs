@@ -41,10 +41,6 @@ pub enum Command {
         names: Vec<String>,
     },
     IndexVersionDownloadsArchive,
-    NormalizeIndex {
-        #[arg(long = "dry-run")]
-        dry_run: bool,
-    },
     ProcessCdnLogQueue(jobs::ProcessCdnLogQueue),
     SendTokenExpiryNotifications,
     SquashIndex,
@@ -114,9 +110,6 @@ pub async fn run(command: Command) -> Result<()> {
         }
         Command::IndexVersionDownloadsArchive => {
             jobs::IndexVersionDownloadsArchive.enqueue(&conn).await?;
-        }
-        Command::NormalizeIndex { dry_run } => {
-            jobs::NormalizeIndex::new(dry_run).enqueue(&conn).await?;
         }
         Command::ProcessCdnLogQueue(job) => {
             job.enqueue(&conn).await?;

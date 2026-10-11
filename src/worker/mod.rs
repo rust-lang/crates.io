@@ -46,7 +46,6 @@ impl RunnerExt for Runner<WorkerContext> {
             .register_job_type::<jobs::GenerateOgImage>()
             .register_job_type::<jobs::IndexVersionDownloadsArchive>()
             .register_job_type::<jobs::InvalidateCdns>()
-            .register_job_type::<jobs::NormalizeIndex>()
             .register_job_type::<jobs::ProcessCdnLog>()
             .register_job_type::<jobs::ProcessCdnLogQueue>()
             .register_job_type::<jobs::ProcessCloudfrontInvalidationQueue>()

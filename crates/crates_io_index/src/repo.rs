@@ -189,21 +189,10 @@ impl Repository {
 
     /// Starts a new commit targeting the `master` branch.
     ///
-    /// See [`Self::commit_builder_to`] for details.
-    pub fn commit_builder(&self, msg: impl Into<String>) -> anyhow::Result<CommitBuilder<'_>> {
-        CommitBuilder::new(self, msg, "master")
-    }
-
-    /// Starts a new commit targeting the given remote branch.
-    ///
     /// Stage changes on the returned [`CommitBuilder`] and call
     /// [`CommitBuilder::commit_and_push`] to finalize them.
-    pub fn commit_builder_to(
-        &self,
-        msg: impl Into<String>,
-        branch: impl Into<String>,
-    ) -> anyhow::Result<CommitBuilder<'_>> {
-        CommitBuilder::new(self, msg, branch)
+    pub fn commit_builder(&self, msg: impl Into<String>) -> anyhow::Result<CommitBuilder<'_>> {
+        CommitBuilder::new(self, msg)
     }
 
     pub(crate) fn git_repo(&self) -> &git2::Repository {
