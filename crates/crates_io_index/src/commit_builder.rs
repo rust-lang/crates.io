@@ -5,13 +5,12 @@ use tracing::{info, instrument};
 
 /// Buffers staged index mutations and produces a single commit when finalized.
 ///
-/// Obtain one via [`Repository::commit_builder`] or
-/// [`Repository::commit_builder_to`]. Stage changes through [`Self::upsert_entry`]
-/// and [`Self::remove_entry`], then call [`Self::commit_and_push`] to write the
-/// commit and push it to the target branch. Dropping the builder without
-/// calling `commit_and_push` discards the staged operations; any blobs that
-/// were written to the ODB become unreachable and will be cleaned up by
-/// `git gc`.
+/// Obtain one via [`Repository::commit_builder`]. Stage changes through
+/// [`Self::upsert_entry`] and [`Self::remove_entry`], then call
+/// [`Self::commit_and_push`] to write the commit and push it to the target
+/// branch. Dropping the builder without calling `commit_and_push` discards the
+/// staged operations; any blobs that were written to the ODB become unreachable
+/// and will be cleaned up by `git gc`.
 ///
 /// ### Limitation
 ///
@@ -205,32 +204,5 @@ mod tests {
         builder.commit_and_push().unwrap();
 
         assert_ok_eq!(upstream.read_file("config.json"), "{}".to_string());
-    }
-
-    #[test]
-    fn commit_builder_to_targets_specific_branch() {
-        let (upstream, repo) = setup();
-
-        // Create the target branch on the upstream so the push has somewhere
-        // to land. We simply start it at the current HEAD.
-        {
-            let bare = upstream.repository.lock().unwrap();
-            let head = bare.head().unwrap().target().unwrap();
-            bare.reference("refs/heads/side", head, false, "set up side branch")
-                .unwrap();
-        }
-
-        let mut builder = repo.commit_builder_to("Sideways", "side").unwrap();
-        builder.upsert_entry("serde", b"serde\n").unwrap();
-        builder.commit_and_push().unwrap();
-
-        // master is untouched
-        assert_ok_eq!(upstream.list_commits(), vec!["Initial Commit".to_string()]);
-
-        // the side branch has the new commit
-        let bare = upstream.repository.lock().unwrap();
-        let side = bare.find_reference("refs/heads/side").unwrap();
-        let commit = bare.find_commit(side.target().unwrap()).unwrap();
-        assert_eq!(commit.message().unwrap(), "Sideways");
     }
 }
