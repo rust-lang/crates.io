@@ -1,11 +1,13 @@
 use crate::builders::PublishBuilder;
-use crate::util::{RequestHelper, TestApp};
+use crate::util::{MockTokenUser, RequestHelper, TestApp};
 use claims::{assert_ok, assert_ok_eq};
 use crates_io::models::Crate;
+use crates_io::schema::background_jobs;
 use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use http::StatusCode;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -198,4 +200,111 @@ async fn bulk_sync_to_git_index_noop() {
     app.run_pending_background_jobs().await;
 
     assert_eq!(upstream.list_commits().unwrap(), before);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn sync_to_git_index_fails_on_rejected_push() {
+    let (app, _, _, token) = TestApp::full().with_git_index().with_token().await;
+    let upstream = app.upstream_index();
+    // Rejects every push to `master`.
+    set_upstream_config(&app, "receive.hideRefs", "refs/heads/master");
+
+    publish_serde(&token, "1.0.0").await;
+    let error = app.try_run_pending_background_jobs().await.unwrap_err();
+    assert_snapshot!(error, @"1 jobs failed");
+
+    assert_ok_eq!(upstream.list_commits(), vec!["Initial Commit"]);
+    delete_background_jobs(&app).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn lazy_fetch_pushes_without_fetching() {
+    let (app, token) = lazy_fetch_app().await;
+    let upstream = app.upstream_index();
+
+    publish_serde(&token, "1.0.0").await;
+    app.run_pending_background_jobs().await;
+
+    // Fetching `master` fails from here on, while pushing it still works.
+    set_upstream_config(&app, "uploadpack.hideRefs", "refs/heads/master");
+    publish_serde(&token, "1.1.0").await;
+    app.run_pending_background_jobs().await;
+
+    assert_ok_eq!(
+        upstream.list_commits(),
+        vec![
+            "Initial Commit",
+            "Create crate `serde`",
+            "Update crate `serde`",
+        ]
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn lazy_fetch_retries_after_remote_moved_ahead() {
+    let (app, token) = lazy_fetch_app().await;
+    let upstream = app.upstream_index();
+
+    publish_serde(&token, "1.0.0").await;
+    app.run_pending_background_jobs().await;
+
+    upstream.write_file("config.json", "{}\n").unwrap();
+    publish_serde(&token, "1.1.0").await;
+    app.run_pending_background_jobs().await;
+
+    assert_ok_eq!(
+        upstream.list_commits(),
+        vec![
+            "Initial Commit",
+            "Create crate `serde`",
+            "Write `config.json`",
+            "Update crate `serde`",
+        ]
+    );
+    assert_ok_eq!(upstream.read_file("config.json"), "{}\n".to_string());
+    assert_eq!(app.crates_from_index_head("serde").len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn lazy_fetch_fails_when_retried_push_is_rejected() {
+    let (app, token) = lazy_fetch_app().await;
+    let upstream = app.upstream_index();
+    // Rejects every push to `master`.
+    set_upstream_config(&app, "receive.hideRefs", "refs/heads/master");
+
+    publish_serde(&token, "1.0.0").await;
+    let error = app.try_run_pending_background_jobs().await.unwrap_err();
+    assert_snapshot!(error, @"1 jobs failed");
+
+    assert_ok_eq!(upstream.list_commits(), vec!["Initial Commit"]);
+    delete_background_jobs(&app).await;
+}
+
+fn set_upstream_config(app: &TestApp, name: &str, value: &str) {
+    let repo = app.upstream_index().repository.lock().unwrap();
+    repo.config().unwrap().set_str(name, value).unwrap();
+}
+
+async fn lazy_fetch_app() -> (TestApp, MockTokenUser) {
+    let (app, _, _, token) = TestApp::full()
+        .with_git_index()
+        .with_config(|config| config.features.git_index_lazy_fetch_enabled = true)
+        .with_token()
+        .await;
+    (app, token)
+}
+
+async fn publish_serde(token: &MockTokenUser, version: &str) {
+    let body = PublishBuilder::new("serde", version).body();
+    let response = token.put::<()>("/api/v1/crates/new", body).await;
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+/// Removes failed jobs, which would otherwise fail the `TestApp` teardown.
+async fn delete_background_jobs(app: &TestApp) {
+    let mut conn = app.db_conn().await;
+    diesel::delete(background_jobs::table)
+        .execute(&mut conn)
+        .await
+        .unwrap();
 }

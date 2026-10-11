@@ -43,10 +43,26 @@ impl BackgroundJob for SyncToGitIndex {
             .await
             .context("Failed to get index data")?;
 
+        let lazy_fetch = ctx.config.features.git_index_lazy_fetch_enabled;
         spawn_blocking(move || {
             let repo = ctx.lock_index()?;
-            repo.fetch_and_reset()?;
-            Ok(sync_entry(&repo, &crate_name, new.as_deref())?)
+            let new = new.as_deref();
+
+            if !lazy_fetch {
+                repo.fetch_and_reset()?;
+                return Ok(sync_entry(&repo, &crate_name, new)?);
+            }
+
+            // The clone is never ahead of the remote, but it can fall behind,
+            // so a failed push is retried once against the fetched remote tip.
+            match sync_entry(&repo, &crate_name, new) {
+                Err(CommitAndPushError::Push(error)) => {
+                    info!("Retrying after failed push: {error:#}");
+                    repo.fetch_and_reset()?;
+                    Ok(sync_entry(&repo, &crate_name, new)?)
+                }
+                result => Ok(result?),
+            }
         })
         .await?
     }
