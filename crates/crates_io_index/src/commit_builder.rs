@@ -3,6 +3,8 @@ use anyhow::Context;
 use std::process::Command;
 use tracing::{info, instrument};
 
+const MASTER_REF: &str = "refs/heads/master";
+
 /// Buffers staged index mutations and produces a single commit when finalized.
 ///
 /// Obtain one via [`Repository::commit_builder`]. Stage changes through
@@ -57,6 +59,10 @@ impl<'a> CommitBuilder<'a> {
     /// Writes the staged changes as a new commit and pushes it to the
     /// `master` branch on the `origin` remote.
     ///
+    /// The push only succeeds if the remote `master` still points at the
+    /// parent commit, and the local `master` only advances after the push
+    /// succeeds. A rejected push leaves the local clone unchanged.
+    ///
     /// Returns `Ok(())` without creating a commit if the resulting tree is
     /// identical to the parent commit's tree (no effective changes).
     #[instrument(skip_all, fields(message = %self.msg))]
@@ -77,10 +83,21 @@ impl<'a> CommitBuilder<'a> {
 
         let sig = gitrepo.signature()?;
         let tree = gitrepo.find_tree(tree_oid)?;
-        gitrepo.commit(Some("HEAD"), &sig, &sig, &self.msg, &tree, &[&parent])?;
+        let commit = gitrepo.commit(None, &sig, &sig, &self.msg, &tree, &[&parent])?;
 
-        self.repo
-            .run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
+        let parent = parent.id();
+        let lease = format!("--force-with-lease={MASTER_REF}:{parent}");
+        let refspec = format!("{commit}:{MASTER_REF}");
+        let mut command = Command::new("git");
+        command.args(["push", &lease, "origin", &refspec]);
+        let push = self.repo.run_command(&mut command);
+        push.context("Failed to push the commit")?;
+
+        gitrepo
+            .reference_matching(MASTER_REF, commit, true, parent, "commit_and_push")
+            .context("Failed to update local master after push")?;
+
+        Ok(())
     }
 }
 
@@ -89,16 +106,21 @@ mod tests {
     use crate::repo::{Repository, RepositoryConfig};
     use crate::testing::UpstreamIndex;
     use crate::{Credentials, commit_builder::CommitBuilder};
-    use claims::assert_ok_eq;
+    use claims::{assert_err, assert_ok_eq};
+    use insta::assert_snapshot;
 
     fn setup() -> (UpstreamIndex, Repository) {
         let upstream = UpstreamIndex::new().unwrap();
+        let repo = open_shallow(&upstream);
+        (upstream, repo)
+    }
+
+    fn open_shallow(upstream: &UpstreamIndex) -> Repository {
         let config = RepositoryConfig {
             index_location: upstream.url(),
             credentials: Credentials::Missing,
         };
-        let repo = Repository::open_shallow(&config).unwrap();
-        (upstream, repo)
+        Repository::open_shallow(&config).unwrap()
     }
 
     fn commit_builder<'a>(repo: &'a Repository, msg: &str) -> CommitBuilder<'a> {
@@ -130,6 +152,58 @@ mod tests {
             vec!["Initial Commit", "Create crate `serde`"]
         );
         assert_ok_eq!(upstream.read_file("se/rd/serde"), "hello\n".to_string());
+    }
+
+    #[test]
+    fn push_advances_local_and_remote_master() {
+        let (upstream, repo) = setup();
+        let before = repo.head_oid().unwrap();
+
+        let mut builder = commit_builder(&repo, "Create crate `serde`");
+        builder.upsert_entry("serde", b"hello\n").unwrap();
+        builder.commit_and_push().unwrap();
+
+        let after = repo.head_oid().unwrap();
+        assert_ne!(after, before);
+        assert_ok_eq!(upstream.branch_oid("master"), after);
+    }
+
+    #[test]
+    fn push_is_rejected_when_remote_moved_ahead() {
+        let (upstream, repo) = setup();
+        let local = repo.head_oid().unwrap();
+        upstream.write_file("config.json", "{}\n").unwrap();
+        let remote = upstream.branch_oid("master").unwrap();
+
+        let mut builder = commit_builder(&repo, "Create crate `serde`");
+        builder.upsert_entry("serde", b"hello\n").unwrap();
+        let error = assert_err!(builder.commit_and_push());
+        assert_snapshot!(error, @"Failed to push the commit");
+
+        assert_ok_eq!(repo.head_oid(), local);
+        assert_ok_eq!(upstream.branch_oid("master"), remote);
+    }
+
+    #[test]
+    fn push_is_rejected_when_remote_was_rewound() {
+        let upstream = UpstreamIndex::new().unwrap();
+        let initial = upstream.branch_oid("master").unwrap();
+        upstream.write_file("config.json", "{}\n").unwrap();
+        let repo = open_shallow(&upstream);
+        let local = repo.head_oid().unwrap();
+        {
+            let bare = upstream.repository.lock().unwrap();
+            bare.reference("refs/heads/master", initial, true, "rewind")
+                .unwrap();
+        }
+
+        let mut builder = commit_builder(&repo, "Create crate `serde`");
+        builder.upsert_entry("serde", b"hello\n").unwrap();
+        let error = assert_err!(builder.commit_and_push());
+        assert_snapshot!(error, @"Failed to push the commit");
+
+        assert_ok_eq!(repo.head_oid(), local);
+        assert_ok_eq!(upstream.branch_oid("master"), initial);
     }
 
     #[test]
