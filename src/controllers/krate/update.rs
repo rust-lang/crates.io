@@ -13,7 +13,7 @@ use axum::{Extension, Json};
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::{StatusCode, request::Parts};
-use minijinja::Value;
+use minijinja::value::Serde;
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
@@ -208,8 +208,7 @@ struct TrustpubOnlyChangedEmail<'a> {
 
 impl TrustpubOnlyChangedEmail<'_> {
     async fn send(&self, ctx: &ServerContext, email_address: &str) -> anyhow::Result<()> {
-        let email =
-            EmailMessage::from_template("trustpub_only_changed", Value::from_serialize(self));
+        let email = EmailMessage::from_template("trustpub_only_changed", Serde(self));
         let email = email.context("Failed to render email template")?;
 
         ctx.emails
