@@ -7,10 +7,10 @@ use tracing::{info, instrument};
 ///
 /// Obtain one via [`Repository::commit_builder`]. Stage changes through
 /// [`Self::upsert_entry`] and [`Self::remove_entry`], then call
-/// [`Self::commit_and_push`] to write the commit and push it to the target
-/// branch. Dropping the builder without calling `commit_and_push` discards the
-/// staged operations; any blobs that were written to the ODB become unreachable
-/// and will be cleaned up by `git gc`.
+/// [`Self::commit_and_push`] to write the commit and push it to `master`.
+/// Dropping the builder without calling `commit_and_push` discards the staged
+/// operations; any blobs that were written to the ODB become unreachable and
+/// will be cleaned up by `git gc`.
 ///
 /// ### Limitation
 ///
@@ -22,20 +22,14 @@ use tracing::{info, instrument};
 pub struct CommitBuilder<'a> {
     repo: &'a Repository,
     msg: String,
-    branch: String,
     tub: git2::build::TreeUpdateBuilder,
 }
 
 impl<'a> CommitBuilder<'a> {
-    pub(crate) fn new(
-        repo: &'a Repository,
-        msg: impl Into<String>,
-        branch: impl Into<String>,
-    ) -> anyhow::Result<Self> {
+    pub(crate) fn new(repo: &'a Repository, msg: impl Into<String>) -> anyhow::Result<Self> {
         Ok(Self {
             repo,
             msg: msg.into(),
-            branch: branch.into(),
             tub: git2::build::TreeUpdateBuilder::new(),
         })
     }
@@ -61,11 +55,11 @@ impl<'a> CommitBuilder<'a> {
     }
 
     /// Writes the staged changes as a new commit and pushes it to the
-    /// configured branch on the `origin` remote.
+    /// `master` branch on the `origin` remote.
     ///
     /// Returns `Ok(())` without creating a commit if the resulting tree is
     /// identical to the parent commit's tree (no effective changes).
-    #[instrument(skip_all, fields(message = %self.msg, branch = %self.branch))]
+    #[instrument(skip_all, fields(message = %self.msg))]
     pub fn commit_and_push(mut self) -> anyhow::Result<()> {
         let gitrepo = self.repo.git_repo();
         let parent = gitrepo.find_commit(self.repo.head_oid()?)?;
@@ -85,11 +79,8 @@ impl<'a> CommitBuilder<'a> {
         let tree = gitrepo.find_tree(tree_oid)?;
         gitrepo.commit(Some("HEAD"), &sig, &sig, &self.msg, &tree, &[&parent])?;
 
-        self.repo.run_command(Command::new("git").args([
-            "push",
-            "origin",
-            &format!("HEAD:{}", self.branch),
-        ]))
+        self.repo
+            .run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
     }
 }
 

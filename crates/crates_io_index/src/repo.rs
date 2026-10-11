@@ -192,7 +192,7 @@ impl Repository {
     /// Stage changes on the returned [`CommitBuilder`] and call
     /// [`CommitBuilder::commit_and_push`] to finalize them.
     pub fn commit_builder(&self, msg: impl Into<String>) -> anyhow::Result<CommitBuilder<'_>> {
-        CommitBuilder::new(self, msg, "master")
+        CommitBuilder::new(self, msg)
     }
 
     pub(crate) fn git_repo(&self) -> &git2::Repository {
