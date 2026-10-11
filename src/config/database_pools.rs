@@ -6,12 +6,12 @@
 //! - `DB_REPLICA_POOL_SIZE`: The number of connections of the read-only / replica database.
 //! - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
 //!   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
-//! - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
+//! - `READ_ONLY_MODE`: If set to a true value then force all connections to be read-only.
 //! - `DB_TCP_TIMEOUT_MS`: TCP timeout in milliseconds. See the doc comment for more details.
 
 use crate::Env;
 use anyhow::anyhow;
-use crates_io_env_vars::{required_var, var, var_parsed};
+use crates_io_env_vars::{required_var, var, var_bool, var_parsed};
 use secrecy::SecretString;
 use std::time::Duration;
 
@@ -63,7 +63,7 @@ impl DatabasePools {
     pub fn full_from_environment(env: Env) -> anyhow::Result<Self> {
         let leader_url = required_var("DATABASE_URL")?.into();
         let follower_url = var("READ_ONLY_REPLICA_URL")?.map(Into::into);
-        let read_only_mode = var("READ_ONLY_MODE")?.is_some();
+        let read_only_mode = var_bool("READ_ONLY_MODE")?.unwrap_or(false);
 
         let primary_pool_size = var_parsed("DB_PRIMARY_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
         let replica_pool_size = var_parsed("DB_REPLICA_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);

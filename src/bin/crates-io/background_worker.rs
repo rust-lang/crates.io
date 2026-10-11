@@ -24,7 +24,7 @@ use crates_io::worker::{
     QUEUE_BACKFILL, QUEUE_CLOUDFRONT, QUEUE_DOWNLOADS, QUEUE_REPOSITORY, RunnerExt, WorkerContext,
 };
 use crates_io_docs_rs::RealDocsRsClient;
-use crates_io_env_vars::{required_var, var, var_parsed};
+use crates_io_env_vars::{required_var, var, var_bool, var_parsed};
 use crates_io_fastly::Fastly;
 use crates_io_github::{GitHubClient, RealGitHubClient};
 use crates_io_github_app::{GitHubApp, GitHubAppClient};
@@ -73,7 +73,7 @@ pub fn run(mut config: SharedConfig) -> anyhow::Result<()> {
         }
     }
 
-    if var("HEROKU")?.is_some() {
+    if var_bool("HEROKU")?.unwrap_or(false) {
         ssh::write_known_hosts_file()?;
     }
 

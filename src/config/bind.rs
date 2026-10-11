@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-use crates_io_env_vars::{var, var_parsed};
+use crates_io_env_vars::{var_bool, var_parsed};
 
 #[derive(Debug)]
 pub struct BindConfig {
@@ -16,8 +16,8 @@ pub struct BindConfig {
 
 impl BindConfig {
     pub fn from_env() -> anyhow::Result<Self> {
-        let docker = var("DEV_DOCKER")?.is_some();
-        let heroku = var("HEROKU")?.is_some();
+        let docker = var_bool("DEV_DOCKER")?.unwrap_or(false);
+        let heroku = var_bool("HEROKU")?.unwrap_or(false);
 
         let ip = if heroku || docker {
             [0, 0, 0, 0].into()
