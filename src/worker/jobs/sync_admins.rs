@@ -205,7 +205,7 @@ async fn send_email(
     address: &str,
     context: &minijinja::Value,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("admin_account", context);
+    let email = EmailMessage::from_template("admin_account", context.clone());
     let email = email.context("Failed to render email template")?;
     let result = ctx.emails.send(address, email).await;
     result.context("Failed to send email")

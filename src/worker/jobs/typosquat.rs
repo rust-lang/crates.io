@@ -105,7 +105,7 @@ async fn send_notification_email(
     recipient: &str,
     context: &minijinja::Value,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("possible_typosquat", context)
+    let email = EmailMessage::from_template("possible_typosquat", context.clone())
         .context("Failed to render email template")?;
 
     emails

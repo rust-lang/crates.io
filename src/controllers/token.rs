@@ -349,7 +349,7 @@ pub async fn revoke_current_api_token(ctx: ServerContext, req: Parts) -> AppResu
 async fn send_creation_email(
     emails: &crate::Emails,
     recipient: &str,
-    context: impl Serialize,
+    context: minijinja::Value,
 ) -> anyhow::Result<()> {
     let email = EmailMessage::from_template("new_token", context);
     let email = email.context("Failed to render email template")?;

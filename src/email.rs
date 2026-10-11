@@ -8,7 +8,7 @@ use lettre::transport::smtp::AsyncSmtpTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
-use minijinja::Environment;
+use minijinja::{Environment, Value};
 use rand::distr::{Alphanumeric, SampleString};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -80,10 +80,7 @@ static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
     env
 });
 
-fn render_template(
-    template_name: &str,
-    context: impl Serialize,
-) -> Result<String, minijinja::Error> {
+fn render_template(template_name: &str, context: &Value) -> Result<String, minijinja::Error> {
     EMAIL_ENV.get_template(template_name)?.render(context)
 }
 
@@ -99,8 +96,9 @@ pub struct EmailMessage {
 impl EmailMessage {
     pub fn from_template(
         template_name: &'static str,
-        context: impl Serialize,
+        context: impl Into<Value>,
     ) -> Result<Self, minijinja::Error> {
+        let context = context.into();
         let subject = render_template(&format!("{template_name}/subject.txt.j2"), &context)?;
         let body_text = render_template(&format!("{template_name}/body.txt.j2"), &context)?;
         let body_html = render_template(&format!("{template_name}/body.html.j2"), &context)?;
@@ -348,7 +346,7 @@ mod tests {
         // Test that the `user_confirm` template inherits properly from the base template
         let result = render_template(
             "user_confirm/body.txt.j2",
-            context! {
+            &context! {
                 domain => "crates.io",
                 user_name => "testuser",
                 token => "abc123"
@@ -376,7 +374,7 @@ mod tests {
     fn test_escaping() {
         let content = assert_ok!(render_template(
             "owner_invite/body.txt.j2",
-            context! {
+            &context! {
                 inviter => "<script>alert('xss');</script>",
                 domain => "crates.io",
                 crate_name => "example-crate",
@@ -398,7 +396,7 @@ mod tests {
 
         let content = assert_ok!(render_template(
             "owner_invite/body.html.j2",
-            context! {
+            &context! {
                 inviter => "<script>alert('xss');</script>",
                 domain => "crates.io",
                 crate_name => "example-crate",
