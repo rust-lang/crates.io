@@ -41,7 +41,7 @@
     "@msw/playwright": "0.7.0",
     "@percy/cli": "1.32.11",
     "@percy/playwright": "1.1.2",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@sinonjs/fake-timers": "15.4.0",
     "@sveltejs/load-config": "0.2.3",
     "@types/node": "24.19.1",
