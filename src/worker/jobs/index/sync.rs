@@ -4,7 +4,7 @@ use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use crate::worker::{QUEUE_REPOSITORY, WorkerContext};
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
-use crates_io_index::Repository;
+use crates_io_index::{CommitAndPushError, Repository};
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
@@ -46,39 +46,49 @@ impl BackgroundJob for SyncToGitIndex {
         spawn_blocking(move || {
             let repo = ctx.lock_index()?;
             repo.fetch_and_reset()?;
-            let old = repo.read_entry(&crate_name)?;
-
-            let commit_and_push_start = Instant::now();
-            match (old, new) {
-                (None, Some(new)) => {
-                    let msg = format!("Create crate `{crate_name}`");
-                    let mut builder = repo.commit_builder(msg)?;
-                    builder.upsert_entry(&crate_name, new.as_bytes())?;
-                    builder.commit_and_push()?;
-                }
-                (Some(old), Some(new)) if old != new.as_bytes() => {
-                    let msg = format!("Update crate `{crate_name}`");
-                    let mut builder = repo.commit_builder(msg)?;
-                    builder.upsert_entry(&crate_name, new.as_bytes())?;
-                    builder.commit_and_push()?;
-                }
-                (Some(_old), None) => {
-                    let msg = format!("Delete crate `{crate_name}`");
-                    let mut builder = repo.commit_builder(msg)?;
-                    builder.remove_entry(&crate_name)?;
-                    builder.commit_and_push()?;
-                }
-                _ => debug!("Skipping sync because index is up-to-date"),
-            }
-            info!(
-                duration = commit_and_push_start.elapsed().as_nanos(),
-                "Committed and pushed"
-            );
-
-            Ok(())
+            Ok(sync_entry(&repo, &crate_name, new.as_deref())?)
         })
         .await?
     }
+}
+
+/// Commits and pushes the difference between the index entry for
+/// `crate_name` in the local clone and the `new` entry.
+fn sync_entry(
+    repo: &Repository,
+    crate_name: &str,
+    new: Option<&str>,
+) -> Result<(), CommitAndPushError> {
+    let old = repo.read_entry(crate_name)?;
+
+    let commit_and_push_start = Instant::now();
+    match (old, new) {
+        (None, Some(new)) => {
+            let msg = format!("Create crate `{crate_name}`");
+            let mut builder = repo.commit_builder(msg)?;
+            builder.upsert_entry(crate_name, new.as_bytes())?;
+            builder.commit_and_push()?;
+        }
+        (Some(old), Some(new)) if old != new.as_bytes() => {
+            let msg = format!("Update crate `{crate_name}`");
+            let mut builder = repo.commit_builder(msg)?;
+            builder.upsert_entry(crate_name, new.as_bytes())?;
+            builder.commit_and_push()?;
+        }
+        (Some(_old), None) => {
+            let msg = format!("Delete crate `{crate_name}`");
+            let mut builder = repo.commit_builder(msg)?;
+            builder.remove_entry(crate_name)?;
+            builder.commit_and_push()?;
+        }
+        _ => debug!("Skipping sync because index is up-to-date"),
+    }
+    info!(
+        duration = commit_and_push_start.elapsed().as_nanos(),
+        "Committed and pushed"
+    );
+
+    Ok(())
 }
 
 /// Syncs index files for multiple crates in a single commit.
