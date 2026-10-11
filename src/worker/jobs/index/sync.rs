@@ -4,7 +4,7 @@ use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use crate::worker::{QUEUE_REPOSITORY, WorkerContext};
 use anyhow::Context;
 use crates_io_database::models::{CloudFrontDistribution, CloudFrontInvalidationQueueItem};
-use crates_io_index::Repository;
+use crates_io_index::{CommitAndPushError, Repository};
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
@@ -43,41 +43,68 @@ impl BackgroundJob for SyncToGitIndex {
             .await
             .context("Failed to get index data")?;
 
+        let lazy_fetch = ctx.config.features.git_index_lazy_fetch_enabled;
         spawn_blocking(move || {
             let repo = ctx.lock_index()?;
-            let old = repo.read_entry(&crate_name)?;
+            let new = new.as_deref();
 
-            let commit_and_push_start = Instant::now();
-            match (old, new) {
-                (None, Some(new)) => {
-                    let msg = format!("Create crate `{crate_name}`");
-                    let mut builder = repo.commit_builder(msg)?;
-                    builder.upsert_entry(&crate_name, new.as_bytes())?;
-                    builder.commit_and_push()?;
-                }
-                (Some(old), Some(new)) if old != new.as_bytes() => {
-                    let msg = format!("Update crate `{crate_name}`");
-                    let mut builder = repo.commit_builder(msg)?;
-                    builder.upsert_entry(&crate_name, new.as_bytes())?;
-                    builder.commit_and_push()?;
-                }
-                (Some(_old), None) => {
-                    let msg = format!("Delete crate `{crate_name}`");
-                    let mut builder = repo.commit_builder(msg)?;
-                    builder.remove_entry(&crate_name)?;
-                    builder.commit_and_push()?;
-                }
-                _ => debug!("Skipping sync because index is up-to-date"),
+            if !lazy_fetch {
+                repo.fetch_and_reset()?;
+                return Ok(sync_entry(&repo, &crate_name, new)?);
             }
-            info!(
-                duration = commit_and_push_start.elapsed().as_nanos(),
-                "Committed and pushed"
-            );
 
-            Ok(())
+            // The clone is never ahead of the remote, but it can fall behind,
+            // so a failed push is retried once against the fetched remote tip.
+            match sync_entry(&repo, &crate_name, new) {
+                Err(CommitAndPushError::Push(error)) => {
+                    info!("Retrying after failed push: {error:#}");
+                    repo.fetch_and_reset()?;
+                    Ok(sync_entry(&repo, &crate_name, new)?)
+                }
+                result => Ok(result?),
+            }
         })
         .await?
     }
+}
+
+/// Commits and pushes the difference between the index entry for
+/// `crate_name` in the local clone and the `new` entry.
+fn sync_entry(
+    repo: &Repository,
+    crate_name: &str,
+    new: Option<&str>,
+) -> Result<(), CommitAndPushError> {
+    let old = repo.read_entry(crate_name)?;
+
+    let commit_and_push_start = Instant::now();
+    match (old, new) {
+        (None, Some(new)) => {
+            let msg = format!("Create crate `{crate_name}`");
+            let mut builder = repo.commit_builder(msg)?;
+            builder.upsert_entry(crate_name, new.as_bytes())?;
+            builder.commit_and_push()?;
+        }
+        (Some(old), Some(new)) if old != new.as_bytes() => {
+            let msg = format!("Update crate `{crate_name}`");
+            let mut builder = repo.commit_builder(msg)?;
+            builder.upsert_entry(crate_name, new.as_bytes())?;
+            builder.commit_and_push()?;
+        }
+        (Some(_old), None) => {
+            let msg = format!("Delete crate `{crate_name}`");
+            let mut builder = repo.commit_builder(msg)?;
+            builder.remove_entry(crate_name)?;
+            builder.commit_and_push()?;
+        }
+        _ => debug!("Skipping sync because index is up-to-date"),
+    }
+    info!(
+        duration = commit_and_push_start.elapsed().as_nanos(),
+        "Committed and pushed"
+    );
+
+    Ok(())
 }
 
 /// Syncs index files for multiple crates in a single commit.
@@ -112,6 +139,7 @@ impl BackgroundJob for BulkSyncToGitIndex {
         let handle = Handle::current();
         spawn_blocking(move || {
             let repo = ctx.lock_index()?;
+            repo.fetch_and_reset()?;
             let mut builder = repo.commit_builder(commit_message)?;
             let mut num_changes = 0;
 
