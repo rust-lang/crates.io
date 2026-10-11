@@ -78,11 +78,7 @@ struct OwnerRow {
 
 /// Inserts a user and returns its assigned ID.
 async fn insert_user(conn: &mut AsyncPgConnection, name: &str, gh_id: i32) -> i32 {
-    let user = NewUser::builder()
-        .username(name)
-        .gh_login(name)
-        .gh_id(gh_id)
-        .build();
+    let user = NewUser::builder().username(name).gh_id(gh_id).build();
     user.insert(conn).await.unwrap()
 }
 

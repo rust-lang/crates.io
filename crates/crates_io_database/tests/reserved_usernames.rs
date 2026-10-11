@@ -24,7 +24,6 @@ async fn reserve_username(conn: &mut AsyncPgConnection, username: &str) {
 async fn insert_user(conn: &AsyncPgConnection, username: &str) -> QueryResult<i32> {
     NewUser::builder()
         .gh_id(NEXT_GH_ID.fetch_add(1, Ordering::SeqCst))
-        .gh_login(username)
         .username(username)
         .build()
         .insert(conn)
