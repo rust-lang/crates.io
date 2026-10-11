@@ -80,7 +80,7 @@ async fn check(
                 .collect();
 
             let email_context = context! {
-                domain => emails.domain,
+                domain => &emails.domain,
                 crate_name => name,
                 squats => squats_data
             };
@@ -105,7 +105,7 @@ async fn send_notification_email(
     recipient: &str,
     context: &minijinja::Value,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("possible_typosquat", context)
+    let email = EmailMessage::from_template("possible_typosquat", context.clone())
         .context("Failed to render email template")?;
 
     emails

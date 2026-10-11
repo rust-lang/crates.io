@@ -1,6 +1,7 @@
 use crate::email::EmailMessage;
 use crates_io_database::models::trustpub::{GitHubConfig, GitLabConfig};
 use crates_io_database::models::{Crate, User};
+use minijinja::value::Serde;
 
 #[derive(Debug, Clone, Copy, serde::Serialize)]
 #[serde(tag = "type")]
@@ -23,7 +24,7 @@ pub struct ConfigCreatedEmail<'a> {
 
 impl ConfigCreatedEmail<'_> {
     pub fn render(&self) -> Result<EmailMessage, minijinja::Error> {
-        EmailMessage::from_template("trustpub_config_created", self)
+        EmailMessage::from_template("trustpub_config_created", Serde(self))
     }
 }
 
@@ -41,7 +42,7 @@ pub struct ConfigDeletedEmail<'a> {
 
 impl ConfigDeletedEmail<'_> {
     pub fn render(&self) -> Result<EmailMessage, minijinja::Error> {
-        EmailMessage::from_template("trustpub_config_deleted", self)
+        EmailMessage::from_template("trustpub_config_deleted", Serde(self))
     }
 }
 

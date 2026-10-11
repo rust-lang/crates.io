@@ -121,11 +121,11 @@ impl FileSet {
     }
 
     pub fn to_html(&self) -> anyhow::Result<String> {
-        use minijinja::{Environment, context};
+        use minijinja::{Environment, context, value::Serde};
 
         let template = include_str!("index.html.j2");
         let context = context! {
-            files => self,
+            files => Serde(self),
         };
 
         Ok(Environment::new().render_str(template, context)?)
