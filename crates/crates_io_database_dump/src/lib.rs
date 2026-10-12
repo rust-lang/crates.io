@@ -404,7 +404,7 @@ mod tests {
         let reader = BufReader::new(file);
 
         let archive = zip::ZipArchive::new(reader).unwrap();
-        let zip_paths = archive.file_names().collect::<Vec<_>>();
+        let zip_paths = archive.file_names().collect::<Result<Vec<_>, _>>().unwrap();
         assert_debug_snapshot!(zip_paths, @r#"
         [
             "README.md",

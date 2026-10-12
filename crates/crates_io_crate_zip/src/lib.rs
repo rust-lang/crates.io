@@ -201,7 +201,7 @@ pub fn build_zip<R: Read + Seek, W: Read + Write + Seek>(
             .by_index_raw(i)
             .context("Failed to read zip entry")?;
 
-        let path = entry.name().to_string();
+        let path = entry.name().context("Invalid zip entry name")?.into_owned();
 
         let data_offset = entry
             .data_start()
