@@ -75,10 +75,18 @@
   .title {
     text-align: center;
     line-height: 1.3;
+    margin: var(--space-m) 0 0;
+  }
+
+  .details {
+    text-align: center;
+    line-height: 1.3;
+    margin: var(--space-s) 0 0;
   }
 
   .link {
     font-weight: 500;
+    margin: var(--space-s) 0 0;
 
     &[disabled] {
       color: var(--grey600);
