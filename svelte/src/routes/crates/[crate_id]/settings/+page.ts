@@ -18,8 +18,8 @@ export async function load({ fetch, parent }) {
   return { owners, githubConfigs, gitlabConfigs };
 }
 
-function loadError(status: number): never {
-  error(status, 'Failed to load crate data', { tryAgain: isRetryableStatus(status) });
+function loadError(status: number, details?: string): never {
+  error(status, 'Failed to load crate data', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadGitHubConfigs(client: ReturnType<typeof createClient>, crateName: string) {
@@ -34,7 +34,8 @@ async function loadGitHubConfigs(client: ReturnType<typeof createClient>, crateN
 
   let status = response.response.status;
   if (response.error) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   return response.data.github_configs;
@@ -52,7 +53,8 @@ async function loadGitLabConfigs(client: ReturnType<typeof createClient>, crateN
 
   let status = response.response.status;
   if (response.error) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   return response.data.gitlab_configs;

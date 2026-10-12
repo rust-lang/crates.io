@@ -27,11 +27,11 @@ export async function load({ fetch, url, params }) {
   return { category, cratesResponse, page, perPage, sort, maxPages: MAX_PAGES };
 }
 
-function loadCategoryError(slug: string, status: number): never {
+function loadCategoryError(slug: string, status: number, details?: string): never {
   if (status === 404) {
     error(404, `${slug}: Category not found`);
   } else {
-    error(status, `${slug}: Failed to load category data`, { tryAgain: isRetryableStatus(status) });
+    error(status, `${slug}: Failed to load category data`, { details, tryAgain: isRetryableStatus(status) });
   }
 }
 
@@ -46,7 +46,8 @@ async function loadCategory(client: ReturnType<typeof createClient>, slug: strin
 
   let status = response.response.status;
   if (response.error) {
-    loadCategoryError(slug, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCategoryError(slug, status, details);
   }
 
   return response.data.category;
@@ -67,7 +68,8 @@ async function loadCrates(
 
   let status = response.response.status;
   if (response.error) {
-    loadCategoryError(slug, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCategoryError(slug, status, details);
   }
 
   return response.data;

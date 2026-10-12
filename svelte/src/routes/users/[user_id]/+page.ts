@@ -42,11 +42,11 @@ export async function load({ fetch, params, parent, url }) {
   return { user, linkedAccounts, cratesResponse, page, perPage, sort };
 }
 
-function loadUserError(login: string, status: number): never {
+function loadUserError(login: string, status: number, details?: string): never {
   if (status === 404) {
     error(404, `${login}: User not found`);
   } else {
-    error(status, `${login}: Failed to load user data`, { tryAgain: isRetryableStatus(status) });
+    error(status, `${login}: Failed to load user data`, { details, tryAgain: isRetryableStatus(status) });
   }
 }
 
@@ -66,7 +66,8 @@ async function loadUser(client: ReturnType<typeof createClient>, login: string) 
 
   let status = response.response.status;
   if (response.error) {
-    loadUserError(login, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadUserError(login, status, details);
   }
 
   return response.data;
@@ -87,7 +88,8 @@ async function loadCrates(
 
   let status = response.response.status;
   if (response.error) {
-    loadUserError(login, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadUserError(login, status, details);
   }
 
   return response.data;

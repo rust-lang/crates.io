@@ -29,8 +29,8 @@ export async function load({ fetch, parent }) {
   };
 }
 
-function loadError(status: number): never {
-  error(status, 'Failed to load dashboard data', { tryAgain: isRetryableStatus(status) });
+function loadError(status: number, details?: string): never {
+  error(status, 'Failed to load dashboard data', { details, tryAgain: isRetryableStatus(status) });
 }
 
 type Client = ReturnType<typeof createClient>;
@@ -45,7 +45,8 @@ async function loadCrates(client: Client, query: { user_id?: number; following?:
 
   let status = response.response.status;
   if (response.error) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   return response.data.crates;
@@ -61,7 +62,8 @@ async function loadStats(client: Client, userId: number) {
 
   let status = response.response.status;
   if (response.error) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   return response.data;
@@ -77,7 +79,8 @@ async function loadUpdates(client: Client) {
 
   let status = response.response.status;
   if (response.error) {
-    loadError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadError(status, details);
   }
 
   return response.data;

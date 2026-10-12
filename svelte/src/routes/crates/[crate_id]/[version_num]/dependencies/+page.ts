@@ -36,12 +36,13 @@ async function loadDependencies(client: ReturnType<typeof createClient>, name: s
 
   let status = response.response.status;
   if (response.error) {
-    loadDependenciesError(name, status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadDependenciesError(name, status, details);
   }
 
   return response.data.dependencies;
 }
 
-function loadDependenciesError(name: string, status: number): never {
-  error(status, `${name}: Failed to load dependencies`, { tryAgain: isRetryableStatus(status) });
+function loadDependenciesError(name: string, status: number, details?: string): never {
+  error(status, `${name}: Failed to load dependencies`, { details, tryAgain: isRetryableStatus(status) });
 }

@@ -23,8 +23,8 @@ export async function load({ fetch }) {
   return { summary: loadSummary(client) };
 }
 
-function loadSummaryError(status: number): never {
-  error(status, 'Failed to load summary data', { tryAgain: isRetryableStatus(status) });
+function loadSummaryError(status: number, details?: string): never {
+  error(status, 'Failed to load summary data', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadSummary(client: ReturnType<typeof createClient>): Promise<SummaryResponse> {
@@ -42,7 +42,8 @@ async function loadSummary(client: ReturnType<typeof createClient>): Promise<Sum
 
   let status = response.response.status;
   if (response.error) {
-    loadSummaryError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadSummaryError(status, details);
   }
 
   if (browser) {

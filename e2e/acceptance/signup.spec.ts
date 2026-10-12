@@ -4,11 +4,16 @@ import { http } from '@crates-io/msw/utils/openapi-http';
 import { Page } from '@playwright/test';
 
 /** Retries loading signup after a mocked request failure. */
-async function retrySignupLoad(page: Page, msw: AppFixtures['msw'], message: string) {
+async function retrySignupLoad(page: Page, msw: AppFixtures['msw'], details?: string) {
   await msw.db.pendingSignup.create({ login: 'ghost' });
 
   await page.goto('/signup');
-  await expect(page.locator('[data-test-title]')).toHaveText(message);
+  await expect(page.locator('[data-test-title]')).toHaveText('Failed to load signup details');
+  if (details) {
+    await expect(page.locator('[data-test-details]')).toHaveText(details);
+  } else {
+    await expect(page.locator('[data-test-details]')).not.toBeVisible();
+  }
   await expect(page.locator('[data-test-login-button]')).toBeVisible();
 
   // Restore the normal response so Try Again can load the pending signup.
@@ -69,7 +74,8 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     // Going back in the browser history should return to the signup page, which now shows a message that the user is already signed in.
     await page.goBack();
     await expect(page).toHaveURL('/signup?returnTo=%2Fsettings%2Fprofile%3Ffrom%3Dsignup%23profile');
-    await expect(page.locator('[data-test-title]')).toHaveText('You are already signed in.');
+    await expect(page.locator('[data-test-title]')).toHaveText('Failed to load signup details');
+    await expect(page.locator('[data-test-details]')).toHaveText('You are already signed in.');
 
     // Going back again should return to the original destination page, which is now accessible since the user is signed in.
     await page.goBack();
@@ -115,7 +121,8 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     // Expire the pending signup while the form is open. Reloading `/signup` now shows an error page.
     msw.db.pendingSignup.deleteMany(q => q.where(() => true));
     await page.reload();
-    await expect(page.locator('[data-test-title]')).toHaveText(
+    await expect(page.locator('[data-test-title]')).toHaveText('Failed to load signup details');
+    await expect(page.locator('[data-test-details]')).toHaveText(
       'Your signup session is missing or has expired. Please authenticate with GitHub again.',
     );
 
@@ -134,7 +141,8 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     // Going back in the browser history returns to the signup URL, which now shows a message that the signup session is missing.
     await page.goBack();
     await expect(page).toHaveURL('/signup?returnTo=%2Fsupport%3Fsource%3Dsignup%23help');
-    await expect(page.locator('[data-test-title]')).toHaveText(
+    await expect(page.locator('[data-test-title]')).toHaveText('Failed to load signup details');
+    await expect(page.locator('[data-test-details]')).toHaveText(
       'Your signup session is missing or has expired. Please authenticate with GitHub again.',
     );
 
@@ -171,7 +179,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
     // Return a network error for the first load, then `retrySignupLoad()` will reset the handler.
     msw.worker.use(http.get('/api/private/session/signup', ({ response }) => response.untyped(Response.error())));
 
-    await retrySignupLoad(page, msw, 'Failed to load signup details');
+    await retrySignupLoad(page, msw);
   });
 
   test('retains entered email after a submission network failure', async ({ page, msw }) => {
@@ -222,7 +230,8 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
 
     // Submitting the form after the pending signup has expired should show the error page.
     await page.getByRole('button', { name: 'Create account' }).click();
-    await expect(page.locator('[data-test-title]')).toHaveText(
+    await expect(page.locator('[data-test-title]')).toHaveText('Failed to load signup details');
+    await expect(page.locator('[data-test-details]')).toHaveText(
       'Your signup session is missing or has expired. Please authenticate with GitHub again.',
     );
   });

@@ -20,15 +20,16 @@ export async function load({ fetch, url }) {
 
   let status = response.response.status;
   if (!response.data) {
+    let details = response.error?.errors?.[0]?.detail;
     if (status === 404) {
       error(404, 'Token not found');
     }
-    loadError(status);
+    loadError(status, details);
   }
 
   return { existingToken: response.data.api_token };
 }
 
-function loadError(status: number): never {
-  error(status, 'Failed to load token data', { tryAgain: isRetryableStatus(status) });
+function loadError(status: number, details?: string): never {
+  error(status, 'Failed to load token data', { details, tryAgain: isRetryableStatus(status) });
 }

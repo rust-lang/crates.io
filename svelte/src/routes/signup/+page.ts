@@ -15,9 +15,8 @@ export async function load({ fetch }) {
 
   if (result.error) {
     let status = result.response.status;
-    error(status, result.error.errors[0]?.detail ?? 'Failed to load signup details', {
-      tryAgain: isRetryableStatus(status),
-    });
+    let details = result.error.errors?.[0]?.detail;
+    error(status, 'Failed to load signup details', { details, tryAgain: isRetryableStatus(status) });
   }
 
   return { signup: result.data.signup };

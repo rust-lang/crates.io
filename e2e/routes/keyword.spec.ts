@@ -9,13 +9,14 @@ test.describe('Route | keyword', { tag: '@routes' }, () => {
   });
 
   test('server error causes the error page to be shown', async ({ page, msw }) => {
-    let error = HttpResponse.json({}, { status: 500 });
+    let error = HttpResponse.json({ errors: [{ detail: 'database is down' }] }, { status: 500 });
     msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.goto('/keywords/foo');
     await expect(page).toHaveURL('/keywords/foo');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
     await expect(page.locator('[data-test-title]')).toHaveText('foo: Failed to load crates');
+    await expect(page.locator('[data-test-details]')).toHaveText('database is down');
     await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });

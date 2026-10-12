@@ -18,8 +18,8 @@ export async function load({ fetch, url }) {
   return { categories, page, perPage, sort };
 }
 
-function loadCategoriesError(status: number): never {
-  error(status, 'Failed to load categories', { tryAgain: isRetryableStatus(status) });
+function loadCategoriesError(status: number, details?: string): never {
+  error(status, 'Failed to load categories', { details, tryAgain: isRetryableStatus(status) });
 }
 
 async function loadCategories(
@@ -36,7 +36,8 @@ async function loadCategories(
 
   let status = response.response.status;
   if (response.error) {
-    loadCategoriesError(status);
+    let details = response.error?.errors?.[0]?.detail;
+    loadCategoriesError(status, details);
   }
 
   return response.data;

@@ -29,7 +29,8 @@ export async function load({ fetch, params, parent }) {
 
   let status = response.response.status;
   if (response.error) {
-    error(status, `${crate.name}: Failed to load version data`, { tryAgain: isRetryableStatus(status) });
+    let details = response.error?.errors?.[0]?.detail;
+    error(status, `${crate.name}: Failed to load version data`, { details, tryAgain: isRetryableStatus(status) });
   }
 
   let versions = response.data.versions;
