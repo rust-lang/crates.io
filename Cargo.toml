@@ -141,7 +141,7 @@ native-tls = "=0.2.18"
 oauth2 = { version = "=5.0.0", default-features = false }
 object_store = { version = "=0.14.2", features = ["aws"] }
 opentelemetry = { version = "=0.33.1", default-features = false, features = ["metrics"] }
-opentelemetry-otlp = { version = "=0.33.1", default-features = false, features = ["gzip-http", "http-proto", "internal-logs", "metrics", "reqwest-blocking-client", "zstd-http"] }
+opentelemetry-otlp = { version = "=0.33.1", default-features = false, features = ["gzip-http", "http-proto", "internal-logs", "metrics", "reqwest-blocking-client", "trace", "zstd-http"] }
 opentelemetry_sdk = { version = "=0.33.1", default-features = false, features = ["metrics"] }
 p256 = "=0.14.0"
 parking_lot = "=0.12.5"
