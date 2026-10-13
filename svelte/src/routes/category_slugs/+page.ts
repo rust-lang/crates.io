@@ -1,34 +1,13 @@
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 export async function load({ fetch }) {
   let client = createClient({ fetch });
 
-  let categorySlugs = await loadCategorySlugs(client);
+  let { category_slugs: categorySlugs } = await loadApi(client.GET('/api/v1/category_slugs'), {
+    message: 'Failed to load category slugs',
+  });
 
   return { categorySlugs };
-}
-
-function loadCategorySlugsError(status: number, details?: string): never {
-  error(status, 'Failed to load category slugs', { details, tryAgain: isRetryableStatus(status) });
-}
-
-async function loadCategorySlugs(client: ReturnType<typeof createClient>) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/category_slugs');
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadCategorySlugsError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadCategorySlugsError(status, details);
-  }
-
-  return response.data.category_slugs;
 }

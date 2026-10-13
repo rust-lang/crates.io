@@ -1,7 +1,7 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 // Match Ember.js behavior of accepting trailing slashes on crate URLs.
 // This can likely be removed once the Ember.js app is fully replaced.
@@ -20,59 +20,34 @@ export async function load({ fetch, params }) {
   return { crate, categories, keywords, defaultVersion, ownersPromise };
 }
 
-async function loadOwners(client: ReturnType<typeof createClient>, name: string) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}/owners', {
-      params: { path: { name } },
-    });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadCrateError(name, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadCrateError(name, status, details);
-  }
-
-  return response.data.users;
+/** Returns the error page headings for the crate and owners requests. */
+function crateErrorMessages(name: string) {
+  return { message: 'Failed to load crate data', notFound: `Crate "${name}" not found` };
 }
 
-function loadCrateError(name: string, status: number, details?: string): never {
-  if (status === 404) {
-    error(404, `Crate "${name}" not found`);
-  } else {
-    error(status, `Failed to load crate data`, { details, tryAgain: isRetryableStatus(status) });
-  }
+async function loadOwners(client: ReturnType<typeof createClient>, name: string) {
+  let { users } = await loadApi(
+    client.GET('/api/v1/crates/{name}/owners', { params: { path: { name } } }),
+    crateErrorMessages(name),
+  );
+
+  return users;
 }
 
 async function loadCrate(client: ReturnType<typeof createClient>, name: string) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}', {
+  let { crate, versions, keywords, categories } = await loadApi(
+    client.GET('/api/v1/crates/{name}', {
       params: {
         path: { name },
         query: { include: 'keywords,categories,downloads,default_version' },
       },
-    });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadCrateError(name, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadCrateError(name, status, details);
-  }
-
-  let { crate, versions, keywords, categories } = response.data;
+    }),
+    crateErrorMessages(name),
+  );
 
   if (versions?.length !== 1 || versions[0].num !== crate.default_version) {
     // Unexpected response structure is treated as `500 Internal Server Error`
-    loadCrateError(name, 500);
+    error(500, 'Failed to load crate data', { tryAgain: true });
   }
   return {
     crate: crate,

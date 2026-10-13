@@ -1,9 +1,8 @@
 import type { components } from '@crates-io/api-client';
 
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 import { loadCrateDescriptions } from '#lib/utils/crate-descriptions.ts';
 
 const PER_PAGE = 10;
@@ -43,28 +42,12 @@ export async function load({ fetch, params, url }) {
 }
 
 async function loadReverseDependencies(client: ReturnType<typeof createClient>, name: string, page: number) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates/{name}/reverse_dependencies', {
+  let { dependencies, versions, meta } = await loadApi(
+    client.GET('/api/v1/crates/{name}/reverse_dependencies', {
       params: { path: { name }, query: { page, per_page: PER_PAGE } },
-    });
-  } catch {
-    loadError(name, 504);
-  }
+    }),
+    { message: `${name}: Failed to load dependents` },
+  );
 
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadError(name, status, details);
-  }
-
-  return {
-    dependencies: response.data.dependencies,
-    versions: response.data.versions,
-    total: response.data.meta.total,
-  };
-}
-
-function loadError(name: string, status: number, details?: string): never {
-  error(status, `${name}: Failed to load dependents`, { details, tryAgain: isRetryableStatus(status) });
+  return { dependencies, versions, total: meta.total };
 }

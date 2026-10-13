@@ -1,9 +1,6 @@
-import type { paths } from '@crates-io/api-client';
-
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 export async function load({ fetch, params, url }) {
   let client = createClient({ fetch });
@@ -13,63 +10,19 @@ export async function load({ fetch, params, url }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'alpha';
 
-  let team = await loadTeam(client, params.team_id);
+  let login = params.team_id;
+  let errorMessages = { message: `${login}: Failed to load team data`, notFound: `${login}: Team not found` };
+  let { team } = await loadApi(
+    client.GET('/api/v1/teams/{team}', { params: { path: { team: login } } }),
+    errorMessages,
+  );
 
-  let cratesResponse = await loadCrates(client, params.team_id, {
-    team_id: team.id,
-    page,
-    per_page: perPage,
-    sort,
-    include_yanked: 'n',
-  });
+  let cratesResponse = await loadApi(
+    client.GET('/api/v1/crates', {
+      params: { query: { team_id: team.id, page, per_page: perPage, sort, include_yanked: 'n' } },
+    }),
+    errorMessages,
+  );
 
   return { team, cratesResponse, page, perPage, sort };
-}
-
-function loadTeamError(login: string, status: number, details?: string): never {
-  if (status === 404) {
-    error(404, `${login}: Team not found`);
-  } else {
-    error(status, `${login}: Failed to load team data`, { details, tryAgain: isRetryableStatus(status) });
-  }
-}
-
-async function loadTeam(client: ReturnType<typeof createClient>, login: string) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/teams/{team}', { params: { path: { team: login } } });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadTeamError(login, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadTeamError(login, status, details);
-  }
-
-  return response.data.team;
-}
-
-async function loadCrates(
-  client: ReturnType<typeof createClient>,
-  login: string,
-  query: paths['/api/v1/crates']['get']['parameters']['query'],
-) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadTeamError(login, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadTeamError(login, status, details);
-  }
-
-  return response.data;
 }

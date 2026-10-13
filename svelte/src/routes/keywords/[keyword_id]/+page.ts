@@ -1,9 +1,6 @@
-import type { paths } from '@crates-io/api-client';
-
 import { createClient } from '@crates-io/api-client';
-import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 const MAX_PAGES = 20;
 
@@ -15,33 +12,10 @@ export async function load({ fetch, url, params }) {
   let perPage = 10;
   let sort = url.searchParams.get('sort') ?? 'recent-downloads';
 
-  let cratesResponse = await loadCrates(client, keyword, { keyword, page, per_page: perPage, sort });
+  let cratesResponse = await loadApi(
+    client.GET('/api/v1/crates', { params: { query: { keyword, page, per_page: perPage, sort } } }),
+    { message: `${keyword}: Failed to load crates` },
+  );
 
   return { keyword, cratesResponse, page, perPage, sort, maxPages: MAX_PAGES };
-}
-
-function loadCratesError(keyword: string, status: number, details?: string): never {
-  error(status, `${keyword}: Failed to load crates`, { details, tryAgain: isRetryableStatus(status) });
-}
-
-async function loadCrates(
-  client: ReturnType<typeof createClient>,
-  keyword: string,
-  query: paths['/api/v1/crates']['get']['parameters']['query'],
-) {
-  let response;
-  try {
-    response = await client.GET('/api/v1/crates', { params: { query } });
-  } catch {
-    // Network errors are treated as `504 Gateway Timeout`
-    loadCratesError(keyword, 504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadCratesError(keyword, status, details);
-  }
-
-  return response.data;
 }

@@ -1,7 +1,7 @@
 import { createClient } from '@crates-io/api-client';
 import { error } from '@sveltejs/kit';
 
-import { isRetryableStatus } from '#lib/utils/api.ts';
+import { loadApi } from '#lib/utils/api.ts';
 
 type Client = ReturnType<typeof createClient>;
 
@@ -19,22 +19,10 @@ export async function load({ fetch, parent }) {
 }
 
 async function loadInvites(client: Client, userId: number) {
-  let response;
-  try {
-    response = await client.GET('/api/private/crate_owner_invitations', {
-      params: { query: { invitee_id: userId } },
-    });
-  } catch {
-    loadError(504);
-  }
-
-  let status = response.response.status;
-  if (response.error) {
-    let details = response.error?.errors?.[0]?.detail;
-    loadError(status, details);
-  }
-
-  let { invitations, users } = response.data;
+  let { invitations, users } = await loadApi(
+    client.GET('/api/private/crate_owner_invitations', { params: { query: { invitee_id: userId } } }),
+    { message: 'Failed to load pending invites' },
+  );
 
   let usersById = new Map(users.map(u => [u.id, u]));
 
@@ -44,8 +32,4 @@ async function loadInvites(client: Client, userId: number) {
     inviter_login: usersById.get(inv.inviter_id)?.login ?? 'unknown',
     created_at: inv.created_at,
   }));
-}
-
-function loadError(status: number, details?: string): never {
-  error(status, 'Failed to load pending invites', { details, tryAgain: isRetryableStatus(status) });
 }

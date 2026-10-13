@@ -1,6 +1,7 @@
 import { createClient } from '@crates-io/api-client';
 
 import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
+import { loadApi } from '#lib/utils/api.ts';
 import { loadDocsRsStatus } from '#lib/utils/docs-rs.ts';
 import { loadReadme } from '#lib/utils/readme.ts';
 import { loadUnmaintained } from '#lib/utils/rustsec.ts';
@@ -28,16 +29,13 @@ export async function load({ fetch, params }) {
 async function loadDownloads(fetch: typeof globalThis.fetch, name: string, version: string) {
   let client = createClient({ fetch });
 
-  let response = await client.GET('/api/v1/crates/{name}/{version}/downloads', {
-    params: { path: { name, version } },
-  });
-
-  if (response.error) {
-    throw new Error('Failed to load download data');
-  }
+  let { version_downloads } = await loadApi(
+    client.GET('/api/v1/crates/{name}/{version}/downloads', { params: { path: { name, version } } }),
+    { message: 'Failed to load download data' },
+  );
 
   return {
-    versionDownloads: response.data.version_downloads,
+    versionDownloads: version_downloads,
     extraDownloads: [],
   };
 }
