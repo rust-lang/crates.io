@@ -10,6 +10,7 @@ pub mod real_ip;
 mod require_user_agent;
 mod static_or_continue;
 mod svelte_redirect;
+mod trace_request;
 mod update_metrics;
 
 use ::sentry::integrations::tower as sentry_tower;
@@ -24,6 +25,7 @@ use tower_http::add_extension::AddExtensionLayer;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::timeout::{RequestBodyTimeoutLayer, TimeoutLayer};
+use tower_http::trace::TraceLayer;
 
 use crate::Env;
 use crate::server::ServerContext;
@@ -90,6 +92,12 @@ pub fn apply_axum_middleware(ctx: ServerContext, router: Router<()>) -> Router {
         ))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(30)))
         .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace_request::make_span)
+                .on_response(trace_request::on_response)
+                .on_failure(()),
+        )
 }
 
 pub fn conditional_layer<L, F: FnOnce() -> L>(
