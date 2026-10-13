@@ -1,5 +1,6 @@
 use crates_io::config::SharedConfig;
 use tracing::Instrument;
+use tracing::field::Empty;
 
 mod analyze_crates;
 mod backfill_target_metadata;
@@ -46,8 +47,22 @@ pub enum Command {
 
 #[tokio::main]
 pub async fn run(config: SharedConfig, command: Command) -> anyhow::Result<()> {
-    let span = info_span!("admin.command", command = ?command);
-    run_command(config, command).instrument(span).await
+    let span = info_span!(
+        "admin.command",
+        command = ?command,
+        otel.status_code = Empty,
+        otel.status_description = Empty,
+    );
+
+    let result = run_command(config, command).instrument(span.clone()).await;
+    match &result {
+        Ok(()) => span.record("otel.status_code", "OK"),
+        Err(error) => span
+            .record("otel.status_code", "ERROR")
+            .record("otel.status_description", format_args!("{error:#}")),
+    };
+
+    result
 }
 
 async fn run_command(config: SharedConfig, command: Command) -> anyhow::Result<()> {
