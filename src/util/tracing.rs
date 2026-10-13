@@ -61,13 +61,11 @@ fn init_with_default_level(level: LevelFilter) -> anyhow::Result<()> {
         .with(sentry_layer)
         .init();
 
-    install_panic_hook();
-
     Ok(())
 }
 
 /// Logs panics before invoking the previously installed panic hook.
-fn install_panic_hook() {
+pub fn install_panic_hook() {
     let previous_hook = panic::take_hook();
     panic::set_hook(Box::new(move |info| {
         log_panic(info);

@@ -23,6 +23,7 @@ fn main() -> anyhow::Result<()> {
 
     // Initialize logging
     crates_io::util::tracing::init()?;
+    crates_io::util::tracing::install_panic_hook();
 
     let config = SharedConfig::from_environment()?;
 
