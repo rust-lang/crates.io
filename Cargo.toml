@@ -197,4 +197,4 @@ opentelemetry_sdk = { version = "=0.33.0", default-features = false, features = 
 quoted_printable = "=0.5.2"
 sentry = { version = "=0.49.3", features = ["test"] }
 tokio = "=1.53.2"
-zip = { version = "=9.0.0", default-features = false, features = ["deflate"] }
+zip = { version = "=9.0.1", default-features = false, features = ["deflate"] }
