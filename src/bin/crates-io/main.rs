@@ -2,6 +2,7 @@
 extern crate tracing;
 
 use crates_io::config::SharedConfig;
+use crates_io::util::tracing as telemetry;
 use tracing_subscriber::util::SubscriberInitExt;
 
 mod admin;
@@ -22,17 +23,28 @@ fn main() -> anyhow::Result<()> {
 
     let _sentry = crates_io::sentry::init();
 
-    // Initialize logging
-    crates_io::util::tracing::subscriber(None)?.init();
-    crates_io::util::tracing::install_panic_hook();
+    // Log without tracing until the trace provider is built.
+    let bootstrap = tracing::subscriber::set_default(telemetry::subscriber(None)?);
+    telemetry::install_panic_hook();
 
     let config = SharedConfig::from_environment()?;
+    let provider = telemetry::tracer_provider(&config);
 
-    match Command::parse() {
+    drop(bootstrap);
+    telemetry::subscriber(provider.as_ref())?.init();
+
+    let result = match Command::parse() {
         Command::Admin(command) => admin::run(config, command),
         Command::Server => server::run(config),
         Command::BackgroundWorker => background_worker::run(config),
+    };
+
+    // The global subscriber keeps the provider alive, so `Drop` never flushes it.
+    if let Some(Err(error)) = provider.map(|provider| provider.shutdown()) {
+        warn!("Failed to shut down OpenTelemetry tracing: {error:#}");
     }
+
+    result
 }
 
 #[test]
