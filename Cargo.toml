@@ -140,9 +140,9 @@ moka = { version = "=0.12.16", default-features = false, features = ["future"] }
 native-tls = "=0.2.18"
 oauth2 = { version = "=5.0.0", default-features = false }
 object_store = { version = "=0.14.2", features = ["aws"] }
-opentelemetry = { version = "=0.33.1", default-features = false, features = ["metrics"] }
+opentelemetry = { version = "=0.33.1", default-features = false, features = ["metrics", "trace"] }
 opentelemetry-otlp = { version = "=0.33.1", default-features = false, features = ["gzip-http", "http-proto", "internal-logs", "metrics", "reqwest-blocking-client", "trace", "zstd-http"] }
-opentelemetry_sdk = { version = "=0.33.1", default-features = false, features = ["metrics"] }
+opentelemetry_sdk = { version = "=0.33.1", default-features = false, features = ["metrics", "trace"] }
 p256 = "=0.14.0"
 parking_lot = "=0.12.5"
 paste = "=1.0.15"

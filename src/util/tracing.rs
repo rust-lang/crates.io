@@ -7,6 +7,10 @@ use tracing::{Level, Metadata, Subscriber, error, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{EnvFilter, Layer, prelude::*};
 
+mod otel;
+
+pub use self::otel::tracer_provider;
+
 fn log_panic(info: &PanicHookInfo<'_>) {
     let message = info.payload_as_str().unwrap_or("non-string panic payload");
     let backtrace = Backtrace::force_capture();

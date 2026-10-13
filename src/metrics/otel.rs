@@ -36,7 +36,8 @@ fn otlp_meter_provider(config: &config::SharedConfig) -> anyhow::Result<SdkMeter
     Ok(provider)
 }
 
-fn resource(config: &config::SharedConfig) -> anyhow::Result<Resource> {
+/// Builds the application resource shared by metrics and traces.
+pub fn resource(config: &config::SharedConfig) -> anyhow::Result<Resource> {
     let environment = match config.domain_name.as_str() {
         "staging.crates.io" => "staging",
         // This uses a non-standard value for backwards compatibility for now.
