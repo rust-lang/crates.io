@@ -43,8 +43,6 @@ use url::Url;
 const DEFAULT_POOL_SIZE: usize = 10;
 
 pub fn run(mut config: SharedConfig) -> anyhow::Result<()> {
-    let _span = info_span!("swirl.run");
-
     info!("Booting runner");
 
     // Override the pool size for the background worker
