@@ -14,6 +14,7 @@ use tokio::time::sleep;
 use tracing::{Instrument, debug, error, info, info_span, warn};
 
 pub struct Worker<Context> {
+    pub(crate) name: String,
     pub(crate) connection_pool: Pool<AsyncPgConnection>,
     pub(crate) context: Context,
     pub(crate) job_registry: Arc<JobRegistry<Context>>,
@@ -85,7 +86,17 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
             let job_id = job.id;
             let job_type = job.job_type;
 
-            let span = info_span!("job", job.id = %job_id, job.typ = %job_type);
+            let span = info_span!(
+                parent: None,
+                "worker.job",
+                otel.name = %job_type,
+                worker.name = %self.name,
+                job.id = %job_id,
+                job.typ = %job_type,
+                job.outcome = tracing::field::Empty,
+                otel.status_code = tracing::field::Empty,
+                otel.status_description = tracing::field::Empty,
+            );
             info!(parent: &span, "Background job {job_type} ({job_id}) started");
 
             let future = with_sentry_transaction(&job_type, async || {
@@ -107,6 +118,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
             async {
                 match result {
                     Ok(_) => {
+                        span.record("job.outcome", "success");
                         info!(
                             job.outcome = "success",
                             duration = duration.as_nanos(),
@@ -115,6 +127,9 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                         storage::delete_successful_job(conn, job_id).await?
                     }
                     Err(error) => {
+                        span.record("job.outcome", "failure");
+                        span.record("otel.status_code", "ERROR");
+                        span.record("otel.status_description", format_args!("{error:#}"));
                         warn!(
                             job.outcome = "failure",
                             duration = duration.as_nanos(),
@@ -126,7 +141,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
 
                 Ok(Some(job_id))
             }
-            .instrument(span)
+            .instrument(span.clone())
             .await
         })
         .await
