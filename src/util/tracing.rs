@@ -83,11 +83,12 @@ pub fn install_panic_hook() {
     }));
 }
 
-/// Builds the JSON log layer with the Heroku release version on each event.
+/// Builds the JSON log layer with Heroku metadata and optional trace correlation.
 fn json_layer() -> anyhow::Result<json_subscriber::fmt::Layer> {
     let mut layer = json_subscriber::fmt::layer()
         .flatten_event(true)
-        .with_flat_span_list(true);
+        .with_flat_span_list(true)
+        .with_opentelemetry_ids(true);
 
     let inner = layer.inner_layer_mut();
 

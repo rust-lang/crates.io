@@ -4446,10 +4446,12 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7450152f0f81b8a1ad51e69fcc114ef6155d1a4efa076697471c4f572067de15"
 dependencies = [
+ "opentelemetry",
  "serde",
  "serde_json",
  "tracing",
  "tracing-core",
+ "tracing-opentelemetry",
  "tracing-serde",
  "tracing-subscriber",
  "uuid",
