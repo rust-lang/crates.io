@@ -39,8 +39,9 @@ fn otlp_tracer_provider(config: &config::SharedConfig) -> anyhow::Result<SdkTrac
         .build())
 }
 
-/// Samples all background job and crate publish traces and defers other root
-/// spans to the sampler configured through the SDK's environment variables.
+/// Samples all background job, admin command and crate publish traces and
+/// defers other root spans to the sampler configured through the SDK's
+/// environment variables.
 #[derive(Clone, Debug)]
 struct CratesSampler {
     baseline: Box<dyn ShouldSample>,
@@ -60,10 +61,11 @@ impl ShouldSample for CratesSampler {
         let has_value = |key, value| attribute(key).is_some_and(|kv| kv.value.as_str() == value);
 
         let is_job = attribute("job.typ").is_some();
+        let is_admin_command = name == "admin.command";
         let is_publish = has_value("http.request.method", "PUT")
             && has_value("http.route", "/api/v1/crates/new");
 
-        let sampler: &dyn ShouldSample = match is_job || is_publish {
+        let sampler: &dyn ShouldSample = match is_job || is_admin_command || is_publish {
             true => &Sampler::AlwaysOn,
             false => self.baseline.as_ref(),
         };
@@ -76,20 +78,31 @@ mod tests {
     use super::*;
     use opentelemetry_sdk::trace::SamplingDecision;
 
-    fn decision(attributes: &[KeyValue]) -> SamplingDecision {
+    fn decision(name: &str, attributes: &[KeyValue]) -> SamplingDecision {
         let sampler = CratesSampler {
             baseline: Box::new(Sampler::AlwaysOff),
         };
         let trace_id = TraceId::from(1);
         let kind = SpanKind::Internal;
-        let result = sampler.should_sample(None, trace_id, "test", &kind, attributes, &[]);
+        let result = sampler.should_sample(None, trace_id, name, &kind, attributes, &[]);
         result.decision
     }
 
     #[test]
     fn test_jobs_are_always_sampled() {
         let attributes = [KeyValue::new("job.typ", "sync_admins")];
-        assert_eq!(decision(&attributes), SamplingDecision::RecordAndSample);
+        assert_eq!(
+            decision("sync_admins", &attributes),
+            SamplingDecision::RecordAndSample
+        );
+    }
+
+    #[test]
+    fn test_admin_commands_are_always_sampled() {
+        assert_eq!(
+            decision("admin.command", &[]),
+            SamplingDecision::RecordAndSample
+        );
     }
 
     #[test]
@@ -98,17 +111,23 @@ mod tests {
             KeyValue::new("http.request.method", "PUT"),
             KeyValue::new("http.route", "/api/v1/crates/new"),
         ];
-        assert_eq!(decision(&attributes), SamplingDecision::RecordAndSample);
+        assert_eq!(
+            decision("PUT /api/v1/crates/new", &attributes),
+            SamplingDecision::RecordAndSample
+        );
     }
 
     #[test]
     fn test_other_spans_use_baseline() {
-        assert_eq!(decision(&[]), SamplingDecision::Drop);
+        assert_eq!(decision("test", &[]), SamplingDecision::Drop);
 
         let attributes = [
             KeyValue::new("http.request.method", "GET"),
             KeyValue::new("http.route", "/api/v1/crates/new"),
         ];
-        assert_eq!(decision(&attributes), SamplingDecision::Drop);
+        assert_eq!(
+            decision("GET /api/v1/crates/new", &attributes),
+            SamplingDecision::Drop
+        );
     }
 }
