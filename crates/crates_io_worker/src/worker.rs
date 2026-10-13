@@ -104,27 +104,30 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
             let result = future.instrument(span.clone()).await;
             let duration = start.elapsed();
 
-            let _enter = span.enter();
-            match result {
-                Ok(_) => {
-                    info!(
-                        job.outcome = "success",
-                        duration = duration.as_nanos(),
-                        "Background job {job_type} ({job_id}) completed",
-                    );
-                    storage::delete_successful_job(conn, job_id).await?
+            async {
+                match result {
+                    Ok(_) => {
+                        info!(
+                            job.outcome = "success",
+                            duration = duration.as_nanos(),
+                            "Background job {job_type} ({job_id}) completed",
+                        );
+                        storage::delete_successful_job(conn, job_id).await?
+                    }
+                    Err(error) => {
+                        warn!(
+                            job.outcome = "failure",
+                            duration = duration.as_nanos(),
+                            "Background job {job_type} ({job_id}) failed: {error:#}",
+                        );
+                        storage::update_failed_job(conn, job_id).await;
+                    }
                 }
-                Err(error) => {
-                    warn!(
-                        job.outcome = "failure",
-                        duration = duration.as_nanos(),
-                        "Background job {job_type} ({job_id}) failed: {error:#}",
-                    );
-                    storage::update_failed_job(conn, job_id).await;
-                }
-            }
 
-            Ok(Some(job_id))
+                Ok(Some(job_id))
+            }
+            .instrument(span)
+            .await
         })
         .await
     }
