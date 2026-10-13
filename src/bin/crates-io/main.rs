@@ -2,6 +2,7 @@
 extern crate tracing;
 
 use crates_io::config::SharedConfig;
+use tracing_subscriber::util::SubscriberInitExt;
 
 mod admin;
 mod background_worker;
@@ -22,7 +23,7 @@ fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
-    crates_io::util::tracing::init()?;
+    crates_io::util::tracing::subscriber()?.init();
     crates_io::util::tracing::install_panic_hook();
 
     let config = SharedConfig::from_environment()?;

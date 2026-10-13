@@ -3,23 +3,9 @@ use sentry::integrations::tracing::EventFilter;
 use serde_json::Value;
 use std::backtrace::Backtrace;
 use std::panic::{self, PanicHookInfo};
-use tracing::{Level, Metadata, error, warn};
+use tracing::{Level, Metadata, Subscriber, error, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{EnvFilter, Layer, prelude::*};
-
-/// Initializes the `tracing` logging framework.
-///
-/// Regular CLI output is influenced by the optional
-/// [`RUST_LOG`](tracing_subscriber::filter::EnvFilter) environment variable
-/// and is showing all `INFO` level events by default.
-///
-/// This function also sets up the Sentry error reporting integration for the
-/// `tracing` framework, which is hardcoded to include all `INFO` level events.
-///
-/// Returns an error if the Heroku release version cannot be read in JSON mode.
-pub fn init() -> anyhow::Result<()> {
-    init_with_default_level(LevelFilter::INFO)
-}
 
 fn log_panic(info: &PanicHookInfo<'_>) {
     let message = info.payload_as_str().unwrap_or("non-string panic payload");
@@ -32,9 +18,19 @@ fn log_panic(info: &PanicHookInfo<'_>) {
     );
 }
 
-fn init_with_default_level(level: LevelFilter) -> anyhow::Result<()> {
+/// Builds a subscriber for the `tracing` logging framework.
+///
+/// Regular CLI output is influenced by the optional
+/// [`RUST_LOG`](tracing_subscriber::filter::EnvFilter) environment variable
+/// and is showing all `INFO` level events by default.
+///
+/// The subscriber also includes the Sentry error reporting integration for the
+/// `tracing` framework, which is hardcoded to include all `INFO` level events.
+///
+/// Returns an error if the Heroku release version cannot be read in JSON mode.
+pub fn subscriber() -> anyhow::Result<impl Subscriber + Send + Sync + 'static> {
     let env_filter = EnvFilter::builder()
-        .with_default_directive(level.into())
+        .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
 
     let log_format = var("RUST_LOG_FORMAT")
@@ -56,12 +52,9 @@ fn init_with_default_level(level: LevelFilter) -> anyhow::Result<()> {
         .event_filter(event_filter)
         .with_filter(LevelFilter::INFO);
 
-    tracing_subscriber::registry()
+    Ok(tracing_subscriber::registry()
         .with(log_layer)
-        .with(sentry_layer)
-        .init();
-
-    Ok(())
+        .with(sentry_layer))
 }
 
 /// Logs panics before invoking the previously installed panic hook.
