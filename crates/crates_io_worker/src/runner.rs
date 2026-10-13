@@ -102,6 +102,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
                 info!(worker.name = %name, "Starting worker…");
 
                 let worker = Worker {
+                    name: name.clone(),
                     connection_pool: self.connection_pool.clone(),
                     context: self.context.clone(),
                     job_registry: Arc::new(queue.job_registry.clone()),

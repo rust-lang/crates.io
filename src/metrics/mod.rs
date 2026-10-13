@@ -1,4 +1,4 @@
-pub use self::otel::meter_provider;
+pub use self::otel::{meter_provider, resource};
 pub use self::server::ServerMetrics;
 pub use self::service::ServiceMetricsSnapshot;
 pub use self::shared::SharedMetrics;
