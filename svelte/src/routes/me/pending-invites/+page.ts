@@ -21,7 +21,7 @@ export async function load({ fetch, parent }) {
 async function loadInvites(client: Client, userId: number) {
   let response;
   try {
-    response = await client.GET('/api/private/crate_owner_invitations', {
+    response = await client.GET('/api/v1/crate_owner_invitations', {
       params: { query: { invitee_id: userId } },
     });
   } catch {

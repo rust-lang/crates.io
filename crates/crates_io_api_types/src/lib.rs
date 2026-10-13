@@ -92,7 +92,8 @@ pub struct EncodableCrateOwnerInvitation {
     /// The ID of the user who sent the invitation.
     #[schema(example = 3)]
     pub inviter_id: i32,
-    /// The ID of the crate that the user was invited to be an owner of.
+    /// The ID of the crate that the user was invited to be an owner of. To accept or reject this
+    /// invitation, use this value in a `/api/v1/me/crate_owner_invitations/{crate_id}` request.
     #[schema(example = 123)]
     pub crate_id: i32,
     /// The name of the crate that the user was invited to be an owner of.
@@ -108,7 +109,9 @@ pub struct EncodableCrateOwnerInvitation {
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, utoipa::ToSchema)]
 pub struct InvitationResponse {
-    /// The opaque identifier for the crate this invitation is for.
+    /// The ID of the crate that the user was invited to be an owner of. This can be found in the
+    /// list of invitations for this owner, returned from a request to
+    /// `/api/v1/crate_owner_invitations?invitee_id={owner_id}`.
     #[schema(example = 42)]
     pub crate_id: i32,
 

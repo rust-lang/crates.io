@@ -71,6 +71,9 @@ pub fn build_axum_router(ctx: ServerContext) -> Router<()> {
             crate_owner_invitation::list_crate_owner_invitations
         ))
         .routes(routes!(
+            crate_owner_invitation::deprecated_private_list_crate_owner_invitations
+        ))
+        .routes(routes!(
             crate_owner_invitation::handle_crate_owner_invitation
         ))
         .routes(routes!(

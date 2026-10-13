@@ -517,7 +517,7 @@ expression: response.json()
       "CrateOwnerInvitation": {
         "properties": {
           "crate_id": {
-            "description": "The ID of the crate that the user was invited to be an owner of.",
+            "description": "The ID of the crate that the user was invited to be an owner of. To accept or reject this\ninvitation, use this value in a `/api/v1/me/crate_owner_invitations/{crate_id}` request.",
             "example": 123,
             "format": "int32",
             "type": "integer"
@@ -1583,7 +1583,8 @@ expression: response.json()
   "paths": {
     "/api/private/crate_owner_invitations": {
       "get": {
-        "operationId": "list_crate_owner_invitations",
+        "deprecated": true,
+        "operationId": "deprecated_private_list_crate_owner_invitations",
         "parameters": [
           {
             "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",
@@ -1710,7 +1711,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "List all crate owner invitations for a crate or user.",
+        "summary": "List all crate owner invitations for a crate or user. Moved to be part of the public API.",
         "tags": [
           "owners"
         ]
@@ -2464,6 +2465,145 @@ expression: response.json()
         "summary": "Marks the email belonging to the given token as verified.",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/crate_owner_invitations": {
+      "get": {
+        "description": "If a `crate_name` parameter is specified, return the outstanding, active invitations for that\ncrate, if the currently authenticated user is an owner of the crate.\n\nIf an `invitee_id` parameter is specified and equals the currently authenticated user, return\nthe outstanding, active invitations that the authenticated user has received.",
+        "operationId": "list_crate_owner_invitations",
+        "parameters": [
+          {
+            "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",
+            "in": "query",
+            "name": "crate_name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The ID of the user who was invited to be a crate owner.\n\nThis parameter needs to match the authenticated user's ID.",
+            "in": "query",
+            "name": "invitee_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "invitations": {
+                      "description": "The list of crate owner invitations.",
+                      "items": {
+                        "$ref": "#/components/schemas/CrateOwnerInvitation"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query parameter string to fetch the next page of results.",
+                          "example": "?seek=c0ffee",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "next_page"
+                      ],
+                      "type": "object"
+                    },
+                    "users": {
+                      "description": "The list of users referenced in the crate owner invitations.",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "invitations",
+                    "users",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "List crate owner invitations according to the specified parameters that the currently\nauthenticated user is allowed to see. At least one valid parameter is required.",
+        "tags": [
+          "owners"
         ]
       }
     },
@@ -5158,7 +5298,7 @@ expression: response.json()
                           "type": "boolean"
                         },
                         "crate_id": {
-                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "description": "The ID of the crate that the user was invited to be an owner of. This can be found in the\nlist of invitations for this owner, returned from a request to\n`/api/v1/crate_owner_invitations?invitee_id={owner_id}`.",
                           "example": 42,
                           "format": "int32",
                           "type": "integer"
@@ -5212,7 +5352,7 @@ expression: response.json()
         "operationId": "handle_crate_owner_invitation",
         "parameters": [
           {
-            "description": "ID of the crate",
+            "description": "ID of the crate. This can be found in the response for `/api/v1/crate_owner_invitations`.",
             "in": "path",
             "name": "crate_id",
             "required": true,
@@ -5235,7 +5375,7 @@ expression: response.json()
                         "type": "boolean"
                       },
                       "crate_id": {
-                        "description": "The opaque identifier for the crate this invitation is for.",
+                        "description": "The ID of the crate that the user was invited to be an owner of. This can be found in the\nlist of invitations for this owner, returned from a request to\n`/api/v1/crate_owner_invitations?invitee_id={owner_id}`.",
                         "example": 42,
                         "format": "int32",
                         "type": "integer"
@@ -5271,7 +5411,7 @@ expression: response.json()
                           "type": "boolean"
                         },
                         "crate_id": {
-                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "description": "The ID of the crate that the user was invited to be an owner of. This can be found in the\nlist of invitations for this owner, returned from a request to\n`/api/v1/crate_owner_invitations?invitee_id={owner_id}`.",
                           "example": 42,
                           "format": "int32",
                           "type": "integer"

@@ -1,11 +1,11 @@
 ---
-source: src/tests/routes/private/crate_owner_invitations.rs
+source: src/tests/routes/crate_owner_invitations.rs
 expression: invitations
 ---
 {
   "invitations": [
     {
-      "invitee_id": 3,
+      "invitee_id": 2,
       "inviter_id": 1,
       "crate_id": 1,
       "crate_name": "crate_1",
@@ -24,16 +24,16 @@ expression: invitations
       "created_at": "[datetime]"
     },
     {
-      "id": 3,
-      "login": "user_2",
+      "id": 2,
+      "login": "invited_user",
       "name": null,
       "avatar": null,
-      "url": "https://github.com/user_2",
+      "url": "https://github.com/invited_user",
       "github_username_matches": true,
       "created_at": "[datetime]"
     }
   ],
   "meta": {
-    "next_page": null
+    "next_page": "?per_page=1&invitee_id=2&seek=WzEsMl0"
   }
 }

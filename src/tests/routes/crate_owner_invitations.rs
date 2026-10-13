@@ -1,4 +1,4 @@
-//! Tests for the `GET /api/private/crate_owner_invitations` endpoint
+//! Tests for the `GET /api/v1/crate_owner_invitations` endpoint
 
 use crate::builders::CrateBuilder;
 use crate::util::{MockCookieUser, RequestHelper, TestApp};
@@ -20,12 +20,9 @@ struct CrateOwnerInvitationsMeta {
 }
 
 async fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvitationsResponse {
-    user.get_with_query::<CrateOwnerInvitationsResponse>(
-        "/api/private/crate_owner_invitations",
-        query,
-    )
-    .await
-    .good()
+    user.get_with_query::<CrateOwnerInvitationsResponse>("/api/v1/crate_owner_invitations", query)
+        .await
+        .good()
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -172,15 +169,14 @@ async fn invitations_list_paginated() {
 async fn invitation_list_with_no_filter() {
     let (_, _, owner, _) = TestApp::init().with_token().await;
 
-    let resp = owner
-        .get::<()>("/api/private/crate_owner_invitations")
-        .await;
+    let resp = owner.get::<()>("/api/v1/crate_owner_invitations").await;
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         resp.json(),
         json!({
             "errors": [{
-                "detail": "missing or invalid filter",
+                "detail": "At least one valid filter is required. \
+                Valid filters include: `crate_name`, `invitee_id`",
             }],
         })
     );
@@ -194,7 +190,7 @@ async fn invitation_list_other_users() {
     // Retrieving our own invitations work.
     let resp = owner
         .get_with_query::<()>(
-            "/api/private/crate_owner_invitations",
+            "/api/v1/crate_owner_invitations",
             &format!("invitee_id={}", owner.as_model().id),
         )
         .await;
@@ -203,7 +199,7 @@ async fn invitation_list_other_users() {
     // Retrieving other users' invitations doesn't work.
     let resp = owner
         .get_with_query::<()>(
-            "/api/private/crate_owner_invitations",
+            "/api/v1/crate_owner_invitations",
             &format!("invitee_id={}", other_user.as_model().id),
         )
         .await;
@@ -225,13 +221,13 @@ async fn invitation_list_other_crates() {
 
     // Retrieving our own invitations work.
     let resp = owner
-        .get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_1")
+        .get_with_query::<()>("/api/v1/crate_owner_invitations", "crate_name=crate_1")
         .await;
     assert_eq!(resp.status(), StatusCode::OK);
 
     // Retrieving other users' invitations doesn't work.
     let resp = owner
-        .get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_2")
+        .get_with_query::<()>("/api/v1/crate_owner_invitations", "crate_name=crate_2")
         .await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
