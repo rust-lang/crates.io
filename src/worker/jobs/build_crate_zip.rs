@@ -1,5 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::StorageKey;
+use crate::tasks::spawn_blocking;
 use crate::worker::WorkerContext;
 use anyhow::Context;
 use chrono::{DateTime, Datelike, Timelike, Utc};
@@ -15,7 +16,6 @@ use std::fs::File;
 use std::io::{Read, Seek};
 use std::time::Instant;
 use tokio::io::AsyncWriteExt;
-use tokio::task::spawn_blocking;
 use tracing::{info, instrument, warn};
 
 /// Builds the seekable `.zip` source archive and its `.zip.json` manifest for a
