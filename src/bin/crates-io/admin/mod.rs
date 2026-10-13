@@ -1,4 +1,5 @@
 use crates_io::config::SharedConfig;
+use tracing::Instrument;
 
 mod analyze_crates;
 mod backfill_target_metadata;
@@ -45,9 +46,11 @@ pub enum Command {
 
 #[tokio::main]
 pub async fn run(config: SharedConfig, command: Command) -> anyhow::Result<()> {
-    let span = info_span!("admin.command", command = tracing::field::Empty);
-    span.record("command", tracing::field::debug(&command));
+    let span = info_span!("admin.command", command = ?command);
+    run_command(config, command).instrument(span).await
+}
 
+async fn run_command(config: SharedConfig, command: Command) -> anyhow::Result<()> {
     match command {
         Command::AnalyzeCrates(opts) => analyze_crates::run(opts).await,
         Command::BackfillTargetMetadata(opts) => backfill_target_metadata::run(opts).await,
