@@ -10,7 +10,7 @@ pub async fn update_metrics(ctx: ServerContext, req: Request, next: Next) -> Res
     next.run(req).await
 }
 
-fn request_scheme(req: &Request) -> &'static str {
+pub fn request_scheme(req: &Request) -> &'static str {
     let forwarded_scheme = req
         .headers()
         .get("x-forwarded-proto")
