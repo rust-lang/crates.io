@@ -169,6 +169,7 @@ toml = "=1.1.8"
 tower = "=0.5.3"
 tower-http = { version = "=0.7.1", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.44"
+tracing-opentelemetry = { version = "=0.34.0", default-features = false }
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "json"] }
 typomania = { version = "=0.2.0", default-features = false }
 url = "=2.5.8"

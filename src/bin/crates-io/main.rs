@@ -23,7 +23,7 @@ fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
-    crates_io::util::tracing::subscriber()?.init();
+    crates_io::util::tracing::subscriber(None)?.init();
     crates_io::util::tracing::install_panic_hook();
 
     let config = SharedConfig::from_environment()?;

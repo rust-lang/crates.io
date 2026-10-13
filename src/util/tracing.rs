@@ -1,4 +1,6 @@
 use crates_io_env_vars::var;
+use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::trace::SdkTracerProvider;
 use sentry::integrations::tracing::EventFilter;
 use serde_json::Value;
 use std::backtrace::Backtrace;
@@ -30,9 +32,13 @@ fn log_panic(info: &PanicHookInfo<'_>) {
 ///
 /// The subscriber also includes the Sentry error reporting integration for the
 /// `tracing` framework, which is hardcoded to include all `INFO` level events.
+/// OpenTelemetry records `INFO` level spans and their events independently of
+/// `RUST_LOG`.
 ///
 /// Returns an error if the Heroku release version cannot be read in JSON mode.
-pub fn subscriber() -> anyhow::Result<impl Subscriber + Send + Sync + 'static> {
+pub fn subscriber(
+    provider: Option<&SdkTracerProvider>,
+) -> anyhow::Result<impl Subscriber + Send + Sync + 'static> {
     let env_filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
@@ -56,9 +62,16 @@ pub fn subscriber() -> anyhow::Result<impl Subscriber + Send + Sync + 'static> {
         .event_filter(event_filter)
         .with_filter(LevelFilter::INFO);
 
+    let otel_layer = provider.map(|provider| {
+        tracing_opentelemetry::layer()
+            .with_tracer(provider.tracer("crates_io"))
+            .with_filter(LevelFilter::INFO)
+    });
+
     Ok(tracing_subscriber::registry()
         .with(log_layer)
-        .with(sentry_layer))
+        .with(sentry_layer)
+        .with(otel_layer))
 }
 
 /// Logs panics before invoking the previously installed panic hook.
