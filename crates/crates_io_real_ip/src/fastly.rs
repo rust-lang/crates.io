@@ -8,6 +8,8 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 pub const FASTLY_NETWORKS: &[IpNetwork] = &[
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(23, 235, 32, 0), 20).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(43, 249, 72, 0), 22).unwrap()),
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(90, 98, 0, 0), 17).unwrap()),
+    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(90, 98, 128, 0), 18).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(103, 244, 50, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(103, 245, 222, 0), 23).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(103, 245, 224, 0), 24).unwrap()),
@@ -26,5 +28,6 @@ pub const FASTLY_NETWORKS: &[IpNetwork] = &[
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(199, 27, 72, 0), 21).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(199, 232, 0, 0), 16).unwrap()),
     IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2a04, 0x4e40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0), 32).unwrap()),
-    IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2a04, 0x4e42, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0), 32).unwrap()),
+    IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2a04, 0x4e42, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0), 31).unwrap()),
+    IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2a04, 0x4e44, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0), 32).unwrap()),
 ];
