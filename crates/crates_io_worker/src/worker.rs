@@ -90,6 +90,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                 parent: None,
                 "worker.job",
                 otel.name = %job_type,
+                otel.kind = "consumer",
                 worker.name = %self.name,
                 job.id = %job_id,
                 job.typ = %job_type,
