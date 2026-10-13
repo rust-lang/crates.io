@@ -28,7 +28,7 @@ fn otlp_tracer_provider(config: &config::SharedConfig) -> anyhow::Result<SdkTrac
     let resource = crate::metrics::resource(config)?;
     let exporter = SpanExporter::builder().with_http().build()?;
 
-    // Child spans follow their root, so a sampled job keeps all of its spans.
+    // Child spans follow their root, so a sampled trace keeps all of its spans.
     let baseline = Config::default().sampler;
     let sampler = Sampler::ParentBased(Box::new(CratesSampler { baseline }));
 
@@ -39,8 +39,8 @@ fn otlp_tracer_provider(config: &config::SharedConfig) -> anyhow::Result<SdkTrac
         .build())
 }
 
-/// Samples all background job traces and defers other root spans to the
-/// sampler configured through the SDK's environment variables.
+/// Samples all background job and crate publish traces and defers other root
+/// spans to the sampler configured through the SDK's environment variables.
 #[derive(Clone, Debug)]
 struct CratesSampler {
     baseline: Box<dyn ShouldSample>,
@@ -56,8 +56,14 @@ impl ShouldSample for CratesSampler {
         attributes: &[KeyValue],
         links: &[Link],
     ) -> SamplingResult {
-        let is_job = attributes.iter().any(|kv| kv.key.as_str() == "job.typ");
-        let sampler: &dyn ShouldSample = match is_job {
+        let attribute = |key| attributes.iter().find(|kv| kv.key.as_str() == key);
+        let has_value = |key, value| attribute(key).is_some_and(|kv| kv.value.as_str() == value);
+
+        let is_job = attribute("job.typ").is_some();
+        let is_publish = has_value("http.request.method", "PUT")
+            && has_value("http.route", "/api/v1/crates/new");
+
+        let sampler: &dyn ShouldSample = match is_job || is_publish {
             true => &Sampler::AlwaysOn,
             false => self.baseline.as_ref(),
         };
@@ -87,7 +93,22 @@ mod tests {
     }
 
     #[test]
+    fn test_crate_publishes_are_always_sampled() {
+        let attributes = [
+            KeyValue::new("http.request.method", "PUT"),
+            KeyValue::new("http.route", "/api/v1/crates/new"),
+        ];
+        assert_eq!(decision(&attributes), SamplingDecision::RecordAndSample);
+    }
+
+    #[test]
     fn test_other_spans_use_baseline() {
         assert_eq!(decision(&[]), SamplingDecision::Drop);
+
+        let attributes = [
+            KeyValue::new("http.request.method", "GET"),
+            KeyValue::new("http.route", "/api/v1/crates/new"),
+        ];
+        assert_eq!(decision(&attributes), SamplingDecision::Drop);
     }
 }
