@@ -44,7 +44,7 @@ pub fn resource(config: &config::SharedConfig) -> anyhow::Result<Resource> {
         _ => "prod",
     };
     let mut builder = Resource::builder().with_attributes([
-        kv("service.name", "crates_io"),
+        kv("service.name", "crates-io"),
         kv("deployment.environment.name", environment),
         kv("service.instance.id", Uuid::new_v4().to_string()),
     ]);
