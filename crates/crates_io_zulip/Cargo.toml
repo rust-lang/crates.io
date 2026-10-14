@@ -18,7 +18,7 @@ mockall = { version = "=0.15.0", optional = true }
 reqwest = { version = "=0.13.5", features = ["form"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.229", features = ["derive"] }
-serde_json = "=1.0.152"
+serde_json = "=1.0.154"
 thiserror = "=2.0.21"
 url = "=2.5.8"
 
