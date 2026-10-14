@@ -69,10 +69,10 @@ async fn show_latest_user_case_insensitively() {
     // Please do not delete or modify the setup of this test in order to get it to pass.
     // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
     // available for anyone to take. We need to support having multiple user accounts
-    // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
-    // should be used for uniquely identifying GitHub accounts whenever possible. For the
-    // crates.io/user/{username} pages, the best we can do is show the last crates.io account
-    // created with that username.
+    // with the same `oauth_github.login` in crates.io. `oauth_github.account_id` is stable across
+    // renames, so that field should be used for uniquely identifying GitHub accounts whenever
+    // possible. For the crates.io/user/{username} pages, the best we can do is show the last
+    // crates.io account created with that username.
 
     let user1 = UserBuilder::new()
         .with_username("foobar")

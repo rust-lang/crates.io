@@ -28,7 +28,7 @@ pub struct OauthGithub {
     /// The last time we verified with GitHub what the GitHub username for this user was, and
     /// whether the account was valid.
     pub last_sync: DateTime<Utc>,
-    /// In the process of being migrated from `users.gh_login`.
+    /// The GitHub username
     pub login: String,
     /// Foreign key to the `users` table.
     pub user_id: i32,
@@ -76,12 +76,12 @@ impl OauthGithub {
     belongs_to(User),
 )]
 pub struct NewOauthGithub<'a> {
-    pub account_id: i64,         // corresponds to users.gh_id
-    pub avatar: Option<&'a str>, // corresponds to users.gh_avatar
+    pub account_id: i64, // corresponds to users.gh_id
+    pub avatar: Option<&'a str>,
     pub encrypted_token: &'a [u8],
     #[builder(default = Utc::now())]
     pub last_sync: DateTime<Utc>,
-    pub login: &'a str, // corresponds to users.gh_login
+    pub login: &'a str,
     pub user_id: i32,
 }
 
