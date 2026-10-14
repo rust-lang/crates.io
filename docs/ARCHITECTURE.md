@@ -76,7 +76,7 @@ Authorization for crates is based on ownership. A crate is owned by one or more 
 
 The backend emits structured logs through the `tracing` framework. In production these logs are shipped to DataDog, which indexes and archives them and is where we search and investigate what the running system is doing. See [`LOGGING.md`](LOGGING.md) for the conventions on how to write these logs.
 
-Errors and panics are additionally reported to Sentry, which groups them and captures the context needed to debug them, with sensitive headers stripped before anything is sent. The server and background worker export operational metrics through OpenTelemetry when configured, including queue depths and database pool usage. The background worker also periodically records service-level metrics from the database.
+The server and background worker export traces and operational metrics through OpenTelemetry when configured. The metrics include queue depths and database pool usage. The background worker also periodically records service-level metrics from the database.
 
 ## Deployment
 

@@ -104,8 +104,6 @@ export class SessionState {
     );
   }
 
-  // TODO: integrate with Sentry (`sentry.setUser({ id })` after loading user)
-
   #client: ApiClient;
   #notifications?: NotificationsContext;
   #sudoTimeout: ReturnType<typeof setTimeout> | null = null;

@@ -25,7 +25,7 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
   });
 
-  test('client errors are reported on sentry', async ({ page, msw }) => {
+  test('client errors are handled gracefully', async ({ page, msw }) => {
     msw.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({}, { status: 404 })));
     await page.goto('/');
 

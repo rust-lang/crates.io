@@ -13,7 +13,6 @@ mod svelte_redirect;
 mod trace_request;
 mod update_metrics;
 
-use ::sentry::integrations::tower as sentry_tower;
 use axum::Router;
 use axum::middleware::{ResponseAxumBodyLayer, from_fn, from_fn_with_state};
 use axum_extra::either::Either;
@@ -42,8 +41,6 @@ pub fn apply_axum_middleware(ctx: ServerContext, router: Router<()>) -> Router {
     // See also https://github.com/rust-lang/crates.io/pull/7443.
 
     let middlewares_1 = tower::ServiceBuilder::new()
-        .layer(sentry_tower::NewSentryLayer::new_from_top())
-        .layer(sentry_tower::SentryHttpLayer::new().enable_transaction())
         .layer(from_fn(self::real_ip::middleware))
         .layer(from_fn(log_request::log_requests))
         .layer(CatchPanicLayer::new())
