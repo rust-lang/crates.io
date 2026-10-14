@@ -350,10 +350,14 @@ pub struct InvitationData {
 )]
 pub async fn handle_crate_owner_invitation(
     ctx: ServerContext,
+    Path(path): Path<CrateRefPath>,
     parts: Parts,
     Json(crate_invite): Json<OwnerInvitation>,
 ) -> AppResult<Json<HandleResponse>> {
     let crate_invite = crate_invite.crate_owner_invite;
+    if path.crate_id != crate_invite.crate_id {
+        return Err(bad_request("`crate_id` mismatch"));
+    }
 
     let mut conn = ctx.db_write().await?;
     let user_id = AuthCheck::default()
