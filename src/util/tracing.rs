@@ -1,11 +1,10 @@
 use crates_io_env_vars::var;
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use sentry::integrations::tracing::EventFilter;
 use serde_json::Value;
 use std::backtrace::Backtrace;
 use std::panic::{self, PanicHookInfo};
-use tracing::{Level, Metadata, Subscriber, error, warn};
+use tracing::{Subscriber, error, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{EnvFilter, Layer, prelude::*};
 
@@ -30,8 +29,6 @@ fn log_panic(info: &PanicHookInfo<'_>) {
 /// [`RUST_LOG`](tracing_subscriber::filter::EnvFilter) environment variable
 /// and is showing all `INFO` level events by default.
 ///
-/// The subscriber also includes the Sentry error reporting integration for the
-/// `tracing` framework, which is hardcoded to include all `INFO` level events.
 /// OpenTelemetry records `INFO` level spans and their events independently of
 /// `RUST_LOG`.
 ///
@@ -58,10 +55,6 @@ pub fn subscriber(
             .boxed(),
     };
 
-    let sentry_layer = sentry::integrations::tracing::layer()
-        .event_filter(event_filter)
-        .with_filter(LevelFilter::INFO);
-
     let otel_layer = provider.map(|provider| {
         tracing_opentelemetry::layer()
             .with_tracer(provider.tracer("crates_io"))
@@ -70,7 +63,6 @@ pub fn subscriber(
 
     Ok(tracing_subscriber::registry()
         .with(log_layer)
-        .with(sentry_layer)
         .with(otel_layer))
 }
 
@@ -103,16 +95,6 @@ fn json_layer() -> anyhow::Result<json_subscriber::fmt::Layer> {
     }
 
     Ok(layer)
-}
-
-pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
-    match metadata.level() {
-        &Level::ERROR if metadata.target() == "panic" => EventFilter::Ignore,
-        &Level::ERROR if metadata.target() == "http" => EventFilter::Breadcrumb,
-        &Level::ERROR => EventFilter::Event,
-        &Level::WARN | &Level::INFO => EventFilter::Breadcrumb,
-        &Level::DEBUG | &Level::TRACE => EventFilter::Ignore,
-    }
 }
 
 /// Initializes the `tracing` logging framework for usage in tests.

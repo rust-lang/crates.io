@@ -11,7 +11,6 @@ This crate provides an async PostgreSQL-backed job queue system with support for
 - **Multiple job queues** with independent worker pools
 - **Automatic retry** with exponential backoff for failed jobs
 - **Graceful shutdown** and queue management
-- **Error tracking** with Sentry integration
 
 ## Architecture
 
@@ -139,7 +138,7 @@ job.enqueue(&mut conn).await?;
 
 Failed jobs are automatically retried with exponential backoff. The retry count and last retry timestamp are tracked in the database. Jobs that continue to fail will eventually be abandoned after reaching the maximum retry limit.
 
-All job execution is instrumented with tracing and optionally reported to Sentry for error monitoring.
+All job execution is instrumented with tracing.
 
 ## History
 

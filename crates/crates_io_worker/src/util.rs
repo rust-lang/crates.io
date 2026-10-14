@@ -1,35 +1,6 @@
 use anyhow::anyhow;
-use sentry_core::{Hub, SentryFutureExt};
 use std::any::Any;
-use std::future::Future;
 use std::panic::PanicHookInfo;
-
-pub async fn with_sentry_transaction<F, R, E, Fut>(
-    transaction_name: &str,
-    callback: F,
-) -> Result<R, E>
-where
-    F: FnOnce() -> Fut,
-    Fut: Future<Output = Result<R, E>>,
-{
-    let hub = Hub::new_from_top(Hub::current());
-    let _scope_guard = hub.push_scope();
-
-    let tx_ctx = sentry_core::TransactionContext::new(transaction_name, "swirl.perform");
-    let tx = sentry_core::start_transaction(tx_ctx);
-
-    hub.configure_scope(|scope| scope.set_span(Some(tx.clone().into())));
-
-    let result = callback().bind_hub(hub).await;
-
-    tx.set_status(match result.is_ok() {
-        true => sentry_core::protocol::SpanStatus::Ok,
-        false => sentry_core::protocol::SpanStatus::UnknownError,
-    });
-    tx.finish();
-
-    result
-}
 
 /// Tries to figure out what's in the box, and wraps it in an error if we can.
 ///

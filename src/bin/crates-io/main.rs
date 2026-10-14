@@ -21,8 +21,6 @@ enum Command {
 fn main() -> anyhow::Result<()> {
     use clap::Parser;
 
-    let _sentry = crates_io::sentry::init();
-
     // Log without tracing until the trace provider is built.
     let bootstrap = tracing::subscriber::set_default(telemetry::subscriber(None)?);
     telemetry::install_panic_hook();

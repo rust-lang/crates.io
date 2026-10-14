@@ -30,7 +30,6 @@ pub mod middleware;
 pub mod openapi;
 pub mod rate_limiter;
 mod router;
-pub mod sentry;
 pub mod server;
 pub mod sqs;
 pub mod ssh;

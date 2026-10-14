@@ -10,7 +10,6 @@ mod github;
 mod otel;
 mod publish_limits;
 mod rate_limits;
-mod sentry;
 mod shared;
 mod zulip;
 
@@ -26,6 +25,5 @@ pub use self::github::GitHubOAuthConfig;
 pub use self::otel::OtelConfig;
 pub use self::publish_limits::PublishLimitsConfig;
 pub use self::rate_limits::RateLimitsConfig;
-pub use self::sentry::SentryConfig;
 pub use self::shared::SharedConfig;
 pub use self::zulip::ZulipConfig;

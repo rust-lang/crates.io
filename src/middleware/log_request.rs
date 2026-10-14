@@ -128,10 +128,7 @@ pub struct RequestLog(Arc<Mutex<Vec<(&'static str, String)>>>);
 
 impl RequestLog {
     pub fn add<V: Display>(&self, key: &'static str, value: V) {
-        let mut metadata = self.lock();
-        metadata.push((key, value.to_string()));
-
-        sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
+        self.lock().push((key, value.to_string()));
     }
 }
 

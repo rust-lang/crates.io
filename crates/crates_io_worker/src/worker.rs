@@ -1,6 +1,6 @@
 use crate::job_registry::JobRegistry;
 use crate::storage;
-use crate::util::{try_to_extract_panic_info, with_sentry_transaction};
+use crate::util::try_to_extract_panic_info;
 use anyhow::anyhow;
 use diesel::prelude::*;
 use diesel_async::pooled_connection::deadpool::Pool;
@@ -100,7 +100,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
             );
             info!(parent: &span, "Background job {job_type} ({job_id}) started");
 
-            let future = with_sentry_transaction(&job_type, async || {
+            let future = async {
                 let run_task_fn = job_registry
                     .get(&job_type)
                     .ok_or_else(|| anyhow!("Unknown job type {}", job_type))?;
@@ -110,7 +110,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                     .await
                     .map_err(|e| try_to_extract_panic_info(&e))
                     .flatten()
-            });
+            };
 
             let start = Instant::now();
             let result = future.instrument(span.clone()).await;

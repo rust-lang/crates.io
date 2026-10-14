@@ -1,18 +1,16 @@
-use sentry::Hub;
 use tokio::task::JoinHandle;
 
 /// Runs the provided closure on a thread where blocking is acceptable.
 ///
 /// This is using [`tokio::task::spawn_blocking`] internally, but automatically
-/// runs the callback function in the context of the current Sentry [`Hub`].
+/// runs the callback function in the context of the current [`tracing::Span`].
 pub fn spawn_blocking<F, R>(f: F) -> JoinHandle<R>
 where
     F: FnOnce() -> R + Send + 'static,
     R: Send + 'static,
 {
     let current_span = tracing::Span::current();
-    let hub = Hub::current();
-    tokio::task::spawn_blocking(move || current_span.in_scope(|| Hub::run(hub, f)))
+    tokio::task::spawn_blocking(move || current_span.in_scope(f))
 }
 
 #[cfg(test)]
