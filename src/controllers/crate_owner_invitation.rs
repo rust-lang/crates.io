@@ -7,7 +7,9 @@ use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::server::ServerContext;
 use crate::util::RequestUtils;
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
+use crate::util::errors::{
+    AppResult, BoxedAppError, bad_request, crate_not_found, custom, forbidden, internal,
+};
 use crate::util::no_store;
 use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
 use axum::Json;
@@ -15,6 +17,7 @@ use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::TypedHeader;
 use axum_extra::headers::CacheControl;
 use chrono::Utc;
+use crates_io_validation::validate_crate_name;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
@@ -350,7 +353,7 @@ pub struct InvitationData {
 )]
 pub async fn handle_crate_owner_invitation(
     ctx: ServerContext,
-    Path(path): Path<CrateRefPath>,
+    path: CrateRefPath,
     parts: Parts,
     Json(crate_invite): Json<OwnerInvitation>,
 ) -> AppResult<Json<HandleResponse>> {
@@ -445,6 +448,30 @@ impl From<AcceptError> for BoxedAppError {
                 custom(StatusCode::FORBIDDEN, detail)
             }
         }
+    }
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for CrateRefPath {
+    type Rejection = BoxedAppError;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Path(path) = Path::<Self>::from_request_parts(parts, state)
+            .await
+            .map_err(|err| custom(err.status(), err.body_text()))?;
+
+        // If the name is not a valid crate name it cannot exist in the
+        // database, so we skip the lookup and return a regular "not found"
+        // response. This also avoids passing invalid input (e.g. names
+        // containing null bytes) to the database layer, where PostgreSQL would
+        // reject the query with a confusing `invalid byte sequence for encoding
+        // "UTF8": 0x00` error and cause a 500 response.
+        if let CrateRef::Name(ref crate_name) = path.crate_id
+            && validate_crate_name("crate", crate_name).is_err()
+        {
+            return Err(crate_not_found(crate_name));
+        }
+
+        Ok(path)
     }
 }
 

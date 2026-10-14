@@ -716,6 +716,70 @@ async fn test_invitation_crate_id_mismatch() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`crate_id` mismatch"}]}"#);
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_invitation_with_null_byte() {
+    let (app, _anon, _owner) = TestApp::full().with_user().await;
+    let invited_user = app.db_new_user("user_bar").await;
+
+    struct Data<T> {
+        crate_id: T,
+        accepted: bool,
+    }
+    fn make_body<T: Serialize>(Data { crate_id, accepted }: Data<T>) -> serde_json::Value {
+        json!({
+            "crate_owner_invite": {
+                "invited_by_username": "",
+                "crate_name": "foobar",
+                "crate_id": crate_id,
+                "created_at": "",
+                "accepted": accepted
+            }
+        })
+    }
+
+    // "foo%00bar" in the path, "foobar" in the body
+
+    let url = "/api/v1/me/crate_owner_invitations/foo%00bar";
+    let body = make_body(Data {
+        crate_id: "foobar",
+        accepted: true,
+    });
+    let response = invited_user.put::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"404 Not Found");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo\u0000bar` does not exist"}]}"#);
+
+    let url = "/api/v1/me/crate_owner_invitations/foo%00bar";
+    let body = make_body(Data {
+        crate_id: "foobar",
+        accepted: false,
+    });
+    let response = invited_user.put::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"404 Not Found");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo\u0000bar` does not exist"}]}"#);
+
+    // "foobar" in the path, "foo%00bar" in the body
+    // this will be treated as a mismatch and return 400 instead of 404 because we only validate the
+    // name in the path.
+
+    let url = "/api/v1/me/crate_owner_invitations/foobar";
+    let body = make_body(Data {
+        crate_id: "foo%00bar",
+        accepted: true,
+    });
+    let response = invited_user.put::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`crate_id` mismatch"}]}"#);
+
+    let url = "/api/v1/me/crate_owner_invitations/foobar";
+    let body = make_body(Data {
+        crate_id: "foo%00bar",
+        accepted: false,
+    });
+    let response = invited_user.put::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`crate_id` mismatch"}]}"#);
+}
+
 /// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
 /// pass, the creation date of the invite is moved back a month.
 pub async fn expire_invitation(app: &TestApp, crate_id: i32) {
