@@ -275,7 +275,7 @@ struct ResponseMeta {
 #[derive(Deserialize, utoipa::ToSchema)]
 pub struct OwnerInvitation {
     #[schema(inline)]
-    crate_owner_invite: InvitationResponse,
+    crate_owner_invite: InvitationData,
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
@@ -284,13 +284,58 @@ pub struct HandleResponse {
     crate_owner_invitation: InvitationResponse,
 }
 
+#[derive(Debug, Deserialize, PartialEq, Eq, utoipa::ToSchema)]
+#[serde(untagged, remote = "Self")]
+pub enum CrateRef {
+    /// The opaque identifier of the crate.
+    #[schema(title = "ID", example = 42, value_type = i32)]
+    ID(i32),
+    /// The name fo the crate.
+    #[schema(title = "Name", example = "serde", value_type = String)]
+    Name(String),
+}
+
+impl<'de> Deserialize<'de> for CrateRef {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let crate_ref = Self::deserialize(deserializer)?;
+        // Consider i32 string as ID
+        if let CrateRef::Name(ref maybe_id) = crate_ref
+            && let Ok(id) = maybe_id.parse::<i32>()
+        {
+            return Ok(Self::ID(id));
+        }
+        Ok(crate_ref)
+    }
+}
+
+/// Name or ID of the crate
+#[derive(Deserialize, utoipa::IntoParams)]
+#[into_params(parameter_in = Path)]
+pub struct CrateRefPath {
+    #[allow(dead_code)]
+    #[param(inline)]
+    crate_id: CrateRef,
+}
+
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct InvitationData {
+    /// The name or opaque identifier for the crate this invitation is for.
+    #[schema(inline)]
+    pub crate_id: CrateRef,
+
+    /// Whether the invitation was accepted.
+    #[schema(example = true)]
+    pub accepted: bool,
+}
+
 /// Accept or decline a crate owner invitation.
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
-    params(
-        ("crate_id" = i32, Path, description = "ID of the crate"),
-    ),
+    params(CrateRefPath),
     request_body = inline(OwnerInvitation),
     security(
         ("api_token" = []),
@@ -315,9 +360,17 @@ pub async fn handle_crate_owner_invitation(
         .check(&parts, &mut conn)
         .await?
         .user_id();
-    let invitation =
-        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn).await?;
 
+    let invitation = match crate_invite.crate_id {
+        CrateRef::ID(crate_id) => {
+            CrateOwnerInvitation::find_by_id(user_id, crate_id, &conn).await?
+        }
+        CrateRef::Name(ref crate_name) => {
+            CrateOwnerInvitation::find_by_name(user_id, crate_name, &conn).await?
+        }
+    };
+
+    let crate_id = invitation.crate_id;
     if crate_invite.accepted {
         invitation.accept(&mut conn).await?;
     } else {
@@ -325,7 +378,11 @@ pub async fn handle_crate_owner_invitation(
     }
 
     Ok(Json(HandleResponse {
-        crate_owner_invitation: crate_invite,
+        // To keep backward compatibility, we return i32 `crate_id`
+        crate_owner_invitation: InvitationResponse {
+            crate_id,
+            accepted: crate_invite.accepted,
+        },
     }))
 }
 
@@ -383,6 +440,25 @@ impl From<AcceptError> for BoxedAppError {
 
                 custom(StatusCode::FORBIDDEN, detail)
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CrateRef;
+    use serde_json::json;
+
+    #[test]
+    fn test_crate_ref() {
+        let cases = [
+            (json!(1).to_string(), CrateRef::ID(1)),
+            (json!("1").to_string(), CrateRef::ID(1)),
+            (json!("foo").to_string(), CrateRef::Name("foo".into())),
+        ];
+        for (input, crate_ref) in cases {
+            let parsed: CrateRef = serde_json::from_str(input.as_str()).unwrap();
+            assert_eq!(parsed, crate_ref);
         }
     }
 }

@@ -88,6 +88,43 @@ impl MockCookieUser {
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
 
+    async fn _ownership_invitation_by_name(&self, krate_name: &str, krate_id: i32, accepted: bool) {
+        let body = json!({
+            "crate_owner_invite": {
+                "invited_by_username": "",
+                "crate_name": krate_name,
+                "crate_id": krate_name,
+                "created_at": "",
+                "accepted": accepted
+            }
+        });
+
+        #[derive(Deserialize)]
+        struct CrateOwnerInvitation {
+            crate_owner_invitation: InvitationResponse,
+        }
+
+        let url = format!("/api/v1/me/crate_owner_invitations/{krate_name}");
+        let crate_owner_invite: CrateOwnerInvitation =
+            self.put(&url, body.to_string()).await.good();
+        assert_eq!(crate_owner_invite.crate_owner_invitation.accepted, accepted);
+        assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
+    }
+
+    /// As the currently logged in user, accepts an invitation to become an owner of the named
+    /// crate.
+    async fn accept_ownership_invitation_by_name(&self, krate_name: &str, krate_id: i32) {
+        self._ownership_invitation_by_name(krate_name, krate_id, true)
+            .await
+    }
+
+    /// As the currently logged in user, declines an invitation to become an owner of the named
+    /// crate.
+    async fn decline_ownership_invitation_by_name(&self, krate_name: &str, krate_id: i32) {
+        self._ownership_invitation_by_name(krate_name, krate_id, false)
+            .await
+    }
+
     /// As the currently logged in user, lists my pending invitations.
     async fn list_invitations(&self) -> InvitationListResponse {
         let url = "/api/private/crate_owner_invitations";
@@ -545,6 +582,68 @@ async fn test_accept_invitation_by_mail() {
     // New owner is now listed as an owner, so the crate has two owners
     let json = anon.show_crate_owners("accept_invitation").await;
     assert_eq!(json.users.len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_accept_invitation_by_name() {
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
+    let owner = owner.as_model();
+    let invited_user = app.db_new_user("user_bar").await;
+
+    let krate = CrateBuilder::new("accept_invitation", owner.id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Invite a new owner
+    owner_token
+        .add_named_owner("accept_invitation", "user_bar")
+        .await
+        .good();
+
+    // New owner accepts the invitation
+    invited_user
+        .accept_ownership_invitation_by_name(&krate.name, krate.id)
+        .await;
+
+    // New owner's invitation list should now be empty
+    let json = invited_user.list_invitations().await;
+    assert_eq!(json.invitations.len(), 0);
+
+    // New owner is now listed as an owner, so the crate has two owners
+    let json = anon.show_crate_owners("accept_invitation").await;
+    assert_eq!(json.users.len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_decline_invitation_by_name() {
+    let (app, anon, owner, owner_token) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
+    let owner = owner.as_model();
+    let invited_user = app.db_new_user("user_bar").await;
+
+    let krate = CrateBuilder::new("decline_invitation", owner.id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Invite a new owner
+    owner_token
+        .add_named_owner("decline_invitation", "user_bar")
+        .await
+        .good();
+
+    // Invited user declines the invitation
+    invited_user
+        .decline_ownership_invitation_by_name(&krate.name, krate.id)
+        .await;
+
+    // Invited user's invitation list should now be empty
+    let json = invited_user.list_invitations().await;
+    assert_eq!(json.invitations.len(), 0);
+
+    // Invited user is NOT listed as an owner, so the crate still only has one owner
+    let json = anon.show_crate_owners("decline_invitation").await;
+    assert_eq!(json.users.len(), 1);
 }
 
 /// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
