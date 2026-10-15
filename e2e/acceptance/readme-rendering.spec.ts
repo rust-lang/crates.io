@@ -188,26 +188,22 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-readme]')).toHaveText('foo');
   });
 
-  for (let destination of ['another crate', 'another version']) {
-    test(`it discards a retried README when navigating to ${destination}`, async ({ page, msw }) => {
+  let navigationCases = [
+    { sourceUrl: '/crates/serde', targetUrl: '/crates/syn', name: 'syn', num: '1.0.0' },
+    { sourceUrl: '/crates/serde/1.0.0', targetUrl: '/crates/serde/2.0.0', name: 'serde', num: '2.0.0' },
+  ];
+
+  for (let { sourceUrl, targetUrl, name, num } of navigationCases) {
+    test(`it discards a retried README when navigating from ${sourceUrl} to ${targetUrl}`, async ({ page, msw }) => {
       let crate = await msw.db.crate.create({ name: 'serde' });
-      let targetCrate = destination === 'another crate' ? await msw.db.crate.create({ name: 'syn' }) : crate;
-      let targetVersion = destination === 'another crate' ? '1.0.0' : '2.0.0';
-      let sourceUrl = destination === 'another crate' ? '/crates/serde' : '/crates/serde/1.0.0';
-      let targetUrl = destination === 'another crate' ? '/crates/syn' : '/crates/serde/2.0.0';
+      let targetCrate = name === crate.name ? crate : await msw.db.crate.create({ name });
 
-      await msw.db.version.create({
-        crate,
-        num: '1.0.0',
-        readme: `<p>Original README</p><a href="${targetUrl}">Read the next README</a>`,
-      });
-      await msw.db.version.create({ crate: targetCrate, num: targetVersion, readme: '<p>Destination README</p>' });
+      let readme = `<p>Original README</p><a href="${targetUrl}">Read the next README</a>`;
+      await msw.db.version.create({ crate, num: '1.0.0', readme });
+      await msw.db.version.create({ crate: targetCrate, num, readme: '<p>Destination README</p>' });
 
-      msw.worker.use(
-        http.get('https://static.crates.io/readmes/serde/serde-1.0.0.html', () =>
-          HttpResponse.html('', { status: 500 }),
-        ),
-      );
+      let readmeUrl = 'https://static.crates.io/readmes/serde/serde-1.0.0.html';
+      msw.worker.use(http.get(readmeUrl, () => HttpResponse.html('', { status: 500 })));
 
       await page.goto(sourceUrl);
       await expect(page.locator('[data-test-readme-error]')).toBeVisible();
@@ -217,8 +213,8 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
 
       await page.getByRole('link', { name: 'Read the next README' }).click();
       await expect(page).toHaveURL(targetUrl);
-      await expect(page.locator('[data-test-crate-name]')).toHaveText(targetCrate.name);
-      await expect(page.locator('[data-test-crate-version]')).toHaveText(`v${targetVersion}`);
+      await expect(page.locator('[data-test-crate-name]')).toHaveText(name);
+      await expect(page.locator('[data-test-crate-version]')).toHaveText(`v${num}`);
       await expect(page.locator('[data-test-readme]')).toHaveText('Destination README');
     });
   }
