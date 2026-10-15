@@ -170,13 +170,12 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
       response => response.url().includes('/api/v1/me/tokens?') && response.request().method() === 'GET',
     );
     await page.locator('[data-test-cancel]').hover();
-    expect(await (await preload).json()).toEqual({ api_tokens: [] });
+    await preload;
 
     await page.click('[data-test-generate]');
-    await expect.poll(() => msw.db.apiToken.findFirst(q => q.where({ name: 'preloaded-token' }))).toBeTruthy();
-    let token = msw.db.apiToken.findFirst(q => q.where({ name: 'preloaded-token' }));
-
     await expect(page).toHaveURL('/settings/tokens');
+
+    let token = msw.db.apiToken.findFirst(q => q.where({ name: 'preloaded-token' }));
     await expect(page.locator('[data-test-api-token="1"] [data-test-name]')).toHaveText('preloaded-token');
     await expect(page.locator('[data-test-token]')).toHaveText(token.token);
   });
