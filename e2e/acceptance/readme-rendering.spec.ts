@@ -188,6 +188,41 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-readme]')).toHaveText('foo');
   });
 
+  for (let destination of ['another crate', 'another version']) {
+    test(`it discards a retried README when navigating to ${destination}`, async ({ page, msw }) => {
+      let crate = await msw.db.crate.create({ name: 'serde' });
+      let targetCrate = destination === 'another crate' ? await msw.db.crate.create({ name: 'syn' }) : crate;
+      let targetVersion = destination === 'another crate' ? '1.0.0' : '2.0.0';
+      let sourceUrl = destination === 'another crate' ? '/crates/serde' : '/crates/serde/1.0.0';
+      let targetUrl = destination === 'another crate' ? '/crates/syn' : '/crates/serde/2.0.0';
+
+      await msw.db.version.create({
+        crate,
+        num: '1.0.0',
+        readme: `<p>Original README</p><a href="${targetUrl}">Read the next README</a>`,
+      });
+      await msw.db.version.create({ crate: targetCrate, num: targetVersion, readme: '<p>Destination README</p>' });
+
+      msw.worker.use(
+        http.get('https://static.crates.io/readmes/serde/serde-1.0.0.html', () =>
+          HttpResponse.html('', { status: 500 }),
+        ),
+      );
+
+      await page.goto(sourceUrl);
+      await expect(page.locator('[data-test-readme-error]')).toBeVisible();
+      await msw.worker.resetHandlers();
+      await page.click('[data-test-retry-button]');
+      await expect(page.locator('[data-test-readme]')).toContainText('Original README');
+
+      await page.getByRole('link', { name: 'Read the next README' }).click();
+      await expect(page).toHaveURL(targetUrl);
+      await expect(page.locator('[data-test-crate-name]')).toHaveText(targetCrate.name);
+      await expect(page.locator('[data-test-crate-version]')).toHaveText(`v${targetVersion}`);
+      await expect(page.locator('[data-test-readme]')).toHaveText('Destination README');
+    });
+  }
+
   test('it scrolls to the anchor spot once rendered', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'serde' });
     await msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });

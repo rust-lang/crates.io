@@ -66,8 +66,8 @@
 
   let downloadsContext = $derived(requestedVersion ? version : crate);
 
-  let retryReadmePromise = $state<typeof readmePromise | null>(null);
-  let activeReadmePromise = $derived(retryReadmePromise ?? readmePromise);
+  // A retry overrides the current request until navigation supplies a new one.
+  let activeReadmePromise = $derived(readmePromise);
 
   // Ensure the mermaid library is loaded before the README is rendered,
   // so that the `renderMermaids` attachment can use it synchronously.
@@ -80,8 +80,9 @@
     }),
   );
 
+  /** Retries the README request for the currently displayed crate version. */
   function retryReadme() {
-    retryReadmePromise = loadReadme(fetch, crate.name, version.num);
+    activeReadmePromise = loadReadme(fetch, crate.name, version.num);
   }
 
   // `forOnMount` is mainly useful for visits with a non-prefix URI fragment. Since the README is
