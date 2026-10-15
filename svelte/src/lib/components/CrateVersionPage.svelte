@@ -80,7 +80,6 @@
     }),
   );
 
-  /** Retries the README request for the currently displayed crate version. */
   function retryReadme() {
     activeReadmePromise = loadReadme(fetch, crate.name, version.num);
   }
