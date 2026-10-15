@@ -158,6 +158,28 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
   });
 
+  test('shows the newly created token after preloading the token list', async ({ page, msw }) => {
+    await prepare(msw);
+
+    await page.goto('/settings/tokens/new');
+    await page.fill('[data-test-name]', 'preloaded-token');
+    await page.click('[data-test-scope="publish-update"]');
+
+    // Hovering Cancel preloads the token list before the new token exists.
+    let preload = page.waitForResponse(
+      response => response.url().includes('/api/v1/me/tokens?') && response.request().method() === 'GET',
+    );
+    await page.locator('[data-test-cancel]').hover();
+    await preload;
+
+    await page.click('[data-test-generate]');
+    await expect(page).toHaveURL('/settings/tokens');
+
+    let token = msw.db.apiToken.findFirst(q => q.where({ name: 'preloaded-token' }));
+    await expect(page.locator('[data-test-api-token="1"] [data-test-name]')).toHaveText('preloaded-token');
+    await expect(page.locator('[data-test-token]')).toHaveText(token.token);
+  });
+
   test('token expiry', async ({ page, msw }) => {
     await prepare(msw);
 

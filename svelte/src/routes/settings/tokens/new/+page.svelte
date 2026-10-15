@@ -164,7 +164,7 @@
       let apiToken = result.data.api_token;
       tokenPageState.pendingToken = { id: apiToken.id, token: apiToken.token };
 
-      await goto(resolve('/settings/tokens'));
+      await goto(resolve('/settings/tokens'), { refreshAll: true });
     } catch {
       notifications.error('An error has occurred while generating your API token. Please try again later!');
     } finally {
