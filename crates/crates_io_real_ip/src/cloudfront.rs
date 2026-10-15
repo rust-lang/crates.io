@@ -217,6 +217,8 @@ pub const CLOUDFRONT_NETWORKS: &[IpNetwork] = &[
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(205, 251, 252, 0), 23).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(205, 251, 254, 0), 24).unwrap()),
     IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(216, 137, 32, 0), 19).unwrap()),
+    IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2001, 0x3fc6, 0x4, 0x0, 0x0, 0x0, 0x0, 0x0), 48).unwrap()),
+    IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2001, 0x3fc6, 0x5, 0x0, 0x0, 0x0, 0x0, 0x0), 48).unwrap()),
     IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2001, 0x3fc6, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0), 43).unwrap()),
     IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2400, 0x7fc0, 0x500, 0x0, 0x0, 0x0, 0x0, 0x0), 40).unwrap()),
     IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0x2404, 0xc2c0, 0x500, 0x0, 0x0, 0x0, 0x0, 0x0), 40).unwrap()),
