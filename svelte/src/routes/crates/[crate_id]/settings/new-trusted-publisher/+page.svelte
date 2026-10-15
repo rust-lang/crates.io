@@ -154,7 +154,7 @@
       }
 
       notifications.success('Trusted Publishing configuration added successfully');
-      await goto(resolve('/crates/[crate_id]/settings', { crate_id }));
+      await goto(resolve('/crates/[crate_id]/settings', { crate_id }), { refreshAll: true });
     } catch (error) {
       let message = 'An error has occurred while adding the Trusted Publishing configuration';
       if (error instanceof Error && error.message) {
