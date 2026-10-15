@@ -303,6 +303,27 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(details).toContainText('Environment: release');
     });
 
+    test('shows the new config after preloading the settings page', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', 'ci.yml');
+
+      // Hovering Cancel preloads the settings page before the new config exists.
+      let preload = page.waitForResponse(response => response.url().includes(`/github_configs?crate=${crate.name}`));
+      await page.locator('[data-test-cancel]').hover();
+      await preload;
+
+      await page.click('[data-test-add]');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+
+      await expect(page.locator('[data-test-github-config]')).toHaveCount(1);
+      let details = page.locator('[data-test-github-config="1"] td:nth-child(2)');
+      await expect(details).toContainText('Repository: rust-lang/crates.io');
+    });
+
     test('validation errors', async ({ msw, page }) => {
       let { crate } = await prepare(msw);
 
