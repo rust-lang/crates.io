@@ -188,6 +188,37 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-readme]')).toHaveText('foo');
   });
 
+  let navigationCases = [
+    { sourceUrl: '/crates/serde', targetUrl: '/crates/syn', name: 'syn', num: '1.0.0' },
+    { sourceUrl: '/crates/serde/1.0.0', targetUrl: '/crates/serde/2.0.0', name: 'serde', num: '2.0.0' },
+  ];
+
+  for (let { sourceUrl, targetUrl, name, num } of navigationCases) {
+    test(`it discards a retried README when navigating from ${sourceUrl} to ${targetUrl}`, async ({ page, msw }) => {
+      let crate = await msw.db.crate.create({ name: 'serde' });
+      let targetCrate = name === crate.name ? crate : await msw.db.crate.create({ name });
+
+      let readme = `<p>Original README</p><a href="${targetUrl}">Read the next README</a>`;
+      await msw.db.version.create({ crate, num: '1.0.0', readme });
+      await msw.db.version.create({ crate: targetCrate, num, readme: '<p>Destination README</p>' });
+
+      let readmeUrl = 'https://static.crates.io/readmes/serde/serde-1.0.0.html';
+      msw.worker.use(http.get(readmeUrl, () => HttpResponse.html('', { status: 500 })));
+
+      await page.goto(sourceUrl);
+      await expect(page.locator('[data-test-readme-error]')).toBeVisible();
+      await msw.worker.resetHandlers();
+      await page.click('[data-test-retry-button]');
+      await expect(page.locator('[data-test-readme]')).toContainText('Original README');
+
+      await page.getByRole('link', { name: 'Read the next README' }).click();
+      await expect(page).toHaveURL(targetUrl);
+      await expect(page.locator('[data-test-crate-name]')).toHaveText(name);
+      await expect(page.locator('[data-test-crate-version]')).toHaveText(`v${num}`);
+      await expect(page.locator('[data-test-readme]')).toHaveText('Destination README');
+    });
+  }
+
   test('it scrolls to the anchor spot once rendered', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'serde' });
     await msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
