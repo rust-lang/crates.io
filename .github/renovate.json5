@@ -42,6 +42,19 @@
       extends: ['schedule:weekly'],
     },
     {
+      // The `@pierre/*` packages publish no `repository` metadata.
+      matchPackageNames: ['@pierre/diffs'],
+      sourceUrl: 'https://github.com/pierrecomputer/pierre',
+      sourceDirectory: 'packages/diffs',
+      // Match the `diffs-v1.2.3` release tags while leaving npm versions as-is.
+      extractVersion: '^(?:diffs-)?v?(?<version>.+)$',
+    },
+    {
+      matchPackageNames: ['@pierre/trees'],
+      sourceUrl: 'https://github.com/pierrecomputer/pierre',
+      sourceDirectory: 'packages/trees',
+    },
+    {
       // Avoid "Artifact update problem" for pnpm updates when the renovatebot
       // setup does not support the new version yet.
       matchDepNames: ['pnpm'],
