@@ -13,7 +13,7 @@ anyhow = "=1.0.104"
 flate2 = "=1.1.10"
 hex = "=0.4.3"
 serde = { version = "=1.0.229", features = ["derive"] }
-sha2 = "=0.11.0"
+sha2 = "=0.11.1"
 tar = { version = "=0.4.46", default-features = false }
 zip = { version = "=9.0.2", default-features = false, features = ["deflate"] }
 
