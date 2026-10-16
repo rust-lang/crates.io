@@ -56,6 +56,7 @@ impl InvalidateCdns {
 
 impl BackgroundJob for InvalidateCdns {
     const JOB_NAME: &'static str = "invalidate_cdns";
+    const DEDUPLICATED: bool = true;
 
     type Context = WorkerContext;
 
@@ -114,6 +115,10 @@ impl BackgroundJob for InvalidateCdns {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::schema::background_jobs;
+    use crates_io_test_db::TestDatabase;
+    use diesel::QueryDsl;
+    use diesel_async::RunQueryDsl;
 
     #[test]
     fn cloudfront_items_include_paths_before_cache_tags() {
@@ -124,5 +129,22 @@ mod tests {
         .unwrap();
 
         assert_eq!(job.cloudfront_items(), ["/path", "#crate:foo"]);
+    }
+
+    #[tokio::test]
+    async fn identical_pending_invalidations_are_deduplicated() {
+        let db = TestDatabase::new();
+        let mut conn = db.async_connect().await;
+
+        let job = InvalidateCdns::cache_tags(["crate:foo"]);
+        job.enqueue(&conn).await.unwrap();
+        job.enqueue(&conn).await.unwrap();
+
+        let job_count: i64 = background_jobs::table
+            .count()
+            .get_result(&mut conn)
+            .await
+            .unwrap();
+        assert_eq!(job_count, 1);
     }
 }
