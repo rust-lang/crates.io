@@ -181,7 +181,7 @@ function unicornRules() {
     'unicorn/prefer-classlist-toggle': 'error',
     'unicorn/prefer-code-point': 'error',
     'unicorn/prefer-date-now': 'error',
-    'unicorn/prefer-default-parameters': 'error',
+    'unicorn/prefer-default-parameters': ['error', { checkFallbackExpressions: false }],
     'unicorn/prefer-dom-node-append': 'error',
     'unicorn/prefer-dom-node-remove': 'error',
     'unicorn/prefer-dom-node-text-content': 'error',
