@@ -19,29 +19,48 @@
     /** The URL of the linked account. */
     href: string;
 
-    /** Whether the account handle differs from the crates.io username. */
-    mismatched?: boolean;
+    /** The crates.io username that does not resolve to this user through GitHub lookup. */
+    mismatchedUsername?: string;
   }
 
-  let { provider, handle, href, mismatched = false }: Props = $props();
+  let { provider, handle, href, mismatchedUsername }: Props = $props();
+
+  let mismatchDescription = $derived(
+    `This crates.io account may differ from the GitHub account named "${mismatchedUsername}".`,
+  );
+  const mismatchDescriptionId = $props.id();
 
   let handleElement = $state<HTMLSpanElement>();
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
-<a {href} class={['account-chip', mismatched && 'mismatched']} data-test-account-chip>
+<a
+  {href}
+  class={['account-chip', mismatchedUsername && 'mismatched']}
+  aria-describedby={mismatchedUsername ? mismatchDescriptionId : undefined}
+  data-test-account-chip
+>
   {#if provider === 'github'}
     <Icon class="i-simple-icons:github" label="GitHub" data-test-provider-icon />
   {/if}
   <span bind:this={handleElement} class="handle" data-test-handle>{handle}</span>
-  {#if mismatched}
+  {#if mismatchedUsername}
     <span class="mismatch-marker" aria-hidden="true" data-test-mismatch-marker>≠</span>
-    <span class="sr-only" data-test-mismatch-description> does not match the crates.io username</span>
   {/if}
-  <Tooltip onlyWhenTruncated={!mismatched} truncationTarget={handleElement}>
-    <span class="tooltip-text">{mismatched ? `${handle} does not match the crates.io username` : handle}</span>
+  <Tooltip onlyWhenTruncated={!mismatchedUsername} truncationTarget={handleElement}>
+    <span class="tooltip-text" aria-hidden="true">
+      {handle}
+      {#if mismatchedUsername}
+        <br />
+        {mismatchDescription}
+      {/if}
+    </span>
   </Tooltip>
 </a>
+
+{#if mismatchedUsername}
+  <span id={mismatchDescriptionId} hidden data-test-mismatch-description>{mismatchDescription}</span>
+{/if}
 
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
 

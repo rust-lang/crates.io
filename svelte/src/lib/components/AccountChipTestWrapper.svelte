@@ -6,18 +6,18 @@
   interface Props {
     handle: string;
     href: string;
-    mismatched?: boolean;
+    mismatchedUsername?: string;
     width?: string;
   }
 
-  let { handle, href, mismatched = false, width = 'max-content' }: Props = $props();
+  let { handle, href, mismatchedUsername, width = 'max-content' }: Props = $props();
   let propsId = $props.id();
 
   setTooltipContext({ containerId: `tooltip-container-${propsId}` });
 </script>
 
 <div style:width>
-  <AccountChip provider="github" {handle} {href} {mismatched} />
+  <AccountChip provider="github" {handle} {href} {mismatchedUsername} />
 </div>
 
 <TooltipContainer />
