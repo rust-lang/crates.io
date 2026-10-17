@@ -19,7 +19,7 @@ tar = { version = "=0.4.46", default-features = false }
 tempfile = "=3.27.0"
 toml = "=1.1.8"
 tracing = "=0.1.44"
-zip = { version = "=9.0.2", default-features = false, features = ["deflate"] }
+zip = { version = "=9.0.3", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 crates_io_env_vars = { path = "../crates_io_env_vars" }
