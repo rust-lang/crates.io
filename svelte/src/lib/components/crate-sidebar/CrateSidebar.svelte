@@ -4,7 +4,7 @@
   import type { PlaygroundCrate } from '#lib/utils/playground.ts';
 
   import { resolve } from '$app/paths';
-  import { format, formatDistanceToNow, formatISO } from 'date-fns';
+  import { formatDistanceToNow, formatISO } from 'date-fns';
   import prettyBytes from 'pretty-bytes';
   import { MediaQuery } from 'svelte/reactivity';
 
@@ -13,6 +13,7 @@
   import LicenseExpression from '#lib/components/LicenseExpression.svelte';
   import OwnersList from '#lib/components/OwnersList.svelte';
   import Tooltip from '#lib/components/Tooltip.svelte';
+  import { dateToLocaleStringUTC } from '#lib/utils/datetime.ts';
   import { formatShortNum } from '#lib/utils/format-short-num.ts';
   import { buildPlaygroundLink } from '#lib/utils/playground.ts';
   import { getPurl } from '#lib/utils/purl.ts';
@@ -92,7 +93,7 @@
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
         <Tooltip>
           Release date:
-          {format(version.created_at, 'PPP')}
+          {dateToLocaleStringUTC(version.created_at)}
         </Tooltip>
       </span>
     </time>
