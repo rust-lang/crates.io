@@ -48,7 +48,7 @@
     "@crates-io/msw": "workspace:*",
     "@iconify-json/heroicons": "1.2.3",
     "@iconify-json/mdi": "1.2.3",
-    "@iconify-json/octicon": "1.2.38",
+    "@iconify-json/octicon": "1.2.39",
     "@iconify-json/simple-icons": "1.2.100",
     "@storybook/addon-a11y": "10.6.2",
     "@storybook/addon-docs": "10.6.2",
