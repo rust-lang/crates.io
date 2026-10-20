@@ -3,7 +3,7 @@
   import type { HTMLAttributes } from 'svelte/elements';
 
   import { resolve } from '$app/paths';
-  import { format, formatDistanceToNow, formatISO } from 'date-fns';
+  import { formatDistanceToNow, formatISO } from 'date-fns';
   import prettyBytes from 'pretty-bytes';
   import semverParse from 'semver/functions/parse';
 
@@ -16,6 +16,7 @@
   import Tooltip from '#lib/components/Tooltip.svelte';
   import UserAvatar from '#lib/components/UserAvatar.svelte';
   import YankButton from '#lib/components/YankButton.svelte';
+  import { dateToLocaleStringUTC } from '#lib/utils/datetime.ts';
 
   const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
 
@@ -205,7 +206,7 @@
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
 
         <Tooltip>
-          {format(version.created_at, 'PPP')}
+          {dateToLocaleStringUTC(version.created_at)}
           {#if isNew}
             (<span class="new">new</span>)
           {/if}
