@@ -14,11 +14,11 @@ diesel-async = { version = "=0.9.2", features = ["async-connection-wrapper", "de
 futures-util = "=0.3.34"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
-tokio = { version = "=1.53.3", features = ["macros", "rt", "sync", "time"]}
+tokio = { version = "=1.54.0", features = ["macros", "rt", "sync", "time"]}
 tracing = "=0.1.44"
 
 [dev-dependencies]
 claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
 insta = { version = "=1.49.0", features = ["json"] }
-tokio = { version = "=1.53.3", features = ["macros", "rt-multi-thread", "sync"]}
+tokio = { version = "=1.54.0", features = ["macros", "rt-multi-thread", "sync"]}
