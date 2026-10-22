@@ -20,6 +20,7 @@ use crate::storage::StorageConfig;
 use crates_io_encryption::TokenEncryption;
 use crates_io_env_vars::{list, required_var, var, var_parsed};
 use http::HeaderValue;
+use secrecy::SecretString;
 use std::convert::Infallible;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -41,6 +42,14 @@ pub struct SharedConfig {
     pub publish_limits: PublishLimitsConfig,
     pub rate_limits: RateLimitsConfig,
     pub block: BlockConfig,
+
+    /// Expected value of the `X-Crates-Origin-Auth` header that the CDNs send
+    /// with every request. When set, requests without a matching header are
+    /// rejected.
+    ///
+    /// Read from the `CRATES_ORIGIN_AUTH_TOKEN` environment variable.
+    pub cdn_auth_token: Option<SecretString>,
+
     pub max_allowed_page_offset: u32,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
@@ -130,6 +139,9 @@ impl SharedConfig {
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
         let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
         let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
+        let cdn_auth_token = var("CRATES_ORIGIN_AUTH_TOKEN")?
+            .filter(|s| !s.is_empty())
+            .map(SecretString::from);
 
         Ok(SharedConfig {
             db: DatabasePools::full_from_environment(env)?,
@@ -146,6 +158,7 @@ impl SharedConfig {
             publish_limits: PublishLimitsConfig::from_env()?,
             rate_limits: RateLimitsConfig::from_env()?,
             block: BlockConfig::from_env()?,
+            cdn_auth_token,
             max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),
             excluded_crate_names,
             domain_name,

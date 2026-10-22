@@ -646,6 +646,7 @@ fn simple_config() -> SharedConfig {
             ..Default::default()
         },
         block: Default::default(),
+        cdn_auth_token: None,
         max_allowed_page_offset: 200,
         excluded_crate_names: vec![],
         domain_name: "crates.io".into(),

@@ -1,5 +1,6 @@
 pub mod block_traffic;
 pub mod cargo_compat;
+pub mod cdn_auth;
 mod common_headers;
 pub mod context;
 mod debug;
@@ -54,7 +55,11 @@ pub fn apply_axum_middleware(ctx: ServerContext, router: Router<()>) -> Router {
             from_fn(debug::debug_requests)
         }));
 
+    let cdn_auth_token = config.cdn_auth_token.clone();
+    let cdn_auth_layer = cdn_auth_token.map(|t| from_fn_with_state(t, cdn_auth::middleware));
+
     let middlewares_2 = tower::ServiceBuilder::new()
+        .layer(option_layer(cdn_auth_layer))
         .layer(from_fn_with_state(
             ctx.config.cargo_compat_status_code_config,
             cargo_compat::middleware,
