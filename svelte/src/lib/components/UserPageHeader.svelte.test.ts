@@ -38,19 +38,25 @@ describe('UserPageHeader', () => {
     ]);
   });
 
-  it('does not mark GitHub accounts when one matches', async () => {
+  it('does not mark GitHub accounts when the username resolves to this user', async () => {
     await render(UserPageHeader, { user: USER, linkedAccounts: LINKED_ACCOUNTS });
 
     expect(page.getByCSS('[data-test-mismatch-marker]').elements()).toHaveLength(0);
   });
 
-  it('marks every GitHub account when none match', async () => {
+  it('marks every GitHub account when the username does not resolve to this user', async () => {
     await render(UserPageHeader, {
       user: { ...USER, github_username_matches: false },
       linkedAccounts: LINKED_ACCOUNTS,
     });
 
     expect(page.getByCSS('[data-test-mismatch-marker]').elements()).toHaveLength(2);
+    for (let account of LINKED_ACCOUNTS) {
+      let chip = page.getByRole('link', { name: `GitHub ${account.login}`, exact: true });
+      await expect
+        .element(chip)
+        .toHaveAccessibleDescription('This crates.io account may differ from the GitHub account named "crates-user".');
+    }
   });
 
   it('omits the account row when there are no linked accounts', async () => {

@@ -88,7 +88,7 @@ test('returns a user object for known users', async function () {
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
         "created_at": null,
-        "github_username_matches": false,
+        "github_username_matches": true,
         "id": 2,
         "login": "second-user",
         "name": "User 2",
@@ -97,6 +97,39 @@ test('returns a user object for known users', async function () {
     }
   `);
 });
+
+test.each([
+  ['9', '10', false],
+  ['10', '9', true],
+  ['9007199254740992', '9007199254740993', false],
+  ['9007199254740993', '9007199254740992', true],
+])('resolves reused GitHub logins by account ID (%s vs %s)', async function (accountId, otherAccountId, expected) {
+  await db.user.create({
+    login: 'bob',
+    githubAccounts: [{ accountId: otherAccountId, login: 'ALICE', avatar: null }],
+  });
+  await db.user.create({
+    login: 'alice',
+    githubAccounts: [{ accountId, login: 'alice', avatar: null }],
+  });
+
+  let response = await fetch('/api/v1/users/alice');
+  expect(response.status).toBe(200);
+  let body = await response.json();
+  expect(body.user.github_username_matches).toBe(expected);
+});
+
+test.each([{ githubAccounts: [] }, { githubAccounts: [{ accountId: '1', login: 'alice_smith', avatar: null }] }])(
+  'reports no GitHub match for missing links or distinct separators (%j)',
+  async function ({ githubAccounts }) {
+    await db.user.create({ login: 'alice-smith', githubAccounts });
+
+    let response = await fetch('/api/v1/users/alice-smith');
+    expect(response.status).toBe(200);
+    let body = await response.json();
+    expect(body.user.github_username_matches).toBe(false);
+  },
+);
 
 test('returns the newest user for canonical username collisions', async function () {
   await db.user.create({
