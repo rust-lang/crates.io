@@ -1,9 +1,7 @@
 use bon::Builder;
 use chrono::{DateTime, Utc};
-use diesel::dsl::{exists, sql};
+use diesel::dsl::exists;
 use diesel::prelude::*;
-use diesel::sql_types::Integer;
-use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
@@ -133,7 +131,6 @@ impl User {
 #[derive(Insertable, Debug, Builder)]
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
-    pub gh_id: i32,
     pub username: &'a str,
     pub name: Option<&'a str>,
 }
@@ -143,34 +140,6 @@ impl NewUser<'_> {
     pub async fn insert(&self, mut conn: &AsyncPgConnection) -> QueryResult<i32> {
         diesel::insert_into(users::table)
             .values(self)
-            .returning(users::id)
-            .get_result(&mut conn)
-            .await
-    }
-
-    /// Inserts the user into the database, or updates an existing one.
-    ///
-    /// This currently works because `users::gh_id` is unique. When we switch to `users::username`
-    /// being the unique key, we should NOT upsert based solely on matching usernames, because we
-    /// might be trying to create a new user who is trying to create their account with a username
-    /// that has already been claimed.
-    pub async fn insert_or_update(&self, mut conn: &AsyncPgConnection) -> QueryResult<i32> {
-        diesel::insert_into(users::table)
-            .values(self)
-            // We need the `WHERE gh_id > 0` condition here because `gh_id` set
-            // to `-1` indicates that we were unable to find a GitHub ID for
-            // the associated GitHub login at the time that we backfilled
-            // GitHub IDs. Therefore, there are multiple records in production
-            // that have a `gh_id` of `-1` so we need to exclude those when
-            // considering uniqueness of `gh_id` values. The `> 0` condition isn't
-            // necessary for most fields in the database to be used as a conflict
-            // target :)
-            .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
-            .do_update()
-            .set((
-                users::username.eq(excluded(users::username)),
-                users::name.eq(excluded(users::name)),
-            ))
             .returning(users::id)
             .get_result(&mut conn)
             .await

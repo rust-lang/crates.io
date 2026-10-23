@@ -92,7 +92,6 @@ async fn create_user(
         .values((
             users::name.eq(name),
             users::username.eq(name),
-            users::gh_id.eq(account_id as i32),
             users::is_admin.eq(is_admin),
         ))
         .returning(users::id)

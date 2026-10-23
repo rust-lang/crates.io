@@ -743,12 +743,13 @@ async fn inactive_users_dont_get_invitations() {
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
+    // An inactive user without a linked GitHub account and an active user with a linked GitHub
+    // account both exist
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 
+    // No linked GitHub account
     NewUser::builder()
-        .gh_id(-1)
         .username(invited_gh_login)
         .build()
         .insert(&conn)
@@ -759,6 +760,7 @@ async fn inactive_users_dont_get_invitations() {
         .expect_build(&mut conn)
         .await;
 
+    // `db_new_user` creates a linked GitHub account
     let invited_user = app.db_new_user(invited_gh_login).await;
 
     owner_token
@@ -771,16 +773,16 @@ async fn inactive_users_dont_get_invitations() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn highest_gh_id_is_most_recent_account_we_know_of() {
+async fn highest_github_id_is_most_recent_account_we_know_of() {
     let (app, _, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    // An inactive user with a lower gh_id and an active user with a higher gh_id both exist
+    // An inactive user with a lower GitHub ID and an active user with a higher GitHub ID both exist
     let invited_gh_login = "user_bar";
     let krate_name = "newer_user_test";
 
-    // This user will get a lower gh_id, given how crate::tests::new_user works
+    // This user will get a lower GitHub ID, given how crate::tests::new_user works
     app.db_new_user(invited_gh_login).await;
 
     let invited_user = app.db_new_user(invited_gh_login).await;
