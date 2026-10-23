@@ -3,7 +3,7 @@ use crate::builders::UserBuilder;
 use crate::util::github::next_gh_id;
 use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
-use claims::{assert_err, assert_ok, assert_ok_eq, assert_some};
+use claims::{assert_err, assert_ok, assert_ok_eq, assert_some, assert_some_eq};
 use crates_io::controllers::session;
 use crates_io::models::{ApiToken, Email, OauthGithub, PublicUser, User};
 use crates_io::schema::{oauth_github, users};
@@ -381,7 +381,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
     assert_eq!(u.username, gh_login);
     assert_eq!(u.name.unwrap(), gh_display_name);
-    assert_eq!(u.gh_id.unwrap() as i32, gh_id);
+    assert_some_eq!(u.gh_id, i64::from(gh_id));
     assert_eq!(u.gh_login.unwrap(), gh_login);
     assert_eq!(u.gh_avatar.unwrap(), gh_avatar);
     let decrypted_token = encryption.decrypt(&u.gh_encrypted_token.unwrap())?;
@@ -417,7 +417,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
     assert_eq!(u.username, different_gh_login);
     assert_eq!(u.name.unwrap(), different_gh_display_name);
-    assert_eq!(u.gh_id.unwrap() as i32, gh_id);
+    assert_some_eq!(u.gh_id, i64::from(gh_id));
     assert_eq!(u.gh_login.unwrap(), different_gh_login);
     assert_eq!(u.gh_avatar.unwrap(), different_gh_avatar);
     let decrypted_token = encryption.decrypt(&u.gh_encrypted_token.unwrap())?;
@@ -451,7 +451,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
 
     assert_eq!(u.gh_login.unwrap(), gh_login);
-    assert_eq!(u.gh_id.unwrap() as i32, new_gh_id);
+    assert_some_eq!(u.gh_id, i64::from(new_gh_id));
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     assert_eq!(oauth_github_records.len(), 2);
