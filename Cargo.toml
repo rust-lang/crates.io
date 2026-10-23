@@ -69,6 +69,9 @@ doctest = true
 name = "integration"
 path = "src/tests/mod.rs"
 
+[workspace.dependencies]
+tokio = { version = "=1.54.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
+
 [dependencies]
 anyhow = "=1.0.104"
 astral-tokio-tar = { version = "=0.7.0", default-features = false }
@@ -161,7 +164,7 @@ tar = { version = "=0.4.46", default-features = false }
 tempfile = "=3.27.0"
 thiserror = "=2.0.21"
 tikv-jemallocator = { version = "=0.7.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
-tokio = { version = "=1.54.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
+tokio = { workspace = true }
 tokio-postgres = "=0.7.18"
 tokio-util = "=0.7.20"
 toml = "=1.1.8"
@@ -195,5 +198,5 @@ insta = { version = "=1.49.0", features = ["glob", "json", "redactions"] }
 jsonwebtoken = { version = "=11.1.0", features = ["aws_lc_rs"] }
 opentelemetry_sdk = { version = "=0.33.1", default-features = false, features = ["testing"] }
 quoted_printable = "=0.5.2"
-tokio = "=1.54.1"
+tokio = { workspace = true }
 zip = { version = "=9.0.5", default-features = false, features = ["deflate"] }
