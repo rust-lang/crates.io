@@ -4345,13 +4345,25 @@ expression: response.json()
         "operationId": "handle_crate_owner_invitation",
         "parameters": [
           {
-            "description": "ID of the crate",
             "in": "path",
             "name": "crate_id",
             "required": true,
             "schema": {
-              "format": "int32",
-              "type": "integer"
+              "oneOf": [
+                {
+                  "description": "The opaque identifier of the crate.",
+                  "example": 42,
+                  "format": "int32",
+                  "title": "ID",
+                  "type": "integer"
+                },
+                {
+                  "description": "The name fo the crate.",
+                  "example": "serde",
+                  "title": "Name",
+                  "type": "string"
+                }
+              ]
             }
           }
         ],
@@ -4368,10 +4380,29 @@ expression: response.json()
                         "type": "boolean"
                       },
                       "crate_id": {
-                        "description": "The opaque identifier for the crate this invitation is for.",
-                        "example": 42,
-                        "format": "int32",
-                        "type": "integer"
+                        "allOf": [
+                          {
+                            "oneOf": [
+                              {
+                                "description": "The opaque identifier of the crate.",
+                                "example": 42,
+                                "format": "int32",
+                                "title": "ID",
+                                "type": "integer"
+                              },
+                              {
+                                "description": "The name fo the crate.",
+                                "example": "serde",
+                                "title": "Name",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "description": "The name or opaque identifier for the crate this invitation is for.",
+                            "type": "object"
+                          }
+                        ]
                       }
                     },
                     "required": [
