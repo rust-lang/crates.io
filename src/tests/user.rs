@@ -1,9 +1,9 @@
 use crate::TestApp;
-use crate::builders::OauthGithubBuilder;
+use crate::builders::UserBuilder;
 use crate::util::github::next_gh_id;
 use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
-use claims::{assert_err, assert_ok, assert_ok_eq, assert_some};
+use claims::{assert_err, assert_ok, assert_ok_eq, assert_some, assert_some_eq};
 use crates_io::controllers::session;
 use crates_io::models::{ApiToken, Email, OauthGithub, PublicUser, User};
 use crates_io::schema::{oauth_github, users};
@@ -30,11 +30,8 @@ async fn public_user_github_username_matches() {
     let (app, _, matching_user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let mismatching_user = app.db_new_user("bar").await;
-    OauthGithubBuilder::for_user(mismatching_user.as_model())
-        .with_login("BAR")
-        .insert(&conn)
-        .await;
+    let mismatching_builder = UserBuilder::new().with_username("bar").with_gh_login("BAR");
+    let mismatching_user = app.db_new_user_from_builder(mismatching_builder).await;
 
     let unlinked_user_id = crate::new_user("baz").insert(&conn).await.unwrap();
 
@@ -49,7 +46,7 @@ async fn public_user_github_username_matches() {
             .await
             .unwrap();
 
-        assert_eq!(user.github_username_matches, expected);
+        assert_eq!(user.github_username_matches, expected, "{user:?}");
     }
 }
 
@@ -58,7 +55,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let (app, _, user, token) = TestApp::init().with_token().await;
     let emails = &app.as_inner().emails;
     let mut conn = app.db_conn().await;
-    let gh_id = user.as_model().gh_id;
+    let gh_id = user.as_model().gh_id.unwrap() as i32;
     let token = token.plaintext();
 
     let encryption = TokenEncryption::for_testing();
@@ -180,7 +177,7 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let gh_user = GitHubUser {
         // Use the same github ID to link to the existing account
-        id: model.gh_id,
+        id: model.gh_id.unwrap() as i32,
         login: "arbitrary_username".to_string(),
         name: None,
         email: Some(new_github_email.to_string()),
@@ -384,7 +381,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
     assert_eq!(u.username, gh_login);
     assert_eq!(u.name.unwrap(), gh_display_name);
-    assert_eq!(u.gh_id, gh_id);
+    assert_some_eq!(u.gh_id, i64::from(gh_id));
     assert_eq!(u.gh_login.unwrap(), gh_login);
     assert_eq!(u.gh_avatar.unwrap(), gh_avatar);
     let decrypted_token = encryption.decrypt(&u.gh_encrypted_token.unwrap())?;
@@ -420,7 +417,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
     assert_eq!(u.username, different_gh_login);
     assert_eq!(u.name.unwrap(), different_gh_display_name);
-    assert_eq!(u.gh_id, gh_id);
+    assert_some_eq!(u.gh_id, i64::from(gh_id));
     assert_eq!(u.gh_login.unwrap(), different_gh_login);
     assert_eq!(u.gh_avatar.unwrap(), different_gh_avatar);
     let decrypted_token = encryption.decrypt(&u.gh_encrypted_token.unwrap())?;
@@ -454,7 +451,7 @@ async fn write_to_users_and_oauth_github() -> anyhow::Result<()> {
     let u = User::find(&conn, uid).await?;
 
     assert_eq!(u.gh_login.unwrap(), gh_login);
-    assert_eq!(u.gh_id, new_gh_id);
+    assert_some_eq!(u.gh_id, i64::from(new_gh_id));
 
     let oauth_github_records: Vec<OauthGithub> = oauth_github::table.load(&mut conn).await.unwrap();
     assert_eq!(oauth_github_records.len(), 2);

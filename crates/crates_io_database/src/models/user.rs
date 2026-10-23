@@ -84,7 +84,8 @@ impl PublicUser {
 pub struct User {
     pub id: i32,
     pub name: Option<String>,
-    pub gh_id: i32,
+    #[diesel(select_expression = oauth_github::account_id.nullable())]
+    pub gh_id: Option<i64>,
     #[diesel(select_expression = oauth_github::login.nullable())]
     pub gh_login: Option<String>,
     #[diesel(select_expression = oauth_github::avatar.nullable())]
