@@ -144,7 +144,7 @@ opentelemetry = { version = "=0.33.1", default-features = false, features = ["me
 opentelemetry-otlp = { version = "=0.33.1", default-features = false, features = ["gzip-http", "http-proto", "internal-logs", "metrics", "reqwest-blocking-client", "trace", "zstd-http"] }
 opentelemetry_sdk = { version = "=0.33.1", default-features = false, features = ["metrics", "trace"] }
 p256 = "=0.14.0"
-parking_lot = "=0.12.5"
+parking_lot = "=0.13.0"
 paste = "=1.0.15"
 postgres-native-tls = "=0.5.3"
 rand = "=0.10.3"
