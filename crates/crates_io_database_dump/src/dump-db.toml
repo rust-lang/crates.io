@@ -258,7 +258,6 @@ expires_at = "private"
 [users.columns]
 id = "public"
 name = "public"
-gh_id = "public"
 username = "public"
 created_at = "public"
 account_lock_reason = "private"

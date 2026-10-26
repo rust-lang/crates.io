@@ -9,9 +9,6 @@ use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
 use diesel::result::QueryResult;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use std::sync::atomic::{AtomicI32, Ordering};
-
-static NEXT_GH_ID: AtomicI32 = AtomicI32::new(1);
 
 async fn reserve_username(conn: &mut AsyncPgConnection, username: &str) {
     diesel::insert_into(reserved_usernames::table)
@@ -23,7 +20,6 @@ async fn reserve_username(conn: &mut AsyncPgConnection, username: &str) {
 
 async fn insert_user(conn: &AsyncPgConnection, username: &str) -> QueryResult<i32> {
     NewUser::builder()
-        .gh_id(NEXT_GH_ID.fetch_add(1, Ordering::SeqCst))
         .username(username)
         .build()
         .insert(conn)
