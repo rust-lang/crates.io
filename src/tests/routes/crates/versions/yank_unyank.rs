@@ -127,7 +127,7 @@ mod auth {
     use crate::util::{MockAnonymousUser, MockCookieUser};
     use chrono::{Duration, Utc};
     use crates_io::models::token::{CrateScope, EndpointScope};
-    use crates_io::schema::{crates, users, versions};
+    use crates_io::schema::{crates, versions};
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
     use insta::assert_snapshot;
@@ -380,15 +380,8 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn admin() {
         let (app, _, _) = prepare().await;
-        let mut conn = app.db_conn().await;
 
-        let admin = app.db_new_user("admin").await;
-
-        diesel::update(admin.as_model())
-            .set(users::is_admin.eq(true))
-            .execute(&mut conn)
-            .await
-            .unwrap();
+        let admin = app.db_new_admin_user("admin").await;
 
         let response = admin.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_snapshot!(response.status(), @"200 OK");

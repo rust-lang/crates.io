@@ -162,6 +162,15 @@ impl TestApp {
         self.db_new_user_from_builder(builder).await
     }
 
+    /// Create a new admin user with a verified e-mail address in the database
+    /// and return a mock user session.
+    pub async fn db_new_admin_user(&self, username: &str) -> MockCookieUser {
+        let builder = UserBuilder::new()
+            .with_username(username)
+            .with_is_admin(true);
+        self.db_new_user_from_builder(builder).await
+    }
+
     /// Create a new user from a builder with a verified email address in the
     /// database (`<username>@example.com`) and return a mock user session.
     pub async fn db_new_user_from_builder(&self, builder: UserBuilder<'_>) -> MockCookieUser {

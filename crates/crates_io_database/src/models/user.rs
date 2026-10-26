@@ -136,6 +136,8 @@ pub struct NewUser<'a> {
     pub gh_id: i32,
     pub username: &'a str,
     pub name: Option<&'a str>,
+    #[builder(default)]
+    pub is_admin: bool,
 }
 
 impl NewUser<'_> {

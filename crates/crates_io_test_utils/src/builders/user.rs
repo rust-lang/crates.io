@@ -25,6 +25,7 @@ pub struct UserBuilder<'a> {
     display_name: Option<&'a str>,
     pub gh_id: Option<i32>,
     pub gh_login: &'a str,
+    is_admin: bool,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -36,6 +37,7 @@ impl<'a> UserBuilder<'a> {
             display_name: None,
             gh_login: "octocat",
             gh_id: Some(next_gh_id()),
+            is_admin: false,
         }
     }
 
@@ -67,6 +69,11 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
+    /// Sets whether the user is an admin or not.
+    pub fn with_is_admin(self, is_admin: bool) -> Self {
+        Self { is_admin, ..self }
+    }
+
     pub fn build(self) -> User {
         let gh_id = match self.gh_id {
             Some(-1) | None => None,
@@ -82,7 +89,7 @@ impl<'a> UserBuilder<'a> {
             gh_encrypted_token: None,
             account_lock_reason: None,
             account_lock_until: None,
-            is_admin: false,
+            is_admin: self.is_admin,
             publish_notifications: true,
             username: self.username.into(),
             created_at: None,
@@ -95,6 +102,7 @@ impl<'a> UserBuilder<'a> {
             .gh_id(self.gh_id.unwrap_or_else(next_gh_id))
             .username(self.username)
             .maybe_name(self.display_name)
+            .is_admin(self.is_admin)
             .build()
     }
 }
