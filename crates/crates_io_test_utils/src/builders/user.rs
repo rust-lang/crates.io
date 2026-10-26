@@ -1,7 +1,7 @@
 use crate::github::next_gh_id;
 
 use chrono::Utc;
-use crates_io_database::models::{NewUser, User};
+use crates_io_database::models::{NewOauthGithub, NewUser, User};
 use crates_io_database::schema::oauth_github;
 use crates_io_encryption::TokenEncryption;
 use diesel::prelude::*;
@@ -122,12 +122,14 @@ impl<'a> UserBuilder<'a> {
         let id = self.new_user().insert(conn).await?;
 
         if let Some(github) = &self.github {
-            let user = User::find(conn, id).await?;
-            OauthGithubBuilder::for_user(&user)
-                .with_login(github.login)
-                .with_account_id(github.account_id.into())
+            NewOauthGithub::builder()
+                .account_id(github.account_id.into())
+                .login(github.login)
+                .encrypted_token(&ENCRYPTED_TOKEN)
+                .user_id(id)
+                .build()
                 .insert(conn)
-                .await;
+                .await?;
         }
 
         Ok(id)
