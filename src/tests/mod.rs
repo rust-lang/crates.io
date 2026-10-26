@@ -92,7 +92,7 @@ pub struct OwnerResp {
 }
 
 fn new_user(login: &str) -> NewUser<'_> {
-    builders::UserBuilder::new().with_username(login).new_user()
+    builders::UserBuilder::new(login).new_user()
 }
 
 fn new_team(login: &str) -> NewTeam<'_> {

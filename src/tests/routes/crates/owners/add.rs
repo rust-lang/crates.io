@@ -64,12 +64,9 @@ async fn reused_github_login_invites_highest_github_id() {
     let mut conn = app.db_conn().await;
 
     let older_gh_id = next_gh_id();
-    let newer = UserBuilder::new()
-        .with_username("newer")
-        .with_gh_login("SHARED");
+    let newer = UserBuilder::new("newer").with_gh_login("SHARED");
     let newer = app.db_new_user_from_builder(newer).await;
-    let older = UserBuilder::new()
-        .with_username("older")
+    let older = UserBuilder::new("older")
         .with_gh_login("shared")
         .with_gh_id(older_gh_id);
     let older = app.db_new_user_from_builder(older).await;
@@ -94,13 +91,9 @@ async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let older = UserBuilder::new()
-        .with_username("older")
-        .with_gh_login("shared");
+    let older = UserBuilder::new("older").with_gh_login("shared");
     let older = app.db_new_user_from_builder(older).await;
-    let newer = UserBuilder::new()
-        .with_username("newer")
-        .with_gh_login("SHARED");
+    let newer = UserBuilder::new("newer").with_gh_login("SHARED");
     let newer = app.db_new_user_from_builder(newer).await;
     assert!(newer.as_model().gh_id > older.as_model().gh_id);
 
@@ -128,7 +121,7 @@ async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
 async fn owner_lookup_error_precedes_duplicate_check() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let inactive = UserBuilder::new().with_username("inactive").with_gh_id(-1);
+    let inactive = UserBuilder::new("inactive").with_gh_id(-1);
     let inactive = app.db_new_user_from_builder(inactive).await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -195,9 +188,7 @@ async fn invite_distinct_login_user(login: &str) -> Response<OwnerResp> {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let user = UserBuilder::new()
-        .with_username("crates-user")
-        .with_gh_login("github-user");
+    let user = UserBuilder::new("crates-user").with_gh_login("github-user");
 
     app.db_new_user_from_builder(user).await;
 
@@ -214,9 +205,7 @@ async fn unprefixed_username_matches_different_accounts() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     let alice = app.db_new_user("alice").await;
-    let bob = UserBuilder::new()
-        .with_username("bob")
-        .with_gh_login("alice");
+    let bob = UserBuilder::new("bob").with_gh_login("alice");
     let bob = app.db_new_user_from_builder(bob).await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -243,13 +232,9 @@ async fn unprefixed_username_matches_different_accounts() {
 async fn unprefixed_confirmation_uses_requested_username() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let alice = UserBuilder::new()
-        .with_username("alice")
-        .with_gh_login("shared");
+    let alice = UserBuilder::new("alice").with_gh_login("shared");
     let alice = app.db_new_user_from_builder(alice).await;
-    let bob = UserBuilder::new()
-        .with_username("bob")
-        .with_gh_login("shared");
+    let bob = UserBuilder::new("bob").with_gh_login("shared");
     app.db_new_user_from_builder(bob).await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -291,9 +276,7 @@ async fn unprefixed_invitation_without_github_account() {
 async fn unprefixed_invitation_resolves_additional_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let alice = UserBuilder::new()
-        .with_username("alice")
-        .with_gh_login("other-login");
+    let alice = UserBuilder::new("alice").with_gh_login("other-login");
     let alice = app.db_new_user_from_builder(alice).await;
     let user_id = alice.as_model().id;
     NewOauthGithub::builder()
@@ -377,8 +360,7 @@ async fn unprefixed_github_login_separator_variant() {
 async fn crates_io_prefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let user_id = UserBuilder::new()
-        .with_username("inactive")
+    let user_id = UserBuilder::new("inactive")
         .with_gh_id(-1)
         .new_user()
         .insert(&conn)
@@ -405,13 +387,9 @@ async fn crates_io_prefixed_username_verbatim() {
 async fn crates_io_prefixed_invitation_targets_username() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let user = UserBuilder::new()
-        .with_username("crates-user")
-        .with_gh_login("github-user");
+    let user = UserBuilder::new("crates-user").with_gh_login("github-user");
     let user = app.db_new_user_from_builder(user).await;
-    let other_user = UserBuilder::new()
-        .with_username("github-user")
-        .with_gh_login("crates-user");
+    let other_user = UserBuilder::new("github-user").with_gh_login("crates-user");
     app.db_new_user_from_builder(other_user).await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -442,8 +420,7 @@ async fn crates_io_prefixed_username_separator_variant() {
 async fn github_prefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    UserBuilder::new()
-        .with_username("inactive")
+    UserBuilder::new("inactive")
         .with_gh_id(-1)
         .new_user()
         .insert(&conn)
@@ -472,9 +449,7 @@ async fn github_prefixed_invitation_uses_highest_account_id() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     app.db_new_user("shared").await;
-    let user = UserBuilder::new()
-        .with_username("newer")
-        .with_gh_login("SHARED");
+    let user = UserBuilder::new("newer").with_gh_login("SHARED");
     let user = app.db_new_user_from_builder(user).await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -839,9 +814,7 @@ async fn invite_with_invalid_email() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
     app.db_new_user("valid_user").await;
-    let invitee = UserBuilder::new()
-        .with_username("invalid_user")
-        .with_gh_login("github_user");
+    let invitee = UserBuilder::new("invalid_user").with_gh_login("github_user");
     let invitee = app.db_new_user_from_builder(invitee).await;
     let email = emails::table.filter(emails::user_id.eq(invitee.as_model().id));
     diesel::update(email)
@@ -889,9 +862,7 @@ async fn no_invite_emails_for_txn_rollback() {
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
 
-    let user = UserBuilder::new()
-        .with_username("bananas")
-        .with_gh_login("oranges");
+    let user = UserBuilder::new("bananas").with_gh_login("oranges");
     app.db_new_user_from_builder(user).await;
     let response = token.add_named_owners("crate_name", &usernames).await;
     assert_snapshot!(response.status(), @"400 Bad Request");

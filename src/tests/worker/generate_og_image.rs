@@ -11,7 +11,7 @@ async fn test_generate_og_image_job() {
 
     let mut conn = app.db_conn().await;
 
-    let user = UserBuilder::new().with_username("foo").new_user();
+    let user = UserBuilder::new("foo").new_user();
     let user_id = user.insert(&conn).await.unwrap();
     let user = User::find(&conn, user_id).await.unwrap();
     OauthGithubBuilder::for_user(&user)

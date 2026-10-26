@@ -45,8 +45,7 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
 
     let mut conn = app.db_conn().await;
 
-    let other_user_id = UserBuilder::new()
-        .with_username("other_user")
+    let other_user_id = UserBuilder::new("other_user")
         .new_user()
         .insert(&conn)
         .await?;

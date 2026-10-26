@@ -701,11 +701,7 @@ mod tests {
     }
 
     async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
-        UserBuilder::new()
-            .with_username(gh_login)
-            .new_user()
-            .insert(conn)
-            .await
+        UserBuilder::new(gh_login).new_user().insert(conn).await
     }
 
     async fn new_user_bucket(

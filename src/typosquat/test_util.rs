@@ -38,10 +38,6 @@ pub mod faker {
     }
 
     pub async fn user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<i32> {
-        UserBuilder::new()
-            .with_username(login)
-            .new_user()
-            .insert(conn)
-            .await
+        UserBuilder::new(login).new_user().insert(conn).await
     }
 }

@@ -158,16 +158,14 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
-        let builder = UserBuilder::new().with_username(username);
+        let builder = UserBuilder::new(username);
         self.db_new_user_from_builder(builder).await
     }
 
     /// Create a new admin user with a verified e-mail address in the database
     /// and return a mock user session.
     pub async fn db_new_admin_user(&self, username: &str) -> MockCookieUser {
-        let builder = UserBuilder::new()
-            .with_username(username)
-            .with_is_admin(true);
+        let builder = UserBuilder::new(username).with_is_admin(true);
         self.db_new_user_from_builder(builder).await
     }
 

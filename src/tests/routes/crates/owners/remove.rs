@@ -125,9 +125,7 @@ async fn remove_reused_github_login(login: &str) {
         .await;
 
     for (username, gh_login) in [("older", "shared"), ("newer", "SHARED")] {
-        let user = UserBuilder::new()
-            .with_username(username)
-            .with_gh_login(gh_login);
+        let user = UserBuilder::new(username).with_gh_login(gh_login);
         let user = app.db_new_user_from_builder(user).await;
         CrateOwner::builder()
             .crate_id(krate.id)
@@ -153,9 +151,7 @@ async fn unprefixed_removal_with_conflicting_owners() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     let alice = app.db_new_user("alice").await;
-    let bob = UserBuilder::new()
-        .with_username("bob")
-        .with_gh_login("alice");
+    let bob = UserBuilder::new("bob").with_gh_login("alice");
     let bob = app.db_new_user_from_builder(bob).await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
@@ -196,13 +192,9 @@ async fn remove_distinct_login_users(logins: &[&str]) -> (Response<OwnerResp>, u
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let user2 = UserBuilder::new()
-        .with_username("crates-user")
-        .with_gh_login("github-user");
+    let user2 = UserBuilder::new("crates-user").with_gh_login("github-user");
     let user2 = app.db_new_user_from_builder(user2).await;
-    let non_owner = UserBuilder::new()
-        .with_username("github-user")
-        .with_gh_login("crates-user");
+    let non_owner = UserBuilder::new("github-user").with_gh_login("crates-user");
     app.db_new_user_from_builder(non_owner).await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)

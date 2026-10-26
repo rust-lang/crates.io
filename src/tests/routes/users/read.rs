@@ -16,9 +16,7 @@ pub struct UserShowPublicResponse {
 async fn show() {
     let (app, anon, _) = TestApp::init().with_user().await;
 
-    let builder = UserBuilder::new()
-        .with_username("crates-Bar")
-        .with_gh_login("github-Bar");
+    let builder = UserBuilder::new("crates-Bar").with_gh_login("github-Bar");
 
     app.db_new_user_from_builder(builder).await;
 
@@ -74,16 +72,14 @@ async fn show_latest_user_case_insensitively() {
     // possible. For the crates.io/user/{username} pages, the best we can do is show the last
     // crates.io account created with that username.
 
-    let user1 = UserBuilder::new()
-        .with_username("foobar")
+    let user1 = UserBuilder::new("foobar")
         .with_display_name("I was first then deleted my github account")
         .new_user();
     let user1_id = user1.insert(&conn).await.unwrap();
     let user1 = User::find(&conn, user1_id).await.unwrap();
     OauthGithubBuilder::for_user(&user1).insert(&conn).await;
 
-    let user2 = UserBuilder::new()
-        .with_username("FOOBAR")
+    let user2 = UserBuilder::new("FOOBAR")
         .with_display_name("I was second, I took the foobar username on github")
         .new_user();
     let user2_id = user2.insert(&conn).await.unwrap();
@@ -105,11 +101,10 @@ async fn show_latest_user_case_insensitively() {
 async fn user_without_github_account() {
     let (app, anon) = TestApp::init().empty().await;
 
-    let builder = UserBuilder::new()
+    let builder = UserBuilder::new("foobar")
         // The gh_id column will eventually be removed; there are currently records in production
         // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
         .with_gh_id(-1)
-        .with_username("foobar")
         .with_display_name("I deleted my github account");
     app.db_new_user_from_builder(builder).await;
     // This user doesn't have a linked record in `oauth_github`

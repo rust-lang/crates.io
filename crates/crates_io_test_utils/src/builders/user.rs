@@ -31,21 +31,13 @@ pub struct UserBuilder<'a> {
 impl<'a> UserBuilder<'a> {
     /// Create a new instance of the builder. To get a `User`, call `build` (creates an instance in
     /// memory only) or `insert` (creates a record in the database).
-    pub fn new() -> Self {
-        Self {
-            username: "octocat",
-            display_name: None,
-            gh_login: "octocat",
-            gh_id: Some(next_gh_id()),
-            is_admin: false,
-        }
-    }
-
-    pub fn with_username(self, username: &'a str) -> Self {
+    pub fn new(username: &'a str) -> Self {
         Self {
             username,
+            display_name: None,
             gh_login: username,
-            ..self
+            gh_id: Some(next_gh_id()),
+            is_admin: false,
         }
     }
 
@@ -104,12 +96,6 @@ impl<'a> UserBuilder<'a> {
             .maybe_name(self.display_name)
             .is_admin(self.is_admin)
             .build()
-    }
-}
-
-impl Default for UserBuilder<'_> {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
