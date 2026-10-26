@@ -51,12 +51,10 @@ pub fn connection_url(config: &DbPoolConfig) -> String {
     }
 
     // Configure the time it takes for diesel to return an error when there is full packet loss
-    // between the application and the database.
-    maybe_append_url_param(
-        &mut url,
-        "tcp_user_timeout",
-        &config.tcp_timeout.as_millis().to_string(),
-    );
+    // between the application and the database. Unlike libpq, `tokio-postgres` parses this
+    // parameter in whole seconds, so round up to avoid passing `0`, which means "system default".
+    let tcp_timeout_secs = config.tcp_timeout.as_millis().div_ceil(1000);
+    maybe_append_url_param(&mut url, "tcp_user_timeout", &tcp_timeout_secs.to_string());
 
     url.into()
 }
@@ -146,5 +144,34 @@ impl From<ConnectionConfig> for Hook<AsyncPgConnection> {
                 result.map_err(|err| HookError::message(err.to_string()))
             })
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn pool_config(tcp_timeout: Duration) -> DbPoolConfig {
+        DbPoolConfig {
+            url: "postgres://localhost/crates".into(),
+            read_only_mode: false,
+            pool_size: 1,
+            tcp_timeout,
+            connection_timeout: Duration::from_secs(30),
+            statement_timeout: Duration::from_secs(30),
+            enforce_tls: false,
+        }
+    }
+
+    #[test]
+    fn connection_url_passes_tcp_user_timeout_in_seconds() {
+        let url = connection_url(&pool_config(Duration::from_secs(15)));
+        assert_eq!(url, "postgres://localhost/crates?tcp_user_timeout=15");
+    }
+
+    #[test]
+    fn connection_url_rounds_tcp_user_timeout_up_to_whole_seconds() {
+        let url = connection_url(&pool_config(Duration::from_millis(500)));
+        assert_eq!(url, "postgres://localhost/crates?tcp_user_timeout=1");
     }
 }
