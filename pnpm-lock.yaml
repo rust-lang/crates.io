@@ -315,8 +315,8 @@ importers:
         specifier: 5.0.5
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       chromatic:
-        specifier: 18.13.0
-        version: 18.13.0
+        specifier: 18.13.3
+        version: 18.13.3
       msw:
         specifier: 3.0.3
         version: 3.0.3(@types/node@24.19.2)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -2323,8 +2323,8 @@ packages:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
     engines: {node: '>= 20.19.0'}
 
-  chromatic@18.13.0:
-    resolution: {integrity: sha512-AdN6tHB9anx/sdJKIMQ7JkQQV2RhVe1iTvXOFLlwFBRecbl9rp50h/25N0sZJDdpx22gG7Y81HoUALOORfMuxQ==}
+  chromatic@18.13.3:
+    resolution: {integrity: sha512-86wzIxGIdDMBvyYWCXF+V0RyckI+3kl6ki9lJoZem6a0UfwHtEEg5ruORpryTpu6c9dVtBk2qSTX4xtkz3gwsA==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -4732,7 +4732,7 @@ snapshots:
   '@chromatic-com/storybook@5.5.1(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))':
     dependencies:
       '@neoconfetti/react': 1.0.0
-      chromatic: 18.13.0
+      chromatic: 18.13.3
       jsonfile: 6.2.1
       storybook: 10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1)
       strip-ansi: 7.2.0
@@ -6664,7 +6664,7 @@ snapshots:
     dependencies:
       readdirp: 5.1.1
 
-  chromatic@18.13.0:
+  chromatic@18.13.3:
     dependencies:
       semver: 7.8.5
 
