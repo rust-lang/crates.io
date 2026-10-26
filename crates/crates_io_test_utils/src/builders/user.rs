@@ -25,7 +25,7 @@ pub struct UserBuilder<'a> {
 }
 
 struct GithubAccount<'a> {
-    account_id: i32,
+    account_id: Option<i32>,
     login: &'a str,
     avatar: Option<&'a str>,
 }
@@ -38,7 +38,7 @@ impl<'a> UserBuilder<'a> {
             username,
             display_name: None,
             github: Some(GithubAccount {
-                account_id: next_gh_id(),
+                account_id: None,
                 login: username,
                 avatar: None,
             }),
@@ -61,7 +61,7 @@ impl<'a> UserBuilder<'a> {
 
     /// Sets the GitHub account ID.
     pub fn with_gh_id(mut self, account_id: i32) -> Self {
-        self.github_mut().account_id = account_id;
+        self.github_mut().account_id = Some(account_id);
         self
     }
 
@@ -92,7 +92,7 @@ impl<'a> UserBuilder<'a> {
             id: 1,
             gh_login: github.map(|github| github.login.into()),
             name: self.display_name.map(ToString::to_string),
-            gh_id: github.map(|github| github.account_id.into()),
+            gh_id: github.map(|github| github.account_id.unwrap_or_else(next_gh_id).into()),
             gh_avatar: github.and_then(|github| github.avatar.map(ToString::to_string)),
             gh_encrypted_token: None,
             account_lock_reason: None,
@@ -109,7 +109,7 @@ impl<'a> UserBuilder<'a> {
     /// returns the user ID.
     pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
         let gh_id = match &self.github {
-            Some(github) => github.account_id,
+            Some(github) => github.account_id.unwrap_or_else(next_gh_id),
             // Production stores `-1` for users whose GitHub account was deleted.
             None => -1,
         };
@@ -125,7 +125,7 @@ impl<'a> UserBuilder<'a> {
 
         if let Some(github) = &self.github {
             NewOauthGithub::builder()
-                .account_id(github.account_id.into())
+                .account_id(gh_id.into())
                 .login(github.login)
                 .maybe_avatar(github.avatar)
                 .encrypted_token(&ENCRYPTED_TOKEN)
