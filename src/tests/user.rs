@@ -34,6 +34,7 @@ async fn public_user_github_username_matches() {
     let mismatching_user = app.db_new_user_from_builder(mismatching_builder).await;
 
     let unlinked_user_id = UserBuilder::new("baz")
+        .with_gh_id(-1)
         .new_user()
         .insert(&conn)
         .await
