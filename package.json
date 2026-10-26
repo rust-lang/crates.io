@@ -39,7 +39,7 @@
     "@eslint/js": "10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@msw/playwright": "0.7.0",
-    "@percy/cli": "1.32.11",
+    "@percy/cli": "1.32.12",
     "@percy/playwright": "1.1.2",
     "@playwright/test": "1.64.1",
     "@sinonjs/fake-timers": "15.4.0",
