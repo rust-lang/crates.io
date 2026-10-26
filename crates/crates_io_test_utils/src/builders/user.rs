@@ -23,9 +23,13 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
-    gh_id: Option<i32>,
-    gh_login: &'a str,
+    github: Option<GithubAccount<'a>>,
     is_admin: bool,
+}
+
+struct GithubAccount<'a> {
+    account_id: i32,
+    login: &'a str,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -35,8 +39,10 @@ impl<'a> UserBuilder<'a> {
         Self {
             username,
             display_name: None,
-            gh_login: username,
-            gh_id: Some(next_gh_id()),
+            github: Some(GithubAccount {
+                account_id: next_gh_id(),
+                login: username,
+            }),
             is_admin: false,
         }
     }
@@ -48,17 +54,26 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
-    /// Sets the legacy GitHub login independently from the crates.io username.
-    pub fn with_gh_login(self, gh_login: &'a str) -> Self {
-        Self { gh_login, ..self }
+    /// Sets the GitHub login independently from the crates.io username.
+    pub fn with_gh_login(mut self, login: &'a str) -> Self {
+        self.github_mut().login = login;
+        self
     }
 
-    /// Sets the legacy GitHub account ID.
-    pub fn with_gh_id(self, gh_id: i32) -> Self {
-        Self {
-            gh_id: Some(gh_id),
-            ..self
-        }
+    /// Sets the GitHub account ID.
+    pub fn with_gh_id(mut self, account_id: i32) -> Self {
+        self.github_mut().account_id = account_id;
+        self
+    }
+
+    pub fn without_github(mut self) -> Self {
+        self.github = None;
+        self
+    }
+
+    fn github_mut(&mut self) -> &mut GithubAccount<'a> {
+        let github = self.github.as_mut();
+        github.expect("GitHub account options require a linked GitHub account")
     }
 
     /// Sets whether the user is an admin or not.
@@ -67,16 +82,13 @@ impl<'a> UserBuilder<'a> {
     }
 
     pub fn build(self) -> User {
-        let gh_id = match self.gh_id {
-            Some(-1) | None => None,
-            Some(id) => Some(id as i64),
-        };
+        let github = self.github.as_ref();
 
         User {
             id: 1,
-            gh_login: Some(self.gh_login.into()),
+            gh_login: github.map(|github| github.login.into()),
             name: self.display_name.map(ToString::to_string),
-            gh_id,
+            gh_id: github.map(|github| github.account_id.into()),
             gh_avatar: None,
             gh_encrypted_token: None,
             account_lock_reason: None,
@@ -89,30 +101,31 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
-    pub fn new_user(self) -> NewUser<'a> {
+    pub fn new_user(&self) -> NewUser<'a> {
+        let gh_id = match &self.github {
+            Some(github) => github.account_id,
+            // Production stores `-1` for users whose GitHub account was deleted.
+            None => -1,
+        };
+
         NewUser::builder()
-            .gh_id(self.gh_id.unwrap_or_else(next_gh_id))
+            .gh_id(gh_id)
             .username(self.username)
             .maybe_name(self.display_name)
             .is_admin(self.is_admin)
             .build()
     }
 
-    /// Inserts the user into the database, links a GitHub account unless the
-    /// GitHub account ID is `-1`, and returns the user ID.
+    /// Inserts the user into the database, links its GitHub account and
+    /// returns the user ID.
     pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
-        let gh_login = self.gh_login;
-        let gh_id = self.gh_id;
-
         let id = self.new_user().insert(conn).await?;
 
-        if let Some(gh_id) = gh_id
-            && gh_id != -1
-        {
+        if let Some(github) = &self.github {
             let user = User::find(conn, id).await?;
             OauthGithubBuilder::for_user(&user)
-                .with_login(gh_login)
-                .with_account_id(gh_id.into())
+                .with_login(github.login)
+                .with_account_id(github.account_id.into())
                 .insert(conn)
                 .await;
         }

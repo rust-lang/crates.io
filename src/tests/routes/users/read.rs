@@ -102,9 +102,7 @@ async fn user_without_github_account() {
     let (app, anon) = TestApp::init().empty().await;
 
     let builder = UserBuilder::new("foobar")
-        // The gh_id column will eventually be removed; there are currently records in production
-        // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
-        .with_gh_id(-1)
+        .without_github()
         .with_display_name("I deleted my github account");
     app.db_new_user_from_builder(builder).await;
     // This user doesn't have a linked record in `oauth_github`

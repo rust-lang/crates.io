@@ -121,7 +121,7 @@ async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
 async fn owner_lookup_error_precedes_duplicate_check() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let inactive = UserBuilder::new("inactive").with_gh_id(-1);
+    let inactive = UserBuilder::new("inactive").without_github();
     let inactive = app.db_new_user_from_builder(inactive).await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -361,7 +361,7 @@ async fn crates_io_prefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     let user_id = UserBuilder::new("inactive")
-        .with_gh_id(-1)
+        .without_github()
         .insert(&conn)
         .await
         .unwrap();
@@ -420,7 +420,7 @@ async fn github_prefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     UserBuilder::new("inactive")
-        .with_gh_id(-1)
+        .without_github()
         .insert(&conn)
         .await
         .unwrap();
