@@ -1,12 +1,9 @@
 use crate::github::next_gh_id;
 
-use chrono::Utc;
 use crates_io_database::models::{NewOauthGithub, NewUser, User};
-use crates_io_database::schema::oauth_github;
 use crates_io_encryption::TokenEncryption;
-use diesel::prelude::*;
-use diesel::upsert::excluded;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel::QueryResult;
+use diesel_async::AsyncPgConnection;
 
 use std::sync::LazyLock;
 
@@ -141,64 +138,5 @@ impl<'a> UserBuilder<'a> {
         }
 
         Ok(id)
-    }
-}
-
-/// A builder to create linked GitHub accounts for a user without having to use `GitHubUser`.
-pub struct OauthGithubBuilder<'a> {
-    user_id: i32,
-    account_id: i64,
-    encrypted_token: &'a [u8],
-    login: &'a str,
-    avatar: Option<&'a str>,
-}
-
-impl<'a> OauthGithubBuilder<'a> {
-    pub fn for_user(user: &'a User) -> Self {
-        Self {
-            user_id: user.id,
-            account_id: next_gh_id() as i64,
-            encrypted_token: &ENCRYPTED_TOKEN,
-            login: user.gh_login.as_ref().unwrap_or(&user.username),
-            avatar: None,
-        }
-    }
-
-    pub fn with_avatar(self, avatar: &'a str) -> Self {
-        Self {
-            avatar: Some(avatar),
-            ..self
-        }
-    }
-
-    pub fn with_login(self, login: &'a str) -> Self {
-        Self { login, ..self }
-    }
-
-    pub fn with_account_id(self, account_id: i64) -> Self {
-        Self { account_id, ..self }
-    }
-
-    pub async fn insert(self, mut conn: &AsyncPgConnection) {
-        diesel::insert_into(oauth_github::table)
-            .values((
-                oauth_github::user_id.eq(self.user_id),
-                oauth_github::account_id.eq(self.account_id),
-                oauth_github::encrypted_token.eq(self.encrypted_token),
-                oauth_github::login.eq(self.login),
-                oauth_github::avatar.eq(self.avatar),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .on_conflict(oauth_github::account_id)
-            .do_update()
-            .set((
-                oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
-                oauth_github::login.eq(excluded(oauth_github::login)),
-                oauth_github::avatar.eq(excluded(oauth_github::avatar)),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .execute(&mut conn)
-            .await
-            .unwrap();
     }
 }
