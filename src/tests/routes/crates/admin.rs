@@ -2,9 +2,6 @@ use crate::{
     builders::{CrateBuilder, VersionBuilder},
     util::{RequestHelper, TestApp},
 };
-use crates_io::schema::users;
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -32,13 +29,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
     let mut conn = app.db_conn().await;
     let user = user.as_model();
 
-    let admin = app.db_new_user("admin").await;
-
-    diesel::update(admin.as_model())
-        .set(users::is_admin.eq(true))
-        .execute(&mut conn)
-        .await
-        .unwrap();
+    let admin = app.db_new_admin_user("admin").await;
 
     let crate_1 = CrateBuilder::new("unyanked", user.id)
         .description("My Fun Crate")
