@@ -35,7 +35,6 @@ async fn public_user_github_username_matches() {
 
     let unlinked_user_id = UserBuilder::new("baz")
         .with_gh_id(-1)
-        .new_user()
         .insert(&conn)
         .await
         .unwrap();

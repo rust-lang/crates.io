@@ -116,7 +116,6 @@ async fn test_update_email_notifications_not_owned() {
     let mut conn = app.db_conn().await;
 
     let user_id = UserBuilder::new("arbitrary_username")
-        .new_user()
         .insert(&conn)
         .await
         .unwrap();

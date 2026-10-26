@@ -45,10 +45,7 @@ async fn test_trigger_rebuild_permission_failed() -> anyhow::Result<()> {
 
     let mut conn = app.db_conn().await;
 
-    let other_user_id = UserBuilder::new("other_user")
-        .new_user()
-        .insert(&conn)
-        .await?;
+    let other_user_id = UserBuilder::new("other_user").insert(&conn).await?;
 
     CrateBuilder::new("krate", other_user_id)
         .version(VersionBuilder::new("0.1.0"))
