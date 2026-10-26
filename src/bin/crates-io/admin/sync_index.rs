@@ -259,8 +259,7 @@ mod tests {
     }
 
     async fn create_user(conn: &AsyncPgConnection) -> i32 {
-        UserBuilder::new()
-            .with_username("testuser")
+        UserBuilder::new("testuser")
             .new_user()
             .insert(conn)
             .await

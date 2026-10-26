@@ -55,7 +55,7 @@ mod tests {
     use insta::assert_snapshot;
 
     fn test_user() -> User {
-        UserBuilder::new().build()
+        UserBuilder::new("octocat").build()
     }
 
     fn test_crate() -> Crate {

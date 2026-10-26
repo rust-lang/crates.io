@@ -30,7 +30,7 @@ async fn public_user_github_username_matches() {
     let (app, _, matching_user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
 
-    let mismatching_builder = UserBuilder::new().with_username("bar").with_gh_login("BAR");
+    let mismatching_builder = UserBuilder::new("bar").with_gh_login("BAR");
     let mismatching_user = app.db_new_user_from_builder(mismatching_builder).await;
 
     let unlinked_user_id = crate::new_user("baz").insert(&conn).await.unwrap();

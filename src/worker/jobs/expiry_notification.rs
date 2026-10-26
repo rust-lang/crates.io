@@ -154,8 +154,7 @@ mod tests {
         let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
-        let user_id = UserBuilder::new()
-            .with_username("a")
+        let user_id = UserBuilder::new("a")
             .new_user()
             .insert(&conn)
             .await

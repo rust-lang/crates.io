@@ -147,8 +147,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user_id = UserBuilder::new()
-            .with_username("user1")
+        let user_id = UserBuilder::new("user1")
             .new_user()
             .insert(&conn)
             .await

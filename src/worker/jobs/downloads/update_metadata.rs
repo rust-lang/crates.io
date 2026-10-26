@@ -114,8 +114,7 @@ mod tests {
     use diesel_async::AsyncConnection;
 
     async fn user(conn: &mut AsyncPgConnection) -> i32 {
-        UserBuilder::new()
-            .with_username("login")
+        UserBuilder::new("login")
             .new_user()
             .insert(conn)
             .await

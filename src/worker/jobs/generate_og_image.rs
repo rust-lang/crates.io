@@ -220,7 +220,7 @@ mod tests {
         let db = TestDatabase::new();
         let mut conn = db.async_connect().await;
 
-        let new_user = UserBuilder::new().with_username("foo").new_user();
+        let new_user = UserBuilder::new("foo").new_user();
         let user_id = new_user.insert(&conn).await.unwrap();
         let user = User::find(&conn, user_id).await.unwrap();
         OauthGithubBuilder::for_user(&user)
