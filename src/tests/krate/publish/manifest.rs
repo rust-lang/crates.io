@@ -5,6 +5,7 @@ use crates_io::schema::versions;
 use crates_io::views::GoodCrate;
 use diesel::QueryDsl;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use googletest::prelude::*;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 async fn lib_name_in_db(conn: &mut AsyncPgConnection) -> Option<String> {
@@ -343,4 +344,27 @@ async fn test_lib_name_bin_only() {
 
     let mut conn = app.db_conn().await;
     assert_eq!(lib_name_in_db(&mut conn).await, None);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn nul_in_manifest_fields() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let response = token
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+            r#"[package]
+            name = "foo"
+            version = "1.0.0"
+            description = "description\u0000"
+            license = "MIT"
+            homepage = "https://example.com/\u0000"
+            documentation = "https://example.com/\u0000"
+            repository = "https://example.com/\u0000"
+            links = "foo\u0000"
+            categories = ["cat\u0000"]"#,
+        ))
+        .await;
+    assert_snapshot!(response.status(), @"500 Internal Server Error");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
 }

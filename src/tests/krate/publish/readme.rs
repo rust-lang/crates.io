@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
+use googletest::prelude::*;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -107,4 +108,17 @@ async fn publish_after_removing_documentation() {
     // Ensure latest version no longer has documentation
     let json = anon.show_crate("docscrate").await;
     assert_eq!(json.krate.documentation, None);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_with_nul_in_readme() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0")
+        .readme("8-byte protocol header `'AMQP\0\0\t\x01'`")
+        .readme_file("README\0.md");
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_snapshot!(response.status(), @"500 Internal Server Error");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
 }
