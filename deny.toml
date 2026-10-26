@@ -80,6 +80,15 @@ ignore = [
     # upstream crates have been updated to `quick-xml >= 0.41.0`.
     "RUSTSEC-2026-0194",
     "RUSTSEC-2026-0195",
+
+    # `zstd` and `zstd-safe` advisories. Fixed in `zstd >= 0.14.3` and
+    # `zstd-safe >= 8.2.0`, but `opentelemetry-otlp` still requires `zstd`
+    # 0.13. It only calls `zstd::bulk::compress()`, which uses none of the
+    # affected stream, seekable, or decompression APIs. Remove these once
+    # `opentelemetry-otlp` has been updated to `zstd >= 0.14.3`.
+    "RUSTSEC-2026-0391",
+    "RUSTSEC-2026-0398",
+    "RUSTSEC-2026-0403",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
