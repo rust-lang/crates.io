@@ -1,6 +1,6 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::builders::{CrateBuilder, UserBuilder, VersionBuilder};
+use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
-use crate::{new_category, new_user};
 use crates_io::models::{Category, OwnerKind};
 use crates_io::schema::{crates, version_downloads, versions};
 use crates_io_database::schema::categories;
@@ -24,7 +24,7 @@ async fn index() -> anyhow::Result<()> {
         assert_eq!(json.meta.total, 0);
     }
 
-    let user_id = new_user("foo").insert(&conn).await?;
+    let user_id = UserBuilder::new("foo").new_user().insert(&conn).await?;
 
     let krate = CrateBuilder::new("fooindex", user_id)
         .expect_build(&mut conn)

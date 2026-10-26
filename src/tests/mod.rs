@@ -1,5 +1,5 @@
 use crate::util::{RequestHelper, TestApp, github::next_gh_id};
-use crates_io::models::{NewCategory, NewTeam, NewUser};
+use crates_io::models::{NewCategory, NewTeam};
 use crates_io::views::{
     EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
     GoodCrate,
@@ -89,10 +89,6 @@ pub struct OwnerResp {
     // server must include `ok: true` to support old cargo clients
     ok: bool,
     msg: String,
-}
-
-fn new_user(login: &str) -> NewUser<'_> {
-    builders::UserBuilder::new(login).new_user()
 }
 
 fn new_team(login: &str) -> NewTeam<'_> {
