@@ -24,6 +24,7 @@ pub struct PublishBuilder {
     license_file: Option<String>,
     manifest: Manifest,
     readme: Option<String>,
+    readme_file: Option<String>,
     version: semver::Version,
     features: BTreeMap<String, Vec<String>>,
 }
@@ -50,6 +51,7 @@ impl PublishBuilder {
             license_file: None,
             manifest: Manifest::Generated,
             readme: None,
+            readme_file: None,
             version: semver::Version::parse(version).unwrap(),
             features: BTreeMap::new(),
         }
@@ -77,6 +79,12 @@ impl PublishBuilder {
     /// Sets the readme of this crate.
     pub fn readme(mut self, readme: &str) -> Self {
         self.readme = Some(readme.to_string());
+        self
+    }
+
+    /// Sets the path of the readme file of this crate.
+    pub fn readme_file(mut self, readme_file: &str) -> Self {
+        self.readme_file = Some(readme_file.to_string());
         self
     }
 
@@ -144,7 +152,7 @@ impl PublishBuilder {
             name: self.krate_name.clone(),
             vers: self.version.to_string(),
             readme: self.readme,
-            readme_file: None,
+            readme_file: self.readme_file,
         };
 
         let mut tarball_builder = TarballBuilder::new();
