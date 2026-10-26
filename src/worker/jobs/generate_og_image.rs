@@ -213,20 +213,19 @@ mod tests {
     use super::*;
     use crates_io_database::models::{OauthGithub, User};
     use crates_io_test_db::TestDatabase;
-    use crates_io_test_utils::builders::{CrateBuilder, OauthGithubBuilder, UserBuilder};
+    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder};
 
     #[tokio::test]
     async fn fetch_crate_info() {
         let db = TestDatabase::new();
         let mut conn = db.async_connect().await;
 
-        let new_user = UserBuilder::new("foo").new_user();
-        let user_id = new_user.insert(&conn).await.unwrap();
-        let user = User::find(&conn, user_id).await.unwrap();
-        OauthGithubBuilder::for_user(&user)
-            .with_avatar("http://example.com/icon-the-first.png")
+        let user_id = UserBuilder::new("foo")
+            .with_gh_avatar("http://example.com/icon-the-first.png")
             .insert(&conn)
-            .await;
+            .await
+            .unwrap();
+        let user = User::find(&conn, user_id).await.unwrap();
         let oauth_github = OauthGithub::belonging_to(&user)
             .select(OauthGithub::as_select())
             .first(&mut conn)
