@@ -364,7 +364,7 @@ async fn nul_in_manifest_fields() {
             categories = ["cat\u0000"]"#,
         ))
         .await;
-    assert_snapshot!(response.status(), @"500 Internal Server Error");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"the following `Cargo.toml` fields must not contain NUL characters: description, homepage, documentation, repository, links, categories"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
