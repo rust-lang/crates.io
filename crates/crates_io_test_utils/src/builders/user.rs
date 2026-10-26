@@ -30,6 +30,7 @@ pub struct UserBuilder<'a> {
 struct GithubAccount<'a> {
     account_id: i32,
     login: &'a str,
+    avatar: Option<&'a str>,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -42,6 +43,7 @@ impl<'a> UserBuilder<'a> {
             github: Some(GithubAccount {
                 account_id: next_gh_id(),
                 login: username,
+                avatar: None,
             }),
             is_admin: false,
         }
@@ -63,6 +65,11 @@ impl<'a> UserBuilder<'a> {
     /// Sets the GitHub account ID.
     pub fn with_gh_id(mut self, account_id: i32) -> Self {
         self.github_mut().account_id = account_id;
+        self
+    }
+
+    pub fn with_gh_avatar(mut self, avatar: &'a str) -> Self {
+        self.github_mut().avatar = Some(avatar);
         self
     }
 
@@ -89,7 +96,7 @@ impl<'a> UserBuilder<'a> {
             gh_login: github.map(|github| github.login.into()),
             name: self.display_name.map(ToString::to_string),
             gh_id: github.map(|github| github.account_id.into()),
-            gh_avatar: None,
+            gh_avatar: github.and_then(|github| github.avatar.map(ToString::to_string)),
             gh_encrypted_token: None,
             account_lock_reason: None,
             account_lock_until: None,
@@ -125,6 +132,7 @@ impl<'a> UserBuilder<'a> {
             NewOauthGithub::builder()
                 .account_id(github.account_id.into())
                 .login(github.login)
+                .maybe_avatar(github.avatar)
                 .encrypted_token(&ENCRYPTED_TOKEN)
                 .user_id(id)
                 .build()
