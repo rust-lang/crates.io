@@ -25,7 +25,7 @@ use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
-use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
+use crates_io_test_utils::builders::UserBuilder;
 use crates_io_trustpub::github::test_helpers::AUDIENCE;
 use crates_io_trustpub::keystore::{MockOidcKeyStore, OidcKeyStore};
 use crates_io_worker::Runner;
@@ -174,28 +174,12 @@ impl TestApp {
     pub async fn db_new_user_from_builder(&self, builder: UserBuilder<'_>) -> MockCookieUser {
         let conn = self.db_conn().await;
 
-        let gh_login = builder.gh_login.to_string();
-        let gh_id = builder.gh_id;
-
-        let new_user = builder.new_user();
-        let email = format!("{}@example.com", new_user.username);
-        let id = new_user.insert(&conn).await.unwrap();
+        let id = builder.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
-
-        if let Some(gh_id) = gh_id
-            && gh_id != -1
-        {
-            OauthGithubBuilder::for_user(&user)
-                .with_login(&gh_login)
-                .with_account_id(gh_id.into())
-                .insert(&conn)
-                .await;
-        }
-
-        let user = User::find(&conn, id).await.unwrap();
+        let email = format!("{}@example.com", user.username);
 
         let new_email = NewEmail::builder()
-            .user_id(id)
+            .user_id(user.id)
             .email(&email)
             .verified(true)
             .build();

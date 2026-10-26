@@ -362,7 +362,6 @@ async fn crates_io_prefixed_invitation_without_github_account() {
     let mut conn = app.db_conn().await;
     let user_id = UserBuilder::new("inactive")
         .with_gh_id(-1)
-        .new_user()
         .insert(&conn)
         .await
         .unwrap();
@@ -422,7 +421,6 @@ async fn github_prefixed_invitation_without_github_account() {
     let mut conn = app.db_conn().await;
     UserBuilder::new("inactive")
         .with_gh_id(-1)
-        .new_user()
         .insert(&conn)
         .await
         .unwrap();

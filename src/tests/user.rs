@@ -33,7 +33,11 @@ async fn public_user_github_username_matches() {
     let mismatching_builder = UserBuilder::new("bar").with_gh_login("BAR");
     let mismatching_user = app.db_new_user_from_builder(mismatching_builder).await;
 
-    let unlinked_user_id = crate::new_user("baz").insert(&conn).await.unwrap();
+    let unlinked_user_id = UserBuilder::new("baz")
+        .with_gh_id(-1)
+        .insert(&conn)
+        .await
+        .unwrap();
 
     for (user_id, expected) in [
         (matching_user.as_model().id, true),

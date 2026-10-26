@@ -147,11 +147,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let user_id = UserBuilder::new("user1")
-            .new_user()
-            .insert(&conn)
-            .await
-            .unwrap();
+        let user_id = UserBuilder::new("user1").insert(&conn).await.unwrap();
 
         let created_at_1 = "2020-01-01T00:00:00Z".parse().unwrap();
         let created_at_2 = "2020-02-01T00:00:00Z".parse().unwrap();

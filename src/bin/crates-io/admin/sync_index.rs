@@ -259,11 +259,7 @@ mod tests {
     }
 
     async fn create_user(conn: &AsyncPgConnection) -> i32 {
-        UserBuilder::new("testuser")
-            .new_user()
-            .insert(conn)
-            .await
-            .unwrap()
+        UserBuilder::new("testuser").insert(conn).await.unwrap()
     }
 
     #[derive(HasQuery, Serialize)]

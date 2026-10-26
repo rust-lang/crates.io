@@ -23,8 +23,8 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
-    pub gh_id: Option<i32>,
-    pub gh_login: &'a str,
+    gh_id: Option<i32>,
+    gh_login: &'a str,
     is_admin: bool,
 }
 
@@ -96,6 +96,28 @@ impl<'a> UserBuilder<'a> {
             .maybe_name(self.display_name)
             .is_admin(self.is_admin)
             .build()
+    }
+
+    /// Inserts the user into the database, links a GitHub account unless the
+    /// GitHub account ID is `-1`, and returns the user ID.
+    pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
+        let gh_login = self.gh_login;
+        let gh_id = self.gh_id;
+
+        let id = self.new_user().insert(conn).await?;
+
+        if let Some(gh_id) = gh_id
+            && gh_id != -1
+        {
+            let user = User::find(conn, id).await?;
+            OauthGithubBuilder::for_user(&user)
+                .with_login(gh_login)
+                .with_account_id(gh_id.into())
+                .insert(conn)
+                .await;
+        }
+
+        Ok(id)
     }
 }
 
