@@ -114,11 +114,7 @@ mod tests {
     use diesel_async::AsyncConnection;
 
     async fn user(conn: &mut AsyncPgConnection) -> i32 {
-        UserBuilder::new("login")
-            .new_user()
-            .insert(conn)
-            .await
-            .unwrap()
+        UserBuilder::new("login").insert(conn).await.unwrap()
     }
 
     async fn crate_and_version(conn: &mut AsyncPgConnection, user_id: i32) -> (Crate, Version) {
