@@ -728,20 +728,16 @@ async fn test_accept_expired_invitation_by_mail() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn inactive_users_dont_get_invitations() {
-    use crates_io::models::NewUser;
-
     let (app, _, owner, owner_token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
+    // An inactive user without a linked GitHub account and an active user both exist
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 
-    NewUser::builder()
-        .gh_id(-1)
-        .username(invited_gh_login)
-        .build()
+    UserBuilder::new(invited_gh_login)
+        .without_github()
         .insert(&conn)
         .await
         .unwrap();
