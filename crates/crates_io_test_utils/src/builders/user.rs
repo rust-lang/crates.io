@@ -58,11 +58,9 @@ impl<'a> UserBuilder<'a> {
     }
 
     /// Sets the display name, which is unset by default.
-    pub fn with_display_name(self, display_name: &'a str) -> Self {
-        Self {
-            display_name: Some(display_name),
-            ..self
-        }
+    pub fn with_display_name(mut self, display_name: &'a str) -> Self {
+        self.display_name = Some(display_name);
+        self
     }
 
     /// Sets the GitHub login independently from the crates.io username.
@@ -125,8 +123,9 @@ impl<'a> UserBuilder<'a> {
     }
 
     /// Sets whether the user is an admin or not.
-    pub fn with_is_admin(self, is_admin: bool) -> Self {
-        Self { is_admin, ..self }
+    pub fn with_is_admin(mut self, is_admin: bool) -> Self {
+        self.is_admin = is_admin;
+        self
     }
 
     /// Returns an in-memory `User` with ID 1, without touching the database.
