@@ -66,18 +66,21 @@ impl<'a> UserBuilder<'a> {
     }
 
     /// Sets the GitHub login independently from the crates.io username.
+    #[track_caller]
     pub fn with_gh_login(mut self, login: &'a str) -> Self {
         self.github_mut().login = login;
         self
     }
 
     /// Sets the GitHub account ID.
+    #[track_caller]
     pub fn with_gh_id(mut self, account_id: i32) -> Self {
         self.github_mut().account_id = Some(account_id);
         self
     }
 
     /// Sets the GitHub avatar URL, which is unset by default.
+    #[track_caller]
     pub fn with_gh_avatar(mut self, avatar: &'a str) -> Self {
         self.github_mut().avatar = Some(avatar);
         self
@@ -89,18 +92,21 @@ impl<'a> UserBuilder<'a> {
         self
     }
 
+    #[track_caller]
     fn github_mut(&mut self) -> &mut GithubAccount<'a> {
         let github = self.github.as_mut();
         github.expect("GitHub account options require a linked GitHub account")
     }
 
     /// Sets the email address, which defaults to `<username>@example.com`.
+    #[track_caller]
     pub fn with_email(mut self, address: &'a str) -> Self {
         self.email_mut().address = Some(address);
         self
     }
 
     /// Sets whether the email address is verified, which it is by default.
+    #[track_caller]
     pub fn with_email_verified(mut self, verified: bool) -> Self {
         self.email_mut().verified = verified;
         self
@@ -112,6 +118,7 @@ impl<'a> UserBuilder<'a> {
         self
     }
 
+    #[track_caller]
     fn email_mut(&mut self) -> &mut EmailAddress<'a> {
         let email = self.email.as_mut();
         email.expect("email options require an email address")
