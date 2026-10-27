@@ -143,6 +143,20 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
     request_log.add("crate_name", &*metadata.name);
     request_log.add("crate_version", &version_string);
 
+    let nul_fields = [
+        ("readme", contains_nul(metadata.readme.as_deref())),
+        ("readme_file", contains_nul(metadata.readme_file.as_deref())),
+    ]
+    .into_iter()
+    .filter_map(|(field, has_nul)| has_nul.then_some(field))
+    .collect::<Vec<_>>();
+    if !nul_fields.is_empty() {
+        let fields = nul_fields.join(", ");
+        return Err(bad_request(format_args!(
+            "the following fields must not contain NUL characters: {fields}"
+        )));
+    }
+
     let mut conn = ctx.db_write().await?;
 
     let deleted_crate: Option<(String, DateTime<Utc>)> = deleted_crates::table
@@ -310,6 +324,10 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
     let repository = package.repository.map(|it| it.as_local().unwrap());
     let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
     let edition = package.edition.map(|rv| rv.as_local().unwrap());
+    let categories = package
+        .categories
+        .map(|it| it.as_local().unwrap())
+        .unwrap_or_default();
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
@@ -327,6 +345,24 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
     if !missing.is_empty() {
         let message = missing_metadata_error_message(&missing);
         return Err(bad_request(&message));
+    }
+
+    let nul_fields = [
+        ("description", contains_nul(description.as_deref())),
+        ("homepage", contains_nul(homepage.as_deref())),
+        ("documentation", contains_nul(documentation.as_deref())),
+        ("repository", contains_nul(repository.as_deref())),
+        ("links", contains_nul(package.links.as_deref())),
+        ("categories", categories.iter().any(|c| c.contains('\0'))),
+    ]
+    .into_iter()
+    .filter_map(|(field, has_nul)| has_nul.then_some(field))
+    .collect::<Vec<_>>();
+    if !nul_fields.is_empty() {
+        let fields = nul_fields.join(", ");
+        return Err(bad_request(format_args!(
+            "the following `Cargo.toml` fields must not contain NUL characters: {fields}"
+        )));
     }
 
     if let Some(description) = &description
@@ -381,11 +417,6 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
             return Err(bad_request(format!("\"{keyword}\" is an invalid keyword")));
         }
     }
-
-    let categories = package
-        .categories
-        .map(|it| it.as_local().unwrap())
-        .unwrap_or_default();
 
     if categories.len() > 5 {
         return Err(bad_request("expected at most 5 categories per crate"));
@@ -847,6 +878,10 @@ fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
     Url::parse(url)
         .map_err(|_| bad_request(format_args!("`{field}` is not a valid url: `{url}`")))?;
     Ok(())
+}
+
+fn contains_nul(value: Option<&str>) -> bool {
+    value.is_some_and(|value| value.contains('\0'))
 }
 
 fn missing_metadata_error_message(missing: &[&str]) -> String {
