@@ -13,10 +13,11 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
         .unwrap()
 });
 
-/// A builder to create user instances for the purpose of not using the database or inserting
-/// directly into the database.
+/// A builder for test users, which have a linked GitHub account and a verified
+/// email address by default.
 ///
-/// If you want to test logic that happens as part of signing up or logging in,
+/// `insert()` creates the user in the database, while `build()` returns an
+/// in-memory `User` without touching the database.
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
@@ -37,8 +38,8 @@ struct EmailAddress<'a> {
 }
 
 impl<'a> UserBuilder<'a> {
-    /// Create a new instance of the builder. To get a `User`, call `build` (creates an instance in
-    /// memory only) or `insert` (creates a record in the database).
+    /// Creates a builder for a user with the given crates.io username, which
+    /// is also the default GitHub login.
     pub fn new(username: &'a str) -> Self {
         Self {
             username,
@@ -56,67 +57,78 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
-    pub fn with_display_name(self, display_name: &'a str) -> Self {
-        Self {
-            display_name: Some(display_name),
-            ..self
-        }
+    /// Sets the display name, which is unset by default.
+    pub fn with_display_name(mut self, display_name: &'a str) -> Self {
+        self.display_name = Some(display_name);
+        self
     }
 
     /// Sets the GitHub login independently from the crates.io username.
+    #[track_caller]
     pub fn with_gh_login(mut self, login: &'a str) -> Self {
         self.github_mut().login = login;
         self
     }
 
     /// Sets the GitHub account ID.
+    #[track_caller]
     pub fn with_gh_id(mut self, account_id: i32) -> Self {
         self.github_mut().account_id = Some(account_id);
         self
     }
 
+    /// Sets the GitHub avatar URL, which is unset by default.
+    #[track_caller]
     pub fn with_gh_avatar(mut self, avatar: &'a str) -> Self {
         self.github_mut().avatar = Some(avatar);
         self
     }
 
+    /// Creates the user without a linked GitHub account.
     pub fn without_github(mut self) -> Self {
         self.github = None;
         self
     }
 
+    #[track_caller]
     fn github_mut(&mut self) -> &mut GithubAccount<'a> {
         let github = self.github.as_mut();
         github.expect("GitHub account options require a linked GitHub account")
     }
 
     /// Sets the email address, which defaults to `<username>@example.com`.
+    #[track_caller]
     pub fn with_email(mut self, address: &'a str) -> Self {
         self.email_mut().address = Some(address);
         self
     }
 
     /// Sets whether the email address is verified, which it is by default.
+    #[track_caller]
     pub fn with_email_verified(mut self, verified: bool) -> Self {
         self.email_mut().verified = verified;
         self
     }
 
+    /// Creates the user without an email address.
     pub fn without_email(mut self) -> Self {
         self.email = None;
         self
     }
 
+    #[track_caller]
     fn email_mut(&mut self) -> &mut EmailAddress<'a> {
         let email = self.email.as_mut();
         email.expect("email options require an email address")
     }
 
     /// Sets whether the user is an admin or not.
-    pub fn with_is_admin(self, is_admin: bool) -> Self {
-        Self { is_admin, ..self }
+    pub fn with_is_admin(mut self, is_admin: bool) -> Self {
+        self.is_admin = is_admin;
+        self
     }
 
+    /// Returns an in-memory `User` with ID 1, without touching the database.
     pub fn build(self) -> User {
         let github = self.github.as_ref();
 
