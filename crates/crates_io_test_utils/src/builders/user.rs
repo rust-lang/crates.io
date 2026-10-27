@@ -13,10 +13,11 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
         .unwrap()
 });
 
-/// A builder to create user instances for the purpose of not using the database or inserting
-/// directly into the database.
+/// A builder for test users, which have a linked GitHub account and a verified
+/// email address by default.
 ///
-/// If you want to test logic that happens as part of signing up or logging in,
+/// `insert()` creates the user in the database, while `build()` returns an
+/// in-memory `User` without touching the database.
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
@@ -37,8 +38,8 @@ struct EmailAddress<'a> {
 }
 
 impl<'a> UserBuilder<'a> {
-    /// Create a new instance of the builder. To get a `User`, call `build` (creates an instance in
-    /// memory only) or `insert` (creates a record in the database).
+    /// Creates a builder for a user with the given crates.io username, which
+    /// is also the default GitHub login.
     pub fn new(username: &'a str) -> Self {
         Self {
             username,
@@ -56,6 +57,7 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
+    /// Sets the display name, which is unset by default.
     pub fn with_display_name(self, display_name: &'a str) -> Self {
         Self {
             display_name: Some(display_name),
@@ -75,11 +77,13 @@ impl<'a> UserBuilder<'a> {
         self
     }
 
+    /// Sets the GitHub avatar URL, which is unset by default.
     pub fn with_gh_avatar(mut self, avatar: &'a str) -> Self {
         self.github_mut().avatar = Some(avatar);
         self
     }
 
+    /// Creates the user without a linked GitHub account.
     pub fn without_github(mut self) -> Self {
         self.github = None;
         self
@@ -102,6 +106,7 @@ impl<'a> UserBuilder<'a> {
         self
     }
 
+    /// Creates the user without an email address.
     pub fn without_email(mut self) -> Self {
         self.email = None;
         self
@@ -117,6 +122,7 @@ impl<'a> UserBuilder<'a> {
         Self { is_admin, ..self }
     }
 
+    /// Returns an in-memory `User` with ID 1, without touching the database.
     pub fn build(self) -> User {
         let github = self.github.as_ref();
 
