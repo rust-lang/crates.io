@@ -1,8 +1,7 @@
 use crate::util::{RequestHelper, TestApp};
 use claims::{assert_none, assert_ok, assert_some, assert_some_eq};
-use crates_io::models::User;
 use crates_io::views::{EncodableLinkedAccount, EncodablePublicUser};
-use crates_io_test_utils::builders::{OauthGithubBuilder, UserBuilder};
+use crates_io_test_utils::builders::UserBuilder;
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde::Deserialize;
 
@@ -72,22 +71,18 @@ async fn show_latest_user_case_insensitively() {
     // possible. For the crates.io/user/{username} pages, the best we can do is show the last
     // crates.io account created with that username.
 
-    let user1 = UserBuilder::new("foobar")
+    UserBuilder::new("foobar")
         .with_display_name("I was first then deleted my github account")
-        .new_user();
-    let user1_id = user1.insert(&conn).await.unwrap();
-    let user1 = User::find(&conn, user1_id).await.unwrap();
-    OauthGithubBuilder::for_user(&user1).insert(&conn).await;
-
-    let user2 = UserBuilder::new("FOOBAR")
-        .with_display_name("I was second, I took the foobar username on github")
-        .new_user();
-    let user2_id = user2.insert(&conn).await.unwrap();
-    let user2 = User::find(&conn, user2_id).await.unwrap();
-    OauthGithubBuilder::for_user(&user2)
-        .with_login("FOO-BAR")
         .insert(&conn)
-        .await;
+        .await
+        .unwrap();
+
+    UserBuilder::new("FOOBAR")
+        .with_gh_login("FOO-BAR")
+        .with_display_name("I was second, I took the foobar username on github")
+        .insert(&conn)
+        .await
+        .unwrap();
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(
@@ -102,9 +97,7 @@ async fn user_without_github_account() {
     let (app, anon) = TestApp::init().empty().await;
 
     let builder = UserBuilder::new("foobar")
-        // The gh_id column will eventually be removed; there are currently records in production
-        // that have `-1` for their `gh_id` because the associated GitHub accounts have been deleted
-        .with_gh_id(-1)
+        .without_github()
         .with_display_name("I deleted my github account");
     app.db_new_user_from_builder(builder).await;
     // This user doesn't have a linked record in `oauth_github`

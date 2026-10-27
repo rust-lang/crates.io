@@ -1,7 +1,6 @@
-use crate::builders::{CrateBuilder, OauthGithubBuilder, UserBuilder};
+use crate::builders::{CrateBuilder, UserBuilder};
 use crate::util::TestApp;
 use claims::{assert_err, assert_ok};
-use crates_io_database::models::User;
 use crates_io_worker::BackgroundJob;
 use object_store::ObjectStoreExt;
 
@@ -11,13 +10,11 @@ async fn test_generate_og_image_job() {
 
     let mut conn = app.db_conn().await;
 
-    let user = UserBuilder::new("foo").new_user();
-    let user_id = user.insert(&conn).await.unwrap();
-    let user = User::find(&conn, user_id).await.unwrap();
-    OauthGithubBuilder::for_user(&user)
-        .with_avatar("http://example.com/icon-the-first.png")
+    let user_id = UserBuilder::new("foo")
+        .with_gh_avatar("http://example.com/icon-the-first.png")
         .insert(&conn)
-        .await;
+        .await
+        .unwrap();
 
     // Create a test crate with keywords using CrateBuilder
     CrateBuilder::new("test-crate", user_id)

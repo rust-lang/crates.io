@@ -1,12 +1,9 @@
 use crate::github::next_gh_id;
 
-use chrono::Utc;
-use crates_io_database::models::{NewUser, User};
-use crates_io_database::schema::oauth_github;
+use crates_io_database::models::{NewOauthGithub, NewUser, User};
 use crates_io_encryption::TokenEncryption;
-use diesel::prelude::*;
-use diesel::upsert::excluded;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel::QueryResult;
+use diesel_async::AsyncPgConnection;
 
 use std::sync::LazyLock;
 
@@ -23,9 +20,14 @@ static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
 pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
-    gh_id: Option<i32>,
-    gh_login: &'a str,
+    github: Option<GithubAccount<'a>>,
     is_admin: bool,
+}
+
+struct GithubAccount<'a> {
+    account_id: Option<i32>,
+    login: &'a str,
+    avatar: Option<&'a str>,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -35,8 +37,11 @@ impl<'a> UserBuilder<'a> {
         Self {
             username,
             display_name: None,
-            gh_login: username,
-            gh_id: Some(next_gh_id()),
+            github: Some(GithubAccount {
+                account_id: None,
+                login: username,
+                avatar: None,
+            }),
             is_admin: false,
         }
     }
@@ -48,17 +53,31 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
-    /// Sets the legacy GitHub login independently from the crates.io username.
-    pub fn with_gh_login(self, gh_login: &'a str) -> Self {
-        Self { gh_login, ..self }
+    /// Sets the GitHub login independently from the crates.io username.
+    pub fn with_gh_login(mut self, login: &'a str) -> Self {
+        self.github_mut().login = login;
+        self
     }
 
-    /// Sets the legacy GitHub account ID.
-    pub fn with_gh_id(self, gh_id: i32) -> Self {
-        Self {
-            gh_id: Some(gh_id),
-            ..self
-        }
+    /// Sets the GitHub account ID.
+    pub fn with_gh_id(mut self, account_id: i32) -> Self {
+        self.github_mut().account_id = Some(account_id);
+        self
+    }
+
+    pub fn with_gh_avatar(mut self, avatar: &'a str) -> Self {
+        self.github_mut().avatar = Some(avatar);
+        self
+    }
+
+    pub fn without_github(mut self) -> Self {
+        self.github = None;
+        self
+    }
+
+    fn github_mut(&mut self) -> &mut GithubAccount<'a> {
+        let github = self.github.as_mut();
+        github.expect("GitHub account options require a linked GitHub account")
     }
 
     /// Sets whether the user is an admin or not.
@@ -67,17 +86,14 @@ impl<'a> UserBuilder<'a> {
     }
 
     pub fn build(self) -> User {
-        let gh_id = match self.gh_id {
-            Some(-1) | None => None,
-            Some(id) => Some(id as i64),
-        };
+        let github = self.github.as_ref();
 
         User {
             id: 1,
-            gh_login: Some(self.gh_login.into()),
+            gh_login: github.map(|github| github.login.into()),
             name: self.display_name.map(ToString::to_string),
-            gh_id,
-            gh_avatar: None,
+            gh_id: github.map(|github| github.account_id.unwrap_or_else(next_gh_id).into()),
+            gh_avatar: github.and_then(|github| github.avatar.map(ToString::to_string)),
             gh_encrypted_token: None,
             account_lock_reason: None,
             account_lock_until: None,
@@ -89,93 +105,36 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
-    pub fn new_user(self) -> NewUser<'a> {
-        NewUser::builder()
-            .gh_id(self.gh_id.unwrap_or_else(next_gh_id))
+    /// Inserts the user into the database, links its GitHub account and
+    /// returns the user ID.
+    pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
+        let gh_id = match &self.github {
+            Some(github) => github.account_id.unwrap_or_else(next_gh_id),
+            // Production stores `-1` for users whose GitHub account was deleted.
+            None => -1,
+        };
+
+        let id = NewUser::builder()
+            .gh_id(gh_id)
             .username(self.username)
             .maybe_name(self.display_name)
             .is_admin(self.is_admin)
             .build()
-    }
+            .insert(conn)
+            .await?;
 
-    /// Inserts the user into the database, links a GitHub account unless the
-    /// GitHub account ID is `-1`, and returns the user ID.
-    pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
-        let gh_login = self.gh_login;
-        let gh_id = self.gh_id;
-
-        let id = self.new_user().insert(conn).await?;
-
-        if let Some(gh_id) = gh_id
-            && gh_id != -1
-        {
-            let user = User::find(conn, id).await?;
-            OauthGithubBuilder::for_user(&user)
-                .with_login(gh_login)
-                .with_account_id(gh_id.into())
+        if let Some(github) = &self.github {
+            NewOauthGithub::builder()
+                .account_id(gh_id.into())
+                .login(github.login)
+                .maybe_avatar(github.avatar)
+                .encrypted_token(&ENCRYPTED_TOKEN)
+                .user_id(id)
+                .build()
                 .insert(conn)
-                .await;
+                .await?;
         }
 
         Ok(id)
-    }
-}
-
-/// A builder to create linked GitHub accounts for a user without having to use `GitHubUser`.
-pub struct OauthGithubBuilder<'a> {
-    user_id: i32,
-    account_id: i64,
-    encrypted_token: &'a [u8],
-    login: &'a str,
-    avatar: Option<&'a str>,
-}
-
-impl<'a> OauthGithubBuilder<'a> {
-    pub fn for_user(user: &'a User) -> Self {
-        Self {
-            user_id: user.id,
-            account_id: next_gh_id() as i64,
-            encrypted_token: &ENCRYPTED_TOKEN,
-            login: user.gh_login.as_ref().unwrap_or(&user.username),
-            avatar: None,
-        }
-    }
-
-    pub fn with_avatar(self, avatar: &'a str) -> Self {
-        Self {
-            avatar: Some(avatar),
-            ..self
-        }
-    }
-
-    pub fn with_login(self, login: &'a str) -> Self {
-        Self { login, ..self }
-    }
-
-    pub fn with_account_id(self, account_id: i64) -> Self {
-        Self { account_id, ..self }
-    }
-
-    pub async fn insert(self, mut conn: &AsyncPgConnection) {
-        diesel::insert_into(oauth_github::table)
-            .values((
-                oauth_github::user_id.eq(self.user_id),
-                oauth_github::account_id.eq(self.account_id),
-                oauth_github::encrypted_token.eq(self.encrypted_token),
-                oauth_github::login.eq(self.login),
-                oauth_github::avatar.eq(self.avatar),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .on_conflict(oauth_github::account_id)
-            .do_update()
-            .set((
-                oauth_github::encrypted_token.eq(excluded(oauth_github::encrypted_token)),
-                oauth_github::login.eq(excluded(oauth_github::login)),
-                oauth_github::avatar.eq(excluded(oauth_github::avatar)),
-                oauth_github::last_sync.eq(Utc::now()),
-            ))
-            .execute(&mut conn)
-            .await
-            .unwrap();
     }
 }

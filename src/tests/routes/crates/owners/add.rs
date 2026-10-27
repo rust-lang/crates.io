@@ -5,7 +5,7 @@ use crate::util::{RequestHelper, Response, TestApp};
 use crate::{OwnerResp, new_team};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{CrateOwner, NewOauthGithub};
-use crates_io::schema::{crate_owner_invitations, emails, oauth_github, teams};
+use crates_io::schema::{crate_owner_invitations, emails, teams};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
@@ -121,7 +121,7 @@ async fn reused_github_login_invites_newer_account_when_older_owns_crate() {
 async fn owner_lookup_error_precedes_duplicate_check() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let inactive = UserBuilder::new("inactive").with_gh_id(-1);
+    let inactive = UserBuilder::new("inactive").without_github();
     let inactive = app.db_new_user_from_builder(inactive).await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -256,14 +256,11 @@ async fn unprefixed_confirmation_uses_requested_username() {
 async fn unprefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
-    let alice = app.db_new_user("alice").await;
+    let alice = UserBuilder::new("alice").without_github();
+    app.db_new_user_from_builder(alice).await;
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
         .expect_build(&mut conn)
         .await;
-    diesel::delete(oauth_github::table.filter(oauth_github::user_id.eq(alice.as_model().id)))
-        .execute(&mut conn)
-        .await
-        .unwrap();
 
     let response = cookie.add_named_owner("foo", "alice").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
@@ -361,7 +358,7 @@ async fn crates_io_prefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     let user_id = UserBuilder::new("inactive")
-        .with_gh_id(-1)
+        .without_github()
         .insert(&conn)
         .await
         .unwrap();
@@ -420,7 +417,7 @@ async fn github_prefixed_invitation_without_github_account() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
     UserBuilder::new("inactive")
-        .with_gh_id(-1)
+        .without_github()
         .insert(&conn)
         .await
         .unwrap();
