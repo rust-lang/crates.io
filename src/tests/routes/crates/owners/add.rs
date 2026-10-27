@@ -5,7 +5,7 @@ use crate::util::{RequestHelper, Response, TestApp};
 use crate::{OwnerResp, new_team};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{CrateOwner, NewOauthGithub};
-use crates_io::schema::{crate_owner_invitations, emails, teams};
+use crates_io::schema::{crate_owner_invitations, teams};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
@@ -809,18 +809,10 @@ async fn invite_with_invalid_email() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
     app.db_new_user("valid_user").await;
-    let invitee = UserBuilder::new("invalid_user").with_gh_login("github_user");
-    let invitee = app.db_new_user_from_builder(invitee).await;
-    let email = emails::table.filter(emails::user_id.eq(invitee.as_model().id));
-    diesel::update(email)
-        .set(emails::email.eq("private address@example.com"))
-        .execute(&mut conn)
-        .await?;
-    // The email-change trigger clears `verified`, so set it in a separate update.
-    diesel::update(email)
-        .set(emails::verified.eq(true))
-        .execute(&mut conn)
-        .await?;
+    let invitee = UserBuilder::new("invalid_user")
+        .with_gh_login("github_user")
+        .with_email("private address@example.com");
+    app.db_new_user_from_builder(invitee).await;
 
     let response = owner
         .add_named_owners("foo", &["valid_user", "github:github_user"])

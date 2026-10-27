@@ -1,6 +1,6 @@
 use crate::github::next_gh_id;
 
-use crates_io_database::models::{NewOauthGithub, NewUser, User};
+use crates_io_database::models::{NewEmail, NewOauthGithub, NewUser, User};
 use crates_io_encryption::TokenEncryption;
 use diesel::QueryResult;
 use diesel_async::AsyncPgConnection;
@@ -21,6 +21,7 @@ pub struct UserBuilder<'a> {
     username: &'a str,
     display_name: Option<&'a str>,
     github: Option<GithubAccount<'a>>,
+    email: Option<EmailAddress<'a>>,
     is_admin: bool,
 }
 
@@ -28,6 +29,11 @@ struct GithubAccount<'a> {
     account_id: Option<i32>,
     login: &'a str,
     avatar: Option<&'a str>,
+}
+
+struct EmailAddress<'a> {
+    address: Option<&'a str>,
+    verified: bool,
 }
 
 impl<'a> UserBuilder<'a> {
@@ -41,6 +47,10 @@ impl<'a> UserBuilder<'a> {
                 account_id: None,
                 login: username,
                 avatar: None,
+            }),
+            email: Some(EmailAddress {
+                address: None,
+                verified: true,
             }),
             is_admin: false,
         }
@@ -80,6 +90,28 @@ impl<'a> UserBuilder<'a> {
         github.expect("GitHub account options require a linked GitHub account")
     }
 
+    /// Sets the email address, which defaults to `<username>@example.com`.
+    pub fn with_email(mut self, address: &'a str) -> Self {
+        self.email_mut().address = Some(address);
+        self
+    }
+
+    /// Sets whether the email address is verified, which it is by default.
+    pub fn with_email_verified(mut self, verified: bool) -> Self {
+        self.email_mut().verified = verified;
+        self
+    }
+
+    pub fn without_email(mut self) -> Self {
+        self.email = None;
+        self
+    }
+
+    fn email_mut(&mut self) -> &mut EmailAddress<'a> {
+        let email = self.email.as_mut();
+        email.expect("email options require an email address")
+    }
+
     /// Sets whether the user is an admin or not.
     pub fn with_is_admin(self, is_admin: bool) -> Self {
         Self { is_admin, ..self }
@@ -105,8 +137,8 @@ impl<'a> UserBuilder<'a> {
         }
     }
 
-    /// Inserts the user into the database, links its GitHub account and
-    /// returns the user ID.
+    /// Inserts the user into the database, links its GitHub account, adds its
+    /// email address and returns the user ID.
     pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
         let gh_id = match &self.github {
             Some(github) => github.account_id.unwrap_or_else(next_gh_id),
@@ -130,6 +162,20 @@ impl<'a> UserBuilder<'a> {
                 .maybe_avatar(github.avatar)
                 .encrypted_token(&ENCRYPTED_TOKEN)
                 .user_id(id)
+                .build()
+                .insert(conn)
+                .await?;
+        }
+
+        if let Some(email) = &self.email {
+            let address = email
+                .address
+                .map_or_else(|| format!("{}@example.com", self.username), String::from);
+
+            NewEmail::builder()
+                .user_id(id)
+                .email(&address)
+                .verified(email.verified)
                 .build()
                 .insert(conn)
                 .await?;

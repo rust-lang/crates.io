@@ -141,7 +141,6 @@ pub async fn find_expiring_tokens(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::NewEmail;
     use crate::{models::token::ApiToken, schema::api_tokens, util::token::PlainToken};
     use crates_io_test_db::TestDatabase;
     use crates_io_test_utils::builders::UserBuilder;
@@ -154,12 +153,8 @@ mod tests {
         let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
-        let user_id = UserBuilder::new("a").insert(&conn).await?;
-
-        NewEmail::builder()
-            .user_id(user_id)
-            .email("testuser@test.com")
-            .build()
+        let user_id = UserBuilder::new("a")
+            .with_email("testuser@test.com")
             .insert(&conn)
             .await?;
 

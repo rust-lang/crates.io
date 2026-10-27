@@ -10,8 +10,8 @@ use crates_io::config::{
 use crates_io::metrics::consts::METER_NAME;
 use crates_io::metrics::{ServerMetrics, WorkerMetrics};
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
+use crates_io::models::User;
 use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::models::{NewEmail, User};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
 use crates_io::worker::{RunnerExt, WorkerContext};
@@ -169,22 +169,13 @@ impl TestApp {
         self.db_new_user_from_builder(builder).await
     }
 
-    /// Create a new user from a builder with a verified email address in the
-    /// database (`<username>@example.com`) and return a mock user session.
+    /// Create a new user from a builder in the database and return a mock user
+    /// session.
     pub async fn db_new_user_from_builder(&self, builder: UserBuilder<'_>) -> MockCookieUser {
         let conn = self.db_conn().await;
 
         let id = builder.insert(&conn).await.unwrap();
         let user = User::find(&conn, id).await.unwrap();
-        let email = format!("{}@example.com", user.username);
-
-        let new_email = NewEmail::builder()
-            .user_id(user.id)
-            .email(&email)
-            .verified(true)
-            .build();
-
-        new_email.insert(&conn).await.unwrap();
 
         MockCookieUser {
             app: self.clone(),

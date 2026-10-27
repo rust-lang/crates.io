@@ -1,8 +1,7 @@
-use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::builders::{CrateBuilder, PublishBuilder, UserBuilder};
 use crate::util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response};
 use crate::{TestApp, add_team_to_crate, new_team};
 use crates_io::models::{Crate, CrateOwner, OwnerKind};
-use crates_io::schema::emails;
 use crates_io::views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
@@ -651,16 +650,8 @@ async fn test_accept_invitation_without_verified_email() {
     let mut conn = app.db_conn().await;
     let owner = owner.as_model();
 
-    // Create a user with a verified email (default behavior of db_new_user)
-    let invited_user = app.db_new_user("user_unverified").await;
-
-    // Update the email to be unverified
-    diesel::update(emails::table)
-        .filter(emails::user_id.eq(invited_user.as_model().id))
-        .set(emails::verified.eq(false))
-        .execute(&mut conn)
-        .await
-        .unwrap();
+    let invited_user = UserBuilder::new("user_unverified").with_email_verified(false);
+    let invited_user = app.db_new_user_from_builder(invited_user).await;
 
     let krate = CrateBuilder::new("foo", owner.id)
         .expect_build(&mut conn)
