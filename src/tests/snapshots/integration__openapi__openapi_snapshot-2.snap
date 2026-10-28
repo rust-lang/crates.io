@@ -4650,6 +4650,72 @@ expression: response.json()
         ]
       }
     },
+    "/api/v1/org/{org}": {
+      "get": {
+        "description": "Specify the organization with `service:org_name`. For example, to list all GitHub teams in the\n`rust-lang` organization, specify `github:rust-lang`. If there are no teams for the specified\norganization, this returns an empty list.",
+        "operationId": "find_teams",
+        "parameters": [
+          {
+            "description": "Name of the organization",
+            "example": "github:rust-lang",
+            "in": "path",
+            "name": "org",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Response returned when getting teams by org.",
+                  "properties": {
+                    "teams": {
+                      "items": {
+                        "$ref": "#/components/schemas/Team"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "teams"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Find teams by organization that crates.io knows about.",
+        "tags": [
+          "org"
+        ]
+      }
+    },
     "/api/v1/site_metadata": {
       "get": {
         "description": "Returns the current deployed commit SHA1 (or `unknown`), and whether the\nsystem is in read-only mode.",
