@@ -1,0 +1,15 @@
+---
+source: src/tests/routes/org.rs
+expression: response.json()
+---
+{
+  "teams": [
+    {
+      "avatar": null,
+      "id": 3,
+      "login": "github:test-org:test-team",
+      "name": null,
+      "url": "https://github.com/test-org"
+    }
+  ]
+}
