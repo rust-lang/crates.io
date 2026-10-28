@@ -148,7 +148,7 @@
   >
     Try Again
   </button>
-{:else if cratesResponse && cratesResponse.meta.total > 0 && pagination}
+{:else if pagination && cratesResponse && cratesResponse.meta.total > 0}
   <div class="results-meta mb-s">
     <ResultsCount
       start={pagination.currentPageStart}

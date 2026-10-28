@@ -33,7 +33,7 @@
 
 <CrateHeader crate={data.crate} keywords={data.keywords} ownersPromise={data.ownersPromise} />
 
-{#if data.advisories.length}
+{#if data.advisories.length !== 0}
   <h2 class="heading">Advisories</h2>
   <ul class="advisories" data-test-list>
     {#each data.advisories as advisory (advisory.id)}
