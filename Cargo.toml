@@ -134,7 +134,7 @@ indexmap = { version = "=2.14.2", features = ["serde"] }
 indicatif = "=0.18.6"
 json-subscriber = { version = "=0.3.1", features = ["tracing-opentelemetry-0-34"] }
 lettre = { version = "=0.11.23", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "serde", "tokio1", "tokio1-native-tls"] }
-minijinja = { version = "=3.0.3", features = ["serde"] }
+minijinja = { version = "=3.0.4", features = ["serde"] }
 mockall = "=0.15.0"
 moka = { version = "=0.12.16", default-features = false, features = ["future"] }
 native-tls = "=0.2.18"
