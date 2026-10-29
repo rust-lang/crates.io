@@ -29,5 +29,5 @@ claims = "=0.8.0"
 serde_json = "=1.0.154"
 mockito = "=1.7.2"
 test-case = "=3.4.0"
-tokio = { version = "=1.54.1", features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = "=0.3.23"
