@@ -26,14 +26,16 @@
     list-style: none;
     padding: 0;
     margin: 0;
-
-    @media only screen and (min-width: 551px) {
-      border-bottom: var(--nav-tabs-border-width) solid var(--gray-border);
-    }
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    /* An inset shadow instead of a border, so the active tab underline can
+       cover it without overflowing the scroll container. */
+    box-shadow: inset 0 calc(0px - var(--nav-tabs-border-width)) var(--gray-border);
 
     @media only screen and (max-width: 550px) {
-      flex-direction: column;
-      border-left: var(--nav-tabs-border-width) solid var(--gray-border);
+      --nav-tabs-padding-h: var(--space-xs);
+      font-size: 0.9em;
     }
   }
 </style>
