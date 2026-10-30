@@ -118,7 +118,7 @@
   {/if}
 </div>
 
-<NavTabs.Root aria-label="{crate.name} crate subpages" class="mb-s">
+<NavTabs.Root aria-label="{crate.name} crate subpages" class="mb-s crate-tabs">
   <NavTabs.Tab href={readmeHref} data-test-readme-tab>Readme</NavTabs.Tab>
   <NavTabs.Tab href={codeHref} active={codeActive} data-test-code-tab>Code</NavTabs.Tab>
   <NavTabs.Tab href={versionsHref} data-test-versions-tab>
@@ -219,6 +219,14 @@
     .description,
     .keywords {
       grid-column: 1 / 3;
+    }
+  }
+
+  :global(.crate-tabs) {
+    /* Extend the tab bar to the screen edges, matching the readme below it */
+    @media only screen and (max-width: 550px) {
+      --nav-tabs-inset: var(--main-layout-padding);
+      margin-inline: calc(var(--main-layout-padding) * -1);
     }
   }
 </style>
