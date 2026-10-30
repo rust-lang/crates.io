@@ -24,7 +24,9 @@
 
     display: flex;
     list-style: none;
-    padding: 0;
+    /* Lets callers extend the bar beyond the tabs while keeping them aligned */
+    padding: 0 var(--nav-tabs-inset, 0);
+    scroll-padding-inline: var(--nav-tabs-inset, 0);
     margin: 0;
     overflow-x: auto;
     overscroll-behavior-x: contain;
