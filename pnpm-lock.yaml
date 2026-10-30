@@ -215,8 +215,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       '@pierre/diffs':
-        specifier: 1.6.1
-        version: 1.6.1(@shikijs/themes@4.5.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 1.6.2
+        version: 1.6.2(@shikijs/themes@4.5.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@pierre/trees':
         specifier: 1.0.0-beta.6
         version: 1.0.0-beta.6(patch_hash=1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4)(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.5.0)
@@ -1363,8 +1363,8 @@ packages:
     resolution: {integrity: sha512-wEuOx2bMEdvKXJq7eApAiKbLuBA3pgWh1rWp1NkeAeTdl3V9wMOYGlkkdstEYqvoLlDi3RxFWAUb5syMJvKvvQ==}
     engines: {node: '>=14'}
 
-  '@pierre/diffs@1.6.1':
-    resolution: {integrity: sha512-XTfLW4bFETyosZfFNUoyRh1zPE4tmAijOoxdHx4X805tlaq/7/fuQXIiJSm21+jLkDo8vn5elQ+2O4YtMTKM0Q==}
+  '@pierre/diffs@1.6.2':
+    resolution: {integrity: sha512-Hpk+HjjsJ2IWRZ3ALAa7rdBfhF2Zeyh5Kk7L4riMXRo3eHal9yQR1TgBryp+OzGyxfFfwsnEBOQztoANZIzpMQ==}
     peerDependencies:
       react: ^18.3.1 || ^19.0.0
       react-dom: ^18.3.1 || ^19.0.0
@@ -1374,8 +1374,8 @@ packages:
       react-dom:
         optional: true
 
-  '@pierre/highlights@0.2.0':
-    resolution: {integrity: sha512-hTpcOU1EzDAP4bYtEhxmMu2jwMvtkUydRUBUpWMSHTs3dw0IaC3Ld5ansMy18L0GE3b6Vfl2OGkLK+pWWpnBmw==}
+  '@pierre/highlights@0.3.0':
+    resolution: {integrity: sha512-s6xZ/giPPrSeCO2w254GiysUXD4ditKMTOrl1vHynvPqP7VdlujYi01O9joxJ0T16XkoXGQMN6zkRi9+O8NCzg==}
 
   '@pierre/theme@2.0.0':
     resolution: {integrity: sha512-yNDd9GYLQl1mEUJR8AneJ5e4ohLIHQd/wZLWr4fagt78vS2RwwZNW530vVgHqXFAyFVcFlRmGUD5ramXH46OXw==}
@@ -5606,9 +5606,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@pierre/diffs@1.6.1(@shikijs/themes@4.5.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@pierre/diffs@1.6.2(@shikijs/themes@4.5.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
-      '@pierre/highlights': 0.2.0
+      '@pierre/highlights': 0.3.0
       '@pierre/theme': 2.0.0
       '@pierre/theming': 1.0.2(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.5.0)
       diff: 9.0.0
@@ -5621,7 +5621,7 @@ snapshots:
     transitivePeerDependencies:
       - '@shikijs/themes'
 
-  '@pierre/highlights@0.2.0': {}
+  '@pierre/highlights@0.3.0': {}
 
   '@pierre/theme@2.0.0': {}
 
