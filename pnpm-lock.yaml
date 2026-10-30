@@ -150,8 +150,8 @@ importers:
         specifier: 3.0.3
         version: 3.0.3(@types/node@26.6.5)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       openapi-msw:
-        specifier: 2.1.0
-        version: 2.1.0(msw@3.0.3(@types/node@26.6.5)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: 2.1.1
+        version: 2.1.1(msw@3.0.3(@types/node@26.6.5)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
       semver:
         specifier: 7.8.5
         version: 7.8.5
@@ -3673,8 +3673,8 @@ packages:
   openapi-fetch@0.17.0:
     resolution: {integrity: sha512-PsbZR1wAPcG91eEthKhN+Zn92FMHxv+/faECIwjXdxfTODGSGegYv0sc1Olz+HYPvKOuoXfp+0pA2XVt2cI0Ig==}
 
-  openapi-msw@2.1.0:
-    resolution: {integrity: sha512-kuaz8BM024tVNZLEvJ9QCoasdcLohlfLk+P4VUZpdBDwQItsmSN+WLpHwVffylLscyB5eXqpaRfv4LuMmMUIIQ==}
+  openapi-msw@2.1.1:
+    resolution: {integrity: sha512-i1VM4ZbM5r0bS2w/sVv0MuUjfRw+ub68LKO+oqUeVC9QVTjghytDGy+GVEFrb3FUV7l5BwAVbpiqlWjZ9RIALw==}
     peerDependencies:
       msw: ^2.10.5 || ^3.0.0
 
@@ -8082,7 +8082,7 @@ snapshots:
     dependencies:
       openapi-typescript-helpers: 0.1.0
 
-  openapi-msw@2.1.0(msw@3.0.3(@types/node@26.6.5)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))):
+  openapi-msw@2.1.1(msw@3.0.3(@types/node@26.6.5)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))):
     dependencies:
       msw: 3.0.3(@types/node@26.6.5)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
