@@ -55,7 +55,7 @@
     "@storybook/addon-svelte-csf": "5.1.5",
     "@storybook/addon-vitest": "10.6.5",
     "@storybook/sveltekit": "10.6.5",
-    "@sveltejs/adapter-static": "4.0.0",
+    "@sveltejs/adapter-static": "4.0.1",
     "@sveltejs/enhanced-img": "1.0.0",
     "@sveltejs/kit": "3.1.1",
     "@sveltejs/vite-plugin-svelte": "7.3.1",
