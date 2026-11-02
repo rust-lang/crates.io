@@ -273,8 +273,8 @@ importers:
         specifier: 10.6.5
         version: 10.6.5(@types/react@19.3.0)(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))
       '@storybook/addon-svelte-csf':
-        specifier: 5.1.5
-        version: 5.1.5(@storybook/svelte@10.6.5(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1)))(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+        specifier: 5.1.6
+        version: 5.1.6(@storybook/svelte@10.6.5(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1)))(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       '@storybook/addon-vitest':
         specifier: 10.6.5
         version: 10.6.5(@vitest/browser-playwright@5.0.5)(@vitest/browser@5.0.5)(react@19.3.1)(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(vitest@5.0.5)
@@ -1653,8 +1653,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@storybook/addon-svelte-csf@5.1.5':
-    resolution: {integrity: sha512-lYc9tyFIowXtd/hlapngtGhw6YUZMSU5KezHqJl84lRkahsNtmtqHl/mJjRRJG2ZQIWgw6xBUi4PvVvTxPwqzQ==}
+  '@storybook/addon-svelte-csf@5.1.6':
+    resolution: {integrity: sha512-Pzzfr9Lqx0p6a2IBVRlR3zIhA8usl46ADcSSHoe2cU1hICB2HqpDyukqXFSK1NFuTP53yDH99LBbl7drii9l4Q==}
     peerDependencies:
       '@storybook/svelte': ^0.0.0-0 || ^8.2.0 || ^9.0.0 || ^9.1.0-0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0 || ^10.4.0-0 || ^10.5.0-0 || ^10.6.0-0 || ^11.0.0-0
       '@sveltejs/vite-plugin-svelte': ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
@@ -5803,7 +5803,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react-dom'
 
-  '@storybook/addon-svelte-csf@5.1.5(@storybook/svelte@10.6.5(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1)))(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))':
+  '@storybook/addon-svelte-csf@5.1.6(@storybook/svelte@10.6.5(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1)))(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))':
     dependencies:
       '@storybook/csf': 0.1.13
       '@storybook/svelte': 10.6.5(storybook@10.6.5(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(svelte@5.57.3(@typescript-eslint/types@8.72.1))
