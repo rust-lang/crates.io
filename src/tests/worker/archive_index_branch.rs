@@ -68,7 +68,7 @@ async fn archive_index_branch() {
 
     assert_snapshot!(app.zulip_snapshot(), @"
     #t-crates-io > index squashing: Archiving the `snapshot-test` branch…
-    #t-crates-io > index squashing: The `snapshot-test` branch was copied to the archive repository.
+    #t-crates-io > index squashing: The `snapshot-test` branch with 1 commits was copied to the archive repository.
     ");
 
     diesel::delete(background_jobs::table)
