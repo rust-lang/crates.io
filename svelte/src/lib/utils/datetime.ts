@@ -1,15 +1,14 @@
 /**
- * Format a timestamp to a locale-adapted string with the UTC time zone, such as
- * "October 16, 2026 at 10:00 PM UTC" or
- * "16. Oktober 2026 um 22:00 UTC".
+ * Format a timestamp to a locale-adapted string in the local time zone, such as
+ * "October 16, 2026 at 3:30 PM PDT" or
+ * "17. Oktober 2026 um 00:30 MESZ".
  */
-export function dateToLocaleStringUTC(date: string | Date): string {
+export function dateToLocaleString(date: string | Date): string {
   if (!(date instanceof Date)) {
     // Accept dates or strings
     date = new Date(date);
   }
   let formatter = new Intl.DateTimeFormat(undefined, {
-    timeZone: 'UTC',
     year: 'numeric',
     day: 'numeric',
     month: 'long',

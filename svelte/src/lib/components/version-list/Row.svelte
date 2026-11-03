@@ -16,7 +16,7 @@
   import Tooltip from '#lib/components/Tooltip.svelte';
   import UserAvatar from '#lib/components/UserAvatar.svelte';
   import YankButton from '#lib/components/YankButton.svelte';
-  import { dateToLocaleStringUTC } from '#lib/utils/datetime.ts';
+  import { dateToLocaleString } from '#lib/utils/datetime.ts';
 
   const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
 
@@ -206,7 +206,7 @@
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
 
         <Tooltip>
-          {dateToLocaleStringUTC(version.created_at)}
+          {dateToLocaleString(version.created_at)}
           {#if isNew}
             (<span class="new">new</span>)
           {/if}

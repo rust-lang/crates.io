@@ -13,7 +13,7 @@
   import LicenseExpression from '#lib/components/LicenseExpression.svelte';
   import OwnersList from '#lib/components/OwnersList.svelte';
   import Tooltip from '#lib/components/Tooltip.svelte';
-  import { dateToLocaleStringUTC } from '#lib/utils/datetime.ts';
+  import { dateToLocaleString } from '#lib/utils/datetime.ts';
   import { formatShortNum } from '#lib/utils/format-short-num.ts';
   import { buildPlaygroundLink } from '#lib/utils/playground.ts';
   import { getPurl } from '#lib/utils/purl.ts';
@@ -93,7 +93,7 @@
         {formatDistanceToNow(version.created_at, { addSuffix: true })}
         <Tooltip>
           Release date:
-          {dateToLocaleStringUTC(version.created_at)}
+          {dateToLocaleString(version.created_at)}
         </Tooltip>
       </span>
     </time>
