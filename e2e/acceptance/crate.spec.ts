@@ -3,6 +3,8 @@ import { loadFixtures } from '@crates-io/msw/fixtures';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
+  test.use({ timezoneId: 'America/Los_Angeles' });
+
   test('visiting a crate page from the front page', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });
     await msw.db.version.create({ crate, num: '0.6.1' });
@@ -229,10 +231,13 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   test('sidebar shows correct information', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'foo' });
     await msw.db.version.create({ crate, num: '0.5.0' });
-    await msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.0.0', created_at: '2017-01-01' });
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-linecounts]')).toHaveText('1,119 SLoC');
+
+    await page.getByRole('region', { name: 'Crate metadata' }).locator('time').hover();
+    await expect(page.getByText('Release date: December 31, 2016 at 4:00 PM PST')).toBeVisible();
 
     await page.goto('/crates/foo/0.5.0');
     await expect(page.locator('[data-test-linecounts]')).toHaveText('520 SLoC');
