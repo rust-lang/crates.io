@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/rust:2-bookworm@sha256:9cf2686b6f111f9c1eef20b8103a5f15e96c5a94e2d4d8efeed7af4453872a93
+FROM mcr.microsoft.com/devcontainers/rust:2-bookworm@sha256:4d944fc913385b14c0507bc4636749a773543067c2f5fc885b6fd4a42e59f006
 
 # Enable pipefail so a failure anywhere in a pipeline aborts the build.
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
