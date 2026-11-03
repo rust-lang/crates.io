@@ -1,6 +1,8 @@
 import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => {
+  test.use({ timezoneId: 'America/Los_Angeles' });
+
   test('show versions sorted by date', async ({ page, msw, percy }) => {
     let trustpubData = {
       provider: 'github',
@@ -26,6 +28,9 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
 
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
+
+    await page.locator('[data-test-version="0.3.0"] time').hover();
+    await expect(page.getByText('December 31, 2018 at 4:00 PM PST')).toBeVisible();
 
     await page.click('[data-test-current-order]');
     await page.click('[data-test-semver-sort] a');
