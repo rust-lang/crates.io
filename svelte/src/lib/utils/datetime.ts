@@ -4,10 +4,6 @@
  * "17. Oktober 2026 um 00:30 MESZ".
  */
 export function dateToLocaleString(date: string | Date): string {
-  if (!(date instanceof Date)) {
-    // Accept dates or strings
-    date = new Date(date);
-  }
   let formatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
     day: 'numeric',
@@ -16,5 +12,5 @@ export function dateToLocaleString(date: string | Date): string {
     minute: 'numeric',
     timeZoneName: 'short',
   });
-  return formatter.format(date);
+  return formatter.format(new Date(date));
 }
