@@ -190,6 +190,11 @@ export interface paths {
         /**
          * List crate owner invitations for a crate or user.
          * @description Only pending invitations that haven't expired are returned.
+         *
+         *     Listing the invitations of a user accepts cookie authentication or API
+         *     tokens with the `crate-owner-invitations` scope. Legacy tokens without
+         *     scopes are refused.
+         *     Listing the invitations of a crate requires cookie authentication.
          */
         get: operations["list_crate_owner_invitations"];
         put?: never;
