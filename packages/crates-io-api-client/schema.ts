@@ -13,7 +13,7 @@ export interface paths {
             cookie?: never;
         };
         /** List all crate owner invitations for a crate or user. */
-        get: operations["list_crate_owner_invitations"];
+        get: operations["private_list_crate_owner_invitations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1903,7 +1903,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_crate_owner_invitations: {
+    private_list_crate_owner_invitations: {
         parameters: {
             query?: {
                 /**
