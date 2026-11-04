@@ -1370,7 +1370,14 @@ export interface components {
              * @example 3
              */
             inviter_id: number;
+            /** @description The state of the invitation. */
+            state: components["schemas"]["CrateOwnerInvitationState"];
         };
+        /**
+         * @description The state of a crate owner invitation.
+         * @enum {string}
+         */
+        CrateOwnerInvitationState: "pending" | "accepted" | "declined" | "revoked";
         Dependency: {
             /**
              * @description The name of the crate this dependency points to.
@@ -5487,6 +5494,7 @@ export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJs
 export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJsonOneOf1StatusValues: ReadonlyArray<Extract<FlattenedDeepRequired<paths>["/api/private/session/authorize"]["post"]["responses"]["200"]["content"]["application/json"], {
     status: unknown;
 }>["status"]> = ["signup_required"];
+export const crateOwnerInvitationStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrateOwnerInvitationState"]> = ["pending", "accepted", "declined", "revoked"];
 export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
 export const linkedAccountOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["LinkedAccount"], {
     provider: unknown;
