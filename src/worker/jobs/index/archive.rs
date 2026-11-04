@@ -280,7 +280,7 @@ impl ArchiveIndexBranch {
         info!("Archived snapshot branch ({branch})", branch = self.branch,);
 
         let branch = &self.branch;
-        let message = copied_message(archive_url, branch);
+        let message = copied_message(archive_url, branch, commit_count);
         ctx.post_to_zulip(ZULIP_CHANNEL, ZULIP_TOPIC, &message)
             .await;
 
@@ -294,7 +294,7 @@ impl ArchiveIndexBranch {
 
 /// Builds the Zulip message for a branch that was copied to the archive
 /// repository, linking to the branch if the repository is hosted on GitHub.
-fn copied_message(archive_url: &Url, branch: &str) -> String {
+fn copied_message(archive_url: &Url, branch: &str, commit_count: usize) -> String {
     let branch = match parse_github_slug(archive_url) {
         Ok((owner, repo)) => {
             format!("[`{branch}` branch](https://github.com/{owner}/{repo}/tree/{branch})")
@@ -302,7 +302,7 @@ fn copied_message(archive_url: &Url, branch: &str) -> String {
         Err(_) => format!("`{branch}` branch"),
     };
 
-    format!("The {branch} was copied to the archive repository.")
+    format!("The {branch} with {commit_count} commits was copied to the archive repository.")
 }
 
 /// Returns a copy of `base` with `x-access-token` / `token` embedded as the
@@ -377,13 +377,13 @@ mod tests {
     #[test]
     fn copied_message_github() {
         let url: Url = "https://github.com/rust-lang/archive.git".parse().unwrap();
-        assert_snapshot!(copied_message(&url, "snapshot-test"), @"The [`snapshot-test` branch](https://github.com/rust-lang/archive/tree/snapshot-test) was copied to the archive repository.");
+        assert_snapshot!(copied_message(&url, "snapshot-test", 1234), @"The [`snapshot-test` branch](https://github.com/rust-lang/archive/tree/snapshot-test) with 1234 commits was copied to the archive repository.");
     }
 
     #[test]
     fn copied_message_without_github() {
         let url: Url = "file:///tmp/archive".parse().unwrap();
-        assert_snapshot!(copied_message(&url, "snapshot-test"), @"The `snapshot-test` branch was copied to the archive repository.");
+        assert_snapshot!(copied_message(&url, "snapshot-test", 1), @"The `snapshot-test` branch with 1 commits was copied to the archive repository.");
     }
 
     #[test]
