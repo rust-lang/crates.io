@@ -663,7 +663,8 @@ expression: response.json()
           "publish-update",
           "trusted-publishing",
           "yank",
-          "change-owners"
+          "change-owners",
+          "crate-owner-invitations"
         ],
         "type": "string"
       },
