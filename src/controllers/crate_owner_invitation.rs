@@ -3,7 +3,7 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
-use crate::models::token::EndpointScope;
+use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::server::ServerContext;
@@ -51,7 +51,8 @@ pub struct CrateOwnerInvitationListQueryParams {
 ///
 /// Listing the invitations of a user accepts cookie authentication or API
 /// tokens with the `crate-owner-invitations` scope. Legacy tokens without
-/// scopes are refused.
+/// scopes are refused. Tokens with crate scopes only see invitations for
+/// matching crates.
 /// Listing the invitations of a crate requires cookie authentication.
 #[utoipa::path(
     get,
@@ -77,6 +78,7 @@ pub async fn list_crate_owner_invitations(
         ListFilter::CrateName(_) => AuthCheck::only_cookie(),
         ListFilter::InviteeId(_) => AuthCheck::default()
             .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
+            .allow_any_crate_scope()
             .reject_legacy_tokens(),
     };
     let auth = auth.check(&req, &mut conn).await?;
@@ -170,7 +172,16 @@ async fn prepare_list(
                     let detail = "only the invitee can query their pending invitations";
                     return Err(forbidden(detail));
                 }
-                Box::new(crate_owner_invitations::invited_user_id.eq(invitee_id))
+                let filter = crate_owner_invitations::invited_user_id.eq(invitee_id);
+
+                let crate_scopes = auth.api_token().and_then(|t| t.crate_scopes.as_deref());
+                match crate_scopes.filter(|scopes| !scopes.is_empty()) {
+                    Some(scopes) => {
+                        let crate_ids = matching_crate_ids(invitee_id, scopes, conn).await?;
+                        Box::new(filter.and(crate_owner_invitations::crate_id.eq_any(crate_ids)))
+                    }
+                    None => Box::new(filter),
+                }
             }
         };
 
@@ -286,6 +297,25 @@ async fn prepare_list(
         users: users.into_iter().map(|(_, user)| user.into()).collect(),
         meta: ResponseMeta { next_page },
     })
+}
+
+/// Returns the IDs of the crates that `invitee_id` has invitations for and
+/// that match one of the crate `scopes`.
+async fn matching_crate_ids(
+    invitee_id: i32,
+    scopes: &[CrateScope],
+    mut conn: &AsyncPgConnection,
+) -> QueryResult<Vec<i32>> {
+    let crates: Vec<(i32, String)> = crate_owner_invitations::table
+        .inner_join(crates::table)
+        .filter(crate_owner_invitations::invited_user_id.eq(invitee_id))
+        .select((crates::id, crates::name))
+        .load(&mut conn)
+        .await?;
+
+    let matches = |name: &str| scopes.iter().any(|scope| scope.matches(name));
+    let crates = crates.into_iter().filter(|(_, name)| matches(name));
+    Ok(crates.map(|(id, _)| id).collect())
 }
 
 fn encode_invitation(
