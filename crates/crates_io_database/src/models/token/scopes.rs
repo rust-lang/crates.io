@@ -18,15 +18,22 @@ pub enum EndpointScope {
     ChangeOwners,
 }
 
+impl EndpointScope {
+    /// Returns the scope name, as stored in the database and sent over the API.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            EndpointScope::PublishNew => "publish-new",
+            EndpointScope::PublishUpdate => "publish-update",
+            EndpointScope::TrustedPublishing => "trusted-publishing",
+            EndpointScope::Yank => "yank",
+            EndpointScope::ChangeOwners => "change-owners",
+        }
+    }
+}
+
 impl From<&EndpointScope> for &[u8] {
     fn from(scope: &EndpointScope) -> Self {
-        match scope {
-            EndpointScope::PublishNew => b"publish-new",
-            EndpointScope::PublishUpdate => b"publish-update",
-            EndpointScope::TrustedPublishing => b"trusted-publishing",
-            EndpointScope::Yank => b"yank",
-            EndpointScope::ChangeOwners => b"change-owners",
-        }
+        scope.as_str().as_bytes()
     }
 }
 
