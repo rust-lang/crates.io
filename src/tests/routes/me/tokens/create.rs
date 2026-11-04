@@ -347,3 +347,20 @@ async fn create_token_with_trusted_publishing_scope() {
 
     assert_snapshot!(app.emails_snapshot().await);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_crate_owner_invitations_scope() {
+    let (app, _, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let scopes = json!(["crate-owner-invitations"]);
+    let json = json!({ "api_token": { "name": "ci", "endpoint_scopes": scopes } });
+    let response = user.put::<()>("/api/v1/me/tokens", json.to_string()).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_eq!(response.json()["api_token"]["endpoint_scopes"], scopes);
+
+    let query = ApiToken::belonging_to(user.as_model()).select(ApiToken::as_select());
+    let token = assert_ok!(query.first(&mut conn).await);
+    let expected = vec![EndpointScope::CrateOwnerInvitations];
+    assert_eq!(token.endpoint_scopes, Some(expected));
+}

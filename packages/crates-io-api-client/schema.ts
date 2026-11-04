@@ -1445,7 +1445,7 @@ export interface components {
             version_id: number;
         };
         /** @enum {string} */
-        EndpointScope: "publish-new" | "publish-update" | "trusted-publishing" | "yank" | "change-owners";
+        EndpointScope: "publish-new" | "publish-update" | "trusted-publishing" | "yank" | "change-owners" | "crate-owner-invitations";
         GitHubConfig: {
             /** @example regex */
             crate: string;
@@ -5597,7 +5597,7 @@ export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJs
     status: unknown;
 }>["status"]> = ["signup_required"];
 export const crateOwnerInvitationStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrateOwnerInvitationState"]> = ["pending", "accepted", "declined", "revoked"];
-export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
+export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners", "crate-owner-invitations"];
 export const linkedAccountOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["LinkedAccount"], {
     provider: unknown;
 }>["provider"]> = ["github"];
