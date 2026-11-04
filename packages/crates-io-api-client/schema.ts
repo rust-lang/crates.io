@@ -209,6 +209,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crate_owner_invitations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Accept or decline a crate owner invitation.
+         * @description Only the invitee can accept or decline an invitation.
+         */
+        patch: operations["update_crate_owner_invitation"];
+        trace?: never;
+    };
     "/api/v1/crates": {
         parameters: {
             query?: never;
@@ -2593,6 +2613,59 @@ export interface operations {
                         };
                         /** @description The list of users referenced in the crate owner invitations. */
                         users: components["schemas"]["User"][];
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_crate_owner_invitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the crate owner invitation */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    crate_owner_invitation: {
+                        /** @description The new state of the invitation. */
+                        state: components["schemas"]["CrateOwnerInvitationState"];
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The invitation in its final state. */
+                        crate_owner_invitation: components["schemas"]["CrateOwnerInvitation"];
                     };
                 };
             };

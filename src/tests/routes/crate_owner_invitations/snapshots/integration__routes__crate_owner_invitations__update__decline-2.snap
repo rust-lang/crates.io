@@ -1,0 +1,16 @@
+---
+source: src/tests/routes/crate_owner_invitations/update.rs
+expression: response.json()
+---
+{
+  "crate_owner_invitation": {
+    "crate_id": 1,
+    "crate_name": "foo",
+    "created_at": "[datetime]",
+    "expires_at": "[datetime]",
+    "id": 1,
+    "invitee_id": 2,
+    "inviter_id": 1,
+    "state": "declined"
+  }
+}
