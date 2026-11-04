@@ -53,7 +53,10 @@ pub struct CrateOwnerInvitationListQueryParams {
 /// tokens with the `crate-owner-invitations` scope. Legacy tokens without
 /// scopes are refused. Tokens with crate scopes only see invitations for
 /// matching crates.
-/// Listing the invitations of a crate requires cookie authentication.
+///
+/// Listing the invitations of a crate accepts cookie authentication or API
+/// tokens with the `change-owners` scope and a crate scope that matches the
+/// crate. Legacy tokens without scopes are refused.
 #[utoipa::path(
     get,
     path = "/api/v1/crate_owner_invitations",
@@ -74,8 +77,15 @@ pub async fn list_crate_owner_invitations(
     let mut conn = ctx.db_read().await?;
 
     let filter = params.try_into()?;
-    let auth = match filter {
-        ListFilter::CrateName(_) => AuthCheck::only_cookie(),
+    let auth = match &filter {
+        ListFilter::CrateName(crate_name) => {
+            let query = crates::table.filter(Crate::with_name(crate_name));
+            let crate_name: String = query.select(crates::name).first(&mut conn).await?;
+            AuthCheck::default()
+                .with_endpoint_scope(EndpointScope::ChangeOwners)
+                .for_crate(&crate_name)
+                .reject_legacy_tokens()
+        }
         ListFilter::InviteeId(_) => AuthCheck::default()
             .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
             .allow_any_crate_scope()
