@@ -197,7 +197,18 @@ Enforce auth with `AuthCheck` (`src/auth.rs`):
 - `AuthCheck::only_cookie()` restricts to the web frontend.
 - `AuthCheck::default().with_endpoint_scope(...).for_crate(name)` checks
   that scoped API tokens carry the matching endpoint scope and crate
-  scope. Legacy (unscoped) tokens still pass.
+  scope. Legacy (unscoped) tokens pass unless `.reject_legacy_tokens()`
+  is added.
+
+New endpoints, and existing endpoints newly opened to API tokens, reject
+legacy tokens:
+
+```rust
+AuthCheck::default()
+    .with_endpoint_scope(EndpointScope::ChangeOwners)
+    .reject_legacy_tokens()
+    .for_crate(name)
+```
 
 Declare auth on the handler with the `security(...)` clause of
 `#[utoipa::path]`. Patterns:
