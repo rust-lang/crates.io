@@ -316,7 +316,8 @@ pub async fn handle_crate_owner_invitation(
         .await?
         .user_id();
     let invitation =
-        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn).await?;
+        CrateOwnerInvitation::find_by_invitee_and_crate(user_id, crate_invite.crate_id, &conn)
+            .await?;
 
     if crate_invite.accepted {
         invitation.accept(&mut conn).await?;

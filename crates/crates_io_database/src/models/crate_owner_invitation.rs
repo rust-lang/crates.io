@@ -70,7 +70,7 @@ pub struct CrateOwnerInvitation {
 }
 
 impl CrateOwnerInvitation {
-    pub async fn find_by_id(
+    pub async fn find_by_invitee_and_crate(
         user_id: i32,
         crate_id: i32,
         mut conn: &AsyncPgConnection,
