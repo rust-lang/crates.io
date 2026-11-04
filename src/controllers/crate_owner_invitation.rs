@@ -3,6 +3,7 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
+use crate::models::token::EndpointScope;
 use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::server::ServerContext;
@@ -47,11 +48,16 @@ pub struct CrateOwnerInvitationListQueryParams {
 /// List crate owner invitations for a crate or user.
 ///
 /// Only pending invitations that haven't expired are returned.
+///
+/// Listing the invitations of a user accepts cookie authentication or API
+/// tokens with the `crate-owner-invitations` scope. Legacy tokens without
+/// scopes are refused.
+/// Listing the invitations of a crate requires cookie authentication.
 #[utoipa::path(
     get,
     path = "/api/v1/crate_owner_invitations",
     params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "owners",
     responses(
         (status = 200, description = "Successful Response", body = inline(ListResponse)),
@@ -65,9 +71,15 @@ pub async fn list_crate_owner_invitations(
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<ListResponse>)> {
     let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
+    let auth = match filter {
+        ListFilter::CrateName(_) => AuthCheck::only_cookie(),
+        ListFilter::InviteeId(_) => AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
+            .reject_legacy_tokens(),
+    };
+    let auth = auth.check(&req, &mut conn).await?;
     let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
     Ok((no_store(), Json(list)))
 }
