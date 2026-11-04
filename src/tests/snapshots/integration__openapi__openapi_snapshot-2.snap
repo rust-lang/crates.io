@@ -556,10 +556,15 @@ expression: response.json()
             "example": 3,
             "format": "int32",
             "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CrateOwnerInvitationState",
+            "description": "The state of the invitation."
           }
         },
         "required": [
           "id",
+          "state",
           "invitee_id",
           "inviter_id",
           "crate_id",
@@ -568,6 +573,16 @@ expression: response.json()
           "expires_at"
         ],
         "type": "object"
+      },
+      "CrateOwnerInvitationState": {
+        "description": "The state of a crate owner invitation.",
+        "enum": [
+          "pending",
+          "accepted",
+          "declined",
+          "revoked"
+        ],
+        "type": "string"
       },
       "Dependency": {
         "properties": {

@@ -41,6 +41,7 @@ test('happy path (invitee_id)', async function () {
           "id": 1,
           "invitee_id": 1,
           "inviter_id": 2,
+          "state": "pending",
         },
         {
           "crate_id": 2,
@@ -50,6 +51,7 @@ test('happy path (invitee_id)', async function () {
           "id": 2,
           "invitee_id": 1,
           "inviter_id": 3,
+          "state": "pending",
         },
       ],
       "meta": {
@@ -169,6 +171,7 @@ test('happy path (crate_name)', async function () {
           "id": 2,
           "invitee_id": 1,
           "inviter_id": 3,
+          "state": "pending",
         },
       ],
       "meta": {

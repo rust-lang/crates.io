@@ -90,6 +90,8 @@ pub struct EncodableCrateOwnerInvitation {
     /// user and crate gets a new `id`.
     #[schema(example = 42)]
     pub id: i64,
+    /// The state of the invitation.
+    pub state: CrateOwnerInvitationState,
     /// The ID of the user who was invited to be a crate owner.
     #[schema(example = 42)]
     pub invitee_id: i32,
@@ -108,6 +110,20 @@ pub struct EncodableCrateOwnerInvitation {
     /// The date and time this invitation will expire.
     #[schema(example = "2020-01-13T13:46:41Z")]
     pub expires_at: DateTime<Utc>,
+}
+
+/// The state of a crate owner invitation.
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, utoipa::ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum CrateOwnerInvitationState {
+    /// The invitation waits for the invitee to accept or decline it.
+    Pending,
+    /// The invitee accepted the invitation and is now a crate owner.
+    Accepted,
+    /// The invitee declined the invitation.
+    Declined,
+    /// A crate owner revoked the invitation.
+    Revoked,
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, utoipa::ToSchema)]

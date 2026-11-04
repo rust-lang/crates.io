@@ -9,7 +9,10 @@ use crate::server::ServerContext;
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
 use crate::util::no_store;
-use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
+use crate::views::{
+    CrateOwnerInvitationState, EncodableCrateOwnerInvitation, EncodablePublicUser,
+    InvitationResponse,
+};
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::TypedHeader;
@@ -225,6 +228,7 @@ async fn prepare_list(
     for invitation in raw_invitations.into_iter() {
         invitations.push(EncodableCrateOwnerInvitation {
             id: invitation.id,
+            state: CrateOwnerInvitationState::Pending,
             invitee_id: invitation.invited_user_id,
             inviter_id: invitation.invited_by_user_id,
             crate_id: invitation.crate_id,
