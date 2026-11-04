@@ -227,6 +227,7 @@ async fn prepare_list(
     let mut users_in_response = HashSet::new();
     for invitation in raw_invitations.into_iter() {
         invitations.push(EncodableCrateOwnerInvitation {
+            id: invitation.id,
             invitee_id: invitation.invited_user_id,
             inviter_id: invitation.invited_by_user_id,
             crate_id: invitation.crate_id,

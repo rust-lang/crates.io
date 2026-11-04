@@ -86,6 +86,9 @@ impl From<Category> for EncodableCategory {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
 #[schema(as = CrateOwnerInvitation)]
 pub struct EncodableCrateOwnerInvitation {
+    /// An opaque identifier for the invitation.
+    #[schema(example = 42)]
+    pub id: i64,
     /// The ID of the user who was invited to be a crate owner.
     #[schema(example = 42)]
     pub invitee_id: i32,

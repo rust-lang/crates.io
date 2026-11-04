@@ -1352,6 +1352,12 @@ export interface components {
              */
             expires_at: string;
             /**
+             * Format: int64
+             * @description An opaque identifier for the invitation.
+             * @example 42
+             */
+            id: number;
+            /**
              * Format: int32
              * @description The ID of the user who was invited to be a crate owner.
              * @example 42
