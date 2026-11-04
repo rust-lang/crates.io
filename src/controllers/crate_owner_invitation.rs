@@ -254,19 +254,12 @@ async fn prepare_list(
     let mut invitations = Vec::new();
     let mut users_in_response = HashSet::new();
     for invitation in raw_invitations.into_iter() {
-        invitations.push(EncodableCrateOwnerInvitation {
-            id: invitation.id,
-            state: CrateOwnerInvitationState::Pending,
-            invitee_id: invitation.invited_user_id,
-            inviter_id: invitation.invited_by_user_id,
-            crate_id: invitation.crate_id,
-            crate_name: crate_names
-                .get(&invitation.crate_id)
-                .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?
-                .clone(),
-            created_at: invitation.created_at,
-            expires_at: invitation.expires_at,
-        });
+        let crate_name = crate_names
+            .get(&invitation.crate_id)
+            .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?;
+
+        let state = CrateOwnerInvitationState::Pending;
+        invitations.push(encode_invitation(&invitation, crate_name.clone(), state));
         users_in_response.insert(invitation.invited_user_id);
         users_in_response.insert(invitation.invited_by_user_id);
     }
@@ -281,6 +274,23 @@ async fn prepare_list(
         users: users.into_iter().map(|(_, user)| user.into()).collect(),
         meta: ResponseMeta { next_page },
     })
+}
+
+fn encode_invitation(
+    invitation: &CrateOwnerInvitation,
+    crate_name: String,
+    state: CrateOwnerInvitationState,
+) -> EncodableCrateOwnerInvitation {
+    EncodableCrateOwnerInvitation {
+        id: invitation.id,
+        state,
+        invitee_id: invitation.invited_user_id,
+        inviter_id: invitation.invited_by_user_id,
+        crate_id: invitation.crate_id,
+        crate_name,
+        created_at: invitation.created_at,
+        expires_at: invitation.expires_at,
+    }
 }
 
 #[derive(Serialize, utoipa::ToSchema)]
