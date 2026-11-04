@@ -1605,7 +1605,7 @@ expression: response.json()
   "paths": {
     "/api/private/crate_owner_invitations": {
       "get": {
-        "operationId": "list_crate_owner_invitations",
+        "operationId": "private_list_crate_owner_invitations",
         "parameters": [
           {
             "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",

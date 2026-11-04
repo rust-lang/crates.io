@@ -58,7 +58,7 @@ pub struct CrateOwnerInvitationListQueryParams {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
-pub async fn list_crate_owner_invitations(
+pub async fn private_list_crate_owner_invitations(
     ctx: ServerContext,
     params: CrateOwnerInvitationListQueryParams,
     req: Parts,
