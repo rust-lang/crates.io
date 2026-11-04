@@ -44,6 +44,34 @@ pub struct CrateOwnerInvitationListQueryParams {
     invitee_id: Option<i32>,
 }
 
+/// List crate owner invitations for a crate or user.
+///
+/// Only pending invitations that haven't expired are returned.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crate_owner_invitations",
+    params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
+    security(("cookie" = [])),
+    tag = "owners",
+    responses(
+        (status = 200, description = "Successful Response", body = inline(ListResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn list_crate_owner_invitations(
+    ctx: ServerContext,
+    params: CrateOwnerInvitationListQueryParams,
+    req: Parts,
+) -> AppResult<(TypedHeader<CacheControl>, Json<ListResponse>)> {
+    let mut conn = ctx.db_read().await?;
+    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
+
+    let filter = params.try_into()?;
+    let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
+    Ok((no_store(), Json(list)))
+}
+
 /// List all crate owner invitations for a crate or user.
 #[utoipa::path(
     get,
@@ -68,7 +96,7 @@ pub async fn private_list_crate_owner_invitations(
 
     let filter = params.try_into()?;
     let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
-    Ok((no_store(), Json(list)))
+    Ok((no_store(), Json(list.into())))
 }
 
 enum ListFilter {
@@ -98,7 +126,7 @@ async fn prepare_list(
     auth: Authentication,
     filter: ListFilter,
     mut conn: &AsyncPgConnection,
-) -> AppResult<PrivateListResponse> {
+) -> AppResult<ListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
         .enable_seek(true)
@@ -248,11 +276,23 @@ async fn prepare_list(
     users.retain(|k, _| users_in_response.contains(k));
     users.sort_keys();
 
-    Ok(PrivateListResponse {
-        invitations,
+    Ok(ListResponse {
+        crate_owner_invitations: invitations,
         users: users.into_iter().map(|(_, user)| user.into()).collect(),
         meta: ResponseMeta { next_page },
     })
+}
+
+#[derive(Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    /// The list of crate owner invitations.
+    crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
+
+    /// The list of users referenced in the crate owner invitations.
+    users: Vec<EncodablePublicUser>,
+
+    #[schema(inline)]
+    meta: ResponseMeta,
 }
 
 #[derive(Serialize, utoipa::ToSchema)]
@@ -265,6 +305,16 @@ pub struct PrivateListResponse {
 
     #[schema(inline)]
     meta: ResponseMeta,
+}
+
+impl From<ListResponse> for PrivateListResponse {
+    fn from(list: ListResponse) -> Self {
+        Self {
+            invitations: list.crate_owner_invitations,
+            users: list.users,
+            meta: list.meta,
+        }
+    }
 }
 
 #[derive(Serialize, utoipa::ToSchema)]
