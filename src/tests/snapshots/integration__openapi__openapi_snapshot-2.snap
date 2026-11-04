@@ -2026,6 +2026,117 @@ expression: response.json()
         ]
       }
     },
+    "/api/v1/crate_owner_invitations/{id}": {
+      "patch": {
+        "description": "Only the invitee can accept or decline an invitation.",
+        "operationId": "update_crate_owner_invitation",
+        "parameters": [
+          {
+            "description": "ID of the crate owner invitation",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "accept": {
+                  "value": {
+                    "crate_owner_invitation": {
+                      "state": "accepted"
+                    }
+                  }
+                },
+                "decline": {
+                  "value": {
+                    "crate_owner_invitation": {
+                      "state": "declined"
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "properties": {
+                  "crate_owner_invitation": {
+                    "properties": {
+                      "state": {
+                        "$ref": "#/components/schemas/CrateOwnerInvitationState",
+                        "description": "The new state of the invitation."
+                      }
+                    },
+                    "required": [
+                      "state"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "crate_owner_invitation"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate_owner_invitation": {
+                      "$ref": "#/components/schemas/CrateOwnerInvitation",
+                      "description": "The invitation in its final state."
+                    }
+                  },
+                  "required": [
+                    "crate_owner_invitation"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Accept or decline a crate owner invitation.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
     "/api/v1/crates": {
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates\n\nWhen sorting by relevance, only the first 1000 results can be accessed, even\nthough `meta.total` may report a higher number of matching crates.",
