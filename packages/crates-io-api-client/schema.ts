@@ -193,7 +193,8 @@ export interface paths {
          *
          *     Listing the invitations of a user accepts cookie authentication or API
          *     tokens with the `crate-owner-invitations` scope. Legacy tokens without
-         *     scopes are refused.
+         *     scopes are refused. Tokens with crate scopes only see invitations for
+         *     matching crates.
          *     Listing the invitations of a crate requires cookie authentication.
          */
         get: operations["list_crate_owner_invitations"];
