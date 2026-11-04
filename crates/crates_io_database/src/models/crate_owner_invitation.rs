@@ -58,8 +58,8 @@ impl NewCrateOwnerInvitation {
 
 /// The model representing a row in the `crate_owner_invitations` database table.
 #[derive(Clone, Debug, Identifiable, HasQuery)]
-#[diesel(primary_key(invited_user_id, crate_id))]
 pub struct CrateOwnerInvitation {
+    pub id: i64,
     pub invited_user_id: i32,
     pub invited_by_user_id: i32,
     pub crate_id: i32,
@@ -76,7 +76,8 @@ impl CrateOwnerInvitation {
         mut conn: &AsyncPgConnection,
     ) -> QueryResult<Self> {
         CrateOwnerInvitation::query()
-            .find((user_id, crate_id))
+            .filter(crate_owner_invitations::invited_user_id.eq(user_id))
+            .filter(crate_owner_invitations::crate_id.eq(crate_id))
             .first(&mut conn)
             .await
     }
