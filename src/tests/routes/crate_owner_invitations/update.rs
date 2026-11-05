@@ -1,13 +1,16 @@
 use crate::builders::{CrateBuilder, UserBuilder};
 use crate::util::{MockAnonymousUser, MockCookieUser, RequestHelper, TestApp};
+use crates_io::models::CrateOwner;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::schema::crate_owner_invitations;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};
+use serde_json::json;
 
 const ACCEPTED: &str = r#"{"crate_owner_invitation":{"state":"accepted"}}"#;
 const DECLINED: &str = r#"{"crate_owner_invitation":{"state":"declined"}}"#;
+const REVOKED: &str = r#"{"crate_owner_invitation":{"state":"revoked"}}"#;
 
 struct Fixture {
     app: TestApp,
@@ -79,11 +82,16 @@ async fn decline() -> anyhow::Result<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn other_user() -> anyhow::Result<()> {
-    let Fixture { owner, url, .. } = invite().await?;
+    let Fixture { app, url, .. } = invite().await?;
+    let user = app.db_new_user("other").await;
 
-    let response = owner.patch::<()>(&url, ACCEPTED).await;
-    assert_snapshot!(response.status(), @"404 Not Found");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Not Found"}]}"#);
+    let response = user.patch::<()>(&url, ACCEPTED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only the invitee or a crate owner can update this invitation"}]}"#);
+
+    let response = user.patch::<()>(&url, REVOKED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only the invitee or a crate owner can update this invitation"}]}"#);
 
     Ok(())
 }
@@ -211,6 +219,169 @@ async fn anonymous() -> anyhow::Result<()> {
     let response = anon.patch::<()>(&url, ACCEPTED).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke() -> anyhow::Result<()> {
+    let fixture = invite().await?;
+    let Fixture { owner, invitee, .. } = &fixture;
+    let emails = fixture.app.emails().await.len();
+
+    let url = &fixture.url;
+    let response = owner.patch::<()>(url, REVOKED).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), { ".**.created_at, .**.expires_at" => "[datetime]" });
+    assert_eq!(fixture.app.emails().await.len(), emails);
+
+    let list_url = "/api/v1/crate_owner_invitations";
+    let response = owner.get_with_query::<()>(list_url, "crate_name=foo").await;
+    assert_snapshot!(response.text(), @r#"{"crate_owner_invitations":[],"users":[],"meta":{"next_page":null}}"#);
+
+    let query = format!("invitee_id={}", invitee.as_model().id);
+    let response = invitee.get_with_query::<()>(list_url, &query).await;
+    assert_snapshot!(response.text(), @r#"{"crate_owner_invitations":[],"users":[],"meta":{"next_page":null}}"#);
+
+    let response = invitee.patch::<()>(url, ACCEPTED).await;
+    assert_snapshot!(response.status(), @"404 Not Found");
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_by_other_owner() -> anyhow::Result<()> {
+    let fixture = invite().await?;
+    let conn = fixture.app.db_conn().await;
+    let other = fixture.app.db_new_user("other").await;
+
+    CrateOwner::builder()
+        .crate_id(fixture.crate_id)
+        .user_id(other.as_model().id)
+        .created_by(fixture.owner.as_model().id)
+        .build()
+        .insert(&conn)
+        .await?;
+
+    let response = other.patch::<()>(&fixture.url, REVOKED).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_by_former_owner() -> anyhow::Result<()> {
+    let fixture = invite().await?;
+    let conn = fixture.app.db_conn().await;
+    let owner = &fixture.owner;
+    let other = fixture.app.db_new_user("other").await;
+
+    CrateOwner::builder()
+        .crate_id(fixture.crate_id)
+        .user_id(other.as_model().id)
+        .created_by(owner.as_model().id)
+        .build()
+        .insert(&conn)
+        .await?;
+
+    owner.remove_named_owner("foo", "other").await.good();
+
+    let response = other.patch::<()>(&fixture.url, REVOKED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only the invitee or a crate owner can update this invitation"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_by_team_owner() -> anyhow::Result<()> {
+    let (app, _) = TestApp::full().empty().await;
+    let mut conn = app.db_conn().await;
+    let owner = app.db_new_user("user-org-owner").await;
+    let member = app.db_new_user("user-one-team").await;
+    app.db_new_user("invitee").await;
+
+    let owner_id = owner.as_model().id;
+    CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+
+    let body = json!({ "owners": ["github:test-org:all", "invitee"] }).to_string();
+    let response = owner.put::<()>("/api/v1/crates/foo/owners", body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    let query = crate_owner_invitations::table.select(crate_owner_invitations::id);
+    let id: i64 = query.first(&mut conn).await?;
+    let url = format!("/api/v1/crate_owner_invitations/{id}");
+
+    let response = member.patch::<()>(&url, REVOKED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only the invitee or a crate owner can update this invitation"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_invalid_state() -> anyhow::Result<()> {
+    let Fixture { owner, url, .. } = invite().await?;
+
+    let response = owner.patch::<()>(&url, ACCEPTED).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`state` must be `revoked`"}]}"#);
+
+    let response = owner.patch::<()>(&url, DECLINED).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`state` must be `revoked`"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_with_token() -> anyhow::Result<()> {
+    let Fixture { owner, url, .. } = invite().await?;
+    let foo = Some(vec![CrateScope::try_from("foo*").unwrap()]);
+    let scopes = Some(vec![EndpointScope::ChangeOwners]);
+    let token = owner.db_new_scoped_token("ci", foo, scopes, None).await;
+
+    let response = token.patch::<()>(&url, REVOKED).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_with_token_without_scope() -> anyhow::Result<()> {
+    let Fixture { owner, url, .. } = invite().await?;
+    let scopes = Some(vec![EndpointScope::CrateOwnerInvitations]);
+    let token = owner.db_new_scoped_token("ci", None, scopes, None).await;
+
+    let response = token.patch::<()>(&url, REVOKED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_with_token_with_other_crate_scope() -> anyhow::Result<()> {
+    let Fixture { owner, url, .. } = invite().await?;
+    let bar = Some(vec![CrateScope::try_from("bar").unwrap()]);
+    let scopes = Some(vec![EndpointScope::ChangeOwners]);
+    let token = owner.db_new_scoped_token("ci", bar, scopes, None).await;
+
+    let response = token.patch::<()>(&url, REVOKED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_with_legacy_token() -> anyhow::Result<()> {
+    let Fixture { owner, url, .. } = invite().await?;
+    let token = owner.db_new_token("t").await;
+
+    let response = token.patch::<()>(&url, REVOKED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `change-owners` scope at https://crates.io/settings/tokens/new"}]}"#);
 
     Ok(())
 }

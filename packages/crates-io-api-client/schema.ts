@@ -223,11 +223,16 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Accept or decline a crate owner invitation.
-         * @description Only the invitee can accept or decline an invitation. This endpoint accepts
-         *     cookie authentication or API tokens with the `crate-owner-invitations`
-         *     scope and a crate scope that matches the invitation's crate. Legacy tokens
-         *     without scopes are refused.
+         * Accept, decline or revoke a crate owner invitation.
+         * @description Only the invitee can accept or decline an invitation. This accepts cookie
+         *     authentication or API tokens with the `crate-owner-invitations` scope and a
+         *     crate scope that matches the invitation's crate.
+         *
+         *     Any user owner of the crate can revoke the invitation. This accepts cookie
+         *     authentication or API tokens with the `change-owners` scope and a crate
+         *     scope that matches the invitation's crate. Team owners are refused.
+         *
+         *     Legacy tokens without scopes are refused.
          */
         patch: operations["update_crate_owner_invitation"];
         trace?: never;
