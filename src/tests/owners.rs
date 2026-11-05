@@ -20,7 +20,7 @@ struct UserResponse {
 }
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 struct InvitationListResponse {
-    invitations: Vec<EncodableCrateOwnerInvitation>,
+    crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     users: Vec<EncodablePublicUser>,
 }
 
@@ -89,7 +89,7 @@ impl MockCookieUser {
 
     /// As the currently logged in user, lists my pending invitations.
     async fn list_invitations(&self) -> InvitationListResponse {
-        let url = "/api/private/crate_owner_invitations";
+        let url = "/api/v1/crate_owner_invitations";
         let query = format!("invitee_id={}", self.as_model().id);
         self.get_with_query(url, &query).await.good()
     }
@@ -470,7 +470,7 @@ async fn test_accept_invitation() {
 
     // New owner's invitation list should now be empty
     let json = invited_user.list_invitations().await;
-    assert_eq!(json.invitations.len(), 0);
+    assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // New owner is now listed as an owner, so the crate has two owners
     let json = anon.show_crate_owners("accept_invitation").await;
@@ -505,7 +505,7 @@ async fn test_decline_invitation() {
 
     // Invited user's invitation list should now be empty
     let json = invited_user.list_invitations().await;
-    assert_eq!(json.invitations.len(), 0);
+    assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
     let json = anon.show_crate_owners("decline_invitation").await;
@@ -539,7 +539,7 @@ async fn test_accept_invitation_by_mail() {
 
     // New owner's invitation list should now be empty
     let json = invited_user.list_invitations().await;
-    assert_eq!(json.invitations.len(), 0);
+    assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // New owner is now listed as an owner, so the crate has two owners
     let json = anon.show_crate_owners("accept_invitation").await;
@@ -674,7 +674,7 @@ async fn test_accept_invitation_without_verified_email() {
 
     // Verify that the invitation still exists
     let json = invited_user.list_invitations().await;
-    assert_eq!(json.invitations.len(), 1);
+    assert_eq!(json.crate_owner_invitations.len(), 1);
 
     // Verify that the user is not listed as an owner
     let json = anon.show_crate_owners("foo").await;
@@ -754,7 +754,7 @@ async fn inactive_users_dont_get_invitations() {
         .good();
 
     let json = invited_user.list_invitations().await;
-    assert_eq!(json.invitations.len(), 1);
+    assert_eq!(json.crate_owner_invitations.len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -782,7 +782,7 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
         .good();
 
     let json = invited_user.list_invitations().await;
-    assert_eq!(json.invitations.len(), 1);
+    assert_eq!(json.crate_owner_invitations.len(), 1);
 }
 
 fn extract_token_from_invite_email(emails: &[String]) -> String {
