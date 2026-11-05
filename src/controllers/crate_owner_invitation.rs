@@ -103,8 +103,6 @@ async fn prepare_list(
 
     let user = auth.user();
 
-    let config = &ctx.config;
-
     let mut crate_names = HashMap::new();
 
     let sql_filter: Box<dyn BoxableExpression<crate_owner_invitations::table, Pg, SqlType = Bool>> =
@@ -134,10 +132,9 @@ async fn prepare_list(
         };
 
     // Load all the non-expired invitations matching the filter.
-    let expire_cutoff = config.ownership_invitations_expiration;
     let query = CrateOwnerInvitation::query()
         .filter(sql_filter)
-        .filter(crate_owner_invitations::created_at.gt((Utc::now() - expire_cutoff).naive_utc()))
+        .filter(crate_owner_invitations::expires_at.gt(Utc::now()))
         .order_by((
             crate_owner_invitations::crate_id,
             crate_owner_invitations::invited_user_id,
