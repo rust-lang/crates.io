@@ -5,23 +5,6 @@
  */
 
 export interface paths {
-    "/api/private/crate_owner_invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all crate owner invitations for a crate or user. */
-        get: operations["private_list_crate_owner_invitations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/private/session": {
         parameters: {
             query?: never;
@@ -1964,88 +1947,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    private_list_crate_owner_invitations: {
-        parameters: {
-            query?: {
-                /**
-                 * @description Filter crate owner invitations by crate name.
-                 *
-                 *     Only crate owners can query pending invitations for their crate.
-                 */
-                crate_name?: string;
-                /**
-                 * @description The ID of the user who was invited to be a crate owner.
-                 *
-                 *     This parameter needs to match the authenticated user's ID.
-                 */
-                invitee_id?: number;
-                /**
-                 * @description The page number to request.
-                 *
-                 *     This parameter is mutually exclusive with `seek` and not supported for
-                 *     all requests.
-                 */
-                page?: number;
-                /** @description The number of items to request per page. */
-                per_page?: number;
-                /**
-                 * @description The seek key to request.
-                 *
-                 *     This parameter is mutually exclusive with `page` and not supported for
-                 *     all requests.
-                 *
-                 *     The seek key can usually be found in the `meta.next_page` field of
-                 *     paginated responses.
-                 */
-                seek?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description The list of crate owner invitations. */
-                        invitations: components["schemas"]["CrateOwnerInvitation"][];
-                        meta: {
-                            /**
-                             * @description Query parameter string to fetch the next page of results.
-                             * @example ?seek=c0ffee
-                             */
-                            next_page: string | null;
-                        };
-                        /** @description The list of users referenced in the crate owner invitations. */
-                        users: components["schemas"]["User"][];
-                    };
-                };
-            };
-            /** @description Client Error */
-            "4XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Server Error */
-            "5XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
     end_session: {
         parameters: {
             query?: never;
