@@ -19,15 +19,15 @@ export async function load({ fetch, parent }) {
 }
 
 async function loadInvites(client: Client, userId: number) {
-  let { invitations, users } = await loadApi(
-    client.GET('/api/private/crate_owner_invitations', { params: { query: { invitee_id: userId } } }),
+  let { crate_owner_invitations: invitations, users } = await loadApi(
+    client.GET('/api/v1/crate_owner_invitations', { params: { query: { invitee_id: userId } } }),
     { message: 'Failed to load pending invites' },
   );
 
   let usersById = new Map(users.map(u => [u.id, u]));
 
   return invitations.map(inv => ({
-    crate_id: inv.crate_id,
+    id: inv.id,
     crate_name: inv.crate_name,
     inviter_login: usersById.get(inv.inviter_id)?.login ?? 'unknown',
     created_at: inv.created_at,
