@@ -8,7 +8,7 @@ const schema = v.pipe(
     id: v.optional(v.number()),
 
     createdAt: v.optional(v.string(), '2016-12-24T12:34:56Z'),
-    expiresAt: v.optional(v.string(), '2017-01-24T12:34:56Z'),
+    expiresAt: v.optional(v.string(), '2099-01-24T12:34:56Z'),
     token: v.optional(v.string()),
 
     crate: v.any(),
