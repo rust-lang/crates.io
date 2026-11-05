@@ -97,33 +97,6 @@ pub async fn list_crate_owner_invitations(
     Ok((no_store(), Json(list)))
 }
 
-/// List all crate owner invitations for a crate or user.
-#[utoipa::path(
-    get,
-    path = "/api/private/crate_owner_invitations",
-    params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
-    security(("cookie" = [])),
-    tag = "owners",
-    extensions(("x-internal" = json!(true))),
-    responses(
-        (status = 200, description = "Successful Response", body = inline(PrivateListResponse)),
-        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
-        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
-    ),
-)]
-pub async fn private_list_crate_owner_invitations(
-    ctx: ServerContext,
-    params: CrateOwnerInvitationListQueryParams,
-    req: Parts,
-) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
-    let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-
-    let filter = params.try_into()?;
-    let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
-    Ok((no_store(), Json(list.into())))
-}
-
 enum ListFilter {
     CrateName(String),
     InviteeId(i32),
@@ -356,28 +329,6 @@ pub struct ListResponse {
 
     #[schema(inline)]
     meta: ResponseMeta,
-}
-
-#[derive(Serialize, utoipa::ToSchema)]
-pub struct PrivateListResponse {
-    /// The list of crate owner invitations.
-    invitations: Vec<EncodableCrateOwnerInvitation>,
-
-    /// The list of users referenced in the crate owner invitations.
-    users: Vec<EncodablePublicUser>,
-
-    #[schema(inline)]
-    meta: ResponseMeta,
-}
-
-impl From<ListResponse> for PrivateListResponse {
-    fn from(list: ListResponse) -> Self {
-        Self {
-            invitations: list.crate_owner_invitations,
-            users: list.users,
-            meta: list.meta,
-        }
-    }
 }
 
 #[derive(Serialize, utoipa::ToSchema)]
