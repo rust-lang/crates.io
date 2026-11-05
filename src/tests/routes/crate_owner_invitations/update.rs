@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, UserBuilder};
-use crate::util::{MockCookieUser, RequestHelper, TestApp};
+use crate::util::{MockAnonymousUser, MockCookieUser, RequestHelper, TestApp};
+use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::schema::crate_owner_invitations;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -10,6 +11,7 @@ const DECLINED: &str = r#"{"crate_owner_invitation":{"state":"declined"}}"#;
 
 struct Fixture {
     app: TestApp,
+    anon: MockAnonymousUser,
     owner: MockCookieUser,
     invitee: MockCookieUser,
     crate_id: i32,
@@ -23,7 +25,7 @@ async fn invite() -> anyhow::Result<Fixture> {
 
 /// Creates a `foo` crate and invites the `invitee` user to become an owner.
 async fn invite_user(invitee: UserBuilder<'_>) -> anyhow::Result<Fixture> {
-    let (app, _, owner, token) = TestApp::full().with_token().await;
+    let (app, anon, owner, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
     let invitee = app.db_new_user_from_builder(invitee).await;
 
@@ -37,6 +39,7 @@ async fn invite_user(invitee: UserBuilder<'_>) -> anyhow::Result<Fixture> {
 
     Ok(Fixture {
         app,
+        anon,
         owner,
         invitee,
         crate_id: krate.id,
@@ -142,23 +145,72 @@ async fn invalid_state() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn tokens_are_refused() -> anyhow::Result<()> {
-    let Fixture { invitee, url, .. } = invite().await?;
-    let token = invitee.db_new_token("t").await;
+async fn token_with_scope() -> anyhow::Result<()> {
+    let Fixture { invitee, .. } = invite().await?;
+    let foo = Some(vec![CrateScope::try_from("foo*").unwrap()]);
+    let scopes = Some(vec![EndpointScope::CrateOwnerInvitations]);
+    let token = invitee.db_new_scoped_token("ci", foo, scopes, None).await;
 
+    let query = format!("invitee_id={}", invitee.as_model().id);
+    let url = "/api/v1/crate_owner_invitations";
+    let response = token.get_with_query::<()>(url, &query).await;
+    let id = &response.json()["crate_owner_invitations"][0]["id"];
+
+    let url = format!("/api/v1/crate_owner_invitations/{id}");
     let response = token.patch::<()>(&url, ACCEPTED).await;
-    assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), { ".**.created_at, .**.expires_at" => "[datetime]" });
+    assert_eq!(invitee.show_crate_owners("foo").await.users.len(), 2);
 
     Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn anonymous() {
-    let (_, anon) = TestApp::init().empty().await;
+async fn token_without_scope() -> anyhow::Result<()> {
+    let Fixture { invitee, url, .. } = invite().await?;
+    let scopes = Some(vec![EndpointScope::ChangeOwners]);
+    let token = invitee.db_new_scoped_token("ci", None, scopes, None).await;
 
-    let url = "/api/v1/crate_owner_invitations/42";
-    let response = anon.patch::<()>(url, ACCEPTED).await;
+    let response = token.patch::<()>(&url, ACCEPTED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn token_with_other_crate_scope() -> anyhow::Result<()> {
+    let Fixture { invitee, url, .. } = invite().await?;
+    let bar = Some(vec![CrateScope::try_from("bar").unwrap()]);
+    let scopes = Some(vec![EndpointScope::CrateOwnerInvitations]);
+    let token = invitee.db_new_scoped_token("ci", bar, scopes, None).await;
+
+    let response = token.patch::<()>(&url, ACCEPTED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn legacy_token() -> anyhow::Result<()> {
+    let Fixture { invitee, url, .. } = invite().await?;
+    let token = invitee.db_new_token("t").await;
+
+    let response = token.patch::<()>(&url, ACCEPTED).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `crate-owner-invitations` scope at https://crates.io/settings/tokens/new"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn anonymous() -> anyhow::Result<()> {
+    let Fixture { anon, url, .. } = invite().await?;
+
+    let response = anon.patch::<()>(&url, ACCEPTED).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
+
+    Ok(())
 }
