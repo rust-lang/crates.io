@@ -2631,7 +2631,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations/{id}": {
       "patch": {
-        "description": "Only the invitee can accept or decline an invitation. This endpoint accepts\ncookie authentication or API tokens with the `crate-owner-invitations`\nscope and a crate scope that matches the invitation's crate. Legacy tokens\nwithout scopes are refused.",
+        "description": "Only the invitee can accept or decline an invitation. This accepts cookie\nauthentication or API tokens with the `crate-owner-invitations` scope and a\ncrate scope that matches the invitation's crate.\n\nAny user owner of the crate can revoke the invitation. This accepts cookie\nauthentication or API tokens with the `change-owners` scope and a crate\nscope that matches the invitation's crate. Team owners are refused.\n\nLegacy tokens without scopes are refused.",
         "operationId": "update_crate_owner_invitation",
         "parameters": [
           {
@@ -2660,6 +2660,13 @@ expression: response.json()
                   "value": {
                     "crate_owner_invitation": {
                       "state": "declined"
+                    }
+                  }
+                },
+                "revoke": {
+                  "value": {
+                    "crate_owner_invitation": {
+                      "state": "revoked"
                     }
                   }
                 }
@@ -2737,7 +2744,7 @@ expression: response.json()
             "api_token": []
           }
         ],
-        "summary": "Accept or decline a crate owner invitation.",
+        "summary": "Accept, decline or revoke a crate owner invitation.",
         "tags": [
           "owners"
         ]

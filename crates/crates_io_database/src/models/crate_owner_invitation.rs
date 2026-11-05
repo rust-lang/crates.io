@@ -134,6 +134,11 @@ impl CrateOwnerInvitation {
         Ok(())
     }
 
+    pub async fn revoke(self, mut conn: &AsyncPgConnection) -> QueryResult<()> {
+        diesel::delete(&self).execute(&mut conn).await?;
+        Ok(())
+    }
+
     pub fn is_expired(&self) -> bool {
         self.expires_at <= Utc::now()
     }
