@@ -4618,6 +4618,8 @@ expression: response.json()
     },
     "/api/v1/me/crate_owner_invitations/{crate_id}": {
       "put": {
+        "deprecated": true,
+        "description": "This endpoint is deprecated. Use `PATCH /api/v1/crate_owner_invitations/{id}` instead.",
         "operationId": "handle_crate_owner_invitation",
         "parameters": [
           {
