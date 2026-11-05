@@ -1,6 +1,7 @@
 use crate::OwnerResp;
 use crate::builders::{CrateBuilder, UserBuilder};
 use crate::util::{RequestHelper, Response, TestApp};
+use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::{CrateOwner, User};
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use insta::assert_snapshot;
@@ -102,6 +103,25 @@ async fn test_remove_uppercase_user() {
     let response = cookie.remove_named_owner("foo", "USER2").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_remove_with_alternate_spelling_crate_scope() {
+    let crate_scopes = Some(vec![CrateScope::try_from("foo_*").unwrap()]);
+    let endpoint_scopes = Some(vec![EndpointScope::ChangeOwners]);
+    let (app, _, _, token) = TestApp::full()
+        .with_scoped_token(crate_scopes, endpoint_scopes)
+        .await;
+    app.db_new_user("user2").await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo-crate", token.as_model().user_id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = token.remove_named_owner("foo_crate", "user2").await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
 
 /// One GitHub login can remove multiple owners while leaving another user owner.

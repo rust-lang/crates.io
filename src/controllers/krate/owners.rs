@@ -183,15 +183,15 @@ pub async fn add_owners(
     }
 
     let mut conn = ctx.db_write().await?;
+    let krate = path.load_crate(&conn).await?;
+
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
-        .for_crate(&path.name)
+        .for_crate(&krate.name)
         .check(&parts, &mut conn)
         .await?;
 
     let user = auth.user();
-
-    let krate = path.load_crate(&conn).await?;
 
     let owners = krate.owners(&conn).await?;
 
@@ -288,15 +288,15 @@ pub async fn remove_owners(
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<ModifyResponse>> {
     let mut conn = ctx.db_write().await?;
+    let krate = path.load_crate(&conn).await?;
+
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
-        .for_crate(&path.name)
+        .for_crate(&krate.name)
         .check(&parts, &mut conn)
         .await?;
 
     let user = auth.user();
-
-    let krate = path.load_crate(&conn).await?;
 
     let owners = krate.owners(&conn).await?;
 

@@ -584,6 +584,25 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_change_owner_token_with_alternate_spelling_crate_scope() {
+    let crate_scopes = Some(vec![CrateScope::try_from("foo_*").unwrap()]);
+    let endpoint_scopes = Some(vec![EndpointScope::ChangeOwners]);
+    let (app, _, _, token) = TestApp::full()
+        .with_scoped_token(crate_scopes, endpoint_scopes)
+        .await;
+    let mut conn = app.db_conn().await;
+
+    app.db_new_user("user-2").await;
+    CrateBuilder::new("foo-crate", token.as_model().user_id)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = token.add_named_owner("foo_crate", "user-2").await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_publish_token() {
     let (app, _, _, token) = TestApp::full()
         .with_scoped_token(None, Some(vec![EndpointScope::PublishUpdate]))
