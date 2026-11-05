@@ -8,7 +8,9 @@ use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::server::ServerContext;
 use crate::util::RequestUtils;
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
+use crate::util::errors::{
+    AppResult, BoxedAppError, bad_request, custom, forbidden, internal, not_found,
+};
 use crate::util::no_store;
 use crate::views::{
     CrateOwnerInvitationState, EncodableCrateOwnerInvitation, EncodablePublicUser,
@@ -418,7 +420,10 @@ pub struct UpdateResponse {
 
 /// Accept or decline a crate owner invitation.
 ///
-/// Only the invitee can accept or decline an invitation.
+/// Only the invitee can accept or decline an invitation. This endpoint accepts
+/// cookie authentication or API tokens with the `crate-owner-invitations`
+/// scope and a crate scope that matches the invitation's crate. Legacy tokens
+/// without scopes are refused.
 #[utoipa::path(
     patch,
     path = "/api/v1/crate_owner_invitations/{id}",
@@ -432,7 +437,7 @@ pub struct UpdateResponse {
             ("decline" = (value = json!({ "crate_owner_invitation": { "state": "declined" } }))),
         ),
     ),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "owners",
     responses(
         (status = 200, description = "Successful Response", body = inline(UpdateResponse)),
@@ -449,15 +454,24 @@ pub async fn update_crate_owner_invitation(
     let state = request.crate_owner_invitation.state;
 
     let mut conn = ctx.db_write().await?;
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
 
     let (invitation, crate_name) = crate_owner_invitations::table
         .find(id)
-        .filter(crate_owner_invitations::invited_user_id.eq(auth.user_id()))
         .inner_join(crates::table)
         .select((CrateOwnerInvitation::as_select(), crates::name))
-        .first(&mut conn)
+        .first::<(CrateOwnerInvitation, String)>(&mut conn)
         .await?;
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
+        .for_crate(&crate_name)
+        .reject_legacy_tokens()
+        .check(&parts, &mut conn)
+        .await?;
+
+    if invitation.invited_user_id != auth.user_id() {
+        return Err(not_found());
+    }
 
     let crate_owner_invitation = encode_invitation(&invitation, crate_name, state);
 
