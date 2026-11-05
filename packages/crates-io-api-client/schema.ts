@@ -2559,10 +2559,12 @@ export interface operations {
                  */
                 user_id?: number;
                 /**
-                 * @description If set, only crates owned by the given crates.io team ID are returned
+                 * @description If set, only crates owned by the given crates.io team ID are returned.
+                 *     If more than one `team_id` is specified, will return crates owned by any
+                 *     of the given team IDs.
                  *     (ignored if `all_keywords`, `keyword`, `letter`, or `user_id` are set).
                  */
-                team_id?: number;
+                team_id?: number[];
                 /**
                  * @description If set, only crates owned by users the current user follows are returned
                  *     (ignored if `all_keywords`, `keyword`, `letter`, `user_id`,
