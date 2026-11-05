@@ -34,8 +34,8 @@
     - /url: https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html
   - list:
     - listitem:
-      - checkbox "change-owners Invite new crate owners or remove existing ones"
-      - text: change-owners Invite new crate owners or remove existing ones
+      - checkbox "change-owners Invite new crate owners, revoke invitations or remove owners"
+      - text: change-owners Invite new crate owners, revoke invitations or remove owners
     - listitem:
       - checkbox "crate-owner-invitations List, accept and decline crate owner invitations you have received"
       - text: crate-owner-invitations List, accept and decline crate owner invitations you have received
