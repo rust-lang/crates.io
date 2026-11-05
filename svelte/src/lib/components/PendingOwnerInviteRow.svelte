@@ -6,7 +6,7 @@
   import { getNotifications } from '#lib/notifications.svelte.ts';
 
   interface Invite {
-    crate_id: number;
+    id: number;
     crate_name: string;
     inviter_login: string;
     created_at: string;
@@ -29,9 +29,9 @@
 
     isLoading = true;
     try {
-      let response = await client.PUT('/api/v1/me/crate_owner_invitations/{crate_id}', {
-        params: { path: { crate_id: invite.crate_id } },
-        body: { crate_owner_invite: { crate_id: invite.crate_id, accepted } },
+      let response = await client.PATCH('/api/v1/crate_owner_invitations/{id}', {
+        params: { path: { id: invite.id } },
+        body: { crate_owner_invitation: { state: accepted ? 'accepted' : 'declined' } },
       });
 
       if (response.response.ok) {
