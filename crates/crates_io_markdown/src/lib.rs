@@ -147,21 +147,27 @@ fn canon_base_url(mut base_url: String) -> String {
 struct SanitizeUrl {
     base_url: Option<String>,
     base_dir: String,
+    /// Path prefix that links to non-media files are resolved against. GitHub
+    /// and GitLab serve those files from their `blob` view, while Bitbucket has
+    /// no `blob` route and serves them from `src` instead.
+    file_link_prefix: &'static str,
 }
 
 impl SanitizeUrl {
     fn new(base_url: Option<&str>, base_dir: &str) -> Self {
-        let base_url = base_url
+        let (base_url, file_link_prefix): (Option<String>, &'static str) = base_url
             .and_then(|base_url| Url::parse(base_url).ok())
-            .and_then(|url| match url.host_str() {
-                Some("github.com") | Some("gitlab.com") | Some("bitbucket.org") => {
-                    Some(canon_base_url(url.into()))
+            .map_or((None, "blob/HEAD"), |url| match url.host_str() {
+                Some("github.com") | Some("gitlab.com") => {
+                    (Some(canon_base_url(url.into())), "blob/HEAD")
                 }
-                _ => None,
+                Some("bitbucket.org") => (Some(canon_base_url(url.into())), "src/HEAD"),
+                _ => (None, "blob/HEAD"),
             });
         Self {
             base_url,
             base_dir: base_dir.to_owned(),
+            file_link_prefix,
         }
     }
 }
@@ -236,13 +242,17 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
 
         self.base_url.as_ref().map(|base_url| {
             let mut new_url = base_url.clone();
-            // Assumes GitHub’s URL scheme. GitHub renders text and markdown
-            // better in the "blob" view, but images need to be served raw.
+            // Text and markdown render better in the host’s file view, but
+            // images need to be served raw.
             let MediaUrl {
                 is_media,
                 add_sanitize_query,
             } = is_media_url(url);
-            new_url += if is_media { "raw/HEAD" } else { "blob/HEAD" };
+            new_url += if is_media {
+                "raw/HEAD"
+            } else {
+                self.file_link_prefix
+            };
 
             let mut path = String::new();
             if !self.base_dir.is_empty() {
@@ -516,7 +526,12 @@ There can also be some text in between!
         let html_image = "<img src=\"img.png\" alt=\"alt\">";
         let svg = "![alt](sanitize.svg)";
 
-        for host in &["github.com", "gitlab.com", "bitbucket.org"] {
+        for (host, file_view) in [
+            ("github.com", "blob"),
+            ("gitlab.com", "blob"),
+            // Bitbucket has no `blob` route, its file view is `src`.
+            ("bitbucket.org", "src"),
+        ] {
             for (&extra_slash, &dot_git) in [true, false].iter().zip(&[true, false]) {
                 let url = format!(
                     "https://{}/rust-lang/test{}{}",
@@ -529,7 +544,7 @@ There can also be some text in between!
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{host}/rust-lang/test/blob/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
+                        "<p><a href=\"https://{host}/rust-lang/test/{file_view}/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
                     )
                 );
 
@@ -537,7 +552,7 @@ There can also be some text in between!
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{host}/rust-lang/test/blob/HEAD/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n"
+                        "<p><a href=\"https://{host}/rust-lang/test/{file_view}/HEAD/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n"
                     )
                 );
 
@@ -588,6 +603,18 @@ There can also be some text in between!
             result,
             "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
         );
+    }
+
+    #[test]
+    fn relative_links_on_bitbucket() {
+        // Bitbucket has no `blob` route, so links into a repository must use its
+        // `src` file view. Images are unaffected, `raw` exists on Bitbucket too.
+        let repository = Some("https://bitbucket.org/rust-lang/test");
+        let render = |markdown| markdown_to_html(markdown, repository, "");
+
+        assert_snapshot!(render("[there](there)"), @r#"<p><a href="https://bitbucket.org/rust-lang/test/src/HEAD/there" rel="nofollow noopener noreferrer">there</a></p>"#);
+        assert_snapshot!(render("[changelog](../CHANGELOG.md#v1)"), @r#"<p><a href="https://bitbucket.org/rust-lang/test/src/HEAD/CHANGELOG.md#v1" rel="nofollow noopener noreferrer">changelog</a></p>"#);
+        assert_snapshot!(render("![alt](img.png)"), @r#"<p><img src="https://bitbucket.org/rust-lang/test/raw/HEAD/img.png" alt="alt"></p>"#);
     }
 
     #[test]
