@@ -487,6 +487,8 @@ pub async fn update_crate_owner_invitation(
 }
 
 /// Accept or decline a crate owner invitation.
+///
+/// This endpoint is deprecated. Use `PATCH /api/v1/crate_owner_invitations/{id}` instead.
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
@@ -505,6 +507,7 @@ pub async fn update_crate_owner_invitation(
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
+#[deprecated]
 pub async fn handle_crate_owner_invitation(
     ctx: ServerContext,
     parts: Parts,

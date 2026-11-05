@@ -731,7 +731,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Accept or decline a crate owner invitation. */
+        /**
+         * Accept or decline a crate owner invitation.
+         * @deprecated
+         * @description This endpoint is deprecated. Use `PATCH /api/v1/crate_owner_invitations/{id}` instead.
+         */
         put: operations["handle_crate_owner_invitation"];
         post?: never;
         delete?: never;
