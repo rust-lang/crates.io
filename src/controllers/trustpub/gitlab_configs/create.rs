@@ -48,14 +48,14 @@ pub async fn create_trustpub_gitlab_config(
 
     let mut conn = ctx.db_write().await?;
 
+    let krate = load_crate(&conn, &json_config.krate).await?;
+
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
-        .for_crate(&json_config.krate)
+        .for_crate(&krate.name)
         .check(&parts, &mut conn)
         .await?;
     let auth_user = auth.user();
-
-    let krate = load_crate(&conn, &json_config.krate).await?;
 
     // Check if the crate has reached the maximum number of configs
     let config_count = GitLabConfig::count_for_crate(&conn, krate.id).await?;

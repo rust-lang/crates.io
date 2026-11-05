@@ -77,14 +77,14 @@ async fn list_by_crate(
 ) -> AppResult<Json<GitHubConfigListResponse>> {
     let mut conn = ctx.db_read().await?;
 
+    let krate = load_crate(&conn, krate_name).await?;
+
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
-        .for_crate(krate_name)
+        .for_crate(&krate.name)
         .check(&parts, &mut conn)
         .await?;
     let auth_user = auth.user();
-
-    let krate = load_crate(&conn, krate_name).await?;
 
     // Check if the authenticated user is an owner of the crate
     let is_owner = select(exists(
