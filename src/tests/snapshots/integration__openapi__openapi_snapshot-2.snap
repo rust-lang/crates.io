@@ -2032,7 +2032,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations/{id}": {
       "patch": {
-        "description": "Only the invitee can accept or decline an invitation.",
+        "description": "Only the invitee can accept or decline an invitation. This endpoint accepts\ncookie authentication or API tokens with the `crate-owner-invitations`\nscope and a crate scope that matches the invitation's crate. Legacy tokens\nwithout scopes are refused.",
         "operationId": "update_crate_owner_invitation",
         "parameters": [
           {
@@ -2133,6 +2133,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Accept or decline a crate owner invitation.",
