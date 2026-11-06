@@ -50,7 +50,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prefer-let": "4.2.2",
     "eslint-plugin-storybook": "10.6.5",
-    "eslint-plugin-svelte": "3.23.1",
+    "eslint-plugin-svelte": "3.24.0",
     "eslint-plugin-unicorn": "79.0.0",
     "globals": "17.14.0",
     "msw": "3.0.3",
