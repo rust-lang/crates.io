@@ -1,6 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use crate::auth::{AuthCheck, AuthHeader, Authentication};
+use crate::auth::{AuthCheck, AuthHeader, AuthRejection, Authentication};
 use crate::models::Email;
 use crate::server::ServerContext;
 use crate::worker::jobs::{
@@ -221,9 +221,9 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
                 .ok_or_else(|| forbidden("Invalid authentication token"))?;
 
         if !crate_ids.contains(&Some(existing_crate.id)) {
-            let name = &existing_crate.name;
-            let error = format!("The provided access token is not valid for crate `{name}`");
-            return Err(forbidden(error));
+            let crate_name = existing_crate.name.clone();
+            let rejection = AuthRejection::TrustpubCrateMismatch { crate_name };
+            return Err(rejection.reject(&req));
         }
 
         AuthType::TrustPub(trustpub_data)

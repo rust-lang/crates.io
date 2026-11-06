@@ -208,24 +208,25 @@ impl AuthCheck {
     }
 }
 
-/// The reasons an [`AuthCheck`] can reject an authenticated request.
-#[derive(Clone, Copy, Debug)]
-enum AuthRejection {
+/// The reasons an authenticated request can be rejected.
+#[derive(Clone, Debug)]
+pub enum AuthRejection {
     CookieRequired,
     EndpointScopeMismatch,
     CrateScopeMismatch,
     TrustpubRequired,
+    TrustpubCrateMismatch { crate_name: String },
 }
 
 impl AuthRejection {
     /// Adds the cause of the rejection to the request log and returns the
     /// error response.
-    fn reject(self, parts: &Parts) -> BoxedAppError {
+    pub fn reject(self, parts: &Parts) -> BoxedAppError {
         parts.request_log().add("cause", self.cause());
         self.into_error()
     }
 
-    fn cause(self) -> &'static str {
+    fn cause(&self) -> &'static str {
         match self {
             AuthRejection::CookieRequired => {
                 "API Token authentication was explicitly disallowed for this API"
@@ -233,6 +234,9 @@ impl AuthRejection {
             AuthRejection::EndpointScopeMismatch => "Endpoint scope mismatch",
             AuthRejection::CrateScopeMismatch => "Crate scope mismatch",
             AuthRejection::TrustpubRequired => "Crate requires Trusted Publishing",
+            AuthRejection::TrustpubCrateMismatch { .. } => {
+                "Trusted Publishing token crate mismatch"
+            }
         }
     }
 
@@ -247,6 +251,9 @@ impl AuthRejection {
             AuthRejection::TrustpubRequired => forbidden(
                 "New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing).",
             ),
+            AuthRejection::TrustpubCrateMismatch { crate_name } => forbidden(format!(
+                "The provided access token is not valid for crate `{crate_name}`"
+            )),
         }
     }
 }
