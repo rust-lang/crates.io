@@ -233,24 +233,19 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
             None => EndpointScope::PublishNew,
         };
 
+        let trustpub_only = existing_crate
+            .as_ref()
+            .is_some_and(|krate| krate.trustpub_only);
+
         let auth = AuthCheck::default()
             .with_endpoint_scope(endpoint_scope)
             .for_crate(&metadata.name)
+            .require_trustpub(trustpub_only)
             .check(&req, &mut conn)
             .await?;
 
         AuthType::Regular(Box::new(auth))
     };
-
-    // Check if crate requires trusted publishing
-    if let Some(existing_crate) = &existing_crate
-        && existing_crate.trustpub_only
-        && matches!(auth, AuthType::Regular(_))
-    {
-        return Err(forbidden(
-            "New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing).",
-        ));
-    }
 
     let verified_email_address = if let Some(user) = auth.user() {
         let verified_email_address = Email::verified_for_user(&conn, user.id).await?;

@@ -108,3 +108,28 @@ async fn publish_with_token_rejected_when_trustpub_only() {
     assert_that!(app.stored_files().await, is_empty());
     assert_that!(app.emails().await, is_empty());
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn publish_with_cookie_rejected_when_trustpub_only() {
+    let (app, _, user) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo_trustpub_only", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    diesel::update(crates::table)
+        .filter(crates::name.eq("foo_trustpub_only"))
+        .set(crates::trustpub_only.eq(true))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let crate_to_publish = PublishBuilder::new("foo_trustpub_only", "1.0.0");
+    let response = user.publish_crate(crate_to_publish).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing)."}]}"#);
+
+    assert_that!(app.stored_files().await, is_empty());
+    assert_that!(app.emails().await, is_empty());
+}

@@ -70,6 +70,7 @@ pub struct AuthCheck {
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
     allow_any_crate_scope: bool,
+    require_trustpub: bool,
 }
 
 impl AuthCheck {
@@ -82,6 +83,7 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_trustpub: false,
         }
     }
 
@@ -92,6 +94,7 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_trustpub: false,
         }
     }
 
@@ -101,6 +104,7 @@ impl AuthCheck {
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub: self.require_trustpub,
         }
     }
 
@@ -110,6 +114,7 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub: self.require_trustpub,
         }
     }
 
@@ -123,6 +128,19 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: true,
+            require_trustpub: self.require_trustpub,
+        }
+    }
+
+    /// Rejects the request if `require_trustpub` is set, for crates that only
+    /// accept Trusted Publishing tokens.
+    pub fn require_trustpub(&self, require_trustpub: bool) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub,
         }
     }
 
@@ -134,7 +152,11 @@ impl AuthCheck {
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
 
-        if let Some(rejection) = auth.api_token().and_then(|token| self.rejection(token)) {
+        let token_rejection = auth.api_token().and_then(|token| self.rejection(token));
+        let trustpub_rejection = self
+            .require_trustpub
+            .then_some(AuthRejection::TrustpubRequired);
+        if let Some(rejection) = token_rejection.or(trustpub_rejection) {
             return Err(rejection.reject(parts));
         }
 
@@ -186,12 +208,13 @@ impl AuthCheck {
     }
 }
 
-/// The reasons an [`AuthCheck`] can reject an API token.
+/// The reasons an [`AuthCheck`] can reject an authenticated request.
 #[derive(Clone, Copy, Debug)]
 enum AuthRejection {
     CookieRequired,
     EndpointScopeMismatch,
     CrateScopeMismatch,
+    TrustpubRequired,
 }
 
 impl AuthRejection {
@@ -209,6 +232,7 @@ impl AuthRejection {
             }
             AuthRejection::EndpointScopeMismatch => "Endpoint scope mismatch",
             AuthRejection::CrateScopeMismatch => "Crate scope mismatch",
+            AuthRejection::TrustpubRequired => "Crate requires Trusted Publishing",
         }
     }
 
@@ -219,6 +243,9 @@ impl AuthRejection {
             }
             AuthRejection::EndpointScopeMismatch | AuthRejection::CrateScopeMismatch => forbidden(
                 "this token does not have the required permissions to perform this action",
+            ),
+            AuthRejection::TrustpubRequired => forbidden(
+                "New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing).",
             ),
         }
     }
