@@ -145,29 +145,27 @@ fn canon_base_url(mut base_url: String) -> String {
 
 /// Sanitize relative URLs in Markdown files.
 struct SanitizeUrl {
-    base_url: Option<String>,
+    /// Repository base URL and the host's path prefix for file views.
+    base_url: Option<(String, &'static str)>,
     base_dir: String,
-    /// Path prefix that links to non-media files are resolved against. GitHub
-    /// and GitLab serve those files from their `blob` view, while Bitbucket has
-    /// no `blob` route and serves them from `src` instead.
-    file_link_prefix: &'static str,
 }
 
 impl SanitizeUrl {
     fn new(base_url: Option<&str>, base_dir: &str) -> Self {
-        let (base_url, file_link_prefix): (Option<String>, &'static str) = base_url
+        let base_url = base_url
             .and_then(|base_url| Url::parse(base_url).ok())
-            .map_or((None, "blob/HEAD"), |url| match url.host_str() {
-                Some("github.com") | Some("gitlab.com") => {
-                    (Some(canon_base_url(url.into())), "blob/HEAD")
-                }
-                Some("bitbucket.org") => (Some(canon_base_url(url.into())), "src/HEAD"),
-                _ => (None, "blob/HEAD"),
+            .and_then(|url| {
+                let file_view = match url.host_str()? {
+                    "github.com" | "gitlab.com" => "blob/HEAD",
+                    // Bitbucket has no `blob` route
+                    "bitbucket.org" => "src/HEAD",
+                    _ => return None,
+                };
+                Some((canon_base_url(url.into()), file_view))
             });
         Self {
             base_url,
             base_dir: base_dir.to_owned(),
-            file_link_prefix,
         }
     }
 }
@@ -240,7 +238,7 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
             return None;
         }
 
-        self.base_url.as_ref().map(|base_url| {
+        self.base_url.as_ref().map(|(base_url, file_view)| {
             let mut new_url = base_url.clone();
             // Text and markdown render better in the host’s file view, but
             // images need to be served raw.
@@ -248,11 +246,7 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
                 is_media,
                 add_sanitize_query,
             } = is_media_url(url);
-            new_url += if is_media {
-                "raw/HEAD"
-            } else {
-                self.file_link_prefix
-            };
+            new_url += if is_media { "raw/HEAD" } else { file_view };
 
             let mut path = String::new();
             if !self.base_dir.is_empty() {
