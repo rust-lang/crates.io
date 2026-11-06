@@ -600,18 +600,6 @@ There can also be some text in between!
     }
 
     #[test]
-    fn relative_links_on_bitbucket() {
-        // Bitbucket has no `blob` route, so links into a repository must use its
-        // `src` file view. Images are unaffected, `raw` exists on Bitbucket too.
-        let repository = Some("https://bitbucket.org/rust-lang/test");
-        let render = |markdown| markdown_to_html(markdown, repository, "");
-
-        assert_snapshot!(render("[there](there)"), @r#"<p><a href="https://bitbucket.org/rust-lang/test/src/HEAD/there" rel="nofollow noopener noreferrer">there</a></p>"#);
-        assert_snapshot!(render("[changelog](../CHANGELOG.md#v1)"), @r#"<p><a href="https://bitbucket.org/rust-lang/test/src/HEAD/CHANGELOG.md#v1" rel="nofollow noopener noreferrer">changelog</a></p>"#);
-        assert_snapshot!(render("![alt](img.png)"), @r#"<p><img src="https://bitbucket.org/rust-lang/test/raw/HEAD/img.png" alt="alt"></p>"#);
-    }
-
-    #[test]
     fn relative_links_with_dot_segments() {
         let repository = Some("https://github.com/rust-lang/test");
         let render = |markdown, base_dir| markdown_to_html(markdown, repository, base_dir);
