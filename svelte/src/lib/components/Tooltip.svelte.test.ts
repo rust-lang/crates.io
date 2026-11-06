@@ -21,7 +21,9 @@ describe('Tooltip', () => {
     it('waits for the configured delay before showing the tooltip', async () => {
       await render(TooltipTestWrapper, { text: 'short', width: '500px', delay: 200 });
 
-      await userEvent.hover(page.getByCSS('[data-test-anchor]'));
+      // Browser actions advance fake timers while they run, so dispatch the
+      // event directly to keep the fake clock under the test's control.
+      document.querySelector('[data-test-anchor]')!.dispatchEvent(new MouseEvent('mouseenter'));
       await tick();
 
       expect(document.querySelector('.tooltip')).toBeNull();
