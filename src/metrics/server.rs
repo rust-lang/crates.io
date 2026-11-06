@@ -1,6 +1,7 @@
 use super::SharedMetrics;
 use super::consts::{
-    DB_CLIENT_CONNECTION_FALLBACKS, DB_CLIENT_CONNECTION_POOL_NAME, HTTP_REQUEST_METHOD,
+    AUTH_CHECKS, AUTH_ENDPOINT_SCOPE, AUTH_TYPE, DB_CLIENT_CONNECTION_FALLBACKS,
+    DB_CLIENT_CONNECTION_POOL_NAME, ERROR_TYPE, HTTP_REQUEST_METHOD, HTTP_ROUTE,
     HTTP_SERVER_ACTIVE_REQUESTS, URL_SCHEME,
 };
 use super::otel::kv;
@@ -15,6 +16,7 @@ pub struct ServerMetrics {
     shared: SharedMetrics,
 
     active_requests: UpDownCounter<i64>,
+    auth_checks: Counter<u64>,
     db_fallbacks: Counter<u64>,
 }
 
@@ -28,6 +30,12 @@ impl ServerMetrics {
             .with_unit("{request}")
             .build();
 
+        let auth_checks = meter
+            .u64_counter(AUTH_CHECKS)
+            .with_description("Number of authentication checks of authenticated requests.")
+            .with_unit("{check}")
+            .build();
+
         let db_fallbacks = meter
             .u64_counter(DB_CLIENT_CONNECTION_FALLBACKS)
             .with_unit("{fallback}")
@@ -36,6 +44,7 @@ impl ServerMetrics {
         Self {
             shared,
             active_requests,
+            auth_checks,
             db_fallbacks,
         }
     }
@@ -48,6 +57,34 @@ impl ServerMetrics {
             KeyValue::new(URL_SCHEME, scheme),
         ];
         ActiveRequestGuard::new(&self.active_requests, attributes)
+    }
+
+    /// Records an authentication check of an authenticated request.
+    ///
+    /// `endpoint_scope` is the scope the endpoint required, if any.
+    /// `error_type` is set if the check was rejected.
+    pub fn auth_check(
+        &self,
+        method: &http::Method,
+        route: Option<&str>,
+        auth_type: &'static str,
+        endpoint_scope: Option<&'static str>,
+        error_type: Option<&'static str>,
+    ) {
+        let mut attributes = vec![
+            kv(HTTP_REQUEST_METHOD, method.as_str().to_owned()),
+            kv(AUTH_TYPE, auth_type),
+        ];
+        if let Some(route) = route {
+            attributes.push(kv(HTTP_ROUTE, route.to_owned()));
+        }
+        if let Some(endpoint_scope) = endpoint_scope {
+            attributes.push(kv(AUTH_ENDPOINT_SCOPE, endpoint_scope));
+        }
+        if let Some(error_type) = error_type {
+            attributes.push(kv(ERROR_TYPE, error_type));
+        }
+        self.auth_checks.add(1, &attributes);
     }
 
     /// Records a fallback from an unavailable database pool.

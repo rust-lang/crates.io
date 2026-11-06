@@ -1,6 +1,15 @@
 /// The instrumentation scope name used by crates.io metrics.
 pub const METER_NAME: &str = "crates.io";
 
+/// The authentication check instrument name.
+pub const AUTH_CHECKS: &str = "crates_io.auth.checks";
+
+/// The required endpoint scope attribute key.
+pub const AUTH_ENDPOINT_SCOPE: &str = "crates_io.auth.endpoint_scope";
+
+/// The authentication type attribute key.
+pub const AUTH_TYPE: &str = "crates_io.auth.type";
+
 /// The queued background jobs instrument name.
 pub const BACKGROUND_JOBS: &str = "crates_io.background_jobs";
 
@@ -28,11 +37,17 @@ pub const DB_DUMP_SIZE_BYTES: &str = "crates_io.db_dump_size_bytes";
 /// The database dump upload duration instrument name.
 pub const DB_DUMP_UPLOAD_DURATION_NS: &str = "crates_io.db_dump_upload_duration_ns";
 
+/// The error type attribute key.
+pub const ERROR_TYPE: &str = "error.type";
+
 /// The archive format attribute key.
 pub const FORMAT: &str = "format";
 
 /// The HTTP request method attribute key.
 pub const HTTP_REQUEST_METHOD: &str = "http.request.method";
+
+/// The matched HTTP route attribute key.
+pub const HTTP_ROUTE: &str = "http.route";
 
 /// The active HTTP server requests instrument name.
 pub const HTTP_SERVER_ACTIVE_REQUESTS: &str = "http.server.active_requests";

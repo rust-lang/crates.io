@@ -1,6 +1,7 @@
 use crate::controllers;
 use crate::controllers::session::{EPOCH_KEY, USER_ID_KEY};
 use crate::controllers::util::RequestPartsExt;
+use crate::middleware::context::RequestContext;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
@@ -9,13 +10,14 @@ use crate::util::errors::{
     internal,
 };
 use crate::util::token::HashedToken;
-use axum::extract::FromRequestParts;
+use axum::extract::{FromRequestParts, MatchedPath};
 use chrono::Utc;
 use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::{StatusCode, header};
 use secrecy::{ExposeSecret, SecretString};
+use std::fmt;
 use tracing::instrument;
 
 pub struct AuthHeader(SecretString);
@@ -70,6 +72,7 @@ pub struct AuthCheck {
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
     allow_any_crate_scope: bool,
+    require_trustpub: bool,
 }
 
 impl AuthCheck {
@@ -82,6 +85,7 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_trustpub: false,
         }
     }
 
@@ -92,6 +96,7 @@ impl AuthCheck {
             endpoint_scope: None,
             crate_name: None,
             allow_any_crate_scope: false,
+            require_trustpub: false,
         }
     }
 
@@ -101,6 +106,7 @@ impl AuthCheck {
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub: self.require_trustpub,
         }
     }
 
@@ -110,6 +116,7 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
             allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub: self.require_trustpub,
         }
     }
 
@@ -123,6 +130,19 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: true,
+            require_trustpub: self.require_trustpub,
+        }
+    }
+
+    /// Rejects the request if `require_trustpub` is set, for crates that only
+    /// accept Trusted Publishing tokens.
+    pub fn require_trustpub(&self, require_trustpub: bool) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub,
         }
     }
 
@@ -133,38 +153,31 @@ impl AuthCheck {
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
+        let auth_type = auth.auth_type();
 
-        if let Some(token) = auth.api_token() {
-            if !self.allow_token {
-                let error_message =
-                    "API Token authentication was explicitly disallowed for this API";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this action can only be performed on the crates.io website",
-                ));
-            }
-
-            if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
-                let error_message = "Endpoint scope mismatch";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this token does not have the required permissions to perform this action",
-                ));
-            }
-
-            if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
-                let error_message = "Crate scope mismatch";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this token does not have the required permissions to perform this action",
-                ));
-            }
+        let token_rejection = auth.api_token().and_then(|token| self.rejection(token));
+        let trustpub_rejection = self
+            .require_trustpub
+            .then_some(AuthRejection::TrustpubRequired);
+        if let Some(rejection) = token_rejection.or(trustpub_rejection) {
+            record_auth_error(parts, auth_type, self.endpoint_scope, &rejection);
+            return Err(rejection.reject(parts));
         }
 
+        record_auth_success(parts, auth_type, self.endpoint_scope);
         Ok(auth)
+    }
+
+    fn rejection(&self, token: &ApiToken) -> Option<AuthRejection> {
+        if !self.allow_token {
+            Some(AuthRejection::CookieRequired)
+        } else if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
+            Some(AuthRejection::EndpointScopeMismatch)
+        } else if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
+            Some(AuthRejection::CrateScopeMismatch)
+        } else {
+            None
+        }
     }
 
     fn endpoint_scope_matches(&self, token_scopes: Option<&Vec<EndpointScope>>) -> bool {
@@ -200,6 +213,143 @@ impl AuthCheck {
     }
 }
 
+/// The reasons an authenticated request can be rejected.
+#[derive(Clone, Debug)]
+pub enum AuthRejection {
+    CookieRequired,
+    EndpointScopeMismatch,
+    CrateScopeMismatch,
+    TrustpubRequired,
+    TrustpubCrateMismatch { crate_name: String },
+}
+
+impl AuthRejection {
+    /// Adds the cause of the rejection to the request log and returns the
+    /// error response.
+    pub fn reject(self, parts: &Parts) -> BoxedAppError {
+        parts.request_log().add("cause", self.cause());
+        self.into_error()
+    }
+
+    fn error_type(&self) -> &'static str {
+        match self {
+            AuthRejection::CookieRequired => "cookie_required",
+            AuthRejection::EndpointScopeMismatch => "endpoint_scope_mismatch",
+            AuthRejection::CrateScopeMismatch => "crate_scope_mismatch",
+            AuthRejection::TrustpubRequired => "trustpub_required",
+            AuthRejection::TrustpubCrateMismatch { .. } => "trustpub_crate_mismatch",
+        }
+    }
+
+    fn cause(&self) -> &'static str {
+        match self {
+            AuthRejection::CookieRequired => {
+                "API Token authentication was explicitly disallowed for this API"
+            }
+            AuthRejection::EndpointScopeMismatch => "Endpoint scope mismatch",
+            AuthRejection::CrateScopeMismatch => "Crate scope mismatch",
+            AuthRejection::TrustpubRequired => "Crate requires Trusted Publishing",
+            AuthRejection::TrustpubCrateMismatch { .. } => {
+                "Trusted Publishing token crate mismatch"
+            }
+        }
+    }
+
+    fn into_error(self) -> BoxedAppError {
+        match self {
+            AuthRejection::CookieRequired => {
+                forbidden("this action can only be performed on the crates.io website")
+            }
+            AuthRejection::EndpointScopeMismatch | AuthRejection::CrateScopeMismatch => forbidden(
+                "this token does not have the required permissions to perform this action",
+            ),
+            AuthRejection::TrustpubRequired => forbidden(
+                "New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing).",
+            ),
+            AuthRejection::TrustpubCrateMismatch { crate_name } => forbidden(format!(
+                "The provided access token is not valid for crate `{crate_name}`"
+            )),
+        }
+    }
+}
+
+/// Records a successful authentication check in the `crates_io.auth.checks`
+/// metric.
+///
+/// `endpoint_scope` is the scope the endpoint required, not the scopes of the
+/// token.
+pub fn record_auth_success(
+    parts: &Parts,
+    auth_type: AuthType,
+    endpoint_scope: Option<EndpointScope>,
+) {
+    record_check(parts, auth_type, endpoint_scope, None);
+}
+
+/// Records a rejected authentication check in the `crates_io.auth.checks`
+/// metric.
+///
+/// `endpoint_scope` is the scope the endpoint required, not the scopes of the
+/// token.
+pub fn record_auth_error(
+    parts: &Parts,
+    auth_type: AuthType,
+    endpoint_scope: Option<EndpointScope>,
+    rejection: &AuthRejection,
+) {
+    let error_type = rejection.error_type();
+    record_check(parts, auth_type, endpoint_scope, Some(error_type));
+}
+
+fn record_check(
+    parts: &Parts,
+    auth_type: AuthType,
+    endpoint_scope: Option<EndpointScope>,
+    error_type: Option<&'static str>,
+) {
+    let route = parts.extensions.get::<MatchedPath>();
+    let route = route.map(MatchedPath::as_str);
+    let endpoint_scope = endpoint_scope.map(EndpointScope::as_str);
+
+    let metrics = &parts.server_context().metrics;
+    metrics.auth_check(
+        &parts.method,
+        route,
+        auth_type.as_str(),
+        endpoint_scope,
+        error_type,
+    );
+}
+
+/// The way a request was authenticated, as recorded in the request log and
+/// metrics.
+#[derive(Clone, Copy, Debug)]
+pub enum AuthType {
+    Cookie,
+    /// An API token without endpoint scopes.
+    LegacyToken,
+    /// An API token with endpoint scopes.
+    ScopedToken,
+    Trustpub,
+}
+
+impl AuthType {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AuthType::Cookie => "cookie",
+            AuthType::LegacyToken => "legacy_token",
+            AuthType::ScopedToken => "scoped_token",
+            AuthType::Trustpub => "trustpub",
+        }
+    }
+}
+
+impl fmt::Display for AuthType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 #[derive(Debug)]
 pub enum Authentication {
     Cookie(CookieAuthentication),
@@ -224,6 +374,16 @@ impl Authentication {
 
     pub fn api_token_id(&self) -> Option<i32> {
         self.api_token().map(|token| token.id)
+    }
+
+    fn auth_type(&self) -> AuthType {
+        match self {
+            Authentication::Cookie(_) => AuthType::Cookie,
+            Authentication::Token(auth) if auth.token.endpoint_scopes.is_none() => {
+                AuthType::LegacyToken
+            }
+            Authentication::Token(_) => AuthType::ScopedToken,
+        }
     }
 
     pub fn api_token(&self) -> Option<&ApiToken> {
@@ -336,8 +496,9 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
     match authenticate_via_cookie(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => {
-            parts.request_log().add("auth_type", "cookie");
-            return Ok(Authentication::Cookie(auth));
+            let auth = Authentication::Cookie(auth);
+            parts.request_log().add("auth_type", auth.auth_type());
+            return Ok(auth);
         }
         Err(err) => return Err(err),
     }
@@ -345,8 +506,9 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
     match authenticate_via_token(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => {
-            parts.request_log().add("auth_type", "token");
-            return Ok(Authentication::Token(auth));
+            let auth = Authentication::Token(auth);
+            parts.request_log().add("auth_type", auth.auth_type());
+            return Ok(auth);
         }
         Err(err) => return Err(err),
     }
