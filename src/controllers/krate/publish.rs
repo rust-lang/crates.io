@@ -1,6 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use crate::auth::{AuthCheck, AuthHeader, AuthRejection, Authentication};
+use crate::auth::{self, AuthCheck, AuthHeader, AuthRejection, Authentication};
 use crate::models::Email;
 use crate::server::ServerContext;
 use crate::worker::jobs::{
@@ -199,7 +199,7 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
         .transpose()?;
 
     let auth = if let Some(trustpub_token) = trustpub_token {
-        request_log.add("auth_type", "trustpub");
+        request_log.add("auth_type", auth::AuthType::Trustpub);
 
         let Some(existing_crate) = &existing_crate else {
             let error = forbidden(

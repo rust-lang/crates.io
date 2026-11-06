@@ -16,6 +16,7 @@ use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::{StatusCode, header};
 use secrecy::{ExposeSecret, SecretString};
+use std::fmt;
 use tracing::instrument;
 
 pub struct AuthHeader(SecretString);
@@ -258,6 +259,30 @@ impl AuthRejection {
     }
 }
 
+/// The way a request was authenticated, as recorded in the request log.
+#[derive(Clone, Copy, Debug)]
+pub enum AuthType {
+    Cookie,
+    Token,
+    Trustpub,
+}
+
+impl AuthType {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AuthType::Cookie => "cookie",
+            AuthType::Token => "token",
+            AuthType::Trustpub => "trustpub",
+        }
+    }
+}
+
+impl fmt::Display for AuthType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 #[derive(Debug)]
 pub enum Authentication {
     Cookie(CookieAuthentication),
@@ -282,6 +307,13 @@ impl Authentication {
 
     pub fn api_token_id(&self) -> Option<i32> {
         self.api_token().map(|token| token.id)
+    }
+
+    fn auth_type(&self) -> AuthType {
+        match self {
+            Authentication::Cookie(_) => AuthType::Cookie,
+            Authentication::Token(_) => AuthType::Token,
+        }
     }
 
     pub fn api_token(&self) -> Option<&ApiToken> {
@@ -394,8 +426,9 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
     match authenticate_via_cookie(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => {
-            parts.request_log().add("auth_type", "cookie");
-            return Ok(Authentication::Cookie(auth));
+            let auth = Authentication::Cookie(auth);
+            parts.request_log().add("auth_type", auth.auth_type());
+            return Ok(auth);
         }
         Err(err) => return Err(err),
     }
@@ -403,8 +436,9 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
     match authenticate_via_token(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => {
-            parts.request_log().add("auth_type", "token");
-            return Ok(Authentication::Token(auth));
+            let auth = Authentication::Token(auth);
+            parts.request_log().add("auth_type", auth.auth_type());
+            return Ok(auth);
         }
         Err(err) => return Err(err),
     }
