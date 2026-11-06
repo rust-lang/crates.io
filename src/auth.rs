@@ -263,7 +263,10 @@ impl AuthRejection {
 #[derive(Clone, Copy, Debug)]
 pub enum AuthType {
     Cookie,
-    Token,
+    /// An API token without endpoint scopes.
+    LegacyToken,
+    /// An API token with endpoint scopes.
+    ScopedToken,
     Trustpub,
 }
 
@@ -271,7 +274,8 @@ impl AuthType {
     pub fn as_str(self) -> &'static str {
         match self {
             AuthType::Cookie => "cookie",
-            AuthType::Token => "token",
+            AuthType::LegacyToken => "legacy_token",
+            AuthType::ScopedToken => "scoped_token",
             AuthType::Trustpub => "trustpub",
         }
     }
@@ -312,7 +316,10 @@ impl Authentication {
     fn auth_type(&self) -> AuthType {
         match self {
             Authentication::Cookie(_) => AuthType::Cookie,
-            Authentication::Token(_) => AuthType::Token,
+            Authentication::Token(auth) if auth.token.endpoint_scopes.is_none() => {
+                AuthType::LegacyToken
+            }
+            Authentication::Token(_) => AuthType::ScopedToken,
         }
     }
 
