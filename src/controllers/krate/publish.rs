@@ -1,6 +1,9 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use crate::auth::{self, AuthCheck, AuthHeader, AuthRejection, Authentication};
+use crate::auth::{
+    self, AuthCheck, AuthHeader, AuthRejection, Authentication, record_auth_error,
+    record_auth_success,
+};
 use crate::models::Email;
 use crate::server::ServerContext;
 use crate::worker::jobs::{
@@ -223,8 +226,11 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
         if !crate_ids.contains(&Some(existing_crate.id)) {
             let crate_name = existing_crate.name.clone();
             let rejection = AuthRejection::TrustpubCrateMismatch { crate_name };
+            record_auth_error(&req, auth::AuthType::Trustpub, None, &rejection);
             return Err(rejection.reject(&req));
         }
+
+        record_auth_success(&req, auth::AuthType::Trustpub, None);
 
         AuthType::TrustPub(trustpub_data)
     } else {

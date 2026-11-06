@@ -1,6 +1,7 @@
 use crate::controllers;
 use crate::controllers::session::{EPOCH_KEY, USER_ID_KEY};
 use crate::controllers::util::RequestPartsExt;
+use crate::middleware::context::RequestContext;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
@@ -9,7 +10,7 @@ use crate::util::errors::{
     internal,
 };
 use crate::util::token::HashedToken;
-use axum::extract::FromRequestParts;
+use axum::extract::{FromRequestParts, MatchedPath};
 use chrono::Utc;
 use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
@@ -152,15 +153,18 @@ impl AuthCheck {
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
+        let auth_type = auth.auth_type();
 
         let token_rejection = auth.api_token().and_then(|token| self.rejection(token));
         let trustpub_rejection = self
             .require_trustpub
             .then_some(AuthRejection::TrustpubRequired);
         if let Some(rejection) = token_rejection.or(trustpub_rejection) {
+            record_auth_error(parts, auth_type, self.endpoint_scope, &rejection);
             return Err(rejection.reject(parts));
         }
 
+        record_auth_success(parts, auth_type, self.endpoint_scope);
         Ok(auth)
     }
 
@@ -227,6 +231,16 @@ impl AuthRejection {
         self.into_error()
     }
 
+    fn error_type(&self) -> &'static str {
+        match self {
+            AuthRejection::CookieRequired => "cookie_required",
+            AuthRejection::EndpointScopeMismatch => "endpoint_scope_mismatch",
+            AuthRejection::CrateScopeMismatch => "crate_scope_mismatch",
+            AuthRejection::TrustpubRequired => "trustpub_required",
+            AuthRejection::TrustpubCrateMismatch { .. } => "trustpub_crate_mismatch",
+        }
+    }
+
     fn cause(&self) -> &'static str {
         match self {
             AuthRejection::CookieRequired => {
@@ -259,7 +273,56 @@ impl AuthRejection {
     }
 }
 
-/// The way a request was authenticated, as recorded in the request log.
+/// Records a successful authentication check in the `crates_io.auth.checks`
+/// metric.
+///
+/// `endpoint_scope` is the scope the endpoint required, not the scopes of the
+/// token.
+pub fn record_auth_success(
+    parts: &Parts,
+    auth_type: AuthType,
+    endpoint_scope: Option<EndpointScope>,
+) {
+    record_check(parts, auth_type, endpoint_scope, None);
+}
+
+/// Records a rejected authentication check in the `crates_io.auth.checks`
+/// metric.
+///
+/// `endpoint_scope` is the scope the endpoint required, not the scopes of the
+/// token.
+pub fn record_auth_error(
+    parts: &Parts,
+    auth_type: AuthType,
+    endpoint_scope: Option<EndpointScope>,
+    rejection: &AuthRejection,
+) {
+    let error_type = rejection.error_type();
+    record_check(parts, auth_type, endpoint_scope, Some(error_type));
+}
+
+fn record_check(
+    parts: &Parts,
+    auth_type: AuthType,
+    endpoint_scope: Option<EndpointScope>,
+    error_type: Option<&'static str>,
+) {
+    let route = parts.extensions.get::<MatchedPath>();
+    let route = route.map(MatchedPath::as_str);
+    let endpoint_scope = endpoint_scope.map(EndpointScope::as_str);
+
+    let metrics = &parts.server_context().metrics;
+    metrics.auth_check(
+        &parts.method,
+        route,
+        auth_type.as_str(),
+        endpoint_scope,
+        error_type,
+    );
+}
+
+/// The way a request was authenticated, as recorded in the request log and
+/// metrics.
 #[derive(Clone, Copy, Debug)]
 pub enum AuthType {
     Cookie,
