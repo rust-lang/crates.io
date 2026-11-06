@@ -81,6 +81,9 @@ ignore = [
     "RUSTSEC-2026-0194",
     "RUSTSEC-2026-0195",
 
+    # "astral-tokio-tar is unmaintained"
+    "RUSTSEC-2026-0440",
+
     # `zstd` and `zstd-safe` advisories. Fixed in `zstd >= 0.14.3` and
     # `zstd-safe >= 8.2.0`, but `opentelemetry-otlp` still requires `zstd`
     # 0.13. It only calls `zstd::bulk::compress()`, which uses none of the
