@@ -134,37 +134,23 @@ impl AuthCheck {
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
 
-        if let Some(token) = auth.api_token() {
-            if !self.allow_token {
-                let error_message =
-                    "API Token authentication was explicitly disallowed for this API";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this action can only be performed on the crates.io website",
-                ));
-            }
-
-            if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
-                let error_message = "Endpoint scope mismatch";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this token does not have the required permissions to perform this action",
-                ));
-            }
-
-            if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
-                let error_message = "Crate scope mismatch";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this token does not have the required permissions to perform this action",
-                ));
-            }
+        if let Some(rejection) = auth.api_token().and_then(|token| self.rejection(token)) {
+            return Err(rejection.reject(parts));
         }
 
         Ok(auth)
+    }
+
+    fn rejection(&self, token: &ApiToken) -> Option<AuthRejection> {
+        if !self.allow_token {
+            Some(AuthRejection::CookieRequired)
+        } else if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
+            Some(AuthRejection::EndpointScopeMismatch)
+        } else if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
+            Some(AuthRejection::CrateScopeMismatch)
+        } else {
+            None
+        }
     }
 
     fn endpoint_scope_matches(&self, token_scopes: Option<&Vec<EndpointScope>>) -> bool {
@@ -196,6 +182,44 @@ impl AuthCheck {
             (Some(token_scopes), Some(crate_name)) => token_scopes
                 .iter()
                 .any(|token_scope| token_scope.matches(crate_name)),
+        }
+    }
+}
+
+/// The reasons an [`AuthCheck`] can reject an API token.
+#[derive(Clone, Copy, Debug)]
+enum AuthRejection {
+    CookieRequired,
+    EndpointScopeMismatch,
+    CrateScopeMismatch,
+}
+
+impl AuthRejection {
+    /// Adds the cause of the rejection to the request log and returns the
+    /// error response.
+    fn reject(self, parts: &Parts) -> BoxedAppError {
+        parts.request_log().add("cause", self.cause());
+        self.into_error()
+    }
+
+    fn cause(self) -> &'static str {
+        match self {
+            AuthRejection::CookieRequired => {
+                "API Token authentication was explicitly disallowed for this API"
+            }
+            AuthRejection::EndpointScopeMismatch => "Endpoint scope mismatch",
+            AuthRejection::CrateScopeMismatch => "Crate scope mismatch",
+        }
+    }
+
+    fn into_error(self) -> BoxedAppError {
+        match self {
+            AuthRejection::CookieRequired => {
+                forbidden("this action can only be performed on the crates.io website")
+            }
+            AuthRejection::EndpointScopeMismatch | AuthRejection::CrateScopeMismatch => forbidden(
+                "this token does not have the required permissions to perform this action",
+            ),
         }
     }
 }
