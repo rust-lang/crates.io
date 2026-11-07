@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
-use crate::models::{CrateOwner, Email, User};
+use crate::models::{Crate, CrateOwner, Email, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 
 #[derive(Debug)]
@@ -75,6 +75,23 @@ impl CrateOwnerInvitation {
         crate_id: i32,
         mut conn: &AsyncPgConnection,
     ) -> QueryResult<Self> {
+        CrateOwnerInvitation::query()
+            .find((user_id, crate_id))
+            .first(&mut conn)
+            .await
+    }
+
+    pub async fn find_by_name(
+        user_id: i32,
+        crate_name: &str,
+        mut conn: &AsyncPgConnection,
+    ) -> QueryResult<Self> {
+        let crate_id = crates::table
+            .filter(Crate::with_name(crate_name))
+            .select(crates::id)
+            .single_value()
+            .assume_not_null();
+
         CrateOwnerInvitation::query()
             .find((user_id, crate_id))
             .first(&mut conn)

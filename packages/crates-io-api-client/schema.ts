@@ -4293,8 +4293,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of the crate */
-                crate_id: number;
+                crate_id: number | string;
             };
             cookie?: never;
         };
@@ -4307,12 +4306,7 @@ export interface operations {
                          * @example true
                          */
                         accepted: boolean;
-                        /**
-                         * Format: int32
-                         * @description The opaque identifier for the crate this invitation is for.
-                         * @example 42
-                         */
-                        crate_id: number;
+                        crate_id: (number | string) & Record<string, never>;
                     };
                 };
             };
