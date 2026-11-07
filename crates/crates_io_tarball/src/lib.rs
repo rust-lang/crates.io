@@ -127,6 +127,8 @@ pub enum TarballError {
     OldHeader { path: String },
     #[error("tarball uses a base-256 `{field}` field in a ustar header: {path}")]
     Base256UstarField { path: String, field: &'static str },
+    #[error("tarball uses an unsupported pax vendor extension `{keyword}`: {path}")]
+    PaxVendorExtension { path: String, keyword: String },
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -187,6 +189,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         validate_pax_size(&mut entry).await.inspect_err(|e| {
             warn!(%e, ?entry, pkg_name, "file size validation failure");
         })?;
+
+        if let Some(keyword) = pax_vendor_keyword(&mut entry).await? {
+            let path = entry.path()?.display().to_string();
+            policy.enforce_rule(pkg_name, TarballError::PaxVendorExtension { path, keyword })?;
+        }
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could
@@ -377,6 +384,31 @@ async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
     }
 
     Ok(())
+}
+
+/// Returns the first local pax record keyword of the entry that belongs to a
+/// vendor namespace, like `LIBARCHIVE.xattr.com.apple.provenance`.
+///
+/// Standard pax keywords have no namespace, and the `realtime` and `security`
+/// namespaces are reserved by POSIX.
+async fn pax_vendor_keyword<R: tokio::io::AsyncRead + Unpin>(
+    entry: &mut Entry<R>,
+) -> Result<Option<String>, TarballError> {
+    let Some(pax) = entry.pax_extensions().await? else {
+        return Ok(None);
+    };
+
+    for ext in pax {
+        let ext = ext.map_err(TarballError::Malformed)?;
+        if let Ok(key) = ext.key()
+            && let Some((namespace, _)) = key.split_once('.')
+            && !matches!(namespace, "realtime" | "security")
+        {
+            return Ok(Some(key.to_owned()));
+        }
+    }
+
+    Ok(None)
 }
 
 #[cfg(test)]
@@ -592,6 +624,29 @@ mod tests {
             .build();
 
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_pax_vendor_extensions() {
+        let tarball_with_pax_keyword = |keyword| {
+            TarballBuilder::new()
+                .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+                .add_pax_extensions([(keyword, b"value".as_slice())])
+                .add_file("foo-0.0.1/src/lib.rs", b"")
+                .build()
+        };
+
+        let tarball = tarball_with_pax_keyword("LIBARCHIVE.xattr.com.apple.provenance");
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"tarball uses an unsupported pax vendor extension `LIBARCHIVE.xattr.com.apple.provenance`: foo-0.0.1/src/lib.rs");
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+
+        // Standard keywords and the `realtime` and `security` namespaces are
+        // not vendor extensions.
+        for keyword in ["comment", "realtime.attribute", "security.attribute"] {
+            let tarball = tarball_with_pax_keyword(keyword);
+            assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        }
     }
 
     #[tokio::test]
