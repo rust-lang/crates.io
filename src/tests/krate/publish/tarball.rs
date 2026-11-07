@@ -142,6 +142,78 @@ async fn new_krate_tarball_with_non_utf8_path() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_mixed_header_formats() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let tarball = TarballBuilder::new()
+        .add_file_with_header(tar::Header::new_ustar(), "foo-1.1.0/a", b"")
+        .add_file("foo-1.1.0/b", b"")
+        .build();
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball mixes ustar and GNU tar headers: foo-1.1.0/b"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_base256_ustar_uid() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let mut header = tar::Header::new_ustar();
+    header.set_uid(0x4080_2a6e);
+    let tarball = TarballBuilder::new()
+        .add_file_with_header(header, "foo-1.1.0/a", b"")
+        .build();
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball uses a base-256 `uid` field in a ustar header: foo-1.1.0/a"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_pax_vendor_extension() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let tarball = TarballBuilder::new()
+        .add_pax_extensions([("LIBARCHIVE.xattr.com.apple.provenance", b"value".as_slice())])
+        .add_file("foo-1.1.0/a", b"")
+        .build();
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball uses an unsupported pax vendor extension `LIBARCHIVE.xattr.com.apple.provenance`: foo-1.1.0/a"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_old_header() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let tarball = TarballBuilder::new()
+        .add_file_with_header(tar::Header::new_old(), "foo-1.1.0/a", b"")
+        .build();
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball contains an unsupported pre-POSIX tar header: foo-1.1.0/a"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_symlink() {
     let response = publish_tarball_with_entry(tar::EntryType::symlink()).await;
     assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Symlink found: foo-1.1.0/bar"}]}"#);
