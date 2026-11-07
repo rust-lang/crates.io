@@ -160,6 +160,23 @@ async fn new_krate_tarball_with_mixed_header_formats() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_old_header() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let tarball = TarballBuilder::new()
+        .add_file_with_header(tar::Header::new_old(), "foo-1.1.0/a", b"")
+        .build();
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball contains an unsupported pre-POSIX tar header: foo-1.1.0/a"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_symlink() {
     let response = publish_tarball_with_entry(tar::EntryType::symlink()).await;
     assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Symlink found: foo-1.1.0/bar"}]}"#);

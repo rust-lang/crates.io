@@ -123,6 +123,8 @@ pub enum TarballError {
         first: TarHeaderFormat,
         current: TarHeaderFormat,
     },
+    #[error("tarball contains an unsupported pre-POSIX tar header: {path}")]
+    OldHeader { path: String },
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -210,9 +212,14 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         };
 
+        let format = TarHeaderFormat::of(entry.header());
+        if format == TarHeaderFormat::Old {
+            let path = entry_path.display().to_string();
+            policy.enforce_rule(pkg_name, TarballError::OldHeader { path })?;
+        }
+
         // Readers that lock the format at the first header reject archives
         // that switch header formats between members.
-        let format = TarHeaderFormat::of(entry.header());
         let first = *first_format.get_or_insert(format);
         if format != first {
             let error = TarballError::MixedHeaderFormats {
@@ -466,6 +473,18 @@ mod tests {
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
         assert_snapshot!(err, @"tarball mixes ustar and GNU tar headers: foo-0.0.1/Cargo.toml");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_old_headers() {
+        let tarball = TarballBuilder::new()
+            .add_file_with_header(tar::Header::new_old(), "foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"tarball contains an unsupported pre-POSIX tar header: foo-0.0.1/Cargo.toml");
 
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
     }

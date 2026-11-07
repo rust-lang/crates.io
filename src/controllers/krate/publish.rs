@@ -1103,6 +1103,7 @@ impl From<TarballError> for BoxedAppError {
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
             error @ (TarballError::UnexpectedEntry { .. }
             | TarballError::MixedHeaderFormats { .. }
+            | TarballError::OldHeader { .. }
             | TarballError::MetadataFileTooLarge { .. }) => bad_request(error.to_string()),
             TarballError::MissingManifest => {
                 bad_request("uploaded tarball is missing a `Cargo.toml` manifest file")
