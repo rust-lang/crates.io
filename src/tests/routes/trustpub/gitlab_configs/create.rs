@@ -323,6 +323,38 @@ async fn test_token_auth_with_wrong_crate_scope() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_alternate_spelling_crate_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("foo_*").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo-bar", cookie_client.as_model().id)
+        .build(&mut conn)
+        .await?;
+
+    let body = serde_json::to_vec(&json!({
+        "gitlab_config": {
+            "crate": "foo_bar",
+            "namespace": "rust-lang",
+            "project": "foo-rs",
+            "workflow_filepath": ".gitlab-ci.yml",
+            "environment": null,
+        }
+    }))?;
+
+    let response = token_client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full()
         .with_scoped_token(

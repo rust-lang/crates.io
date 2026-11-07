@@ -223,6 +223,30 @@ async fn test_token_auth_with_wrong_crate_scope() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_alternate_spelling_crate_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("foo_*").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo-bar", owner_id)
+        .build(&mut conn)
+        .await?;
+    create_config(&mut conn, krate.id, "foo-rs").await?;
+
+    let query = "crate=foo_bar";
+    let response = token_client.get_with_query::<()>(URL, query).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full()
         .with_scoped_token(
