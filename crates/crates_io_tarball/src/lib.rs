@@ -125,6 +125,8 @@ pub enum TarballError {
     },
     #[error("tarball contains an unsupported pre-POSIX tar header: {path}")]
     OldHeader { path: String },
+    #[error("tarball uses a base-256 `{field}` field in a ustar header: {path}")]
+    Base256UstarField { path: String, field: &'static str },
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -230,6 +232,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             policy.enforce_rule(pkg_name, error)?;
         }
 
+        if let Some(field) = base256_ustar_field(entry.header()) {
+            let path = entry_path.display().to_string();
+            policy.enforce_rule(pkg_name, TarballError::Base256UstarField { path, field })?;
+        }
+
         // Crate packages only need regular files and directories. Other entry
         // types have special or implementation-dependent extraction behavior.
         let entry_type = entry.header().entry_type();
@@ -293,6 +300,26 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         target_metadata,
         vcs_info,
     })
+}
+
+/// Returns the name of the first numeric field of a ustar header that uses the
+/// GNU base-256 encoding instead of octal digits.
+///
+/// GNU headers support base-256 numbers, but the ustar format does not.
+fn base256_ustar_field(header: &tokio_tar::Header) -> Option<&'static str> {
+    let ustar = header.as_ustar()?;
+    let fields: [(&'static str, &[u8]); 5] = [
+        ("mode", &ustar.mode),
+        ("uid", &ustar.uid),
+        ("gid", &ustar.gid),
+        ("size", &ustar.size),
+        ("mtime", &ustar.mtime),
+    ];
+
+    fields
+        .into_iter()
+        .find(|(_, bytes)| bytes[0] & 0x80 != 0)
+        .map(|(field, _)| field)
 }
 
 /// Reads a metadata entry into memory after checking its declared size.
@@ -513,6 +540,58 @@ mod tests {
         assert_snapshot!(err, @"tarball mixes ustar and GNU tar headers: foo-0.0.1/Cargo.toml");
 
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_base256_ustar_fields() {
+        fn tarball_with_base256_field(field: &str) -> Vec<u8> {
+            let mut header = tar::Header::new_ustar();
+            header.set_path("foo-0.0.1/src/lib.rs").unwrap();
+            header.set_size(0);
+
+            let ustar = header.as_ustar_mut().unwrap();
+            let bytes: &mut [u8] = match field {
+                "mode" => &mut ustar.mode,
+                "uid" => &mut ustar.uid,
+                "gid" => &mut ustar.gid,
+                "size" => &mut ustar.size,
+                "mtime" => &mut ustar.mtime,
+                _ => unreachable!(),
+            };
+            // The GNU base-256 encoding of zero.
+            bytes.fill(0);
+            bytes[0] = 0x80;
+            header.set_cksum();
+
+            let mut builder = TarballBuilder::new();
+            builder.as_mut().append(&header, &[][..]).unwrap();
+            builder
+                .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/Cargo.toml", MANIFEST)
+                .build()
+        }
+
+        for field in ["mode", "uid", "gid", "size", "mtime"] {
+            let tarball = tarball_with_base256_field(field);
+
+            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+            let expected = format!(
+                "tarball uses a base-256 `{field}` field in a ustar header: foo-0.0.1/src/lib.rs"
+            );
+            assert_eq!(err.to_string(), expected);
+
+            assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+        }
+
+        // GNU headers support base-256 numbers, which the `tar` crate uses for
+        // IDs that do not fit into seven octal digits.
+        let mut header = tar::Header::new_gnu();
+        header.set_uid(0x4080_2a6e);
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file_with_header(header, "foo-0.0.1/src/lib.rs", b"")
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
     }
 
     #[tokio::test]
