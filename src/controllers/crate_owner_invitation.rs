@@ -224,6 +224,7 @@ async fn prepare_list(
     let mut users_in_response = HashSet::new();
     for invitation in raw_invitations.into_iter() {
         invitations.push(EncodableCrateOwnerInvitation {
+            id: invitation.id,
             invitee_id: invitation.invited_user_id,
             inviter_id: invitation.invited_by_user_id,
             crate_id: invitation.crate_id,
@@ -313,7 +314,8 @@ pub async fn handle_crate_owner_invitation(
         .await?
         .user_id();
     let invitation =
-        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn).await?;
+        CrateOwnerInvitation::find_by_invitee_and_crate(user_id, crate_invite.crate_id, &conn)
+            .await?;
 
     if crate_invite.accepted {
         invitation.accept(&mut conn).await?;

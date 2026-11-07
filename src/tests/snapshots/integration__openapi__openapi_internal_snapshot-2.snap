@@ -539,6 +539,12 @@ expression: response.json()
             "format": "date-time",
             "type": "string"
           },
+          "id": {
+            "description": "An opaque identifier for the invitation. A new invitation for the same\nuser and crate gets a new `id`.",
+            "example": 42,
+            "format": "int64",
+            "type": "integer"
+          },
           "invitee_id": {
             "description": "The ID of the user who was invited to be a crate owner.",
             "example": 42,
@@ -553,6 +559,7 @@ expression: response.json()
           }
         },
         "required": [
+          "id",
           "invitee_id",
           "inviter_id",
           "crate_id",

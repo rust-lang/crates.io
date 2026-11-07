@@ -5,6 +5,7 @@ expression: invitations
 {
   "invitations": [
     {
+      "id": 1,
       "invitee_id": 2,
       "inviter_id": 1,
       "crate_id": 1,
