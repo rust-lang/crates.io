@@ -14,7 +14,7 @@ use axum::Json;
 use axum::body::{Body, Bytes};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_cargo_toml::{Dependency, DepsSet, TargetDepsSet};
-use crates_io_tarball::{TarballError, TarballLimits, process_tarball};
+use crates_io_tarball::{TarballError, TarballPolicy, process_tarball};
 use crates_io_validation::{
     MAX_VERSION_LENGTH, validate_crate_name, validate_dependency_name, validate_feature,
     validate_feature_name,
@@ -285,12 +285,12 @@ pub async fn publish(ctx: ServerContext, req: Parts, body: Body) -> AppResult<Js
         ctx.config.publish_limits.unpack_size,
         max_upload_size as u64,
     );
-    let limits = TarballLimits {
+    let policy = TarballPolicy {
         unpack_size: max_unpack_size,
         entries: Some(ctx.config.publish_limits.tarball_entries),
         metadata_file_size: ctx.config.publish_limits.metadata_file_size,
     };
-    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, limits).await?;
+    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, policy).await?;
     tarball_info
         .target_metadata
         .require_existing_sources()
