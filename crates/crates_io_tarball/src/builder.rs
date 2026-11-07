@@ -13,8 +13,18 @@ impl TarballBuilder {
         Self { inner }
     }
 
-    pub fn add_file(mut self, path: &str, content: &[u8]) -> Self {
-        let mut header = tar::Header::new_gnu();
+    pub fn add_file(self, path: &str, content: &[u8]) -> Self {
+        self.add_file_with_header(tar::Header::new_gnu(), path, content)
+    }
+
+    /// Adds a file using `header` for all metadata except the path, size and
+    /// checksum.
+    pub fn add_file_with_header(
+        mut self,
+        mut header: tar::Header,
+        path: &str,
+        content: &[u8],
+    ) -> Self {
         header.set_size(content.len() as u64);
         header.set_cksum();
         self.inner.append_data(&mut header, path, content).unwrap();
