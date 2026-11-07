@@ -454,6 +454,44 @@ mod tests {
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
     }
 
+    /// Old versions of the `tar` crate wrote GNU long name payloads without a
+    /// NUL terminator. `astral-tokio-tar` accepts them, while `tar-framing`
+    /// rejects them.
+    #[tokio::test]
+    async fn process_tarball_test_gnu_long_name_without_nul() {
+        let bin_name = "a".repeat(100);
+        let long_path = format!("foo-0.0.1/src/bin/{bin_name}.rs");
+        let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
+
+        let mut header = tar::Header::new_gnu();
+        header.set_path("././@LongLink").unwrap();
+        header.set_entry_type(tar::EntryType::GNULongName);
+        header.set_size(long_path.len() as u64);
+        header.set_cksum();
+        builder
+            .as_mut()
+            .append(&header, long_path.as_bytes())
+            .unwrap();
+
+        // The member header holds the first 100 bytes of the name.
+        let mut header = tar::Header::new_gnu();
+        header
+            .as_old_mut()
+            .name
+            .copy_from_slice(&long_path.as_bytes()[..100]);
+        header.set_size(0);
+        header.set_cksum();
+        builder.as_mut().append(&header, &[][..]).unwrap();
+
+        let tarball = builder.build();
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+
+        // Target discovery only finds the binary if the full long name was used.
+        let bin = &tarball_info.manifest.bin;
+        assert_eq!(bin.len(), 1);
+        assert_eq!(bin[0].name.as_deref(), Some(bin_name.as_str()));
+    }
+
     #[tokio::test]
     async fn process_tarball_test_ustar_headers() {
         let tarball = TarballBuilder::new()
