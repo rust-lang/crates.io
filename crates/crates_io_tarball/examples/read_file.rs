@@ -1,6 +1,6 @@
 use anyhow::{Context, anyhow};
 use clap::Parser;
-use crates_io_tarball::{TarballPolicy, process_tarball};
+use crates_io_tarball::{TarballCompatibility, TarballPolicy, process_tarball};
 use std::path::PathBuf;
 use tokio::fs::File;
 use tracing_subscriber::EnvFilter;
@@ -35,6 +35,7 @@ async fn main() -> anyhow::Result<()> {
         unpack_size: u64::MAX,
         metadata_file_size: u64::MAX,
         entries: None,
+        compatibility: TarballCompatibility::Legacy,
     };
     let result = process_tarball(&pkg_name, &mut file, policy)
         .await

@@ -27,7 +27,7 @@ mod vcs_info;
 
 const DEFAULT_BUF_SIZE: usize = 128 * 1024;
 
-/// Resource limits applied while processing a crate tarball.
+/// Validation rules and resource limits applied while processing a crate tarball.
 #[derive(Clone, Copy, Debug)]
 pub struct TarballPolicy {
     /// Maximum size in bytes of a crate tarball once decompressed.
@@ -40,6 +40,61 @@ pub struct TarballPolicy {
     /// Maximum size in bytes of the `Cargo.toml` and `.cargo_vcs_info.json`
     /// entries.
     pub metadata_file_size: u64,
+    pub compatibility: TarballCompatibility,
+}
+
+impl TarballPolicy {
+    /// Returns a rule violation in strict mode, or logs it in legacy mode.
+    fn enforce_rule(&self, pkg_name: &str, error: TarballError) -> Result<(), TarballError> {
+        match self.compatibility {
+            TarballCompatibility::Strict => Err(error),
+            TarballCompatibility::Legacy => {
+                warn!("Accepting tarball `{pkg_name}` despite validation error: {error}");
+                Ok(())
+            }
+        }
+    }
+}
+
+/// How validation rule violations are handled.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TarballCompatibility {
+    /// Rejects the tarball. Used for new publishes.
+    Strict,
+    /// Logs a warning and accepts the tarball. Used for crates that were
+    /// published before the rule existed.
+    Legacy,
+}
+
+/// The header format of a tar archive member.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TarHeaderFormat {
+    Ustar,
+    Gnu,
+    /// Pre-POSIX headers without a format identifier.
+    Old,
+}
+
+impl TarHeaderFormat {
+    fn of(header: &tokio_tar::Header) -> Self {
+        if header.as_ustar().is_some() {
+            Self::Ustar
+        } else if header.as_gnu().is_some() {
+            Self::Gnu
+        } else {
+            Self::Old
+        }
+    }
+}
+
+impl std::fmt::Display for TarHeaderFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Ustar => "ustar",
+            Self::Gnu => "GNU",
+            Self::Old => "pre-POSIX",
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -62,6 +117,12 @@ pub enum TarballError {
     SizeMismatch,
     #[error("unexpected tar entry type {entry_type:?} found: {path}")]
     UnexpectedEntry { path: String, entry_type: EntryType },
+    #[error("tarball mixes {first} and {current} tar headers: {path}")]
+    MixedHeaderFormats {
+        path: String,
+        first: TarHeaderFormat,
+        current: TarHeaderFormat,
+    },
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -104,6 +165,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     let mut manifests = BTreeMap::new();
     let mut entries = archive.entries()?;
     let mut num_entries = 0;
+    let mut first_format = None;
 
     while let Some(entry) = entries.next().await {
         let mut entry = entry.map_err(TarballError::Malformed)?;
@@ -147,6 +209,19 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         let Some(in_pkg_path_str) = in_pkg_path.to_str() else {
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         };
+
+        // Readers that lock the format at the first header reject archives
+        // that switch header formats between members.
+        let format = TarHeaderFormat::of(entry.header());
+        let first = *first_format.get_or_insert(format);
+        if format != first {
+            let error = TarballError::MixedHeaderFormats {
+                path: entry_path.display().to_string(),
+                first,
+                current: format,
+            };
+            policy.enforce_rule(pkg_name, error)?;
+        }
 
         // Crate packages only need regular files and directories. Other entry
         // types have special or implementation-dependent extraction behavior.
@@ -272,7 +347,7 @@ async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
 
 #[cfg(test)]
 mod tests {
-    use super::{TarballPolicy, process_tarball};
+    use super::{TarballCompatibility, TarballPolicy, process_tarball};
     use crate::TarballBuilder;
     use insta::{assert_debug_snapshot, assert_snapshot};
 
@@ -281,6 +356,11 @@ mod tests {
         unpack_size: 512 * 1024 * 1024,
         entries: None,
         metadata_file_size: 1024 * 1024,
+        compatibility: TarballCompatibility::Strict,
+    };
+    const LEGACY_POLICY: TarballPolicy = TarballPolicy {
+        compatibility: TarballCompatibility::Legacy,
+        ..POLICY
     };
 
     fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
@@ -365,6 +445,29 @@ mod tests {
             .build();
 
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_ustar_headers() {
+        let tarball = TarballBuilder::new()
+            .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/src/lib.rs", b"")
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_mixed_header_formats() {
+        let tarball = TarballBuilder::new()
+            .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/src/lib.rs", b"")
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"tarball mixes ustar and GNU tar headers: foo-0.0.1/Cargo.toml");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
     }
 
     #[tokio::test]
