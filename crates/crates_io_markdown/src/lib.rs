@@ -248,12 +248,16 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
             } = is_media_url(url);
             new_url += if is_media { "raw/HEAD" } else { file_view };
 
-            let mut path = String::new();
-            if !self.base_dir.is_empty() {
-                path.push_str(&self.base_dir);
-                path.push('/');
-            }
-            path.push_str(url.strip_prefix('/').unwrap_or(url));
+            let path = match url.strip_prefix('/') {
+                Some(root_rel_url) => root_rel_url.to_string(),
+                None => {
+                    if self.base_dir.is_empty() {
+                        url.to_string()
+                    } else {
+                        format!("{}/{url}", self.base_dir)
+                    }
+                }
+            };
 
             let (path, rest) = match path.find(['?', '#']) {
                 Some(index) => path.split_at(index),
@@ -293,8 +297,9 @@ static MARKDOWN_EXTENSIONS: [&str; 7] =
 ///
 /// The `base_url` parameter will be used as the base for any relative links found in the
 /// Markdown, as long as its host part is github.com, gitlab.com, or bitbucket.org.  The
-/// supplied URL will be used as a directory base whether or not the relative link is
-/// prefixed with '/'.  If `None` is passed, relative links will be omitted.
+/// supplied URL will be used as a directory base unless the relative link is prefixed
+/// with '/' and is then resolved from the repository root.  If `None` is passed,
+/// relative links will be omitted.
 ///
 /// # Examples
 ///
@@ -514,7 +519,6 @@ There can also be some text in between!
 
     #[test]
     fn relative_links() {
-        let absolute = "[hi](/hi)";
         let relative = "[there](there)";
         let image = "![alt](img.png)";
         let html_image = "<img src=\"img.png\" alt=\"alt\">";
@@ -532,14 +536,6 @@ There can also be some text in between!
                     host,
                     if dot_git { ".git" } else { "" },
                     if extra_slash { "/" } else { "" },
-                );
-
-                let result = markdown_to_html(absolute, Some(&url), "");
-                assert_eq!(
-                    result,
-                    format!(
-                        "<p><a href=\"https://{host}/rust-lang/test/{file_view}/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
-                    )
                 );
 
                 let result = markdown_to_html(relative, Some(&url), "");
@@ -592,11 +588,31 @@ There can also be some text in between!
             }
         }
 
-        let result = markdown_to_html(absolute, Some("https://google.com/"), "");
+        let result = markdown_to_html("[hi](./hi)", Some("https://google.com/"), "");
         assert_eq!(
             result,
             "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
         );
+    }
+
+    #[test]
+    fn root_relative_links() {
+        for (host, file_view) in [
+            ("github.com", "blob"),
+            ("gitlab.com", "blob"),
+            ("bitbucket.org", "src"),
+        ] {
+            let markdown = "[munch](/tasty/munchies)";
+            let base_url = format!("https://{host}/sheepshead/ocean-menu");
+            let expected = format!(
+                "<p><a href=\"https://{host}/sheepshead/ocean-menu/{file_view}/HEAD/tasty/munchies\" rel=\"nofollow noopener noreferrer\">munch</a></p>\n"
+            );
+            assert_eq!(markdown_to_html(markdown, Some(&base_url), ""), expected);
+            assert_eq!(
+                markdown_to_html(markdown, Some(&base_url), "tasty"),
+                expected
+            );
+        }
     }
 
     #[test]
@@ -651,7 +667,8 @@ There can also be some text in between!
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
         assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "../README.md", Some("https://github.com/rust-lang/test"), Some("crate")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
         assert_snapshot!(text_to_html("[docs](../docs/index.html?source=../README.md#intro)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/docs/index.html?source=../README.md#intro" rel="nofollow noopener noreferrer">docs</a></p>"#);
-        assert_snapshot!(text_to_html("[guide](/guide.md)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/subdir/guide.md" rel="nofollow noopener noreferrer">guide</a></p>"#);
+        assert_snapshot!(text_to_html("[guide](/guide.md)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/guide.md" rel="nofollow noopener noreferrer">guide</a></p>"#);
+        assert_snapshot!(text_to_html("[guide](./guide.md)", "subdir/README.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><a href="https://github.com/rust-lang/test/blob/HEAD/subdir/guide.md" rel="nofollow noopener noreferrer">guide</a></p>"#);
     }
 
     #[test]
