@@ -3,18 +3,23 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
-use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
-use crate::schema::{crate_owner_invitations, crates, users};
+use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::{Crate, CrateOwner, CrateOwnerInvitation, OwnerKind, PublicUser};
+use crate::schema::{crate_owner_invitations, crate_owners, crates, users};
 use crate::server::ServerContext;
 use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
 use crate::util::no_store;
-use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
+use crate::views::{
+    CrateOwnerInvitationState, EncodableCrateOwnerInvitation, EncodablePublicUser,
+    InvitationResponse,
+};
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::TypedHeader;
 use axum_extra::headers::CacheControl;
 use chrono::Utc;
+use diesel::dsl::exists;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
@@ -41,16 +46,26 @@ pub struct CrateOwnerInvitationListQueryParams {
     invitee_id: Option<i32>,
 }
 
-/// List all crate owner invitations for a crate or user.
+/// List crate owner invitations for a crate or user.
+///
+/// Only pending invitations that haven't expired are returned.
+///
+/// Listing the invitations of a user accepts cookie authentication or API
+/// tokens with the `crate-owner-invitations` scope. Legacy tokens without
+/// scopes are refused. Tokens with crate scopes only see invitations for
+/// matching crates.
+///
+/// Listing the invitations of a crate accepts cookie authentication or API
+/// tokens with the `change-owners` scope and a crate scope that matches the
+/// crate. Legacy tokens without scopes are refused.
 #[utoipa::path(
     get,
-    path = "/api/private/crate_owner_invitations",
+    path = "/api/v1/crate_owner_invitations",
     params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "owners",
-    extensions(("x-internal" = json!(true))),
     responses(
-        (status = 200, description = "Successful Response", body = inline(PrivateListResponse)),
+        (status = 200, description = "Successful Response", body = inline(ListResponse)),
         (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
@@ -59,11 +74,25 @@ pub async fn list_crate_owner_invitations(
     ctx: ServerContext,
     params: CrateOwnerInvitationListQueryParams,
     req: Parts,
-) -> AppResult<(TypedHeader<CacheControl>, Json<PrivateListResponse>)> {
+) -> AppResult<(TypedHeader<CacheControl>, Json<ListResponse>)> {
     let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
+    let auth = match &filter {
+        ListFilter::CrateName(crate_name) => {
+            let query = crates::table.filter(Crate::with_name(crate_name));
+            let crate_name: String = query.select(crates::name).first(&mut conn).await?;
+            AuthCheck::default()
+                .with_endpoint_scope(EndpointScope::ChangeOwners)
+                .for_crate(&crate_name)
+                .reject_legacy_tokens()
+        }
+        ListFilter::InviteeId(_) => AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
+            .allow_any_crate_scope()
+            .reject_legacy_tokens(),
+    };
+    let auth = auth.check(&req, &mut conn).await?;
     let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
     Ok((no_store(), Json(list)))
 }
@@ -95,7 +124,7 @@ async fn prepare_list(
     auth: Authentication,
     filter: ListFilter,
     mut conn: &AsyncPgConnection,
-) -> AppResult<PrivateListResponse> {
+) -> AppResult<ListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
         .enable_seek(true)
@@ -127,7 +156,16 @@ async fn prepare_list(
                     let detail = "only the invitee can query their pending invitations";
                     return Err(forbidden(detail));
                 }
-                Box::new(crate_owner_invitations::invited_user_id.eq(invitee_id))
+                let filter = crate_owner_invitations::invited_user_id.eq(invitee_id);
+
+                let crate_scopes = auth.api_token().and_then(|t| t.crate_scopes.as_deref());
+                match crate_scopes.filter(|scopes| !scopes.is_empty()) {
+                    Some(scopes) => {
+                        let crate_ids = matching_crate_ids(invitee_id, scopes, conn).await?;
+                        Box::new(filter.and(crate_owner_invitations::crate_id.eq_any(crate_ids)))
+                    }
+                    None => Box::new(filter),
+                }
             }
         };
 
@@ -223,18 +261,12 @@ async fn prepare_list(
     let mut invitations = Vec::new();
     let mut users_in_response = HashSet::new();
     for invitation in raw_invitations.into_iter() {
-        invitations.push(EncodableCrateOwnerInvitation {
-            id: invitation.id,
-            invitee_id: invitation.invited_user_id,
-            inviter_id: invitation.invited_by_user_id,
-            crate_id: invitation.crate_id,
-            crate_name: crate_names
-                .get(&invitation.crate_id)
-                .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?
-                .clone(),
-            created_at: invitation.created_at,
-            expires_at: invitation.expires_at,
-        });
+        let crate_name = crate_names
+            .get(&invitation.crate_id)
+            .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?;
+
+        let state = CrateOwnerInvitationState::Pending;
+        invitations.push(encode_invitation(&invitation, crate_name.clone(), state));
         users_in_response.insert(invitation.invited_user_id);
         users_in_response.insert(invitation.invited_by_user_id);
     }
@@ -244,17 +276,53 @@ async fn prepare_list(
     users.retain(|k, _| users_in_response.contains(k));
     users.sort_keys();
 
-    Ok(PrivateListResponse {
-        invitations,
+    Ok(ListResponse {
+        crate_owner_invitations: invitations,
         users: users.into_iter().map(|(_, user)| user.into()).collect(),
         meta: ResponseMeta { next_page },
     })
 }
 
+/// Returns the IDs of the crates that `invitee_id` has invitations for and
+/// that match one of the crate `scopes`.
+async fn matching_crate_ids(
+    invitee_id: i32,
+    scopes: &[CrateScope],
+    mut conn: &AsyncPgConnection,
+) -> QueryResult<Vec<i32>> {
+    let crates: Vec<(i32, String)> = crate_owner_invitations::table
+        .inner_join(crates::table)
+        .filter(crate_owner_invitations::invited_user_id.eq(invitee_id))
+        .select((crates::id, crates::name))
+        .load(&mut conn)
+        .await?;
+
+    let matches = |name: &str| scopes.iter().any(|scope| scope.matches(name));
+    let crates = crates.into_iter().filter(|(_, name)| matches(name));
+    Ok(crates.map(|(id, _)| id).collect())
+}
+
+fn encode_invitation(
+    invitation: &CrateOwnerInvitation,
+    crate_name: String,
+    state: CrateOwnerInvitationState,
+) -> EncodableCrateOwnerInvitation {
+    EncodableCrateOwnerInvitation {
+        id: invitation.id,
+        state,
+        invitee_id: invitation.invited_user_id,
+        inviter_id: invitation.invited_by_user_id,
+        crate_id: invitation.crate_id,
+        crate_name,
+        created_at: invitation.created_at,
+        expires_at: invitation.expires_at,
+    }
+}
+
 #[derive(Serialize, utoipa::ToSchema)]
-pub struct PrivateListResponse {
+pub struct ListResponse {
     /// The list of crate owner invitations.
-    invitations: Vec<EncodableCrateOwnerInvitation>,
+    crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
 
     /// The list of users referenced in the crate owner invitations.
     users: Vec<EncodablePublicUser>,
@@ -282,7 +350,118 @@ pub struct HandleResponse {
     crate_owner_invitation: InvitationResponse,
 }
 
+#[derive(Deserialize, utoipa::ToSchema)]
+pub struct UpdateRequest {
+    #[schema(inline)]
+    crate_owner_invitation: InvitationUpdate,
+}
+
+#[derive(Deserialize, utoipa::ToSchema)]
+struct InvitationUpdate {
+    /// The new state of the invitation.
+    state: CrateOwnerInvitationState,
+}
+
+#[derive(Serialize, utoipa::ToSchema)]
+pub struct UpdateResponse {
+    /// The invitation in its final state.
+    crate_owner_invitation: EncodableCrateOwnerInvitation,
+}
+
+/// Accept, decline or revoke a crate owner invitation.
+///
+/// Only the invitee can accept or decline an invitation. This accepts cookie
+/// authentication or API tokens with the `crate-owner-invitations` scope and a
+/// crate scope that matches the invitation's crate.
+///
+/// Any user owner of the crate can revoke the invitation. This accepts cookie
+/// authentication or API tokens with the `change-owners` scope and a crate
+/// scope that matches the invitation's crate. Team owners are refused.
+///
+/// Legacy tokens without scopes are refused.
+#[utoipa::path(
+    patch,
+    path = "/api/v1/crate_owner_invitations/{id}",
+    params(
+        ("id" = i64, Path, description = "ID of the crate owner invitation"),
+    ),
+    request_body(
+        content = inline(UpdateRequest),
+        examples(
+            ("accept" = (value = json!({ "crate_owner_invitation": { "state": "accepted" } }))),
+            ("decline" = (value = json!({ "crate_owner_invitation": { "state": "declined" } }))),
+            ("revoke" = (value = json!({ "crate_owner_invitation": { "state": "revoked" } }))),
+        ),
+    ),
+    security(("cookie" = []), ("api_token" = [])),
+    tag = "owners",
+    responses(
+        (status = 200, description = "Successful Response", body = inline(UpdateResponse)),
+        (status = "4XX", description = "Client Error", body = crate::util::errors::ApiErrorResponse<'_>),
+        (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
+    ),
+)]
+pub async fn update_crate_owner_invitation(
+    ctx: ServerContext,
+    Path(id): Path<i64>,
+    parts: Parts,
+    Json(request): Json<UpdateRequest>,
+) -> AppResult<Json<UpdateResponse>> {
+    let state = request.crate_owner_invitation.state;
+
+    let mut conn = ctx.db_write().await?;
+
+    let (invitation, crate_name) = crate_owner_invitations::table
+        .find(id)
+        .inner_join(crates::table)
+        .select((CrateOwnerInvitation::as_select(), crates::name))
+        .first::<(CrateOwnerInvitation, String)>(&mut conn)
+        .await?;
+
+    let endpoint_scope = match state {
+        CrateOwnerInvitationState::Revoked => EndpointScope::ChangeOwners,
+        _ => EndpointScope::CrateOwnerInvitations,
+    };
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(endpoint_scope)
+        .for_crate(&crate_name)
+        .reject_legacy_tokens()
+        .check(&parts, &mut conn)
+        .await?;
+
+    let crate_owner_invitation = encode_invitation(&invitation, crate_name, state);
+
+    if invitation.invited_user_id == auth.user_id() {
+        match state {
+            CrateOwnerInvitationState::Accepted => invitation.accept(&mut conn).await?,
+            CrateOwnerInvitationState::Declined => invitation.decline(&conn).await?,
+            _ => return Err(bad_request("`state` must be `accepted` or `declined`")),
+        }
+    } else {
+        let query = CrateOwner::by_owner_kind(OwnerKind::User)
+            .filter(crate_owners::crate_id.eq(invitation.crate_id))
+            .filter(crate_owners::owner_id.eq(auth.user_id()));
+        let is_owner: bool = diesel::select(exists(query)).get_result(&mut conn).await?;
+        if !is_owner {
+            let detail = "only the invitee or a crate owner can update this invitation";
+            return Err(forbidden(detail));
+        }
+
+        match state {
+            CrateOwnerInvitationState::Revoked => invitation.revoke(&conn).await?,
+            _ => return Err(bad_request("`state` must be `revoked`")),
+        }
+    }
+
+    Ok(Json(UpdateResponse {
+        crate_owner_invitation,
+    }))
+}
+
 /// Accept or decline a crate owner invitation.
+///
+/// This endpoint is deprecated. Use `PATCH /api/v1/crate_owner_invitations/{id}` instead.
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
@@ -301,6 +480,7 @@ pub struct HandleResponse {
         (status = "5XX", description = "Server Error", body = crate::util::errors::ApiErrorResponse<'_>),
     ),
 )]
+#[deprecated]
 pub async fn handle_crate_owner_invitation(
     ctx: ServerContext,
     parts: Parts,

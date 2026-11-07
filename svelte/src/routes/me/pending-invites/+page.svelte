@@ -14,7 +14,7 @@
 <Panel class="mb-s">
   {#if data.invites.length !== 0}
     <ul>
-      {#each data.invites as invite (invite.crate_id)}
+      {#each data.invites as invite (invite.id)}
         <li>
           <PendingOwnerInviteRow {invite} />
         </li>

@@ -13,10 +13,10 @@
 
 pub mod categories;
 pub mod category_slugs;
+mod crate_owner_invitations;
 pub mod crates;
 pub mod keywords;
 pub mod me;
-mod private;
 pub mod session;
 mod site_metadata;
 pub mod summary;

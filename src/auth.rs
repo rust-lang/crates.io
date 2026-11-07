@@ -73,6 +73,7 @@ pub struct AuthCheck {
     crate_name: Option<String>,
     allow_any_crate_scope: bool,
     require_trustpub: bool,
+    reject_legacy_tokens: bool,
 }
 
 impl AuthCheck {
@@ -86,6 +87,7 @@ impl AuthCheck {
             crate_name: None,
             allow_any_crate_scope: false,
             require_trustpub: false,
+            reject_legacy_tokens: false,
         }
     }
 
@@ -97,6 +99,7 @@ impl AuthCheck {
             crate_name: None,
             allow_any_crate_scope: false,
             require_trustpub: false,
+            reject_legacy_tokens: false,
         }
     }
 
@@ -107,6 +110,7 @@ impl AuthCheck {
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: self.allow_any_crate_scope,
             require_trustpub: self.require_trustpub,
+            reject_legacy_tokens: self.reject_legacy_tokens,
         }
     }
 
@@ -117,6 +121,7 @@ impl AuthCheck {
             crate_name: Some(crate_name.to_string()),
             allow_any_crate_scope: self.allow_any_crate_scope,
             require_trustpub: self.require_trustpub,
+            reject_legacy_tokens: self.reject_legacy_tokens,
         }
     }
 
@@ -131,6 +136,7 @@ impl AuthCheck {
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: true,
             require_trustpub: self.require_trustpub,
+            reject_legacy_tokens: self.reject_legacy_tokens,
         }
     }
 
@@ -143,6 +149,20 @@ impl AuthCheck {
             crate_name: self.crate_name.clone(),
             allow_any_crate_scope: self.allow_any_crate_scope,
             require_trustpub,
+            reject_legacy_tokens: self.reject_legacy_tokens,
+        }
+    }
+
+    /// Rejects legacy (unscoped) API tokens, so that only scoped tokens with
+    /// the endpoint scope are accepted.
+    pub fn reject_legacy_tokens(&self) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            allow_any_crate_scope: self.allow_any_crate_scope,
+            require_trustpub: self.require_trustpub,
+            reject_legacy_tokens: true,
         }
     }
 
@@ -171,6 +191,12 @@ impl AuthCheck {
     fn rejection(&self, token: &ApiToken) -> Option<AuthRejection> {
         if !self.allow_token {
             Some(AuthRejection::CookieRequired)
+        } else if self.rejects_legacy_token(token.endpoint_scopes.as_ref()) {
+            Some(match self.endpoint_scope {
+                Some(scope) => AuthRejection::LegacyTokenRejected(scope),
+                // Without an endpoint scope, scoped tokens are rejected too.
+                None => AuthRejection::CookieRequired,
+            })
         } else if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
             Some(AuthRejection::EndpointScopeMismatch)
         } else if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
@@ -178,6 +204,10 @@ impl AuthCheck {
         } else {
             None
         }
+    }
+
+    fn rejects_legacy_token(&self, token_scopes: Option<&Vec<EndpointScope>>) -> bool {
+        self.reject_legacy_tokens && token_scopes.is_none()
     }
 
     fn endpoint_scope_matches(&self, token_scopes: Option<&Vec<EndpointScope>>) -> bool {
@@ -217,6 +247,7 @@ impl AuthCheck {
 #[derive(Clone, Debug)]
 pub enum AuthRejection {
     CookieRequired,
+    LegacyTokenRejected(EndpointScope),
     EndpointScopeMismatch,
     CrateScopeMismatch,
     TrustpubRequired,
@@ -228,12 +259,14 @@ impl AuthRejection {
     /// error response.
     pub fn reject(self, parts: &Parts) -> BoxedAppError {
         parts.request_log().add("cause", self.cause());
-        self.into_error()
+        let domain = &parts.server_context().config.domain_name;
+        self.into_error(domain)
     }
 
     fn error_type(&self) -> &'static str {
         match self {
             AuthRejection::CookieRequired => "cookie_required",
+            AuthRejection::LegacyTokenRejected(_) => "legacy_token_rejected",
             AuthRejection::EndpointScopeMismatch => "endpoint_scope_mismatch",
             AuthRejection::CrateScopeMismatch => "crate_scope_mismatch",
             AuthRejection::TrustpubRequired => "trustpub_required",
@@ -246,6 +279,7 @@ impl AuthRejection {
             AuthRejection::CookieRequired => {
                 "API Token authentication was explicitly disallowed for this API"
             }
+            AuthRejection::LegacyTokenRejected(_) => "Legacy API token rejected",
             AuthRejection::EndpointScopeMismatch => "Endpoint scope mismatch",
             AuthRejection::CrateScopeMismatch => "Crate scope mismatch",
             AuthRejection::TrustpubRequired => "Crate requires Trusted Publishing",
@@ -255,11 +289,16 @@ impl AuthRejection {
         }
     }
 
-    fn into_error(self) -> BoxedAppError {
+    fn into_error(self, domain: &str) -> BoxedAppError {
         match self {
             AuthRejection::CookieRequired => {
                 forbidden("this action can only be performed on the crates.io website")
             }
+            AuthRejection::LegacyTokenRejected(scope) => forbidden(format!(
+                "This endpoint requires a scoped API token. Create a new token with the `{}` \
+                scope at https://{domain}/settings/tokens/new",
+                scope.as_str()
+            )),
             AuthRejection::EndpointScopeMismatch | AuthRejection::CrateScopeMismatch => forbidden(
                 "this token does not have the required permissions to perform this action",
             ),
@@ -665,5 +704,23 @@ mod tests {
         assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
         assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
         assert!(!auth_check.crate_scope_matches(Some(&vec![cs("actix-*")])));
+    }
+
+    #[test]
+    fn legacy_tokens_rejected() {
+        let auth_check = AuthCheck::default().with_endpoint_scope(EndpointScope::ChangeOwners);
+        assert!(!auth_check.rejects_legacy_token(None));
+
+        let auth_check = auth_check.reject_legacy_tokens().for_crate("tokio-console");
+
+        assert!(auth_check.rejects_legacy_token(None));
+        assert!(!auth_check.rejects_legacy_token(Some(&vec![EndpointScope::ChangeOwners])));
+        assert!(!auth_check.rejects_legacy_token(Some(&vec![EndpointScope::Yank])));
+
+        assert!(auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::ChangeOwners])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::Yank])));
+
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
     }
 }

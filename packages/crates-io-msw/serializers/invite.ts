@@ -6,6 +6,7 @@ type ApiCrateOwnerInvitation = components['schemas']['CrateOwnerInvitation'];
 export function serializeInvite(invite: CrateOwnerInvitation): ApiCrateOwnerInvitation {
   return {
     id: invite.id,
+    state: 'pending',
     crate_id: invite.crate.id,
     crate_name: invite.crate.name,
     invitee_id: invite.invitee.id,
