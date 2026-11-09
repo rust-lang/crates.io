@@ -167,7 +167,7 @@ tikv-jemallocator = { version = "=0.7.0", features = ['unprefixed_malloc_on_supp
 tokio = { workspace = true }
 tokio-postgres = "=0.7.18"
 tokio-util = "=0.7.20"
-toml = "=1.2.0"
+toml = "=1.2.1"
 tower = "=0.5.3"
 tower-http = { version = "=0.7.1", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full", "trace"] }
 tracing = "=0.1.44"
