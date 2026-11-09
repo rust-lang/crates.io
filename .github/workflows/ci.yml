@@ -334,7 +334,7 @@ jobs:
 
       # Chromatic token is included here to enable visual regression testing
       # on community-submitted PRs
-      - uses: chromaui/action@eb9c008466617caf0155bad7a566d335c8b57626 # v18.13.8
+      - uses: chromaui/action@2b75e3340bcec86b4ae38c6a10f14831114e8137 # v18.14.3
         with:
           workingDir: svelte
           projectToken: chpt_015c1709eb9b9fa
