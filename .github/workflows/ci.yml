@@ -85,7 +85,7 @@ jobs:
 
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          version: 2026.10.25
+          version: 2026.11.5
           install_args: --jobs=1 cargo:cargo-deny cargo:cargo-machete
 
       - run: cargo deny check
@@ -104,7 +104,7 @@ jobs:
 
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          version: 2026.10.25
+          version: 2026.11.5
           install_args: cargo:diesel-guard
 
       - run: diesel-guard check migrations/
@@ -141,7 +141,7 @@ jobs:
 
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          version: 2026.10.25
+          version: 2026.11.5
           install_args: cargo-insta
 
       - run: sudo systemctl start postgresql.service
@@ -266,7 +266,7 @@ jobs:
 
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          version: 2026.10.25
+          version: 2026.11.5
           install_args: zizmor
 
       - run: zizmor --format=sarif . > results.sarif
