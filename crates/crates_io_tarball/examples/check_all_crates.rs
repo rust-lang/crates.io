@@ -2,8 +2,9 @@ use anyhow::anyhow;
 use clap::Parser;
 use crates_io_tarball::{TarballLimits, process_tarball};
 use futures_util::{StreamExt, stream};
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
+use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use tokio::fs::File;
 use tracing::{debug, info, warn};
@@ -16,15 +17,36 @@ use walkdir::WalkDir;
 pub struct Options {
     /// Path to the folder to scan for crate files
     path: PathBuf,
+
+    /// Number of CPUs to use for scanning and processing crate files
+    #[arg(short, long, default_value_t = default_jobs())]
+    jobs: NonZeroUsize,
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+/// Returns the number of CPUs available to this process, falling back to 1.
+fn default_jobs() -> NonZeroUsize {
+    std::thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
+}
+
+fn main() -> anyhow::Result<()> {
     setup_tracing();
 
     let options = Options::parse();
+    let jobs = options.jobs.get();
 
-    let path = options.path;
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(jobs)
+        .build_global()?;
+
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(jobs)
+        .enable_all()
+        .build()?
+        .block_on(run(options.path, jobs))
+}
+
+/// Scans `path` for crate files and processes them using `jobs` worker threads.
+async fn run(path: PathBuf, jobs: usize) -> anyhow::Result<()> {
     if !path.is_dir() {
         return Err(anyhow!("`{}` not found or not a directory", path.display()));
     }
@@ -55,12 +77,27 @@ async fn main() -> anyhow::Result<()> {
         "{bar:60} ({pos}/{len}, ETA {eta}) {wide_msg}",
     )?);
 
-    stream::iter(paths.iter().progress_with(pb.clone()))
-        .for_each_concurrent(None, |path| {
+    // Spawn each crate file onto its own task so decompression and parsing are
+    // spread across the runtime's worker threads, and bound the number of
+    // in-flight files to avoid exhausting file descriptors on large corpora.
+    let concurrency = jobs * 4;
+
+    stream::iter(paths)
+        .map(|path| {
             let pb = pb.clone();
-            async move { process_path(path, &pb).await }
+            tokio::spawn(async move { process_path(&path, &pb).await })
+        })
+        .buffer_unordered(concurrency)
+        .for_each(|result| {
+            if let Err(error) = result {
+                pb.suspend(|| warn!("Crate processing task failed: {error}"));
+            }
+            pb.inc(1);
+            async {}
         })
         .await;
+
+    pb.finish();
 
     Ok(())
 }
