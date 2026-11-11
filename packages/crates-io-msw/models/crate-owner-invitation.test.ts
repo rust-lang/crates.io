@@ -54,7 +54,7 @@ test('happy path', async ({ expect }) => {
         "updated_at": "2017-02-24T12:34:56Z",
       },
       "createdAt": "2016-12-24T12:34:56Z",
-      "expiresAt": "2017-01-24T12:34:56Z",
+      "expiresAt": "2099-01-24T12:34:56Z",
       "id": 1,
       "invitee": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
