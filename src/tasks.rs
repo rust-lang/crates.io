@@ -10,6 +10,7 @@ where
     R: Send + 'static,
 {
     let current_span = tracing::Span::current();
+    #[expect(clippy::disallowed_methods)]
     tokio::task::spawn_blocking(move || current_span.in_scope(f))
 }
 

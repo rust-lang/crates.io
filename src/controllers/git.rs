@@ -1,3 +1,4 @@
+use crate::tasks::spawn_blocking;
 use axum::extract::{ConnectInfo, Path, Request};
 use axum::response::{IntoResponse, Response};
 use http::header::HeaderName;
@@ -38,7 +39,7 @@ pub async fn http_backend(
 
     let mut p = cmd.spawn().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    tokio::task::spawn_blocking(move || {
+    spawn_blocking(move || {
         // Pass in the body of the request (if any)
         let mut body_reader = body.reader();
         std::io::copy(&mut body_reader, &mut p.stdin.take().unwrap())
