@@ -1,1 +1,5 @@
 doc-valid-idents = ["CloudFront", "PostgreSQL", "OpenGraph", "SvelteKit", "OpenID", "CommonMark", "OAuth2", "ReDoS", ".."]
+
+disallowed-methods = [
+    { path = "tokio::task::spawn_blocking", reason = "use `crate::tasks::spawn_blocking()` to keep the current tracing span" },
+]
