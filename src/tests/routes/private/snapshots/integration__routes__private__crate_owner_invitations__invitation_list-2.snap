@@ -6,6 +6,7 @@ expression: invitations
   "invitations": [
     {
       "id": 2,
+      "state": "pending",
       "invitee_id": 3,
       "inviter_id": 1,
       "crate_id": 1,

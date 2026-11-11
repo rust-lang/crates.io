@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/crate_owner_invitations/list.rs
+expression: response.json()
+---
+{
+  "crate_owner_invitations": [],
+  "meta": {
+    "next_page": null
+  },
+  "users": []
+}

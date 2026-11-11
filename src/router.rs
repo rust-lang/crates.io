@@ -68,7 +68,13 @@ pub fn build_axum_router(ctx: ServerContext) -> Router<()> {
         .routes(routes!(token::find_api_token, token::revoke_api_token))
         .routes(routes!(token::revoke_current_api_token))
         .routes(routes!(
+            crate_owner_invitation::private_list_crate_owner_invitations
+        ))
+        .routes(routes!(
             crate_owner_invitation::list_crate_owner_invitations
+        ))
+        .routes(routes!(
+            crate_owner_invitation::update_crate_owner_invitation
         ))
         .routes(routes!(
             crate_owner_invitation::handle_crate_owner_invitation
