@@ -6,6 +6,9 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 publish = false
 
+[lints]
+workspace = true
+
 [dependencies]
 http = "=1.5.0"
 ipnetwork = "=0.21.1"
