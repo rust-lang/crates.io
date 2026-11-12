@@ -663,7 +663,8 @@ expression: response.json()
           "publish-update",
           "trusted-publishing",
           "yank",
-          "change-owners"
+          "change-owners",
+          "crate-owner-invitations"
         ],
         "type": "string"
       },
@@ -1603,141 +1604,6 @@ expression: response.json()
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/private/crate_owner_invitations": {
-      "get": {
-        "operationId": "private_list_crate_owner_invitations",
-        "parameters": [
-          {
-            "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",
-            "in": "query",
-            "name": "crate_name",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "The ID of the user who was invited to be a crate owner.\n\nThis parameter needs to match the authenticated user's ID.",
-            "in": "query",
-            "name": "invitee_id",
-            "required": false,
-            "schema": {
-              "format": "int32",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
-            "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "format": "int32",
-              "minimum": 1,
-              "type": "integer"
-            }
-          },
-          {
-            "description": "The number of items to request per page.",
-            "in": "query",
-            "name": "per_page",
-            "required": false,
-            "schema": {
-              "format": "int32",
-              "minimum": 1,
-              "type": "integer"
-            }
-          },
-          {
-            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
-            "in": "query",
-            "name": "seek",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "invitations": {
-                      "description": "The list of crate owner invitations.",
-                      "items": {
-                        "$ref": "#/components/schemas/CrateOwnerInvitation"
-                      },
-                      "type": "array"
-                    },
-                    "meta": {
-                      "properties": {
-                        "next_page": {
-                          "description": "Query parameter string to fetch the next page of results.",
-                          "example": "?seek=c0ffee",
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "next_page"
-                      ],
-                      "type": "object"
-                    },
-                    "users": {
-                      "description": "The list of users referenced in the crate owner invitations.",
-                      "items": {
-                        "$ref": "#/components/schemas/User"
-                      },
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "invitations",
-                    "users",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          },
-          "5XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            },
-            "description": "Server Error"
-          }
-        },
-        "security": [
-          {
-            "cookie": []
-          }
-        ],
-        "summary": "List all crate owner invitations for a crate or user.",
-        "tags": [
-          "owners"
-        ]
-      }
-    },
     "/api/private/session": {
       "delete": {
         "operationId": "end_session",
@@ -2491,7 +2357,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations": {
       "get": {
-        "description": "Only pending invitations that haven't expired are returned.",
+        "description": "Only pending invitations that haven't expired are returned.\n\nListing the invitations of a user accepts cookie authentication or API\ntokens with the `crate-owner-invitations` scope. Legacy tokens without\nscopes are refused. Tokens with crate scopes only see invitations for\nmatching crates.\n\nListing the invitations of a crate accepts cookie authentication or API\ntokens with the `change-owners` scope and a crate scope that matches the\ncrate. Legacy tokens without scopes are refused.",
         "operationId": "list_crate_owner_invitations",
         "parameters": [
           {
@@ -2617,6 +2483,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "List crate owner invitations for a crate or user.",
@@ -2627,7 +2496,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations/{id}": {
       "patch": {
-        "description": "Only the invitee can accept or decline an invitation.",
+        "description": "Only the invitee can accept or decline an invitation. This accepts cookie\nauthentication or API tokens with the `crate-owner-invitations` scope and a\ncrate scope that matches the invitation's crate.\n\nAny user owner of the crate can revoke the invitation. This accepts cookie\nauthentication or API tokens with the `change-owners` scope and a crate\nscope that matches the invitation's crate. Team owners are refused.\n\nLegacy tokens without scopes are refused.",
         "operationId": "update_crate_owner_invitation",
         "parameters": [
           {
@@ -2656,6 +2525,13 @@ expression: response.json()
                   "value": {
                     "crate_owner_invitation": {
                       "state": "declined"
+                    }
+                  }
+                },
+                "revoke": {
+                  "value": {
+                    "crate_owner_invitation": {
+                      "state": "revoked"
                     }
                   }
                 }
@@ -2728,9 +2604,12 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
-        "summary": "Accept or decline a crate owner invitation.",
+        "summary": "Accept, decline or revoke a crate owner invitation.",
         "tags": [
           "owners"
         ]
@@ -5478,6 +5357,8 @@ expression: response.json()
     },
     "/api/v1/me/crate_owner_invitations/{crate_id}": {
       "put": {
+        "deprecated": true,
+        "description": "This endpoint is deprecated. Use `PATCH /api/v1/crate_owner_invitations/{id}` instead.",
         "operationId": "handle_crate_owner_invitation",
         "parameters": [
           {

@@ -405,6 +405,38 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
   });
 
+  test('crate-owner-invitations scope', async ({ page, msw }) => {
+    await prepare(msw);
+
+    await page.goto('/settings/tokens/new');
+    await expect(page).toHaveURL('/settings/tokens/new');
+
+    await page.fill('[data-test-name]', 'invitations-token');
+    await page.locator('[data-test-expiry]').selectOption('none');
+    await page.click('[data-test-scope="crate-owner-invitations"]');
+    await page.click('[data-test-generate]');
+
+    await expect
+      .poll(() => msw.db.apiToken.findFirst(q => q.where({ name: 'invitations-token' })))
+      .toMatchObject({
+        name: 'invitations-token',
+        expiredAt: null,
+        crateScopes: null,
+        endpointScopes: ['crate-owner-invitations'],
+      });
+
+    let token = msw.db.apiToken.findFirst(q => q.where({ name: 'invitations-token' }));
+
+    await expect(page).toHaveURL('/settings/tokens');
+    await expect(page.locator('[data-test-api-token="1"] [data-test-name]')).toHaveText('invitations-token');
+    await expect(page.locator('[data-test-api-token="1"] [data-test-token]')).toHaveText(token.token);
+    await expect(page.locator('[data-test-api-token="1"] [data-test-endpoint-scopes]')).toHaveText(
+      'Scopes: crate-owner-invitations',
+    );
+    await expect(page.locator('[data-test-api-token="1"] [data-test-crate-scopes]')).toHaveCount(0);
+    await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
+  });
+
   test('access is blocked if unauthenticated', async ({ page }) => {
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');

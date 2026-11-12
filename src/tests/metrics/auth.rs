@@ -184,6 +184,19 @@ async fn trustpub_only_crate_with_token() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn legacy_token_rejected() {
+    let (metrics, meter) = MetricsFixture::new();
+    let (_, _, user, token) = TestApp::init().with_meter(meter).with_token().await;
+
+    let url = "/api/v1/crate_owner_invitations";
+    let query = format!("invitee_id={}", user.as_model().id);
+    let response = token.get_with_query::<()>(url, &query).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+
+    assert_snapshot!(metrics.auth_checks(), @"1: crates_io.auth.endpoint_scope=crate-owner-invitations crates_io.auth.type=legacy_token error.type=legacy_token_rejected http.request.method=GET http.route=/api/v1/crate_owner_invitations");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn trusted_publishing() -> anyhow::Result<()> {
     let (metrics, meter) = MetricsFixture::new();
     let (app, _, user) = TestApp::full().with_meter(meter).with_user().await;

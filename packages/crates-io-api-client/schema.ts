@@ -5,23 +5,6 @@
  */
 
 export interface paths {
-    "/api/private/crate_owner_invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all crate owner invitations for a crate or user. */
-        get: operations["private_list_crate_owner_invitations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/private/session": {
         parameters: {
             query?: never;
@@ -190,6 +173,15 @@ export interface paths {
         /**
          * List crate owner invitations for a crate or user.
          * @description Only pending invitations that haven't expired are returned.
+         *
+         *     Listing the invitations of a user accepts cookie authentication or API
+         *     tokens with the `crate-owner-invitations` scope. Legacy tokens without
+         *     scopes are refused. Tokens with crate scopes only see invitations for
+         *     matching crates.
+         *
+         *     Listing the invitations of a crate accepts cookie authentication or API
+         *     tokens with the `change-owners` scope and a crate scope that matches the
+         *     crate. Legacy tokens without scopes are refused.
          */
         get: operations["list_crate_owner_invitations"];
         put?: never;
@@ -214,8 +206,16 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Accept or decline a crate owner invitation.
-         * @description Only the invitee can accept or decline an invitation.
+         * Accept, decline or revoke a crate owner invitation.
+         * @description Only the invitee can accept or decline an invitation. This accepts cookie
+         *     authentication or API tokens with the `crate-owner-invitations` scope and a
+         *     crate scope that matches the invitation's crate.
+         *
+         *     Any user owner of the crate can revoke the invitation. This accepts cookie
+         *     authentication or API tokens with the `change-owners` scope and a crate
+         *     scope that matches the invitation's crate. Team owners are refused.
+         *
+         *     Legacy tokens without scopes are refused.
          */
         patch: operations["update_crate_owner_invitation"];
         trace?: never;
@@ -719,7 +719,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Accept or decline a crate owner invitation. */
+        /**
+         * Accept or decline a crate owner invitation.
+         * @deprecated
+         * @description This endpoint is deprecated. Use `PATCH /api/v1/crate_owner_invitations/{id}` instead.
+         */
         put: operations["handle_crate_owner_invitation"];
         post?: never;
         delete?: never;
@@ -1465,7 +1469,7 @@ export interface components {
             version_id: number;
         };
         /** @enum {string} */
-        EndpointScope: "publish-new" | "publish-update" | "trusted-publishing" | "yank" | "change-owners";
+        EndpointScope: "publish-new" | "publish-update" | "trusted-publishing" | "yank" | "change-owners" | "crate-owner-invitations";
         GitHubConfig: {
             /** @example regex */
             crate: string;
@@ -1943,88 +1947,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    private_list_crate_owner_invitations: {
-        parameters: {
-            query?: {
-                /**
-                 * @description Filter crate owner invitations by crate name.
-                 *
-                 *     Only crate owners can query pending invitations for their crate.
-                 */
-                crate_name?: string;
-                /**
-                 * @description The ID of the user who was invited to be a crate owner.
-                 *
-                 *     This parameter needs to match the authenticated user's ID.
-                 */
-                invitee_id?: number;
-                /**
-                 * @description The page number to request.
-                 *
-                 *     This parameter is mutually exclusive with `seek` and not supported for
-                 *     all requests.
-                 */
-                page?: number;
-                /** @description The number of items to request per page. */
-                per_page?: number;
-                /**
-                 * @description The seek key to request.
-                 *
-                 *     This parameter is mutually exclusive with `page` and not supported for
-                 *     all requests.
-                 *
-                 *     The seek key can usually be found in the `meta.next_page` field of
-                 *     paginated responses.
-                 */
-                seek?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description The list of crate owner invitations. */
-                        invitations: components["schemas"]["CrateOwnerInvitation"][];
-                        meta: {
-                            /**
-                             * @description Query parameter string to fetch the next page of results.
-                             * @example ?seek=c0ffee
-                             */
-                            next_page: string | null;
-                        };
-                        /** @description The list of users referenced in the crate owner invitations. */
-                        users: components["schemas"]["User"][];
-                    };
-                };
-            };
-            /** @description Client Error */
-            "4XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Server Error */
-            "5XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
     end_session: {
         parameters: {
             query?: never;
@@ -5670,7 +5592,7 @@ export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJs
     status: unknown;
 }>["status"]> = ["signup_required"];
 export const crateOwnerInvitationStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrateOwnerInvitationState"]> = ["pending", "accepted", "declined", "revoked"];
-export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
+export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners", "crate-owner-invitations"];
 export const linkedAccountOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["LinkedAccount"], {
     provider: unknown;
 }>["provider"]> = ["github"];
