@@ -119,7 +119,7 @@ impl CrateScope {
             return true;
         }
 
-        let name_without_wildcard = pattern.strip_suffix('*').unwrap_or(pattern);
+        let name_without_wildcard = pattern.trim_suffix('*');
         validate_crate_name("crate", name_without_wildcard).is_ok()
     }
 

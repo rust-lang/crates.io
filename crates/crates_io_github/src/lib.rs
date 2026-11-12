@@ -343,7 +343,7 @@ impl GitHubClient for RealGitHubClient {
         ref_name: &str,
         auth: &GitHubAuth,
     ) -> Result<GitRef> {
-        let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
+        let ref_path = ref_name.trim_prefix("refs/");
         let path = format!("/repos/{owner}/{repo}/git/ref/{ref_path}");
         self.request(&path, auth).await
     }
@@ -407,7 +407,7 @@ impl GitHubClient for RealGitHubClient {
             force: bool,
         }
 
-        let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
+        let ref_path = ref_name.trim_prefix("refs/");
         let path = format!("/repos/{owner}/{repo}/git/refs/{ref_path}");
         let body = Body { sha, force };
         self._mutate(reqwest::Method::PATCH, &path, &body, auth)
@@ -421,7 +421,7 @@ impl GitHubClient for RealGitHubClient {
         ref_name: &str,
         auth: &GitHubAuth,
     ) -> Result<()> {
-        let ref_path = ref_name.strip_prefix("refs/").unwrap_or(ref_name);
+        let ref_path = ref_name.trim_prefix("refs/");
         let path = format!("/repos/{owner}/{repo}/git/refs/{ref_path}");
         let request = self.request_builder(reqwest::Method::DELETE, &path, auth)?;
         request.send().await?.error_for_status()?;

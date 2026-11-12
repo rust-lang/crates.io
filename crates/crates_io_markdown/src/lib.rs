@@ -253,7 +253,7 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
                 path.push_str(&self.base_dir);
                 path.push('/');
             }
-            path.push_str(url.strip_prefix('/').unwrap_or(url));
+            path.push_str(url.trim_prefix('/'));
 
             let (path, rest) = match path.find(['?', '#']) {
                 Some(index) => path.split_at(index),
