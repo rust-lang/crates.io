@@ -53,6 +53,7 @@ jobs:
     if: needs.filter-jobs.outputs.backend-lint == 'true'
 
     env:
+      CARGO_BUILD_WARNINGS: deny
       RUSTFLAGS: '-D warnings'
       RUSTDOCFLAGS: '-D warnings'
 
