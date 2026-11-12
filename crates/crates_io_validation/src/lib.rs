@@ -200,7 +200,7 @@ pub fn validate_feature_name(name: &str) -> Result<(), InvalidFeature> {
 /// Validates a whole feature string, `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
 pub fn validate_feature(name: &str) -> Result<(), InvalidFeature> {
     if let Some((dep, dep_feat)) = name.split_once('/') {
-        let dep = dep.strip_suffix('?').unwrap_or(dep);
+        let dep = dep.trim_suffix('?');
         validate_dependency_name(dep)?;
         validate_feature_name(dep_feat)
     } else if let Some((_, dep)) = name.split_once("dep:") {

@@ -21,7 +21,7 @@ pub fn parse_github_slug(url: &Url) -> Result<(String, String), ParseSlugError> 
     let owner = segments.next().ok_or(ParseSlugError::MissingOwner)?;
     let repo = segments.next().ok_or(ParseSlugError::MissingRepo)?;
 
-    let repo = repo.strip_suffix(".git").unwrap_or(repo);
+    let repo = repo.trim_suffix(".git");
     if repo.is_empty() {
         return Err(ParseSlugError::MissingRepo);
     }
