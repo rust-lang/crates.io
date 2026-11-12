@@ -8,6 +8,7 @@ use super::otel::kv;
 use derive_more::Deref;
 use opentelemetry::KeyValue;
 use opentelemetry::metrics::{Counter, Meter, UpDownCounter};
+use std::mem::DropGuard;
 
 /// OpenTelemetry instruments recorded by the HTTP server.
 #[derive(Clone, Debug, Deref)]
@@ -56,7 +57,10 @@ impl ServerMetrics {
             KeyValue::new(HTTP_REQUEST_METHOD, method.as_str().to_owned()),
             KeyValue::new(URL_SCHEME, scheme),
         ];
-        ActiveRequestGuard::new(&self.active_requests, attributes)
+        self.active_requests.add(1, &attributes);
+        DropGuard::new(attributes, |attributes| {
+            self.active_requests.add(-1, &attributes);
+        })
     }
 
     /// Records an authentication check of an authenticated request.
@@ -91,28 +95,6 @@ impl ServerMetrics {
     pub fn db_fallback(&self, pool: &'static str) {
         self.db_fallbacks
             .add(1, &[kv(DB_CLIENT_CONNECTION_POOL_NAME, pool)]);
-    }
-}
-
-#[derive(Debug)]
-struct ActiveRequestGuard<'a> {
-    counter: &'a UpDownCounter<i64>,
-    attributes: [KeyValue; 2],
-}
-
-impl<'a> ActiveRequestGuard<'a> {
-    fn new(counter: &'a UpDownCounter<i64>, attributes: [KeyValue; 2]) -> Self {
-        counter.add(1, &attributes);
-        Self {
-            counter,
-            attributes,
-        }
-    }
-}
-
-impl Drop for ActiveRequestGuard<'_> {
-    fn drop(&mut self) {
-        self.counter.add(-1, &self.attributes);
     }
 }
 
