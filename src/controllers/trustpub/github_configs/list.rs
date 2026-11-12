@@ -114,11 +114,9 @@ async fn list_by_user(
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
         .allow_any_crate_scope()
+        .reject_legacy_tokens()
         .check(&parts, &mut conn)
         .await?;
-
-    // Reject legacy tokens for this endpoint
-    auth.reject_legacy_tokens()?;
 
     let auth_user = auth.user();
 
