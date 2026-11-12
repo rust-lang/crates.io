@@ -72,10 +72,9 @@ pub async fn update_crate(
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
         .for_crate(&krate.name)
+        .reject_legacy_tokens()
         .check(&req, &mut conn)
         .await?;
-
-    auth.reject_legacy_tokens()?;
 
     // Update crate settings in a transaction
     conn.transaction(async |conn| {

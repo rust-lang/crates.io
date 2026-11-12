@@ -197,7 +197,7 @@ async fn legacy_token_rejected() -> anyhow::Result<()> {
     let response = token.patch::<()>("/api/v1/crates/foo", body).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
 
-    assert_snapshot!(metrics.auth_checks(), @"1: crates_io.auth.endpoint_scope=trusted-publishing crates_io.auth.type=legacy_token http.request.method=PATCH http.route=/api/v1/crates/{name}");
+    assert_snapshot!(metrics.auth_checks(), @"1: crates_io.auth.endpoint_scope=trusted-publishing crates_io.auth.type=legacy_token error.type=legacy_token_rejected http.request.method=PATCH http.route=/api/v1/crates/{name}");
 
     Ok(())
 }
