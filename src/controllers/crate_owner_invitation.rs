@@ -3,11 +3,14 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
+use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{Crate, CrateOwnerInvitation, PublicUser};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::server::ServerContext;
 use crate::util::RequestUtils;
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
+use crate::util::errors::{
+    AppResult, BoxedAppError, bad_request, custom, forbidden, internal, not_found,
+};
 use crate::util::no_store;
 use crate::views::{
     CrateOwnerInvitationState, EncodableCrateOwnerInvitation, EncodablePublicUser,
@@ -47,11 +50,17 @@ pub struct CrateOwnerInvitationListQueryParams {
 /// List crate owner invitations for a crate or user.
 ///
 /// Only pending invitations that haven't expired are returned.
+///
+/// Listing the invitations of a user accepts cookie authentication or API
+/// tokens with the `crate-owner-invitations` scope. Legacy tokens without
+/// scopes are refused. Tokens with crate scopes only see invitations for
+/// matching crates.
+/// Listing the invitations of a crate requires cookie authentication.
 #[utoipa::path(
     get,
     path = "/api/v1/crate_owner_invitations",
     params(CrateOwnerInvitationListQueryParams, PaginationQueryParams),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "owners",
     responses(
         (status = 200, description = "Successful Response", body = inline(ListResponse)),
@@ -65,9 +74,16 @@ pub async fn list_crate_owner_invitations(
     req: Parts,
 ) -> AppResult<(TypedHeader<CacheControl>, Json<ListResponse>)> {
     let mut conn = ctx.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     let filter = params.try_into()?;
+    let auth = match filter {
+        ListFilter::CrateName(_) => AuthCheck::only_cookie(),
+        ListFilter::InviteeId(_) => AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
+            .allow_any_crate_scope()
+            .reject_legacy_tokens(),
+    };
+    let auth = auth.check(&req, &mut conn).await?;
     let list = prepare_list(&ctx, &req, auth, filter, &conn).await?;
     Ok((no_store(), Json(list)))
 }
@@ -158,7 +174,16 @@ async fn prepare_list(
                     let detail = "only the invitee can query their pending invitations";
                     return Err(forbidden(detail));
                 }
-                Box::new(crate_owner_invitations::invited_user_id.eq(invitee_id))
+                let filter = crate_owner_invitations::invited_user_id.eq(invitee_id);
+
+                let crate_scopes = auth.api_token().and_then(|t| t.crate_scopes.as_deref());
+                match crate_scopes.filter(|scopes| !scopes.is_empty()) {
+                    Some(scopes) => {
+                        let crate_ids = matching_crate_ids(invitee_id, scopes, conn).await?;
+                        Box::new(filter.and(crate_owner_invitations::crate_id.eq_any(crate_ids)))
+                    }
+                    None => Box::new(filter),
+                }
             }
         };
 
@@ -276,6 +301,25 @@ async fn prepare_list(
     })
 }
 
+/// Returns the IDs of the crates that `invitee_id` has invitations for and
+/// that match one of the crate `scopes`.
+async fn matching_crate_ids(
+    invitee_id: i32,
+    scopes: &[CrateScope],
+    mut conn: &AsyncPgConnection,
+) -> QueryResult<Vec<i32>> {
+    let crates: Vec<(i32, String)> = crate_owner_invitations::table
+        .inner_join(crates::table)
+        .filter(crate_owner_invitations::invited_user_id.eq(invitee_id))
+        .select((crates::id, crates::name))
+        .load(&mut conn)
+        .await?;
+
+    let matches = |name: &str| scopes.iter().any(|scope| scope.matches(name));
+    let crates = crates.into_iter().filter(|(_, name)| matches(name));
+    Ok(crates.map(|(id, _)| id).collect())
+}
+
 fn encode_invitation(
     invitation: &CrateOwnerInvitation,
     crate_name: String,
@@ -366,7 +410,10 @@ pub struct UpdateResponse {
 
 /// Accept or decline a crate owner invitation.
 ///
-/// Only the invitee can accept or decline an invitation.
+/// Only the invitee can accept or decline an invitation. This endpoint accepts
+/// cookie authentication or API tokens with the `crate-owner-invitations`
+/// scope and a crate scope that matches the invitation's crate. Legacy tokens
+/// without scopes are refused.
 #[utoipa::path(
     patch,
     path = "/api/v1/crate_owner_invitations/{id}",
@@ -380,7 +427,7 @@ pub struct UpdateResponse {
             ("decline" = (value = json!({ "crate_owner_invitation": { "state": "declined" } }))),
         ),
     ),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "owners",
     responses(
         (status = 200, description = "Successful Response", body = inline(UpdateResponse)),
@@ -397,15 +444,24 @@ pub async fn update_crate_owner_invitation(
     let state = request.crate_owner_invitation.state;
 
     let mut conn = ctx.db_write().await?;
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
 
     let (invitation, crate_name) = crate_owner_invitations::table
         .find(id)
-        .filter(crate_owner_invitations::invited_user_id.eq(auth.user_id()))
         .inner_join(crates::table)
         .select((CrateOwnerInvitation::as_select(), crates::name))
-        .first(&mut conn)
+        .first::<(CrateOwnerInvitation, String)>(&mut conn)
         .await?;
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::CrateOwnerInvitations)
+        .for_crate(&crate_name)
+        .reject_legacy_tokens()
+        .check(&parts, &mut conn)
+        .await?;
+
+    if invitation.invited_user_id != auth.user_id() {
+        return Err(not_found());
+    }
 
     let crate_owner_invitation = encode_invitation(&invitation, crate_name, state);
 
