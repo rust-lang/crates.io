@@ -65,6 +65,8 @@ let sveltekitPlugin = sveltekit({
         'https://raw.githubusercontent.com',
         // RustSec advisory lookup on the crate security tab
         'https://rustsec.org',
+        // crates.io tag feed of the Rust blog on the front page
+        'https://blog.rust-lang.org',
         // CDN that the `/api/v1/crates/{name}/{version}/readme` endpoint redirects to
         'https://static.crates.io',
         'https://static.staging.crates.io',
