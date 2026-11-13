@@ -107,7 +107,7 @@ async fn test_legacy_token_auth() -> anyhow::Result<()> {
         .get_with_query::<()>(URL, &format!("user_id={}", user.id))
         .await;
     assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `trusted-publishing` scope at https://crates.io/settings/tokens/new"}]}"#);
 
     Ok(())
 }

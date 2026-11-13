@@ -188,7 +188,7 @@ mod auth {
         let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"403 Forbidden");
-        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `trusted-publishing` scope at https://crates.io/settings/tokens/new"}]}"#);
 
         assert_eq!(app.emails().await.len(), 0);
     }
@@ -250,7 +250,7 @@ mod auth {
         let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"403 Forbidden");
-        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `trusted-publishing` scope at https://crates.io/settings/tokens/new"}]}"#);
 
         assert_eq!(app.emails().await.len(), 0);
     }
