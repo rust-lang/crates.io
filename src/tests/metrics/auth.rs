@@ -184,6 +184,25 @@ async fn trustpub_only_crate_with_token() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn legacy_token_rejected() -> anyhow::Result<()> {
+    let (metrics, meter) = MetricsFixture::new();
+    let (app, _, user, token) = TestApp::full().with_meter(meter).with_token().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .build(&mut conn)
+        .await?;
+
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } }).to_string();
+    let response = token.patch::<()>("/api/v1/crates/foo", body).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+
+    assert_snapshot!(metrics.auth_checks(), @"1: crates_io.auth.endpoint_scope=trusted-publishing crates_io.auth.type=legacy_token http.request.method=PATCH http.route=/api/v1/crates/{name}");
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn trusted_publishing() -> anyhow::Result<()> {
     let (metrics, meter) = MetricsFixture::new();
     let (app, _, user) = TestApp::full().with_meter(meter).with_user().await;
