@@ -2,6 +2,8 @@ import { expect, test } from '@/e2e/helper';
 import { loadFixtures } from '@crates-io/msw/fixtures';
 import { http, HttpResponse } from 'msw';
 
+const BLOG_FEED_URL = 'https://blog.rust-lang.org/tags/crates-io/feed.xml';
+
 test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
   test.use({ locale: 'en' });
   test('visiting /', async ({ page, msw, percy, a11y }) => {
@@ -36,6 +38,15 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await expect(justUpdated.locator('[data-test-version]')).toHaveText('0.6.1');
     await expect(justUpdated).toHaveAttribute('href', '/crates/nanomsg/0.6.1');
 
+    let blogPosts = page.locator('[data-test-blog-posts] [data-test-blog-post]');
+    await expect(blogPosts).toHaveCount(3);
+    await expect(blogPosts.first().locator('[data-test-title]')).toHaveText('crates.io: development update');
+    await expect(blogPosts.first()).toHaveAttribute(
+      'href',
+      'https://blog.rust-lang.org/2025/07/11/crates-io-development-update/',
+    );
+    await expect(blogPosts.nth(1).locator('[data-test-inside-rust-badge]')).toBeVisible();
+
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
     await a11y.audit();
@@ -66,5 +77,37 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-lists]')).toBeVisible();
     await expect(page.locator('[data-test-error-message]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again-button]')).toHaveCount(0);
+  });
+
+  test('blog posts error handling', async ({ page, msw }) => {
+    msw.worker.use(http.get(BLOG_FEED_URL, () => HttpResponse.text('', { status: 500 })));
+
+    await page.goto('/');
+    await expect(page.locator('[data-test-blog-posts-error]')).toBeVisible();
+    await expect(page.locator('[data-test-lists]')).toBeVisible();
+  });
+
+  test('blog posts load independently of the summary', async ({ page, msw }) => {
+    let summary = Promise.withResolvers<Response>();
+    msw.worker.use(http.get('/api/v1/summary', () => summary.promise));
+
+    await page.goto('/');
+    await expect(page.locator('[data-test-blog-post]')).toHaveCount(3);
+    await expect(page.locator('[data-test-lists]')).toBeVisible();
+    await expect(page.locator('[data-test-crate-link]')).toHaveCount(0);
+
+    summary.resolve(HttpResponse.json({}, { status: 500 }));
+
+    await expect(page.locator('[data-test-error-message]')).toBeVisible();
+    await expect(page.locator('[data-test-blog-post]')).toHaveCount(3);
+  });
+
+  test('summary loads independently of the blog posts', async ({ page, msw }) => {
+    await loadFixtures(msw.db);
+    msw.worker.use(http.get(BLOG_FEED_URL, () => new Promise(() => {})));
+
+    await page.goto('/');
+    await expect(page.locator('[data-test-new-crates] [data-test-crate-link="0"]')).toBeVisible();
+    await expect(page.locator('[data-test-blog-post-placeholder]')).toHaveCount(3);
   });
 });
