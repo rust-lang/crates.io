@@ -22,6 +22,14 @@
 
 {#await data.summary}
   <IntroBlurb />
+{:then summary}
+  <IntroBlurb {summary} />
+  <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+{:catch _error}
+  <IntroBlurb />
+{/await}
+
+{#await data.summary}
   {#if isFirstLoad}
     <!-- during first load, show placeholders -->
     <CrateLists />
@@ -30,10 +38,8 @@
     <ErrorState isLoading={true} />
   {/if}
 {:then summary}
-  <IntroBlurb {summary} />
   <CrateLists {summary} />
   <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 {:catch _error}
-  <IntroBlurb />
   <ErrorState isLoading={false} onRetry={retry} />
 {/await}
