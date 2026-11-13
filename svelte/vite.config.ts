@@ -143,7 +143,7 @@ export default defineConfig({
 
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright({ contextOptions: { locale: 'en-US' } }),
             instances: [{ browser: 'chromium', headless: true }],
           },
 
