@@ -803,6 +803,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/org/{org}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find teams by organization that crates.io knows about.
+         * @description Specify the organization with `service:org_name`. For example, to list all GitHub teams in the
+         *     `rust-lang` organization, specify `github:rust-lang`. If there are no teams for the specified
+         *     organization, this returns an empty list.
+         */
+        get: operations["find_teams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/site_metadata": {
         parameters: {
             query?: never;
@@ -2726,10 +2748,12 @@ export interface operations {
                  */
                 user_id?: number;
                 /**
-                 * @description If set, only crates owned by the given crates.io team ID are returned
+                 * @description If set, only crates owned by the given crates.io team ID are returned.
+                 *     If more than one `team_id` is specified, will return crates owned by any
+                 *     of the given team IDs.
                  *     (ignored if `all_keywords`, `keyword`, `letter`, or `user_id` are set).
                  */
-                team_id?: number;
+                team_id?: number[];
                 /**
                  * @description If set, only crates owned by users the current user follows are returned
                  *     (ignored if `all_keywords`, `keyword`, `letter`, `user_id`,
@@ -4797,6 +4821,52 @@ export interface operations {
                         };
                         /** @description The list of recent versions of crates that the authenticated user follows. */
                         versions: components["schemas"]["Version"][];
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    find_teams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Name of the organization
+                 * @example github:rust-lang
+                 */
+                org: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        teams: components["schemas"]["Team"][];
                     };
                 };
             };

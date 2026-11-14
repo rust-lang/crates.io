@@ -1,0 +1,7 @@
+---
+source: src/tests/routes/org.rs
+expression: response.json()
+---
+{
+  "teams": []
+}

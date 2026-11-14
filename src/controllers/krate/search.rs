@@ -370,9 +370,12 @@ pub struct CrateListQueryParams {
     /// (ignored if `all_keywords`, `keyword`, or `letter` are set).
     user_id: Option<i32>,
 
-    /// If set, only crates owned by the given crates.io team ID are returned
+    /// If set, only crates owned by the given crates.io team ID are returned.
+    /// If more than one `team_id` is specified, will return crates owned by any
+    /// of the given team IDs.
     /// (ignored if `all_keywords`, `keyword`, `letter`, or `user_id` are set).
-    team_id: Option<i32>,
+    #[serde(default)]
+    team_id: Vec<i32>,
 
     /// If set, only crates owned by users the current user follows are returned
     /// (ignored if `all_keywords`, `keyword`, `letter`, `user_id`,
@@ -496,12 +499,12 @@ impl FilterParams {
                         .filter(crate_owners::owner_id.eq(user_id)),
                 ),
             );
-        } else if let Some(team_id) = self.team_id {
+        } else if !self.team_id.is_empty() {
             query = query.filter(
                 crates::id.eq_any(
                     CrateOwner::by_owner_kind(OwnerKind::Team)
                         .select(crate_owners::crate_id)
-                        .filter(crate_owners::owner_id.eq(team_id)),
+                        .filter(crate_owners::owner_id.eq_any(&self.team_id)),
                 ),
             );
         } else if let Some(user_id) = self.auth_user_id {
