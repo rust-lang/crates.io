@@ -10,7 +10,7 @@
   });
 
   const INVITE = {
-    crate_id: 1,
+    id: 1,
     crate_name: 'serde',
     inviter_login: 'dtolnay',
     created_at: '2024-12-24T12:34:56Z',
