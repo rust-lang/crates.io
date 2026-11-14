@@ -5,7 +5,7 @@
 [tools]
 cargo-insta = "1.49.0"
 "cargo:cargo-deny" = "0.20.2"
-"cargo:diesel_cli" = { version = "2.3.14", features = "postgres", default-features = false }
+"cargo:diesel_cli" = { version = "2.4.0", features = "postgres", default-features = false }
 "cargo:diesel-guard" = "0.12.0"
 node = "26.13.1"
 pnpm = "12.18.0"
