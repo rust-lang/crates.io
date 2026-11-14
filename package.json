@@ -54,7 +54,7 @@
     "eslint-plugin-unicorn": "79.0.0",
     "globals": "17.14.0",
     "msw": "3.0.5",
-    "prettier": "3.9.10",
+    "prettier": "3.10.0",
     "prettier-plugin-svelte": "4.1.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.2"
