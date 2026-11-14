@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@pierre/trees@*': 1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4
+  '@pierre/trees@*': 5d1f61ba1e6131801a8c4e50d881404d6614a9deb2b8d9cd56c7e7a6af8fbdc0
 
 importers:
 
@@ -219,7 +219,7 @@ importers:
         version: 1.6.4(@shikijs/themes@4.6.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@pierre/trees':
         specifier: 1.0.0
-        version: 1.0.0(patch_hash=1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4)(@pierre/theme@2.0.0)(@shikijs/themes@4.6.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.6.0)
+        version: 1.0.0(patch_hash=5d1f61ba1e6131801a8c4e50d881404d6614a9deb2b8d9cd56c7e7a6af8fbdc0)(@pierre/theme@2.0.0)(@shikijs/themes@4.6.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.6.0)
       '@shikijs/themes':
         specifier: 4.6.0
         version: 4.6.0
@@ -5616,7 +5616,7 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
       shiki: 4.6.0
 
-  '@pierre/trees@1.0.0(patch_hash=1ea0e5defaa05275ab818a165fab6012db4b10483ee05bb1fc475e9ada62a5c4)(@pierre/theme@2.0.0)(@shikijs/themes@4.6.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.6.0)':
+  '@pierre/trees@1.0.0(patch_hash=5d1f61ba1e6131801a8c4e50d881404d6614a9deb2b8d9cd56c7e7a6af8fbdc0)(@pierre/theme@2.0.0)(@shikijs/themes@4.6.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.6.0)':
     dependencies:
       '@pierre/theming': 1.0.2(@pierre/theme@2.0.0)(@shikijs/themes@4.6.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(shiki@4.6.0)
       preact: 11.0.0-beta.0
