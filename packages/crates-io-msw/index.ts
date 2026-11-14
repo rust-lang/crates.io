@@ -1,4 +1,5 @@
 import apiTokenHandlers from './handlers/api-tokens.js';
+import blogHandlers from './handlers/blog.js';
 import categoryHandlers from './handlers/categories.js';
 import cdnHandlers from './handlers/cdn.js';
 import cratesHandlers from './handlers/crates.js';
@@ -20,6 +21,7 @@ import versionHandlers from './handlers/versions.js';
 
 export const handlers = [
   ...apiTokenHandlers,
+  ...blogHandlers,
   ...categoryHandlers,
   ...cdnHandlers,
   ...cratesHandlers,

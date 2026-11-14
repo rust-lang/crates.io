@@ -65,6 +65,8 @@ let sveltekitPlugin = sveltekit({
         'https://raw.githubusercontent.com',
         // RustSec advisory lookup on the crate security tab
         'https://rustsec.org',
+        // crates.io tag feed of the Rust blog on the front page
+        'https://blog.rust-lang.org',
         // CDN that the `/api/v1/crates/{name}/{version}/readme` endpoint redirects to
         'https://static.crates.io',
         'https://static.staging.crates.io',
@@ -143,11 +145,11 @@ export default defineConfig({
 
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright({ contextOptions: { locale: 'en-US' } }),
             instances: [{ browser: 'chromium', headless: true }],
           },
 
-          include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+          include: ['src/**/*.{svelte,browser}.{test,spec}.{js,ts}'],
           exclude: ['src/lib/server/**'],
         },
       },
@@ -159,7 +161,7 @@ export default defineConfig({
           name: 'server',
           environment: 'node',
           include: ['src/**/*.{test,spec}.{js,ts}'],
-          exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+          exclude: ['src/**/*.{svelte,browser}.{test,spec}.{js,ts}'],
         },
       },
     ],
