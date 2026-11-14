@@ -1,8 +1,8 @@
 diff --git a/dist/builtInIcons.js b/dist/builtInIcons.js
-index 994e2c8..8d79fef 100644
+index abf6b9b..8d79fef 100644
 --- a/dist/builtInIcons.js
 +++ b/dist/builtInIcons.js
-@@ -17,563 +17,24 @@ const MINIMAL_SVG_SPRITE_SHEET = `<svg data-icon-sprite aria-hidden="true" width
+@@ -17,564 +17,24 @@ const MINIMAL_SVG_SPRITE_SHEET = `<svg data-icon-sprite aria-hidden="true" width
      <path d="M5 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M9.5 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M14 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
    </symbol>
  </svg>`;
@@ -554,7 +554,8 @@ index 994e2c8..8d79fef 100644
  function resolveBuiltInFileIconToken(set, fileName, extensionCandidates) {
 -	if (set === "minimal" || set === "none") return;
 -	const isComplete = set === "complete";
--	const fileNameToken = BUILT_IN_FILE_NAME_TOKENS[fileName.toLowerCase()];
+-	const lowerFileName = fileName.toLowerCase();
+-	const fileNameToken = BUILT_IN_FILE_NAME_TOKENS[lowerFileName];
 -	if (fileNameToken != null) {
 -		if (isComplete || STANDARD_TIER_TOKENS.has(fileNameToken)) return fileNameToken;
 -	}
