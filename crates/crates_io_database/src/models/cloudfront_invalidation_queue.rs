@@ -1,19 +1,12 @@
 use crate::schema::cloudfront_invalidation_queue;
-use diesel::AsExpression;
-use diesel::deserialize::{self, FromSql, FromSqlRow};
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::serialize::{self, IsNull, Output, ToSql};
-use diesel::sql_types::Text;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use std::io::Write;
-use std::str::FromStr;
 
 /// CloudFront distribution identifier.
 ///
 /// Used to route invalidation requests to the correct CloudFront distribution.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, AsExpression, FromSqlRow)]
-#[diesel(sql_type = Text)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, diesel::types::Enum)]
+#[diesel(sql_type = diesel::sql_types::Text, rename_all = "lowercase")]
 pub enum CloudFrontDistribution {
     /// The index.crates.io distribution (sparse index metadata)
     Index,
@@ -27,32 +20,6 @@ impl CloudFrontDistribution {
             Self::Index => "index",
             Self::Static => "static",
         }
-    }
-}
-
-impl FromStr for CloudFrontDistribution {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "index" => Ok(Self::Index),
-            "static" => Ok(Self::Static),
-            _ => Err(format!("Unknown CloudFront distribution: {s}")),
-        }
-    }
-}
-
-impl ToSql<Text, Pg> for CloudFrontDistribution {
-    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
-        out.write_all(self.as_str().as_bytes())?;
-        Ok(IsNull::No)
-    }
-}
-
-impl FromSql<Text, Pg> for CloudFrontDistribution {
-    fn from_sql(bytes: diesel::pg::PgValue<'_>) -> deserialize::Result<Self> {
-        let value = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
-        Ok(value.parse()?)
     }
 }
 
