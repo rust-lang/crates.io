@@ -15,9 +15,15 @@
 
   const PLACEHOLDER_TITLE_WIDTHS = ['55%', '70%', '45%'];
 
-  let { state }: { state: BlogPostsState } = $props();
+  const NEW_POST_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+  let { state, now = new Date() }: { state: BlogPostsState; now?: Date } = $props();
 
   let posts = $derived(state.status === 'loaded' ? state.posts.slice(0, 3) : []);
+
+  function isNewPost(post: BlogPost): boolean {
+    return now.getTime() - post.published.getTime() < NEW_POST_MAX_AGE_MS;
+  }
 </script>
 
 <section class="blog" data-test-blog-posts>
@@ -42,9 +48,13 @@
     {:else}
       <ul>
         {#each posts as post (post.url)}
+          {@const isNew = isNewPost(post)}
           <li>
-            <a class="post" href={post.url} target="_blank" rel="external" data-test-blog-post>
+            <a class="post" class:new={isNew} href={post.url} target="_blank" rel="external" data-test-blog-post>
               <span class="title">
+                {#if isNew}
+                  <span class="badge new-badge" data-test-new-badge>New<span class="sr-only">:</span></span>
+                {/if}
                 <span class="text" data-test-title>{post.title}</span>
                 {#if post.isInsideRust}
                   <span class="badge" data-test-inside-rust-badge>Inside Rust</span>
@@ -194,6 +204,16 @@
     color: var(--main-color-light);
     border: 1px solid currentColor;
     border-radius: 3px;
+  }
+
+  .new-badge {
+    color: var(--orange-900);
+    background: var(--orange-200);
+    border-color: var(--orange-200);
+  }
+
+  .post.new .text {
+    font-weight: 600;
   }
 
   .error {

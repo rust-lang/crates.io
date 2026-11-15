@@ -69,6 +69,23 @@ describe('BlogPosts', () => {
     expect(second.element().querySelector('[data-test-inside-rust-badge]')).not.toBeNull();
   });
 
+  it('marks posts published in the last two weeks as new', async () => {
+    let posts = [
+      post('Recent post', 'https://blog.rust-lang.org/2025/08/02/recent/', '2025-08-02'),
+      post('Older post', 'https://blog.rust-lang.org/2025/07/31/older/', '2025-07-31'),
+      ...POSTS,
+    ];
+    let now = new Date('2025-08-15T12:00:00Z');
+    await render(BlogPosts, { state: { status: 'loaded', posts }, now });
+
+    let badges = page.getByCSS('[data-test-new-badge]');
+    expect(badges.elements()).toHaveLength(1);
+    await expect.element(badges).toHaveTextContent('New:');
+
+    let first = page.getByCSS('[data-test-blog-post]').nth(0);
+    expect(first.element().querySelector('[data-test-new-badge]')).not.toBeNull();
+  });
+
   it('renders titles as plain text', async () => {
     let title = 'Use <b>bold</b> moves';
     await render(BlogPosts, { state: { status: 'loaded', posts: [post(title, POSTS[0]!.url, '2025-07-11')] } });
