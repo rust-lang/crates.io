@@ -33,7 +33,7 @@ impl SqsQueueImpl {
         let config = aws_sdk_sqs::Config::builder()
             .credentials_provider(credentials)
             .region(region)
-            .behavior_version(BehaviorVersion::v2026_01_12())
+            .behavior_version(BehaviorVersion::v2026_11_10())
             .build();
 
         let client = aws_sdk_sqs::Client::from_conf(config);
