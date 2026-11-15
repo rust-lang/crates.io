@@ -1,9 +1,9 @@
 use crate::models::{Crate, Version};
-use crate::pg_enum;
 use crate::schema::*;
 use crates_io_index::DependencyKind as IndexDependencyKind;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 #[derive(Identifiable, Associations, Debug, HasQuery, QueryableByName)]
@@ -73,12 +73,13 @@ impl ReverseDependency {
     }
 }
 
-pg_enum! {
-    pub enum DependencyKind {
-        Normal = 0,
-        Build = 1,
-        Dev = 2,
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, diesel::types::Enum)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+#[serde(rename_all = "snake_case")]
+pub enum DependencyKind {
+    Normal = 0,
+    Build = 1,
+    Dev = 2,
 }
 
 impl From<IndexDependencyKind> for DependencyKind {

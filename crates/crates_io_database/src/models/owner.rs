@@ -5,7 +5,6 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 use self::crate_owner_builder::{SetOwnerId, SetOwnerKind};
 use crate::models::{Crate, CrateOwnerInvitation, Team, User};
-use crate::pg_enum;
 use crate::schema::crate_owners;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy, Builder)]
@@ -80,11 +79,11 @@ impl CrateOwner {
     }
 }
 
-pg_enum! {
-    pub enum OwnerKind {
-        User = 0,
-        Team = 1,
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, diesel::types::Enum)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+pub enum OwnerKind {
+    User = 0,
+    Team = 1,
 }
 
 /// Unifies the notion of a User or a Team.

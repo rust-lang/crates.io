@@ -2,7 +2,6 @@ use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{DateTime, Utc};
 use crates_io_database::fns::{date_part, floor, greatest, interval_part, least};
-use crates_io_database::pg_enum;
 use derive_more::Constructor;
 use diesel::dsl::IntervalDsl;
 use diesel::prelude::*;
@@ -12,15 +11,17 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
 
-pg_enum! {
-    pub enum LimitedAction {
-        PublishNew = 0,
-        PublishUpdate = 1,
-        YankUnyank = 2,
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, diesel::types::Enum)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+pub enum LimitedAction {
+    PublishNew = 0,
+    PublishUpdate = 1,
+    YankUnyank = 2,
 }
 
 impl LimitedAction {
+    pub const VARIANTS: &[Self] = &[Self::PublishNew, Self::PublishUpdate, Self::YankUnyank];
+
     pub fn default_rate_seconds(&self) -> u64 {
         match self {
             LimitedAction::PublishNew => 10 * 60, // 10 minutes

@@ -1,17 +1,16 @@
 use crate::models::{ApiToken, PublicUser, User, Version};
-use crate::pg_enum;
 use crate::schema::*;
 use bon::Builder;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
-pg_enum! {
-    pub enum VersionAction {
-        Publish = 0,
-        Yank = 1,
-        Unyank = 2,
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, diesel::types::Enum)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+pub enum VersionAction {
+    Publish = 0,
+    Yank = 1,
+    Unyank = 2,
 }
 
 impl From<VersionAction> for &'static str {
