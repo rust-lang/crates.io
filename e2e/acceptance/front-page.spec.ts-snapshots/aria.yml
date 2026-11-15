@@ -20,7 +20,7 @@
     - /url: https://blog.rust-lang.org/tags/crates-io/
   - list:
     - listitem:
-      - 'link /crates\.io: development update Jul \d+, \d+/':
+      - 'link /New : crates\.io: development update Jul \d+, \d+/':
         - /url: https://blog.rust-lang.org/2025/07/11/crates-io-development-update/
         - text: ""
         - time: /Jul \d+, \d+/

@@ -35,6 +35,25 @@
 
 <Story name="Loaded" args={{ state: { status: 'loaded', posts: POSTS } }} />
 
+<Story
+  name="New Post"
+  args={{
+    state: {
+      status: 'loaded',
+      posts: [
+        {
+          title: 'crates.io: Trusted publishing for GitLab is now generally available',
+          url: 'https://blog.rust-lang.org/2025/08/04/crates-io-gitlab-trusted-publishing/',
+          published: new Date('2025-08-04T00:00:00Z'),
+          isInsideRust: false,
+        },
+        ...POSTS,
+      ],
+    },
+    now: new Date('2025-08-07T12:00:00Z'),
+  }}
+/>
+
 <Story name="Loading" args={{ state: { status: 'loading' } }} />
 
 <Story name="Error" args={{ state: { status: 'error' } }} />

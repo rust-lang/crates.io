@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 const BLOG_FEED_URL = 'https://blog.rust-lang.org/tags/crates-io/feed.xml';
 
 test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
-  test.use({ locale: 'en' });
+  test.use({ locale: 'en', clockOptions: { now: '2025-07-15T12:00:00', shouldAdvanceTime: true } });
   test('visiting /', async ({ page, msw, percy, a11y }) => {
     await loadFixtures(msw.db);
 
@@ -45,7 +45,9 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
       'href',
       'https://blog.rust-lang.org/2025/07/11/crates-io-development-update/',
     );
+    await expect(blogPosts.first().locator('[data-test-new-badge]')).toBeVisible();
     await expect(blogPosts.nth(1).locator('[data-test-inside-rust-badge]')).toBeVisible();
+    await expect(page.locator('[data-test-new-badge]')).toHaveCount(1);
 
     await percy.snapshot();
     await expect(page).toMatchAriaSnapshot({ name: 'aria.yml' });
