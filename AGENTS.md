@@ -173,6 +173,7 @@ pnpm prettier:write                     # Fix formatting
 - Accessibility is critical; use semantic HTML, ARIA attributes, and verify with the e2e a11y fixtures.
 - MSW mocks for tests live in `/packages/crates-io-msw/`; define handlers for API endpoints.
 - Visual regression testing uses Percy (via Playwright) and Chromatic via Storybook
+- Chromatic bills per snapshot: give each `*.stories.svelte` file one snapshotted story, following `Alert.stories.svelte`.
 - Follow existing component patterns for consistency; search for similar components before creating new ones.
 
 ## Commit Messages and Pull Requests
