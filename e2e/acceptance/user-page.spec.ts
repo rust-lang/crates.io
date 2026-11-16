@@ -36,9 +36,9 @@ test.describe('Acceptance | user page', { tag: '@acceptance' }, () => {
   });
 
   test('user details has github profile icon', async ({ page }) => {
-    await expect(page.locator('[data-test-heading] [data-test-avatar]')).toHaveAttribute(
+    await expect(page.locator('[data-test-heading] [data-test-avatar] img')).toHaveAttribute(
       'src',
-      'https://avatars.githubusercontent.com/u/565790?v=3&s=170',
+      'https://avatars.githubusercontent.com/u/565790?v=3&s=256',
     );
   });
 });
