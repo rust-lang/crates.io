@@ -3,9 +3,9 @@
   Renders the public team identity header.
 -->
 <script lang="ts">
+  import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import PageHeader from './PageHeader.svelte';
-  import UserAvatar from './UserAvatar.svelte';
 
   interface TeamPageHeaderTeam {
     /** The team's avatar URL, if available. */
@@ -32,9 +32,8 @@
 </script>
 
 <PageHeader style="display: flex; align-items: center;" data-test-heading>
-  <UserAvatar
-    user={{ avatar: team.avatar, kind: 'team', login: team.login, name: team.name }}
-    size="medium"
+  <Avatar
+    owner={{ avatar: team.avatar, kind: 'team', login: team.login, name: team.name }}
     class="team-page-avatar me-m"
     data-test-avatar
   />
@@ -63,11 +62,7 @@
   }
 
   :global(.team-page-avatar) {
-    border-radius: 4px;
-    object-fit: cover;
-    background: white;
-    padding: 3px;
-    box-shadow: 1px 2px 2px 0 var(--surface-shadow-color-muted);
+    --avatar-size: 85px;
   }
 
   .header-row {
