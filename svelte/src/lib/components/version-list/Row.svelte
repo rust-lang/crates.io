@@ -7,6 +7,7 @@
   import prettyBytes from 'pretty-bytes';
   import semverParse from 'semver/functions/parse';
 
+  import Avatar from '#lib/components/Avatar.svelte';
   import Edition from '#lib/components/crate-sidebar/Edition.svelte';
   import Msrv from '#lib/components/crate-sidebar/Msrv.svelte';
   import * as Dropdown from '#lib/components/dropdown/index.ts';
@@ -14,7 +15,6 @@
   import LicenseExpression from '#lib/components/LicenseExpression.svelte';
   import PrivilegedAction from '#lib/components/PrivilegedAction.svelte';
   import Tooltip from '#lib/components/Tooltip.svelte';
-  import UserAvatar from '#lib/components/UserAvatar.svelte';
   import YankButton from '#lib/components/YankButton.svelte';
   import { dateToLocaleString } from '#lib/utils/datetime.ts';
 
@@ -173,7 +173,7 @@
         <span class="publisher" role="listitem">
           by
           <a href={resolve('/users/[user_id]', { user_id: publishedBy.login })}>
-            <UserAvatar user={publishedBy} class="avatar" aria-hidden="true" />
+            <Avatar owner={publishedBy} class="avatar" aria-hidden="true" />
             {publishedBy.name ?? publishedBy.login}
           </a>
         </span>
@@ -530,13 +530,10 @@
   }
 
   .metadata :global(.avatar) {
-    height: 1.5em;
-    width: auto;
+    --avatar-size: 1.5em;
+    --avatar-shadow: 0 1px 1px 0 light-dark(var(--grey600), var(--surface-shadow-color-muted));
     margin-left: var(--space-4xs);
     margin-bottom: -0.4em;
-    border-radius: 50%;
-    box-shadow: 0 1px 1px 0 var(--grey600);
-    padding: 1px;
   }
 
   .metadata-row {
