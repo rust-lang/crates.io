@@ -204,7 +204,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(
       page.locator('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"] img'),
-    ).toHaveAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=64');
+    ).toHaveAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=256');
 
     await expect(page.locator('[data-test-owners] li')).toHaveCount(4);
   });
