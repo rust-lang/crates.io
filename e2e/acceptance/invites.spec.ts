@@ -121,7 +121,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page).toHaveURL('/me/pending-invites');
 
     let error = HttpResponse.json({}, { status: 500 });
-    msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
+    msw.worker.use(http.patch('/api/v1/crate_owner_invitations/:id', () => error));
 
     await page.click('[data-test-invite="nanomsg"] [data-test-decline-button]');
     await expect(page.locator('[data-test-notification-message="error"]')).toContainText('Error in declining invite');
@@ -175,7 +175,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page).toHaveURL('/me/pending-invites');
 
     let error = HttpResponse.json({}, { status: 500 });
-    msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
+    msw.worker.use(http.patch('/api/v1/crate_owner_invitations/:id', () => error));
 
     await page.click('[data-test-invite="nanomsg"] [data-test-accept-button]');
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText('Error in accepting invite');
@@ -189,7 +189,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     let errorMessage =
       'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
     let error = HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 410 });
-    msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
+    msw.worker.use(http.patch('/api/v1/crate_owner_invitations/:id', () => error));
 
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
