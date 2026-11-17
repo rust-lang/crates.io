@@ -12,6 +12,7 @@
   import PageTitle from '#lib/components/PageTitle.svelte';
   import Panel from '#lib/components/Panel.svelte';
   import Tooltip from '#lib/components/Tooltip.svelte';
+  import UsernameMismatchNote from '#lib/components/UsernameMismatchNote.svelte';
   import { getNotifications } from '#lib/notifications.svelte.ts';
   import { getSession } from '#lib/utils/session.svelte.ts';
 
@@ -247,14 +248,18 @@
   {/each}
   {#each userOwners as user (user.id)}
     {@const href = ownerHref(user)}
+    {@const mismatched = !user.github_username_matches}
     <div class="row" data-test-owner-user={user.login}>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a {href}>
-        <Avatar owner={user} />
+        <Avatar owner={user} {mismatched} />
       </a>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a {href}>
         {user.name ?? user.login}
+        {#if mismatched}
+          <UsernameMismatchNote login={user.login} />
+        {/if}
       </a>
       <!--
         TODO: Showing only the authenticated user's own email here is a bit
