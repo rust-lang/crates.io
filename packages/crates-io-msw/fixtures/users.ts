@@ -4,8 +4,9 @@ export default [
     email: null,
     id: 303,
     login: 'blabaere',
+    githubAccounts: [{ accountId: '303', login: 'benoit-labaere', avatar: null }],
     name: 'Benoît Labaere',
-    url: 'https://github.com/blabaere',
+    url: 'https://github.com/benoit-labaere',
   },
   {
     avatar: 'https://avatars.githubusercontent.com/u/565790?v=3',
