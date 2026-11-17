@@ -195,7 +195,7 @@ async fn test_missing_key_id() -> anyhow::Result<()> {
     let client = prepare().await?;
 
     let claims = default_claims();
-    let secret_key = EncodingKey::from_secret(b"secret");
+    let secret_key = EncodingKey::from_secret(b"secret")?;
     let jwt = jsonwebtoken::encode(&Header::default(), &claims, &secret_key)?;
     let body = serde_json::to_vec(&json!({ "jwt": jwt }))?;
 

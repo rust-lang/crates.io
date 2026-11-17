@@ -51,7 +51,7 @@ mod tests {
         let iss = ISSUER.to_string();
         let claims = TestClaims { iss };
 
-        let key = EncodingKey::from_secret(b"test-secret");
+        let key = assert_ok!(EncodingKey::from_secret(b"test-secret"));
         let token = assert_ok!(encode(&header, &claims, &key));
 
         let decoded = assert_ok!(UnverifiedClaims::decode(&token));
@@ -80,6 +80,6 @@ mod tests {
         assert_compact_debug_snapshot!(error, @"Error(InvalidToken)");
 
         let error = assert_err!(UnverifiedClaims::decode("invalid.token.format"));
-        assert_compact_debug_snapshot!(error, @"Error(Base64(InvalidLastSymbol(6, 100)))");
+        assert_compact_debug_snapshot!(error, @"Error(Base64(Invalid last symbol 0x64 ('d') at offset 6, decoded as 0b00011101.))");
     }
 }
