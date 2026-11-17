@@ -166,11 +166,8 @@ jobs:
           persist-credentials: false
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          cache: pnpm
-          node-version-file: package.json
+          cache: true
 
       - run: pnpm install
 
@@ -190,11 +187,8 @@ jobs:
           persist-credentials: false
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          cache: pnpm
-          node-version-file: package.json
+          cache: true
 
       - run: pnpm install
 
@@ -221,11 +215,8 @@ jobs:
           persist-credentials: false
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          cache: pnpm
-          node-version-file: package.json
+          cache: true
 
       - run: pnpm install
 
@@ -233,7 +224,7 @@ jobs:
 
       # Reuse the Chromium that Playwright just installed instead of letting
       # @percy/core download its own.
-      - run: echo "PERCY_BROWSER_EXECUTABLE=$(node -e "console.log(require('@playwright/test').chromium.executablePath())")" >> "$GITHUB_ENV"
+      - run: echo "PERCY_BROWSER_EXECUTABLE=$(pnpm exec node -e "console.log(require('@playwright/test').chromium.executablePath())")" >> "$GITHUB_ENV"
 
       - if: github.repository == 'rust-lang/crates.io'
         run: pnpm percy exec -- pnpm e2e:svelte
@@ -287,11 +278,8 @@ jobs:
           persist-credentials: false
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          cache: pnpm
-          node-version-file: package.json
+          cache: true
 
       - run: pnpm install
 
@@ -313,11 +301,8 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          cache: pnpm
-          node-version-file: package.json
+          cache: true
 
       - run: pnpm install
 
