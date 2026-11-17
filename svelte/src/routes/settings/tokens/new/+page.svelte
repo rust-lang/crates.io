@@ -13,7 +13,14 @@
   import { scopeDescription } from '#lib/utils/token-scopes.ts';
   import { getTokenPageState } from '../+layout.svelte';
 
-  const ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'trusted-publishing', 'yank'];
+  const ENDPOINT_SCOPES = [
+    'change-owners',
+    'crate-owner-invitations',
+    'publish-new',
+    'publish-update',
+    'trusted-publishing',
+    'yank',
+  ];
 
   let notifications = getNotifications();
   let client = createClient({ fetch });

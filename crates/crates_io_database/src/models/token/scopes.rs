@@ -16,6 +16,7 @@ pub enum EndpointScope {
     TrustedPublishing,
     Yank,
     ChangeOwners,
+    CrateOwnerInvitations,
 }
 
 impl EndpointScope {
@@ -27,6 +28,7 @@ impl EndpointScope {
             EndpointScope::TrustedPublishing => "trusted-publishing",
             EndpointScope::Yank => "yank",
             EndpointScope::ChangeOwners => "change-owners",
+            EndpointScope::CrateOwnerInvitations => "crate-owner-invitations",
         }
     }
 }
@@ -54,6 +56,7 @@ impl TryFrom<&[u8]> for EndpointScope {
             b"trusted-publishing" => Ok(EndpointScope::TrustedPublishing),
             b"yank" => Ok(EndpointScope::Yank),
             b"change-owners" => Ok(EndpointScope::ChangeOwners),
+            b"crate-owner-invitations" => Ok(EndpointScope::CrateOwnerInvitations),
             _ => Err("Unrecognized enum variant".to_string()),
         }
     }
@@ -148,6 +151,10 @@ mod tests {
         }
 
         assert(EndpointScope::ChangeOwners, "\"change-owners\"");
+        assert(
+            EndpointScope::CrateOwnerInvitations,
+            "\"crate-owner-invitations\"",
+        );
         assert(EndpointScope::PublishNew, "\"publish-new\"");
         assert(EndpointScope::PublishUpdate, "\"publish-update\"");
         assert(EndpointScope::TrustedPublishing, "\"trusted-publishing\"");

@@ -663,7 +663,8 @@ expression: response.json()
           "publish-update",
           "trusted-publishing",
           "yank",
-          "change-owners"
+          "change-owners",
+          "crate-owner-invitations"
         ],
         "type": "string"
       },
@@ -2491,7 +2492,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations": {
       "get": {
-        "description": "Only pending invitations that haven't expired are returned.",
+        "description": "Only pending invitations that haven't expired are returned.\n\nListing the invitations of a user accepts cookie authentication or API\ntokens with the `crate-owner-invitations` scope. Legacy tokens without\nscopes are refused. Tokens with crate scopes only see invitations for\nmatching crates.\nListing the invitations of a crate requires cookie authentication.",
         "operationId": "list_crate_owner_invitations",
         "parameters": [
           {
@@ -2617,6 +2618,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "List crate owner invitations for a crate or user.",
@@ -2627,7 +2631,7 @@ expression: response.json()
     },
     "/api/v1/crate_owner_invitations/{id}": {
       "patch": {
-        "description": "Only the invitee can accept or decline an invitation.",
+        "description": "Only the invitee can accept or decline an invitation. This endpoint accepts\ncookie authentication or API tokens with the `crate-owner-invitations`\nscope and a crate scope that matches the invitation's crate. Legacy tokens\nwithout scopes are refused.",
         "operationId": "update_crate_owner_invitation",
         "parameters": [
           {
@@ -2728,6 +2732,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Accept or decline a crate owner invitation.",

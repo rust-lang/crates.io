@@ -190,6 +190,12 @@ export interface paths {
         /**
          * List crate owner invitations for a crate or user.
          * @description Only pending invitations that haven't expired are returned.
+         *
+         *     Listing the invitations of a user accepts cookie authentication or API
+         *     tokens with the `crate-owner-invitations` scope. Legacy tokens without
+         *     scopes are refused. Tokens with crate scopes only see invitations for
+         *     matching crates.
+         *     Listing the invitations of a crate requires cookie authentication.
          */
         get: operations["list_crate_owner_invitations"];
         put?: never;
@@ -215,7 +221,10 @@ export interface paths {
         head?: never;
         /**
          * Accept or decline a crate owner invitation.
-         * @description Only the invitee can accept or decline an invitation.
+         * @description Only the invitee can accept or decline an invitation. This endpoint accepts
+         *     cookie authentication or API tokens with the `crate-owner-invitations`
+         *     scope and a crate scope that matches the invitation's crate. Legacy tokens
+         *     without scopes are refused.
          */
         patch: operations["update_crate_owner_invitation"];
         trace?: never;
@@ -1465,7 +1474,7 @@ export interface components {
             version_id: number;
         };
         /** @enum {string} */
-        EndpointScope: "publish-new" | "publish-update" | "trusted-publishing" | "yank" | "change-owners";
+        EndpointScope: "publish-new" | "publish-update" | "trusted-publishing" | "yank" | "change-owners" | "crate-owner-invitations";
         GitHubConfig: {
             /** @example regex */
             crate: string;
@@ -5670,7 +5679,7 @@ export const pathsApiPrivateSessionAuthorizePostResponses200ContentApplicationJs
     status: unknown;
 }>["status"]> = ["signup_required"];
 export const crateOwnerInvitationStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrateOwnerInvitationState"]> = ["pending", "accepted", "declined", "revoked"];
-export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners"];
+export const endpointScopeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EndpointScope"]> = ["publish-new", "publish-update", "trusted-publishing", "yank", "change-owners", "crate-owner-invitations"];
 export const linkedAccountOneOf0ProviderValues: ReadonlyArray<Extract<FlattenedDeepRequired<components>["schemas"]["LinkedAccount"], {
     provider: unknown;
 }>["provider"]> = ["github"];

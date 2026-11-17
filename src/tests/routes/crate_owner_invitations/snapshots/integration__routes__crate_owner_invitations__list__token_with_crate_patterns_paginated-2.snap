@@ -1,0 +1,41 @@
+---
+source: src/tests/routes/crate_owner_invitations/list.rs
+expression: first_page
+---
+{
+  "crate_owner_invitations": [
+    {
+      "crate_id": 1,
+      "crate_name": "foo",
+      "created_at": "[datetime]",
+      "expires_at": "[datetime]",
+      "id": 1,
+      "invitee_id": 2,
+      "inviter_id": 1,
+      "state": "pending"
+    }
+  ],
+  "meta": {
+    "next_page": "?per_page=1&invitee_id=2&seek=WzEsMl0"
+  },
+  "users": [
+    {
+      "avatar": null,
+      "created_at": "[datetime]",
+      "github_username_matches": true,
+      "id": 1,
+      "login": "foo",
+      "name": null,
+      "url": "https://github.com/foo"
+    },
+    {
+      "avatar": null,
+      "created_at": "[datetime]",
+      "github_username_matches": true,
+      "id": 2,
+      "login": "invitee",
+      "name": null,
+      "url": "https://github.com/invitee"
+    }
+  ]
+}
