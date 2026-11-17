@@ -95,9 +95,11 @@ describe('Avatar', () => {
   });
 
   it('takes its shadow from `--avatar-shadow`', async () => {
-    await render(Avatar, { owner: JANE_DOE, style: '--avatar-shadow: 0 1px 1px 0 red' });
+    await render(Avatar, { owner: JANE_DOE, style: '--avatar-shadow: 0 1px 1px red' });
 
-    await expect.element(page.getByRole('img')).toHaveStyle({ boxShadow: 'rgb(255, 0, 0) 0px 1px 1px 0px' });
+    let wrapper = page.getByRole('img').element().parentElement!;
+    await expect.element(wrapper).toHaveStyle({ filter: 'drop-shadow(rgb(255, 0, 0) 0px 1px 1px)' });
+    await expect.element(page.getByRole('img')).toHaveStyle({ boxShadow: 'none' });
   });
 
   it('loads an image that matches the rendered size', async () => {

@@ -531,7 +531,7 @@
 
   .metadata :global(.avatar) {
     --avatar-size: 1.5em;
-    --avatar-shadow: 0 1px 1px 0 light-dark(var(--grey600), var(--surface-shadow-color-muted));
+    --avatar-shadow: 0 1px 1px light-dark(var(--grey600), var(--surface-shadow-color-muted));
     margin-left: var(--space-4xs);
     margin-bottom: -0.4em;
   }

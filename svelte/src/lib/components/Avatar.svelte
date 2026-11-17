@@ -44,6 +44,7 @@
     container-type: inline-size;
     display: inline-block;
     flex-shrink: 0;
+    filter: drop-shadow(var(--avatar-shadow, 1px 2px 2px var(--surface-shadow-color-muted)));
     width: var(--avatar-size, 22px);
     height: var(--avatar-size, 22px);
   }
@@ -56,7 +57,6 @@
     padding: max(1px, 3.5cqi);
     border-radius: 50%;
     background: white;
-    box-shadow: var(--avatar-shadow, 1px 2px 2px 0 var(--surface-shadow-color-muted));
   }
 
   .team {
