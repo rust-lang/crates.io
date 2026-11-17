@@ -3,7 +3,7 @@
 
   import { resolve } from '$app/paths';
 
-  import UserAvatar from './UserAvatar.svelte';
+  import Avatar from './Avatar.svelte';
 
   type Owner = components['schemas']['Owner'];
 
@@ -37,10 +37,10 @@
     {@const href = isTeam
       ? resolve('/teams/[team_id]', { team_id: owner.login })
       : resolve('/users/[user_id]', { user_id: owner.login })}
-    <li class:team={isTeam}>
+    <li>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() is used above -->
       <a {href} class="link" data-test-owner-link={owner.login}>
-        <UserAvatar user={owner} size="medium-small" class="avatar" aria-hidden="true" />
+        <Avatar {owner} aria-hidden="true" />
         <span class="name" class:sr-only={!showDetailedList}>{displayName(owner)}</span>
       </a>
     </li>
@@ -60,11 +60,8 @@
     .link {
       display: grid;
       grid-template-columns: auto 1fr;
+      column-gap: 10px;
       align-items: center;
-    }
-
-    :global(.avatar) {
-      margin-right: 10px;
     }
 
     .name {
@@ -86,14 +83,7 @@
     }
   }
 
-  .link :global(.avatar) {
-    border-radius: 50%;
-    background: white;
-    box-shadow: 1px 2px 2px 0 hsla(51, 50%, 44%, 0.35);
-    padding: 1px;
-  }
-
-  .team :global(.avatar) {
-    border-radius: 4px;
+  .link {
+    --avatar-size: 32px;
   }
 </style>

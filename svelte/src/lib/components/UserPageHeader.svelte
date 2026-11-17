@@ -6,8 +6,8 @@
   import type { components } from '@crates-io/api-client';
 
   import AccountChip from './AccountChip.svelte';
+  import Avatar from './Avatar.svelte';
   import PageHeader from './PageHeader.svelte';
-  import UserAvatar from './UserAvatar.svelte';
 
   type LinkedAccount = Pick<components['schemas']['LinkedAccount'], 'account_id' | 'login' | 'provider'>;
 
@@ -45,9 +45,8 @@
 
 <PageHeader data-test-heading>
   <div class="layout">
-    <UserAvatar
-      user={{ avatar: user.avatar, kind: 'user', login: user.login, name: user.name }}
-      size="medium"
+    <Avatar
+      owner={{ avatar: user.avatar, kind: 'user', login: user.login, name: user.name }}
       class="user-page-avatar"
       data-test-avatar
     />
@@ -105,12 +104,7 @@
   }
 
   :global(.user-page-avatar) {
+    --avatar-size: 85px;
     align-self: start;
-    flex-shrink: 0;
-    border-radius: 50%;
-    object-fit: cover;
-    background: white;
-    padding: 3px;
-    box-shadow: 1px 2px 2px 0 var(--surface-shadow-color-muted);
   }
 </style>

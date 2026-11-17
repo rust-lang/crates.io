@@ -3,12 +3,12 @@
   import { format } from 'date-fns/format';
 
   import { getSession } from '#lib/utils/session.svelte.ts';
+  import Avatar from './Avatar.svelte';
   import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   import * as Dropdown from './dropdown';
   import Icon from './Icon.svelte';
   import LoadingSpinner from './LoadingSpinner.svelte';
   import SearchForm from './SearchForm.svelte';
-  import UserAvatar from './UserAvatar.svelte';
 
   const SUDO_SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
 
@@ -60,13 +60,7 @@
               <div class="wizard-hat" aria-hidden="true" data-test-wizard-hat>🧙</div>
             {/if}
 
-            <UserAvatar
-              user={{ ...currentUser, kind: 'user' }}
-              size="small"
-              class="me-2xs"
-              aria-hidden="true"
-              data-test-avatar
-            />
+            <Avatar owner={{ ...currentUser, kind: 'user' }} class="me-2xs" aria-hidden="true" data-test-avatar />
 
             {currentUser.name}
           </Dropdown.Trigger>
@@ -291,6 +285,7 @@
   }
 
   .nav {
+    --avatar-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.15);
     grid-area: nav;
     display: flex;
     align-items: center;

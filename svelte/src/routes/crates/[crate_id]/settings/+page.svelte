@@ -6,12 +6,12 @@
   import { createClient } from '@crates-io/api-client';
 
   import Alert from '#lib/components/Alert.svelte';
+  import Avatar from '#lib/components/Avatar.svelte';
   import CrateHeader from '#lib/components/CrateHeader.svelte';
   import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
   import PageTitle from '#lib/components/PageTitle.svelte';
   import Panel from '#lib/components/Panel.svelte';
   import Tooltip from '#lib/components/Tooltip.svelte';
-  import UserAvatar from '#lib/components/UserAvatar.svelte';
   import { getNotifications } from '#lib/notifications.svelte.ts';
   import { getSession } from '#lib/utils/session.svelte.ts';
 
@@ -228,7 +228,7 @@
     <div class="row" data-test-owner-team={team.login}>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() is used above -->
       <a {href}>
-        <UserAvatar user={team} size="medium-small" />
+        <Avatar owner={team} />
       </a>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a {href}>
@@ -250,7 +250,7 @@
     <div class="row" data-test-owner-user={user.login}>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a {href}>
-        <UserAvatar {user} size="medium-small" />
+        <Avatar owner={user} />
       </a>
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a {href}>
@@ -478,6 +478,7 @@
   }
 
   .row {
+    --avatar-size: 32px;
     padding: var(--space-s) var(--space-m);
     display: flex;
     justify-content: space-between;

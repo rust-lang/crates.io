@@ -1,12 +1,12 @@
 <script lang="ts">
   import { createClient } from '@crates-io/api-client';
 
+  import Avatar from '#lib/components/Avatar.svelte';
   import EmailInput from '#lib/components/EmailInput.svelte';
   import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
   import PageHeader from '#lib/components/PageHeader.svelte';
   import PageTitle from '#lib/components/PageTitle.svelte';
   import SettingsPage from '#lib/components/SettingsPage.svelte';
-  import UserAvatar from '#lib/components/UserAvatar.svelte';
   import { getNotifications } from '#lib/notifications.svelte.ts';
   import { getSession } from '#lib/utils/session.svelte.ts';
 
@@ -50,7 +50,7 @@
     <div class="info">
       <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
       <a href={user.url} title={user.login}>
-        <UserAvatar user={{ ...user, kind: 'user' }} size="medium" />
+        <Avatar owner={{ ...user, kind: 'user' }} />
       </a>
 
       <dl>
@@ -100,6 +100,7 @@
     margin-bottom: var(--space-s);
 
     .info {
+      --avatar-size: 85px;
       display: flex;
     }
 
@@ -127,7 +128,7 @@
     }
 
     @media only screen and (max-width: 550px) {
-      .info :global(img) {
+      .info > a {
         display: none;
       }
     }
