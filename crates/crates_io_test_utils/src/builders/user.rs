@@ -152,12 +152,6 @@ impl<'a> UserBuilder<'a> {
     /// Inserts the user into the database, links its GitHub account, adds its
     /// email address and returns the user ID.
     pub async fn insert(self, conn: &AsyncPgConnection) -> QueryResult<i32> {
-        let gh_id = match &self.github {
-            Some(github) => github.account_id.unwrap_or_else(next_gh_id),
-            // Production stores `-1` for users whose GitHub account was deleted.
-            None => -1,
-        };
-
         let id = NewUser::builder()
             .username(self.username)
             .maybe_name(self.display_name)
@@ -168,7 +162,7 @@ impl<'a> UserBuilder<'a> {
 
         if let Some(github) = &self.github {
             NewOauthGithub::builder()
-                .account_id(gh_id.into())
+                .account_id(github.account_id.unwrap_or_else(next_gh_id).into())
                 .login(github.login)
                 .maybe_avatar(github.avatar)
                 .encrypted_token(&ENCRYPTED_TOKEN)
