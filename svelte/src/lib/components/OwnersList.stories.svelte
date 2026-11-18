@@ -42,6 +42,16 @@
     github_username_matches: true,
   };
 
+  const MISMATCHED_USER: Owner = {
+    id: 10,
+    kind: 'user',
+    name: 'Bob Smith',
+    login: 'bobsmith',
+    avatar: 'https://avatars.githubusercontent.com/u/10?v=4',
+    url: 'https://github.com/bob-smith',
+    github_username_matches: false,
+  };
+
   const RUST_TEAM: Owner = {
     id: 5_430_905,
     kind: 'team',
@@ -136,6 +146,12 @@
 
   <h1>Mixed Users and Teams</h1>
   <OwnersList owners={[RUST_TEAM, ANOTHER_TEAM, JANE_DOE, JOHN_SMITH, ANONYMOUS]} />
+
+  <h1>Mismatched User (Detailed)</h1>
+  <OwnersList owners={[JANE_DOE, MISMATCHED_USER]} />
+
+  <h1>Mismatched User (Compact)</h1>
+  <OwnersList owners={[JANE_DOE, MISMATCHED_USER, JOHN_SMITH, ANONYMOUS, USER_4, USER_5]} />
 
   <h1>Teams Only</h1>
   <OwnersList owners={[RUST_TEAM, ANOTHER_TEAM]} />

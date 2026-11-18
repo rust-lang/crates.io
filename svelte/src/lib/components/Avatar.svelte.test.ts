@@ -35,6 +35,7 @@ describe('Avatar', () => {
     await expect.element(img).toHaveAttribute('sizes', 'auto');
     await expect.element(img).toHaveAttribute('loading', 'lazy');
     await expect.element(img).toHaveStyle({ borderRadius: '50%' });
+    await expect.element(page.getByCSS('[data-test-mismatch-badge]')).not.toBeInTheDocument();
   });
 
   it('renders a team avatar with rounded corners', async () => {
@@ -95,9 +96,26 @@ describe('Avatar', () => {
   });
 
   it('takes its shadow from `--avatar-shadow`', async () => {
-    await render(Avatar, { owner: JANE_DOE, style: '--avatar-shadow: 0 1px 1px 0 red' });
+    await render(Avatar, { owner: JANE_DOE, style: '--avatar-shadow: 0 1px 1px red' });
 
-    await expect.element(page.getByRole('img')).toHaveStyle({ boxShadow: 'rgb(255, 0, 0) 0px 1px 1px 0px' });
+    let wrapper = page.getByRole('img').element().parentElement!;
+    await expect.element(wrapper).toHaveStyle({ filter: 'drop-shadow(rgb(255, 0, 0) 0px 1px 1px)' });
+    await expect.element(page.getByRole('img')).toHaveStyle({ boxShadow: 'none' });
+  });
+
+  it('renders a decorative mismatch badge framed as wide as the avatar padding', async () => {
+    await render(Avatar, { owner: JANE_DOE, mismatched: true, style: '--avatar-size: 85px' });
+
+    let badge = page.getByCSS('[data-test-mismatch-badge]');
+    await expect.element(badge).toHaveAttribute('aria-hidden', 'true');
+    await expect.element(badge).toHaveStyle({ paddingTop: '2.975px' });
+  });
+
+  it('keeps the mismatch badge legible on small avatars', async () => {
+    await render(Avatar, { owner: JANE_DOE, mismatched: true, style: '--avatar-size: 20px' });
+
+    let badge = page.getByCSS('[data-test-mismatch-badge]');
+    await expect.element(badge).toHaveStyle({ width: '13px', paddingTop: '1px' });
   });
 
   it('loads an image that matches the rendered size', async () => {

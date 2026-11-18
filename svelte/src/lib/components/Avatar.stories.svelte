@@ -60,6 +60,13 @@
     </div>
   {/each}
 
+  <h1>Mismatched</h1>
+  <div class="row">
+    {#each SIZES as size (size)}
+      <Avatar owner={JANE_DOE} mismatched style="--avatar-size: {size}" />
+    {/each}
+  </div>
+
   <h1>Header Shadow</h1>
   <div class="row header">
     {#each SIZES as size (size)}
@@ -83,7 +90,7 @@
   }
 
   .header {
-    --avatar-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+    --avatar-shadow: 1px 2px 2px rgba(0, 0, 0, 0.15);
     padding: 8px;
     background: var(--header-bg-color);
   }

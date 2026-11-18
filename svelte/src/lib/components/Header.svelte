@@ -285,7 +285,7 @@
   }
 
   .nav {
-    --avatar-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+    --avatar-shadow: 1px 2px 2px rgba(0, 0, 0, 0.15);
     grid-area: nav;
     display: flex;
     align-items: center;

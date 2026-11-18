@@ -15,6 +15,7 @@
   import LicenseExpression from '#lib/components/LicenseExpression.svelte';
   import PrivilegedAction from '#lib/components/PrivilegedAction.svelte';
   import Tooltip from '#lib/components/Tooltip.svelte';
+  import UsernameMismatchNote from '#lib/components/UsernameMismatchNote.svelte';
   import YankButton from '#lib/components/YankButton.svelte';
   import { dateToLocaleString } from '#lib/utils/datetime.ts';
 
@@ -170,11 +171,15 @@
   <div class="metadata" role="list" aria-label="Version metadata">
     <div class="metadata-row" role="presentation">
       {#if publishedBy}
+        {@const mismatched = !publishedBy.github_username_matches}
         <span class="publisher" role="listitem">
           by
           <a href={resolve('/users/[user_id]', { user_id: publishedBy.login })}>
-            <Avatar owner={publishedBy} class="avatar" aria-hidden="true" />
+            <Avatar owner={publishedBy} {mismatched} class={['avatar', { mismatched }]} aria-hidden="true" />
             {publishedBy.name ?? publishedBy.login}
+            {#if mismatched}
+              <UsernameMismatchNote login={publishedBy.login} />
+            {/if}
           </a>
         </span>
       {:else if trustpubPublisher}
@@ -531,9 +536,13 @@
 
   .metadata :global(.avatar) {
     --avatar-size: 1.5em;
-    --avatar-shadow: 0 1px 1px 0 light-dark(var(--grey600), var(--surface-shadow-color-muted));
+    --avatar-shadow: 0 1px 1px light-dark(var(--grey600), var(--surface-shadow-color-muted));
     margin-left: var(--space-4xs);
     margin-bottom: -0.4em;
+
+    &.mismatched {
+      margin-right: var(--space-4xs);
+    }
   }
 
   .metadata-row {

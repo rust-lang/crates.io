@@ -86,6 +86,14 @@
     isHighestOfReleaseTrack={true}
   />
 
+  <h1>Publisher With Mismatched GitHub Username</h1>
+  <Row
+    version={createVersion({
+      published_by: { ...createVersion().published_by!, github_username_matches: false },
+    })}
+    crateName="serde"
+  />
+
   <h1>With Trusted Publisher (GitHub)</h1>
   <Row
     version={createVersion({
