@@ -149,17 +149,9 @@ as well.
 
 ### Frontend requirements
 
-In order to run the frontend on Windows and macOS, you will need to have installed:
-
-- [node](https://nodejs.org/en/) (see `package.json` engines field for the exact version required)
-- [pnpm](https://pnpm.io) >= 8.5.1
-
-Follow the links for each of these tools for their recommended installation
-instructions. If you already have these tools, or you have a different
-preferred method of installing packages like these, that should work fine.
-
-If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md)
-to ensure that the use of `npm` does not require the use of `sudo`.
+In order to run the frontend, you will need to have [pnpm](https://pnpm.io)
+installed. pnpm then installs the Node.js version from the `devEngines` field in
+`package.json`.
 
 The front end should run fine after these steps. Please file an issue if you run
 into any trouble.
