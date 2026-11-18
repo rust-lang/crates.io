@@ -1,5 +1,5 @@
 use claims::assert_err_eq;
-use crates_io_database::models::{NewOauthGithub, NewUser, PublicUser, users_by_username};
+use crates_io_database::models::{NewUser, PublicUser, users_by_username};
 use crates_io_database::schema::users;
 use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
@@ -16,27 +16,8 @@ async fn find_latest_user_by_canonical_username() {
         .insert(&conn)
         .await
         .unwrap();
-    NewOauthGithub::builder()
-        .user_id(first_id)
-        .account_id(1)
-        .login("foo-bar")
-        .encrypted_token(&[])
-        .build()
-        .insert(&conn)
-        .await
-        .unwrap();
-
     let second_id = NewUser::builder()
         .username("FOO_BAR")
-        .build()
-        .insert(&conn)
-        .await
-        .unwrap();
-    NewOauthGithub::builder()
-        .user_id(second_id)
-        .account_id(2)
-        .login("FOO_BAR")
-        .encrypted_token(&[])
         .build()
         .insert(&conn)
         .await
