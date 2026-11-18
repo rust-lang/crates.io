@@ -11,14 +11,12 @@ async fn find_latest_user_by_canonical_username() {
     let mut conn = test_db.async_connect().await;
 
     let first_id = NewUser::builder()
-        .gh_id(1)
         .username("foo-bar")
         .build()
         .insert(&conn)
         .await
         .unwrap();
     let second_id = NewUser::builder()
-        .gh_id(2)
         .username("FOO_BAR")
         .build()
         .insert(&conn)
@@ -41,7 +39,7 @@ async fn find_latest_user_by_canonical_username() {
 async fn find_public_user_by_id() {
     let test_db = TestDatabase::new();
     let conn = test_db.async_connect().await;
-    let user = NewUser::builder().gh_id(1).username("crates-user").build();
+    let user = NewUser::builder().username("crates-user").build();
     let id = user.insert(&conn).await.unwrap();
 
     let user = PublicUser::find(&conn, id).await.unwrap();
