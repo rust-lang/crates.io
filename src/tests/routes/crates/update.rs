@@ -1,6 +1,9 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::schema::{crates, emails};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -145,6 +148,67 @@ async fn test_update_trustpub_only_requires_ownership() {
     let body = serde_json::json!({ "crate": { "trustpub_only": true } });
     let response = another_user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
+
+    assert_eq!(app.emails().await.len(), 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_update_trustpub_only_requires_verified_email() {
+    let (app, _, user) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    diesel::update(emails::table.filter(emails::user_id.eq(user.as_model().id)))
+        .set(emails::verified.eq(false))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let url = "/api/v1/crates/foo";
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
+    let response = user.patch::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to modify crate settings"}]}"#);
+
+    let trustpub_only = crates::table
+        .select(crates::trustpub_only)
+        .first::<bool>(&mut conn)
+        .await
+        .unwrap();
+    assert!(!trustpub_only);
+
+    assert_eq!(app.emails().await.len(), 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_update_trustpub_only_requires_email() {
+    let (app, _, user) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    diesel::delete(emails::table.filter(emails::user_id.eq(user.as_model().id)))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let url = "/api/v1/crates/foo";
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
+    let response = user.patch::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to modify crate settings"}]}"#);
+
+    let trustpub_only = crates::table
+        .select(crates::trustpub_only)
+        .first::<bool>(&mut conn)
+        .await
+        .unwrap();
+    assert!(!trustpub_only);
 
     assert_eq!(app.emails().await.len(), 0);
 }

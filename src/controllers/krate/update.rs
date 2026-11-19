@@ -94,17 +94,22 @@ async fn update_inner(
     // Query user owners to check permissions and send emails
     let user_owners = crate_owners::table
         .inner_join(users::table)
-        .inner_join(emails::table.on(users::id.eq(emails::user_id)))
+        .left_join(emails::table.on(users::id.eq(emails::user_id).and(emails::verified.eq(true))))
         .filter(crate_owners::crate_id.eq(krate.id))
         .filter(crate_owners::deleted.eq(false))
         .filter(crate_owners::owner_kind.eq(crate::models::OwnerKind::User))
-        .select((users::id, users::username, emails::email, emails::verified))
-        .load::<(i32, String, String, bool)>(conn)
+        .select((users::id, users::username, emails::email.nullable()))
+        .load::<(i32, String, Option<String>)>(conn)
         .await?;
 
     // Check that the authenticated user is an owner
-    if !user_owners.iter().any(|(id, _, _, _)| *id == user.id) {
+    let Some((_, _, verified_email)) = user_owners.iter().find(|(id, _, _)| *id == user.id) else {
         let msg = "only owners have permission to modify crate settings";
+        return Err(custom(StatusCode::FORBIDDEN, msg));
+    };
+
+    if verified_email.is_none() {
+        let msg = "You must verify your email address to modify crate settings";
         return Err(custom(StatusCode::FORBIDDEN, msg));
     }
 
@@ -132,8 +137,8 @@ async fn update_inner(
         );
 
         // Send email notifications to all crate owners
-        for (_, username, email_address, email_verified) in &user_owners {
-            if *email_verified {
+        for (_, username, email_address) in &user_owners {
+            if let Some(email_address) = email_address {
                 let email = TrustpubOnlyChangedEmail {
                     recipient: username,
                     auth_user: user,
