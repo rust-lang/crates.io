@@ -101,31 +101,44 @@
   .install-instructions :global(.copy-button),
   .copy-fallback {
     display: flex;
-    width: 100%;
+    /* Keeps the text aligned with the sidebar column while the card extends to the left */
+    width: calc(100% + var(--space-xs));
+    margin-left: calc(-1 * var(--space-xs));
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-2xs) var(--space-xs);
+    padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-xs);
     font-family: var(--font-monospace);
-    font-size: 14px;
+    font-size: 80%;
     line-height: 1.5em;
     color: var(--main-color);
-    background: transparent;
+    background: var(--surface);
     border-radius: var(--border-radius-small);
-    border: solid var(--space-4xs) var(--gray-border);
+    border: none;
+    box-shadow: var(--surface-shadow-muted);
 
     span {
       flex: auto;
       display: block;
       word-break: break-word;
     }
+
+    /* The stacked sidebar has no room to the left of the column, so the cards span the full screen width instead */
+    @media only screen and (max-width: 889px) {
+      width: calc(100% + 2 * var(--main-layout-padding));
+      margin-left: calc(-1 * var(--main-layout-padding));
+      padding-inline: var(--main-layout-padding);
+      border-radius: 0;
+    }
   }
 
   .install-instructions :global(.copy-button) {
     text-align: start;
     cursor: pointer;
+    transition: background-color var(--transition-slow);
 
     &:hover {
-      background-color: var(--surface);
+      background-color: light-dark(hsl(58deg 72% 97%), hsl(204, 3%, 11%));
+      transition: background-color var(--transition-instant);
     }
   }
 
@@ -134,11 +147,12 @@
     height: 1.25em;
     margin-left: var(--space-2xs);
     opacity: 0;
-    transition: opacity var(--transition-fast);
+    transition: opacity var(--transition-slow);
   }
 
   .install-instructions :global(.copy-button:hover .copy-icon) {
     opacity: 1;
+    transition: opacity var(--transition-instant);
   }
 
   .selectable {
