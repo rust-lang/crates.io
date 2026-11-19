@@ -1,7 +1,7 @@
 use crate::auth::AuthCheck;
 use crate::controllers::trustpub::emails::{ConfigDeletedEmail, ConfigType};
 use crate::server::ServerContext;
-use crate::util::errors::{AppResult, bad_request, not_found};
+use crate::util::errors::{AppResult, bad_request, forbidden, not_found};
 use anyhow::Context;
 use axum::extract::Path;
 use crates_io_database::models::token::EndpointScope;
@@ -59,14 +59,20 @@ pub async fn delete_trustpub_gitlab_config(
         .filter(crate_owners::deleted.eq(false))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .inner_join(users::table)
-        .inner_join(emails::table.on(users::id.eq(emails::user_id)))
-        .select((users::id, users::username, emails::email, emails::verified))
-        .load::<(i32, String, String, bool)>(&mut conn)
+        .left_join(emails::table.on(users::id.eq(emails::user_id).and(emails::verified.eq(true))))
+        .select((users::id, users::username, emails::email.nullable()))
+        .load::<(i32, String, Option<String>)>(&mut conn)
         .await?;
 
     // Check if the authenticated user is an owner of the crate
-    if !user_owners.iter().any(|owner| owner.0 == auth_user.id) {
-        return Err(bad_request("You are not an owner of this crate"));
+    let (_, _, verified_email) = user_owners
+        .iter()
+        .find(|(id, _, _)| *id == auth_user.id)
+        .ok_or_else(|| bad_request("You are not an owner of this crate"))?;
+
+    if verified_email.is_none() {
+        let message = "You must verify your email address to delete a Trusted Publishing config";
+        return Err(forbidden(message));
     }
 
     // Delete the configuration from the database
@@ -78,8 +84,7 @@ pub async fn delete_trustpub_gitlab_config(
 
     let recipients = user_owners
         .into_iter()
-        .filter(|(_, _, _, verified)| *verified)
-        .map(|(_, login, email, _)| (login, email))
+        .filter_map(|(_, login, email)| Some((login, email?)))
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
