@@ -24,3 +24,10 @@ export async function loadCdnBase(fetch: typeof globalThis.fetch): Promise<strin
 
   return cdnBase(data);
 }
+
+/** Returns the URL of the `.crate` or `.zip` file for a crate version. */
+export function crateFileUrl(base: string, crateName: string, versionNum: string, format: 'crate' | 'zip'): string {
+  // `encodeURIComponent` matches the backend's `+` -> `%2B` encoding for versions with build metadata.
+  let version = encodeURIComponent(versionNum);
+  return `${base}/crates/${crateName}/${crateName}-${version}.${format}`;
+}

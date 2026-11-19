@@ -2,6 +2,7 @@ import { createClient } from '@crates-io/api-client';
 
 import { loadNativeReplacements } from '#lib/data/native-replacements.ts';
 import { loadApi } from '#lib/utils/api.ts';
+import { cdnBase, loadCdnBase } from '#lib/utils/cdn.ts';
 import { loadDocsRsStatus } from '#lib/utils/docs-rs.ts';
 import { loadReadme } from '#lib/utils/readme.ts';
 import { loadUnmaintained } from '#lib/utils/rustsec.ts';
@@ -12,15 +13,24 @@ export async function load({ fetch, params, parent }) {
   let crateName = params.crate_id;
   let downloadsPromise = loadDownloads(client, crateName);
 
-  let [{ crate, defaultVersion }, nativeReplacements, unmaintained] = await Promise.all([
+  let [{ crate, defaultVersion }, nativeReplacements, unmaintained, cdnBaseUrl] = await Promise.all([
     parent(),
     loadNativeReplacements(fetch),
     loadUnmaintained(fetch, crateName),
+    // The download links fall back to the production CDN instead of failing the whole page
+    loadCdnBase(fetch).catch(() => cdnBase({})),
   ]);
   let readmePromise = loadReadme(fetch, crate.name, defaultVersion.num);
   let docsRsStatusPromise = loadDocsRsStatus(fetch, crate.name, defaultVersion.num);
 
-  return { readmePromise, downloadsPromise, docsRsStatusPromise, nativeReplacements, unmaintained };
+  return {
+    readmePromise,
+    downloadsPromise,
+    docsRsStatusPromise,
+    cdnBase: cdnBaseUrl,
+    nativeReplacements,
+    unmaintained,
+  };
 }
 
 /**

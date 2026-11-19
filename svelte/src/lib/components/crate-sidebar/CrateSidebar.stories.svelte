@@ -20,6 +20,7 @@
   const playgroundCrates: PlaygroundCrate[] = [{ name: 'serde', version: '1.0.215', id: 'serde' }];
 
   const playgroundCratesPromise = Promise.resolve(playgroundCrates);
+  const cdnBase = 'https://static.crates.io';
 
   const baseCrate: Crate = {
     id: 'serde',
@@ -178,6 +179,7 @@
     categories: baseCategories,
     owners: baseOwners,
     playgroundCratesPromise,
+    cdnBase,
   }}
 />
 
@@ -189,6 +191,7 @@
     categories: baseCategories,
     owners: baseOwners,
     playgroundCratesPromise,
+    cdnBase,
   }}
 />
 
@@ -200,6 +203,7 @@
     categories: baseCategories,
     owners: baseOwners,
     playgroundCratesPromise,
+    cdnBase,
   }}
 />
 
@@ -211,6 +215,7 @@
     categories: baseCategories,
     owners: manyOwners,
     playgroundCratesPromise,
+    cdnBase,
   }}
 />
 
@@ -226,6 +231,7 @@
     categories: baseCategories,
     owners: baseOwners,
     playgroundCratesPromise,
+    cdnBase,
   }}
 />
 
@@ -237,5 +243,6 @@
     categories: [],
     owners: baseOwners,
     playgroundCratesPromise,
+    cdnBase,
   }}
 />

@@ -22,6 +22,7 @@
     requestedVersion?: boolean;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
     docsRsStatusPromise: Promise<DocsRsStatus | null>;
+    cdnBase?: string;
   }
 
   let {
@@ -31,6 +32,7 @@
     owners,
     playgroundCratesPromise,
     docsRsStatusPromise,
+    cdnBase = 'https://static.crates.io',
     requestedVersion = false,
   }: Props = $props();
 
@@ -46,5 +48,6 @@
   {owners}
   {playgroundCratesPromise}
   {docsRsStatusPromise}
+  {cdnBase}
   {requestedVersion}
 />

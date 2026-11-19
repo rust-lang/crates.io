@@ -36,6 +36,7 @@
     readmePromise: Promise<string | null>;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
     docsRsStatusPromise: Promise<DocsRsStatus | null>;
+    cdnBase: string;
     downloadsPromise: Promise<DownloadChartData>;
     nativeReplacement?: NativeReplacement;
     unmaintained: Unmaintained | null;
@@ -51,6 +52,7 @@
     readmePromise,
     playgroundCratesPromise,
     docsRsStatusPromise,
+    cdnBase,
     downloadsPromise,
     nativeReplacement,
     unmaintained,
@@ -164,6 +166,7 @@
       requestedVersion={requestedVersion !== undefined}
       {playgroundCratesPromise}
       {docsRsStatusPromise}
+      {cdnBase}
     />
   </div>
 </div>
