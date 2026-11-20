@@ -60,11 +60,9 @@ fn process_line(line: &str, downloads: &mut DownloadsMap) {
         return;
     }
 
-    if json
-        .user_agent()
-        .is_some_and(|ua| !should_count_user_agent(ua))
-    {
-        // Ignore requests from user agents that should not be counted.
+    if !json.user_agent().is_some_and(should_count_user_agent) {
+        // Ignore requests without a user agent or from user agents that
+        // should not be counted.
         return;
     }
 
@@ -231,6 +229,28 @@ mod tests {
             2025-10-26  scale-info@2.11.3 .. 1
             2025-10-26  tinyvec_macros@0.1.1 .. 1
             2025-10-26  unicode-normalization@0.1.22 .. 1
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_missing_user_agent() {
+        let _guard = enable_tracing_output();
+
+        let input = [
+            // Without `http` field
+            r#"{"date_time":"2025-10-26T23:57:34.867635728Z","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#,
+            // With `http.useragent: null`
+            r#"{"date_time":"2025-10-26T23:57:34.867635728Z","http":{"protocol":"HTTP/2","referer":null,"useragent":null},"method":"GET","status":200,"url":"https://static.crates.io/crates/tinyvec/tinyvec-1.6.0.crate","version":"1"}"#,
+            // With cargo user agent
+            r#"{"date_time":"2025-10-26T23:57:34.867635728Z","http":{"protocol":"HTTP/2","referer":null,"useragent":"cargo/1.90.0 (840b83a10 2025-07-30)"},"method":"GET","status":200,"url":"https://static.crates.io/crates/winnow/winnow-0.5.4.crate","version":"1"}"#,
+        ]
+        .join("\n");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2025-10-26  winnow@0.5.4 .. 1
         }
         ");
     }
