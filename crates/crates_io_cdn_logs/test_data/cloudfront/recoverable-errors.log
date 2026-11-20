@@ -1,20 +1,20 @@
 #Version: 1.0
 #Foo?
-#Fields: date time cs-method cs-uri-stem sc-status sc-foo
-2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	200
-#Fields: date time cs-uri-stem sc-status
-2024-01-16	23:56:42	/crates/bindgen/bindgen-0.65.1.crate	200
-#Fields: date time cs-method cs-uri-stem
-2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate
-#Fields: date time cs-method sc-status
-2024-01-16	23:56:42	GET	200
-#Fields: cs-method cs-uri-stem sc-status
-GET	/crates/bindgen/bindgen-0.65.1.crate	200
-#Fields: date time cs-method cs-uri-stem sc-status
-foo	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	200
-#Fields: date time cs-method cs-uri-stem sc-status
-2024-01-16	23:56:42	GET	/crates/foo/bindgen-0.65.1.crate	200
-#Fields: date time cs-method cs-uri-stem sc-status
-2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.0.0§foo.crate	200
-#Fields: date time cs-method cs-uri-stem sc-status
-2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	200
+#Fields: date time cs-method cs-uri-stem sc-status cs(User-Agent) sc-foo
+2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-uri-stem sc-status cs(User-Agent)
+2024-01-16	23:56:42	/crates/bindgen/bindgen-0.65.1.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-method cs-uri-stem cs(User-Agent)
+2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-method sc-status cs(User-Agent)
+2024-01-16	23:56:42	GET	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: cs-method cs-uri-stem sc-status cs(User-Agent)
+GET	/crates/bindgen/bindgen-0.65.1.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-method cs-uri-stem sc-status cs(User-Agent)
+foo	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-method cs-uri-stem sc-status cs(User-Agent)
+2024-01-16	23:56:42	GET	/crates/foo/bindgen-0.65.1.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-method cs-uri-stem sc-status cs(User-Agent)
+2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.0.0§foo.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)
+#Fields: date time cs-method cs-uri-stem sc-status cs(User-Agent)
+2024-01-16	23:56:42	GET	/crates/bindgen/bindgen-0.65.1.crate	200	cargo%201.74.0%20(ecb9851af%202023-10-18)

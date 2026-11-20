@@ -120,7 +120,7 @@ mod tests {
     use std::io::Cursor;
     use tokio::io::BufReader;
 
-    const LINE: &str = r#"<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
+    const LINE: &str = r#"<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","http":{"useragent":"cargo 1.74.0 (ecb9851af 2023-10-18)"},"ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
 
     #[tokio::test]
     async fn test_basic() {
