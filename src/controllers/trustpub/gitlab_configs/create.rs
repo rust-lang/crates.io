@@ -72,17 +72,17 @@ pub async fn create_trustpub_gitlab_config(
         .filter(crate_owners::deleted.eq(false))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .inner_join(users::table)
-        .inner_join(emails::table.on(users::id.eq(emails::user_id)))
-        .select((users::id, users::username, emails::email, emails::verified))
-        .load::<(i32, String, String, bool)>(&mut conn)
+        .left_join(emails::table.on(users::id.eq(emails::user_id).and(emails::verified.eq(true))))
+        .select((users::id, users::username, emails::email.nullable()))
+        .load::<(i32, String, Option<String>)>(&mut conn)
         .await?;
 
-    let (_, _, _, email_verified) = user_owners
+    let (_, _, verified_email) = user_owners
         .iter()
-        .find(|(id, _, _, _)| *id == auth_user.id)
+        .find(|(id, _, _)| *id == auth_user.id)
         .ok_or_else(|| bad_request("You are not an owner of this crate"))?;
 
-    if !email_verified {
+    if verified_email.is_none() {
         let message = "You must verify your email address to create a Trusted Publishing config";
         return Err(forbidden(message));
     }
@@ -103,8 +103,7 @@ pub async fn create_trustpub_gitlab_config(
 
     let recipients = user_owners
         .into_iter()
-        .filter(|(_, _, _, verified)| *verified)
-        .map(|(_, login, email, _)| (login, email))
+        .filter_map(|(_, login, email)| Some((login, email?)))
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {

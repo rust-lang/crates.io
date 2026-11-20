@@ -469,6 +469,37 @@ async fn test_unverified_email() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_missing_email() -> anyhow::Result<()> {
+    let (app, _client, cookie_client) = TestApp::full().with_user().await;
+
+    let mut conn = app.db_conn().await;
+
+    diesel::delete(emails::table.filter(emails::user_id.eq(cookie_client.as_model().id)))
+        .execute(&mut conn)
+        .await?;
+
+    CrateBuilder::new(CRATE_NAME, cookie_client.as_model().id)
+        .build(&mut conn)
+        .await?;
+
+    let body = serde_json::to_vec(&json!({
+        "gitlab_config": {
+            "crate": CRATE_NAME,
+            "namespace": "rust-lang",
+            "project": "foo-rs",
+            "workflow_filepath": ".gitlab-ci.yml",
+            "environment": null,
+        }
+    }))?;
+
+    let response = cookie_client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to create a Trusted Publishing config"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_too_many_configs() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
 

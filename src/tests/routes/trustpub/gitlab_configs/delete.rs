@@ -3,6 +3,7 @@ use crate::util::{RequestHelper, TestApp};
 use crates_io_database::models::Crate;
 use crates_io_database::models::token::{CrateScope, EndpointScope};
 use crates_io_database::models::trustpub::{GitLabConfig, NewGitLabConfig};
+use crates_io_database::schema::emails;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
@@ -134,6 +135,61 @@ async fn test_non_owner() -> anyhow::Result<()> {
     let response = other_client.delete::<()>(&delete_url(config.id)).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
+
+    // Verify the config was not deleted
+    let configs = get_all_configs(&mut conn).await?;
+    assert_eq!(configs.len(), 1);
+
+    // Verify no emails were sent to crate owners
+    assert_eq!(app.emails().await.len(), 0);
+
+    Ok(())
+}
+
+/// Tries to delete the config with an owner that has an unverified email address.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unverified_email() -> anyhow::Result<()> {
+    let (app, _client, cookie_client) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let krate = create_crate(&mut conn, cookie_client.as_model().id).await?;
+    let config = create_config(&mut conn, krate.id).await?;
+
+    diesel::update(emails::table.filter(emails::user_id.eq(cookie_client.as_model().id)))
+        .set(emails::verified.eq(false))
+        .execute(&mut conn)
+        .await?;
+
+    let response = cookie_client.delete::<()>(&delete_url(config.id)).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to delete a Trusted Publishing config"}]}"#);
+
+    // Verify the config was not deleted
+    let configs = get_all_configs(&mut conn).await?;
+    assert_eq!(configs.len(), 1);
+
+    // Verify no emails were sent to crate owners
+    assert_eq!(app.emails().await.len(), 0);
+
+    Ok(())
+}
+
+/// Tries to delete the config with an owner that has no email address.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_missing_email() -> anyhow::Result<()> {
+    let (app, _client, cookie_client) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let krate = create_crate(&mut conn, cookie_client.as_model().id).await?;
+    let config = create_config(&mut conn, krate.id).await?;
+
+    diesel::delete(emails::table.filter(emails::user_id.eq(cookie_client.as_model().id)))
+        .execute(&mut conn)
+        .await?;
+
+    let response = cookie_client.delete::<()>(&delete_url(config.id)).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to delete a Trusted Publishing config"}]}"#);
 
     // Verify the config was not deleted
     let configs = get_all_configs(&mut conn).await?;
