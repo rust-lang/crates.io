@@ -32,8 +32,8 @@ fn process_line(line: &str, downloads: &mut DownloadsMap) {
     let span = debug_span!("process_line");
     let _guard = span.enter();
 
-    let Some(json) = parse_line(line) else {
-        warn!("Failed to find JSON start");
+    let Some(json) = strip_syslog_prefix(line) else {
+        warn!("Failed to find end of syslog prefix");
         return;
     };
 
@@ -87,8 +87,10 @@ fn process_line(line: &str, downloads: &mut DownloadsMap) {
 }
 
 /// Strips the optional `classic` syslog prefix (`<134>... s3-request-logs[322614]: `).
+///
+/// Returns `None` if the line starts with `<` but the prefix has no `]: ` terminator.
 #[instrument(level = "debug", skip(line))]
-fn parse_line(line: &str) -> Option<&str> {
+fn strip_syslog_prefix(line: &str) -> Option<&str> {
     match line.strip_prefix('<') {
         Some(rest) => rest.split_once("]: ").map(|(_, json)| json),
         None => Some(line),
