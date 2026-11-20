@@ -12,12 +12,17 @@ use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tracing::{debug_span, instrument, warn};
 
 #[instrument(level = "debug", skip(reader))]
-pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Result<DownloadsMap> {
+pub async fn count_downloads(
+    mut reader: impl AsyncBufRead + Unpin,
+) -> anyhow::Result<DownloadsMap> {
     let mut downloads = DownloadsMap::new();
 
-    let mut lines = reader.lines();
-    while let Some(line) = lines.next_line().await? {
-        process_line(&line, &mut downloads);
+    let mut line = Vec::new();
+    while reader.read_until(b'\n', &mut line).await? > 0 {
+        let trimmed = line.strip_suffix(b"\n").unwrap_or(&line);
+        let trimmed = trimmed.strip_suffix(b"\r").unwrap_or(trimmed);
+        process_line(str::from_utf8(trimmed)?, &mut downloads);
+        line.clear();
     }
 
     Ok(downloads)
