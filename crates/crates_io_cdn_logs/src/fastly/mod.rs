@@ -17,64 +17,68 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
 
     let mut lines = reader.lines();
     while let Some(line) = lines.next_line().await? {
-        let span = debug_span!("process_line");
-        let _guard = span.enter();
-
-        let Some(json) = parse_line(&line) else {
-            warn!("Failed to find JSON start");
-            continue;
-        };
-
-        let json = match parse_json(json) {
-            Ok(json) => json,
-            Err(error) => {
-                warn!("Failed to parse JSON: {error}");
-                continue;
-            }
-        };
-
-        if json.version() != "1" {
-            warn!("Unsupported log line version: {}", json.version());
-            continue;
-        }
-
-        if json.method() != "GET" {
-            // Ignore non-GET requests.
-            continue;
-        }
-
-        if json.status() != 200 {
-            // Ignore non-200 responses.
-            continue;
-        }
-
-        if json
-            .user_agent()
-            .is_some_and(|ua| !should_count_user_agent(ua))
-        {
-            // Ignore requests from user agents that should not be counted.
-            continue;
-        }
-
-        let url = decode_url(json.url());
-
-        // We're avoiding parsing to `url::Url` here for performance reasons.
-        // Since we're already filtering out non-200 responses, we can assume
-        // that the URL is valid.
-
-        let Some((name, version)) = parse_path(&url) else {
-            continue;
-        };
-
-        let Some(date) = json.date() else {
-            warn!("Failed to parse date `{}`", json.date_time);
-            continue;
-        };
-
-        downloads.add(name, version, date);
+        process_line(&line, &mut downloads);
     }
 
     Ok(downloads)
+}
+
+fn process_line(line: &str, downloads: &mut DownloadsMap) {
+    let span = debug_span!("process_line");
+    let _guard = span.enter();
+
+    let Some(json) = parse_line(line) else {
+        warn!("Failed to find JSON start");
+        return;
+    };
+
+    let json = match parse_json(json) {
+        Ok(json) => json,
+        Err(error) => {
+            warn!("Failed to parse JSON: {error}");
+            return;
+        }
+    };
+
+    if json.version() != "1" {
+        warn!("Unsupported log line version: {}", json.version());
+        return;
+    }
+
+    if json.method() != "GET" {
+        // Ignore non-GET requests.
+        return;
+    }
+
+    if json.status() != 200 {
+        // Ignore non-200 responses.
+        return;
+    }
+
+    if json
+        .user_agent()
+        .is_some_and(|ua| !should_count_user_agent(ua))
+    {
+        // Ignore requests from user agents that should not be counted.
+        return;
+    }
+
+    let url = decode_url(json.url());
+
+    // We're avoiding parsing to `url::Url` here for performance reasons.
+    // Since we're already filtering out non-200 responses, we can assume
+    // that the URL is valid.
+
+    let Some((name, version)) = parse_path(&url) else {
+        return;
+    };
+
+    let Some(date) = json.date() else {
+        warn!("Failed to parse date `{}`", json.date_time);
+        return;
+    };
+
+    downloads.add(name, version, date);
 }
 
 #[instrument(level = "debug", skip(line))]
