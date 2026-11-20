@@ -103,8 +103,11 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use claims::assert_ok;
-    use insta::assert_debug_snapshot;
+    use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::Cursor;
+    use tokio::io::BufReader;
+
+    const LINE: &str = r#"<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
 
     #[tokio::test]
     async fn test_basic() {
@@ -217,5 +220,41 @@ mod tests {
             2025-10-26  unicode-normalization@0.1.22 .. 1
         }
         ");
+    }
+
+    #[tokio::test]
+    async fn test_small_read_buffer() {
+        let _guard = enable_tracing_output();
+
+        let bytes = include_bytes!("../../test_data/fastly/basic.log");
+        let expected = assert_ok!(count_downloads(&bytes[..]).await);
+
+        let reader = BufReader::with_capacity(7, &bytes[..]);
+        let downloads = assert_ok!(count_downloads(reader).await);
+        assert_eq!(*downloads, *expected);
+    }
+
+    #[tokio::test]
+    async fn test_line_endings() {
+        let _guard = enable_tracing_output();
+
+        let input = format!("{LINE}\n\n{LINE}\r\n{LINE}");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 3
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_invalid_utf8() {
+        let _guard = enable_tracing_output();
+
+        let input = [LINE.as_bytes(), b"\n<134>\xff\n", LINE.as_bytes()].concat();
+        let error = count_downloads(&input[..]).await.unwrap_err();
+
+        assert_snapshot!(error, @"invalid utf-8 sequence of 1 bytes from index 5");
     }
 }
