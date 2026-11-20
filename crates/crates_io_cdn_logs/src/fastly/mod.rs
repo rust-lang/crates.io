@@ -3,8 +3,10 @@
 //! see <https://docs.fastly.com/en/guides/changing-log-line-formats#classic-format>.
 
 mod json;
+mod lean;
 
 use crate::DownloadsMap;
+use crate::fastly::lean::LeanLines;
 use crate::paths::parse_path;
 use crate::user_agent::should_count_user_agent;
 use std::borrow::Cow;
@@ -16,28 +18,41 @@ pub async fn count_downloads(
     mut reader: impl AsyncBufRead + Unpin,
 ) -> anyhow::Result<DownloadsMap> {
     let mut downloads = DownloadsMap::new();
+    let mut lean_lines = LeanLines::default();
 
     let mut line = Vec::new();
     while reader.read_until(b'\n', &mut line).await? > 0 {
         let trimmed = line.strip_suffix(b"\n").unwrap_or(&line);
         let trimmed = trimmed.strip_suffix(b"\r").unwrap_or(trimmed);
-        process_line(str::from_utf8(trimmed)?, &mut downloads);
+        process_line(str::from_utf8(trimmed)?, &mut downloads, &mut lean_lines);
         line.clear();
     }
 
+    lean_lines.add_to(&mut downloads)?;
     Ok(downloads)
 }
 
-fn process_line(line: &str, downloads: &mut DownloadsMap) {
+fn process_line(line: &str, downloads: &mut DownloadsMap, lean_lines: &mut LeanLines) {
     let span = debug_span!("process_line");
     let _guard = span.enter();
 
-    let Some(json) = strip_syslog_prefix(line) else {
+    let Some(payload) = strip_syslog_prefix(line) else {
         warn!("Failed to find end of syslog prefix");
         return;
     };
 
-    let json = match parse_json(json) {
+    let is_lean = match payload.as_bytes().first() {
+        Some(b'{') => false,
+        Some(b'0'..=b'9') => true,
+        _ => payload.contains('\t'),
+    };
+
+    if is_lean {
+        lean_lines.add(payload);
+        return;
+    }
+
+    let json = match parse_json(payload) {
         Ok(json) => json,
         Err(error) => {
             warn!("Failed to parse JSON: {error}");
@@ -116,7 +131,7 @@ fn decode_url(url: &str) -> Cow<'_, str> {
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use claims::assert_ok;
+    use claims::{assert_err, assert_ok};
     use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::Cursor;
     use tokio::io::BufReader;
@@ -307,5 +322,71 @@ mod tests {
             2024-01-16  strsim@0.10.0 .. 2
         }
         ");
+    }
+
+    #[tokio::test]
+    async fn test_lean() {
+        let _guard = enable_tracing_output();
+
+        let mut cursor = Cursor::new(include_bytes!("../../test_data/fastly/lean.log"));
+        let downloads = assert_ok!(count_downloads(&mut cursor).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 3
+            2024-01-16  tikv-jemalloc-sys@0.5.2+5.3.0-patched .. 1
+            2024-01-17  strsim@0.10.0 .. 1
+            2024-01-17  windows_x86_64_gnu@0.48.0 .. 2
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_mixed() {
+        let _guard = enable_tracing_output();
+
+        let mut cursor = Cursor::new(include_bytes!("../../test_data/fastly/mixed.log"));
+        let downloads = assert_ok!(count_downloads(&mut cursor).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 4
+            2024-01-17  cc@1.0.73 .. 2
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_malformed_lean_lines() {
+        let _guard = enable_tracing_output();
+
+        let lines = [
+            "2024-01-16",
+            "2024-01-16\tstrsim",
+            "2024-01-16\tstrsim\t0.10.0\tfoo",
+            "2024-13-16\tstrsim\t0.10.0",
+            "2024-01-16\tstrsim\t0.10",
+            "2024-01-16\t\t0.10.0",
+            "bad-date\tstrsim\t0.10.0",
+        ];
+
+        let mut errors = Vec::new();
+        for line in lines {
+            let input = format!("2024-01-16\tstrsim\t0.10.0\n{line}\n");
+            let error = assert_err!(count_downloads(input.as_bytes()).await);
+            errors.push(format!("{error:#}"));
+        }
+
+        assert_debug_snapshot!(errors, @r#"
+        [
+            "Failed to parse log line: \"2024-01-16\": Missing crate name",
+            "Failed to parse log line: \"2024-01-16\\tstrsim\": Missing version",
+            "Failed to parse log line: \"2024-01-16\\tstrsim\\t0.10.0\\tfoo\": Invalid version: unexpected character '\\t' after patch version number",
+            "Failed to parse log line: \"2024-13-16\\tstrsim\\t0.10.0\": Invalid date",
+            "Failed to parse log line: \"2024-01-16\\tstrsim\\t0.10\": Invalid version: unexpected end of input while parsing minor version number",
+            "Failed to parse log line: \"2024-01-16\\t\\t0.10.0\": Missing crate name",
+            "Failed to parse log line: \"bad-date\\tstrsim\\t0.10.0\": Invalid date",
+        ]
+        "#);
     }
 }
