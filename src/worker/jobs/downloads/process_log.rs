@@ -448,6 +448,29 @@ mod tests {
         "#);
     }
 
+    #[tokio::test]
+    async fn test_save_downloads_in_multiple_batches() {
+        crate::util::tracing::init_for_test();
+
+        let test_database = TestDatabase::new();
+        let db_pool = build_connection_pool(test_database.url());
+        let mut conn = db_pool.get().await.unwrap();
+        create_crate_and_version("foo", "1.0.0", &mut conn).await;
+
+        let first_date = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+        let mut downloads = DownloadsMap::new();
+        for date in first_date.iter_days().take(12_345) {
+            downloads.add("foo".to_string(), Version::new(1, 0, 0), date);
+        }
+
+        let transaction = conn.transaction(async |conn| save_downloads(downloads, conn).await);
+        assert_ok!(transaction.await);
+
+        let downloads = query_all_version_downloads(&conn).await;
+        assert_eq!(downloads.len(), 12_345);
+        assert!(downloads.iter().all(|row| row.2 == 1));
+    }
+
     #[test]
     fn test_build_store_s3() {
         let access_key = "access_key".into();
