@@ -31,12 +31,13 @@ where
             let reader = Cursor::new(b"#").chain(reader);
             cloudfront::count_downloads(reader).await
         }
-        // Fastly log lines start with a `<123>` field.
-        b'<' => {
+        // Fastly log lines start with a `<123>` syslog field or directly
+        // with the JSON payload.
+        byte @ (b'<' | b'{') => {
             // We can't use `AsyncSeek` here because `async-compression` does
-            // not support it, but we can use `Cursor` to prepend the `<` back
+            // not support it, but we can use `Cursor` to prepend the byte back
             // onto the reader.
-            let reader = Cursor::new(b"<").chain(reader);
+            let reader = Cursor::new([byte]).chain(reader);
             fastly::count_downloads(reader).await
         }
         // Anything else is rejected.
@@ -192,6 +193,20 @@ mod tests {
             2024-01-17  windows_x86_64_gnu@0.48.0 .. 2
             2024-01-17  xz2@0.1.7 .. 1
             2024-01-17  zstd-safe@7.0.0 .. 1
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_fastly_without_prefix() {
+        let _guard = enable_tracing_output();
+
+        let line = r#"{"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
+        let downloads = assert_ok!(count_downloads(line.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @r"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 1
         }
         ");
     }

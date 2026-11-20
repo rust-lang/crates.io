@@ -86,11 +86,13 @@ fn process_line(line: &str, downloads: &mut DownloadsMap) {
     downloads.add(name, version, date);
 }
 
+/// Strips the optional `classic` syslog prefix (`<134>... s3-request-logs[322614]: `).
 #[instrument(level = "debug", skip(line))]
 fn parse_line(line: &str) -> Option<&str> {
-    // A regex could also be used here, but the `find()` call appears to
-    // be roughly 10x faster.
-    line.find(r#"]: {"#).map(|pos| &line[pos + 3..])
+    match line.strip_prefix('<') {
+        Some(rest) => rest.split_once("]: ").map(|(_, json)| json),
+        None => Some(line),
+    }
 }
 
 #[instrument(level = "debug", skip(json))]
@@ -265,5 +267,20 @@ mod tests {
         let error = count_downloads(&input[..]).await.unwrap_err();
 
         assert_snapshot!(error, @"invalid utf-8 sequence of 1 bytes from index 5");
+    }
+
+    #[tokio::test]
+    async fn test_without_prefix() {
+        let _guard = enable_tracing_output();
+
+        let (_, json) = LINE.split_once("]: ").unwrap();
+        let input = format!("{json}\n{LINE}\n");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @r"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 2
+        }
+        ");
     }
 }
