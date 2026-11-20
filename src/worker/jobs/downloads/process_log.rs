@@ -187,8 +187,8 @@ struct NewDownload {
     downloads: i64,
 }
 
-impl From<(String, Version, NaiveDate, u64)> for NewDownload {
-    fn from((name, version, date, downloads): (String, Version, NaiveDate, u64)) -> Self {
+impl From<((String, Version, NaiveDate), u64)> for NewDownload {
+    fn from(((name, version, date), downloads): ((String, Version, NaiveDate), u64)) -> Self {
         Self {
             name,
             version: version.to_string(),
@@ -275,15 +275,11 @@ async fn fill_temp_downloads_table(
     // batches.
     const MAX_BATCH_SIZE: usize = 5_000;
 
-    let map = downloads
-        .into_vec()
-        .into_iter()
-        .map(NewDownload::from)
-        .collect::<Vec<_>>();
-
-    for chunk in map.chunks(MAX_BATCH_SIZE) {
+    let mut downloads = downloads.into_iter().map(NewDownload::from).peekable();
+    while downloads.peek().is_some() {
+        let batch = downloads.by_ref().take(MAX_BATCH_SIZE).collect::<Vec<_>>();
         diesel::insert_into(temp_downloads::table)
-            .values(chunk)
+            .values(batch)
             .execute(conn)
             .await?;
     }
@@ -446,6 +442,29 @@ mod tests {
             "tracing-core | 0.1.32 | 1 | 0 | 2024-01-16 | false",
         ]
         "#);
+    }
+
+    #[tokio::test]
+    async fn test_save_downloads_in_multiple_batches() {
+        crate::util::tracing::init_for_test();
+
+        let test_database = TestDatabase::new();
+        let db_pool = build_connection_pool(test_database.url());
+        let mut conn = db_pool.get().await.unwrap();
+        create_crate_and_version("foo", "1.0.0", &mut conn).await;
+
+        let first_date = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+        let mut downloads = DownloadsMap::new();
+        for date in first_date.iter_days().take(12_345) {
+            downloads.add("foo".to_string(), Version::new(1, 0, 0), date);
+        }
+
+        let transaction = conn.transaction(async |conn| save_downloads(downloads, conn).await);
+        assert_ok!(transaction.await);
+
+        let downloads = query_all_version_downloads(&conn).await;
+        assert_eq!(downloads.len(), 12_345);
+        assert!(downloads.iter().all(|row| row.2 == 1));
     }
 
     #[test]
