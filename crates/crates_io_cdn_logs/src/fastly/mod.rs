@@ -12,76 +12,87 @@ use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tracing::{debug_span, instrument, warn};
 
 #[instrument(level = "debug", skip(reader))]
-pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Result<DownloadsMap> {
+pub async fn count_downloads(
+    mut reader: impl AsyncBufRead + Unpin,
+) -> anyhow::Result<DownloadsMap> {
     let mut downloads = DownloadsMap::new();
 
-    let mut lines = reader.lines();
-    while let Some(line) = lines.next_line().await? {
-        let span = debug_span!("process_line");
-        let _guard = span.enter();
-
-        let Some(json) = parse_line(&line) else {
-            warn!("Failed to find JSON start");
-            continue;
-        };
-
-        let json = match parse_json(json) {
-            Ok(json) => json,
-            Err(error) => {
-                warn!("Failed to parse JSON: {error}");
-                continue;
-            }
-        };
-
-        if json.version() != "1" {
-            warn!("Unsupported log line version: {}", json.version());
-            continue;
-        }
-
-        if json.method() != "GET" {
-            // Ignore non-GET requests.
-            continue;
-        }
-
-        if json.status() != 200 {
-            // Ignore non-200 responses.
-            continue;
-        }
-
-        if json
-            .user_agent()
-            .is_some_and(|ua| !should_count_user_agent(ua))
-        {
-            // Ignore requests from user agents that should not be counted.
-            continue;
-        }
-
-        let url = decode_url(json.url());
-
-        // We're avoiding parsing to `url::Url` here for performance reasons.
-        // Since we're already filtering out non-200 responses, we can assume
-        // that the URL is valid.
-
-        let Some((name, version)) = parse_path(&url) else {
-            continue;
-        };
-
-        let Some(date) = json.date() else {
-            warn!("Failed to parse date `{}`", json.date_time);
-            continue;
-        };
-
-        downloads.add(name, version, date);
+    let mut line = Vec::new();
+    while reader.read_until(b'\n', &mut line).await? > 0 {
+        let trimmed = line.strip_suffix(b"\n").unwrap_or(&line);
+        let trimmed = trimmed.strip_suffix(b"\r").unwrap_or(trimmed);
+        process_line(str::from_utf8(trimmed)?, &mut downloads);
+        line.clear();
     }
 
     Ok(downloads)
 }
 
+fn process_line(line: &str, downloads: &mut DownloadsMap) {
+    let span = debug_span!("process_line");
+    let _guard = span.enter();
+
+    let Some(json) = parse_line(line) else {
+        warn!("Failed to find JSON start");
+        return;
+    };
+
+    let json = match parse_json(json) {
+        Ok(json) => json,
+        Err(error) => {
+            warn!("Failed to parse JSON: {error}");
+            return;
+        }
+    };
+
+    if json.version() != "1" {
+        warn!("Unsupported log line version: {}", json.version());
+        return;
+    }
+
+    if json.method() != "GET" {
+        // Ignore non-GET requests.
+        return;
+    }
+
+    if json.status() != 200 {
+        // Ignore non-200 responses.
+        return;
+    }
+
+    if json
+        .user_agent()
+        .is_some_and(|ua| !should_count_user_agent(ua))
+    {
+        // Ignore requests from user agents that should not be counted.
+        return;
+    }
+
+    let url = decode_url(json.url());
+
+    // We're avoiding parsing to `url::Url` here for performance reasons.
+    // Since we're already filtering out non-200 responses, we can assume
+    // that the URL is valid.
+
+    let Some((name, version)) = parse_path(&url) else {
+        return;
+    };
+
+    let Some(date) = json.date() else {
+        warn!("Failed to parse date `{}`", json.date_time);
+        return;
+    };
+
+    downloads.add(name, version, date);
+}
+
+/// Strips the optional `classic` syslog prefix (`<134>... s3-request-logs[322614]: `).
 #[instrument(level = "debug", skip(line))]
 fn parse_line(line: &str) -> Option<&str> {
-    // A regex could also be used here, but the `find()` call appears to
-    // be roughly 10x faster.
-    line.find(r#"]: {"#).map(|pos| &line[pos + 3..])
+    match line.strip_prefix('<') {
+        Some(rest) => rest.split_once("]: ").map(|(_, json)| json),
+        None => Some(line),
+    }
 }
 
 #[instrument(level = "debug", skip(json))]
@@ -103,8 +114,11 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use claims::assert_ok;
-    use insta::assert_debug_snapshot;
+    use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::Cursor;
+    use tokio::io::BufReader;
+
+    const LINE: &str = r#"<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
 
     #[tokio::test]
     async fn test_basic() {
@@ -215,6 +229,57 @@ mod tests {
             2025-10-26  scale-info@2.11.3 .. 1
             2025-10-26  tinyvec_macros@0.1.1 .. 1
             2025-10-26  unicode-normalization@0.1.22 .. 1
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_small_read_buffer() {
+        let _guard = enable_tracing_output();
+
+        let bytes = include_bytes!("../../test_data/fastly/basic.log");
+        let expected = assert_ok!(count_downloads(&bytes[..]).await);
+
+        let reader = BufReader::with_capacity(7, &bytes[..]);
+        let downloads = assert_ok!(count_downloads(reader).await);
+        assert_eq!(*downloads, *expected);
+    }
+
+    #[tokio::test]
+    async fn test_line_endings() {
+        let _guard = enable_tracing_output();
+
+        let input = format!("{LINE}\n\n{LINE}\r\n{LINE}");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 3
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_invalid_utf8() {
+        let _guard = enable_tracing_output();
+
+        let input = [LINE.as_bytes(), b"\n<134>\xff\n", LINE.as_bytes()].concat();
+        let error = count_downloads(&input[..]).await.unwrap_err();
+
+        assert_snapshot!(error, @"invalid utf-8 sequence of 1 bytes from index 5");
+    }
+
+    #[tokio::test]
+    async fn test_without_prefix() {
+        let _guard = enable_tracing_output();
+
+        let (_, json) = LINE.split_once("]: ").unwrap();
+        let input = format!("{json}\n{LINE}\n");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @r"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 2
         }
         ");
     }
