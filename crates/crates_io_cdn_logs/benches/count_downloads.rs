@@ -24,6 +24,14 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.to_async(&rt)
             .iter(|| fastly::count_downloads(black_box(Cursor::new(bytes))));
     });
+
+    let bytes = include_bytes!("../test_data/fastly/lean.log");
+    c.bench_function("fastly_lean", |b| {
+        // Insert a call to `to_async` to convert the bencher to async mode.
+        // The timing loops are the same as with the normal bencher.
+        b.to_async(&rt)
+            .iter(|| fastly::count_downloads(black_box(Cursor::new(bytes))));
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);
