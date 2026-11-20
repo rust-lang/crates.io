@@ -187,8 +187,8 @@ struct NewDownload {
     downloads: i64,
 }
 
-impl From<(String, Version, NaiveDate, u64)> for NewDownload {
-    fn from((name, version, date, downloads): (String, Version, NaiveDate, u64)) -> Self {
+impl From<((String, Version, NaiveDate), u64)> for NewDownload {
+    fn from(((name, version, date), downloads): ((String, Version, NaiveDate), u64)) -> Self {
         Self {
             name,
             version: version.to_string(),
@@ -275,15 +275,11 @@ async fn fill_temp_downloads_table(
     // batches.
     const MAX_BATCH_SIZE: usize = 5_000;
 
-    let map = downloads
-        .into_vec()
-        .into_iter()
-        .map(NewDownload::from)
-        .collect::<Vec<_>>();
-
-    for chunk in map.chunks(MAX_BATCH_SIZE) {
+    let mut downloads = downloads.into_iter().map(NewDownload::from).peekable();
+    while downloads.peek().is_some() {
+        let batch = downloads.by_ref().take(MAX_BATCH_SIZE).collect::<Vec<_>>();
         diesel::insert_into(temp_downloads::table)
-            .values(chunk)
+            .values(batch)
             .execute(conn)
             .await?;
     }

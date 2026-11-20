@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use derive_more::Deref;
 use foldhash::quality::FixedState;
 use semver::Version;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, hash_map};
 use std::fmt::Debug;
 
 #[derive(Clone, Default, Deref)]
@@ -27,13 +27,14 @@ impl DownloadsMap {
     pub fn sum_downloads(&self) -> u64 {
         self.0.values().sum()
     }
+}
 
-    /// Converts the map into a vector of `(crate, version, date, downloads)` tuples.
-    pub fn into_vec(self) -> Vec<(String, Version, NaiveDate, u64)> {
-        self.0
-            .into_iter()
-            .map(|((name, version, date), downloads)| (name, version, date, downloads))
-            .collect()
+impl IntoIterator for DownloadsMap {
+    type Item = ((String, Version, NaiveDate), u64);
+    type IntoIter = hash_map::IntoIter<(String, Version, NaiveDate), u64>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
