@@ -1,0 +1,6 @@
+<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}
+<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: 2024-01-16	strsim	0.10.0
+{"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}
+2024-01-16	strsim	0.10.0
+<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: 2024-01-17	cc	1.0.73
+2024-01-17	cc	1.0.73
