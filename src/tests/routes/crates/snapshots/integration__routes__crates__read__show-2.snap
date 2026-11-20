@@ -68,6 +68,7 @@ expression: response.json()
       "homepage": null,
       "id": 3,
       "lib_links": null,
+      "lib_name": null,
       "license": null,
       "linecounts": {
         "languages": {},
@@ -114,6 +115,7 @@ expression: response.json()
       "homepage": null,
       "id": 2,
       "lib_links": null,
+      "lib_name": null,
       "license": null,
       "linecounts": {
         "languages": {},
@@ -160,6 +162,7 @@ expression: response.json()
       "homepage": null,
       "id": 1,
       "lib_links": null,
+      "lib_name": null,
       "license": null,
       "linecounts": {
         "languages": {},

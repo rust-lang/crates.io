@@ -999,6 +999,16 @@ pub struct EncodableVersion {
     #[schema(required = true, example = true)]
     pub has_lib: Option<bool>,
 
+    /// The name of the library target of this version, as used in Rust
+    /// code (e.g. in `use` statements).
+    ///
+    /// This field is `null` if the version has no library target, or if the
+    /// version has not been analyzed yet, which happens in an asynchronous
+    /// background job for versions published before crates.io started
+    /// recording this information.
+    #[schema(required = true, example = "serde_json")]
+    pub lib_name: Option<String>,
+
     /// The names of the binaries provided by this version, if any.
     #[schema(required = true, example = json!([]))]
     pub bin_names: Option<Vec<Option<String>>>,
@@ -1073,6 +1083,7 @@ impl EncodableVersion {
             tar_sha256,
             rust_version,
             has_lib,
+            lib_name,
             bin_names,
             edition,
             description,
@@ -1113,6 +1124,7 @@ impl EncodableVersion {
             checksum: hex::encode(tar_sha256),
             rust_version,
             has_lib,
+            lib_name,
             bin_names,
             edition,
             description,
@@ -1242,6 +1254,7 @@ mod tests {
             checksum: String::new(),
             rust_version: None,
             has_lib: None,
+            lib_name: None,
             bin_names: None,
             published_by: None,
             edition: None,

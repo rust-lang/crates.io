@@ -1840,6 +1840,17 @@ export interface components {
              */
             lib_links: string | null;
             /**
+             * @description The name of the library target of this version, as used in Rust
+             *     code (e.g. in `use` statements).
+             *
+             *     This field is `null` if the version has no library target, or if the
+             *     version has not been analyzed yet, which happens in an asynchronous
+             *     background job for versions published before crates.io started
+             *     recording this information.
+             * @example serde_json
+             */
+            lib_name: string | null;
+            /**
              * @description The license of this version of the crate.
              * @example MIT
              */

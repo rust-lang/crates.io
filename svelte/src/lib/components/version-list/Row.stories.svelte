@@ -29,6 +29,7 @@
       has_lib: null,
       homepage: null,
       lib_links: null,
+      lib_name: null,
       yanked: false,
       checksum: 'abc123',
       dl_path: '/api/v1/crates/serde/1.0.200/download',

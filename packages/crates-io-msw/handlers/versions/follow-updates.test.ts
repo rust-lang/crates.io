@@ -51,6 +51,7 @@ test('returns latest versions of followed crates', async function () {
           "homepage": null,
           "id": 1,
           "lib_links": null,
+          "lib_name": null,
           "license": "MIT",
           "linecounts": {
             "languages": {

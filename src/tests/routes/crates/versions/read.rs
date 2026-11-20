@@ -79,6 +79,46 @@ async fn show_by_crate_name_and_semver_no_published_by() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn show_lib_name_from_target_metadata() {
+    use crates_io::schema::versions;
+    use serde_json::json;
+
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    let krate = CrateBuilder::new("foo_lib_name", user.id)
+        .expect_build(&mut conn)
+        .await;
+    let analyzed = VersionBuilder::new("1.0.0")
+        .expect_build(krate.id, user.id, &mut conn)
+        .await;
+    let failed = VersionBuilder::new("2.0.0")
+        .expect_build(krate.id, user.id, &mut conn)
+        .await;
+
+    // Mimic versions that were analyzed by the target metadata backfill,
+    // which leaves the `lib_name` column empty
+    let metadata = json!({ "lib": { "path": "src/lib.rs", "name": "custom_lib" } });
+    diesel::update(versions::table.find(analyzed.id))
+        .set(versions::target_metadata.eq(metadata))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+    diesel::update(versions::table.find(failed.id))
+        .set(versions::target_metadata.eq(json!({ "status": "error" })))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let json: Value = anon.get("/api/v1/crates/foo_lib_name/1.0.0").await.good();
+    assert_eq!(json["version"]["lib_name"], "custom_lib");
+
+    let json: Value = anon.get("/api/v1/crates/foo_lib_name/2.0.0").await.good();
+    assert_eq!(json["version"]["lib_name"], Value::Null);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn block_bad_version_urls() {
     use crates_io::schema::versions;
     use diesel::{ExpressionMethods, update};

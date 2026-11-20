@@ -53,6 +53,12 @@ pub struct Version {
     pub links: Option<String>,
     pub rust_version: Option<String>,
     pub has_lib: Option<bool>,
+    /// The library target name from the target metadata, or `None` if the
+    /// version has no library target or no successfully analyzed target
+    /// metadata yet.
+    #[diesel(select_expression = versions::target_metadata
+        .retrieve_as_object("lib")
+        .retrieve_as_text("name"))]
     pub lib_name: Option<String>,
     pub bin_names: Option<Vec<Option<String>>>,
     pub yank_message: Option<String>,
