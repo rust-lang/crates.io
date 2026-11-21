@@ -843,7 +843,7 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
 
-    /// Precomputed reverse-dependency edges (target crate <- dependent crate's default version). Derived cache table maintained by database triggers.
+    /// Precomputed reverse-dependency edges (target crate <- dependent crate's default version). Derived cache table maintained by database triggers, except for `dependent_downloads`, which the `update_downloads` background job syncs.
     reverse_dependencies (target_crate_id, dependent_crate_id) {
         /// The `dependencies` row used to hydrate the response.
         dependency_id -> Int4,

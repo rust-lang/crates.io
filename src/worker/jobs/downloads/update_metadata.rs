@@ -55,6 +55,12 @@ async fn update(conn: &mut AsyncPgConnection) -> QueryResult<()> {
 
     info!("Finished updating versions");
 
+    // The batches above can change a crate's downloads several times, so the
+    // reverse dependencies are synced once afterwards.
+    let query = include_str!("sync_reverse_dependencies.sql");
+    let sync_count = diesel::sql_query(query).execute(conn).await?;
+    info!("Updated {sync_count} reverse dependencies");
+
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
     diesel::update(version_downloads::table)
