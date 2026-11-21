@@ -416,6 +416,7 @@ mod tests {
     use super::{TarballCompatibility, TarballPolicy, process_tarball};
     use crate::TarballBuilder;
     use insta::{assert_debug_snapshot, assert_snapshot};
+    use std::io::Read;
 
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
     const POLICY: TarballPolicy = TarballPolicy {
@@ -982,6 +983,51 @@ mod tests {
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
         assert_snapshot!(err, @"mismatched pax and tar header sizes");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_repeated_pax_path() {
+        // `astral-tokio-tar` uses the last `path` record, but the `tar` crate
+        // that Cargo uses for extraction picks the first one.
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_pax_extensions([
+                ("path", "foo-0.0.1/build.rs".as_bytes()),
+                ("path", "foo-0.0.1/src/lib.rs".as_bytes()),
+            ])
+            .add_file("foo-0.0.1/src/lib.rs", b"fn main() {}")
+            .build();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_none!(tarball_info.target_metadata.build);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_multiple_gzip_members() {
+        // A tar archive ends with two 512-byte blocks of zeros.
+        const END_OF_ARCHIVE_LEN: usize = 2 * 512;
+
+        // Without its end-of-archive blocks, the tar stream continues in the
+        // second gzip member, which only multi-member gzip decoders like
+        // `gzip` and `bsdtar` read.
+        let mut first = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/src/lib.rs", b"")
+            .build_unzipped();
+        first.truncate(first.len() - END_OF_ARCHIVE_LEN);
+
+        let mut tarball = vec![];
+        flate2::read::GzEncoder::new(&*first, flate2::Compression::default())
+            .read_to_end(&mut tarball)
+            .unwrap();
+
+        let second = TarballBuilder::new()
+            .add_file("foo-0.0.1/build.rs", b"fn main() {}")
+            .build();
+        tarball.extend(second);
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_none!(tarball_info.target_metadata.build);
     }
 
     #[tokio::test]
