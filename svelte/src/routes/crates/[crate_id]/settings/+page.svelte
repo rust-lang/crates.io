@@ -329,8 +329,10 @@
             <a
               href="https://github.com/{config.repository_owner}/{config.repository_name}"
               target="_blank"
-              rel="noopener noreferrer">{config.repository_owner}/{config.repository_name}</a
+              rel="noopener noreferrer"
             >
+              {config.repository_owner}/{config.repository_name}
+            </a>
             <span class="owner-id">
               · Owner ID: {config.repository_owner_id}
               <Tooltip>

@@ -14,10 +14,10 @@
   </p>
 
   <p>
-    Rate limiting is implemented using the <a href="https://en.wikipedia.org/wiki/Leaky_bucket#As_a_meter"
-      >leaky bucket as a meter</a
-    > algorithm. This allows for a burst of activity up to a threshold, and then sets a rate at which the allowance of further
-    activity is earned back over time.
+    Rate limiting is implemented using the <a href="https://en.wikipedia.org/wiki/Leaky_bucket#As_a_meter">
+      leaky bucket as a meter
+    </a> algorithm. This allows for a burst of activity up to a threshold, and then sets a rate at which the allowance of
+    further activity is earned back over time.
   </p>
 
   <p>Concretely, the rate limits for crates.io are:</p>
