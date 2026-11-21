@@ -1106,6 +1106,7 @@ impl From<TarballError> for BoxedAppError {
             | TarballError::OldHeader { .. }
             | TarballError::Base256UstarField { .. }
             | TarballError::PaxVendorExtension { .. }
+            | TarballError::RepeatedPaxKeyword { .. }
             | TarballError::MetadataFileTooLarge { .. }) => bad_request(error.to_string()),
             TarballError::MissingManifest => {
                 bad_request("uploaded tarball is missing a `Cargo.toml` manifest file")

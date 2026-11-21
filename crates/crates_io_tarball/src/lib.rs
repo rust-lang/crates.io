@@ -12,7 +12,7 @@ pub use crate::vcs_info::CargoVcsInfo;
 use crates_io_cargo_toml::target_metadata::{self, TargetMetadata};
 pub use crates_io_cargo_toml::{Manifest, StringOrBool};
 use futures_util::StreamExt;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tokio::io::{AsyncReadExt, BufReader};
@@ -129,6 +129,8 @@ pub enum TarballError {
     Base256UstarField { path: String, field: &'static str },
     #[error("tarball uses an unsupported pax vendor extension `{keyword}`: {path}")]
     PaxVendorExtension { path: String, keyword: String },
+    #[error("tarball repeats the pax keyword `{keyword}`: {path}")]
+    RepeatedPaxKeyword { path: String, keyword: String },
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -189,6 +191,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         validate_pax_size(&mut entry).await.inspect_err(|e| {
             warn!(%e, ?entry, pkg_name, "file size validation failure");
         })?;
+
+        if let Some(keyword) = repeated_pax_keyword(&mut entry).await? {
+            let path = entry.path()?.display().to_string();
+            return Err(TarballError::RepeatedPaxKeyword { path, keyword });
+        }
 
         if let Some(keyword) = pax_vendor_keyword(&mut entry).await? {
             let path = entry.path()?.display().to_string();
@@ -384,6 +391,29 @@ async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
     }
 
     Ok(())
+}
+
+/// Returns the first keyword that appears in more than one local pax record of
+/// the entry.
+///
+/// Readers disagree on which record wins. `astral-tokio-tar` uses the last
+/// `path` record, while the `tar` crate that Cargo uses picks the first one.
+async fn repeated_pax_keyword<R: tokio::io::AsyncRead + Unpin>(
+    entry: &mut Entry<R>,
+) -> Result<Option<String>, TarballError> {
+    let Some(pax) = entry.pax_extensions().await? else {
+        return Ok(None);
+    };
+
+    let mut keywords = HashSet::new();
+    for ext in pax {
+        let ext = ext.map_err(TarballError::Malformed)?;
+        if !keywords.insert(ext.key_bytes()) {
+            return Ok(Some(String::from_utf8_lossy(ext.key_bytes()).into_owned()));
+        }
+    }
+
+    Ok(None)
 }
 
 /// Returns the first local pax record keyword of the entry that belongs to a
@@ -998,8 +1028,8 @@ mod tests {
             .add_file("foo-0.0.1/src/lib.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
-        assert_none!(tarball_info.target_metadata.build);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"tarball repeats the pax keyword `path`: foo-0.0.1/src/lib.rs");
     }
 
     #[tokio::test]
