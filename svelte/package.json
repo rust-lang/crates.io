@@ -67,7 +67,7 @@
     "@vitest/browser-playwright": "5.1.1",
     "@vitest/coverage-v8": "5.1.1",
     "chromatic": "18.14.1",
-    "msw": "3.0.6",
+    "msw": "3.0.7",
     "playwright": "1.65.1",
     "storybook": "10.6.7",
     "svelte": "5.58.0",
