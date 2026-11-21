@@ -14,7 +14,9 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
       await expect(page.locator('[data-test-crate-version]')).toHaveText('v1.2.3');
       await expect(page.locator('[data-test-yanked]')).toBeVisible();
       await expect(page.locator('[data-test-docs]')).toBeVisible();
-      await expect(page.locator('[data-test-install]')).toHaveCount(0);
+      await expect(page.locator('[data-test-install]')).toBeVisible();
+      await expect(page.locator('[data-test-yanked-install-notice]')).toBeVisible();
+      await expect(page.locator('[data-test-install]')).not.toContainText('cargo add');
       await expect(page.locator('[data-test-notification-message]')).toHaveCount(0);
     });
 
@@ -96,7 +98,7 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
       await expect(page.locator('[data-test-crate-version]')).toHaveText('v2.0.0-beta.1');
       await expect(page.locator('[data-test-yanked]')).toBeVisible();
       await expect(page.locator('[data-test-docs]')).toBeVisible();
-      await expect(page.locator('[data-test-install]')).toHaveCount(0);
+      await expect(page.locator('[data-test-yanked-install-notice]')).toBeVisible();
       await expect(page.locator('[data-test-notification-message]')).toHaveCount(0);
     });
   });
