@@ -461,8 +461,25 @@ async fn crates_by_team_id() -> anyhow::Result<()> {
         .await;
     add_team_to_crate(&t, &krate, user.id, &mut conn).await?;
 
+    let other_team = new_team("github:test-org:other-team")
+        .create_or_update(&conn)
+        .await?;
+    let other_krate = CrateBuilder::new("foo-other-team", user.id)
+        .expect_build(&mut conn)
+        .await;
+    add_team_to_crate(&other_team, &other_krate, user.id, &mut conn).await?;
+
+    CrateBuilder::new("foo-no-team", user.id)
+        .expect_build(&mut conn)
+        .await;
+
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 1);
+
+    let json = anon
+        .search(&format!("team_id={}&team_id={}", t.id, other_team.id))
+        .await;
+    assert_eq!(json.crates.len(), 2);
 
     Ok(())
 }

@@ -1,0 +1,22 @@
+---
+source: src/tests/routes/org.rs
+expression: response.json()
+---
+{
+  "teams": [
+    {
+      "avatar": null,
+      "id": 1,
+      "login": "github:rust-lang:releasers",
+      "name": null,
+      "url": "https://github.com/rust-lang"
+    },
+    {
+      "avatar": null,
+      "id": 2,
+      "login": "github:rust-lang:libs",
+      "name": null,
+      "url": "https://github.com/rust-lang"
+    }
+  ]
+}
