@@ -1,7 +1,4 @@
-import { createClient } from '@crates-io/api-client';
-
-import { cdnBase } from './cdn';
-import { loadSiteMetadata } from './site-metadata';
+import { loadCdnBase } from './cdn';
 
 /**
  * Loads the README HTML for a crate version.
@@ -15,12 +12,7 @@ export async function loadReadme(
   crateName: string,
   versionNum: string,
 ): Promise<string | null> {
-  let { data } = await loadSiteMetadata(createClient({ fetch }));
-  if (!data) {
-    throw new Error('Failed to load README');
-  }
-
-  let base = cdnBase(data);
+  let base = await loadCdnBase(fetch);
 
   // `encodeURIComponent` matches the backend's `+` -> `%2B` encoding for versions with build metadata.
   let version = encodeURIComponent(versionNum);

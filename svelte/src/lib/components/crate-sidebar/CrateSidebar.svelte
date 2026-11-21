@@ -22,6 +22,7 @@
   import InstallInstructions from './InstallInstructions.svelte';
   import Link, { simplifyUrl } from './Link.svelte';
   import Msrv from './Msrv.svelte';
+  import SourceCodeLinks from './SourceCodeLinks.svelte';
 
   const PLAYGROUND_TOOLTIP =
     'The top 100 crates are available on the Rust Playground for you to try out directly in your browser.';
@@ -39,6 +40,7 @@
     requestedVersion?: boolean;
     playgroundCratesPromise: Promise<PlaygroundCrate[]>;
     docsRsStatusPromise: Promise<DocsRsStatus | null>;
+    cdnBase: string;
   }
 
   let {
@@ -49,6 +51,7 @@
     requestedVersion = false,
     playgroundCratesPromise,
     docsRsStatusPromise,
+    cdnBase,
   }: Props = $props();
 
   let session = getSession();
@@ -193,6 +196,8 @@
         binNames={version.bin_names?.filter(Boolean as unknown as (name: string | null) => name is string)}
       />
     {/if}
+
+    <SourceCodeLinks crate={crate.name} version={version.num} {cdnBase} />
   </div>
 
   {#snippet linksSection(docsRsStatus: DocsRsStatus | null)}

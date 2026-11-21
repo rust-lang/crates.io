@@ -18,6 +18,7 @@
   readmePromise={data.readmePromise}
   playgroundCratesPromise={data.playgroundCratesPromise}
   docsRsStatusPromise={data.docsRsStatusPromise}
+  cdnBase={data.cdnBase}
   unmaintained={data.unmaintained}
   {downloadsPromise}
   nativeReplacement={data.nativeReplacements[data.crate.name]}

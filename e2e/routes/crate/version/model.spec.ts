@@ -17,6 +17,7 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
       await expect(page.locator('[data-test-install]')).toBeVisible();
       await expect(page.locator('[data-test-yanked-install-notice]')).toBeVisible();
       await expect(page.locator('[data-test-install]')).not.toContainText('cargo add');
+      await expect(page.locator('[data-test-install]').getByText('Download source code')).toBeVisible();
       await expect(page.locator('[data-test-notification-message]')).toHaveCount(0);
     });
 

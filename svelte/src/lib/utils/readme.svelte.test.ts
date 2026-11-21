@@ -46,6 +46,12 @@ describe('loadReadme', () => {
     expect(await loadReadme(fetch, 'rand', '1.0.0+foo')).toBe('<p>build</p>');
   });
 
+  test('throws when the site metadata cannot be loaded', async ({ worker }) => {
+    worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({}, { status: 500 })));
+
+    await expect(loadReadme(fetch, 'rand', '1.0.0')).rejects.toThrow('Failed to load site metadata');
+  });
+
   test('throws when the request fails unexpectedly', async ({ worker }) => {
     worker.use(
       http.get('/api/v1/site_metadata', () => HttpResponse.json(METADATA)),
