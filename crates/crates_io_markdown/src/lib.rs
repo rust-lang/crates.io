@@ -104,11 +104,10 @@ impl<'a> MarkdownRenderer<'a> {
             .footnotes(true)
             .build();
 
-        let options = options::Options {
-            render: render_options,
-            extension: extension_options,
-            ..options::Options::default()
-        };
+        let options = options::Options::builder()
+            .render(render_options)
+            .extension(extension_options)
+            .build();
 
         let arena = Arena::new();
         let root = parse_document(&arena, text, &options);
