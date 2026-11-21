@@ -31,9 +31,9 @@ where
             let reader = Cursor::new(b"#").chain(reader);
             cloudfront::count_downloads(reader).await
         }
-        // Fastly log lines start with a `<123>` syslog field or directly
-        // with the JSON payload.
-        byte @ (b'<' | b'{') => {
+        // Fastly log lines start with a `<123>` syslog field, or directly
+        // with the JSON payload or the date of a lean line.
+        byte @ (b'<' | b'{' | b'0'..=b'9') => {
             // We can't use `AsyncSeek` here because `async-compression` does
             // not support it, but we can use `Cursor` to prepend the byte back
             // onto the reader.
@@ -207,6 +207,27 @@ mod tests {
         assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  strsim@0.10.0 .. 1
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_compressed_fastly_lean() {
+        let _guard = enable_tracing_output();
+
+        let cursor = Cursor::new(include_bytes!("../test_data/fastly/lean.log.zst"));
+
+        let decompressor = assert_ok!(Decompressor::from_extension(cursor, Some("zst")));
+        let reader = tokio::io::BufReader::new(decompressor);
+
+        let downloads = assert_ok!(count_downloads(reader).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2024-01-16  strsim@0.10.0 .. 3
+            2024-01-16  tikv-jemalloc-sys@0.5.2+5.3.0-patched .. 1
+            2024-01-17  strsim@0.10.0 .. 1
+            2024-01-17  windows_x86_64_gnu@0.48.0 .. 2
         }
         ");
     }
