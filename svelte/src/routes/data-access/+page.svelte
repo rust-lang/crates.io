@@ -37,16 +37,16 @@
     Older versions of Cargo use the crate index provided in the
     <a href="https://github.com/rust-lang/crates.io-index">
       <code>rust-lang/crates.io-index</code>
-      repository on GitHub</a
-    >. This remains available for use, and may be a more efficient way of accessing crate metadata for projects that
+      repository on GitHub
+    </a>. This remains available for use, and may be a more efficient way of accessing crate metadata for projects that
     require most or all crates to be included than the sparse index.
   </p>
 
   <p>
     As the Git index is hosted on GitHub, GitHub's
-    <a href="https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies"
-      >Acceptable Use Policies</a
-    >
+    <a href="https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies">
+      Acceptable Use Policies
+    </a>
     apply.
   </p>
 
@@ -56,9 +56,9 @@
     Crates can be downloaded directly from the crates.io CDN. For example, to download <code>rand</code> version 0.10.1,
     you can do so with a
     <code>GET</code> request to
-    <a href="https://static.crates.io/crates/rand/rand-0.10.1.crate"
-      >https://static.crates.io/crates/rand/rand-0.10.1.crate</a
-    >.
+    <a href="https://static.crates.io/crates/rand/rand-0.10.1.crate">
+      https://static.crates.io/crates/rand/rand-0.10.1.crate
+    </a>.
   </p>
 
   <p>No rate limits apply to static.crates.io at present.</p>

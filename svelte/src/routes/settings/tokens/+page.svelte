@@ -112,9 +112,9 @@
     on the command line and paste the key when prompted. This will save it to a
     <a href="https://doc.rust-lang.org/cargo/reference/config.html#credentials">local credentials file</a>. For CI
     systems you can use the
-    <a href="https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials"
-      ><code>CARGO_REGISTRY_TOKEN</code></a
-    >
+    <a href="https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials">
+      <code>CARGO_REGISTRY_TOKEN</code>
+    </a>
     environment variable, but make sure that the token stays secret!
   </p>
 

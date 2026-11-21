@@ -146,10 +146,13 @@
             Release Track:
             {releaseTrack}
             {#if isPrerelease || isHighestOfReleaseTrack}
-              ({#if isPrerelease}<span class="rt-prerelease">prerelease</span
-                >{/if}{#if isPrerelease && isHighestOfReleaseTrack},&nbsp;{/if}{#if isHighestOfReleaseTrack}<span
-                  class="rt-latest">latest</span
-                >{/if})
+              ({#if isPrerelease}<span class="rt-prerelease">
+                  prerelease
+                </span>{/if}{#if isPrerelease && isHighestOfReleaseTrack},&nbsp;{/if}{#if isHighestOfReleaseTrack}<span
+                  class="rt-latest"
+                >
+                  latest
+                </span>{/if})
             {/if}
           {/if}
         </div>

@@ -272,8 +272,10 @@
               <a
                 href="https://github.com/{repository}/blob/HEAD/.github/workflows/"
                 target="_blank"
-                rel="noopener noreferrer">.github/workflows/</a
+                rel="noopener noreferrer"
               >
+                .github/workflows/
+              </a>
             {:else}
               .github/workflows/
             {/if}
@@ -309,8 +311,9 @@
         The name of the
         <a
           href="https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment"
-          >GitHub Actions environment</a
         >
+          GitHub Actions environment
+        </a>
         that the above workflow uses for publishing. This should be configured in the repository settings. A dedicated publishing
         environment is not required, but is
         <strong>strongly recommended</strong>, especially if your repository has maintainers with commit access who
