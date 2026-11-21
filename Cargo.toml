@@ -174,7 +174,7 @@ utoipa-axum = "=0.3.0"
 uuid = { version = "=1.29.3", features = ["v4"] }
 
 [dev-dependencies]
-bytes = "=1.12.1"
+bytes = "=1.12.2"
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs", features = ["mock"] }
 crates_io_github = { path = "crates/crates_io_github", features = ["mock"] }
 crates_io_github_app = { path = "crates/crates_io_github_app", features = ["mock"] }
