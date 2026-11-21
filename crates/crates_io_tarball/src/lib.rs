@@ -131,6 +131,8 @@ pub enum TarballError {
     PaxVendorExtension { path: String, keyword: String },
     #[error("tarball repeats the pax keyword `{keyword}`: {path}")]
     RepeatedPaxKeyword { path: String, keyword: String },
+    #[error("uploaded tarball contains data after the end of the gzip stream")]
+    TrailingData,
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -281,6 +283,25 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
             manifests.insert(owned_entry_path, manifest);
         }
+    }
+
+    // The tar reader stops at the end-of-archive marker, so the rest of the
+    // gzip member has not been read yet.
+    drop(entries);
+    let mut decoder = archive
+        .into_inner()
+        .map_err(|_| std::io::Error::other("tar archive is still in use"))?;
+    tokio::io::copy(&mut decoder, &mut tokio::io::sink())
+        .await
+        .map_err(TarballError::Malformed)?;
+
+    // The gzip decoder stops after the first member, but tools like `gzip`
+    // and `bsdtar` also decode any members that follow it.
+    let mut tarball = decoder.into_inner().into_inner();
+    let mut next_byte = [0];
+    let has_trailing_data = tarball.read(&mut next_byte).await? > 0;
+    if has_trailing_data {
+        policy.enforce_rule(pkg_name, TarballError::TrailingData)?;
     }
 
     if manifests.len() > 1 {
@@ -1056,8 +1077,23 @@ mod tests {
             .build();
         tarball.extend(second);
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
-        assert_none!(tarball_info.target_metadata.build);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_trailing_data() {
+        let mut tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+        tarball.push(0);
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
     }
 
     #[tokio::test]

@@ -218,6 +218,22 @@ async fn new_krate_tarball_with_repeated_pax_path() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_trailing_data() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let mut tarball = TarballBuilder::new().add_file("foo-1.1.0/a", b"").build();
+    tarball.push(0);
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball contains data after the end of the gzip stream"}]}"#);
+    assert_that!(app.stored_files().await, is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_old_header() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
