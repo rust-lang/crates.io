@@ -172,10 +172,19 @@
     </div>
   </div>
 
-  {#if !version.yanked}
-    <div data-test-install>
-      <h2 class="heading">Install</h2>
+  <div data-test-install>
+    <h2 class="heading">Install</h2>
 
+    {#if version.yanked}
+      <div class="yanked-notice" data-test-yanked-install-notice>
+        <Icon class="i-mdi:alert-outline" />
+        <strong>This version has been yanked</strong>
+        <p>
+          Cargo won't use it for new dependencies. Projects that already have it in their Cargo.lock file can keep using
+          it.
+        </p>
+      </div>
+    {:else}
       <InstallInstructions
         crate={crate.name}
         version={version.num}
@@ -183,8 +192,8 @@
         hasLib={version.has_lib !== false}
         binNames={version.bin_names?.filter(Boolean as unknown as (name: string | null) => name is string)}
       />
-    </div>
-  {/if}
+    {/if}
+  </div>
 
   {#snippet linksSection(docsRsStatus: DocsRsStatus | null)}
     {@const documentationLink = computeDocumentationLink(docsRsStatus)}
@@ -371,6 +380,42 @@
 
     :global(.icon) {
       margin: 0;
+    }
+  }
+
+  .yanked-notice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: var(--space-2xs);
+    /* Keeps the text aligned with the sidebar column while the card extends to the left */
+    margin-left: calc(-1 * var(--space-xs));
+    padding: var(--space-2xs) var(--space-xs);
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--surface);
+    border-left: 3px solid var(--yellow500);
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--surface-shadow-muted);
+
+    :global(.icon) {
+      color: var(--yellow700);
+    }
+
+    strong {
+      font-size: 14px;
+    }
+
+    p {
+      grid-column: 2;
+      margin: 0;
+    }
+
+    /* The stacked sidebar has no room to the left of the column, so the card spans the full screen width instead */
+    @media only screen and (max-width: 889px) {
+      margin-inline: calc(-1 * var(--main-layout-padding));
+      padding-inline: var(--main-layout-padding);
+      border-radius: 0;
     }
   }
 
