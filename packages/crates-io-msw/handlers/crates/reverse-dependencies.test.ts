@@ -100,6 +100,7 @@ test('returns a paginated list of crate versions depending to the specified crat
           "homepage": null,
           "id": 2,
           "lib_links": null,
+          "lib_name": null,
           "license": "Apache-2.0",
           "linecounts": {
             "languages": {
@@ -154,6 +155,7 @@ test('returns a paginated list of crate versions depending to the specified crat
           "homepage": null,
           "id": 1,
           "lib_links": null,
+          "lib_name": null,
           "license": "MIT",
           "linecounts": {
             "languages": {

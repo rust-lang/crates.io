@@ -37,6 +37,7 @@ expression: response.json()
     "homepage": null,
     "id": "[id]",
     "lib_links": null,
+    "lib_name": "foo",
     "license": "MIT",
     "linecounts": {
       "languages": {

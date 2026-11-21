@@ -57,6 +57,7 @@ test('returns a version object for known version', async function () {
         "homepage": null,
         "id": 1,
         "lib_links": null,
+        "lib_name": null,
         "license": "MIT",
         "linecounts": {
           "languages": {

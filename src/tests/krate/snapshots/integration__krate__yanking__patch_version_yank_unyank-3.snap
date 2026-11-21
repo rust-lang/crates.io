@@ -76,6 +76,7 @@ expression: json
     "checksum": "d4d2d515985c394dc9fa95c56b935ab0805f6dfbd91a6dc99af9d316dff96dc0",
     "rust_version": null,
     "has_lib": false,
+    "lib_name": null,
     "bin_names": [],
     "edition": null,
     "description": "description",

@@ -72,6 +72,7 @@
     has_lib: null,
     homepage: null,
     lib_links: null,
+    lib_name: null,
     rust_version: '1.56',
     repository: null,
     checksum: 'e8dfc9d19bdbf6d17e22319da49161d5d0108e4188e8b680aef6299eed22df60',
