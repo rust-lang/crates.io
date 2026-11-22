@@ -305,8 +305,8 @@ importers:
         specifier: workspace:*
         version: link:../crates-io-api-client
       '@msw/data':
-        specifier: 1.1.8
-        version: 1.1.8
+        specifier: 1.1.9
+        version: 1.1.9
       msw:
         specifier: 3.0.7
         version: 3.0.7(@types/node@26.6.6)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -1166,8 +1166,8 @@ packages:
     resolution: {integrity: sha512-j37dj/h6p6pots1L7pLPPNuABEEu9WP4OYg9pW1g+nYG331j0+3canE9OagtYdytYvdSAMG+2fKU5cxep6LgjA==}
     engines: {node: '>=22.12.0'}
 
-  '@msw/data@1.1.8':
-    resolution: {integrity: sha512-+kSNeBPNvHkr/84aIK2ddeef8ng62T8xAG1zof5z8lMNgGt/jVwoDsPs9cYUU2WV4T2fn22NFi0NasmTzW2mnA==}
+  '@msw/data@1.1.9':
+    resolution: {integrity: sha512-Fq8C1K2UV362ahtaQz73Wfu88yA7sROIYNAq71yh7jJ5kTtQHYniBdqmUz1wHyOP+d1I5nRxecLUEA9Z8bc+nQ==}
 
   '@msw/playwright@0.7.0':
     resolution: {integrity: sha512-HovTLoUTrs3oaMBmztaCtYv3roaWXCkoE89Gzwri2Qc0kFPTZ2hYvEU4fUzXuAR3S7t+TnY1QVLIVKY/p+lJzw==}
@@ -5480,7 +5480,7 @@ snapshots:
     dependencies:
       '@chevrotain/types': 13.2.0
 
-  '@msw/data@1.1.8':
+  '@msw/data@1.1.9':
     dependencies:
       '@standard-schema/spec': 1.1.0
       es-toolkit: 1.53.2
