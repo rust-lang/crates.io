@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@crates-io/api-client": "workspace:*",
-    "@msw/data": "1.1.8",
+    "@msw/data": "1.1.9",
     "msw": "3.0.7",
     "openapi-msw": "2.1.1",
     "semver": "7.8.6",
