@@ -105,7 +105,11 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             continue;
         }
 
-        if user_agent.is_some_and(|ua| !should_count_user_agent(ua)) {
+        let Some(user_agent) = user_agent else {
+            warn!("Failed to find {FIELD_USER_AGENT} field.");
+            continue;
+        };
+        if !should_count_user_agent(user_agent) {
             // Ignore requests from user agents that should not be counted.
             continue;
         }
@@ -230,6 +234,31 @@ mod tests {
         assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  bindgen@0.65.1 .. 1
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_missing_user_agent() {
+        let _guard = enable_tracing_output();
+
+        let input = [
+            "#Version: 1.0",
+            // Without `cs(User-Agent)` field
+            "#Fields: date time cs-method cs-uri-stem sc-status",
+            "2024-01-16\t23:56:42\tGET\t/crates/rand/rand-0.8.5.crate\t200",
+            "#Fields: date time cs-method cs-uri-stem sc-status cs(User-Agent)",
+            // A missing `User-Agent` header is logged as `-`
+            "2024-01-16\t23:56:42\tGET\t/crates/bindgen/bindgen-0.65.1.crate\t200\t-",
+            // With cargo user agent
+            "2024-01-16\t23:56:42\tGET\t/crates/tar/tar-0.4.38.crate\t200\tcargo%201.74.0%20(ecb9851af%202023-10-18)",
+        ]
+        .join("\n");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2024-01-16  tar@0.4.38 .. 1
         }
         ");
     }

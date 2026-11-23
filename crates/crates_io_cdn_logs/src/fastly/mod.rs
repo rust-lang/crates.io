@@ -62,9 +62,10 @@ fn process_line(line: &str, downloads: &mut DownloadsMap) {
 
     if json
         .user_agent()
-        .is_some_and(|ua| !should_count_user_agent(ua))
+        .is_none_or(|ua| !should_count_user_agent(ua))
     {
-        // Ignore requests from user agents that should not be counted.
+        // Ignore requests without a user agent or from user agents that
+        // should not be counted.
         return;
     }
 
@@ -120,7 +121,7 @@ mod tests {
     use std::io::Cursor;
     use tokio::io::BufReader;
 
-    const LINE: &str = r#"<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
+    const LINE: &str = r#"<134>2024-01-16T23:53:20Z cache-iad-kiad7000128 s3-request-logs[322614]: {"bytes":11355,"date_time":"2024-01-16T23:53:20.460557177Z","http":{"useragent":"cargo 1.74.0 (ecb9851af 2023-10-18)"},"ip":"1.2.3.4","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#;
 
     #[tokio::test]
     async fn test_basic() {
@@ -231,6 +232,28 @@ mod tests {
             2025-10-26  scale-info@2.11.3 .. 1
             2025-10-26  tinyvec_macros@0.1.1 .. 1
             2025-10-26  unicode-normalization@0.1.22 .. 1
+        }
+        ");
+    }
+
+    #[tokio::test]
+    async fn test_missing_user_agent() {
+        let _guard = enable_tracing_output();
+
+        let input = [
+            // Without `http` field
+            r#"{"date_time":"2025-10-26T23:57:34.867635728Z","method":"GET","status":200,"url":"https://static.crates.io/crates/strsim/strsim-0.10.0.crate","version":"1"}"#,
+            // With `http.useragent: null`
+            r#"{"date_time":"2025-10-26T23:57:34.867635728Z","http":{"protocol":"HTTP/2","referer":null,"useragent":null},"method":"GET","status":200,"url":"https://static.crates.io/crates/tinyvec/tinyvec-1.6.0.crate","version":"1"}"#,
+            // With cargo user agent
+            r#"{"date_time":"2025-10-26T23:57:34.867635728Z","http":{"protocol":"HTTP/2","referer":null,"useragent":"cargo/1.90.0 (840b83a10 2025-07-30)"},"method":"GET","status":200,"url":"https://static.crates.io/crates/winnow/winnow-0.5.4.crate","version":"1"}"#,
+        ]
+        .join("\n");
+        let downloads = assert_ok!(count_downloads(input.as_bytes()).await);
+
+        assert_debug_snapshot!(downloads, @"
+        DownloadsMap {
+            2025-10-26  winnow@0.5.4 .. 1
         }
         ");
     }
