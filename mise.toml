@@ -12,4 +12,4 @@ cargo-insta = "1.49.0"
 "cargo:cargo-deny" = "0.22.0"
 "cargo:diesel_cli" = { version = "2.4.0", features = "postgres", default-features = false }
 "cargo:diesel-guard" = "0.12.0"
-zizmor = "1.32.0"
+zizmor = "1.33.1"
