@@ -41,6 +41,12 @@ pub async fn find_teams(
 
     let name = name.to_lowercase();
 
+    // `name` must not contain PostgreSQL `LIKE` wildcards `%` and `_`. Reject rather than escape
+    // because these are not valid characters in GitHub organization names either.
+    if name.contains('%') || name.contains('_') {
+        return Err(bad_request("organization components must not contain wildcards"))
+    }
+
     // Validate `name` format; return error if invalid
     let mut chunks = name.split(':');
     let first = chunks.next().unwrap_or_default();

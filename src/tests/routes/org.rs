@@ -52,6 +52,17 @@ async fn teams_by_org() {
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json());
 
+    // Wildcards in the org name are invalid
+    let response = anon
+        .get::<()>("/api/v1/orgs/github:%")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+
+    let response = anon
+        .get::<()>("/api/v1/orgs/git__b:_________")
+        .await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+
     // No colons in the org name
     let response = anon.get::<()>("/api/v1/orgs/rust-lang").await;
     assert_snapshot!(response.status(), @"400 Bad Request");
