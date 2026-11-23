@@ -60,7 +60,10 @@ fn process_line(line: &str, downloads: &mut DownloadsMap) {
         return;
     }
 
-    if !json.user_agent().is_some_and(should_count_user_agent) {
+    if json
+        .user_agent()
+        .is_none_or(|ua| !should_count_user_agent(ua))
+    {
         // Ignore requests without a user agent or from user agents that
         // should not be counted.
         return;
