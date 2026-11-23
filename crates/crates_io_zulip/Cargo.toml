@@ -20,7 +20,7 @@ secrecy = "=0.10.3"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
 thiserror = "=2.0.21"
-url = "=2.5.8"
+url = "=2.5.9"
 
 [dev-dependencies]
 anyhow = "=1.0.104"
