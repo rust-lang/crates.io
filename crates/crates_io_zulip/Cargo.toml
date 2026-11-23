@@ -25,6 +25,6 @@ url = "=2.5.9"
 [dev-dependencies]
 anyhow = "=1.0.104"
 claims = "=0.8.0"
-clap = { version = "=4.6.8", features = ["derive", "env"] }
+clap = { version = "=4.6.9", features = ["derive", "env"] }
 mockito = "=1.7.2"
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
