@@ -12,7 +12,7 @@ pub use crate::vcs_info::CargoVcsInfo;
 use crates_io_cargo_toml::target_metadata::{self, TargetMetadata};
 pub use crates_io_cargo_toml::{Manifest, StringOrBool};
 use futures_util::StreamExt;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tokio::io::{AsyncReadExt, BufReader};
@@ -129,6 +129,10 @@ pub enum TarballError {
     Base256UstarField { path: String, field: &'static str },
     #[error("tarball uses an unsupported pax vendor extension `{keyword}`: {path}")]
     PaxVendorExtension { path: String, keyword: String },
+    #[error("tarball repeats the pax keyword `{keyword}`: {path}")]
+    RepeatedPaxKeyword { path: String, keyword: String },
+    #[error("uploaded tarball contains data after the end of the gzip stream")]
+    TrailingData,
     #[error("uploaded tarball contains more than {max} entries")]
     TooManyEntries { max: usize },
     #[error("metadata file `{path}` exceeds the maximum size of {max} bytes")]
@@ -189,6 +193,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
         validate_pax_size(&mut entry).await.inspect_err(|e| {
             warn!(%e, ?entry, pkg_name, "file size validation failure");
         })?;
+
+        if let Some(keyword) = repeated_pax_keyword(&mut entry).await? {
+            let path = entry.path()?.display().to_string();
+            return Err(TarballError::RepeatedPaxKeyword { path, keyword });
+        }
 
         if let Some(keyword) = pax_vendor_keyword(&mut entry).await? {
             let path = entry.path()?.display().to_string();
@@ -274,6 +283,25 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
             manifests.insert(owned_entry_path, manifest);
         }
+    }
+
+    // The tar reader stops at the end-of-archive marker, so the rest of the
+    // gzip member has not been read yet.
+    drop(entries);
+    let mut decoder = archive
+        .into_inner()
+        .map_err(|_| std::io::Error::other("tar archive is still in use"))?;
+    tokio::io::copy(&mut decoder, &mut tokio::io::sink())
+        .await
+        .map_err(TarballError::Malformed)?;
+
+    // The gzip decoder stops after the first member, but tools like `gzip`
+    // and `bsdtar` also decode any members that follow it.
+    let mut tarball = decoder.into_inner().into_inner();
+    let mut next_byte = [0];
+    let has_trailing_data = tarball.read(&mut next_byte).await? > 0;
+    if has_trailing_data {
+        policy.enforce_rule(pkg_name, TarballError::TrailingData)?;
     }
 
     if manifests.len() > 1 {
@@ -386,6 +414,29 @@ async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
     Ok(())
 }
 
+/// Returns the first keyword that appears in more than one local pax record of
+/// the entry.
+///
+/// Readers disagree on which record wins. `astral-tokio-tar` uses the last
+/// `path` record, while the `tar` crate that Cargo uses picks the first one.
+async fn repeated_pax_keyword<R: tokio::io::AsyncRead + Unpin>(
+    entry: &mut Entry<R>,
+) -> Result<Option<String>, TarballError> {
+    let Some(pax) = entry.pax_extensions().await? else {
+        return Ok(None);
+    };
+
+    let mut keywords = HashSet::new();
+    for ext in pax {
+        let ext = ext.map_err(TarballError::Malformed)?;
+        if !keywords.insert(ext.key_bytes()) {
+            return Ok(Some(String::from_utf8_lossy(ext.key_bytes()).into_owned()));
+        }
+    }
+
+    Ok(None)
+}
+
 /// Returns the first local pax record keyword of the entry that belongs to a
 /// vendor namespace, like `LIBARCHIVE.xattr.com.apple.provenance`.
 ///
@@ -416,6 +467,7 @@ mod tests {
     use super::{TarballCompatibility, TarballPolicy, process_tarball};
     use crate::TarballBuilder;
     use insta::{assert_debug_snapshot, assert_snapshot};
+    use std::io::Read;
 
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
     const POLICY: TarballPolicy = TarballPolicy {
@@ -982,6 +1034,66 @@ mod tests {
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
         assert_snapshot!(err, @"mismatched pax and tar header sizes");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_repeated_pax_path() {
+        // `astral-tokio-tar` uses the last `path` record, but the `tar` crate
+        // that Cargo uses for extraction picks the first one.
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_pax_extensions([
+                ("path", "foo-0.0.1/build.rs".as_bytes()),
+                ("path", "foo-0.0.1/src/lib.rs".as_bytes()),
+            ])
+            .add_file("foo-0.0.1/src/lib.rs", b"fn main() {}")
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"tarball repeats the pax keyword `path`: foo-0.0.1/src/lib.rs");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_multiple_gzip_members() {
+        // A tar archive ends with two 512-byte blocks of zeros.
+        const END_OF_ARCHIVE_LEN: usize = 2 * 512;
+
+        // Without its end-of-archive blocks, the tar stream continues in the
+        // second gzip member, which only multi-member gzip decoders like
+        // `gzip` and `bsdtar` read.
+        let mut first = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/src/lib.rs", b"")
+            .build_unzipped();
+        first.truncate(first.len() - END_OF_ARCHIVE_LEN);
+
+        let mut tarball = vec![];
+        flate2::read::GzEncoder::new(&*first, flate2::Compression::default())
+            .read_to_end(&mut tarball)
+            .unwrap();
+
+        let second = TarballBuilder::new()
+            .add_file("foo-0.0.1/build.rs", b"fn main() {}")
+            .build();
+        tarball.extend(second);
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_trailing_data() {
+        let mut tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+        tarball.push(0);
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
     }
 
     #[tokio::test]

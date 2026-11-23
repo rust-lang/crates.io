@@ -15,6 +15,10 @@ impl<R: AsyncRead + Unpin> LimitErrorReader<R> {
             inner: r.take(limit),
         }
     }
+
+    pub fn into_inner(self) -> R {
+        self.inner.into_inner()
+    }
 }
 
 impl<R: AsyncRead + Unpin> AsyncRead for LimitErrorReader<R> {
