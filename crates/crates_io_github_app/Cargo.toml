@@ -21,7 +21,7 @@ secrecy = { version = "=0.10.3", features = ["serde"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 tokio = { workspace = true, features = ["sync"] }
 tracing = "=0.1.44"
-url = "=2.5.8"
+url = "=2.5.9"
 
 [dev-dependencies]
 claims = "=0.8.0"
