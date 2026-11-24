@@ -53,7 +53,7 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     let beta = page.locator('[data-test-version="2.0.0-beta.1"]');
     await expect(beta).toHaveClass(/.*latest/);
     await expect(beta.locator('[data-test-release-track] .sr-only')).toHaveText(
-      'Release track 2.x (prerelease,latest)',
+      'Release track 2.x (prerelease, latest)',
     );
   });
 
