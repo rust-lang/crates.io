@@ -18,8 +18,7 @@ use crate::schema::oauth_github;
     belongs_to(User),
 )]
 pub struct OauthGithub {
-    /// In the process of being migrated from `users.gh_id`.
-    /// GitHub API docs describe this type as int64.
+    /// The GitHub user ID. GitHub API docs describe this type as int64.
     pub account_id: i64,
     /// In the process of being migrated from `users.gh_avatar`.
     pub avatar: Option<String>,
@@ -76,7 +75,7 @@ impl OauthGithub {
     belongs_to(User),
 )]
 pub struct NewOauthGithub<'a> {
-    pub account_id: i64, // corresponds to users.gh_id
+    pub account_id: i64,
     pub avatar: Option<&'a str>,
     pub encrypted_token: &'a [u8],
     #[builder(default = Utc::now())]
