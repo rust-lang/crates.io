@@ -33,4 +33,4 @@ insta = "=1.49.0"
 rayon = "=1.12.0"
 tar = { version = "=0.4.46", default-features = false }
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
-walkdir = "=2.5.0"
+walkdir = "=2.5.1"
