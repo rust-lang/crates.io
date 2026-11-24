@@ -4,6 +4,7 @@ use crates_io_cargo_toml::{
 };
 use serde_json::{Value, json};
 use std::str::FromStr;
+use std::time::{Duration, Instant};
 
 fn extract(manifest: &str, files: &[&str]) -> Result<TargetMetadata, Error> {
     let mut manifest = Manifest::from_str(manifest).unwrap();
@@ -296,6 +297,69 @@ fn normalizes_inventory_paths_for_directory_style_binaries() {
     });
 
     assert_eq!(json, expected);
+}
+
+#[test]
+fn discovers_targets_in_unsorted_inventory() {
+    let manifest = r#"
+        [package]
+        name = "target-demo"
+        version = "1.0.0"
+        edition = "2021"
+
+        [[bin]]
+        name = "custom-binary"
+        path = "commands/custom.rs"
+        "#;
+
+    let files = [
+        "src/binary/main.rs",
+        "src/bin/tool/main.rs",
+        "Cargo.toml",
+        "src/bin-old/main.rs",
+        "src/bin/helper.rs",
+        "src/bin.rs",
+        "src/bin/tool/extra.rs",
+        "commands/custom.rs",
+    ];
+
+    let metadata = extract(manifest, &files).unwrap();
+    let json = to_json(metadata);
+    let expected = json!({
+        "bins": [
+            { "path": "commands/custom.rs", "name": "custom-binary" },
+            { "path": "src/bin/helper.rs", "name": "helper" },
+            { "path": "src/bin/tool/main.rs", "name": "tool" },
+        ],
+    });
+
+    assert_eq!(json, expected);
+}
+
+#[test]
+fn discovers_many_binaries_quickly() {
+    let manifest = r#"
+        [package]
+        name = "target-demo"
+        version = "1.0.0"
+        edition = "2021"
+        "#;
+
+    let bins = (0..30_000)
+        .map(|i| format!("src/bin/b{i}.rs"))
+        .collect::<Vec<_>>();
+    let mut files = vec!["Cargo.toml", "src/lib.rs"];
+    files.extend(bins.iter().map(String::as_str));
+
+    let start = Instant::now();
+    let metadata = extract(manifest, &files).unwrap();
+    let elapsed = start.elapsed();
+
+    assert_eq!(metadata.bins.len(), 30_000);
+    assert!(
+        elapsed < Duration::from_secs(10),
+        "target discovery took {elapsed:?}"
+    );
 }
 
 #[test]
