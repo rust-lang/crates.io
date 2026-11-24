@@ -1,7 +1,7 @@
 import type { Placement, Strategy } from '@floating-ui/dom';
 import type { Attachment } from 'svelte/attachments';
 
-import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, offset, shift, size } from '@floating-ui/dom';
 
 export interface AnchorOptions {
   placement: Placement;
@@ -13,11 +13,19 @@ export interface AnchorOptions {
   strategy?: Strategy;
 }
 
+const anchorWidth = size({
+  apply({ rects, elements }) {
+    elements.floating.style.setProperty('--anchor-width', `${rects.reference.width}px`);
+  },
+});
+
 /**
  * Svelte attachment that positions an absolutely positioned element next to
  * `anchor`, flipping and shifting it to stay inside the viewport.
  *
  * The position updates whenever the anchor or the element moves or resizes.
+ * The width of the anchor is available to the element's styles as the
+ * `--anchor-width` CSS property.
  */
 export function anchorTo(anchor: HTMLElement, options: AnchorOptions): Attachment<HTMLElement> {
   return element => {
@@ -25,7 +33,7 @@ export function anchorTo(anchor: HTMLElement, options: AnchorOptions): Attachmen
       let { x, y } = await computePosition(anchor, element, {
         placement: options.placement,
         strategy: options.strategy,
-        middleware: [offset(options.offset), flip(), shift({ padding: options.padding })],
+        middleware: [offset(options.offset), flip(), shift({ padding: options.padding }), anchorWidth],
       });
 
       Object.assign(element.style, {
