@@ -40,17 +40,22 @@ impl AbstractFilesystem for Filesystem<'_> {
 }
 
 /// An [`AbstractFilesystem`] backed by a list of package-relative paths.
+///
+/// The paths are kept sorted, so that all descendants of a directory form a
+/// contiguous range that can be found with a binary search.
 pub struct PathsFileSystem(Vec<PathBuf>);
 
 impl PathsFileSystem {
     /// Creates an abstract filesystem from package-relative paths.
-    pub fn new(paths: Vec<PathBuf>) -> Self {
+    pub fn new(mut paths: Vec<PathBuf>) -> Self {
+        paths.sort_unstable();
         Self(paths)
     }
 
     /// Returns whether the backing path list contains the exact path.
     pub fn contains<P: AsRef<Path>>(&self, path: P) -> bool {
-        self.0.iter().any(|candidate| candidate == path.as_ref())
+        let path = path.as_ref();
+        self.0.binary_search_by_key(&path, PathBuf::as_path).is_ok()
     }
 }
 
@@ -64,10 +69,10 @@ impl AbstractFilesystem for PathsFileSystem {
             rel_path = components.as_path();
         }
 
-        let file_names = self
-            .0
+        let start = self.0.partition_point(|path| path.as_path() < rel_path);
+        let file_names = self.0[start..]
             .iter()
-            .filter_map(move |path| path.strip_prefix(rel_path).ok())
+            .map_while(move |path| path.strip_prefix(rel_path).ok())
             .filter_map(|name| match name.components().next() {
                 Some(Component::Normal(path)) => path.to_str(),
                 _ => None,

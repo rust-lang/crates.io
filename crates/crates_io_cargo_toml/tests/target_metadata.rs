@@ -4,6 +4,7 @@ use crates_io_cargo_toml::{
 };
 use serde_json::{Value, json};
 use std::str::FromStr;
+use std::time::{Duration, Instant};
 
 fn extract(manifest: &str, files: &[&str]) -> Result<TargetMetadata, Error> {
     let mut manifest = Manifest::from_str(manifest).unwrap();
@@ -333,6 +334,32 @@ fn discovers_targets_in_unsorted_inventory() {
     });
 
     assert_eq!(json, expected);
+}
+
+#[test]
+fn discovers_many_binaries_quickly() {
+    let manifest = r#"
+        [package]
+        name = "target-demo"
+        version = "1.0.0"
+        edition = "2021"
+        "#;
+
+    let bins = (0..30_000)
+        .map(|i| format!("src/bin/b{i}.rs"))
+        .collect::<Vec<_>>();
+    let mut files = vec!["Cargo.toml", "src/lib.rs"];
+    files.extend(bins.iter().map(String::as_str));
+
+    let start = Instant::now();
+    let metadata = extract(manifest, &files).unwrap();
+    let elapsed = start.elapsed();
+
+    assert_eq!(metadata.bins.len(), 30_000);
+    assert!(
+        elapsed < Duration::from_secs(10),
+        "target discovery took {elapsed:?}"
+    );
 }
 
 #[test]
