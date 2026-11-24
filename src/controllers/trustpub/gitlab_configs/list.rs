@@ -82,6 +82,7 @@ async fn list_by_crate(
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::TrustedPublishing)
         .for_crate(&krate.name)
+        .reject_legacy_tokens()
         .check(&parts, &mut conn)
         .await?;
     let auth_user = auth.user();

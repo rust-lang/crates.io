@@ -150,10 +150,8 @@ async fn test_legacy_token_auth() -> anyhow::Result<()> {
     create_config(&mut conn, krate.id, "foo-rs").await?;
 
     let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
-    assert_snapshot!(response.status(), @"200 OK");
-    assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
-    });
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `trusted-publishing` scope at https://crates.io/settings/tokens/new"}]}"#);
 
     Ok(())
 }
