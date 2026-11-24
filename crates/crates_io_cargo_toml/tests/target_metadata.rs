@@ -299,6 +299,43 @@ fn normalizes_inventory_paths_for_directory_style_binaries() {
 }
 
 #[test]
+fn discovers_targets_in_unsorted_inventory() {
+    let manifest = r#"
+        [package]
+        name = "target-demo"
+        version = "1.0.0"
+        edition = "2021"
+
+        [[bin]]
+        name = "custom-binary"
+        path = "commands/custom.rs"
+        "#;
+
+    let files = [
+        "src/binary/main.rs",
+        "src/bin/tool/main.rs",
+        "Cargo.toml",
+        "src/bin-old/main.rs",
+        "src/bin/helper.rs",
+        "src/bin.rs",
+        "src/bin/tool/extra.rs",
+        "commands/custom.rs",
+    ];
+
+    let metadata = extract(manifest, &files).unwrap();
+    let json = to_json(metadata);
+    let expected = json!({
+        "bins": [
+            { "path": "commands/custom.rs", "name": "custom-binary" },
+            { "path": "src/bin/helper.rs", "name": "helper" },
+            { "path": "src/bin/tool/main.rs", "name": "tool" },
+        ],
+    });
+
+    assert_eq!(json, expected);
+}
+
+#[test]
 fn rejects_unresolved_targets() {
     let manifest = r#"
         [package]
