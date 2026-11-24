@@ -15,7 +15,12 @@ impl DownloadsMap {
 
     /// Increments the download count for the given crate version on the given date.
     pub fn add(&mut self, name: String, version: Version, date: NaiveDate) {
-        *self.0.entry((name, version, date)).or_default() += 1;
+        self.add_count(name, version, date, 1);
+    }
+
+    /// Adds `count` downloads for the given crate version on the given date.
+    pub fn add_count(&mut self, name: String, version: Version, date: NaiveDate, count: u64) {
+        *self.0.entry((name, version, date)).or_default() += count;
     }
 
     /// Returns a [`HashSet`] of all crate names in the map.
