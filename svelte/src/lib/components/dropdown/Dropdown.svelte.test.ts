@@ -47,7 +47,7 @@ describe('Dropdown', () => {
     await expect.element(content).not.toBeInTheDocument();
   });
 
-  it('does not close when Escape key is pressed while focus is outside', async () => {
+  it('closes when Escape key is pressed while focus is outside', async () => {
     await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Open Menu' });
@@ -58,10 +58,10 @@ describe('Dropdown', () => {
 
     trigger.element().blur();
     await userEvent.keyboard('{Escape}');
-    await expect.element(content).toBeVisible();
+    await expect.element(content).not.toBeInTheDocument();
   });
 
-  it('does not return focus to the trigger when closed via Escape from a menu item', async () => {
+  it('returns focus to the trigger when closed via Escape from a menu item', async () => {
     await render(TestDropdown);
 
     let trigger = page.getByRole('button', { name: 'Menu Dropdown' });
@@ -73,7 +73,7 @@ describe('Dropdown', () => {
 
     await userEvent.keyboard('{Escape}');
     await expect.element(page.getByRole('menu')).not.toBeInTheDocument();
-    await expect.element(trigger).not.toHaveFocus();
+    await expect.element(trigger).toHaveFocus();
   });
 
   describe('positioning', () => {
@@ -94,6 +94,18 @@ describe('Dropdown', () => {
       let { trigger, content } = rects('Wide Trigger');
       expect(content.left).toBeCloseTo(trigger.left);
       expect(content.width).toBeCloseTo(trigger.width);
+    });
+
+    it('places the content according to `placement`', async () => {
+      await render(TestDropdown);
+      await page.getByRole('button', { name: 'End' }).click();
+
+      // content is aligned to the right edge of the trigger
+      await expect.poll(() => rects('End').content.right - rects('End').trigger.right).toBeCloseTo(0, 1);
+
+      // content keeps its own width
+      let { trigger, content } = rects('End');
+      expect(content.width).toBeGreaterThan(trigger.width);
     });
   });
 

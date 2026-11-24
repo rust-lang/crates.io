@@ -19,7 +19,7 @@
   id={dropdown.triggerId}
   aria-expanded={dropdown.isExpanded}
   aria-controls={dropdown.contentId}
-  onclick={dropdown.toggle}
+  bind:this={dropdown.trigger}
   class={['trigger', className]}
   class:active={dropdown.isExpanded}
   {...restProps}

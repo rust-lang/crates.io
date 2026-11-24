@@ -31,6 +31,13 @@
         <div>Narrow</div>
       </Dropdown.Content>
     </Dropdown.Root>
+
+    <Dropdown.Root>
+      <Dropdown.Trigger hideArrow>End</Dropdown.Trigger>
+      <Dropdown.Menu placement="bottom-end">
+        <Dropdown.Item>Wider content</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown.Root>
   </div>
 
   <!-- Menu dropdown for menu-specific tests -->
