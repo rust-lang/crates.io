@@ -291,13 +291,13 @@
   </div>
 
   <PrivilegedAction userAuthorised={isOwner} class="actions">
-    <Dropdown.Root class="dropdown" data-test-actions-menu>
+    <Dropdown.Root class="dropdown">
       <Dropdown.Trigger hideArrow class="trigger" data-test-actions-toggle>
         <Icon class="i-heroicons:ellipsis-horizontal-circle" />
         <span class="sr-only">Actions</span>
       </Dropdown.Trigger>
 
-      <Dropdown.Menu class="menu">
+      <Dropdown.Menu class="menu" data-test-actions-menu>
         <Dropdown.Item>
           <YankButton {crateName} {version} onChanged={onVersionChanged} class="button-reset menu-button" />
         </Dropdown.Item>

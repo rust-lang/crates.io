@@ -53,8 +53,8 @@
       <ColorSchemeMenu class="color-scheme-menu" />
 
       {#if currentUser}
-        <Dropdown.Root data-test-user-menu>
-          <Dropdown.Trigger class="button-reset" data-test-toggle>
+        <Dropdown.Root>
+          <Dropdown.Trigger class="button-reset" data-test-user-menu-toggle>
             {#if isSudoEnabled}
               <span class="sr-only">Admin mode active</span>
               <div class="wizard-hat" aria-hidden="true" data-test-wizard-hat>🧙</div>
@@ -65,7 +65,7 @@
             {currentUser.name}
           </Dropdown.Trigger>
 
-          <Dropdown.Menu class="current-user-links">
+          <Dropdown.Menu class="current-user-links" data-test-user-menu>
             <Dropdown.Item>
               <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
             </Dropdown.Item>

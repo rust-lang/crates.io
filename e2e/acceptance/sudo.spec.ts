@@ -47,7 +47,7 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/foo/versions');
 
-    await page.locator('[data-test-user-menu]').getByRole('button').click();
+    await page.locator('[data-test-user-menu-toggle]').click();
 
     // Test the various header elements.
     await expect(page.locator('[data-test-wizard-hat]')).toHaveCount(0);
@@ -68,7 +68,7 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/foo/versions');
 
-    await page.locator('[data-test-user-menu]').getByRole('button').click();
+    await page.locator('[data-test-user-menu-toggle]').click();
     await page.getByRole('button', { name: 'Enable admin actions' }).click();
 
     // Test the various header elements.
@@ -104,7 +104,7 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/foo/versions');
 
-    await page.locator('[data-test-user-menu]').getByRole('button').click();
+    await page.locator('[data-test-user-menu-toggle]').click();
     await page.getByRole('button', { name: 'Enable admin actions' }).click();
 
     await page.locator('[data-test-actions-toggle]').click();

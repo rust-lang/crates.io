@@ -8,11 +8,11 @@ test.describe('Acceptance | Logout', { tag: '@acceptance' }, () => {
     await page.goto('/crates');
     await expect(page).toHaveURL('/crates');
 
-    let menu = page.locator('[data-test-user-menu]');
-    await expect(menu.locator('[data-test-toggle]')).toHaveText('John Doe');
+    let toggle = page.locator('[data-test-user-menu-toggle]');
+    await expect(toggle).toHaveText('John Doe');
 
-    await menu.locator('[data-test-toggle]').click();
-    await menu.locator('[data-test-logout-button]').click();
+    await toggle.click();
+    await page.locator('[data-test-user-menu] [data-test-logout-button]').click();
 
     await page.waitForURL('/');
   });

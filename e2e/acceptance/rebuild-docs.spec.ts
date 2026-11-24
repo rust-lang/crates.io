@@ -22,7 +22,7 @@ test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
 
     let v021 = page.locator('[data-test-version="0.2.1"]');
     await v021.locator('[data-test-actions-toggle]').click();
-    await v021.getByRole('link', { name: 'Rebuild Docs' }).click();
+    await page.locator('[data-test-actions-menu]').getByRole('link', { name: 'Rebuild Docs' }).click();
 
     await expect(page).toHaveURL('/crates/nanomsg/0.2.1/rebuild-docs');
     await expect(page.locator('[data-test-title]')).toHaveText('Rebuild Documentation');
