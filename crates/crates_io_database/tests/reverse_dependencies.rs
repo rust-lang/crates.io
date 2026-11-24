@@ -68,11 +68,9 @@ async fn rev_dep_not_created_for_non_default_version() {
 }
 
 /// The `dependent_downloads` ordering key is populated when a reverse
-/// dependency is recorded and kept in sync when the dependent's download count
-/// changes. A dependent that appears in more than one target's list has every
-/// one of its edges refreshed, not just one.
+/// dependency is recorded.
 #[tokio::test]
-async fn dependent_downloads_tracked_and_kept_in_sync() {
+async fn dependent_downloads_populated_on_insert() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
 
@@ -95,13 +93,6 @@ async fn dependent_downloads_tracked_and_kept_in_sync() {
 
     assert_compact_debug_snapshot!(stored_dependents(&mut conn, c1).await, @r#"[("c4", 30), ("c5", 20), ("c3", 10)]"#);
     assert_compact_debug_snapshot!(stored_dependents(&mut conn, c2).await, @r#"[("c3", 10)]"#);
-
-    // Bumping a dependent's download count updates the denormalized ordering
-    // key in every edge for that dependent, re-sorting each target's list.
-    set_downloads(&mut conn, c3, 100).await;
-
-    assert_compact_debug_snapshot!(stored_dependents(&mut conn, c1).await, @r#"[("c3", 100), ("c4", 30), ("c5", 20)]"#);
-    assert_compact_debug_snapshot!(stored_dependents(&mut conn, c2).await, @r#"[("c3", 100)]"#);
 }
 
 /// Moving a crate's default version to one with different dependencies rebuilds

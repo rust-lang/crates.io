@@ -55,6 +55,12 @@ async fn update(conn: &mut AsyncPgConnection) -> QueryResult<()> {
 
     info!("Finished updating versions");
 
+    // The batches above can change a crate's downloads several times, so the
+    // reverse dependencies are synced once afterwards.
+    let query = include_str!("sync_reverse_dependencies.sql");
+    let sync_count = diesel::sql_query(query).execute(conn).await?;
+    info!("Updated {sync_count} reverse dependencies");
+
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
     diesel::update(version_downloads::table)
@@ -107,9 +113,9 @@ async fn batch_update(batch_size: i64, conn: &mut AsyncPgConnection) -> QueryRes
 mod tests {
     use super::*;
     use crate::models::{Crate, NewCrate, NewVersion, Version};
-    use crate::schema::{crate_downloads, crates, versions};
+    use crate::schema::{crate_downloads, crates, reverse_dependencies, versions};
     use crates_io_test_db::TestDatabase;
-    use crates_io_test_utils::builders::UserBuilder;
+    use crates_io_test_utils::builders::{CrateBuilder, UserBuilder, VersionBuilder};
     use diesel::sql_types::Timestamptz;
     use diesel_async::AsyncConnection;
 
@@ -184,6 +190,52 @@ mod tests {
             .first(&mut conn)
             .await;
         assert_eq!(version_downloads, Ok(1));
+    }
+
+    #[tokio::test]
+    async fn syncs_reverse_dependency_downloads() {
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.async_connect().await;
+
+        let user_id = user(&mut conn).await;
+        let target1 = CrateBuilder::new("target1", user_id)
+            .expect_build(&mut conn)
+            .await;
+        let target2 = CrateBuilder::new("target2", user_id)
+            .expect_build(&mut conn)
+            .await;
+        let version = VersionBuilder::new("1.0.0")
+            .dependency(&target1, None)
+            .dependency(&target2, None);
+        let dependent = CrateBuilder::new("dependent", user_id)
+            .version(version)
+            .expect_build(&mut conn)
+            .await;
+
+        let version_id: i32 = versions::table
+            .filter(versions::crate_id.eq(dependent.id))
+            .select(versions::id)
+            .first(&mut conn)
+            .await
+            .unwrap();
+        diesel::insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version_id),
+                version_downloads::downloads.eq(3),
+            ))
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        super::update(&mut conn).await.unwrap();
+
+        let dependent_downloads: Vec<i64> = reverse_dependencies::table
+            .filter(reverse_dependencies::dependent_crate_id.eq(dependent.id))
+            .select(reverse_dependencies::dependent_downloads)
+            .load(&mut conn)
+            .await
+            .unwrap();
+        assert_eq!(dependent_downloads, [3, 3]);
     }
 
     #[tokio::test]
