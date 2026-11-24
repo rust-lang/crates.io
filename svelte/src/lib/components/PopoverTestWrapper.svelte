@@ -5,9 +5,11 @@
 
   interface Props {
     placement?: Placement;
+    minWidthFromAnchor?: boolean;
+    class?: string;
   }
 
-  let { placement }: Props = $props();
+  let { placement, minWidthFromAnchor, class: className }: Props = $props();
 
   let open = $state(false);
   let anchor = $state<HTMLButtonElement>();
@@ -17,7 +19,7 @@
   <h1 data-test-heading style:margin-bottom="100px">
     <button type="button" data-test-trigger bind:this={anchor}>Toggle popover</button>
 
-    <Popover bind:open {anchor} {placement} data-test-popover>
+    <Popover bind:open {anchor} {placement} {minWidthFromAnchor} class={className} data-test-popover>
       <a href="#item" data-test-item>Item</a>
       <button type="button" data-test-close onclick={() => (open = false)}>Close</button>
     </Popover>
@@ -26,3 +28,9 @@
   <button type="button" data-test-outside>Outside</button>
   <button type="button" data-test-open onclick={() => (open = true)}>Open</button>
 </div>
+
+<style>
+  :global(.narrow-popover) {
+    min-width: 100px;
+  }
+</style>

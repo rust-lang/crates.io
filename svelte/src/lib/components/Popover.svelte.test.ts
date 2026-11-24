@@ -70,6 +70,25 @@ describe('Popover', () => {
     await expect.poll(() => rects().popover.right - rects().anchor.right).toBeCloseTo(0, 1);
   });
 
+  it('is at least as wide as the anchor with `minWidthFromAnchor`', async () => {
+    await render(PopoverTestWrapper, { minWidthFromAnchor: true });
+    trigger.element().style.width = '400px';
+    await userEvent.click(trigger);
+
+    await expect.poll(() => rects().popover.width).toBeCloseTo(400);
+  });
+
+  it('lets a class override the minimum width from `minWidthFromAnchor`', async () => {
+    await render(PopoverTestWrapper, { minWidthFromAnchor: true, class: 'narrow-popover' });
+    trigger.element().style.width = '400px';
+    await userEvent.click(trigger);
+    await expect.element(item).toBeVisible();
+
+    // wait until the anchor width is known
+    await expect.poll(() => popover.element().style.getPropertyValue('--anchor-width')).toBe('400px');
+    expect(rects().popover.width).toBeLessThan(400);
+  });
+
   it('closes when clicking outside', async () => {
     await render(PopoverTestWrapper);
     await userEvent.click(trigger);

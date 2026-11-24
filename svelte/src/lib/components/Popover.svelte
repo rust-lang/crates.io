@@ -18,6 +18,8 @@
     open: boolean;
     anchor: HTMLButtonElement | undefined;
     placement?: Placement;
+    /** Makes the popover at least as wide as the anchor, unless a class overrides its `min-width`. */
+    minWidthFromAnchor?: boolean;
     onBeforeToggle?: ToggleEventHandler<HTMLDivElement>;
     onToggle?: ToggleEventHandler<HTMLDivElement>;
     children: Snippet;
@@ -27,6 +29,7 @@
     open = $bindable(),
     anchor,
     placement = 'bottom-start',
+    minWidthFromAnchor,
     children,
     class: className,
     onBeforeToggle,
@@ -90,7 +93,7 @@
   <div
     {...restProps}
     popover="auto"
-    class={['popover', className]}
+    class={['popover', { 'min-width-from-anchor': minWidthFromAnchor }, className]}
     onbeforetoggle={handleBeforeToggle}
     ontoggle={handleToggle}
     {@attach linkAnchor}
@@ -113,5 +116,9 @@
     overflow: visible;
     background: none;
     color: inherit;
+  }
+
+  :where(.min-width-from-anchor) {
+    min-width: var(--anchor-width);
   }
 </style>

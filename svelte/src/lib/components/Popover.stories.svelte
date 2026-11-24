@@ -20,6 +20,7 @@
     },
     args: {
       placement: 'bottom-start',
+      minWidthFromAnchor: false,
     },
     parameters: {
       docs: { story: { height: '250px' } },
@@ -37,8 +38,8 @@
     <div class="container">
       <button type="button" bind:this={anchor}>Toggle popover</button>
 
-      <Popover bind:open {anchor} placement={args.placement}>
-        <p class="content">Popover content</p>
+      <Popover bind:open {anchor} placement={args.placement} minWidthFromAnchor={args.minWidthFromAnchor}>
+        <p class="content">Content</p>
       </Popover>
     </div>
   {/snippet}
