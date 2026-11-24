@@ -6,19 +6,36 @@
   interface Props {
     text: string;
     width: string;
+    side?: 'top' | 'bottom' | 'left' | 'right';
+    marginTop?: string;
     delay?: number;
     onlyWhenTruncated?: boolean;
     truncationTargetWidth?: string;
   }
 
-  let { text, width, delay = 0, onlyWhenTruncated = false, truncationTargetWidth }: Props = $props();
+  let {
+    text,
+    width,
+    side,
+    marginTop = '100px',
+    delay = 0,
+    onlyWhenTruncated = false,
+    truncationTargetWidth,
+  }: Props = $props();
   let propsId = $props.id();
   let truncationTarget = $state<HTMLSpanElement>();
 
   setTooltipContext({ containerId: `tooltip-container-${propsId}` });
 </script>
 
-<div data-test-anchor style:width style:overflow="hidden" style:white-space="nowrap" style:text-overflow="ellipsis">
+<div
+  data-test-anchor
+  style:width
+  style:margin-top={marginTop}
+  style:overflow="hidden"
+  style:white-space="nowrap"
+  style:text-overflow="ellipsis"
+>
   {#if truncationTargetWidth}
     <span
       bind:this={truncationTarget}
@@ -33,7 +50,7 @@
   {:else}
     {text}
   {/if}
-  <Tooltip {text} {delay} {onlyWhenTruncated} {truncationTarget} />
+  <Tooltip {text} {side} {delay} {onlyWhenTruncated} {truncationTarget} />
 </div>
 
 <TooltipContainer />

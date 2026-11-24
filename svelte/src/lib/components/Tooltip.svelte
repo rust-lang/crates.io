@@ -2,8 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { Attachment } from 'svelte/attachments';
 
-  import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
-
+  import { anchorTo } from '#lib/attachments/anchor-to.ts';
   import { getTooltipContext } from '#lib/tooltip.svelte.ts';
 
   interface BaseProps {
@@ -105,29 +104,10 @@
     let container = document.getElementById(tooltipContext.containerId);
     container?.append(floatingElement);
 
-    async function updatePosition() {
-      if (!anchorElement) return;
-
-      let middleware = [offset(5), flip(), shift({ padding: 5 })];
-
-      let { x, y } = await computePosition(anchorElement, floatingElement, {
-        placement: side,
-        middleware,
-      });
-
-      Object.assign(floatingElement.style, {
-        left: `${x}px`,
-        top: `${y}px`,
-      });
-    }
-
-    let cleanupAutoUpdate = autoUpdate(anchorElement, floatingElement, updatePosition);
-
     floatingElement.addEventListener('mouseenter', show);
     floatingElement.addEventListener('mouseleave', hide);
 
     return () => {
-      cleanupAutoUpdate();
       floatingElement.removeEventListener('mouseenter', show);
       floatingElement.removeEventListener('mouseleave', hide);
       floatingElement.remove();
@@ -138,7 +118,11 @@
 <span class="anchor" {@attach attachAnchor}></span>
 
 {#if visible}
-  <div class="tooltip" {@attach attachTooltip}>
+  <div
+    class="tooltip"
+    {@attach attachTooltip}
+    {@attach anchorElement && anchorTo(anchorElement, { placement: side, offset: 5, padding: 5 })}
+  >
     {#if children}
       {@render children()}
     {:else}
