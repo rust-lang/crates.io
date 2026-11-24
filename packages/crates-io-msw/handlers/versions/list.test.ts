@@ -426,5 +426,6 @@ test('include `release_tracks` meta with pre-releases', async function () {
   let { meta } = await response.json();
   expect(meta.release_tracks).toEqual({
     1: { highest: '1.0.0' },
+    2: { highest: '2.0.0-beta.1' },
   });
 });

@@ -13,16 +13,14 @@ impl ReleaseTracks {
         I: Iterator<Item = &'a semver::Version>,
     {
         let mut map = IndexMap::new();
-        for num in versions.filter(|num| num.pre.is_empty()) {
+        for num in versions {
             let key = ReleaseTrackName::from_semver(num);
-            let prev = map.last();
-            if prev.filter(|&(k, _)| *k == key).is_none() {
-                map.insert(
-                    key,
-                    ReleaseTrackDetails {
-                        highest: num.clone(),
-                    },
-                );
+            let details = map.entry(key).or_insert_with(|| ReleaseTrackDetails {
+                highest: num.clone(),
+            });
+            // Stable versions take precedence over higher pre-releases.
+            if !details.highest.pre.is_empty() && num.pre.is_empty() {
+                details.highest = num.clone();
             }
         }
 
@@ -88,7 +86,12 @@ mod tests {
         let versions = [version("1.0.0-beta.5")];
         assert_eq!(
             ReleaseTracks::from_sorted_semver_iter(versions.iter()),
-            ReleaseTracks(IndexMap::new())
+            ReleaseTracks(IndexMap::from([(
+                ReleaseTrackName::Major(1),
+                ReleaseTrackDetails {
+                    highest: version("1.0.0-beta.5")
+                }
+            )]))
         );
     }
 
@@ -134,6 +137,12 @@ mod tests {
                     }
                 ),
                 (
+                    ReleaseTrackName::Minor(4),
+                    ReleaseTrackDetails {
+                        highest: version("0.4.0-rc.1")
+                    }
+                ),
+                (
                     ReleaseTrackName::Minor(3),
                     ReleaseTrackDetails {
                         highest: version("0.3.23")
@@ -163,6 +172,7 @@ mod tests {
             json!({
                 "100": { "highest": "100.1.1" },
                 "1": { "highest": "1.3.5" },
+                "0.4": { "highest": "0.4.0-rc.1" },
                 "0.3": { "highest": "0.3.23" },
                 "0.2": { "highest": "0.2.1" },
                 "0.1": { "highest": "0.1.2" }

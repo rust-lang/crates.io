@@ -122,7 +122,10 @@ async fn test_sorting() -> anyhow::Result<()> {
         "1.0.0-alpha.1",
         "1.0.0-alpha",
     ];
-    let release_tracks = Some(json!({"1": {"highest": "1.0.0"}}));
+    let release_tracks = Some(json!({
+        "2": {"highest": "2.0.0-alpha"},
+        "1": {"highest": "1.0.0"}
+    }));
 
     // Sort by semver
     let url = "/api/v1/crates/foo_versions/versions?sort=semver";
