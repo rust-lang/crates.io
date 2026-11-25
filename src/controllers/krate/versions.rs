@@ -4,7 +4,7 @@ use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::CratePath;
-use crate::models::{PublicUser, Version, VersionOwnerAction};
+use crate::models::{PublicUser, Version, VersionOwnerAction, default_versions};
 use crate::schema::{oauth_github, users, versions};
 use crate::server::ServerContext;
 use crate::util::RequestUtils;
@@ -16,12 +16,10 @@ use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
 use crates_io_database::fns::semver_ord_v2;
-use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{TryStreamExt, future};
 use http::request::Parts;
-use indexmap::{IndexMap, IndexSet};
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -206,39 +204,22 @@ async fn list(
     };
 
     let release_tracks = if params.include()?.release_tracks {
-        let mut sorted_versions = IndexSet::new();
-        if options.is_some() {
-            versions::table
+        let versions = if options.is_some() {
+            default_versions::Version::query()
                 .filter(versions::crate_id.eq(crate_id))
-                .filter(not(versions::yanked))
-                .select(versions::num)
-                .order(versions::semver_ord_v2.desc())
-                .load_stream::<String>(&mut conn)
+                .load(&mut conn)
                 .await?
-                .try_for_each(|num| {
-                    if let Ok(semver) = semver::Version::parse(&num) {
-                        sorted_versions.insert(semver);
-                    };
-                    future::ready(Ok(()))
-                })
-                .await?;
         } else {
-            sorted_versions = data
-                .iter()
+            data.iter()
                 .flat_map(|(version, _)| {
-                    (!version.yanked)
-                        .then_some(version)
-                        .and_then(|v| semver::Version::parse(&v.num).ok())
+                    let num = semver::Version::parse(&version.num).ok()?;
+                    let (id, yanked) = (version.id, version.yanked);
+                    Some(default_versions::Version { id, num, yanked })
                 })
-                .collect();
-            if seek == Seek::Date {
-                sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
-            }
-        }
+                .collect()
+        };
 
-        Some(ReleaseTracks::from_sorted_semver_iter(
-            sorted_versions.iter(),
-        ))
+        Some(ReleaseTracks::from_versions(&versions))
     } else {
         None
     };

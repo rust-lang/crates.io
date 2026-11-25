@@ -51,7 +51,7 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-version]')).toHaveCount(3);
 
     let trackLabel = (num: string) => page.locator(`[data-test-version="${num}"] [data-test-release-track] .sr-only`);
-    await expect(trackLabel('2.0.0-beta.1')).toHaveText('Release track 2.x (prerelease)');
+    await expect(trackLabel('2.0.0-beta.1')).toHaveText('Release track 2.x (prerelease, latest)');
     await expect(trackLabel('2.0.0-alpha.1')).toHaveText('Release track 2.x (prerelease)');
   });
 

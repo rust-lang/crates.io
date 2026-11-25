@@ -1,17 +1,27 @@
 import semverParse from 'semver/functions/parse.js';
-import semverSort from 'semver/functions/rsort.js';
 
-export function calculateReleaseTracks(versions: { yanked: boolean; num: string }[]) {
-  let versionNums = versions.filter(it => !it.yanked).map(it => it.num);
-  semverSort(versionNums, { loose: true });
+import { calculateDefaultVersion } from './default-version.js';
+
+type Version = { yanked: boolean; num: string };
+
+/**
+ * The highest version of a track is chosen like the default version of a
+ * crate, see `calculateDefaultVersion()`.
+ */
+export function calculateReleaseTracks(versions: Version[]) {
+  let versionsByTrack = new Map<string, Version[]>();
+  for (let version of versions) {
+    let semver = semverParse(version.num, { loose: true });
+    if (!semver) continue;
+    let name = semver.major == 0 ? `0.${semver.minor}` : `${semver.major}`;
+    let trackVersions = versionsByTrack.get(name) ?? [];
+    trackVersions.push(version);
+    versionsByTrack.set(name, trackVersions);
+  }
 
   let tracks: Record<string, { highest: string }> = {};
-  for (let num of versionNums) {
-    let semver = semverParse(num, { loose: true });
-    if (!semver || semver.prerelease.length !== 0) continue;
-    let name = semver.major == 0 ? `0.${semver.minor}` : `${semver.major}`;
-    if (name in tracks) continue;
-    tracks[name] = { highest: num };
+  for (let [name, trackVersions] of versionsByTrack) {
+    tracks[name] = { highest: calculateDefaultVersion(trackVersions)!.num };
   }
   return tracks;
 }

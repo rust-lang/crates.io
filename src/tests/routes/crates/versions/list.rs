@@ -122,7 +122,10 @@ async fn test_sorting() -> anyhow::Result<()> {
         "1.0.0-alpha.1",
         "1.0.0-alpha",
     ];
-    let release_tracks = Some(json!({"1": {"highest": "1.0.0"}}));
+    let release_tracks = Some(json!({
+        "2": {"highest": "2.0.0-alpha"},
+        "1": {"highest": "1.0.0"}
+    }));
 
     // Sort by semver
     let url = "/api/v1/crates/foo_versions/versions?sort=semver";
@@ -199,7 +202,10 @@ async fn release_tracks_without_stable_non_yanked_versions() -> anyhow::Result<(
     ] {
         let json: VersionList = anon.get_with_query(url, query).await.good();
         let release_tracks = json!({
+            "3": {"highest": "3.0.0-rc.1"},
+            "2": {"highest": "2.0.0-beta.1"},
             "1": {"highest": "1.0.0"},
+            "0.11": {"highest": "0.11.1"},
             "0.10": {"highest": "0.10.0"}
         });
         assert_eq!(json.meta.release_tracks, Some(release_tracks), "{query}");
