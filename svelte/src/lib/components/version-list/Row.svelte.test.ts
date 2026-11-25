@@ -2,7 +2,7 @@ import type { components } from '@crates-io/api-client';
 
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 
 import Row from './RowTestWrapper.svelte';
 
@@ -38,18 +38,32 @@ function createVersion(overrides: Partial<Version> = {}): Version {
 }
 
 describe('version-list/Row', () => {
+  let track = page.getByCSS('[data-test-release-track]');
+  let trackLabel = page.getByCSS('[data-test-release-track] [aria-hidden="true"]');
+  let trackSrLabel = page.getByCSS('[data-test-release-track] .sr-only');
+  let versionLink = page.getByCSS('[data-test-release-track-link]');
+  let tooltip = page.getByCSS('.tooltip');
+
   it('handle non-standard semver strings', async () => {
     let firstVersion = createVersion({ num: '0.4.0-alpha.01' });
     let secondVersion = createVersion({ num: '0.3.0-alpha.01' });
 
     let { unmount } = await render(Row, { version: firstVersion, crateName: 'foo' });
-    await expect.element(page.getByCSS('[data-test-release-track]')).toMatchTextContent('0.4');
-    await expect.element(page.getByCSS('[data-test-release-track-link]')).toMatchTextContent('0.4.0-alpha.01');
+    await expect.element(trackLabel).toHaveTextContent('0.4');
+    await expect.element(trackSrLabel).toHaveTextContent('Release track 0.4 (prerelease)');
+    await expect.element(versionLink).toHaveTextContent('Version 0.4.0-alpha.01');
+
+    await userEvent.hover(track);
+    await expect.element(tooltip).toHaveTextContent('Release Track: 0.4 (prerelease)');
     await unmount();
 
     await render(Row, { version: secondVersion, crateName: 'foo' });
-    await expect.element(page.getByCSS('[data-test-release-track]')).toMatchTextContent('0.3');
-    await expect.element(page.getByCSS('[data-test-release-track-link]')).toMatchTextContent('0.3.0-alpha.01');
+    await expect.element(trackLabel).toHaveTextContent('0.3');
+    await expect.element(trackSrLabel).toHaveTextContent('Release track 0.3 (prerelease)');
+    await expect.element(versionLink).toHaveTextContent('Version 0.3.0-alpha.01');
+
+    await userEvent.hover(track);
+    await expect.element(tooltip).toHaveTextContent('Release Track: 0.3 (prerelease)');
   });
 
   it('handle node-semver parsing errors', async () => {
@@ -57,8 +71,22 @@ describe('version-list/Row', () => {
     let version = createVersion({ num });
 
     await render(Row, { version, crateName: 'foo' });
-    await expect.element(page.getByCSS('[data-test-release-track]')).toMatchTextContent('?');
-    await expect.element(page.getByCSS('[data-test-release-track-link]')).toMatchTextContent(num);
+    await expect.element(trackLabel).toHaveTextContent('?');
+    await expect.element(trackSrLabel).toHaveTextContent('Unable to parse version');
+    await expect.element(versionLink).toHaveTextContent(`Version ${num}`);
+
+    await userEvent.hover(track);
+    await expect.element(tooltip).toHaveTextContent(`Failed to parse version ${num}`);
+  });
+
+  it('labels a pre-release that is the highest of its release track', async () => {
+    let version = createVersion({ num: '2.0.0-beta.1' });
+
+    await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
+    await expect.element(trackSrLabel).toHaveTextContent('Release track 2.x (prerelease, latest)');
+
+    await userEvent.hover(track);
+    await expect.element(tooltip).toHaveTextContent('Release Track: 2.x (prerelease, latest)');
   });
 
   it('pluralize "feature" only when appropriate', async () => {

@@ -11,13 +11,14 @@
   interface Props {
     version: Version;
     crateName: string;
+    isHighestOfReleaseTrack?: boolean;
   }
 
-  let { version, crateName }: Props = $props();
+  let { version, crateName, isHighestOfReleaseTrack }: Props = $props();
 
   // Row uses PrivilegedAction, which requires a session context.
   let session = new SessionState(createClient({ fetch }));
   setSession(session);
 </script>
 
-<Row {version} {crateName} />
+<Row {version} {crateName} {isHighestOfReleaseTrack} />
