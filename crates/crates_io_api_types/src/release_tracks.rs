@@ -66,12 +66,19 @@ pub struct ReleaseTrackDetails {
 #[cfg(test)]
 mod tests {
     use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks};
+    use crates_io_database::models::default_versions::Version;
     use indexmap::IndexMap;
     use serde_json::json;
 
     #[track_caller]
     fn version(str: &str) -> semver::Version {
         semver::Version::parse(str).unwrap()
+    }
+
+    #[track_caller]
+    fn v(num: &str, yanked: bool) -> Version {
+        let num = version(num);
+        Version { id: 0, num, yanked }
     }
 
     #[test]
@@ -93,10 +100,34 @@ mod tests {
     }
 
     #[test]
+    fn release_tracks_yanked() {
+        let versions = [
+            v("3.0.0", true),
+            v("3.0.0-rc.1", false),
+            v("2.1.0", true),
+            v("2.0.0", false),
+            v("1.1.0", true),
+            v("1.1.0-beta.1", true),
+            v("1.0.0", true),
+        ];
+        let versions = versions.iter().filter(|v| !v.yanked).map(|v| &v.num);
+        assert_eq!(
+            ReleaseTracks::from_sorted_semver_iter(versions),
+            ReleaseTracks(IndexMap::from([(
+                ReleaseTrackName::Major(2),
+                ReleaseTrackDetails {
+                    highest: version("2.0.0")
+                }
+            )]))
+        );
+    }
+
+    #[test]
     fn release_tracks_multiple() {
         let versions = [
             "100.1.1",
             "100.1.0",
+            "1.4.0-beta.1",
             "1.3.5",
             "1.2.5",
             "1.1.5",
