@@ -30,6 +30,10 @@
 
   let open = $state(false);
   let trigger = $state<HTMLButtonElement>();
+
+  function preload() {
+    if (store.versions.length === 0) store.loadMore();
+  }
 </script>
 
 <!-- The popover and the dialog both open themselves when the trigger is clicked. -->
@@ -39,6 +43,7 @@
   class="trigger"
   aria-haspopup="dialog"
   aria-expanded={open}
+  onpointerenter={preload}
   data-test-version-switcher
 >
   v{currentNum}<Icon class="i-mdi:menu-down" />

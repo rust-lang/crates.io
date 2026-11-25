@@ -1,7 +1,7 @@
 import type { ResolvedPathname } from '$app/types';
 
 import { db, handlers } from '@crates-io/msw';
-import { afterEach, describe, expect } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page, userEvent } from 'vitest/browser';
 
@@ -21,6 +21,7 @@ async function renderSwitcher() {
   let versionHref = (num: string) => `#${num}` as ResolvedPathname;
   let store = new VersionStore('foo');
   await render(VersionSwitcher, { store, crateName: 'foo', currentNum: '1.1.0', versionHref });
+  return { store };
 }
 
 describe('version-switcher/VersionSwitcher', () => {
@@ -56,5 +57,21 @@ describe('version-switcher/VersionSwitcher', () => {
 
     await userEvent.click(rows.nth(0));
     await expect.element(dialog).not.toBeInTheDocument();
+  });
+
+  test('loads the first page when the trigger is hovered', async ({ worker }) => {
+    worker.use(...handlers);
+    await page.viewport(1280, 800);
+    let { store } = await renderSwitcher();
+
+    await userEvent.hover(trigger);
+    await expect.poll(() => store.versions).toHaveLength(3);
+    await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    // Hovering again doesn't load more pages.
+    let loadMore = vi.spyOn(store, 'loadMore');
+    await userEvent.unhover(trigger);
+    await userEvent.hover(trigger);
+    expect(loadMore).not.toHaveBeenCalled();
   });
 });
