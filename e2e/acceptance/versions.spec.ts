@@ -41,6 +41,20 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
       .toEqual(['0.3.0', '0.2.1', '0.2.0', '0.1.0']);
   });
 
+  test('shows correct release tracks label for a track with only pre-releases', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '1.0.0', created_at: '2017-01-01' });
+    await msw.db.version.create({ crate, num: '2.0.0-alpha.1', created_at: '2018-01-01' });
+    await msw.db.version.create({ crate, num: '2.0.0-beta.1', created_at: '2019-01-01' });
+
+    await page.goto('/crates/nanomsg/versions');
+    await expect(page.locator('[data-test-version]')).toHaveCount(3);
+
+    let trackLabel = (num: string) => page.locator(`[data-test-version="${num}"] [data-test-release-track] .sr-only`);
+    await expect(trackLabel('2.0.0-beta.1')).toHaveText('Release track 2.x (prerelease)');
+    await expect(trackLabel('2.0.0-alpha.1')).toHaveText('Release track 2.x (prerelease)');
+  });
+
   test('shows correct release tracks label after yanking/unyanking', async ({ page, msw }) => {
     let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
