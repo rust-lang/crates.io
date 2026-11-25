@@ -60,6 +60,13 @@
     return major >= 100 ? String(major) : `${major}.${major === 0 ? semver.minor : 'x'}`;
   });
 
+  let status = $derived.by(() => {
+    if (version.yanked) return 'yanked';
+    if (isPrerelease) return 'prerelease';
+    if (isHighestOfReleaseTrack) return 'latest';
+    return null;
+  });
+
   let isNew = $derived(Date.now() - new Date(version.created_at).getTime() < EIGHT_DAYS);
 
   let featureList = $derived.by((): Feature[] => {
@@ -107,14 +114,7 @@
   });
 </script>
 
-<div
-  class="row"
-  class:latest={isHighestOfReleaseTrack}
-  class:yanked={version.yanked}
-  class:prerelease={isPrerelease}
-  class:focused
-  {...others}
->
+<div class={['row', status, { focused }]} {...others}>
   <div class="version">
     <div class="release-track" data-test-release-track>
       {#if version.yanked}

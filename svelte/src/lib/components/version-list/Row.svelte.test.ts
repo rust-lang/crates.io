@@ -85,7 +85,7 @@ describe('version-list/Row', () => {
 
     await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
     await expect.element(row).toHaveClass('prerelease');
-    await expect.element(row).toHaveClass('latest');
+    await expect.element(row).not.toHaveClass('latest');
     await expect.element(row).not.toHaveClass('yanked');
     await expect.element(trackSrLabel).toHaveTextContent('Release track 2.x (prerelease, latest)');
 
@@ -93,12 +93,12 @@ describe('version-list/Row', () => {
     await expect.element(tooltip).toHaveTextContent('Release Track: 2.x (prerelease, latest)');
   });
 
-  it('marks a yanked version that is the highest of its release track as latest', async () => {
+  it('marks a yanked version that is the highest of its release track only as yanked', async () => {
     let version = createVersion({ num: '1.0.0', yanked: true });
 
     await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
     await expect.element(row).toHaveClass('yanked');
-    await expect.element(row).toHaveClass('latest');
+    await expect.element(row).not.toHaveClass('latest');
     await expect.element(row).not.toHaveClass('prerelease');
   });
 
