@@ -83,7 +83,7 @@ describe('version-list/Row', () => {
     let version = createVersion({ num: '2.0.0-beta.1' });
 
     await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
-    await expect.element(trackSrLabel).toHaveTextContent('Release track 2.x (prerelease,latest)');
+    await expect.element(trackSrLabel).toHaveTextContent('Release track 2.x (prerelease, latest)');
 
     await userEvent.hover(track);
     await expect.element(tooltip).toHaveTextContent('Release Track: 2.x (prerelease, latest)');

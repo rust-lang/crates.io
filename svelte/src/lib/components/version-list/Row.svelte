@@ -127,9 +127,12 @@
         <span aria-hidden="true">{releaseTrack}</span>
         <span class="sr-only">
           Release track {releaseTrack}
-          {#if isPrerelease || isHighestOfReleaseTrack}
-            ({#if isPrerelease}prerelease{/if}{#if isPrerelease && isHighestOfReleaseTrack},
-            {/if}{#if isHighestOfReleaseTrack}latest{/if})
+          {#if isPrerelease && isHighestOfReleaseTrack}
+            (prerelease, latest)
+          {:else if isPrerelease}
+            (prerelease)
+          {:else if isHighestOfReleaseTrack}
+            (latest)
           {/if}
         </span>
       {/if}
