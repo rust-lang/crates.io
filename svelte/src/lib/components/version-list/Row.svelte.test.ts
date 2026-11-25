@@ -79,6 +79,16 @@ describe('version-list/Row', () => {
     await expect.element(tooltip).toHaveTextContent(`Failed to parse version ${num}`);
   });
 
+  it('labels a pre-release that is the highest of its release track', async () => {
+    let version = createVersion({ num: '2.0.0-beta.1' });
+
+    await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
+    await expect.element(trackSrLabel).toHaveTextContent('Release track 2.x (prerelease,latest)');
+
+    await userEvent.hover(track);
+    await expect.element(tooltip).toHaveTextContent('Release Track: 2.x (prerelease, latest)');
+  });
+
   it('pluralize "feature" only when appropriate', async () => {
     let firstVersion = createVersion({ num: '0.1.0', features: {} });
     let secondVersion = createVersion({ num: '0.2.0', features: { one: [] } });
