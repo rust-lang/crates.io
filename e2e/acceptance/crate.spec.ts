@@ -73,6 +73,20 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await a11y.audit();
   });
 
+  test('switching versions keeps the current subpage', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
+    await msw.db.version.create({ crate, num: '0.6.1' });
+
+    await page.goto('/crates/nanomsg/0.6.1/dependencies');
+    await page.getByRole('button', { name: 'v0.6.1' }).click();
+    await page.getByRole('link', { name: /^0\.6\.0,/ }).click();
+
+    await expect(page).toHaveURL('/crates/nanomsg/0.6.0/dependencies');
+    await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.0');
+    await expect(page.getByRole('link', { name: /^0\.6\.0,/ })).toHaveCount(0);
+  });
+
   test('unknown crate shows an error message', async ({ page }) => {
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
