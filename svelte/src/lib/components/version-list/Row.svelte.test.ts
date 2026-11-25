@@ -38,6 +38,7 @@ function createVersion(overrides: Partial<Version> = {}): Version {
 }
 
 describe('version-list/Row', () => {
+  let row = page.getByCSS('.row');
   let track = page.getByCSS('[data-test-release-track]');
   let trackLabel = page.getByCSS('[data-test-release-track] [aria-hidden="true"]');
   let trackSrLabel = page.getByCSS('[data-test-release-track] .sr-only');
@@ -83,10 +84,22 @@ describe('version-list/Row', () => {
     let version = createVersion({ num: '2.0.0-beta.1' });
 
     await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
+    await expect.element(row).toHaveClass('prerelease');
+    await expect.element(row).not.toHaveClass('latest');
+    await expect.element(row).not.toHaveClass('yanked');
     await expect.element(trackSrLabel).toHaveTextContent('Release track 2.x (prerelease, latest)');
 
     await userEvent.hover(track);
     await expect.element(tooltip).toHaveTextContent('Release Track: 2.x (prerelease, latest)');
+  });
+
+  it('marks a yanked version that is the highest of its release track only as yanked', async () => {
+    let version = createVersion({ num: '1.0.0', yanked: true });
+
+    await render(Row, { version, crateName: 'foo', isHighestOfReleaseTrack: true });
+    await expect.element(row).toHaveClass('yanked');
+    await expect.element(row).not.toHaveClass('latest');
+    await expect.element(row).not.toHaveClass('prerelease');
   });
 
   it('pluralize "feature" only when appropriate', async () => {

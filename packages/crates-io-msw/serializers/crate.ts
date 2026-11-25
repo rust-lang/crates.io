@@ -6,6 +6,7 @@ import semverSort from 'semver/functions/rsort.js';
 
 import { db } from '../index.js';
 import { compareDates } from '../utils/dates.js';
+import { calculateDefaultVersion } from '../utils/default-version.js';
 
 type ApiCrate = components['schemas']['Crate'];
 
@@ -22,10 +23,7 @@ export function serializeCrate(
   let versionNums = Object.keys(versionsByNum);
   semverSort(versionNums, { loose: true });
 
-  let defaultVersion =
-    versionNums.find(it => !prerelease(it, { loose: true }) && !versionsByNum[it].yanked) ??
-    versionNums.find(it => !versionsByNum[it].yanked) ??
-    versionNums[0];
+  let defaultVersion = calculateDefaultVersion(versions)!;
   let maxVersion = '0.0.0';
   let newestVersion = '0.0.0';
   let maxStableVersion = null;
@@ -53,9 +51,9 @@ export function serializeCrate(
     badges: crate.badges,
     trustpub_only: crate.trustpubOnly,
     exact_match: false,
-    default_version: defaultVersion,
+    default_version: defaultVersion.num,
     num_versions: versions.length,
-    yanked: versionsByNum[defaultVersion]?.yanked ?? false,
+    yanked: defaultVersion.yanked,
     links: {
       owners: `/api/v1/crates/${crate.name}/owners`,
       owner_user: `/api/v1/crates/${crate.name}/owner_user`,

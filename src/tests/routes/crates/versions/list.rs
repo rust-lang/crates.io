@@ -122,7 +122,10 @@ async fn test_sorting() -> anyhow::Result<()> {
         "1.0.0-alpha.1",
         "1.0.0-alpha",
     ];
-    let release_tracks = Some(json!({"1": {"highest": "1.0.0"}}));
+    let release_tracks = Some(json!({
+        "2": {"highest": "2.0.0-alpha"},
+        "1": {"highest": "1.0.0"}
+    }));
 
     // Sort by semver
     let url = "/api/v1/crates/foo_versions/versions?sort=semver";
@@ -165,6 +168,47 @@ async fn test_sorting() -> anyhow::Result<()> {
             assert_eq!(json.meta.release_tracks.as_ref(), release_tracks);
         }
         assert_eq!(calls as usize, expects.len() + 1);
+    }
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn release_tracks_without_stable_non_yanked_versions() -> anyhow::Result<()> {
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    CrateBuilder::new("foo_versions", user.id)
+        .version("0.10.0")
+        .version(VersionBuilder::new("0.10.1").yanked(true))
+        .version(VersionBuilder::new("0.11.0").yanked(true))
+        .version(VersionBuilder::new("0.11.1").yanked(true))
+        .version("1.0.0")
+        .version("1.1.0-beta.1")
+        .version("2.0.0-alpha.1")
+        .version("2.0.0-beta.1")
+        .version("3.0.0-rc.1")
+        .version(VersionBuilder::new("3.0.0").yanked(true))
+        .expect_build(&mut conn)
+        .await;
+
+    let url = "/api/v1/crates/foo_versions/versions";
+    for query in [
+        "include=release_tracks",
+        "include=release_tracks&sort=date",
+        "include=release_tracks&per_page=1",
+        "include=release_tracks&per_page=1&sort=date",
+    ] {
+        let json: VersionList = anon.get_with_query(url, query).await.good();
+        let release_tracks = json!({
+            "3": {"highest": "3.0.0-rc.1"},
+            "2": {"highest": "2.0.0-beta.1"},
+            "1": {"highest": "1.0.0"},
+            "0.11": {"highest": "0.11.1"},
+            "0.10": {"highest": "0.10.0"}
+        });
+        assert_eq!(json.meta.release_tracks, Some(release_tracks), "{query}");
     }
 
     Ok(())

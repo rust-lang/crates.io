@@ -1,32 +1,35 @@
+use crates_io_database::models::default_versions::Version;
 use derive_more::Display;
 use indexmap::IndexMap;
 use serde::Serialize;
+use std::cmp::max;
+use std::collections::BTreeMap;
 
 #[derive(Debug, Eq, PartialEq, Serialize)]
 pub struct ReleaseTracks(IndexMap<ReleaseTrackName, ReleaseTrackDetails>);
 
 impl ReleaseTracks {
-    // Return the release tracks based on a sorted semver versions iterator (in descending order).
-    // **Remember to** filter out yanked versions manually before calling this function.
-    pub fn from_sorted_semver_iter<'a, I>(versions: I) -> Self
-    where
-        I: Iterator<Item = &'a semver::Version>,
-    {
-        let mut map = IndexMap::new();
-        for num in versions.filter(|num| num.pre.is_empty()) {
-            let key = ReleaseTrackName::from_semver(num);
-            let prev = map.last();
-            if prev.filter(|&(k, _)| *k == key).is_none() {
-                map.insert(
-                    key,
-                    ReleaseTrackDetails {
-                        highest: num.clone(),
-                    },
-                );
-            }
+    /// Returns the release tracks of the given versions, sorted in descending
+    /// order.
+    ///
+    /// The highest version of a track is chosen like the default version of a
+    /// crate, see [`update_default_version()`](crates_io_database::models::update_default_version).
+    pub fn from_versions<'a>(versions: impl IntoIterator<Item = &'a Version>) -> Self {
+        let mut tracks = BTreeMap::new();
+        for version in versions {
+            let key = ReleaseTrackName::from_semver(&version.num);
+            tracks
+                .entry(key)
+                .and_modify(|highest| *highest = max(*highest, version))
+                .or_insert(version);
         }
 
-        Self(map)
+        let tracks = tracks.into_iter().rev().map(|(key, version)| {
+            let highest = version.num.clone();
+            (key, ReleaseTrackDetails { highest })
+        });
+
+        Self(tracks.collect())
     }
 }
 
@@ -65,7 +68,7 @@ pub struct ReleaseTrackDetails {
 
 #[cfg(test)]
 mod tests {
-    use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks};
+    use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks, Version};
     use indexmap::IndexMap;
     use serde_json::json;
 
@@ -74,21 +77,67 @@ mod tests {
         semver::Version::parse(str).unwrap()
     }
 
+    #[track_caller]
+    fn v(num: &str, yanked: bool) -> Version {
+        let num = version(num);
+        Version { id: 0, num, yanked }
+    }
+
     #[test]
     fn release_tracks_empty() {
-        let versions = [];
         assert_eq!(
-            ReleaseTracks::from_sorted_semver_iter(versions.into_iter()),
+            ReleaseTracks::from_versions(&[]),
             ReleaseTracks(IndexMap::new())
         );
     }
 
     #[test]
     fn release_tracks_prerelease() {
-        let versions = [version("1.0.0-beta.5")];
+        let versions = [v("1.0.0-beta.5", false)];
         assert_eq!(
-            ReleaseTracks::from_sorted_semver_iter(versions.iter()),
-            ReleaseTracks(IndexMap::new())
+            ReleaseTracks::from_versions(&versions),
+            ReleaseTracks(IndexMap::from([(
+                ReleaseTrackName::Major(1),
+                ReleaseTrackDetails {
+                    highest: version("1.0.0-beta.5")
+                }
+            )]))
+        );
+    }
+
+    #[test]
+    fn release_tracks_yanked() {
+        let versions = [
+            v("3.0.0", true),
+            v("3.0.0-rc.1", false),
+            v("2.1.0", true),
+            v("2.0.0", false),
+            v("1.1.0", true),
+            v("1.1.0-beta.1", true),
+            v("1.0.0", true),
+        ];
+        assert_eq!(
+            ReleaseTracks::from_versions(&versions),
+            ReleaseTracks(IndexMap::from([
+                (
+                    ReleaseTrackName::Major(3),
+                    ReleaseTrackDetails {
+                        highest: version("3.0.0-rc.1")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Major(2),
+                    ReleaseTrackDetails {
+                        highest: version("2.0.0")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Major(1),
+                    ReleaseTrackDetails {
+                        highest: version("1.1.0")
+                    }
+                ),
+            ]))
         );
     }
 
@@ -97,6 +146,7 @@ mod tests {
         let versions = [
             "100.1.1",
             "100.1.0",
+            "1.4.0-beta.1",
             "1.3.5",
             "1.2.5",
             "1.1.5",
@@ -114,9 +164,9 @@ mod tests {
             "0.1.2",
             "0.1.1",
         ]
-        .map(version);
+        .map(|num| v(num, false));
 
-        let release_tracks = ReleaseTracks::from_sorted_semver_iter(versions.iter());
+        let release_tracks = ReleaseTracks::from_versions(&versions);
         assert_eq!(
             release_tracks,
             ReleaseTracks(IndexMap::from([
@@ -130,6 +180,12 @@ mod tests {
                     ReleaseTrackName::Major(1),
                     ReleaseTrackDetails {
                         highest: version("1.3.5")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Minor(4),
+                    ReleaseTrackDetails {
+                        highest: version("0.4.0-rc.1")
                     }
                 ),
                 (
@@ -162,6 +218,7 @@ mod tests {
             json!({
                 "100": { "highest": "100.1.1" },
                 "1": { "highest": "1.3.5" },
+                "0.4": { "highest": "0.4.0-rc.1" },
                 "0.3": { "highest": "0.3.23" },
                 "0.2": { "highest": "0.2.1" },
                 "0.1": { "highest": "0.1.2" }
