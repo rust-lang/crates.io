@@ -413,3 +413,25 @@ test('include `release_tracks` meta', async function () {
     },
   });
 });
+
+test('include `release_tracks` meta for tracks without stable non-yanked versions', async function () {
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '0.10.0' });
+  await db.version.create({ crate, num: '0.10.1', yanked: true });
+  await db.version.create({ crate, num: '0.11.0', yanked: true });
+  await db.version.create({ crate, num: '0.11.1', yanked: true });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0-beta.1' });
+  await db.version.create({ crate, num: '2.0.0-alpha.1' });
+  await db.version.create({ crate, num: '2.0.0-beta.1' });
+  await db.version.create({ crate, num: '3.0.0-rc.1' });
+  await db.version.create({ crate, num: '3.0.0', yanked: true });
+
+  let response = await fetch('/api/v1/crates/rand/versions?include=release_tracks');
+  expect(response.status).toBe(200);
+  let { meta } = await response.json();
+  expect(meta.release_tracks).toEqual({
+    '0.10': { highest: '0.10.0' },
+    1: { highest: '1.0.0' },
+  });
+});
