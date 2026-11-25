@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { setTooltipContext } from '#lib/tooltip.svelte.ts';
   import Tooltip from './Tooltip.svelte';
-  import TooltipContainer from './TooltipContainer.svelte';
 
   interface Props {
     text: string;
@@ -22,10 +20,7 @@
     onlyWhenTruncated = false,
     truncationTargetWidth,
   }: Props = $props();
-  let propsId = $props.id();
   let truncationTarget = $state<HTMLSpanElement>();
-
-  setTooltipContext({ containerId: `tooltip-container-${propsId}` });
 </script>
 
 <div
@@ -52,5 +47,3 @@
   {/if}
   <Tooltip {text} {side} {delay} {onlyWhenTruncated} {truncationTarget} />
 </div>
-
-<TooltipContainer />

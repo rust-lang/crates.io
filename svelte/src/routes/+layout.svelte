@@ -10,20 +10,17 @@
   import Header from '#lib/components/Header.svelte';
   import NotificationContainer from '#lib/components/notifications/NotificationContainer.svelte';
   import ProgressBar from '#lib/components/ProgressBar.svelte';
-  import TooltipContainer from '#lib/components/TooltipContainer.svelte';
   import DismissedBannerMessages from '#lib/dismissed-banner-messages.svelte.ts';
   import { NotificationsState, setNotifications } from '#lib/notifications.svelte.ts';
   import { PageTitleState, setPageTitle } from '#lib/page-title.svelte.ts';
   import { ProgressState, setProgressContext } from '#lib/progress.svelte.ts';
   import { SearchFormContext, setSearchFormContext } from '#lib/search-form.svelte.ts';
-  import { setTooltipContext } from '#lib/tooltip.svelte.ts';
   import { SessionState, setSession } from '#lib/utils/session.svelte.ts';
 
   import 'virtual:uno.css';
   import '#lib/css/global.css';
 
   let { children, data } = $props();
-  let propsId = $props.id();
 
   let isIndex = $derived(page.route.id === '/');
   let isSignupFormVisible = $derived(page.route.id === '/signup' && page.error === null);
@@ -59,8 +56,6 @@
       progress.trackPromise(navigating.complete);
     }
   });
-
-  setTooltipContext({ containerId: `tooltip-container-${propsId}` });
 
   let notifications = new NotificationsState();
   setNotifications(notifications);
@@ -120,7 +115,6 @@
 {/if}
 
 <NotificationContainer position="top-right" />
-<TooltipContainer />
 
 <Header hero={isIndex} showLogin={!isSignupFormVisible} />
 

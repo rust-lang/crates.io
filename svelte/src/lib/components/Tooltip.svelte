@@ -3,7 +3,7 @@
   import type { Attachment } from 'svelte/attachments';
 
   import { anchorTo } from '#lib/attachments/anchor-to.ts';
-  import { getTooltipContext } from '#lib/tooltip.svelte.ts';
+  import Portal from './portal/Portal.svelte';
 
   interface BaseProps {
     side?: 'top' | 'bottom' | 'left' | 'right';
@@ -96,39 +96,32 @@
   };
 
   let attachTooltip: Attachment = element => {
-    let floatingElement = element as HTMLElement;
-
-    if (!anchorElement) return;
-
-    let tooltipContext = getTooltipContext();
-    let container = document.getElementById(tooltipContext.containerId);
-    container?.append(floatingElement);
-
-    floatingElement.addEventListener('mouseenter', show);
-    floatingElement.addEventListener('mouseleave', hide);
+    element.addEventListener('mouseenter', show);
+    element.addEventListener('mouseleave', hide);
 
     return () => {
-      floatingElement.removeEventListener('mouseenter', show);
-      floatingElement.removeEventListener('mouseleave', hide);
-      floatingElement.remove();
+      element.removeEventListener('mouseenter', show);
+      element.removeEventListener('mouseleave', hide);
     };
   };
 </script>
 
 <span class="anchor" {@attach attachAnchor}></span>
 
-{#if visible}
-  <div
-    class="tooltip"
-    {@attach attachTooltip}
-    {@attach anchorElement && anchorTo(anchorElement, { placement: side, offset: 5, padding: 5 })}
-  >
-    {#if children}
-      {@render children()}
-    {:else}
-      {text}
-    {/if}
-  </div>
+{#if visible && anchorElement}
+  <Portal>
+    <div
+      class="tooltip"
+      {@attach attachTooltip}
+      {@attach anchorTo(anchorElement, { placement: side, offset: 5, padding: 5 })}
+    >
+      {#if children}
+        {@render children()}
+      {:else}
+        {text}
+      {/if}
+    </div>
+  </Portal>
 {/if}
 
 <style>
