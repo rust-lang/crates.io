@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.104"
+anyhow = "=1.0.105"
 crates_io_env_vars = { path = "../crates_io_env_vars" }
 diesel = { version = "=2.4.0", features = ["postgres", "r2d2"] }
 diesel-async = { version = "=0.10.0", features = ["postgres"] }

@@ -67,7 +67,7 @@ path = "src/tests/mod.rs"
 tokio = { version = "=1.54.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 
 [dependencies]
-anyhow = "=1.0.104"
+anyhow = "=1.0.105"
 astral-tokio-tar = { version = "=0.7.1", default-features = false }
 async-compression = { version = "=0.4.52", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.92"
