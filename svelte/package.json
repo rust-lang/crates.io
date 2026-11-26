@@ -34,7 +34,7 @@
     "@pierre/diffs": "1.7.1",
     "@pierre/trees": "1.0.0",
     "@shikijs/themes": "4.6.0",
-    "chart.js": "4.6.1",
+    "chart.js": "4.6.2",
     "date-fns": "4.4.0",
     "mermaid": "12.3.0",
     "micromark": "4.0.3",
