@@ -470,15 +470,15 @@ mod tests {
     use std::io::Read;
 
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
-    const POLICY: TarballPolicy = TarballPolicy {
+    const STRICT: TarballPolicy = TarballPolicy {
         unpack_size: 512 * 1024 * 1024,
         entries: None,
         metadata_file_size: 1024 * 1024,
         compatibility: TarballCompatibility::Strict,
     };
-    const LEGACY_POLICY: TarballPolicy = TarballPolicy {
+    const LEGACY: TarballPolicy = TarballPolicy {
         compatibility: TarballCompatibility::Legacy,
-        ..POLICY
+        ..STRICT
     };
 
     fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
@@ -507,10 +507,10 @@ mod tests {
             .add_dir("foo-0.0.1")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
 
-        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
     }
 
@@ -524,7 +524,7 @@ mod tests {
             .add_dir("foo-0.0.1/src/bin/tool.rs")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
 
         assert_none!(tarball_info.manifest.package.unwrap().build);
         assert_none!(tarball_info.manifest.lib);
@@ -546,7 +546,7 @@ mod tests {
 
         for (entry_type, entry_type_name) in unexpected_entry_types {
             let tarball = tarball_with_entry_type(entry_type);
-            let error = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+            let error = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
             assert_eq!(
                 error.to_string(),
                 format!("unexpected tar entry type {entry_type_name} found: foo-0.0.1/bar")
@@ -562,7 +562,7 @@ mod tests {
             .add_file(&long_path, b"")
             .build();
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
     }
 
     /// Old versions of the `tar` crate wrote GNU long name payloads without a
@@ -595,7 +595,7 @@ mod tests {
         builder.as_mut().append(&header, &[][..]).unwrap();
 
         let tarball = builder.build();
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
 
         // Target discovery only finds the binary if the full long name was used.
         let bin = &tarball_info.manifest.bin;
@@ -610,7 +610,7 @@ mod tests {
             .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/src/lib.rs", b"")
             .build();
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
     }
 
     #[tokio::test]
@@ -620,10 +620,10 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"tarball mixes ustar and GNU tar headers: foo-0.0.1/Cargo.toml");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
     }
 
     #[tokio::test]
@@ -657,13 +657,13 @@ mod tests {
         for field in ["mode", "uid", "gid", "size", "mtime"] {
             let tarball = tarball_with_base256_field(field);
 
-            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
             let expected = format!(
                 "tarball uses a base-256 `{field}` field in a ustar header: foo-0.0.1/src/lib.rs"
             );
             assert_eq!(err.to_string(), expected);
 
-            assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+            assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
         }
 
         // GNU headers support base-256 numbers, which the `tar` crate uses for
@@ -675,7 +675,7 @@ mod tests {
             .add_file_with_header(header, "foo-0.0.1/src/lib.rs", b"")
             .build();
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
     }
 
     #[tokio::test]
@@ -689,15 +689,15 @@ mod tests {
         };
 
         let tarball = tarball_with_pax_keyword("LIBARCHIVE.xattr.com.apple.provenance");
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"tarball uses an unsupported pax vendor extension `LIBARCHIVE.xattr.com.apple.provenance`: foo-0.0.1/src/lib.rs");
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
 
         // Standard keywords and the `realtime` and `security` namespaces are
         // not vendor extensions.
         for keyword in ["comment", "realtime.attribute", "security.attribute"] {
             let tarball = tarball_with_pax_keyword(keyword);
-            assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+            assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         }
     }
 
@@ -707,10 +707,10 @@ mod tests {
             .add_file_with_header(tar::Header::new_old(), "foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"tarball contains an unsupported pre-POSIX tar header: foo-0.0.1/Cargo.toml");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
     }
 
     #[tokio::test]
@@ -727,7 +727,7 @@ mod tests {
         builder.as_mut().append(&header, b"".as_slice()).unwrap();
 
         let tarball = builder.build();
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/../outside");
     }
 
@@ -749,7 +749,7 @@ mod tests {
 
         let tarball = builder.build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/�");
     }
 
@@ -761,7 +761,7 @@ mod tests {
 
         let policy = TarballPolicy {
             unpack_size: tarball.len() as u64 - 1,
-            ..POLICY
+            ..STRICT
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, policy).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
@@ -779,13 +779,13 @@ mod tests {
 
         let policy = TarballPolicy {
             entries: Some(4),
-            ..POLICY
+            ..STRICT
         };
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, policy).await);
 
         let policy = TarballPolicy {
             entries: Some(3),
-            ..POLICY
+            ..STRICT
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, policy).await);
         assert_snapshot!(err, @"uploaded tarball contains more than 3 entries");
@@ -799,13 +799,13 @@ mod tests {
 
         let policy = TarballPolicy {
             metadata_file_size: MANIFEST.len() as u64,
-            ..POLICY
+            ..STRICT
         };
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, policy).await);
 
         let policy = TarballPolicy {
             metadata_file_size: MANIFEST.len() as u64 - 1,
-            ..POLICY
+            ..STRICT
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, policy).await);
         assert_snapshot!(err, @"metadata file `foo-0.0.1/Cargo.toml` exceeds the maximum size of 40 bytes");
@@ -818,7 +818,7 @@ mod tests {
 
         let policy = TarballPolicy {
             metadata_file_size: MANIFEST.len() as u64,
-            ..POLICY
+            ..STRICT
         };
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, policy).await);
         assert_snapshot!(err, @"metadata file `foo-0.0.1/.cargo_vcs_info.json` exceeds the maximum size of 41 bytes");
@@ -831,7 +831,7 @@ mod tests {
 
         let policy = TarballPolicy {
             metadata_file_size: MANIFEST.len() as u64,
-            ..POLICY
+            ..STRICT
         };
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, policy).await);
     }
@@ -843,7 +843,7 @@ mod tests {
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_some!(&tarball_info.vcs_info);
         assert_debug_snapshot!(tarball_info);
     }
@@ -856,7 +856,7 @@ mod tests {
             .add_file("foo-0.0.1/.cargo_vcs_info.json", vcs_info)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_some!(&tarball_info.vcs_info);
         assert_debug_snapshot!(tarball_info);
     }
@@ -875,7 +875,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -891,7 +891,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -901,7 +901,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -917,7 +917,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -933,7 +933,7 @@ mod tests {
             .add_file("foo-0.0.1/cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -944,7 +944,7 @@ mod tests {
                 .add_file(&format!("foo-0.0.1/{file}"), MANIFEST)
                 .build();
 
-            process_tarball("foo-0.0.1", &*tarball, POLICY).await
+            process_tarball("foo-0.0.1", &*tarball, STRICT).await
         };
 
         let err = assert_err!(process("CARGO.TOML").await);
@@ -964,7 +964,7 @@ mod tests {
                 })
                 .build();
 
-            process_tarball("foo-0.0.1", &*tarball, POLICY).await
+            process_tarball("foo-0.0.1", &*tarball, STRICT).await
         };
 
         let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]).await);
@@ -989,7 +989,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
 
         let tarball = TarballBuilder::new()
@@ -997,7 +997,7 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
     }
 
@@ -1015,7 +1015,7 @@ mod tests {
             .add_symlink("smuggled", "/etc/issue")
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"mismatched pax and tar header sizes");
     }
 
@@ -1032,7 +1032,7 @@ mod tests {
             .add_symlink("smuggled", "/etc/issue")
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"mismatched pax and tar header sizes");
     }
 
@@ -1049,7 +1049,7 @@ mod tests {
             .add_file("foo-0.0.1/src/lib.rs", b"fn main() {}")
             .build();
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"tarball repeats the pax keyword `path`: foo-0.0.1/src/lib.rs");
     }
 
@@ -1077,10 +1077,10 @@ mod tests {
             .build();
         tarball.extend(second);
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
     }
 
     #[tokio::test]
@@ -1090,10 +1090,10 @@ mod tests {
             .build();
         tarball.push(0);
 
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY_POLICY).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
     }
 
     #[tokio::test]
@@ -1103,7 +1103,7 @@ mod tests {
             .add_file("foo-0.0.1/src/lib.rs", b"pub fn foo() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -1117,7 +1117,7 @@ mod tests {
             .add_file("foo-0.0.1/src/bin/bar.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 
@@ -1128,7 +1128,7 @@ mod tests {
             .add_file("foo-0.0.1/src/main.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, POLICY).await);
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_debug_snapshot!(tarball_info);
     }
 }
