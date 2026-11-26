@@ -116,9 +116,9 @@ fn is_hidden(path: &Path) -> bool {
 }
 
 async fn process_path(path: &Path, pb: &ProgressBar) {
-    let file = File::open(path)
-        .await
-        .map_err(|error| pb.suspend(|| warn!("Failed to read crate file: {error}")));
+    let file = File::open(path).await.map_err(|error| {
+        pb.suspend(|| warn!(path = %path.display(), "Failed to read crate file: {error}"))
+    });
 
     let Ok(mut file) = file else {
         return;
