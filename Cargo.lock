@@ -231,6 +231,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "archive-trait"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24ed9d753c6bf6ad6855ea6295df8aa0828bc9ee091633b49fe240402b3eb664"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1890,7 +1900,6 @@ name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "astral-tokio-tar",
  "async-compression",
  "claims",
  "clap",
@@ -1903,6 +1912,8 @@ dependencies = [
  "serde",
  "serde_json",
  "tar",
+ "tar-codec",
+ "tar-framing",
  "thiserror 2.0.21",
  "tokio",
  "tracing",
@@ -6899,6 +6910,28 @@ checksum = "3f6221d9a6003c78398e3b239969f352578258df48c8eb051caadae0015bc840"
 dependencies = [
  "filetime",
  "libc",
+]
+
+[[package]]
+name = "tar-codec"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cac8b1341c7c68ea322a9c155ccdb09d32b1526be8da22c20b8cb3323814c98"
+dependencies = [
+ "archive-trait",
+ "tar-framing",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
+name = "tar-framing"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c07c818ffdfc87f607073f986b6167218bc9e05d54ecec4d50299a949e09feb1"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
 ]
 
 [[package]]

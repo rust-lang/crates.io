@@ -1094,19 +1094,14 @@ impl From<TarballError> for BoxedAppError {
             TarballError::Malformed(_err) => {
                 bad_request("uploaded tarball is malformed or too large when decompressed")
             }
-            TarballError::MalformedPaxSize | TarballError::SizeMismatch | TarballError::IO(_) => {
-                bad_request("uploaded tarball is malformed")
-            }
+            TarballError::IO(_) => bad_request("uploaded tarball is malformed"),
             TarballError::TooManyEntries { max } => {
                 bad_request(format!("uploaded tarball contains more than {max} entries"))
             }
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
-            error @ (TarballError::UnexpectedEntry { .. }
-            | TarballError::MixedHeaderFormats { .. }
-            | TarballError::OldHeader { .. }
-            | TarballError::Base256UstarField { .. }
-            | TarballError::PaxVendorExtension { .. }
-            | TarballError::RepeatedPaxKeyword { .. }
+            error @ (TarballError::Decode(_)
+            | TarballError::SizeMismatch { .. }
+            | TarballError::UnexpectedEntry { .. }
             | TarballError::TrailingData
             | TarballError::MetadataFileTooLarge { .. }) => bad_request(error.to_string()),
             TarballError::MissingManifest => {
