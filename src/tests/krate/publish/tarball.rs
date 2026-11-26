@@ -182,7 +182,7 @@ async fn new_krate_tarball_with_base256_ustar_uid() {
 async fn new_krate_tarball_with_pax_vendor_extension() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
-    let tarball = TarballBuilder::new()
+    let tarball = TarballBuilder::ustar()
         .add_pax_extensions([("LIBARCHIVE.xattr.com.apple.provenance", b"value".as_slice())])
         .add_file("foo-1.1.0/a", b"")
         .build();
@@ -200,7 +200,7 @@ async fn new_krate_tarball_with_pax_vendor_extension() {
 async fn new_krate_tarball_with_repeated_pax_path() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
-    let tarball = TarballBuilder::new()
+    let tarball = TarballBuilder::ustar()
         .add_pax_extensions([
             ("path", "foo-1.1.0/build.rs".as_bytes()),
             ("path", "foo-1.1.0/a".as_bytes()),

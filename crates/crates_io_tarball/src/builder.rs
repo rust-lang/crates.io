@@ -4,17 +4,31 @@ use std::io::Read;
 
 pub struct TarballBuilder {
     inner: tar::Builder<Vec<u8>>,
+    /// The empty header that `add_file()`, `add_dir()` and `add_symlink()`
+    /// start from.
+    header: tar::Header,
 }
 
 impl TarballBuilder {
+    /// Creates a builder that writes GNU headers.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
+        Self::with_header(tar::Header::new_gnu())
+    }
+
+    /// Creates a builder that writes ustar headers.
+    pub fn ustar() -> Self {
+        Self::with_header(tar::Header::new_ustar())
+    }
+
+    fn with_header(header: tar::Header) -> Self {
         let inner = tar::Builder::new(vec![]);
-        Self { inner }
+        Self { inner, header }
     }
 
     pub fn add_file(self, path: &str, content: &[u8]) -> Self {
-        self.add_file_with_header(tar::Header::new_gnu(), path, content)
+        let header = self.header.clone();
+        self.add_file_with_header(header, path, content)
     }
 
     /// Adds a file using `header` for all metadata except the path, size and
@@ -34,7 +48,7 @@ impl TarballBuilder {
 
     /// Adds a directory entry to the tarball.
     pub fn add_dir(mut self, path: &str) -> Self {
-        let mut header = tar::Header::new_gnu();
+        let mut header = self.header.clone();
         header.set_entry_type(tar::EntryType::Directory);
         header.set_size(0);
         header.set_cksum();
@@ -55,7 +69,7 @@ impl TarballBuilder {
     }
 
     pub fn add_symlink(mut self, path: &str, target: &str) -> Self {
-        let mut header = tar::Header::new_gnu();
+        let mut header = self.header.clone();
         header.set_path(path).unwrap();
         header.set_link_name(target).unwrap();
         header.set_size(0);
