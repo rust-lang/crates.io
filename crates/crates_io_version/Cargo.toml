@@ -8,5 +8,5 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.104"
+anyhow = "=1.0.105"
 crates_io_heroku = { path = "../crates_io_heroku" }

@@ -24,7 +24,7 @@ async-compression = { version = "=0.4.52", default-features = false, features = 
 futures-util = "=0.3.34"
 
 [dev-dependencies]
-anyhow = "=1.0.104"
+anyhow = "=1.0.105"
 claims = "=0.8.0"
 clap = { version = "=4.6.9", features = ["derive", "unicode", "wrap_help"] }
 flate2 = { version = "=1.1.11" }
