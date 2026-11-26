@@ -464,7 +464,7 @@ async fn pax_vendor_keyword<R: tokio::io::AsyncRead + Unpin>(
 
 #[cfg(test)]
 mod tests {
-    use super::{TarballCompatibility, TarballPolicy, process_tarball};
+    use super::{TarballCompatibility, TarballError, TarballInfo, TarballPolicy, process_tarball};
     use crate::TarballBuilder;
     use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::Read;
@@ -480,6 +480,10 @@ mod tests {
         compatibility: TarballCompatibility::Legacy,
         ..STRICT
     };
+
+    fn describe_result(result: Result<TarballInfo, TarballError>) -> String {
+        result.map_or_else(|error| error.to_string(), |_| "ok".to_string())
+    }
 
     fn tarball_with_entry_type(entry_type: tar::EntryType) -> Vec<u8> {
         let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
@@ -534,24 +538,33 @@ mod tests {
     #[tokio::test]
     async fn process_tarball_test_unexpected_entry_types() {
         let unexpected_entry_types = [
-            (tar::EntryType::new(b'Z'), "Other(90)"),
-            (tar::EntryType::contiguous(), "Continuous"),
-            (tar::EntryType::new(b'S'), "GNUSparse"),
-            (tar::EntryType::hard_link(), "Link"),
-            (tar::EntryType::symlink(), "Symlink"),
-            (tar::EntryType::character_special(), "Char"),
-            (tar::EntryType::block_special(), "Block"),
-            (tar::EntryType::fifo(), "Fifo"),
+            tar::EntryType::new(b'Z'),
+            tar::EntryType::contiguous(),
+            tar::EntryType::new(b'S'),
+            tar::EntryType::hard_link(),
+            tar::EntryType::symlink(),
+            tar::EntryType::character_special(),
+            tar::EntryType::block_special(),
+            tar::EntryType::fifo(),
         ];
 
-        for (entry_type, entry_type_name) in unexpected_entry_types {
+        let mut results = String::new();
+        for entry_type in unexpected_entry_types {
             let tarball = tarball_with_entry_type(entry_type);
-            let error = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-            assert_eq!(
-                error.to_string(),
-                format!("unexpected tar entry type {entry_type_name} found: foo-0.0.1/bar")
-            );
+            let result = process_tarball("foo-0.0.1", &*tarball, STRICT).await;
+            let typeflag = entry_type.as_byte() as char;
+            results.push_str(&format!("'{typeflag}': {}\n", describe_result(result)));
         }
+        assert_snapshot!(results, @"
+        'Z': unexpected tar entry type Other(90) found: foo-0.0.1/bar
+        '7': unexpected tar entry type Continuous found: foo-0.0.1/bar
+        'S': unexpected tar entry type GNUSparse found: foo-0.0.1/bar
+        '1': unexpected tar entry type Link found: foo-0.0.1/bar
+        '2': unexpected tar entry type Symlink found: foo-0.0.1/bar
+        '3': unexpected tar entry type Char found: foo-0.0.1/bar
+        '4': unexpected tar entry type Block found: foo-0.0.1/bar
+        '6': unexpected tar entry type Fifo found: foo-0.0.1/bar
+        ");
     }
 
     #[tokio::test]
@@ -654,17 +667,28 @@ mod tests {
                 .build()
         }
 
+        let mut results = String::new();
         for field in ["mode", "uid", "gid", "size", "mtime"] {
             let tarball = tarball_with_base256_field(field);
 
-            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-            let expected = format!(
-                "tarball uses a base-256 `{field}` field in a ustar header: foo-0.0.1/src/lib.rs"
-            );
-            assert_eq!(err.to_string(), expected);
+            let result = process_tarball("foo-0.0.1", &*tarball, STRICT).await;
+            results.push_str(&format!("{field} (strict): {}\n", describe_result(result)));
 
-            assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+            let result = process_tarball("foo-0.0.1", &*tarball, LEGACY).await;
+            results.push_str(&format!("{field} (legacy): {}\n", describe_result(result)));
         }
+        assert_snapshot!(results, @"
+        mode (strict): tarball uses a base-256 `mode` field in a ustar header: foo-0.0.1/src/lib.rs
+        mode (legacy): ok
+        uid (strict): tarball uses a base-256 `uid` field in a ustar header: foo-0.0.1/src/lib.rs
+        uid (legacy): ok
+        gid (strict): tarball uses a base-256 `gid` field in a ustar header: foo-0.0.1/src/lib.rs
+        gid (legacy): ok
+        size (strict): tarball uses a base-256 `size` field in a ustar header: foo-0.0.1/src/lib.rs
+        size (legacy): ok
+        mtime (strict): tarball uses a base-256 `mtime` field in a ustar header: foo-0.0.1/src/lib.rs
+        mtime (legacy): ok
+        ");
 
         // GNU headers support base-256 numbers, which the `tar` crate uses for
         // IDs that do not fit into seven octal digits.
