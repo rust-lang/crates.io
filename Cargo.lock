@@ -1548,6 +1548,7 @@ dependencies = [
  "sha2 0.11.1",
  "spdx",
  "tar",
+ "tar-codec",
  "tempfile",
  "thiserror 2.0.21",
  "tikv-jemallocator",
