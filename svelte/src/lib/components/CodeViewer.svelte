@@ -42,6 +42,7 @@
         onLineHashChange?.(hash);
       },
       renderHeaderMetadata: () => content?.meta ?? null,
+      searchOptions: { disableShortcuts: true },
     };
   }
 
