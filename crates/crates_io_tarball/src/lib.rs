@@ -1044,6 +1044,51 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn process_tarball_test_size_mismatch_with_larger_header_size() {
+        let manifest_size = MANIFEST.len().to_string();
+        let mut builder =
+            TarballBuilder::ustar().add_pax_extensions([("size", manifest_size.as_bytes())]);
+
+        let mut header = tar::Header::new_ustar();
+        header.set_path("foo-0.0.1/Cargo.toml").unwrap();
+        header.set_size(1024);
+        header.set_cksum();
+        builder.as_mut().append(&header, MANIFEST).unwrap();
+        let tarball = builder.build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @"mismatched pax and tar header sizes");
+    }
+
+    /// The reader skips the unread payload of the first file in more than one
+    /// chunk before it reads the header of the manifest.
+    #[tokio::test]
+    async fn process_tarball_test_pax_size_after_large_payload() {
+        let payload = vec![b'a'; 1024 * 1024 + 7];
+        let payload_size = payload.len().to_string();
+        let manifest_size = MANIFEST.len().to_string();
+        let tarball = TarballBuilder::ustar()
+            .add_pax_extensions([("size", payload_size.as_bytes())])
+            .add_file("foo-0.0.1/src/lib.rs", &payload)
+            .add_pax_extensions([("size", manifest_size.as_bytes())])
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_matching_pax_size() {
+        let manifest_size = MANIFEST.len().to_string();
+        let tarball = TarballBuilder::ustar()
+            .add_pax_extensions([("size", manifest_size.as_bytes())])
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+    }
+
+    #[tokio::test]
     async fn process_tarball_test_repeated_pax_size_mismatch() {
         let manifest_size = MANIFEST.len().to_string();
         // The final size matches the tar header, but every size record must match.
