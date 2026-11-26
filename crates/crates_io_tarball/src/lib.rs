@@ -726,6 +726,86 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn process_tarball_test_unknown_pax_keyword() {
+        let tarball = TarballBuilder::ustar()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_pax_extensions([("foo", b"value".as_slice())])
+            .add_file("foo-0.0.1/src/lib.rs", b"")
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_global_pax_header() {
+        let mut builder = TarballBuilder::new();
+
+        let records = b"17 comment=hello\n";
+        let mut header = tar::Header::new_ustar();
+        header.set_path("pax_global_header").unwrap();
+        header.set_entry_type(tar::EntryType::XGlobalHeader);
+        header.set_size(records.len() as u64);
+        header.set_cksum();
+        builder.as_mut().append(&header, &records[..]).unwrap();
+
+        let tarball = builder
+            .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @"invalid path found: pax_global_header");
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert_snapshot!(err, @"invalid path found: pax_global_header");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_directory_with_payload() {
+        // The directory payload holds the header of a binary target, which
+        // readers that honor the directory size skip over.
+        let mut hidden = tar::Header::new_gnu();
+        hidden.set_path("foo-0.0.1/src/main.rs").unwrap();
+        hidden.set_size(0);
+        hidden.set_cksum();
+
+        let mut header = tar::Header::new_gnu();
+        header.set_path("foo-0.0.1/src/").unwrap();
+        header.set_entry_type(tar::EntryType::Directory);
+        header.set_size(512);
+        header.set_cksum();
+
+        let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
+        builder
+            .as_mut()
+            .append(&header, &hidden.as_bytes()[..])
+            .unwrap();
+        let tarball = builder.build();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert!(tarball_info.manifest.bin.is_empty());
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert!(tarball_info.manifest.bin.is_empty());
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_data_after_end_of_archive() {
+        let mut archive = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build_unzipped();
+        archive.extend([0xff; 512]);
+
+        let mut tarball = vec![];
+        flate2::read::GzEncoder::new(&*archive, flate2::Compression::default())
+            .read_to_end(&mut tarball)
+            .unwrap();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+    }
+
+    #[tokio::test]
     async fn process_tarball_test_old_headers() {
         let tarball = TarballBuilder::new()
             .add_file_with_header(tar::Header::new_old(), "foo-0.0.1/Cargo.toml", MANIFEST)
