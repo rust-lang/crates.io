@@ -57,7 +57,7 @@
     "prettier": "3.10.1",
     "prettier-plugin-svelte": "4.2.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.73.0"
+    "typescript-eslint": "8.74.0"
   },
   "devEngines": {
     "runtime": {
