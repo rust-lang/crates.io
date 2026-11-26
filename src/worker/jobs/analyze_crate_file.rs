@@ -6,15 +6,17 @@ use anyhow::Context;
 use async_compression::tokio::bufread::GzipDecoder;
 use crates_io_database::schema::default_versions;
 use crates_io_linecount::{LinecountStats, PathDetails};
+use crates_io_tarball::{TarballCompatibility, read_payload};
 use crates_io_worker::BackgroundJob;
 use derive_more::Constructor;
 use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::time::Instant;
-use tokio::io::{AsyncReadExt, BufReader};
+use tar_codec::{Archive, Member, TarArchive};
+use tokio::io::BufReader;
 use tokio_util::io::StreamReader;
 use tracing::{info, instrument, warn};
 
@@ -94,30 +96,29 @@ async fn analyze_crate_tarball(
     let reader = BufReader::new(reader);
     let decoder = GzipDecoder::new(reader);
 
-    let mut archive = tokio_tar::Archive::new(decoder);
-
-    let entries = archive.entries();
-    let mut entries = entries.context("Failed to read tarball entries")?;
+    let policy = TarballCompatibility::Legacy.decode_policy();
+    let mut archive = TarArchive::new(decoder).with_policy(policy);
 
     let mut linecount_stats = LinecountStats::new();
-    while let Some(entry) = entries.next().await {
-        let mut entry = entry.context("Failed to read tarball entry")?;
-        if !entry.header().entry_type().is_file() {
+    while let Some(member) = archive
+        .next_member()
+        .await
+        .context("Failed to read tarball entry")?
+    {
+        let path_details = PathDetails::from_path(Path::new(&member.metadata().path));
+        let Member::File { payload, .. } = member else {
             // Skip directories and other non-file entries
             continue;
-        }
-
-        let path = entry.path().context("Failed to get entry path")?;
-        let path_details = PathDetails::from_path(&path);
+        };
 
         // Check if this file should be counted for line statistics
         if !path_details.should_ignore()
             && let Some(language_type) = path_details.language_type()
         {
             // If this is a file that we want to count, read it and update the linecount stats.
-            let mut contents = Vec::new();
-            let result = entry.read_to_end(&mut contents).await;
-            result.context("Failed to read entry contents")?;
+            let contents = read_payload(payload)
+                .await
+                .context("Failed to read entry contents")?;
 
             linecount_stats.add_file(language_type, &contents);
         }
