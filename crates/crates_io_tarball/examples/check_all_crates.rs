@@ -66,6 +66,7 @@ async fn run(roots: Vec<PathBuf>, jobs: usize) -> anyhow::Result<()> {
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.into_path())
         .filter(|path| path.is_file() && path.extension().unwrap_or_default() == "crate")
+        .filter(|path| !is_hidden(path))
         .progress_with(pb)
         .collect::<Vec<_>>();
 
@@ -102,6 +103,16 @@ async fn run(roots: Vec<PathBuf>, jobs: usize) -> anyhow::Result<()> {
     pb.finish();
 
     Ok(())
+}
+
+/// Returns whether the file name starts with a dot.
+///
+/// Crate names can't start with a dot, so this only matches files like the
+/// `._` metadata files that macOS writes next to each file on non-Apple
+/// filesystems like exFAT.
+fn is_hidden(path: &Path) -> bool {
+    path.file_name()
+        .is_some_and(|name| name.as_encoded_bytes().starts_with(b"."))
 }
 
 async fn process_path(path: &Path, pb: &ProgressBar) {
