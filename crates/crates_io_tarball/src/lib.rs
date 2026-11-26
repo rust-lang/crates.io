@@ -681,7 +681,7 @@ mod tests {
     #[tokio::test]
     async fn process_tarball_test_pax_vendor_extensions() {
         let tarball_with_pax_keyword = |keyword| {
-            TarballBuilder::new()
+            TarballBuilder::ustar()
                 .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
                 .add_pax_extensions([(keyword, b"value".as_slice())])
                 .add_file("foo-0.0.1/src/lib.rs", b"")
@@ -769,7 +769,7 @@ mod tests {
 
     #[tokio::test]
     async fn process_tarball_test_entry_limit() {
-        let tarball = TarballBuilder::new()
+        let tarball = TarballBuilder::ustar()
             .add_pax_extensions([("comment", b"metadata".as_slice())])
             .add_dir("foo-0.0.1")
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
@@ -984,7 +984,7 @@ mod tests {
         //
         // We have to build this with the regular `tar` crate.
 
-        let tarball = TarballBuilder::new()
+        let tarball = TarballBuilder::ustar()
             .add_pax_extensions([("size", b"\xff\xfe".as_slice())])
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
@@ -992,7 +992,7 @@ mod tests {
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
         assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
 
-        let tarball = TarballBuilder::new()
+        let tarball = TarballBuilder::ustar()
             .add_pax_extensions([("size", b"not-a-valid-number".as_slice())])
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
@@ -1005,7 +1005,7 @@ mod tests {
     async fn process_tarball_test_size_mismatch() {
         // Build up a tarball with a mismatch between its pax and tar header
         // sizes.
-        let tarball = TarballBuilder::new()
+        let tarball = TarballBuilder::ustar()
             // Set the pax size to a larger value.
             .add_pax_extensions([("size", "2048".as_bytes())])
             // Add the real content, which is less than a single tar block (512
@@ -1023,7 +1023,7 @@ mod tests {
     async fn process_tarball_test_repeated_pax_size_mismatch() {
         let manifest_size = MANIFEST.len().to_string();
         // The final size matches the tar header, but every size record must match.
-        let tarball = TarballBuilder::new()
+        let tarball = TarballBuilder::ustar()
             .add_pax_extensions([
                 ("size", "2048".as_bytes()),
                 ("size", manifest_size.as_bytes()),
@@ -1040,7 +1040,7 @@ mod tests {
     async fn process_tarball_test_repeated_pax_path() {
         // `astral-tokio-tar` uses the last `path` record, but the `tar` crate
         // that Cargo uses for extraction picks the first one.
-        let tarball = TarballBuilder::new()
+        let tarball = TarballBuilder::ustar()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_pax_extensions([
                 ("path", "foo-0.0.1/build.rs".as_bytes()),
