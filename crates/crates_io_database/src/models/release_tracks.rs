@@ -15,10 +15,8 @@ pub fn calculate_release_tracks<'a>(
         let key = ReleaseTrackName::from_semver(&version.num);
         tracks
             .entry(key)
-            .and_modify(|track: &mut ReleaseTrack<'a>| {
-                track.highest = max(track.highest, version);
-            })
-            .or_insert(ReleaseTrack { highest: version });
+            .and_modify(|track: &mut ReleaseTrack<'a>| track.add(version))
+            .or_insert_with(|| ReleaseTrack::new(version));
     }
     tracks
 }
@@ -53,6 +51,23 @@ impl serde::Serialize for ReleaseTrackName {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReleaseTrack<'a> {
     pub highest: &'a default_versions::Version,
+    /// The number of versions in this release track, including yanked
+    /// versions and pre-releases.
+    pub count: u64,
+}
+
+impl<'a> ReleaseTrack<'a> {
+    fn new(version: &'a default_versions::Version) -> Self {
+        Self {
+            highest: version,
+            count: 1,
+        }
+    }
+
+    fn add(&mut self, version: &'a default_versions::Version) {
+        self.highest = max(self.highest, version);
+        self.count += 1;
+    }
 }
 
 #[cfg(test)]
@@ -72,8 +87,12 @@ mod tests {
     }
 
     fn format_tracks(tracks: &BTreeMap<ReleaseTrackName, ReleaseTrack<'_>>) -> String {
-        let lines = tracks.iter();
-        let lines = lines.map(|(name, track)| format!("{name}: {}\n", track.highest.num));
+        let lines = tracks.iter().map(|(name, track)| {
+            let ReleaseTrack { highest, count } = track;
+            let num = &highest.num;
+            let yanked = if highest.yanked { " (yanked)" } else { "" };
+            format!("{name}: {num}{yanked}, count: {count}\n")
+        });
         lines.collect()
     }
 
@@ -87,7 +106,7 @@ mod tests {
     fn release_tracks_prerelease() {
         let versions = [v("1.0.0-beta.5", false)];
         let tracks = calculate_release_tracks(&versions);
-        assert_snapshot!(format_tracks(&tracks), @"1: 1.0.0-beta.5");
+        assert_snapshot!(format_tracks(&tracks), @"1: 1.0.0-beta.5, count: 1");
     }
 
     #[test]
@@ -103,9 +122,9 @@ mod tests {
         ];
         let tracks = calculate_release_tracks(&versions);
         assert_snapshot!(format_tracks(&tracks), @"
-        1: 1.1.0
-        2: 2.0.0
-        3: 3.0.0-rc.1
+        1: 1.1.0 (yanked), count: 3
+        2: 2.0.0, count: 2
+        3: 3.0.0-rc.1, count: 2
         ");
     }
 
@@ -136,12 +155,12 @@ mod tests {
 
         let tracks = calculate_release_tracks(&versions);
         assert_snapshot!(format_tracks(&tracks), @"
-        0.1: 0.1.2
-        0.2: 0.2.1
-        0.3: 0.3.23
-        0.4: 0.4.0-rc.1
-        1: 1.3.5
-        100: 100.1.1
+        0.1: 0.1.2, count: 2
+        0.2: 0.2.1, count: 2
+        0.3: 0.3.23, count: 8
+        0.4: 0.4.0-rc.1, count: 1
+        1: 1.3.5, count: 4
+        100: 100.1.1, count: 2
         ");
     }
 }

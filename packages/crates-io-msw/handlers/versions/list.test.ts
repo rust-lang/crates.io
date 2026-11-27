@@ -405,9 +405,13 @@ test('include `release_tracks` meta', async function () {
       release_tracks: {
         '0.0': {
           highest: '0.0.1',
+          yanked: false,
+          count: 2,
         },
         1: {
           highest: '1.1.0',
+          yanked: false,
+          count: 3,
         },
       },
     },
@@ -431,10 +435,10 @@ test('include `release_tracks` meta for tracks without stable non-yanked version
   expect(response.status).toBe(200);
   let { meta } = await response.json();
   expect(meta.release_tracks).toEqual({
-    '0.10': { highest: '0.10.0' },
-    '0.11': { highest: '0.11.1' },
-    1: { highest: '1.0.0' },
-    2: { highest: '2.0.0-beta.1' },
-    3: { highest: '3.0.0-rc.1' },
+    '0.10': { highest: '0.10.0', yanked: false, count: 2 },
+    '0.11': { highest: '0.11.1', yanked: true, count: 2 },
+    1: { highest: '1.0.0', yanked: false, count: 2 },
+    2: { highest: '2.0.0-beta.1', yanked: false, count: 2 },
+    3: { highest: '3.0.0-rc.1', yanked: false, count: 2 },
   });
 });

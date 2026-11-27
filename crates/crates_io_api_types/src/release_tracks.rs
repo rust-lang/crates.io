@@ -18,12 +18,25 @@ impl From<BTreeMap<ReleaseTrackName, ReleaseTrack<'_>>> for ReleaseTracks {
 pub struct ReleaseTrackDetails {
     #[schema(value_type = String)]
     pub highest: semver::Version,
+
+    /// Whether all versions in this release track are yanked.
+    pub yanked: bool,
+
+    /// The number of versions in this release track, including yanked
+    /// versions and pre-releases.
+    #[schema(example = 42, minimum = 1)]
+    pub count: u64,
 }
 
 impl From<ReleaseTrack<'_>> for ReleaseTrackDetails {
     fn from(track: ReleaseTrack<'_>) -> Self {
-        let highest = track.highest.num.clone();
-        Self { highest }
+        Self {
+            highest: track.highest.num.clone(),
+            // Non-yanked versions take precedence, so the highest version is
+            // only yanked if all versions of the track are.
+            yanked: track.highest.yanked,
+            count: track.count,
+        }
     }
 }
 
@@ -74,22 +87,34 @@ mod tests {
         assert_json_snapshot!(tracks, @r#"
         {
           "100": {
-            "highest": "100.1.1"
+            "highest": "100.1.1",
+            "yanked": false,
+            "count": 2
           },
           "1": {
-            "highest": "1.3.5"
+            "highest": "1.3.5",
+            "yanked": false,
+            "count": 4
           },
           "0.4": {
-            "highest": "0.4.0-rc.1"
+            "highest": "0.4.0-rc.1",
+            "yanked": false,
+            "count": 1
           },
           "0.3": {
-            "highest": "0.3.23"
+            "highest": "0.3.23",
+            "yanked": false,
+            "count": 8
           },
           "0.2": {
-            "highest": "0.2.1"
+            "highest": "0.2.1",
+            "yanked": false,
+            "count": 2
           },
           "0.1": {
-            "highest": "0.1.2"
+            "highest": "0.1.2",
+            "yanked": false,
+            "count": 2
           }
         }
         "#);

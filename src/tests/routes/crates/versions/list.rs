@@ -123,8 +123,16 @@ async fn test_sorting() -> anyhow::Result<()> {
         "1.0.0-alpha",
     ];
     let release_tracks = Some(json!({
-        "2": {"highest": "2.0.0-alpha"},
-        "1": {"highest": "1.0.0"}
+        "2": {
+            "highest": "2.0.0-alpha",
+            "yanked": false,
+            "count": 1
+        },
+        "1": {
+            "highest": "1.0.0",
+            "yanked": false,
+            "count": 8
+        }
     }));
 
     // Sort by semver
@@ -202,11 +210,31 @@ async fn release_tracks_without_stable_non_yanked_versions() -> anyhow::Result<(
     ] {
         let json: VersionList = anon.get_with_query(url, query).await.good();
         let release_tracks = json!({
-            "3": {"highest": "3.0.0-rc.1"},
-            "2": {"highest": "2.0.0-beta.1"},
-            "1": {"highest": "1.0.0"},
-            "0.11": {"highest": "0.11.1"},
-            "0.10": {"highest": "0.10.0"}
+            "3": {
+                "highest": "3.0.0-rc.1",
+                "yanked": false,
+                "count": 2
+            },
+            "2": {
+                "highest": "2.0.0-beta.1",
+                "yanked": false,
+                "count": 2
+            },
+            "1": {
+                "highest": "1.0.0",
+                "yanked": false,
+                "count": 2
+            },
+            "0.11": {
+                "highest": "0.11.1",
+                "yanked": true,
+                "count": 2
+            },
+            "0.10": {
+                "highest": "0.10.0",
+                "yanked": false,
+                "count": 2
+            }
         });
         assert_eq!(json.meta.release_tracks, Some(release_tracks), "{query}");
     }
@@ -229,9 +257,21 @@ async fn release_tracks_with_nums() -> anyhow::Result<()> {
         .await;
 
     let expected = Some(json!({
-        "2": {"highest": "2.0.0"},
-        "1": {"highest": "1.2.0"},
-        "0.5": {"highest": "0.5.0"}
+        "2": {
+            "highest": "2.0.0",
+            "yanked": false,
+            "count": 1
+        },
+        "1": {
+            "highest": "1.2.0",
+            "yanked": false,
+            "count": 2
+        },
+        "0.5": {
+            "highest": "0.5.0",
+            "yanked": false,
+            "count": 1
+        }
     }));
 
     let url = "/api/v1/crates/foo_versions/versions";
@@ -335,8 +375,16 @@ async fn test_seek_based_pagination_semver_sorting() -> anyhow::Result<()> {
     let url = "/api/v1/crates/foo_versions/versions";
     let expects = ["1.0.0", "0.5.1", "0.5.0"];
     let release_tracks = Some(json!({
-        "1": {"highest": "1.0.0"},
-        "0.5": {"highest": "0.5.0"}
+        "1": {
+            "highest": "1.0.0",
+            "yanked": false,
+            "count": 1
+        },
+        "0.5": {
+            "highest": "0.5.0",
+            "yanked": false,
+            "count": 2
+        }
     }));
 
     // per_page larger than the number of versions
@@ -421,8 +469,16 @@ async fn test_seek_based_pagination_date_sorting() -> anyhow::Result<()> {
     let url = "/api/v1/crates/foo_versions/versions";
     let expects = ["0.5.0", "1.0.0", "0.5.1"];
     let release_tracks = Some(json!({
-        "1": {"highest": "1.0.0"},
-        "0.5": {"highest": "0.5.0"}
+        "1": {
+            "highest": "1.0.0",
+            "yanked": false,
+            "count": 1
+        },
+        "0.5": {
+            "highest": "0.5.0",
+            "yanked": false,
+            "count": 2
+        }
     }));
 
     // per_page larger than the number of versions

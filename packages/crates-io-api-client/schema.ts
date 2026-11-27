@@ -1625,7 +1625,16 @@ export interface components {
             other: string[];
         };
         ReleaseTrackDetails: {
+            /**
+             * Format: int64
+             * @description The number of versions in this release track, including yanked
+             *     versions and pre-releases.
+             * @example 42
+             */
+            count: number;
             highest: string;
+            /** @description Whether all versions in this release track are yanked. */
+            yanked: boolean;
         };
         /** @description Public GitHub account details displayed while a user completes signup. */
         SignupDetails: {

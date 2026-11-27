@@ -4,6 +4,12 @@ import { calculateDefaultVersion } from './default-version.js';
 
 type Version = { yanked: boolean; num: string };
 
+interface ReleaseTrack {
+  highest: string;
+  yanked: boolean;
+  count: number;
+}
+
 /**
  * The highest version of a track is chosen like the default version of a
  * crate, see `calculateDefaultVersion()`.
@@ -19,9 +25,10 @@ export function calculateReleaseTracks(versions: Version[]) {
     versionsByTrack.set(name, trackVersions);
   }
 
-  let tracks: Record<string, { highest: string }> = {};
+  let tracks: Record<string, ReleaseTrack> = {};
   for (let [name, trackVersions] of versionsByTrack) {
-    tracks[name] = { highest: calculateDefaultVersion(trackVersions)!.num };
+    let highest = calculateDefaultVersion(trackVersions)!;
+    tracks[name] = { highest: highest.num, yanked: highest.yanked, count: trackVersions.length };
   }
   return tracks;
 }
