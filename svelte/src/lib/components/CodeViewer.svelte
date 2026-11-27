@@ -4,6 +4,7 @@
 
   import { onMount, untrack } from 'svelte';
   import { CodeView } from '@pierre/diffs';
+  import { resolveSearchShortcut } from '@pierre/diffs/edit';
   import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
   import WorkerUrl from '@pierre/diffs/worker/worker.js?worker&url';
 
@@ -44,6 +45,17 @@
       renderHeaderMetadata: () => content?.meta ?? null,
       searchOptions: { disableShortcuts: true },
     };
+  }
+
+  // The built-in shortcut only fires while focus is inside the viewer, so it
+  // is bound on the window instead to also replace the browser's find, which
+  // can't see lines outside the virtualized viewport.
+  function handleKeydown(event: KeyboardEvent) {
+    if (!content || !view || event.defaultPrevented) return;
+    if (resolveSearchShortcut(event) !== 'find') return;
+
+    event.preventDefault();
+    view.openSearch();
   }
 
   function getHighlighterPool(): WorkerPoolManager {
@@ -119,6 +131,8 @@
     }
   });
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <div class="code" class:hidden={content === null} bind:this={container} data-test-code-viewer></div>
 

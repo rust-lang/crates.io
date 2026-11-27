@@ -152,6 +152,23 @@ test.describe('Acceptance | crate code viewer', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-code-viewer]')).toContainText('// line 1');
   });
 
+  test('opens the code search panel with the find shortcut from anywhere on the page', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+
+    let viewer = page.locator('[data-test-code-viewer]');
+
+    await page.goto('/crates/serde/1.0.0/code/src/lib.rs');
+    await expect(viewer).toContainText('// serde crate root');
+
+    await page.keyboard.press('ControlOrMeta+f');
+    let searchInput = viewer.getByPlaceholder('Search');
+    await expect(searchInput).toBeFocused();
+
+    await searchInput.fill('answer');
+    await expect(viewer).toContainText('1/1');
+  });
+
   test('shows a message for binary files', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'serde' });
     await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
