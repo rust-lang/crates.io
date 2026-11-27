@@ -174,8 +174,8 @@ importers:
         version: 4.4.0
     devDependencies:
       '@axe-core/playwright':
-        specifier: 4.14.0
-        version: 4.14.0(playwright-core@1.65.1)
+        specifier: 4.14.1
+        version: 4.14.1(playwright-core@1.65.1)
       '@crates-io/msw':
         specifier: workspace:*
         version: link:packages/crates-io-msw
@@ -517,8 +517,8 @@ packages:
   '@antfu/install-pkg@2.1.0':
     resolution: {integrity: sha512-sdg9NxU3zR4Mnawfbc/x6GB5Wf17WYud5qOuEuxXjaKpYpMkISSJEjItGebXJ2bQ4DIcly4NYH23mtkGJjvKUw==}
 
-  '@axe-core/playwright@4.14.0':
-    resolution: {integrity: sha512-SGUhG5PIHd2eMdpgBF2PyQLOhX+qyDR2PT4cmoS4Qk2ak+jX/rrSvst9l0PGv5WTHolKpUMvVmoHpr4cZgf1RQ==}
+  '@axe-core/playwright@4.14.1':
+    resolution: {integrity: sha512-cSN1ijrWLnlOof22sPN4RtWGSoPpt7GzOVyOKomyhnPsy1fPNoRdBiJAUziuCRs8KoK50kKufiMUFt7itAuwOg==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
       playwright-core: '>= 1.0.0'
@@ -4948,7 +4948,7 @@ snapshots:
       package-manager-detector: 1.9.0
       tinyexec: 1.3.1
 
-  '@axe-core/playwright@4.14.0(playwright-core@1.65.1)':
+  '@axe-core/playwright@4.14.1(playwright-core@1.65.1)':
     dependencies:
       axe-core: 4.14.1
       playwright-core: 1.65.1
