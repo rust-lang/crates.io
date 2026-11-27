@@ -204,7 +204,7 @@ async fn list(
     };
 
     let release_tracks = if params.include()?.release_tracks {
-        let versions = if options.is_some() {
+        let versions = if options.is_some() || !params.nums.is_empty() {
             default_versions::Version::query()
                 .filter(versions::crate_id.eq(crate_id))
                 .load(&mut conn)
