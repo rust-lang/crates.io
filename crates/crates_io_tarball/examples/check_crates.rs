@@ -12,11 +12,12 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
 use walkdir::WalkDir;
 
-/// Runs through all crate files in a folder and shows parsing errors.
+/// Runs through all crate files in the given paths and shows parsing errors.
 #[derive(clap::Parser, Debug, Clone)]
 pub struct Options {
-    /// Path to the folder to scan for crate files
-    path: PathBuf,
+    /// Crate files or folders to scan for crate files
+    #[arg(required = true)]
+    paths: Vec<PathBuf>,
 
     /// Number of CPUs to use for scanning and processing crate files
     #[arg(short, long, default_value_t = default_jobs())]
@@ -42,28 +43,30 @@ fn main() -> anyhow::Result<()> {
         .worker_threads(jobs)
         .enable_all()
         .build()?
-        .block_on(run(options.path, jobs))
+        .block_on(run(options.paths, jobs))
 }
 
-/// Scans `path` for crate files and processes them using `jobs` worker threads.
-async fn run(path: PathBuf, jobs: usize) -> anyhow::Result<()> {
-    if !path.is_dir() {
-        return Err(anyhow!("`{}` not found or not a directory", path.display()));
+/// Scans `roots` for crate files and processes them using `jobs` worker threads.
+async fn run(roots: Vec<PathBuf>, jobs: usize) -> anyhow::Result<()> {
+    if let Some(root) = roots.iter().find(|root| !root.exists()) {
+        return Err(anyhow!("`{}` not found", root.display()));
     }
 
-    info!(path = %path.display(), "Searching for crate files");
+    info!("Searching for crate files");
 
     let pb = ProgressBar::new(u64::MAX);
     pb.set_style(ProgressStyle::with_template(
         "{human_pos} crate files found",
     )?);
 
-    let mut paths = WalkDir::new(path)
+    let mut paths = roots
         .into_iter()
+        .flat_map(WalkDir::new)
         .par_bridge()
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.into_path())
         .filter(|path| path.is_file() && path.extension().unwrap_or_default() == "crate")
+        .filter(|path| !is_hidden(path))
         .progress_with(pb)
         .collect::<Vec<_>>();
 
@@ -102,10 +105,20 @@ async fn run(path: PathBuf, jobs: usize) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Returns whether the file name starts with a dot.
+///
+/// Crate names can't start with a dot, so this only matches files like the
+/// `._` metadata files that macOS writes next to each file on non-Apple
+/// filesystems like exFAT.
+fn is_hidden(path: &Path) -> bool {
+    path.file_name()
+        .is_some_and(|name| name.as_encoded_bytes().starts_with(b"."))
+}
+
 async fn process_path(path: &Path, pb: &ProgressBar) {
-    let file = File::open(path)
-        .await
-        .map_err(|error| pb.suspend(|| warn!("Failed to read crate file: {error}")));
+    let file = File::open(path).await.map_err(|error| {
+        pb.suspend(|| warn!(path = %path.display(), "Failed to read crate file: {error}"))
+    });
 
     let Ok(mut file) = file else {
         return;
