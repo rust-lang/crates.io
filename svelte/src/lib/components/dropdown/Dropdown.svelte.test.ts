@@ -76,6 +76,27 @@ describe('Dropdown', () => {
     await expect.element(trigger).not.toHaveFocus();
   });
 
+  describe('positioning', () => {
+    function rects(triggerName: string) {
+      let trigger = page.getByRole('button', { name: triggerName }).element();
+      let content = document.getElementById(trigger.getAttribute('aria-controls')!)!;
+      return { trigger: trigger.getBoundingClientRect(), content: content.getBoundingClientRect() };
+    }
+
+    it('places the content directly below the trigger and at least as wide', async () => {
+      await render(TestDropdown);
+      await page.getByRole('button', { name: 'Wide Trigger' }).click();
+
+      // content is directly below the trigger
+      await expect.poll(() => rects('Wide Trigger').content.top - rects('Wide Trigger').trigger.bottom).toBeCloseTo(0);
+
+      // content is as wide as the trigger
+      let { trigger, content } = rects('Wide Trigger');
+      expect(content.left).toBeCloseTo(trigger.left);
+      expect(content.width).toBeCloseTo(trigger.width);
+    });
+  });
+
   it('closes when another dropdown opens', async () => {
     await render(TestDropdown);
     // open the lower trigger first so the upper menu can't cover it
