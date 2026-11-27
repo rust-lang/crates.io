@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
+use chrono::{DateTime, TimeZone, Utc};
 use crates_io::models::{NewVersionOwnerAction, Version, VersionAction};
 use crates_io::schema::versions;
 use crates_io::views::EncodableVersion;
@@ -86,8 +87,8 @@ async fn test_sorting() -> anyhow::Result<()> {
     ];
 
     let mut builder = CrateBuilder::new("foo_versions", user.id);
-    for version in versions {
-        builder = builder.version(version);
+    for (day, version) in (1..).zip(versions) {
+        builder = builder.version(VersionBuilder::new(version).created_at(published(day)));
     }
     builder.expect_build(&mut conn).await;
     // Make version 1.0.0-beta.2 and 1.0.0-alpha.beta mimic versions created at same time,
@@ -126,12 +127,16 @@ async fn test_sorting() -> anyhow::Result<()> {
         "2": {
             "highest": "2.0.0-alpha",
             "yanked": false,
-            "count": 1
+            "count": 1,
+            "first_published": "2025-01-02T00:00:00Z",
+            "last_published": "2025-01-02T00:00:00Z"
         },
         "1": {
             "highest": "1.0.0",
             "yanked": false,
-            "count": 8
+            "count": 8,
+            "first_published": "2025-01-01T00:00:00Z",
+            "last_published": "2025-01-09T00:00:00Z"
         }
     }));
 
@@ -188,16 +193,32 @@ async fn release_tracks_without_stable_non_yanked_versions() -> anyhow::Result<(
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
-        .version("0.10.0")
-        .version(VersionBuilder::new("0.10.1").yanked(true))
-        .version(VersionBuilder::new("0.11.0").yanked(true))
-        .version(VersionBuilder::new("0.11.1").yanked(true))
-        .version("1.0.0")
-        .version("1.1.0-beta.1")
-        .version("2.0.0-alpha.1")
-        .version("2.0.0-beta.1")
-        .version("3.0.0-rc.1")
-        .version(VersionBuilder::new("3.0.0").yanked(true))
+        .version(VersionBuilder::new("0.10.0").created_at(published(1)))
+        .version(
+            VersionBuilder::new("0.10.1")
+                .yanked(true)
+                .created_at(published(2)),
+        )
+        .version(
+            VersionBuilder::new("0.11.0")
+                .yanked(true)
+                .created_at(published(3)),
+        )
+        .version(
+            VersionBuilder::new("0.11.1")
+                .yanked(true)
+                .created_at(published(4)),
+        )
+        .version(VersionBuilder::new("1.0.0").created_at(published(5)))
+        .version(VersionBuilder::new("1.1.0-beta.1").created_at(published(6)))
+        .version(VersionBuilder::new("2.0.0-alpha.1").created_at(published(7)))
+        .version(VersionBuilder::new("2.0.0-beta.1").created_at(published(8)))
+        .version(VersionBuilder::new("3.0.0-rc.1").created_at(published(9)))
+        .version(
+            VersionBuilder::new("3.0.0")
+                .yanked(true)
+                .created_at(published(10)),
+        )
         .expect_build(&mut conn)
         .await;
 
@@ -213,27 +234,37 @@ async fn release_tracks_without_stable_non_yanked_versions() -> anyhow::Result<(
             "3": {
                 "highest": "3.0.0-rc.1",
                 "yanked": false,
-                "count": 2
+                "count": 2,
+                "first_published": "2025-01-09T00:00:00Z",
+                "last_published": "2025-01-10T00:00:00Z"
             },
             "2": {
                 "highest": "2.0.0-beta.1",
                 "yanked": false,
-                "count": 2
+                "count": 2,
+                "first_published": "2025-01-07T00:00:00Z",
+                "last_published": "2025-01-08T00:00:00Z"
             },
             "1": {
                 "highest": "1.0.0",
                 "yanked": false,
-                "count": 2
+                "count": 2,
+                "first_published": "2025-01-05T00:00:00Z",
+                "last_published": "2025-01-06T00:00:00Z"
             },
             "0.11": {
                 "highest": "0.11.1",
                 "yanked": true,
-                "count": 2
+                "count": 2,
+                "first_published": "2025-01-03T00:00:00Z",
+                "last_published": "2025-01-04T00:00:00Z"
             },
             "0.10": {
                 "highest": "0.10.0",
                 "yanked": false,
-                "count": 2
+                "count": 2,
+                "first_published": "2025-01-01T00:00:00Z",
+                "last_published": "2025-01-02T00:00:00Z"
             }
         });
         assert_eq!(json.meta.release_tracks, Some(release_tracks), "{query}");
@@ -249,10 +280,10 @@ async fn release_tracks_with_nums() -> anyhow::Result<()> {
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
-        .version("0.5.0")
-        .version("1.0.0")
-        .version("1.2.0")
-        .version("2.0.0")
+        .version(VersionBuilder::new("0.5.0").created_at(published(1)))
+        .version(VersionBuilder::new("1.0.0").created_at(published(2)))
+        .version(VersionBuilder::new("1.2.0").created_at(published(3)))
+        .version(VersionBuilder::new("2.0.0").created_at(published(4)))
         .expect_build(&mut conn)
         .await;
 
@@ -260,17 +291,23 @@ async fn release_tracks_with_nums() -> anyhow::Result<()> {
         "2": {
             "highest": "2.0.0",
             "yanked": false,
-            "count": 1
+            "count": 1,
+            "first_published": "2025-01-04T00:00:00Z",
+            "last_published": "2025-01-04T00:00:00Z"
         },
         "1": {
             "highest": "1.2.0",
             "yanked": false,
-            "count": 2
+            "count": 2,
+            "first_published": "2025-01-02T00:00:00Z",
+            "last_published": "2025-01-03T00:00:00Z"
         },
         "0.5": {
             "highest": "0.5.0",
             "yanked": false,
-            "count": 1
+            "count": 1,
+            "first_published": "2025-01-01T00:00:00Z",
+            "last_published": "2025-01-01T00:00:00Z"
         }
     }));
 
@@ -357,9 +394,17 @@ async fn test_seek_based_pagination_semver_sorting() -> anyhow::Result<()> {
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
-        .version(VersionBuilder::new("0.5.1").yanked(true))
-        .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
-        .version("0.5.0")
+        .version(
+            VersionBuilder::new("0.5.1")
+                .yanked(true)
+                .created_at(published(1)),
+        )
+        .version(
+            VersionBuilder::new("1.0.0")
+                .rust_version("1.64")
+                .created_at(published(2)),
+        )
+        .version(VersionBuilder::new("0.5.0").created_at(published(3)))
         .expect_build(&mut conn)
         .await;
 
@@ -378,12 +423,16 @@ async fn test_seek_based_pagination_semver_sorting() -> anyhow::Result<()> {
         "1": {
             "highest": "1.0.0",
             "yanked": false,
-            "count": 1
+            "count": 1,
+            "first_published": "2025-01-02T00:00:00Z",
+            "last_published": "2025-01-02T00:00:00Z"
         },
         "0.5": {
             "highest": "0.5.0",
             "yanked": false,
-            "count": 2
+            "count": 2,
+            "first_published": "2025-01-01T00:00:00Z",
+            "last_published": "2025-01-03T00:00:00Z"
         }
     }));
 
@@ -451,9 +500,17 @@ async fn test_seek_based_pagination_date_sorting() -> anyhow::Result<()> {
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
-        .version(VersionBuilder::new("0.5.1").yanked(true))
-        .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
-        .version("0.5.0")
+        .version(
+            VersionBuilder::new("0.5.1")
+                .yanked(true)
+                .created_at(published(1)),
+        )
+        .version(
+            VersionBuilder::new("1.0.0")
+                .rust_version("1.64")
+                .created_at(published(2)),
+        )
+        .version(VersionBuilder::new("0.5.0").created_at(published(3)))
         .expect_build(&mut conn)
         .await;
 
@@ -472,12 +529,16 @@ async fn test_seek_based_pagination_date_sorting() -> anyhow::Result<()> {
         "1": {
             "highest": "1.0.0",
             "yanked": false,
-            "count": 1
+            "count": 1,
+            "first_published": "2025-01-02T00:00:00Z",
+            "last_published": "2025-01-02T00:00:00Z"
         },
         "0.5": {
             "highest": "0.5.0",
             "yanked": false,
-            "count": 2
+            "count": 2,
+            "first_published": "2025-01-01T00:00:00Z",
+            "last_published": "2025-01-03T00:00:00Z"
         }
     }));
 
@@ -589,6 +650,10 @@ pub struct ResponseMeta {
     pub total: i64,
     pub next_page: Option<String>,
     pub release_tracks: Option<serde_json::Value>,
+}
+
+fn published(day: u32) -> DateTime<Utc> {
+    Utc.with_ymd_and_hms(2025, 1, day, 0, 0, 0).unwrap()
 }
 
 fn nums(versions: &[EncodableVersion]) -> Vec<String> {

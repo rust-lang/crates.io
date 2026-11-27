@@ -1004,7 +1004,19 @@ expression: response.json()
             "minimum": 1,
             "type": "integer"
           },
+          "first_published": {
+            "description": "When the first version in this release track was published.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
           "highest": {
+            "type": "string"
+          },
+          "last_published": {
+            "description": "When the most recent version in this release track was published.",
+            "example": "2026-07-20T17:06:09Z",
+            "format": "date-time",
             "type": "string"
           },
           "yanked": {
@@ -1015,7 +1027,9 @@ expression: response.json()
         "required": [
           "highest",
           "yanked",
-          "count"
+          "count",
+          "first_published",
+          "last_published"
         ],
         "type": "object"
       },

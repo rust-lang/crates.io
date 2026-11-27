@@ -4,7 +4,7 @@ use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::CratePath;
-use crate::models::release_tracks::calculate_release_tracks;
+use crate::models::release_tracks::{ReleaseTrackInput, calculate_release_tracks};
 use crate::models::{PublicUser, Version, VersionOwnerAction, default_versions};
 use crate::schema::{oauth_github, users, versions};
 use crate::server::ServerContext;
@@ -206,7 +206,7 @@ async fn list(
 
     let release_tracks = if params.include()?.release_tracks {
         let versions = if options.is_some() || !params.nums.is_empty() {
-            default_versions::Version::query()
+            ReleaseTrackInput::query()
                 .filter(versions::crate_id.eq(crate_id))
                 .load(&mut conn)
                 .await?
@@ -214,8 +214,12 @@ async fn list(
             data.iter()
                 .flat_map(|(version, _)| {
                     let num = semver::Version::parse(&version.num).ok()?;
-                    let (id, yanked) = (version.id, version.yanked);
-                    Some(default_versions::Version { id, num, yanked })
+                    let (id, yanked, created_at) = (version.id, version.yanked, version.created_at);
+                    let version = default_versions::Version { id, num, yanked };
+                    Some(ReleaseTrackInput {
+                        version,
+                        created_at,
+                    })
                 })
                 .collect()
         };

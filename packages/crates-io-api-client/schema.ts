@@ -1632,7 +1632,19 @@ export interface components {
              * @example 42
              */
             count: number;
+            /**
+             * Format: date-time
+             * @description When the first version in this release track was published.
+             * @example 2019-12-13T13:46:41Z
+             */
+            first_published: string;
             highest: string;
+            /**
+             * Format: date-time
+             * @description When the most recent version in this release track was published.
+             * @example 2026-07-20T17:06:09Z
+             */
+            last_published: string;
             /** @description Whether all versions in this release track are yanked. */
             yanked: boolean;
         };
