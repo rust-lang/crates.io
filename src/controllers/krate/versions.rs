@@ -4,6 +4,7 @@ use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::CratePath;
+use crate::models::release_tracks::calculate_release_tracks;
 use crate::models::{PublicUser, Version, VersionOwnerAction, default_versions};
 use crate::schema::{oauth_github, users, versions};
 use crate::server::ServerContext;
@@ -219,7 +220,7 @@ async fn list(
                 .collect()
         };
 
-        Some(ReleaseTracks::from_versions(&versions))
+        Some(calculate_release_tracks(&versions).into())
     } else {
         None
     };
