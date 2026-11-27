@@ -2,10 +2,10 @@ use anyhow::{Context, anyhow};
 use crates_io::db;
 use crates_io::models::Version;
 use crates_io::schema::{crates, readme_renderings, versions};
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::TryStreamExt;
 use std::path::{Path, PathBuf};
-use std::{future, sync::Arc};
-use tokio::io::{AsyncRead, AsyncReadExt};
+use std::sync::Arc;
+use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
 
 use async_compression::tokio::bufread::GzipDecoder;
@@ -13,13 +13,13 @@ use chrono::{NaiveDateTime, Utc};
 use crates_io::storage::{Storage, StorageKey};
 use crates_io::tasks::spawn_blocking;
 use crates_io_markdown::text_to_html;
-use crates_io_tarball::{Manifest, StringOrBool};
+use crates_io_tarball::{Manifest, StringOrBool, TarballCompatibility, read_payload};
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use reqwest::{Client, header};
 use std::str::FromStr;
-use tokio_tar::{self, Archive};
+use tar_codec::{Archive, Member, TarArchive};
 
 const USER_AGENT: &str = "crates-io";
 
@@ -174,19 +174,18 @@ async fn get_readme(
     let reader = response.bytes_stream().map_err(std::io::Error::other);
     let reader = StreamReader::new(reader);
     let reader = GzipDecoder::new(reader);
-    let archive = Archive::new(reader);
+    let policy = TarballCompatibility::Legacy.decode_policy();
+    let archive = TarArchive::new(reader).with_policy(policy);
     render_pkg_readme(archive, &pkg_name).await
 }
 
 async fn render_pkg_readme<R: AsyncRead + Unpin>(
-    mut archive: Archive<R>,
+    mut archive: TarArchive<R>,
     pkg_name: &str,
 ) -> anyhow::Result<String> {
-    let mut entries = archive.entries().context("Invalid tar archive entries")?;
-
     let manifest: Manifest = {
         let path = format!("{pkg_name}/Cargo.toml");
-        let contents = find_file_by_path(&mut entries, Path::new(&path))
+        let contents = find_file_by_path(&mut archive, Path::new(&path))
             .await
             .context("Failed to read Cargo.toml file")?;
 
@@ -210,7 +209,7 @@ async fn render_pkg_readme<R: AsyncRead + Unpin>(
         };
 
         let path = Path::new(pkg_name).join(&readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path))
+        let contents = find_file_by_path(&mut archive, Path::new(&path))
             .await
             .with_context(|| format!("Failed to read {} file", readme_path.display()))?;
 
@@ -232,30 +231,31 @@ async fn render_pkg_readme<R: AsyncRead + Unpin>(
     Ok(rendered)
 }
 
-/// Search an entry by its path in a Tar archive.
+/// Search a file by its path in a Tar archive.
 async fn find_file_by_path<R: AsyncRead + Unpin>(
-    entries: &mut tokio_tar::Entries<R>,
+    archive: &mut TarArchive<R>,
     path: &Path,
 ) -> anyhow::Result<String> {
-    let mut file = entries
-        .filter_map(|entry| future::ready(entry.ok()))
-        .filter(|entry| future::ready(entry.path().is_ok_and(|p| p == path)))
-        .next()
-        .await
-        .ok_or_else(|| anyhow!("Failed to find tarball entry: {}", path.display()))?;
+    while let Some(member) = archive.next_member().await? {
+        if Path::new(&member.metadata().path) != path {
+            continue;
+        }
+        let Member::File { payload, .. } = member else {
+            continue;
+        };
 
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .await
-        .context("Failed to read file contents")?;
+        let contents = read_payload(payload).await?;
+        return String::from_utf8(contents).context("Failed to read file contents");
+    }
 
-    Ok(contents)
+    Err(anyhow!("Failed to find tarball entry: {}", path.display()))
 }
 
 #[cfg(test)]
 pub mod tests {
     use claims::assert_err;
     use crates_io_tarball::TarballBuilder;
+    use tar_codec::TarArchive;
 
     use super::render_pkg_readme;
 
@@ -274,7 +274,7 @@ readme = "README.md"
             .add_file("foo-0.0.1/README.md", b"readme")
             .build_unzipped();
 
-        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+        let result = render_pkg_readme(TarArchive::new(&*serialized_archive), "foo-0.0.1")
             .await
             .unwrap();
         assert!(result.contains("readme"))
@@ -291,9 +291,7 @@ readme = "README.md"
             )
             .build_unzipped();
 
-        assert_err!(
-            render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1").await
-        );
+        assert_err!(render_pkg_readme(TarArchive::new(&*serialized_archive), "foo-0.0.1").await);
     }
 
     #[tokio::test]
@@ -310,7 +308,7 @@ version = "0.0.1"
             .add_file("foo-0.0.1/README.md", b"readme")
             .build_unzipped();
 
-        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+        let result = render_pkg_readme(TarArchive::new(&*serialized_archive), "foo-0.0.1")
             .await
             .unwrap();
         assert!(result.contains("readme"))
@@ -332,7 +330,7 @@ repository = "https://github.com/foo/foo"
             .add_file("foo-0.0.1/README.md", b"readme [link](./Other.md)")
             .build_unzipped();
 
-        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+        let result = render_pkg_readme(TarArchive::new(&*serialized_archive), "foo-0.0.1")
             .await
             .unwrap();
         assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/Other.md\""))
@@ -357,7 +355,7 @@ repository = "https://github.com/foo/foo"
             )
             .build_unzipped();
 
-        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+        let result = render_pkg_readme(TarArchive::new(&*serialized_archive), "foo-0.0.1")
             .await
             .unwrap();
         assert!(result.contains("docs/readme"));

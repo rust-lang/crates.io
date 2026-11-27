@@ -137,7 +137,7 @@ async fn new_krate_tarball_with_non_utf8_path() {
 
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid path found: foo-1.1.0/�"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: path is not valid UTF-8"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 
@@ -155,7 +155,7 @@ async fn new_krate_tarball_with_mixed_header_formats() {
 
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball mixes ustar and GNU tar headers: foo-1.1.0/b"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 512: archive format changed from Pax to Gnu"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 
@@ -174,7 +174,7 @@ async fn new_krate_tarball_with_base256_ustar_uid() {
 
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball uses a base-256 `uid` field in a ustar header: foo-1.1.0/a"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: invalid tar uid field: found [128, 0, 0, 0, 64, 128, 42, 110]"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 
@@ -192,7 +192,7 @@ async fn new_krate_tarball_with_pax_vendor_extension() {
 
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball uses an unsupported pax vendor extension `LIBARCHIVE.xattr.com.apple.provenance`: foo-1.1.0/a"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: decode policy rejected input: pax vendor extension LIBARCHIVE.xattr.com.apple.provenance is not allowed"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 
@@ -213,7 +213,7 @@ async fn new_krate_tarball_with_repeated_pax_path() {
 
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball repeats the pax keyword `path`: foo-1.1.0/a"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: decode policy rejected input: pax extended header contains duplicate record path"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 
@@ -246,7 +246,7 @@ async fn new_krate_tarball_with_old_header() {
 
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"tarball contains an unsupported pre-POSIX tar header: foo-1.1.0/a"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: invalid tar identity: found [0, 0, 0, 0, 0, 0, 0, 0]"}]}"#);
     assert_that!(app.stored_files().await, is_empty());
 }
 
@@ -276,20 +276,54 @@ async fn new_krate_tarball_with_fifo() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_contiguous_file() {
-    let response = publish_tarball_with_entry(tar::EntryType::contiguous()).await;
-    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Continuous found: foo-1.1.0/bar"}]}"#);
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let manifest = br#"[package]
+name = "foo"
+version = "1.1.0"
+description = "description"
+license = "MIT"
+"#;
+
+    let tarball = {
+        let mut builder = TarballBuilder::new().add_file("foo-1.1.0/Cargo.toml", manifest);
+
+        let mut header = tar::Header::new_gnu();
+        assert_ok!(header.set_path("foo-1.1.0/src/lib.rs"));
+        header.set_size(0);
+        header.set_entry_type(tar::EntryType::contiguous());
+        header.set_cksum();
+        assert_ok!(builder.as_mut().append(&header, &[][..]));
+
+        builder.build()
+    };
+
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
+
+    let response = token.publish_crate(body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_snapshot!(app.stored_files().await.join("\n"), @"
+    crates/foo/foo-1.1.0.crate
+    crates/foo/foo-1.1.0.zip
+    crates/foo/foo-1.1.0.zip.json
+    index/3/f/foo
+    rss/crates.xml
+    rss/crates/foo.xml
+    rss/updates.xml
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_gnu_sparse_file() {
     let response = publish_tarball_with_entry(tar::EntryType::new(b'S')).await;
-    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type GNUSparse found: foo-1.1.0/bar"}]}"#);
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: unsupported tar typeflag 83"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_unknown_entry_type() {
     let response = publish_tarball_with_entry(tar::EntryType::new(b'Z')).await;
-    assert_snapshot!(response, @r#"{"errors":[{"detail":"unexpected tar entry type Other(90) found: foo-1.1.0/bar"}]}"#);
+    assert_snapshot!(response, @r#"{"errors":[{"detail":"uploaded tarball is invalid: at byte 0: unsupported tar typeflag 90"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

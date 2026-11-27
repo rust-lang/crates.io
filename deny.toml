@@ -81,9 +81,6 @@ ignore = [
     "RUSTSEC-2026-0194",
     "RUSTSEC-2026-0195",
 
-    # "astral-tokio-tar is unmaintained"
-    "RUSTSEC-2026-0440",
-
     # "chrono is unmaintained"
     "RUSTSEC-2026-0543",
 ]

@@ -6,21 +6,27 @@ extern crate claims;
 
 #[cfg(any(feature = "builder", test))]
 pub use crate::builder::TarballBuilder;
+use crate::last_block_reader::{LastBlock, LastBlockReader};
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 use crates_io_cargo_toml::target_metadata::{self, TargetMetadata};
 pub use crates_io_cargo_toml::{Manifest, StringOrBool};
-use futures_util::StreamExt;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
+use tar_codec::{
+    Archive, DecodeError, DecodePolicy, Member, MemberPayload, PaxDecodePolicy,
+    PaxVendorExtensionPolicy, SpecialKind, TarArchive, TrailingDataPolicy,
+};
+use tar_framing::header::{IDENTITY_RANGE, SIZE_RANGE, USTAR_IDENTITY};
+use tar_framing::{FrameError, FrameErrorInner};
 use tokio::io::{AsyncReadExt, BufReader};
-use tokio_tar::{Entry, EntryType};
 use tracing::{instrument, warn};
 
 #[cfg(any(feature = "builder", test))]
 mod builder;
+mod last_block_reader;
 mod limit_reader;
 mod manifest;
 mod vcs_info;
@@ -66,34 +72,32 @@ pub enum TarballCompatibility {
     Legacy,
 }
 
-/// The header format of a tar archive member.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TarHeaderFormat {
-    Ustar,
-    Gnu,
-    /// Pre-POSIX headers without a format identifier.
-    Old,
-}
+impl TarballCompatibility {
+    /// Returns the `tar-codec` decoding rules for this mode.
+    ///
+    /// Strict mode uses the `tar-codec` defaults and also rejects global pax
+    /// headers. Legacy mode accepts quirks of older tar writers, like
+    /// unterminated names, base-256 IDs, unknown pax vendor records and data
+    /// after the end-of-archive marker. Neither mode accepts repeated pax
+    /// keywords, which readers resolve differently.
+    pub fn decode_policy(self) -> DecodePolicy {
+        match self {
+            Self::Strict => {
+                let pax_policy = PaxDecodePolicy::default().allow_global_pax_extensions(false);
+                DecodePolicy::default().pax_policy(pax_policy)
+            }
+            Self::Legacy => {
+                let pax_policy = PaxDecodePolicy::default()
+                    .vendor_extension_policy(PaxVendorExtensionPolicy::AllowUnknown)
+                    .allow_base256_uid_and_gid(true);
 
-impl TarHeaderFormat {
-    fn of(header: &tokio_tar::Header) -> Self {
-        if header.as_ustar().is_some() {
-            Self::Ustar
-        } else if header.as_gnu().is_some() {
-            Self::Gnu
-        } else {
-            Self::Old
+                DecodePolicy::default()
+                    .trailing_data_policy(TrailingDataPolicy::Ignore)
+                    .allow_header_uname_and_gname_without_terminator(true)
+                    .allow_gnu_extensions_without_terminator(true)
+                    .pax_policy(pax_policy)
+            }
         }
-    }
-}
-
-impl std::fmt::Display for TarHeaderFormat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::Ustar => "ustar",
-            Self::Gnu => "GNU",
-            Self::Old => "pre-POSIX",
-        })
     }
 }
 
@@ -111,26 +115,21 @@ pub enum TarballError {
     Malformed(#[source] std::io::Error),
     #[error("invalid path found: {0}")]
     InvalidPath(String),
-    #[error("malformed pax size")]
-    MalformedPaxSize,
-    #[error("mismatched pax and tar header sizes")]
-    SizeMismatch,
-    #[error("unexpected tar entry type {entry_type:?} found: {path}")]
-    UnexpectedEntry { path: String, entry_type: EntryType },
-    #[error("tarball mixes {first} and {current} tar headers: {path}")]
-    MixedHeaderFormats {
-        path: String,
-        first: TarHeaderFormat,
-        current: TarHeaderFormat,
+    #[error("uploaded tarball is invalid: {0}")]
+    Decode(DecodeError),
+    #[error(
+        "uploaded tarball is invalid: at byte {position}: pax size {pax_size} does not match header size {header_size}"
+    )]
+    SizeMismatch {
+        position: u64,
+        pax_size: u64,
+        header_size: u64,
     },
-    #[error("tarball contains an unsupported pre-POSIX tar header: {path}")]
-    OldHeader { path: String },
-    #[error("tarball uses a base-256 `{field}` field in a ustar header: {path}")]
-    Base256UstarField { path: String, field: &'static str },
-    #[error("tarball uses an unsupported pax vendor extension `{keyword}`: {path}")]
-    PaxVendorExtension { path: String, keyword: String },
-    #[error("tarball repeats the pax keyword `{keyword}`: {path}")]
-    RepeatedPaxKeyword { path: String, keyword: String },
+    #[error("unexpected tar entry type {entry_type} found: {path}")]
+    UnexpectedEntry {
+        path: String,
+        entry_type: &'static str,
+    },
     #[error("uploaded tarball contains data after the end of the gzip stream")]
     TrailingData,
     #[error("uploaded tarball contains more than {max} entries")]
@@ -151,6 +150,25 @@ pub enum TarballError {
     IO(#[from] std::io::Error),
 }
 
+impl TarballError {
+    fn unexpected_entry(path: &Path, entry_type: &'static str) -> Self {
+        let path = path.display().to_string();
+        Self::UnexpectedEntry { path, entry_type }
+    }
+}
+
+impl From<DecodeError> for TarballError {
+    fn from(error: DecodeError) -> Self {
+        match error {
+            DecodeError::Framing(FrameError {
+                inner: FrameErrorInner::Io { source },
+                ..
+            }) => Self::Malformed(source),
+            error => Self::Decode(error),
+        }
+    }
+}
+
 #[instrument(skip_all, fields(%pkg_name))]
 pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     pkg_name: &str,
@@ -163,23 +181,19 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
-    let decoder = LimitErrorReader::new(decoder, policy.unpack_size);
+    let mut decoder = LimitErrorReader::new(decoder, policy.unpack_size);
 
-    // Use this I/O object now to take a peek inside
-    let mut archive = tokio_tar::Archive::new(decoder);
+    let (reader, last_block) = LastBlockReader::new(&mut decoder);
+    let mut archive = TarArchive::new(reader).with_policy(policy.compatibility.decode_policy());
 
     let pkg_root = Path::new(&pkg_name);
 
     let mut vcs_info = None;
     let mut files = Vec::new();
     let mut manifests = BTreeMap::new();
-    let mut entries = archive.entries()?;
     let mut num_entries = 0;
-    let mut first_format = None;
 
-    while let Some(entry) = entries.next().await {
-        let mut entry = entry.map_err(TarballError::Malformed)?;
-
+    while let Some(member) = archive.next_member().await? {
         if let Some(max) = policy.entries {
             num_entries += 1;
             if num_entries > max {
@@ -187,29 +201,12 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             }
         }
 
-        // Check that the file size is consistent between the pax and tar
-        // headers. We have to do this before anything else because iterating
-        // the pax headers requires a mutable reference to entry.
-        validate_pax_size(&mut entry).await.inspect_err(|e| {
-            warn!(%e, ?entry, pkg_name, "file size validation failure");
-        })?;
-
-        if let Some(keyword) = repeated_pax_keyword(&mut entry).await? {
-            let path = entry.path()?.display().to_string();
-            return Err(TarballError::RepeatedPaxKeyword { path, keyword });
-        }
-
-        if let Some(keyword) = pax_vendor_keyword(&mut entry).await? {
-            let path = entry.path()?.display().to_string();
-            policy.enforce_rule(pkg_name, TarballError::PaxVendorExtension { path, keyword })?;
-        }
-
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could
         // upload a tarball that contains both `foo-0.1.0/` source code as well
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
-        let entry_path = entry.path()?;
+        let entry_path = PathBuf::from(&member.metadata().path);
         let Ok(in_pkg_path) = entry_path.strip_prefix(pkg_root) else {
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         };
@@ -225,72 +222,56 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         }
 
-        // Reject any paths that are not UTF-8.
-        let Some(in_pkg_path_str) = in_pkg_path.to_str() else {
-            return Err(TarballError::InvalidPath(entry_path.display().to_string()));
-        };
-
-        let format = TarHeaderFormat::of(entry.header());
-        if format == TarHeaderFormat::Old {
-            let path = entry_path.display().to_string();
-            policy.enforce_rule(pkg_name, TarballError::OldHeader { path })?;
-        }
-
-        // Readers that lock the format at the first header reject archives
-        // that switch header formats between members.
-        let first = *first_format.get_or_insert(format);
-        if format != first {
-            let error = TarballError::MixedHeaderFormats {
-                path: entry_path.display().to_string(),
-                first,
-                current: format,
-            };
-            policy.enforce_rule(pkg_name, error)?;
-        }
-
-        if let Some(field) = base256_ustar_field(entry.header()) {
-            let path = entry_path.display().to_string();
-            policy.enforce_rule(pkg_name, TarballError::Base256UstarField { path, field })?;
+        if policy.compatibility == TarballCompatibility::Strict
+            && let Member::File { size, .. } = &member
+        {
+            check_header_size(&last_block, member.metadata().position, *size)?;
         }
 
         // Crate packages only need regular files and directories. Other entry
         // types have special or implementation-dependent extraction behavior.
-        let entry_type = entry.header().entry_type();
-        if !entry_type.is_file() && !entry_type.is_dir() {
-            return Err(TarballError::UnexpectedEntry {
-                path: entry_path.display().to_string(),
-                entry_type,
-            });
-        }
+        let (size, payload) = match member {
+            Member::File { size, payload, .. } => (size, payload),
+            Member::Directory { .. } => continue,
+            Member::SymbolicLink { .. } => {
+                return Err(TarballError::unexpected_entry(&entry_path, "Symlink"));
+            }
+            Member::HardLink { .. } => {
+                return Err(TarballError::unexpected_entry(&entry_path, "Link"));
+            }
+            Member::Special { kind, .. } => {
+                let entry_type = match kind {
+                    SpecialKind::CharacterDevice => "Char",
+                    SpecialKind::BlockDevice => "Block",
+                    SpecialKind::Fifo => "Fifo",
+                };
+                return Err(TarballError::unexpected_entry(&entry_path, entry_type));
+            }
+        };
 
-        if entry_type.is_file() {
-            files.push(in_pkg_path.to_path_buf());
-        }
+        files.push(in_pkg_path.to_path_buf());
 
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
-        if in_pkg_path_str == ".cargo_vcs_info.json" {
-            let contents = read_metadata_entry(&mut entry, policy.metadata_file_size).await?;
+        let max_size = policy.metadata_file_size;
+        if in_pkg_path == Path::new(".cargo_vcs_info.json") {
+            let contents = read_metadata_payload(payload, size, max_size, &entry_path).await?;
             vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-        } else if in_pkg_path_str.eq_ignore_ascii_case("cargo.toml") {
+        } else if in_pkg_path.as_os_str().eq_ignore_ascii_case("cargo.toml") {
             // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
             // cannot be read.
-            let owned_entry_path = entry_path.into_owned();
-            let contents = read_metadata_entry(&mut entry, policy.metadata_file_size).await?;
+            let contents = read_metadata_payload(payload, size, max_size, &entry_path).await?;
 
             let manifest = Manifest::from_str(&contents)?;
             validate_manifest(&manifest)?;
 
-            manifests.insert(owned_entry_path, manifest);
+            manifests.insert(entry_path, manifest);
         }
     }
 
-    // The tar reader stops at the end-of-archive marker, so the rest of the
-    // gzip member has not been read yet.
-    drop(entries);
-    let mut decoder = archive
-        .into_inner()
-        .map_err(|_| std::io::Error::other("tar archive is still in use"))?;
+    // In legacy mode, the tar decoder stops at the end-of-archive marker, so
+    // the rest of the gzip member has not been read yet.
+    drop(archive);
     tokio::io::copy(&mut decoder, &mut tokio::io::sink())
         .await
         .map_err(TarballError::Malformed)?;
@@ -337,129 +318,64 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     })
 }
 
-/// Returns the name of the first numeric field of a ustar header that uses the
-/// GNU base-256 encoding instead of octal digits.
+/// Rejects a file whose pax `size` record differs from its header `size`
+/// field.
 ///
-/// GNU headers support base-256 numbers, but the ustar format does not.
-fn base256_ustar_field(header: &tokio_tar::Header) -> Option<&'static str> {
-    let ustar = header.as_ustar()?;
-    let fields: [(&'static str, &[u8]); 5] = [
-        ("mode", &ustar.mode),
-        ("uid", &ustar.uid),
-        ("gid", &ustar.gid),
-        ("size", &ustar.size),
-        ("mtime", &ustar.mtime),
-    ];
+/// See the [`last_block_reader`] module for why this check is needed and how
+/// it finds the header.
+fn check_header_size(last_block: &LastBlock, position: u64, size: u64) -> Result<(), TarballError> {
+    let Some(header) = last_block.get(position) else {
+        let message = format!("tar header at byte {position} is not the last block read");
+        return Err(std::io::Error::other(message).into());
+    };
 
-    fields
-        .into_iter()
-        .find(|(_, bytes)| bytes[0] & 0x80 != 0)
-        .map(|(field, _)| field)
-}
-
-/// Reads a metadata entry into memory after checking its declared size.
-async fn read_metadata_entry<R: tokio::io::AsyncRead + Unpin>(
-    entry: &mut Entry<R>,
-    max: u64,
-) -> Result<String, TarballError> {
-    if entry.effective_size() > max {
-        let path = entry.path()?.display().to_string();
-        return Err(TarballError::MetadataFileTooLarge { path, max });
+    // GNU headers cannot be combined with pax records.
+    if header[IDENTITY_RANGE] != *USTAR_IDENTITY {
+        return Ok(());
     }
 
-    let mut contents = String::new();
-    entry.read_to_string(&mut contents).await?;
-    Ok(contents)
-}
+    let digits = std::str::from_utf8(&header[SIZE_RANGE]).unwrap_or_default();
+    let Ok(header_size) = u64::from_str_radix(digits.trim_end_matches(['\0', ' ']), 8) else {
+        let message = format!("tar header at byte {position} has an invalid size field");
+        return Err(std::io::Error::other(message).into());
+    };
 
-async fn validate_pax_size<R: tokio::io::AsyncRead + Unpin>(
-    entry: &mut Entry<R>,
-) -> Result<(), TarballError> {
-    // Ensure that, if we have both tar and pax header file sizes, they match so
-    // that downstream users of crates cannot be subjected to confusion attacks
-    // if they prioritise those headers differently when deciding on the source
-    // of truth.
-    //
-    // It's not an error to not have a pax header — while Cargo will always
-    // include them, as will pretty much every modern tar implementation, it's
-    // really not an issue if it's not there. It's just an issue if it doesn't
-    // match.
-    //
-    // Note that this implies the files cannot be larger than the limit in
-    // legacy tar headers, which is 8 GiB. In practice, this should not be an
-    // issue for crates.io given our other limits.
-
-    let tar_size = entry
-        .header()
-        .raw_file_size()
-        .map_err(TarballError::Malformed)?;
-
-    if let Some(pax) = entry.pax_extensions().await? {
-        for ext_result in pax {
-            let ext = ext_result.map_err(TarballError::Malformed)?;
-            if ext.key().is_ok_and(|key| key == "size") {
-                let pax_size = ext
-                    .value()
-                    .map_err(|_| TarballError::MalformedPaxSize)?
-                    .parse::<u64>()
-                    .map_err(|_| TarballError::MalformedPaxSize)?;
-
-                if pax_size != tar_size {
-                    return Err(TarballError::SizeMismatch);
-                }
-            }
-        }
+    if header_size != size {
+        return Err(TarballError::SizeMismatch {
+            position,
+            pax_size: size,
+            header_size,
+        });
     }
 
     Ok(())
 }
 
-/// Returns the first keyword that appears in more than one local pax record of
-/// the entry.
-///
-/// Readers disagree on which record wins. `astral-tokio-tar` uses the last
-/// `path` record, while the `tar` crate that Cargo uses picks the first one.
-async fn repeated_pax_keyword<R: tokio::io::AsyncRead + Unpin>(
-    entry: &mut Entry<R>,
-) -> Result<Option<String>, TarballError> {
-    let Some(pax) = entry.pax_extensions().await? else {
-        return Ok(None);
-    };
-
-    let mut keywords = HashSet::new();
-    for ext in pax {
-        let ext = ext.map_err(TarballError::Malformed)?;
-        if !keywords.insert(ext.key_bytes()) {
-            return Ok(Some(String::from_utf8_lossy(ext.key_bytes()).into_owned()));
-        }
+/// Reads a metadata file payload into memory after checking its declared size.
+async fn read_metadata_payload<P: MemberPayload<Error = DecodeError>>(
+    payload: P,
+    size: u64,
+    max: u64,
+    path: &Path,
+) -> Result<String, TarballError> {
+    if size > max {
+        let path = path.display().to_string();
+        return Err(TarballError::MetadataFileTooLarge { path, max });
     }
 
-    Ok(None)
+    let contents = read_payload(payload).await?;
+    String::from_utf8(contents)
+        .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error).into())
 }
 
-/// Returns the first local pax record keyword of the entry that belongs to a
-/// vendor namespace, like `LIBARCHIVE.xattr.com.apple.provenance`.
-///
-/// Standard pax keywords have no namespace, and the `realtime` and `security`
-/// namespaces are reserved by POSIX.
-async fn pax_vendor_keyword<R: tokio::io::AsyncRead + Unpin>(
-    entry: &mut Entry<R>,
-) -> Result<Option<String>, TarballError> {
-    let Some(pax) = entry.pax_extensions().await? else {
-        return Ok(None);
-    };
-
-    for ext in pax {
-        let ext = ext.map_err(TarballError::Malformed)?;
-        if let Ok(key) = ext.key()
-            && let Some((namespace, _)) = key.split_once('.')
-            && !matches!(namespace, "realtime" | "security")
-        {
-            return Ok(Some(key.to_owned()));
-        }
+/// Reads the remaining payload of a tar member into memory.
+pub async fn read_payload<P: MemberPayload>(mut payload: P) -> Result<Vec<u8>, P::Error> {
+    let mut contents = Vec::new();
+    let mut chunk = Vec::new();
+    while payload.next_chunk(&mut chunk, DEFAULT_BUF_SIZE).await? {
+        contents.extend_from_slice(&chunk);
     }
-
-    Ok(None)
+    Ok(contents)
 }
 
 #[cfg(test)]
@@ -556,9 +472,9 @@ mod tests {
             results.push_str(&format!("'{typeflag}': {}\n", describe_result(result)));
         }
         assert_snapshot!(results, @"
-        'Z': unexpected tar entry type Other(90) found: foo-0.0.1/bar
-        '7': unexpected tar entry type Continuous found: foo-0.0.1/bar
-        'S': unexpected tar entry type GNUSparse found: foo-0.0.1/bar
+        'Z': uploaded tarball is invalid: at byte 1024: unsupported tar typeflag 90
+        '7': ok
+        'S': uploaded tarball is invalid: at byte 1024: unsupported tar typeflag 83
         '1': unexpected tar entry type Link found: foo-0.0.1/bar
         '2': unexpected tar entry type Symlink found: foo-0.0.1/bar
         '3': unexpected tar entry type Char found: foo-0.0.1/bar
@@ -579,8 +495,7 @@ mod tests {
     }
 
     /// Old versions of the `tar` crate wrote GNU long name payloads without a
-    /// NUL terminator. `astral-tokio-tar` accepts them, while `tar-framing`
-    /// rejects them.
+    /// NUL terminator. Only legacy mode accepts them.
     #[tokio::test]
     async fn process_tarball_test_gnu_long_name_without_nul() {
         let bin_name = "a".repeat(100);
@@ -608,7 +523,10 @@ mod tests {
         builder.as_mut().append(&header, &[][..]).unwrap();
 
         let tarball = builder.build();
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: malformed GNU LongName metadata payload: value is not NUL-terminated");
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
 
         // Target discovery only finds the binary if the full long name was used.
         let bin = &tarball_info.manifest.bin;
@@ -634,9 +552,10 @@ mod tests {
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"tarball mixes ustar and GNU tar headers: foo-0.0.1/Cargo.toml");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 512: archive format changed from Pax to Gnu");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 512: archive format changed from Pax to Gnu");
     }
 
     #[tokio::test]
@@ -678,16 +597,16 @@ mod tests {
             results.push_str(&format!("{field} (legacy): {}\n", describe_result(result)));
         }
         assert_snapshot!(results, @"
-        mode (strict): tarball uses a base-256 `mode` field in a ustar header: foo-0.0.1/src/lib.rs
-        mode (legacy): ok
-        uid (strict): tarball uses a base-256 `uid` field in a ustar header: foo-0.0.1/src/lib.rs
+        mode (strict): uploaded tarball is invalid: at byte 0: invalid tar mode field: found [128, 0, 0, 0, 0, 0, 0, 0]
+        mode (legacy): uploaded tarball is invalid: at byte 0: invalid tar mode field: found [128, 0, 0, 0, 0, 0, 0, 0]
+        uid (strict): uploaded tarball is invalid: at byte 0: invalid tar uid field: found [128, 0, 0, 0, 0, 0, 0, 0]
         uid (legacy): ok
-        gid (strict): tarball uses a base-256 `gid` field in a ustar header: foo-0.0.1/src/lib.rs
+        gid (strict): uploaded tarball is invalid: at byte 0: invalid tar gid field: found [128, 0, 0, 0, 0, 0, 0, 0]
         gid (legacy): ok
-        size (strict): tarball uses a base-256 `size` field in a ustar header: foo-0.0.1/src/lib.rs
-        size (legacy): ok
-        mtime (strict): tarball uses a base-256 `mtime` field in a ustar header: foo-0.0.1/src/lib.rs
-        mtime (legacy): ok
+        size (strict): uploaded tarball is invalid: at byte 0: invalid tar size field: found [128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        size (legacy): uploaded tarball is invalid: at byte 0: invalid tar size field: found [128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        mtime (strict): uploaded tarball is invalid: at byte 0: invalid tar mtime field: found [128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        mtime (legacy): uploaded tarball is invalid: at byte 0: invalid tar mtime field: found [128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         ");
 
         // GNU headers support base-256 numbers, which the `tar` crate uses for
@@ -714,7 +633,7 @@ mod tests {
 
         let tarball = tarball_with_pax_keyword("LIBARCHIVE.xattr.com.apple.provenance");
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"tarball uses an unsupported pax vendor extension `LIBARCHIVE.xattr.com.apple.provenance`: foo-0.0.1/src/lib.rs");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: decode policy rejected input: pax vendor extension LIBARCHIVE.xattr.com.apple.provenance is not allowed");
         assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
 
         // Standard keywords and the `realtime` and `security` namespaces are
@@ -726,15 +645,100 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn process_tarball_test_unknown_pax_keyword() {
+        let tarball = TarballBuilder::ustar()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_pax_extensions([("foo", b"value".as_slice())])
+            .add_file("foo-0.0.1/src/lib.rs", b"")
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @r#"uploaded tarball is invalid: at byte 1024: invalid or unknown pax keyword "foo""#);
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert_snapshot!(err, @r#"uploaded tarball is invalid: at byte 1024: invalid or unknown pax keyword "foo""#);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_global_pax_header() {
+        let mut builder = TarballBuilder::new();
+
+        let records = b"17 comment=hello\n";
+        let mut header = tar::Header::new_ustar();
+        header.set_path("pax_global_header").unwrap();
+        header.set_entry_type(tar::EntryType::XGlobalHeader);
+        header.set_size(records.len() as u64);
+        header.set_cksum();
+        builder.as_mut().append(&header, &records[..]).unwrap();
+
+        let tarball = builder
+            .add_file_with_header(tar::Header::new_ustar(), "foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 0: decode policy rejected input: global pax extended headers are not allowed");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_directory_with_payload() {
+        // The directory payload holds the header of a binary target, which
+        // readers that honor the directory size skip over.
+        let mut hidden = tar::Header::new_gnu();
+        hidden.set_path("foo-0.0.1/src/main.rs").unwrap();
+        hidden.set_size(0);
+        hidden.set_cksum();
+
+        let mut header = tar::Header::new_gnu();
+        header.set_path("foo-0.0.1/src/").unwrap();
+        header.set_entry_type(tar::EntryType::Directory);
+        header.set_size(512);
+        header.set_cksum();
+
+        let mut builder = TarballBuilder::new().add_file("foo-0.0.1/Cargo.toml", MANIFEST);
+        builder
+            .as_mut()
+            .append(&header, &hidden.as_bytes()[..])
+            .unwrap();
+        let tarball = builder.build();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: member type Directory cannot carry payload size 512");
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: member type Directory cannot carry payload size 512");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_data_after_end_of_archive() {
+        let mut archive = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build_unzipped();
+        archive.extend([0xff; 512]);
+
+        let mut tarball = vec![];
+        flate2::read::GzEncoder::new(&*archive, flate2::Compression::default())
+            .read_to_end(&mut tarball)
+            .unwrap();
+
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 2048: unexpected data after the end-of-archive marker");
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+    }
+
+    #[tokio::test]
     async fn process_tarball_test_old_headers() {
         let tarball = TarballBuilder::new()
             .add_file_with_header(tar::Header::new_old(), "foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"tarball contains an unsupported pre-POSIX tar header: foo-0.0.1/Cargo.toml");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 0: invalid tar identity: found [0, 0, 0, 0, 0, 0, 0, 0]");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 0: invalid tar identity: found [0, 0, 0, 0, 0, 0, 0, 0]");
     }
 
     #[tokio::test]
@@ -774,7 +778,7 @@ mod tests {
         let tarball = builder.build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"invalid path found: foo-0.0.1/�");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: path is not valid UTF-8");
     }
 
     #[tokio::test]
@@ -1014,7 +1018,7 @@ mod tests {
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 0: pax records contain invalid UTF-8 text");
 
         let tarball = TarballBuilder::ustar()
             .add_pax_extensions([("size", b"not-a-valid-number".as_slice())])
@@ -1022,7 +1026,7 @@ mod tests {
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
+        assert_snapshot!(err, @r#"uploaded tarball is invalid: at byte 0: invalid pax size value: "not-a-valid-number""#);
     }
 
     #[tokio::test]
@@ -1040,7 +1044,7 @@ mod tests {
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"mismatched pax and tar header sizes");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: pax size 2048 does not match header size 41");
     }
 
     #[tokio::test]
@@ -1057,7 +1061,7 @@ mod tests {
         let tarball = builder.build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"mismatched pax and tar header sizes");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: pax size 41 does not match header size 1024");
     }
 
     /// The reader skips the unread payload of the first file in more than one
@@ -1102,12 +1106,12 @@ mod tests {
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"mismatched pax and tar header sizes");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 0: decode policy rejected input: pax extended header contains duplicate record size");
     }
 
     #[tokio::test]
     async fn process_tarball_test_repeated_pax_path() {
-        // `astral-tokio-tar` uses the last `path` record, but the `tar` crate
+        // Pax gives the last `path` record precedence, but the `tar` crate
         // that Cargo uses for extraction picks the first one.
         let tarball = TarballBuilder::ustar()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
@@ -1119,7 +1123,7 @@ mod tests {
             .build();
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"tarball repeats the pax keyword `path`: foo-0.0.1/src/lib.rs");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1024: decode policy rejected input: pax extended header contains duplicate record path");
     }
 
     #[tokio::test]
@@ -1147,9 +1151,10 @@ mod tests {
         tarball.extend(second);
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, STRICT).await);
-        assert_snapshot!(err, @"uploaded tarball contains data after the end of the gzip stream");
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1536: missing two-block end-of-archive marker");
 
-        assert_ok!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, LEGACY).await);
+        assert_snapshot!(err, @"uploaded tarball is invalid: at byte 1536: missing two-block end-of-archive marker");
     }
 
     #[tokio::test]

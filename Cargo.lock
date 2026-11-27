@@ -231,6 +231,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "archive-trait"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24ed9d753c6bf6ad6855ea6295df8aa0828bc9ee091633b49fe240402b3eb664"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -250,22 +260,6 @@ checksum = "47e4f2b81832e72834d7518d8487a0396a28cc408186a2e8854c0f98011faf12"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "astral-tokio-tar"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "821ed36daf7c40d00a7b62759f9833fb279fb7c87dd989ec0a4d626dcd8d1dca"
-dependencies = [
- "futures-core",
- "libc",
- "portable-atomic",
- "rustc-hash",
- "rustix",
- "tokio",
- "tokio-stream",
- "zerocopy",
 ]
 
 [[package]]
@@ -1447,7 +1441,6 @@ name = "crates_io"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "astral-tokio-tar",
  "async-compression",
  "async-trait",
  "aws-credential-types",
@@ -1538,6 +1531,7 @@ dependencies = [
  "sha2 0.11.1",
  "spdx",
  "tar",
+ "tar-codec",
  "tempfile",
  "thiserror 2.0.21",
  "tikv-jemallocator",
@@ -1890,7 +1884,6 @@ name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "astral-tokio-tar",
  "async-compression",
  "claims",
  "clap",
@@ -1903,6 +1896,8 @@ dependencies = [
  "serde",
  "serde_json",
  "tar",
+ "tar-codec",
+ "tar-framing",
  "thiserror 2.0.21",
  "tokio",
  "tracing",
@@ -6902,6 +6897,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "tar-codec"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cac8b1341c7c68ea322a9c155ccdb09d32b1526be8da22c20b8cb3323814c98"
+dependencies = [
+ "archive-trait",
+ "tar-framing",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
+name = "tar-framing"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c07c818ffdfc87f607073f986b6167218bc9e05d54ecec4d50299a949e09feb1"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7273,17 +7290,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9cc2678c2cdd569ef8215e2afd7954ada2ae20b4fdd2c5fe6139a3b02d105db"
 dependencies = [
  "rustls",
- "tokio",
-]
-
-[[package]]
-name = "tokio-stream"
-version = "0.1.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3d06f0b082ba57c26b79407372e57cf2a1e28124f78e9479fe80322cf53420b"
-dependencies = [
- "futures-core",
- "pin-project-lite",
  "tokio",
 ]
 
