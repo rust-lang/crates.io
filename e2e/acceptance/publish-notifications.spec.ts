@@ -43,7 +43,7 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     // Navigate away and back via client-side links
     await page.locator('header').getByRole('link', { name: 'crates.io' }).click();
     await expect(page).toHaveURL('/');
-    await page.click('[data-test-user-menu] [data-test-toggle]');
+    await page.click('[data-test-user-menu-toggle]');
     await page.click('[data-test-user-menu] [data-test-settings]');
     await expect(page).toHaveURL('/settings/profile');
 

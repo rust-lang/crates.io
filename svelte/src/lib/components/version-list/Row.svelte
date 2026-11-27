@@ -291,13 +291,13 @@
   </div>
 
   <PrivilegedAction userAuthorised={isOwner} class="actions">
-    <Dropdown.Root class="dropdown" data-test-actions-menu>
+    <Dropdown.Root class="dropdown">
       <Dropdown.Trigger hideArrow class="trigger" data-test-actions-toggle>
         <Icon class="i-heroicons:ellipsis-horizontal-circle" />
         <span class="sr-only">Actions</span>
       </Dropdown.Trigger>
 
-      <Dropdown.Menu class="menu">
+      <Dropdown.Menu placement="bottom-end" class="version-actions-menu" data-test-actions-menu>
         <Dropdown.Item>
           <YankButton {crateName} {version} onChanged={onVersionChanged} class="button-reset menu-button" />
         </Dropdown.Item>
@@ -391,24 +391,18 @@
         height: 2em;
       }
     }
+  }
 
-    :global(.menu) {
-      top: 100%;
-      right: 0;
-      min-width: max-content;
-    }
+  :global(.version-actions-menu .menu-button) {
+    align-items: center;
+    gap: var(--space-2xs);
+    cursor: pointer;
+    text-transform: capitalize;
 
-    :global(.menu-button) {
-      align-items: center;
-      gap: var(--space-2xs);
-      cursor: pointer;
-      text-transform: capitalize;
-
-      &[disabled] {
-        background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
-        color: var(--disabled-text-color) !important;
-        cursor: not-allowed;
-      }
+    &[disabled] {
+      background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
+      color: var(--disabled-text-color) !important;
+      cursor: not-allowed;
     }
   }
 

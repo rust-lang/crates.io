@@ -53,8 +53,8 @@
       <ColorSchemeMenu class="color-scheme-menu" />
 
       {#if currentUser}
-        <Dropdown.Root data-test-user-menu>
-          <Dropdown.Trigger class="button-reset" data-test-toggle>
+        <Dropdown.Root>
+          <Dropdown.Trigger class="button-reset" data-test-user-menu-toggle>
             {#if isSudoEnabled}
               <span class="sr-only">Admin mode active</span>
               <div class="wizard-hat" aria-hidden="true" data-test-wizard-hat>🧙</div>
@@ -65,7 +65,7 @@
             {currentUser.name}
           </Dropdown.Trigger>
 
-          <Dropdown.Menu class="current-user-links">
+          <Dropdown.Menu placement="bottom-end" class="current-user-links" data-test-user-menu>
             <Dropdown.Item>
               <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
             </Dropdown.Item>
@@ -136,7 +136,7 @@
       {#if currentUser || showLogin}
         <Dropdown.Root>
           <Dropdown.Trigger class="button-reset">Menu</Dropdown.Trigger>
-          <Dropdown.Menu class="current-user-links">
+          <Dropdown.Menu placement="bottom-end" class="current-user-links">
             {#if currentUser}
               <Dropdown.Item>
                 <a href={resolve('/users/[user_id]', { user_id: currentUser.login })}>Profile</a>
@@ -342,13 +342,8 @@
     margin-right: var(--space-3xs);
   }
 
-  .menu,
-  .nav {
-    & :global(.current-user-links) {
-      left: auto;
-      right: 0;
-      min-width: 200px;
-    }
+  :global(.current-user-links) {
+    min-width: 200px;
   }
 
   .login-menu-item,

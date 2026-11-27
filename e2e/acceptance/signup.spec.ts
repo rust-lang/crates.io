@@ -66,7 +66,7 @@ test.describe('Acceptance | Signup', { tag: '@acceptance' }, () => {
 
     // After successful signup, we are redirected to the original destination page.
     await expect(page).toHaveURL('/settings/profile?from=signup#profile');
-    await expect(page.locator('[data-test-user-menu] [data-test-toggle]')).toHaveText('Ghost');
+    await expect(page.locator('[data-test-user-menu-toggle]')).toHaveText('Ghost');
     expect(msw.db.user.findFirst()?.email).toBe('chosen@example.com');
     expect(msw.db.pendingSignup.findFirst()).toBeFalsy();
     await expect(page.locator('[data-test-notification-message]')).toHaveCount(0);

@@ -219,7 +219,7 @@
             {stackedGraph ? 'Stacked' : 'Unstacked'}
           </span>
         </Dropdown.Trigger>
-        <Dropdown.Menu>
+        <Dropdown.Menu placement="bottom-end">
           <Dropdown.Item>
             <button type="button" class="dropdown-button" onclick={() => (stackedGraph = true)}>Stacked</button>
           </Dropdown.Item>
@@ -387,10 +387,10 @@
     .trigger-label {
       min-width: 65px;
     }
+  }
 
-    .dropdown-button {
-      background: none;
-      border: 0;
-    }
+  .dropdown-button {
+    background: none;
+    border: 0;
   }
 </style>

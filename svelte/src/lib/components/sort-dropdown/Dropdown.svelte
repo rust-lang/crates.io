@@ -20,7 +20,7 @@
       {current}
     </Dropdown.Trigger>
 
-    <Dropdown.Menu>
+    <Dropdown.Menu placement="bottom-end">
       {@render children()}
     </Dropdown.Menu>
   </Dropdown.Root>

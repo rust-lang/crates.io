@@ -1,7 +1,8 @@
 import { createContext } from 'svelte';
 
 export interface DropdownContext {
-  readonly isExpanded: boolean;
+  isExpanded: boolean;
+  trigger: HTMLButtonElement | undefined;
   readonly triggerId: string;
   readonly contentId: string;
   toggle: () => void;

@@ -47,6 +47,85 @@ describe('Dropdown', () => {
     await expect.element(content).not.toBeInTheDocument();
   });
 
+  it('closes when Escape key is pressed while focus is outside', async () => {
+    await render(TestDropdown);
+
+    let trigger = page.getByRole('button', { name: 'Open Menu' });
+    let content = page.getByText('Menu content');
+
+    await trigger.click();
+    await expect.element(content).toBeVisible();
+
+    trigger.element().blur();
+    await userEvent.keyboard('{Escape}');
+    await expect.element(content).not.toBeInTheDocument();
+  });
+
+  it('returns focus to the trigger when closed via Escape from a menu item', async () => {
+    await render(TestDropdown);
+
+    let trigger = page.getByRole('button', { name: 'Menu Dropdown' });
+    await trigger.click();
+
+    let item = page.getByRole('link', { name: 'Item 1' });
+    item.element().focus();
+    await expect.element(item).toHaveFocus();
+
+    await userEvent.keyboard('{Escape}');
+    await expect.element(page.getByRole('menu')).not.toBeInTheDocument();
+    await expect.element(trigger).toHaveFocus();
+  });
+
+  describe('positioning', () => {
+    function rects(triggerName: string) {
+      let trigger = page.getByRole('button', { name: triggerName }).element();
+      let content = document.getElementById(trigger.getAttribute('aria-controls')!)!;
+      return { trigger: trigger.getBoundingClientRect(), content: content.getBoundingClientRect() };
+    }
+
+    it('places the content directly below the trigger and at least as wide', async () => {
+      await render(TestDropdown);
+      await page.getByRole('button', { name: 'Wide Trigger' }).click();
+
+      // content is directly below the trigger
+      await expect.poll(() => rects('Wide Trigger').content.top - rects('Wide Trigger').trigger.bottom).toBeCloseTo(0);
+
+      // content is as wide as the trigger
+      let { trigger, content } = rects('Wide Trigger');
+      expect(content.left).toBeCloseTo(trigger.left);
+      expect(content.width).toBeCloseTo(trigger.width);
+    });
+
+    it('places the content according to `placement`', async () => {
+      await render(TestDropdown);
+      await page.getByRole('button', { name: 'End' }).click();
+
+      // content is aligned to the right edge of the trigger
+      await expect.poll(() => rects('End').content.right - rects('End').trigger.right).toBeCloseTo(0, 1);
+
+      // content keeps its own width
+      let { trigger, content } = rects('End');
+      expect(content.width).toBeGreaterThan(trigger.width);
+    });
+  });
+
+  it('closes when another dropdown opens', async () => {
+    await render(TestDropdown);
+    // open the lower trigger first so the upper menu can't cover it
+    let first = page.getByRole('button', { name: 'No Arrow' });
+    let second = page.getByRole('button', { name: 'Open Menu' });
+
+    await first.click();
+    await expect.element(page.getByText('Content', { exact: true })).toBeVisible();
+    await expect.element(first).toHaveAttribute('aria-expanded', 'true');
+
+    await second.click();
+    await expect.element(page.getByText('Content', { exact: true })).not.toBeInTheDocument();
+    await expect.element(first).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(page.getByText('Menu content')).toBeVisible();
+    await expect.element(second).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('sets correct ARIA attributes on trigger', async () => {
     await render(TestDropdown);
 
@@ -58,6 +137,9 @@ describe('Dropdown', () => {
     await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
     await trigger.click();
     await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.keyboard('{Escape}');
+    await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('shows arrow indicator by default, hides when hideArrow is true', async () => {

@@ -3,7 +3,6 @@
   import type { HTMLAttributes } from 'svelte/elements';
   import type { DropdownContext } from './context';
 
-  import { clickOutside } from '#lib/attachments/click-outside.ts';
   import { setDropdown } from './context';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
@@ -14,10 +13,20 @@
   let uniqueId = $props.id();
 
   let isExpanded = $state(false);
+  let trigger = $state<HTMLButtonElement>();
 
   let context: DropdownContext = {
     get isExpanded() {
       return isExpanded;
+    },
+    set isExpanded(value) {
+      isExpanded = value;
+    },
+    get trigger() {
+      return trigger;
+    },
+    set trigger(element) {
+      trigger = element;
     },
     triggerId: `dropdown-trigger-${uniqueId}`,
     contentId: `dropdown-content-${uniqueId}`,
@@ -26,20 +35,9 @@
   };
 
   setDropdown(context);
-
-  function handleKeydown(event: KeyboardEvent) {
-    if (isExpanded && event.key === 'Escape') {
-      isExpanded = false;
-    }
-  }
 </script>
 
-<div
-  class={['container', className]}
-  {@attach clickOutside(() => (isExpanded = false))}
-  onkeydown={handleKeydown}
-  {...restProps}
->
+<div class={['container', className]} {...restProps}>
   {@render children()}
 </div>
 
@@ -47,6 +45,5 @@
   .container {
     display: inline-flex;
     align-items: center;
-    position: relative;
   }
 </style>

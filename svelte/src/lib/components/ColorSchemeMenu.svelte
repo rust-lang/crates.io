@@ -35,7 +35,7 @@
       <span class="sr-only">Change color scheme. Current: {colorScheme.scheme}</span>
     </Dropdown.Trigger>
 
-    <Dropdown.Menu class="menu">
+    <Dropdown.Menu placement="bottom-end">
       {#each COLOR_SCHEMES as { mode, iconClass } (mode)}
         <Dropdown.Item>
           <button
@@ -64,21 +64,17 @@
       border: 0;
       padding: 0;
     }
+  }
 
-    & :global(.menu) {
-      right: 0;
-      min-width: max-content;
-    }
+  .menu-button {
+    --icon-size: 1.4em;
+    align-items: center;
+    gap: var(--space-2xs);
+    cursor: pointer;
+    text-transform: capitalize;
+  }
 
-    .menu-button {
-      align-items: center;
-      gap: var(--space-2xs);
-      cursor: pointer;
-      text-transform: capitalize;
-    }
-
-    .selected {
-      background: light-dark(#e6e6e6, #404040);
-    }
+  .selected {
+    background: light-dark(#e6e6e6, #404040);
   }
 </style>

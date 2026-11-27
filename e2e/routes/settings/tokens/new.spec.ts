@@ -21,7 +21,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await page.goto('/');
     await expect(page).toHaveURL('/');
 
-    await page.click('[data-test-user-menu] [data-test-toggle]');
+    await page.click('[data-test-user-menu-toggle]');
     await page.click('[data-test-user-menu] [data-test-settings]');
     await expect(page).toHaveURL('/settings/profile');
 

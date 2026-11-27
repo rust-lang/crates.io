@@ -27,7 +27,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
 
     await page.goto('/');
     await page.click('[data-test-login-button]');
-    await expect(page.locator('[data-test-user-menu] [data-test-toggle]')).toHaveText('John Doe');
+    await expect(page.locator('[data-test-user-menu-toggle]')).toHaveText('John Doe');
   });
 
   test('failed login', async ({ page, msw }) => {
@@ -73,7 +73,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
     await page.click('[data-test-login]');
 
     // After login, the user should be redirected to the originally requested page
-    await expect(page.locator('[data-test-user-menu] [data-test-toggle]')).toHaveText('John Doe');
+    await expect(page.locator('[data-test-user-menu-toggle]')).toHaveText('John Doe');
     await expect(page).toHaveURL('/settings/profile');
     await expect(page.locator('[data-test-page-header]')).toHaveText('Account Settings');
   });

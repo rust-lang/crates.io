@@ -23,6 +23,23 @@
     </Dropdown.Root>
   </div>
 
+  <!-- Dropdowns for positioning tests -->
+  <div data-testid="dropdown-positioning" style="display: flex; justify-content: space-between;">
+    <Dropdown.Root>
+      <Dropdown.Trigger>Wide Trigger</Dropdown.Trigger>
+      <Dropdown.Content>
+        <div>Narrow</div>
+      </Dropdown.Content>
+    </Dropdown.Root>
+
+    <Dropdown.Root>
+      <Dropdown.Trigger hideArrow>End</Dropdown.Trigger>
+      <Dropdown.Menu placement="bottom-end">
+        <Dropdown.Item>Wider content</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown.Root>
+  </div>
+
   <!-- Menu dropdown for menu-specific tests -->
   <div data-testid="dropdown-menu">
     <Dropdown.Root>
