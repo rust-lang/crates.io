@@ -228,24 +228,18 @@ async fn release_tracks_with_nums() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
-    let all = json!({
+    let expected = Some(json!({
         "2": {"highest": "2.0.0"},
         "1": {"highest": "1.2.0"},
         "0.5": {"highest": "0.5.0"}
-    });
-    let filtered = json!({ "1": {"highest": "1.0.0"} });
+    }));
 
     let url = "/api/v1/crates/foo_versions/versions";
-    for (params, expected) in [
-        ("", &filtered),
-        ("&sort=date", &filtered),
-        ("&per_page=1", &all),
-        ("&per_page=1&sort=date", &all),
-    ] {
+    for params in ["", "&sort=date", "&per_page=1", "&per_page=1&sort=date"] {
         let query = format!("nums[]=1.0.0&include=release_tracks{params}");
         let json: VersionList = anon.get_with_query(url, &query).await.good();
         assert_eq!(nums(&json.versions), ["1.0.0"], "{query}");
-        assert_eq!(json.meta.release_tracks.as_ref(), Some(expected), "{query}");
+        assert_eq!(json.meta.release_tracks, expected, "{query}");
     }
 
     Ok(())
