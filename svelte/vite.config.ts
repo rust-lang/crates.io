@@ -145,7 +145,7 @@ export default defineConfig({
 
           browser: {
             enabled: true,
-            provider: playwright({ contextOptions: { locale: 'en-US' } }),
+            provider: playwright({ contextOptions: { locale: 'en-US', timezoneId: 'Pacific/Auckland' } }),
             instances: [{ browser: 'chromium', headless: true }],
           },
 
