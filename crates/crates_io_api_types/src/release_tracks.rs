@@ -68,9 +68,8 @@ pub struct ReleaseTrackDetails {
 
 #[cfg(test)]
 mod tests {
-    use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks, Version};
-    use indexmap::IndexMap;
-    use serde_json::json;
+    use super::{ReleaseTracks, Version};
+    use insta::{assert_json_snapshot, assert_snapshot};
 
     #[track_caller]
     fn version(str: &str) -> semver::Version {
@@ -83,26 +82,23 @@ mod tests {
         Version { id: 0, num, yanked }
     }
 
+    fn format_tracks(tracks: &ReleaseTracks) -> String {
+        let lines = tracks.0.iter();
+        let lines = lines.map(|(name, details)| format!("{name}: {}\n", details.highest));
+        lines.collect()
+    }
+
     #[test]
     fn release_tracks_empty() {
-        assert_eq!(
-            ReleaseTracks::from_versions(&[]),
-            ReleaseTracks(IndexMap::new())
-        );
+        let tracks = ReleaseTracks::from_versions(&[]);
+        assert_snapshot!(format_tracks(&tracks), @"");
     }
 
     #[test]
     fn release_tracks_prerelease() {
         let versions = [v("1.0.0-beta.5", false)];
-        assert_eq!(
-            ReleaseTracks::from_versions(&versions),
-            ReleaseTracks(IndexMap::from([(
-                ReleaseTrackName::Major(1),
-                ReleaseTrackDetails {
-                    highest: version("1.0.0-beta.5")
-                }
-            )]))
-        );
+        let tracks = ReleaseTracks::from_versions(&versions);
+        assert_snapshot!(format_tracks(&tracks), @"1: 1.0.0-beta.5");
     }
 
     #[test]
@@ -116,29 +112,12 @@ mod tests {
             v("1.1.0-beta.1", true),
             v("1.0.0", true),
         ];
-        assert_eq!(
-            ReleaseTracks::from_versions(&versions),
-            ReleaseTracks(IndexMap::from([
-                (
-                    ReleaseTrackName::Major(3),
-                    ReleaseTrackDetails {
-                        highest: version("3.0.0-rc.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Major(2),
-                    ReleaseTrackDetails {
-                        highest: version("2.0.0")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Major(1),
-                    ReleaseTrackDetails {
-                        highest: version("1.1.0")
-                    }
-                ),
-            ]))
-        );
+        let tracks = ReleaseTracks::from_versions(&versions);
+        assert_snapshot!(format_tracks(&tracks), @"
+        3: 3.0.0-rc.1
+        2: 2.0.0
+        1: 1.1.0
+        ");
     }
 
     #[test]
@@ -166,63 +145,36 @@ mod tests {
         ]
         .map(|num| v(num, false));
 
-        let release_tracks = ReleaseTracks::from_versions(&versions);
-        assert_eq!(
-            release_tracks,
-            ReleaseTracks(IndexMap::from([
-                (
-                    ReleaseTrackName::Major(100),
-                    ReleaseTrackDetails {
-                        highest: version("100.1.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Major(1),
-                    ReleaseTrackDetails {
-                        highest: version("1.3.5")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(4),
-                    ReleaseTrackDetails {
-                        highest: version("0.4.0-rc.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(3),
-                    ReleaseTrackDetails {
-                        highest: version("0.3.23")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(2),
-                    ReleaseTrackDetails {
-                        highest: version("0.2.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(1),
-                    ReleaseTrackDetails {
-                        highest: version("0.1.2")
-                    }
-                ),
-            ]))
-        );
-
-        let json = serde_json::from_str::<serde_json::Value>(
-            &serde_json::to_string(&release_tracks).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(
-            json,
-            json!({
-                "100": { "highest": "100.1.1" },
-                "1": { "highest": "1.3.5" },
-                "0.4": { "highest": "0.4.0-rc.1" },
-                "0.3": { "highest": "0.3.23" },
-                "0.2": { "highest": "0.2.1" },
-                "0.1": { "highest": "0.1.2" }
-            })
-        );
+        let tracks = ReleaseTracks::from_versions(&versions);
+        assert_snapshot!(format_tracks(&tracks), @"
+        100: 100.1.1
+        1: 1.3.5
+        0.4: 0.4.0-rc.1
+        0.3: 0.3.23
+        0.2: 0.2.1
+        0.1: 0.1.2
+        ");
+        assert_json_snapshot!(tracks, @r#"
+        {
+          "100": {
+            "highest": "100.1.1"
+          },
+          "1": {
+            "highest": "1.3.5"
+          },
+          "0.4": {
+            "highest": "0.4.0-rc.1"
+          },
+          "0.3": {
+            "highest": "0.3.23"
+          },
+          "0.2": {
+            "highest": "0.2.1"
+          },
+          "0.1": {
+            "highest": "0.1.2"
+          }
+        }
+        "#);
     }
 }

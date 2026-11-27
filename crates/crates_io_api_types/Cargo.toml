@@ -24,3 +24,4 @@ utoipa = { version = "=6.0.0", features = ["chrono"] }
 
 [dev-dependencies]
 claims = "=0.8.0"
+insta = { version = "=1.49.0", features = ["json"] }

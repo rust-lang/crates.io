@@ -1568,6 +1568,7 @@ dependencies = [
  "derive_more",
  "hex",
  "indexmap",
+ "insta",
  "semver",
  "serde",
  "serde_json",
