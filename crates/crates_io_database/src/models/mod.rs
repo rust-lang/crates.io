@@ -38,6 +38,7 @@ mod keyword;
 pub mod krate;
 mod oauth_github;
 mod owner;
+pub mod release_tracks;
 pub mod team;
 pub mod token;
 pub mod trustpub;

@@ -387,11 +387,17 @@ test('supports seek pagination', async function () {
 test('include `release_tracks` meta', async function () {
   let user = await db.user.create({});
   let crate = await db.crate.create({ name: 'rand' });
-  await db.version.create({ crate, num: '0.0.1' });
-  await db.version.create({ crate, num: '0.0.2', yanked: true });
-  await db.version.create({ crate, num: '1.0.0' });
-  await db.version.create({ crate, num: '1.1.0', publishedBy: user });
-  await db.version.create({ crate, num: '1.2.0', rust_version: '1.69', yanked: true });
+  await db.version.create({ crate, num: '0.0.1', created_at: '2020-01-01T00:00:00Z' });
+  await db.version.create({ crate, num: '0.0.2', created_at: '2020-01-02T00:00:00Z', yanked: true });
+  await db.version.create({ crate, num: '1.0.0', created_at: '2020-01-03T00:00:00Z' });
+  await db.version.create({ crate, num: '1.1.0', created_at: '2020-01-04T00:00:00Z', publishedBy: user });
+  await db.version.create({
+    crate,
+    num: '1.2.0',
+    created_at: '2020-01-05T00:00:00Z',
+    rust_version: '1.69',
+    yanked: true,
+  });
 
   let req = await fetch('/api/v1/crates/rand/versions');
   let expected = await req.json();
@@ -405,9 +411,17 @@ test('include `release_tracks` meta', async function () {
       release_tracks: {
         '0.0': {
           highest: '0.0.1',
+          yanked: false,
+          count: 2,
+          first_published: '2020-01-01T00:00:00Z',
+          last_published: '2020-01-02T00:00:00Z',
         },
         1: {
           highest: '1.1.0',
+          yanked: false,
+          count: 3,
+          first_published: '2020-01-03T00:00:00Z',
+          last_published: '2020-01-05T00:00:00Z',
         },
       },
     },
@@ -416,25 +430,55 @@ test('include `release_tracks` meta', async function () {
 
 test('include `release_tracks` meta for tracks without stable non-yanked versions', async function () {
   let crate = await db.crate.create({ name: 'rand' });
-  await db.version.create({ crate, num: '0.10.0' });
-  await db.version.create({ crate, num: '0.10.1', yanked: true });
-  await db.version.create({ crate, num: '0.11.0', yanked: true });
-  await db.version.create({ crate, num: '0.11.1', yanked: true });
-  await db.version.create({ crate, num: '1.0.0' });
-  await db.version.create({ crate, num: '1.1.0-beta.1' });
-  await db.version.create({ crate, num: '2.0.0-alpha.1' });
-  await db.version.create({ crate, num: '2.0.0-beta.1' });
-  await db.version.create({ crate, num: '3.0.0-rc.1' });
-  await db.version.create({ crate, num: '3.0.0', yanked: true });
+  await db.version.create({ crate, num: '0.10.0', created_at: '2020-01-01T00:00:00Z' });
+  await db.version.create({ crate, num: '0.10.1', created_at: '2020-01-02T00:00:00Z', yanked: true });
+  await db.version.create({ crate, num: '0.11.0', created_at: '2020-01-03T00:00:00Z', yanked: true });
+  await db.version.create({ crate, num: '0.11.1', created_at: '2020-01-04T00:00:00Z', yanked: true });
+  await db.version.create({ crate, num: '1.0.0', created_at: '2020-01-05T00:00:00Z' });
+  await db.version.create({ crate, num: '1.1.0-beta.1', created_at: '2020-01-06T00:00:00Z' });
+  await db.version.create({ crate, num: '2.0.0-alpha.1', created_at: '2020-01-07T00:00:00Z' });
+  await db.version.create({ crate, num: '2.0.0-beta.1', created_at: '2020-01-08T00:00:00Z' });
+  await db.version.create({ crate, num: '3.0.0-rc.1', created_at: '2020-01-09T00:00:00Z' });
+  await db.version.create({ crate, num: '3.0.0', created_at: '2020-01-10T00:00:00Z', yanked: true });
 
   let response = await fetch('/api/v1/crates/rand/versions?include=release_tracks');
   expect(response.status).toBe(200);
   let { meta } = await response.json();
   expect(meta.release_tracks).toEqual({
-    '0.10': { highest: '0.10.0' },
-    '0.11': { highest: '0.11.1' },
-    1: { highest: '1.0.0' },
-    2: { highest: '2.0.0-beta.1' },
-    3: { highest: '3.0.0-rc.1' },
+    '0.10': {
+      highest: '0.10.0',
+      yanked: false,
+      count: 2,
+      first_published: '2020-01-01T00:00:00Z',
+      last_published: '2020-01-02T00:00:00Z',
+    },
+    '0.11': {
+      highest: '0.11.1',
+      yanked: true,
+      count: 2,
+      first_published: '2020-01-03T00:00:00Z',
+      last_published: '2020-01-04T00:00:00Z',
+    },
+    1: {
+      highest: '1.0.0',
+      yanked: false,
+      count: 2,
+      first_published: '2020-01-05T00:00:00Z',
+      last_published: '2020-01-06T00:00:00Z',
+    },
+    2: {
+      highest: '2.0.0-beta.1',
+      yanked: false,
+      count: 2,
+      first_published: '2020-01-07T00:00:00Z',
+      last_published: '2020-01-08T00:00:00Z',
+    },
+    3: {
+      highest: '3.0.0-rc.1',
+      yanked: false,
+      count: 2,
+      first_published: '2020-01-09T00:00:00Z',
+      last_published: '2020-01-10T00:00:00Z',
+    },
   });
 });

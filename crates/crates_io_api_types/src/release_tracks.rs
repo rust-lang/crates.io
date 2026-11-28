@@ -1,62 +1,17 @@
-use crates_io_database::models::default_versions::Version;
-use derive_more::Display;
+use chrono::{DateTime, Utc};
+use crates_io_database::models::release_tracks::{ReleaseTrack, ReleaseTrackName};
 use indexmap::IndexMap;
 use serde::Serialize;
-use std::cmp::max;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Eq, PartialEq, Serialize)]
 pub struct ReleaseTracks(IndexMap<ReleaseTrackName, ReleaseTrackDetails>);
 
-impl ReleaseTracks {
-    /// Returns the release tracks of the given versions, sorted in descending
-    /// order.
-    ///
-    /// The highest version of a track is chosen like the default version of a
-    /// crate, see [`update_default_version()`](crates_io_database::models::update_default_version).
-    pub fn from_versions<'a>(versions: impl IntoIterator<Item = &'a Version>) -> Self {
-        let mut tracks = BTreeMap::new();
-        for version in versions {
-            let key = ReleaseTrackName::from_semver(&version.num);
-            tracks
-                .entry(key)
-                .and_modify(|highest| *highest = max(*highest, version))
-                .or_insert(version);
-        }
-
-        let tracks = tracks.into_iter().rev().map(|(key, version)| {
-            let highest = version.num.clone();
-            (key, ReleaseTrackDetails { highest })
-        });
-
-        Self(tracks.collect())
-    }
-}
-
-#[derive(Debug, Clone, Display, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum ReleaseTrackName {
-    #[display("0.{_0}")]
-    Minor(u64),
-    Major(u64),
-}
-
-impl ReleaseTrackName {
-    pub fn from_semver(version: &semver::Version) -> Self {
-        if version.major == 0 {
-            Self::Minor(version.minor)
-        } else {
-            Self::Major(version.major)
-        }
-    }
-}
-
-impl serde::Serialize for ReleaseTrackName {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-        Self: std::fmt::Display,
-    {
-        serializer.collect_str(self)
+/// Sorts the release tracks in descending order.
+impl From<BTreeMap<ReleaseTrackName, ReleaseTrack<'_>>> for ReleaseTracks {
+    fn from(tracks: BTreeMap<ReleaseTrackName, ReleaseTrack<'_>>) -> Self {
+        let tracks = tracks.into_iter().rev();
+        Self(tracks.map(|(name, track)| (name, track.into())).collect())
     }
 }
 
@@ -64,165 +19,137 @@ impl serde::Serialize for ReleaseTrackName {
 pub struct ReleaseTrackDetails {
     #[schema(value_type = String)]
     pub highest: semver::Version,
+
+    /// Whether all versions in this release track are yanked.
+    pub yanked: bool,
+
+    /// The number of versions in this release track, including yanked
+    /// versions and pre-releases.
+    #[schema(example = 42, minimum = 1)]
+    pub count: u64,
+
+    /// When the first version in this release track was published.
+    #[schema(example = "2019-12-13T13:46:41Z")]
+    pub first_published: DateTime<Utc>,
+
+    /// When the most recent version in this release track was published.
+    #[schema(example = "2026-07-20T17:06:09Z")]
+    pub last_published: DateTime<Utc>,
+}
+
+impl From<ReleaseTrack<'_>> for ReleaseTrackDetails {
+    fn from(track: ReleaseTrack<'_>) -> Self {
+        Self {
+            highest: track.highest.num.clone(),
+            // Non-yanked versions take precedence, so the highest version is
+            // only yanked if all versions of the track are.
+            yanked: track.highest.yanked,
+            count: track.count,
+            first_published: track.first_published,
+            last_published: track.last_published,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks, Version};
-    use indexmap::IndexMap;
-    use serde_json::json;
+    use super::ReleaseTracks;
+    use chrono::{DateTime, TimeZone, Utc};
+    use crates_io_database::models::default_versions::Version;
+    use crates_io_database::models::release_tracks::{ReleaseTrackInput, calculate_release_tracks};
+    use insta::assert_json_snapshot;
 
     #[track_caller]
     fn version(str: &str) -> semver::Version {
         semver::Version::parse(str).unwrap()
     }
 
+    fn published(day: u32) -> DateTime<Utc> {
+        Utc.with_ymd_and_hms(2020, 1, day, 0, 0, 0).unwrap()
+    }
+
     #[track_caller]
-    fn v(num: &str, yanked: bool) -> Version {
+    fn v(num: &str, yanked: bool, day: u32) -> ReleaseTrackInput {
         let num = version(num);
-        Version { id: 0, num, yanked }
-    }
-
-    #[test]
-    fn release_tracks_empty() {
-        assert_eq!(
-            ReleaseTracks::from_versions(&[]),
-            ReleaseTracks(IndexMap::new())
-        );
-    }
-
-    #[test]
-    fn release_tracks_prerelease() {
-        let versions = [v("1.0.0-beta.5", false)];
-        assert_eq!(
-            ReleaseTracks::from_versions(&versions),
-            ReleaseTracks(IndexMap::from([(
-                ReleaseTrackName::Major(1),
-                ReleaseTrackDetails {
-                    highest: version("1.0.0-beta.5")
-                }
-            )]))
-        );
-    }
-
-    #[test]
-    fn release_tracks_yanked() {
-        let versions = [
-            v("3.0.0", true),
-            v("3.0.0-rc.1", false),
-            v("2.1.0", true),
-            v("2.0.0", false),
-            v("1.1.0", true),
-            v("1.1.0-beta.1", true),
-            v("1.0.0", true),
-        ];
-        assert_eq!(
-            ReleaseTracks::from_versions(&versions),
-            ReleaseTracks(IndexMap::from([
-                (
-                    ReleaseTrackName::Major(3),
-                    ReleaseTrackDetails {
-                        highest: version("3.0.0-rc.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Major(2),
-                    ReleaseTrackDetails {
-                        highest: version("2.0.0")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Major(1),
-                    ReleaseTrackDetails {
-                        highest: version("1.1.0")
-                    }
-                ),
-            ]))
-        );
+        let version = Version { id: 0, num, yanked };
+        let created_at = published(day);
+        ReleaseTrackInput {
+            version,
+            created_at,
+        }
     }
 
     #[test]
     fn release_tracks_multiple() {
         let versions = [
-            "100.1.1",
-            "100.1.0",
-            "1.4.0-beta.1",
-            "1.3.5",
-            "1.2.5",
-            "1.1.5",
-            "0.4.0-rc.1",
-            "0.3.23",
-            "0.3.22",
-            "0.3.21-pre.0",
-            "0.3.20",
-            "0.3.3",
-            "0.3.2",
-            "0.3.1",
-            "0.3.0",
-            "0.2.1",
-            "0.2.0",
-            "0.1.2",
-            "0.1.1",
+            ("100.1.1", 19),
+            ("100.1.0", 18),
+            ("1.4.0-beta.1", 16),
+            ("1.3.5", 15),
+            ("1.2.5", 14),
+            ("1.1.5", 17),
+            ("0.4.0-rc.1", 13),
+            ("0.3.23", 12),
+            ("0.3.22", 11),
+            ("0.3.21-pre.0", 10),
+            ("0.3.20", 9),
+            ("0.3.3", 8),
+            ("0.3.2", 7),
+            ("0.3.1", 6),
+            ("0.3.0", 5),
+            ("0.2.1", 4),
+            ("0.2.0", 3),
+            ("0.1.2", 2),
+            ("0.1.1", 1),
         ]
-        .map(|num| v(num, false));
+        .map(|(num, day)| v(num, false, day));
 
-        let release_tracks = ReleaseTracks::from_versions(&versions);
-        assert_eq!(
-            release_tracks,
-            ReleaseTracks(IndexMap::from([
-                (
-                    ReleaseTrackName::Major(100),
-                    ReleaseTrackDetails {
-                        highest: version("100.1.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Major(1),
-                    ReleaseTrackDetails {
-                        highest: version("1.3.5")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(4),
-                    ReleaseTrackDetails {
-                        highest: version("0.4.0-rc.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(3),
-                    ReleaseTrackDetails {
-                        highest: version("0.3.23")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(2),
-                    ReleaseTrackDetails {
-                        highest: version("0.2.1")
-                    }
-                ),
-                (
-                    ReleaseTrackName::Minor(1),
-                    ReleaseTrackDetails {
-                        highest: version("0.1.2")
-                    }
-                ),
-            ]))
-        );
-
-        let json = serde_json::from_str::<serde_json::Value>(
-            &serde_json::to_string(&release_tracks).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(
-            json,
-            json!({
-                "100": { "highest": "100.1.1" },
-                "1": { "highest": "1.3.5" },
-                "0.4": { "highest": "0.4.0-rc.1" },
-                "0.3": { "highest": "0.3.23" },
-                "0.2": { "highest": "0.2.1" },
-                "0.1": { "highest": "0.1.2" }
-            })
-        );
+        let tracks = ReleaseTracks::from(calculate_release_tracks(&versions));
+        assert_json_snapshot!(tracks, @r#"
+        {
+          "100": {
+            "highest": "100.1.1",
+            "yanked": false,
+            "count": 2,
+            "first_published": "2020-01-18T00:00:00Z",
+            "last_published": "2020-01-19T00:00:00Z"
+          },
+          "1": {
+            "highest": "1.3.5",
+            "yanked": false,
+            "count": 4,
+            "first_published": "2020-01-14T00:00:00Z",
+            "last_published": "2020-01-17T00:00:00Z"
+          },
+          "0.4": {
+            "highest": "0.4.0-rc.1",
+            "yanked": false,
+            "count": 1,
+            "first_published": "2020-01-13T00:00:00Z",
+            "last_published": "2020-01-13T00:00:00Z"
+          },
+          "0.3": {
+            "highest": "0.3.23",
+            "yanked": false,
+            "count": 8,
+            "first_published": "2020-01-05T00:00:00Z",
+            "last_published": "2020-01-12T00:00:00Z"
+          },
+          "0.2": {
+            "highest": "0.2.1",
+            "yanked": false,
+            "count": 2,
+            "first_published": "2020-01-03T00:00:00Z",
+            "last_published": "2020-01-04T00:00:00Z"
+          },
+          "0.1": {
+            "highest": "0.1.2",
+            "yanked": false,
+            "count": 2,
+            "first_published": "2020-01-01T00:00:00Z",
+            "last_published": "2020-01-02T00:00:00Z"
+          }
+        }
+        "#);
     }
 }

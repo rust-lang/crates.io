@@ -997,12 +997,39 @@ expression: response.json()
       },
       "ReleaseTrackDetails": {
         "properties": {
+          "count": {
+            "description": "The number of versions in this release track, including yanked\nversions and pre-releases.",
+            "example": 42,
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "first_published": {
+            "description": "When the first version in this release track was published.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
           "highest": {
             "type": "string"
+          },
+          "last_published": {
+            "description": "When the most recent version in this release track was published.",
+            "example": "2026-07-20T17:06:09Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "yanked": {
+            "description": "Whether all versions in this release track are yanked.",
+            "type": "boolean"
           }
         },
         "required": [
-          "highest"
+          "highest",
+          "yanked",
+          "count",
+          "first_published",
+          "last_published"
         ],
         "type": "object"
       },
