@@ -1,4 +1,5 @@
 import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 const SOURCE_FILES = {
   'Cargo.toml': '[package]\nname = "serde"\n',
@@ -83,6 +84,45 @@ test.describe('Acceptance | crate code viewer', { tag: '@acceptance' }, () => {
     await page.getByRole('treeitem', { name: 'long-b.rs' }).click();
     await expect(viewer).toContainText('// long file b');
     await expect.poll(() => viewer.evaluate(el => el.scrollTop)).toBe(0);
+  });
+
+  test('cancels an in-flight source load when switching versions at the same path', async ({ page, msw }) => {
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', source_files: SOURCE_FILES });
+    await msw.db.version.create({ crate, num: '2.0.0', source_files: { 'src/lib.rs': '// serde v2' } });
+
+    let firstArchive = 'https://static.crates.io/crates/serde/serde-1.0.0.zip';
+    let { promise, resolve } = Promise.withResolvers<void>();
+    msw.worker.use(
+      http.get(firstArchive, async () => {
+        await promise;
+        return new HttpResponse(null, { status: 500 });
+      }),
+    );
+
+    try {
+      let firstRequest = page.waitForRequest(firstArchive);
+      await page.goto('/crates/serde/1.0.0/code/src/lib.rs');
+      let request = await firstRequest;
+
+      let secondPath = '/crates/serde/2.0.0/code/src/lib.rs';
+      let canceled = page.waitForEvent('requestfailed', failedRequest => failedRequest === request);
+
+      // A same-document navigation reuses the source browser component.
+      await page.evaluate(path => {
+        let link = document.createElement('a');
+        link.href = path;
+        document.body.append(link);
+        link.click();
+        link.remove();
+      }, secondPath);
+
+      await expect(page).toHaveURL(secondPath);
+      await expect(page.locator('[data-test-code-viewer]')).toContainText('// serde v2');
+      await canceled;
+    } finally {
+      resolve();
+    }
   });
 
   test('selects code lines from GitHub-style URL hashes', async ({ page, msw }) => {
