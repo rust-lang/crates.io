@@ -19,7 +19,7 @@ export async function load({ fetch, params, url }) {
 
   let cratesResponse = await loadApi(
     client.GET('/api/v1/crates', {
-      params: { query: { team_id: team.id, page, per_page: perPage, sort, include_yanked: 'n' } },
+      params: { query: { team_id: [team.id], page, per_page: perPage, sort, include_yanked: 'n' } },
     }),
     errorMessages,
   );
