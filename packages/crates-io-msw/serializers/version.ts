@@ -37,6 +37,7 @@ export function serializeVersion(version: Version): ApiVersion {
     has_lib: null,
     homepage: null,
     lib_links: null,
+    lib_name: null,
     license: version.license,
     repository: null,
     rust_version: version.rust_version,

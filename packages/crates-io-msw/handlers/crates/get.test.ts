@@ -78,6 +78,7 @@ test('returns a crate object for known crates', async function () {
           "homepage": null,
           "id": 1,
           "lib_links": null,
+          "lib_name": null,
           "license": "MIT",
           "linecounts": {
             "languages": {
@@ -177,6 +178,7 @@ test('works for non-canonical names', async function () {
           "homepage": null,
           "id": 1,
           "lib_links": null,
+          "lib_name": null,
           "license": "MIT",
           "linecounts": {
             "languages": {
@@ -250,6 +252,7 @@ test('includes related versions', async function () {
         "homepage": null,
         "id": 3,
         "lib_links": null,
+        "lib_name": null,
         "license": "MIT/Apache-2.0",
         "linecounts": {
           "languages": {
@@ -294,6 +297,7 @@ test('includes related versions', async function () {
         "homepage": null,
         "id": 2,
         "lib_links": null,
+        "lib_name": null,
         "license": "Apache-2.0",
         "linecounts": {
           "languages": {
@@ -348,6 +352,7 @@ test('includes related versions', async function () {
         "homepage": null,
         "id": 1,
         "lib_links": null,
+        "lib_name": null,
         "license": "MIT",
         "linecounts": {
           "languages": {

@@ -20,6 +20,7 @@ expression: json
     "homepage": null,
     "id": "[id]",
     "lib_links": null,
+    "lib_name": null,
     "license": null,
     "linecounts": null,
     "links": {

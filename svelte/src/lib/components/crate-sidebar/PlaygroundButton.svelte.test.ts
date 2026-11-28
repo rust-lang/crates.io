@@ -67,6 +67,7 @@ function createVersion(num: string): Version {
     documentation: null,
     homepage: null,
     lib_links: null,
+    lib_name: null,
     linecounts: {},
     repository: null,
     trustpub_data: null,

@@ -55,6 +55,7 @@ expression: response.json()
       "homepage": null,
       "id": 3,
       "lib_links": null,
+      "lib_name": null,
       "license": null,
       "linecounts": {
         "languages": {},

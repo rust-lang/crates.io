@@ -65,6 +65,7 @@ test('returns all versions belonging to the specified crate', async function () 
           "homepage": null,
           "id": 3,
           "lib_links": null,
+          "lib_name": null,
           "license": "MIT/Apache-2.0",
           "linecounts": {
             "languages": {
@@ -109,6 +110,7 @@ test('returns all versions belonging to the specified crate', async function () 
           "homepage": null,
           "id": 2,
           "lib_links": null,
+          "lib_name": null,
           "license": "Apache-2.0",
           "linecounts": {
             "languages": {
@@ -171,6 +173,7 @@ test('returns all versions belonging to the specified crate', async function () 
           "homepage": null,
           "id": 1,
           "lib_links": null,
+          "lib_name": null,
           "license": "MIT",
           "linecounts": {
             "languages": {

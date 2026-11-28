@@ -471,6 +471,7 @@ function createVersion(id: number, num: string, createdAt: string): Version {
     has_lib: null,
     homepage: null,
     lib_links: null,
+    lib_name: null,
     license: 'MIT',
     linecounts: {},
     links: {
