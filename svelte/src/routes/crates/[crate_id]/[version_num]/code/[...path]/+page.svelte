@@ -48,10 +48,14 @@
     let path = selectedPath;
     if (!path) return;
 
-    void showFile(path);
+    let controller = new AbortController();
+    fileState = { kind: 'loading' };
+    void showFile(path, controller.signal);
+    return () => controller.abort();
   });
 
-  async function showFile(path: string) {
+  /** Loads the selected archive entry for the current navigation. */
+  async function showFile(path: string, signal: AbortSignal) {
     let file = filesByPath.get(path);
     if (!file) {
       fileState = { kind: 'error', message: `File "${path}" was not found in this archive.` };
@@ -59,11 +63,10 @@
     }
 
     try {
-      let result = await loadFile(fetch, cdnBase, crate.name, version.num, file);
+      let result = await loadFile(fetch, cdnBase, crate.name, version.num, file, signal);
 
-      // Drop a stale result if a newer navigation superseded this
-      // load while it was in flight.
-      if (selectedPath !== path) return;
+      // Navigation can also happen while decompressing or validating the response.
+      if (signal.aborted) return;
 
       if (result === null) {
         fileState = { kind: 'unavailable' };
@@ -73,7 +76,7 @@
         fileState = { kind: 'content', file, text: result.text };
       }
     } catch (error) {
-      if (selectedPath !== path) return;
+      if (signal.aborted) return;
 
       let message = error instanceof Error ? error.message : String(error);
       fileState = { kind: 'error', message };
