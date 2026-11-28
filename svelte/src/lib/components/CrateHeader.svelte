@@ -8,6 +8,9 @@
   import KeywordPill from '#lib/components/KeywordPill.svelte';
   import * as NavTabs from '#lib/components/nav-tabs/index.ts';
   import Tooltip from '#lib/components/Tooltip.svelte';
+  import { versionHref } from '#lib/components/version-switcher/version-href.ts';
+  import { VersionStore } from '#lib/components/version-switcher/version-store.svelte.ts';
+  import VersionSwitcher from '#lib/components/version-switcher/VersionSwitcher.svelte';
   import { getSession } from '#lib/utils/session.svelte.ts';
 
   type Crate = components['schemas']['Crate'];
@@ -40,6 +43,8 @@
 
   let { crate, version, versionNum: version_num, keywords = [], ownersPromise }: Props = $props();
   let crate_id = $derived(crate.id);
+
+  let versionStore = $derived(new VersionStore(crate_id));
 
   let session = getSession();
 
@@ -79,7 +84,15 @@
     <h1 class="heading">
       <span data-test-crate-name>{crate.name}</span>
       {#if version}
-        <small data-test-crate-version>v{version.num}</small>
+        <small data-test-crate-version>
+          <VersionSwitcher
+            store={versionStore}
+            crateName={crate.name}
+            currentNum={version.num}
+            defaultNum={crate.default_version ?? undefined}
+            versionHref={num => versionHref(page.route.id, page.params, crate_id, num)}
+          />
+        </small>
       {/if}
     </h1>
 
