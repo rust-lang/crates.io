@@ -86,12 +86,14 @@ export async function loadFile(
   crateName: string,
   versionNum: string,
   file: ManifestFile,
+  signal?: AbortSignal,
 ): Promise<LoadedFile | null> {
   let start = file.data_offset;
   let end = file.data_offset + file.compressed_size - 1;
 
   let response = await fetch(archiveUrl(base, crateName, versionNum), {
     headers: { Range: `bytes=${start}-${end}` },
+    signal,
   });
 
   // The S3-backed CDN reports a not-yet-built archive as `404` or `403`.
