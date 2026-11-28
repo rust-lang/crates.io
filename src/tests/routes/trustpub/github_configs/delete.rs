@@ -93,15 +93,15 @@ async fn test_legacy_token_auth() -> anyhow::Result<()> {
     let config = create_config(&mut conn, krate.id).await?;
 
     let response = token_client.delete::<()>(&delete_url(config.id)).await;
-    assert_snapshot!(response.status(), @"204 No Content");
-    assert_eq!(response.text(), "");
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint requires a scoped API token. Create a new token with the `trusted-publishing` scope at https://crates.io/settings/tokens/new"}]}"#);
 
-    // Verify the config was deleted from the database
+    // Verify the config was not deleted
     let configs = get_all_configs(&mut conn).await?;
-    assert_eq!(configs.len(), 0);
+    assert_eq!(configs.len(), 1);
 
-    // Verify emails were sent to crate owners
-    assert_snapshot!(app.emails_snapshot().await);
+    // Verify no emails were sent to crate owners
+    assert_eq!(app.emails().await.len(), 0);
 
     Ok(())
 }
