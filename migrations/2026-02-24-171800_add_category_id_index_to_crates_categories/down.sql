@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS index_crates_categories_category_id;
